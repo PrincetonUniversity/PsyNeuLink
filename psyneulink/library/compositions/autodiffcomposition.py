@@ -1784,7 +1784,7 @@ class AutodiffComposition(Composition):
         loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
         target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
         self._validate_loss_mech_specs(loss_mech_specs, context)
-        self.__parse_constructor_targets_specs()
+        self._parse_constructor_targets_specs()
 
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
@@ -2770,7 +2770,7 @@ class AutodiffComposition(Composition):
         return stim_input, num_input_trials
 
     # # BREADCRUMB: ??PASS loss_mechs FROM _instantiate_loss_mechs TO AVOID NEED FOR SEARCH OVER self.targets??
-    def __parse_constructor_targets_specs(self):
+    def _parse_constructor_targets_specs(self):
         """Parse sample-target specifications from **targets** of constructor in self._constructor_target_specs
         Standardize format of entries as {sample.output_port: target.output_port or 'TARGET')
         Register samples and targets from LossMechanism specs in loss_mechs_map
@@ -2795,12 +2795,19 @@ class AutodiffComposition(Composition):
         - missing entries in learn() or ones with a non-numeric value
             for SAMPLEs specified with the keyword 'TARGET' in the constructor
         - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
-        Note:
-         BREADCRUMB: (VALIDATION OF constructor ARGS SHOULD HAPPEN IN _valiate_constructor_sample_target_specs()
 
+        Notes:
+        - validation of SAMPLES happens in _validate_constructor_targets_specs()
+        - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
+          there should be another entry for that SAMPLE
+          that has value == numeric and source = {inputs, inputs[TARGETS or targets}
+        - the total number should = the number of SAMPLE Nodes in the Composition:
+          if too many: bad specs
+          if too few, error (see below)
         """
-        # BREADCDRUMB: MOVE THIS TO END, OR DON"T EVEN BOTHER?
+        # call super() to populate self._sample_target_specs with legal entries from learn() and get illegal ones
         illegal_specs = super()._validate_sample_target_specs_from_learn(learn_specs, name, allow_None_for_target)
+
         constructor_specs = self._constructor_target_specs.items()  # specs from **targets** are of constructor
         legal_specs = []
         bad_specs = []
@@ -2812,6 +2819,7 @@ class AutodiffComposition(Composition):
                                                          if (item.sample_port == spec
                                                              and item.source in learn_dicts)), None)
         _num_specs = lambda source : len([spec for spec in self._sample_target_specs if spec.source in source])
+        # BREADCRUMB: MOVE THIS TO SampleTargets ONCE THAT IS IMPLEMENTED AS A SUBCLASS OF ContentAddressableLisst
         # _get_spec_from_learn = lambda spec : (learn_specs[spec] if spec in learn_specs
         #                                       else (learn_specs[spec.owner] if spec.owner in learn_specs
         #                                             else (learn_specs[spec.name] if spec.name in learn_specs
@@ -2819,22 +2827,17 @@ class AutodiffComposition(Composition):
         #                                                         if spec.owner.name in learn_specs
         #                                                         else None))))
 
-        # BREADCRUMB: SHOULD ALSO SEARCH illegal_specs and self._sample_target_specs FOR target
-        # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs 
+        # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs
         for sample, target in constructor_specs:
             # Check if sample is in illegal_specs from learn()
             learn_spec = _get_learn_spec(sample, illegal_specs)
             if learn_spec:
-                # assert False, \
-                #     "CHECK: WASN'T SURE IF illegal_specs IS EVER POPULATED WHEN **targets** OF CONSTRUCTOR IS SPECIFIED"
                 illegal_specs.remove(learn_spec)
             else:
                 # Check if sample was in learn()
                 learn_spec = _get_learn_spec(sample, self._sample_target_specs)
-                # learn_spec = _get_spec_from_learn(sample)
             if learn_spec:
                 # sample specified in learn()
-                # BREADCRUMB:
                 learn_sample, learn_target = (learn_spec.sample_port, learn_spec.target_spec)
                 if target == TARGET:
                     # sample should be specified in learn() with numeric value
@@ -2845,18 +2848,18 @@ class AutodiffComposition(Composition):
                         # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
                         # expected numeric spec for target in learn(), but got non-numeric
                         bad_specs.append((learn_spec, learn_target,
-                                          f"'TARGET' is specified in the 'targets' argument of the constructor, "
-                                          f"indicating it receives an external value, so it must be assigned a "
-                                          f"numeric value in the 'targets' argument of learn(), "
-                                          f"not '{learn_spec.target_spec.full_name}'"))
+                                          f"'TARGET' is assigned as its value in the 'targets' argument of the "
+                                          f"constructor, specifying that its actual value is provided as an input "
+                                          f"in learn(), so the entry for it in the 'targets' argument of learn() "
+                                          f"must be a numeric value (rather than '{learn_spec.target_value})'"))
                 else:
                     # sample should NOT be specified in learn()
                     # Got unexpected specification for target in learn() (speccified as Node in constructor)
                     # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
                     bad_specs.append((learn_spec, learn_target,
-                                      f"a Node that provides the target value ('{learn_spec.target_spec.full_name}') "
-                                      f"for the sample is specified in the 'targets' argument of the constructor, "
-                                      f"so it should NOT be specified in learn()"))
+                                      f"a Node ('{learn_spec.target_spec.full_name}') that provides its target value "
+                                      f"is specified in the 'targets' argument of the constructor, so there should "
+                                      f"be no specification for the SAMPLE in learn()"))
             else:
                 # sample NOT specified in learn()
                 if target == TARGET:
@@ -2887,9 +2890,11 @@ class AutodiffComposition(Composition):
         #                                            f"argument of the constructor"))
 
         if bad_specs:
+            # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
             def get_inflections(plural):
                 inflections = {
                     's': 's' if plural else '',
+                    'not_s': '' if plural else 's',
                     'a': '' if plural else 'a ',
                     'an': '' if plural else 'an ',
                     'the': 'the ' if plural else '',
@@ -2903,11 +2908,8 @@ class AutodiffComposition(Composition):
             all_bad_specs_str = []
             sources = []
             for bad_spec in bad_specs:
-                # spec = _get_learn_spec(bad_spec[0], self._sample_target_specs)
-                # sample_spec = spec.sample_spec
-                # source = spec.source
                 sources.append(bad_spec[0].source)
-                all_bad_specs_str.append(f"'{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
+                all_bad_specs_str.append(f"for SAMPLE '{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
 
             sources = sorted(set(sources))
             if len(sources) == 1:
@@ -2919,30 +2921,21 @@ class AutodiffComposition(Composition):
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
 
-            raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because the "
-                                           f"following target specification{_['s']} in its {source_str} {_['are_is']} "
-                                           f"at variance with one{_['s']} in the 'targets' argument of its consructor: "
-                                           f"{'; '.join(all_bad_specs_str)}.")
+            raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
+                                           f"the following target specification{_['s']} in its {source_str} "
+                                           f"conflict{_['not_s']} with one{_['s']} in the 'targets' argument "
+                                           f"of its consructor: {'; '.join(all_bad_specs_str)}.")
 
         return illegal_specs
 
     def _validate_constructor_targets_specs(self):
-        """Handle redundant sample specs in **targets** argument of constructor
+        """Handle erroneous SAMPLE specs in **targets** argument of constructor
         Note: not done in Composition, since that does not support specification of SAMPLES 
-              (they are assigned automatically as the OUTPUT Nodes of the Composition)
+              (there they are assigned automatically as the OUTPUT Nodes of the Composition)
 
         ==============
-        - ERRORS:
-            - SAMPLE or TARGET specs:
-                - Node NOT in the Composition
-                - Node NOT in the Composition
-
-            - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
-              there should be another entry for that SAMPLE
-              that has value == numeric and source = {inputs, inputs[TARGETS or targets}
-            - the total number should = the number of SAMPLE Nodes in the Composition:
-              if too many: bad specs
-              if too few, error (see below)
+        - REDUNDANT SAMPLE SPECS
+        - SAMPLE or TARGET specs NOT in the Composition
         ==============
         """
 

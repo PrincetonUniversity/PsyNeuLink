@@ -9922,8 +9922,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
             except TypeError:
                 illegal_specs.append(SampleTargetSpec(None, None,
-                                                                    None, input_item,
-                                                                    value, name))
+                                                      None, input_item,
+                                                      value, name))
                 continue
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
@@ -9936,12 +9936,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sample_port = sample_target_pair.sample_port
                 sample_spec = input_item if input_item in sample_target_pair else None
                 target_port = sample_target_pair.target_port
-                target_spec = input_item if input_item in sample_target_pair else None
+                # target_spec = input_item if input_item in sample_target_pair else None
+                target_spec = target_port if target_port in sample_target_pair else None
                 # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULE BE ALLOWED FOR AutodiffComposition:
                 if not is_numeric(value):
                     illegal_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                                        target_port, target_spec,
-                                                                        value, name))
+                                                          target_port, target_spec,
+                                                          value, name))
                     continue
                 # Don't incude spec if None is not allowed for target spec
                 # BREADCRUMB: IS THIS STILL NEEDED:
@@ -9955,8 +9956,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 legal_specs.update({input_item:value})
             else:
                 illegal_specs.append(SampleTargetSpec(None, None,
-                                                                    None, input_item,
-                                                                    value, name))
+                                                      None, input_item,
+                                                      value, name))
 
         return illegal_specs
 
