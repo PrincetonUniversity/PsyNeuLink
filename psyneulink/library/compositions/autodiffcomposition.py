@@ -2801,17 +2801,17 @@ class AutodiffComposition(Composition):
         """
         # BREADCDRUMB: MOVE THIS TO END, OR DON"T EVEN BOTHER?
         illegal_specs = super()._validate_sample_target_specs_from_learn(learn_specs, name, allow_None_for_target)
-        assert not illegal_specs, "illegal_specs returned from call to super()"
-        # learn_specs = self._sample_target_specs                     # specs from **targets** arg of learn() method
         constructor_specs = self._constructor_target_specs.items()  # specs from **targets** are of constructor
         legal_specs = []
+        bad_specs = []
         missing_specs = []
         learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
         # get SampleTargetSpec from self._sample_target_specs for sample_port
         #    specified in a dict in *targets* of learn()
-        _get_spec = lambda spec, spec_list : next((item for item in spec_list
-                                                   if (item.sample_port == spec
-                                                       and item.source in learn_dicts)), None)
+        _get_learn_spec = lambda spec, spec_list : next((item for item in spec_list
+                                                         if (item.sample_port == spec
+                                                             and item.source in learn_dicts)), None)
+        _num_specs = lambda source : len([spec for spec in self._sample_target_specs if spec.source in source])
         # _get_spec_from_learn = lambda spec : (learn_specs[spec] if spec in learn_specs
         #                                       else (learn_specs[spec.owner] if spec.owner in learn_specs
         #                                             else (learn_specs[spec.name] if spec.name in learn_specs
@@ -2823,14 +2823,14 @@ class AutodiffComposition(Composition):
         # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs 
         for sample, target in constructor_specs:
             # Check if sample is in illegal_specs from learn()
-            learn_spec = _get_spec(sample, illegal_specs)
+            learn_spec = _get_learn_spec(sample, illegal_specs)
             if learn_spec:
-                assert False, \
-                    "CHECK: WASN'T SURE IF illegal_specs IS EVER POPULATED WHEN **targets** OF CONSTRUCTOR IS SPECIFIED"
+                # assert False, \
+                #     "CHECK: WASN'T SURE IF illegal_specs IS EVER POPULATED WHEN **targets** OF CONSTRUCTOR IS SPECIFIED"
                 illegal_specs.remove(learn_spec)
             else:
-                # Check if sample is in self._sample_target_spec from learn()
-                learn_spec = _get_spec(sample, self._sample_target_specs)
+                # Check if sample was in learn()
+                learn_spec = _get_learn_spec(sample, self._sample_target_specs)
                 # learn_spec = _get_spec_from_learn(sample)
             if learn_spec:
                 # sample specified in learn()
@@ -2844,64 +2844,85 @@ class AutodiffComposition(Composition):
                     else:
                         # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
                         # expected numeric spec for target in learn(), but got non-numeric
-                        bad_specs.append((learn_sample, learn_target,
+                        bad_specs.append((learn_spec, learn_target,
                                           f"'TARGET' is specified in the 'targets' argument of the constructor, "
                                           f"indicating it receives an external value, so it must be assigned a "
-                                          f"numeric value in the 'targets' argument of learn(), not '{learn_target}'"))
+                                          f"numeric value in the 'targets' argument of learn(), "
+                                          f"not '{learn_spec.target_spec.full_name}'"))
                 else:
                     # sample should NOT be specified in learn()
-                    # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
                     # Got unexpected specification for target in learn() (speccified as Node in constructor)
-                    bad_specs.append((learn_sample, learn_target,
-                                      f"Node that provides the target value ('{learn_target}') for the sample is "
-                                      f"specified in the 'targets' argument of the constructor, so it should not be "
-                                      f"specified in learn()"))
+                    # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
+                    bad_specs.append((learn_spec, learn_target,
+                                      f"a Node that provides the target value ('{learn_spec.target_spec.full_name}') "
+                                      f"for the sample is specified in the 'targets' argument of the constructor, "
+                                      f"so it should NOT be specified in learn()"))
             else:
                 # sample NOT specified in learn()
                 if target == TARGET:
                     # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
                     # Missing numeric specification for target in learn() (specified as TARGET in constructor)
-                    bad_specs.append((sample, learn_target,
-                                      f"specification of a numeric value is missing from the 'targets' argument of "
-                                      f"learn() ('TARGET' is specified for the sample in the 'targets' argument of the "
-                                      f"constructor, indicating it should receive an external value during learning)"))
+                    bad_specs.append((learn_spec, learn_target,
+                                      f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
+                                      f"constructor, so it should also be specified in the 'targets argument of the "
+                                      "learn method, and assigned a numeric array (i.e., the value used for training "
+                                      "on each trial."))
 
-        # if len(specs_dict) > len(legal_specs):
-        extra_specs = [spec for spec in learn_specs if spec not in constructor_specs]
-        if extra_specs:
-            assert len(specs_dict) > len(legal_specs), \
+        # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
+        # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
+        if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
+            assert len(learn_specs) > len(legal_specs), \
                 "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
+            assert illegal_specs, \
+                "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
             # X TEST DONE: TOO MANY SPECS IN learn()
-            bad_specs.append((sample, target_spec, f"does not correspond to any sample specified in the 'targets "
-                                                   f"argument of the constructor"))
+            # specification in learn that does not correspond to any in the constructor
+            for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
+                bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
+                                                           f"in the 'targets' argument of the constructor"))
 
-        if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
-            # target specified in learn() taht is not specifed constructor;
-            bad_specs.append((sample, target_spec, f"errant specificaton in learn()"))
-            assert False, \
-                "CHECK: WASN'T SURE IF illegal_specs IS EVER POPULATED WHEN **targets** OF CONSTRUCTOR IS SPECIFIED"
+        # if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
+        #     # target specified in learn() that is is not specifed constructor;
+        #     bad_specs.append((sample, target_spec, f"does not correspond to any sample specified in the 'targets "
+        #                                            f"argument of the constructor"))
 
+        if bad_specs:
+            def get_inflections(plural):
+                inflections = {
+                    's': 's' if plural else '',
+                    'a': '' if plural else 'a ',
+                    'an': '' if plural else 'an ',
+                    'the': 'the ' if plural else '',
+                    'are_is': 'are' if plural else 'is',
+                    'have_has': 'have' if plural else 'has',
+                    'entry': 'entries' if plural else 'entry',
+                    'was_were': 'were' if plural else 'was',
+                }
+                return inflections
+            _ = get_inflections(bad_specs)
+            all_bad_specs_str = []
+            sources = []
+            for bad_spec in bad_specs:
+                # spec = _get_learn_spec(bad_spec[0], self._sample_target_specs)
+                # sample_spec = spec.sample_spec
+                # source = spec.source
+                sources.append(bad_spec[0].source)
+                all_bad_specs_str.append(f"'{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
 
-    #           - IF A SAMPLE IN learn() HAS A TARGET VALUE THAT IS A NODE OR OUTPUT PORT:
-    #                   INDICATE THAT ALL "INTERNAL" TARGETS MUST BE SPECIFIED IN constructor
-    #           - FOR ANY OTHER "UNACCOUNTED FOR" SPECIFICATIONS, INDICATE THAT WHEN targets IS SPECIFIED IN
-    #                   constructor, THE ONLY SPECIFICATIONS IN learn() SHOULD BE FOR ONES SPECIIFIED TO RECEIVER
-    #                   EXTERNAL INPUTS BY USING THE 'TARGET' KEYWORD TO SPECIFY THEIR TARGET VALUE IN THE
-    #                   'targets' ARGUMENT OF THE constructor
-    #           BREADCRUMB: ??IS THE FOLLOWING NEEDED, SINCE MISSING ONES ARE CAUGHT ABOVE:
-    #           - BE SURE THAT ALL "TARGET" SPECS IN CONSTRUCTOR ARE MATCHED WITH NUMBER SPECS FROM learn():
-    #                   IF ONE IS MISSING, ADD EXPLANATION IN ERROR THAT IT NEEDS TO BE SPECIFIED IN learn()
+            sources = sorted(set(sources))
+            if len(sources) == 1:
+                s = ''
+                source_str = f"'{sources[0]}'"
+            else:
+                s = 's'
+                source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
+                              else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
+            source_str = f"{source_str} argument{s}"
 
-            legal_specs.append(spec) if spec else missing_specs.append(spec)
-
-        error_messages = [
-
-        ]
-        assert True
-        (f"The learn() method of '{self.name}' can't be executed because the following specification{_['s']} "
-         f"in its 'targets' argument {_[are_is]} at variance with one{_['s']} in the 'targets' argument of its "
-         f"consructor:  {full_str}.")
-
+            raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because the "
+                                           f"following target specification{_['s']} in its {source_str} {_['are_is']} "
+                                           f"at variance with one{_['s']} in the 'targets' argument of its consructor: "
+                                           f"{'; '.join(all_bad_specs_str)}.")
 
         return illegal_specs
 
