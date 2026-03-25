@@ -39,6 +39,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
 )
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import (
@@ -498,14 +499,138 @@ class EMStorage(LearningFunction):
 
         return self.convert_output_type(memory_matrix)
 
+    def _get_output_struct_type(self, ctx):
+        return ctx.convert_python_struct_to_llvm_ir(self.parameters.memory_matrix.get())
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
+        axis = self.parameters.axis.get()
+        storage_location_val = self.parameters.storage_location.get()
+
+        memory_matrix_ptr = ctx.get_param_or_state_ptr(builder, self, "memory_matrix", param_struct_ptr=params)
+
+        rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
+        uniform_f = ctx.get_uniform_dist_function_by_state(rand_struct)
+
+        storage_prob_ptr = ctx.get_param_or_state_ptr(builder, self, "storage_prob", param_struct_ptr=params)
+        decay_rate_ptr = ctx.get_param_or_state_ptr(builder, self, "decay_rate", param_struct_ptr=params)
+
+        storage_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, storage_prob_ptr)
+        decay_rate = pnlvm.helpers.load_extract_scalar_array_one(builder, decay_rate_ptr)
+
+        # Mark remaining compiled params as used
+        ctx.get_param_or_state_ptr(builder, self, "axis", param_struct_ptr=params)
+        ctx.get_param_or_state_ptr(builder, self, "entry", param_struct_ptr=params)
+        ctx.get_param_or_state_ptr(builder, self, "storage_location", param_struct_ptr=params)
+
+        matrix_ty = memory_matrix_ptr.type.pointee
+        num_rows = matrix_ty.count
+        num_cols = matrix_ty.element.count
+
+        # Storage probability gate
+        store_cond_ptr = builder.alloca(ctx.bool_ty)
+        builder.store(store_cond_ptr.type.pointee(1), store_cond_ptr)
+
+        prob_lt_one = builder.fcmp_ordered('<', storage_prob, storage_prob.type(1.0))
+        with builder.if_then(prob_lt_one):
+            rand_ptr = builder.alloca(ctx.float_ty)
+            builder.call(uniform_f, [rand_struct, rand_ptr])
+            rand_val = builder.load(rand_ptr)
+            passed = builder.fcmp_ordered('<', rand_val, storage_prob)
+            builder.store(passed, store_cond_ptr)
+
+        store_cond = builder.load(store_cond_ptr)
+        with builder.if_then(store_cond, likely=True):
+            # Decay existing entries
+            has_decay = builder.fcmp_ordered('!=', decay_rate, decay_rate.type(0.0))
+            with builder.if_then(has_decay):
+                with pnlvm.helpers.recursive_iterate_arrays(
+                    ctx, builder, memory_matrix_ptr, loop_id="decay"
+                ) as (b, elem_ptr):
+                    elem = b.load(elem_ptr)
+                    decayed = b.fmul(elem, decay_rate)
+                    b.store(decayed, elem_ptr)
+
+            # Determine which slot to overwrite
+            if storage_location_val is not None:
+                idx_of_min = ctx.int32_ty(int(storage_location_val))
+            else:
+                # Argmin of squared norms along axis (sqrt is monotonic so we skip it)
+                min_norm_ptr = builder.alloca(ctx.float_ty)
+                builder.store(ctx.float_ty(float('inf')), min_norm_ptr)
+                min_idx_ptr = builder.alloca(ctx.int32_ty)
+                builder.store(ctx.int32_ty(0), min_idx_ptr)
+                norm_sq_ptr = builder.alloca(ctx.float_ty)
+
+                if axis == 0:
+                    outer_count = num_cols
+                    inner_count = num_rows
+                else:
+                    outer_count = num_rows
+                    inner_count = num_cols
+
+                with pnlvm.helpers.for_loop_zero_inc(
+                    builder, ctx.int32_ty(outer_count), "norm_outer"
+                ) as (b, outer_idx):
+                    b.store(ctx.float_ty(0.0), norm_sq_ptr)
+                    with pnlvm.helpers.for_loop_zero_inc(
+                        b, ctx.int32_ty(inner_count), "norm_inner"
+                    ) as (b2, inner_idx):
+                        if axis == 0:
+                            elem_ptr = b2.gep(memory_matrix_ptr,
+                                              [ctx.int32_ty(0), inner_idx, outer_idx])
+                        else:
+                            elem_ptr = b2.gep(memory_matrix_ptr,
+                                              [ctx.int32_ty(0), outer_idx, inner_idx])
+                        elem = b2.load(elem_ptr)
+                        sq = b2.fmul(elem, elem)
+                        acc = b2.load(norm_sq_ptr)
+                        acc = b2.fadd(acc, sq)
+                        b2.store(acc, norm_sq_ptr)
+
+                    norm_sq = b.load(norm_sq_ptr)
+                    min_norm = b.load(min_norm_ptr)
+                    is_less = b.fcmp_ordered('<', norm_sq, min_norm)
+                    with b.if_then(is_less):
+                        b.store(norm_sq, min_norm_ptr)
+                        b.store(outer_idx, min_idx_ptr)
+
+                idx_of_min = builder.load(min_idx_ptr)
+
+            # Write entry into the selected slot
+            if axis == 0:
+                with pnlvm.helpers.for_loop_zero_inc(
+                    builder, ctx.int32_ty(num_rows), "store_entry"
+                ) as (b, row_idx):
+                    src = b.gep(arg_in, [ctx.int32_ty(0), row_idx])
+                    dst = b.gep(memory_matrix_ptr,
+                                [ctx.int32_ty(0), row_idx, idx_of_min])
+                    b.store(b.load(src), dst)
+            elif axis == 1:
+                with pnlvm.helpers.for_loop_zero_inc(
+                    builder, ctx.int32_ty(num_cols), "store_entry"
+                ) as (b, col_idx):
+                    src = b.gep(arg_in, [ctx.int32_ty(0), col_idx])
+                    dst = b.gep(memory_matrix_ptr,
+                                [ctx.int32_ty(0), idx_of_min, col_idx])
+                    b.store(b.load(src), dst)
+
+        pnlvm.helpers.memcpy(builder, arg_out, memory_matrix_ptr)
+
+        return builder
+
     def _gen_pytorch_fct(self, device, context=None):
+        axis = self.parameters.axis._get(context)
+        storage_location = self.parameters.storage_location._get(context)
+        storage_prob = self.parameters.storage_prob._get(context)
+        decay_rate = self.parameters.decay_rate._get(context)
+        random_state = self.parameters.random_state._get(context)
         def func(entry_to_store,
                  memory_matrix,
-                 axis,
-                 storage_location,
-                 storage_prob,
-                 decay_rate,
-                 random_state)->torch.tensor:
+                 axis=axis,
+                 storage_location=storage_location,
+                 storage_prob=storage_prob,
+                 decay_rate=decay_rate,
+                 random_state=random_state)->torch.tensor:
             """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
 
             # If the batch_size is not equal to one then we need to raise an exception.
