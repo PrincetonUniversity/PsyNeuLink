@@ -1921,10 +1921,6 @@ class AutodiffComposition(Composition):
                 assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
                                f"({loss_mech_spec} for '{self.name}'.")
 
-            # # MODIFIED TEACHTER_TARGET OLD:
-            # target_mechs.append(target_mech)
-            # self.sample_port_to_target_port_map.update({sample_port: target_spec})
-            # MODIFIED TEACHTER_TARGET NEW:
             self._sample_target_pairs.append(SampleTargetPair(sample_port.owner,
                                                               sample_port,
                                                               target_mech,
@@ -1932,14 +1928,11 @@ class AutodiffComposition(Composition):
             self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                               target_port, target_spec, None,
                                                               CONSTRUCTOR_TARGETS))
-            # MODIFIED TEACHTER_TARGET END
+            self._validate_constructor_targets_specs()
 
             self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
-        # MODIFIED TEACHER_TARGET OLD:
-        #     loss_mech_specs.append((sample_port, target_spec))
 
         # return loss_mech_specs, target_mechs
-        # MODIFIED TEACHER_TARGET END
 
     def _instantiate_default_targets(self, pathways:list, context, base_context)->tuple[list,list]:
         """Construct default TARGET Nodes (since none were specified in **targets** arg of constructor
