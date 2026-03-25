@@ -2932,8 +2932,6 @@ class AutodiffComposition(Composition):
         ==============
         """
 
-        # BREADCRUMB: STILL NEED TO FINISH GOING THROUGH VALIDATION, INCLUDING FILTERING FOR non_composition NODES
-
         # Identify redundant specs for SAMPLE-TARGET pairs
         all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
@@ -2942,7 +2940,7 @@ class AutodiffComposition(Composition):
         if not sample_ports_with_redundant_specs:
             return
 
-        # Identify redundant specs with mismatching values
+        # Identify redundant SAMPLE specs, and flag ones with mismatching values
         sample_ports_with_mismatching_specs = {}
         # Search over all samples that have redundant specs
         for sample_port in [s for s in sample_port_counts if sample_port_counts[s] > 1]:
@@ -3419,7 +3417,7 @@ class AutodiffComposition(Composition):
                                    f"{sample_nodes} Node{node_s}: {full_str}.")
 
 
-    def _handle_redundant_sample_target_specs_in_learn(self):
+    def _handle_redundant_sample_target_specs_in_learn(self, key:Literal[SAMPLE, TARGET]):
         """Override to deal with specification of TARGET in constructor and value in learn() method"""
         # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
         TARGET_nodes = self.get_target_nodes()
@@ -3435,7 +3433,7 @@ class AutodiffComposition(Composition):
                         f"The learn() method of '{self.name}' can't be executed because no target value is specified "
                         f"for '{spec.sample_spec.full_name}'.")
 
-        super()._handle_redundant_sample_target_specs_in_learn()
+        super()._handle_redundant_sample_target_specs_in_learn(TARGET)
 
     def _check_nested_target_mechs(self):
         pass

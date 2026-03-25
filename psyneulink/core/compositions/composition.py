@@ -9805,7 +9805,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         illegal_specs = self._aggregate_and_filter_sample_target_specs(targets_dicts)
         if illegal_specs:
             self._handle_illegal_sample_target_specs_from_learn(illegal_specs)
-        self._handle_redundant_sample_target_specs_in_learn()
+        self._handle_redundant_sample_target_specs_in_learn(TARGET)
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs()
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9961,7 +9961,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return illegal_specs
 
-    def _handle_redundant_sample_target_specs_in_learn(self):
+    def _handle_redundant_sample_target_specs_in_learn(self, key:Literal[SAMPLE, TARGET]):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
         Use self._sample_target_specs to identify redundant specs.
         Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
