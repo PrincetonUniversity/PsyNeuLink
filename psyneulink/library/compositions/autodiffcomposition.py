@@ -1723,15 +1723,16 @@ class AutodiffComposition(Composition):
             target_idx = next((i for i, node in enumerate(pathway) if node == target_mech), None)
 
             # Warn if target comes before sample in the same pathway, and there is no learnable Projection between them
-            warning_msg = (f"The target ({target_mech.name}) specified for a sample ({sample_mech.name}) "
-                           f"appears before it in the same pathway of '{self.name}'")
+            # X TEST DONE
+            warning_msg = (f"The target ({target_mech.name}) specified for a SAMPLE ({sample_mech.name}) in the "
+                           f"'targets' argument of the constructor for '{self.name}' appears before it in the same "
+                           f"pathway")
             if (target_idx is not None and sample_idx is not None and target_idx < sample_idx
                     and not self._warned_about_target_before_sample_in_pathway):
                 if not any(isinstance(p, MappingProjection) and p.learnable for p in pathway[target_idx:sample_idx]):
-                    warnings.warn(warning_msg + f"without a learnable Projection between them; "
-                                                f"this can cause instabilities in learning.)")
+                    warnings.warn(warning_msg + f"without a learnable Projection between them)")
                 else:
-                    warnings.warn(warning_msg + '.')
+                    warnings.warn(warning_msg + '; this may cause instabilities in learning.')
                 self._warned_about_target_before_sample_in_pathway = True
 
     def _instantiate_loss_components(self, pathways, context, base_context):
@@ -1928,9 +1929,10 @@ class AutodiffComposition(Composition):
             self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                               target_port, target_spec, None,
                                                               CONSTRUCTOR_TARGETS))
-            self._validate_constructor_targets_specs()
 
             self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
+
+        self._validate_constructor_targets_specs()
 
         # return loss_mech_specs, target_mechs
 
@@ -2931,7 +2933,7 @@ class AutodiffComposition(Composition):
         - SAMPLE or TARGET specs NOT in the Composition
         ==============
         """
-
+        self._handle_redundant_sample_target_specs_in_learn(SAMPLE)
         # Identify redundant specs for SAMPLE-TARGET pairs
         all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
@@ -3417,23 +3419,23 @@ class AutodiffComposition(Composition):
                                    f"{sample_nodes} Node{node_s}: {full_str}.")
 
 
-    def _handle_redundant_sample_target_specs_in_learn(self, key:Literal[SAMPLE, TARGET]):
-        """Override to deal with specification of TARGET in constructor and value in learn() method"""
-        # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
-        TARGET_nodes = self.get_target_nodes()
-        for spec in self._sample_target_specs.copy():
-            if spec.target_spec is TARGET:
-                TARGET_spec = next((i for i in self._sample_target_specs
-                                  if i.sample_port is spec.sample_port and i.target_port.owner in TARGET_nodes), None)
-                if TARGET_spec:
-                    self._sample_target_specs.remove(TARGET_spec)
-                else:
-                    # X TEST DONE
-                    raise AutodiffCompositionError(
-                        f"The learn() method of '{self.name}' can't be executed because no target value is specified "
-                        f"for '{spec.sample_spec.full_name}'.")
-
-        super()._handle_redundant_sample_target_specs_in_learn(TARGET)
+    # def _handle_redundant_sample_target_specs_in_learn(self, key:Literal[SAMPLE, TARGET]):
+    #     """Override to deal with specification of TARGET in constructor and value in learn() method"""
+    #     # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
+    #     TARGET_nodes = self.get_target_nodes()
+    #     for spec in self._sample_target_specs.copy():
+    #         if spec.target_spec is TARGET:
+    #             TARGET_spec = next((i for i in self._sample_target_specs
+    #                               if i.sample_port is spec.sample_port and i.target_port.owner in TARGET_nodes), None)
+    #             if TARGET_spec:
+    #                 self._sample_target_specs.remove(TARGET_spec)
+    #             else:
+    #                 # X TEST DONE
+    #                 raise AutodiffCompositionError(
+    #                     f"The learn() method of '{self.name}' can't be executed because no target value is specified "
+    #                     f"for '{spec.sample_spec.full_name}'.")
+    #
+    #     super()._handle_redundant_sample_target_specs_in_learn(TARGET)
 
     def _check_nested_target_mechs(self):
         pass
