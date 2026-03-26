@@ -9042,6 +9042,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return f"{TARGET} for {output_source.name}"
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
+        return self._get_target_nodes(execution_mode, context, base_context)
+
+    def _get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
         # BREADCRUMB: IF NodeRole.TARGET IS ASSIGNED TO INTERNAL TARGES, MODIFY THIS TO BE SIMILAR TO get_sample_nodes()
         #             BY RETURNING A DICT WITH TARGET Mech AS KEY AND TARGET port AS VALUE
         """Return a list of all `TARGET Nodes <Composition_Learning_Components>`\\s for `learning Pathways
@@ -10060,7 +10063,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #         f"method) can be specified in the 'inputs' arg of learn() method, along with other INPUT nodes, "
     #         f"obviating the need to specify the 'targets' arg. Redundant specifications for: {full_str}.")
 
-    # MODIFIED TEACHER_TARGET NEW: GENERALIZED TO HANDLE EITHER SAMPLE (for Autodiff constructor) OR TARGET (learn())
+    # MODIFIED TEACHER_TARGET NEW: USE SAMPLE INSTEAD OF TARGET
     def _handle_redundant_sample_target_specs_in_learn(self):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
@@ -10100,14 +10103,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
 
         # Prepare strings for warning message
-        num_samples = 0
+
+        # # MODIFIED TEACHER_TARGET OLD:
+        # all_sample_str = []
+        # sources = set()
+        # for target in targets_with_redundant_specs:
+        #     sources.update(set(t.source for t in self._sample_target_specs if target == t.target_port.full_name))
+        #     specs_str = ', '.join([f"'{t.sample_spec.full_name} in '{t.source}'"
+        #                            for t in self._sample_target_specs if t.target_port.full_name == target])
+        #     sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
+        #                   if entry.target_port.full_name == target), None)
+        #     assert sample, "PROGRAM ERROR: unable to find name of sample associated with target in _sample_target_pairs"
+        #     all_targets_str.append(f"'{sample}': [{specs_str}]")
+        # full_str = '; '.join(all_targets_str)
+        #
+        # if not full_str:
+        #     # No redundant taret_specs
+        #     return
+
+        # # MODIFIED TEACHER_TARGET NEW:
+        # num_samples = 0
+        # sources = set()
+        # for sample_port in sample_ports_with_redundant_specs:
+        #     sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
+        #     num_samples += any(entry for entry in self._sample_target_specs if entry.sample_port is sample_port)
+
+        # MODIFIED TEACHER_TARGET NEWER:
+        all_samples_str = []
         sources = set()
         for sample_port in sample_ports_with_redundant_specs:
             sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
-            num_samples += any(entry for entry in self._sample_target_specs if entry.sample_port is sample_port)
+            specs_str = ', '.join([f"'{s.sample_spec.full_name} in '{s.source}'"
+                                   for s in self._sample_target_specs if s.sample_port.full_name == sample_port])
+            sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
+                          if entry.target_port.full_name == sample_port), None)
+            sample_spec = next((entry.sample_spec for entry in self._sample_target_specs
+                                if entry.sample_port == sample_port), None)
+            assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
+                                 "sample_port in _sample_target_pairs")
+            all_samples_str.append(f"'{sample_spec}': [{specs_str}]")
+        full_str = '; '.join(all_samples_str)
 
+        if not full_str:
+            # No redundant taret_specs
+            return
+        # MODIFIED TEACHER_TARGET END
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
-        plural = num_samples
+        plural = len(all_samples_str)
         s = 's' if plural else ''
         s_not = '' if plural else 's'
         are_is = 'are' if plural else 'is'
@@ -10129,7 +10171,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         source_str = f"{source_str} argument{s}"
 
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
-        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self.get_target_nodes()
+        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self._get_target_nodes()
                                 for target_spec in self._sample_target_specs)
         use_sample_nodes_str = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
                             f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
