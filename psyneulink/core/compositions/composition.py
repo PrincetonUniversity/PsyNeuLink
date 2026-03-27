@@ -10138,31 +10138,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Prepare strings for warning message
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # all_sample_str = []
-        # sources = set()
-        # for target in targets_with_redundant_specs:
-        #     sources.update(set(t.source for t in self._sample_target_specs if target == t.target_port.full_name))
-        #     specs_str = ', '.join([f"'{t.sample_spec.full_name} in '{t.source}'"
-        #                            for t in self._sample_target_specs if t.target_port.full_name == target])
-        #     sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
-        #                   if entry.target_port.full_name == target), None)
-        #     assert sample, "PROGRAM ERROR: unable to find name of sample associated with target in _sample_target_pairs"
-        #     all_targets_str.append(f"'{sample}': [{specs_str}]")
-        # full_str = '; '.join(all_targets_str)
-        #
-        # if not full_str:
-        #     # No redundant taret_specs
-        #     return
-
-        # # MODIFIED TEACHER_TARGET NEW:
-        # num_samples = 0
-        # sources = set()
-        # for sample_port in sample_ports_with_redundant_specs:
-        #     sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
-        #     num_samples += any(entry for entry in self._sample_target_specs if entry.sample_port is sample_port)
-
-        # MODIFIED TEACHER_TARGET NEWER:
         all_samples_str = []
         sources = set()
         for sample_port in sample_ports_with_redundant_specs:
@@ -10181,7 +10156,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not full_str:
             # No redundant taret_specs
             return
-        # MODIFIED TEACHER_TARGET END
+
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
         plural = len(all_samples_str)
         s = 's' if plural else ''
@@ -10229,8 +10204,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.  Redundant specifications for: {full_str}.")
         _warned_about_targets_mechs_in_inputs_and_targets = True
-    # MODIFIED TEACHER_TARGET END
-
 
     # def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
     def _handle_conflicting_sample_target_specs(self, targets_with_mismatching_specs:list):
