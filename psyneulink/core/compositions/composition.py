@@ -9808,7 +9808,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         illegal_specs = self._aggregate_and_filter_sample_target_specs(targets_dicts)
         if illegal_specs:
             self._handle_illegal_sample_target_specs_from_learn(illegal_specs)
-        self._handle_redundant_sample_target_specs()
+        if not _warned_about_targets_mechs_in_inputs_and_targets:
+            self._handle_redundant_sample_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs()
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9908,18 +9909,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Get sample-target specifications from dicts used to specify samples and targets:
           - in learn(), these are either in the **targets** arg, or in a subdict of the **inputs** arg
           - can also be in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
-        Use self._sample_target_pairs to identify sample_target_specs and construct self._sample_target_specs
+        Check validity of:
+          - all Node specifications:
+            - in Composition
+            - SAMPLE, TARGET
+          - target specifications:
+            - Node (per above) or numeric value
+        Construct self._sample_target_pairs (which itself is created during pathway construction)
 
-        Note: supports names (str) of Nodes but not of Ports
+        Notes:
+          - Names (str) can be used for Nodes but not Ports
+          - The only legal specifications in the **targets** arg of the learn() method are for:
+            - SAMPLES specified in the **targets** arg of the constructor that are assigned the keyword 'TARGET'
+            - TARGET Nodes constructed automatically for all OUTPUT Nodes
+            - subclasses may allow other forms of specification for SAMPLES and/or TARGETS, but those should be
+                handled by the relevant overrides and/or subclass-specific methods
+                (e.g., see Autodiff for examples:
+                      _validate_constructor_targets_specs()
+                      _validate_sample_target_specs_from_learn()
+                      _handle_conflicting_sample_target_specs()
+          - Missing sample-target specifications are deteceted and reported in _canonicalize_target_specs()
         """
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
         legal_specs = {}
         illegal_specs = []
+
         for input_item, value in specs_dict.items():
+            # Determine whether specified Node is in Composition
+            # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             try:
-                # Determine whether specified Node is in Composition
-                # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
                 input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
             except TypeError:
                 illegal_specs.append(SampleTargetSpec(None, None,
@@ -10067,11 +10086,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _handle_redundant_sample_target_specs(self):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
-        Warning about non-conflicting redundant target_specs, but leave them;
-                  they will be removed in _canonicalize_target_specs()
+        Warn about non-conflicting redundant target_specs:
+            - use of different references for same SAMPLE (e.g., by mech or OutputPort)
+            - specification of both SAMPLE and corresponding TARGET Node
+        Leave conflicting redundant target_specs; they will be removed in _canonicalize_target_specs()
         Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
         Ignore bad individual specs (i.e. ones for which target is None in self._sample_target_specs:
-                  they will be handled in _validate_constructor_targets_specs()
+            they will be handled in _validate_constructor_targets_specs()
         """
         spec_as_port = lambda spec : (spec if isinstance(spec, OutputPort)
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
@@ -10206,6 +10227,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
             f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.  Redundant specifications for: {full_str}.")
+        _warned_about_targets_mechs_in_inputs_and_targets = True
     # MODIFIED TEACHER_TARGET END
 
 
@@ -10313,10 +10335,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             missing_spec_names = [f"'{spec.full_name}'" if len(spec.owner.output_ports) > 1
                                   else f"'{spec.owner.name}'" for spec in missing_target_specs]
             missing_specs_str = ', '.join(missing_spec_names)
+            node_type = 'SAMPLE (OUTPUT)' if (len(self.get_nodes_by_role(NodeRole.SAMPLE))
+                                              == len(self.get_nodes_by_role(NodeRole.SAMPLE))) else 'SAMPLE'
             # X TEST DONE
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
                                    f"it's 'targets' argument is missing {a}specification{s} for the following "
-                                   f"sample{s}: {missing_specs_str}.")
+                                   f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
