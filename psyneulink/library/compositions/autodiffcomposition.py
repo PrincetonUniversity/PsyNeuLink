@@ -2784,160 +2784,16 @@ class AutodiffComposition(Composition):
                     self._constructor_target_specs[entry] = None
                     self.loss_mechs_map[entry] = (entry.sample, entry.target)
 
-    def _validate_sample_target_specs_from_learn(self, learn_specs, name:str, allow_None_for_target:bool)->dict:
-        """Compare learn_specs with constructor specs for SAMPLEs and TARGETs
-        Issue error for:
-        - missing entries in learn() or ones with a non-numeric value
-            for SAMPLEs specified with the keyword 'TARGET' in the constructor
-        - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
-
-        Notes:
-        - validation of SAMPLES happens in _validate_constructor_targets_specs()
-        - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
-          there should be another entry for that SAMPLE
-          that has value == numeric and source = {inputs, inputs[TARGETS or targets}
-        - the total number should = the number of SAMPLE Nodes in the Composition:
-          if too many: bad specs
-          if too few, error (see below)
-        """
-        # call super() to populate self._sample_target_specs with legal entries from learn() and get illegal ones
-        legal_specs, illegal_specs = super()._validate_sample_target_specs_from_learn(learn_specs, name,
-                                                                                      allow_None_for_target)
-
-        constructor_specs = self._constructor_target_specs.items()  # specs from **targets** are of constructor
-        if not constructor_specs:
-            return legal_specs, illegal_specs
-
-        bad_specs = []
-        missing_specs = []
-        learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
-        # get SampleTargetSpec from self._sample_target_specs for sample_port
-        #    specified in a dict in *targets* of learn()
-        _get_learn_spec = lambda spec, spec_list : next((item for item in spec_list
-                                                         if (item.sample_port == spec
-                                                             and item.source in learn_dicts)), None)
-        _num_specs = lambda source : len([spec for spec in self._sample_target_specs if spec.source in source])
-        # BREADCRUMB: MOVE THIS TO SampleTargets ONCE THAT IS IMPLEMENTED AS A SUBCLASS OF ContentAddressableLisst
-        # _get_spec_from_learn = lambda spec : (learn_specs[spec] if spec in learn_specs
-        #                                       else (learn_specs[spec.owner] if spec.owner in learn_specs
-        #                                             else (learn_specs[spec.name] if spec.name in learn_specs
-        #                                                   else (learn_specs[spec.owner.name]
-        #                                                         if spec.owner.name in learn_specs
-        #                                                         else None))))
-
-        # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs
-        for sample, target in constructor_specs:
-            # Check if sample is in illegal_specs from learn()
-            learn_spec = _get_learn_spec(sample, illegal_specs)
-            if learn_spec:
-                illegal_specs.remove(learn_spec)
-            else:
-                # Check if sample was in learn()
-                learn_spec = _get_learn_spec(sample, self._sample_target_specs)
-            if learn_spec:
-                # sample specified in learn()
-                learn_sample, learn_target = (learn_spec.sample_port, learn_spec.target_spec)
-                if target == TARGET:
-                    # sample should be specified in learn() with numeric value
-                    if is_numeric(learn_target):
-                        # target in constructor is specified as TARGET, and spec in learn() is correctly numeric
-                        # BREADCRUMB: IS THE FOLLOWING OK SINCE IT IS PASSED IN?
-                        legal_specs.append(learn_spec)
-                    else:
-                        # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
-                        # expected numeric spec for target in learn(), but got non-numeric
-                        bad_specs.append((learn_spec, learn_target,
-                                          f"'TARGET' is assigned as its value in the 'targets' argument of the "
-                                          f"constructor, specifying that its actual value is provided as an input "
-                                          f"in learn(), so the entry for it in the 'targets' argument of learn() "
-                                          f"must be a numeric value (rather than '{learn_spec.target_value})'"))
-                else:
-                    # sample should NOT be specified in learn()
-                    # Got unexpected specification for target in learn() (speccified as Node in constructor)
-                    # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
-                    bad_specs.append((learn_spec, learn_target,
-                                      f"a Node ('{learn_spec.target_spec.full_name}') that provides its target value "
-                                      f"is specified in the 'targets' argument of the constructor, so there should "
-                                      f"be no specification for the SAMPLE in learn()"))
-            else:
-                # sample NOT specified in learn()
-                if target == TARGET:
-                    # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
-                    # Missing numeric specification for target in learn() (specified as TARGET in constructor)
-                    bad_specs.append((learn_spec, learn_target,
-                                      f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
-                                      f"constructor, so it should also be specified in the 'targets argument of the "
-                                      "learn method, and assigned a numeric array (i.e., the value used for training "
-                                      "on each trial."))
-
-        # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
-        # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
-        if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
-            assert len(learn_specs) > len(legal_specs), \
-                "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
-            assert illegal_specs, \
-                "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
-            # X TEST DONE: TOO MANY SPECS IN learn()
-            # specification in learn that does not correspond to any in the constructor
-            for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
-                bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
-                                                           f"in the 'targets' argument of the constructor"))
-
-        # if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
-        #     # target specified in learn() that is is not specifed constructor;
-        #     bad_specs.append((sample, target_spec, f"does not correspond to any sample specified in the 'targets "
-        #                                            f"argument of the constructor"))
-
-        if bad_specs:
-            # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
-            def get_inflections(plural):
-                inflections = {
-                    's': 's' if plural else '',
-                    'not_s': '' if plural else 's',
-                    'a': '' if plural else 'a ',
-                    'an': '' if plural else 'an ',
-                    'the': 'the ' if plural else '',
-                    'are_is': 'are' if plural else 'is',
-                    'have_has': 'have' if plural else 'has',
-                    'entry': 'entries' if plural else 'entry',
-                    'was_were': 'were' if plural else 'was',
-                }
-                return inflections
-            _ = get_inflections(bad_specs)
-            all_bad_specs_str = []
-            sources = []
-            for bad_spec in bad_specs:
-                sources.append(bad_spec[0].source)
-                all_bad_specs_str.append(f"for SAMPLE '{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
-
-            sources = sorted(set(sources))
-            if len(sources) == 1:
-                s = ''
-                source_str = f"'{sources[0]}'"
-            else:
-                s = 's'
-                source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
-                              else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
-            source_str = f"{source_str} argument{s}"
-
-            raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
-                                           f"the following target specification{_['s']} in its {source_str} "
-                                           f"conflict{_['not_s']} with one{_['s']} in the 'targets' argument "
-                                           f"of its consructor: {'; '.join(all_bad_specs_str)}.")
-
-        return legal_specs, illegal_specs
-
     def _validate_constructor_targets_specs(self):
         """Handle erroneous SAMPLE specs in **targets** argument of constructor
-        Note: not done in Composition, since that does not support specification of SAMPLES 
+        Note: not done in Composition, since that does not support specification of SAMPLES
               (there they are assigned automatically as the OUTPUT Nodes of the Composition)
 
-        ==============
-        - REDUNDANT SAMPLE SPECS
-        - SAMPLE or TARGET specs NOT in the Composition
-        ==============
+        - Handle redundant specifications and any conflicts among them in _handle_redundant_sample_target_specs()
+        - Check for SAMPLE or TARGET specs NOT in the Composition
         """
-        self._handle_redundant_sample_target_specs_in_learn()
+
+        self._handle_redundant_sample_target_specs()
 
         # BREADCRUMB ================================================================================================
         #            ALL OF THE FOLLOWING IS FROM Composition _validate_learn_target_specs()
@@ -2973,6 +2829,7 @@ class AutodiffComposition(Composition):
         # extra_sample_specs = len()
 
         # TEACHER_TARGET BREADCRUMB: MOVE THIS TO globals utlities
+        spec_as_mech = lambda spec : (spec.owner if isinstance(spec, OutputPort) else spec)
         def get_inflections(plural):
             inflections = {
                 's': 's' if plural else '',
@@ -2986,64 +2843,67 @@ class AutodiffComposition(Composition):
             }
             return inflections
 
-        if constructor_has_target_specs:
-            # BREADCRUMB: MOVE ANY OF THIS THAT IS JUST ABOUT CONSTRUCTOR TO AUTOIDFF CONSTRUCTOR??
-            # BREADCRUMB: MAKE SURE THAT EARLIER, IN AutodiffCOmposition, ALL constructor SPECS HAVE BEEN VALIDATED?
-            # BREADCRUMB: Check that all are either sample ports, sample nodes, or TARGET nodes: DONE EARLIER?
-            # Checks here ensure that:
-            # - number must equal number of learnable pathways                      <- MOVE TO CONSTRUCTOR?
-            # - all specs (keys, and values != TARGET) should be in the Composition <- MOVE TO CONSTRUCTOR?
-            # - learn() should have an entry for every sample specified as TARGET in the constructor
+        # BREADCRUMB: MOVE ANY OF THIS THAT IS JUST ABOUT CONSTRUCTOR TO AUTOIDFF CONSTRUCTOR??
+        # BREADCRUMB: MAKE SURE THAT EARLIER, IN AutodiffCOmposition, ALL constructor SPECS HAVE BEEN VALIDATED?
+        # BREADCRUMB: Check that all are either sample ports, sample nodes, or TARGET nodes: DONE EARLIER?
+        # Checks here ensure that:
+        # - number must equal number of learnable pathways                      <- MOVE TO CONSTRUCTOR?
+        # - all specs (keys, and values != TARGET) should be in the Composition <- MOVE TO CONSTRUCTOR?
+        # - learn() should have an entry for every sample specified as TARGET in the constructor
 
-            # # Use assert here since the number of Comparator or LossMechanisms constructed should
-            # #   equal the number of **targets** specified in the constructor and any disparities
-            # #   (e.g., due orphaned_learnable_projections) in _instantiate_loss_components() of AutodiffComposition
-            # assert num_constructor_target_specs == len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)),\
-            #     (f"PROGRAM ERROR: The number of sample-target pairs ({num_constructor_target_specs}) specified in "
-            #      f"the 'targets' argument of the constructor for '{self.name}' should equal the number of "
-            #      f"LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
+        # # Use assert here since the number of Comparator or LossMechanisms constructed should
+        # #   equal the number of **targets** specified in the constructor and any disparities
+        # #   (e.g., due orphaned_learnable_projections) in _instantiate_loss_components() of AutodiffComposition
+        # assert num_constructor_target_specs == len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)),\
+        #     (f"PROGRAM ERROR: The number of sample-target pairs ({num_constructor_target_specs}) specified in "
+        #      f"the 'targets' argument of the constructor for '{self.name}' should equal the number of "
+        #      f"LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
 
-            # BREADCRUMB: MOVE BOTH TO BELOW AND TO AUTDOIFF constructor
-            # Check that all specified Nodes are in the Composition
-            not_in_comp = [spec for item in targets_from_constructor_as_ports for spec in item
-                           if spec != TARGET and spec.owner not in self._get_all_nodes()]
-            if not_in_comp:
-                # Entries in **targets** of learn() for Nodes that are not in the Composition
-                not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
-                _ = get_inflections(len(not_in_comp) > 1)
-                # X TEST DONE
-                # BREADCRUMB: REPLACE "'targets' argument" WITH SOURCE FROM self._sample_target_specs
-                raise CompositionError(f"The following specification{_['s']} in the 'targets' argument of the "
-                                       f"constructor for '{self.name}' {_['are_is']} not in the Composition or any "
-                                       f"nested within it: {', '.join(not_in_comp)}.")
+        # BREADCRUMB: MOVE BOTH TO BELOW AND TO AUTDOIFF constructor
+        # Check that all specified Nodes are in the Composition
+        nodes_in_comp =  self._get_all_nodes()
+        not_in_comp = []
+        # Get entries in **targets** of constructor for Nodes that are not in the Composition
+        for _, sample, _, target, _, _ in self._sample_target_specs:
+            not_in_comp.append(f"'{sample.full_name}'") if sample not in nodes_in_comp else ''
+            not_in_comp.append(f"'{target.full_name}'") if target not in nodes_in_comp and target != TARGET else ''
+        if not_in_comp:
+            _ = get_inflections(len(not_in_comp) > 1)
+            # X TEST DONE
+            raise CompositionError(f"The following specification{_['s']} in the 'targets' argument of the "
+                                   f"constructor for '{self.name}' {_['are_is']} not in the Composition or any "
+                                   f"nested within it: {', '.join(sorted(not_in_comp))}.")
 
-            # BREADCRUMB: KEEP HERE
-            # Check that all specified as TARGET nodes are also specified in the **targets** arg of the learn() method
-            if missing_sample_specs:
-                _ = get_inflections(len(missing_sample_specs) > 1)
-                missing_sample_specs = sorted([f"'{spec[0].full_name}'" for spec in num_constructor_target_specs
-                                               if spec[0] in missing_sample_specs])
-                # X TEST DONE
-                raise CompositionError(f"The specification of {_['the ']}input value{_['s']} for the following TARGET "
-                                       f"Node{_['s']} {_['are_is']} missing from the 'targets' argument of the learn() "
-                                       f"method for '{self.name}': {', '.join(missing_sample_specs)}.")
+        # BREADCRUMB: ??SHOULD THE FOLLOWING BE HANDLED HERE OR IN _validate_sample_target_specs_from_learn()??
+        return
 
-            # BREADCRUMB: KEEP HERE
-            # Check that there are no extra specs in **targets** arg of learn()
-            #   (i.e. that are not specified as TARGET in the **targets** arg of the constructor)
-            if extra_sample_specs:
-                # Entries for **targets** in learn() that were not specified as TARGETs in the constructor
-                _ = get_inflections(len(extra_sample_specs) > 1)
-                extra_sample_specs = sorted([sample_ports_to_learn_specs[spec].full_name
-                                             for spec in extra_sample_specs])
-                # X TEST DONE
-                raise CompositionError(
-                    f"The following {_['entry']} in the 'targets' argument of the learn() method for '{self.name}' "
-                    f"{_['was_were']} not specified as {_['a']}TARGET Node{_['s']} in the 'targets' argument of the "
-                    f"constructor for '{self.name}': {', '.join(extra_sample_specs)}.")
+        # BREADCRUMB: KEEP HERE
+        # Check that all specified as TARGET nodes are also specified in the **targets** arg of the learn() method
+        if missing_sample_specs:
+            _ = get_inflections(len(missing_sample_specs) > 1)
+            missing_sample_specs = sorted([f"'{spec[0].full_name}'" for spec in num_constructor_target_specs
+                                           if spec[0] in missing_sample_specs])
+            # X TEST DONE
+            raise CompositionError(f"The specification of {_['the ']}input value{_['s']} for the following TARGET "
+                                   f"Node{_['s']} {_['are_is']} missing from the 'targets' argument of the learn() "
+                                   f"method for '{self.name}': {', '.join(missing_sample_specs)}.")
+
+        # BREADCRUMB: KEEP HERE
+        # Check that there are no extra specs in **targets** arg of learn()
+        #   (i.e. that are not specified as TARGET in the **targets** arg of the constructor)
+        if extra_sample_specs:
+            # Entries for **targets** in learn() that were not specified as TARGETs in the constructor
+            _ = get_inflections(len(extra_sample_specs) > 1)
+            extra_sample_specs = sorted([sample_ports_to_learn_specs[spec].full_name
+                                         for spec in extra_sample_specs])
+            # X TEST DONE
+            raise CompositionError(
+                f"The following {_['entry']} in the 'targets' argument of the learn() method for '{self.name}' "
+                f"{_['was_were']} not specified as {_['a']}TARGET Node{_['s']} in the 'targets' argument of the "
+                f"constructor for '{self.name}': {', '.join(extra_sample_specs)}.")
 
         # No constructor specs
-        elif learn_method_has_target_specs:
+        if learn_method_has_target_specs:
             # Error checks:
             # - all specs (keys) in **targets** of learn() are in the Composition
             # BREADCRUMB: ??ARE BOTH OF THE FOLLOWING TWO TESTS NECESSARY:
@@ -3210,23 +3070,6 @@ class AutodiffComposition(Composition):
         #                                f"learn() method for '{self.name}' {i['are_is']} not in the Composition or any "
         #                                f"nested within it: {', '.join(not_in_comp)}.")
         #
-        #     # Check that all OUTPUT Nodes in the Composition are assigned TARGET Nodes,
-        #     # TEACHER_TARGET BREADCRUMB: DO DIRECT COMPARISON OF targets_from_learn_as_sample_ports WITH TARGET NODES]
-        #     #                            ACCOUNT FOR SPECS AS MECHS VS.OUTPUTPORTS AND AS SAMPLES VS. TARGETS
-        #     TARGET_Nodes_in_comp = self.get_target_nodes(execution_mode, context, base_context)
-        #     num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
-        #     num_targets_specified_in_learn = len(target_specs_from_learn_method)
-        #     # The following assert is justified since all TARGETS are OUTPUT Nodes
-        #     if num_targets_specified_in_learn < num_TARGET_Nodes_in_comp:
-        #         missing_target_specs = sorted([f"'{spec.owner.name}'" for spec in self.sample_port_to_target_port_map
-        #                                        if spec not in targets_from_learn_as_sample_ports])
-        #         i = get_inflections(len(missing_target_specs) > 1)
-        #         # X TEST DONE
-        #         raise CompositionError(f"Specification{i['s']} for the following OUTPUT Node{i['s']} of {i['a']}"
-        #                                f"learnable pathway{i['s']} in '{self.name}' {i['are_is']} missing from the "
-        #                                f"'targets' argument of the call to its learn() method: "
-        #                                f"{' ,'.join(missing_target_specs)}.")
-        #
         #     # Warn for any target specs in **targets** arg of learn() that are also in **inputs** arg
         #     targets_from_learn_as_sample_mechs = [target.owner for target in targets_from_learn_as_sample_ports]
         #     # TEACHER_TARGET BREADCRUMB:
@@ -3301,14 +3144,155 @@ class AutodiffComposition(Composition):
         # return True
 
         # BREADCRUMB:  ??CALL self._canonicalize_target_specs(targets)
+    def _validate_sample_target_specs_from_learn(self, learn_specs, name:str, allow_None_for_target:bool)->dict:
+        """Compare learn_specs with constructor specs for SAMPLEs and TARGETs
+        Issue error for:
+        - missing entries in learn() or ones with a non-numeric value
+            for SAMPLEs specified with the keyword 'TARGET' in the constructor
+        - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
 
-    def _handle_conflicting_sample_specs(self, samples_with_mismatching_specs:list):
-        """Override to handle conflict between values from constructor (Nodes or TARGET) and learn() (numbers)
+        Notes:
+        - validation of SAMPLES happens in _validate_constructor_targets_specs()
+        - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
+          there should be another entry for that SAMPLE
+          that has value == numeric and source = {inputs, inputs[TARGETS or targets}
+        - the total number should = the number of SAMPLE Nodes in the Composition:
+          if too many: bad specs
+          if too few, error (see below)
+        """
+        # call super() to populate self._sample_target_specs with legal entries from learn() and get illegal ones
+        legal_specs, illegal_specs = super()._validate_sample_target_specs_from_learn(learn_specs, name,
+                                                                                      allow_None_for_target)
 
-        Errors handled here:
-        - TARGET value CONFLICTS for same SAMPLE (using different aliases)
-            - Node and numeric value
-            - Node and "TARGET"
+        constructor_specs = self._constructor_target_specs.items()  # specs from **targets** are of constructor
+        if not constructor_specs:
+            return legal_specs, illegal_specs
+
+        bad_specs = []
+        missing_specs = []
+        learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
+        # get SampleTargetSpec from self._sample_target_specs for sample_port
+        #    specified in a dict in *targets* of learn()
+        _get_learn_spec = lambda spec, spec_list : next((item for item in spec_list
+                                                         if (item.sample_port == spec
+                                                             and item.source in learn_dicts)), None)
+        _num_specs = lambda source : len([spec for spec in self._sample_target_specs if spec.source in source])
+        # BREADCRUMB: MOVE THIS TO SampleTargets ONCE THAT IS IMPLEMENTED AS A SUBCLASS OF ContentAddressableLisst
+        # _get_spec_from_learn = lambda spec : (learn_specs[spec] if spec in learn_specs
+        #                                       else (learn_specs[spec.owner] if spec.owner in learn_specs
+        #                                             else (learn_specs[spec.name] if spec.name in learn_specs
+        #                                                   else (learn_specs[spec.owner.name]
+        #                                                         if spec.owner.name in learn_specs
+        #                                                         else None))))
+
+        # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs
+        for sample, target in constructor_specs:
+            # Check if sample is in illegal_specs from learn()
+            learn_spec = _get_learn_spec(sample, illegal_specs)
+            if learn_spec:
+                illegal_specs.remove(learn_spec)
+            else:
+                # Check if sample was in learn()
+                learn_spec = _get_learn_spec(sample, self._sample_target_specs)
+            if learn_spec:
+                # sample specified in learn()
+                learn_sample, learn_target = (learn_spec.sample_port, learn_spec.target_spec)
+                if target == TARGET:
+                    # sample should be specified in learn() with numeric value
+                    if is_numeric(learn_target):
+                        # target in constructor is specified as TARGET, and spec in learn() is correctly numeric
+                        # BREADCRUMB: IS THE FOLLOWING OK SINCE IT IS PASSED IN?
+                        legal_specs.append(learn_spec)
+                    else:
+                        # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
+                        # expected numeric spec for target in learn(), but got non-numeric
+                        bad_specs.append((learn_spec, learn_target,
+                                          f"'TARGET' is assigned as its value in the 'targets' argument of the "
+                                          f"constructor, specifying that its actual value is provided as an input "
+                                          f"in learn(), so the entry for it in the 'targets' argument of learn() "
+                                          f"must be a numeric value (rather than '{learn_spec.target_value})'"))
+                else:
+                    # sample should NOT be specified in learn()
+                    # Got unexpected specification for target in learn() (speccified as Node in constructor)
+                    # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
+                    bad_specs.append((learn_spec, learn_target,
+                                      f"a Node ('{learn_spec.target_spec.full_name}') that provides its target value "
+                                      f"is specified in the 'targets' argument of the constructor, so there should "
+                                      f"be no specification for the SAMPLE in learn()"))
+            else:
+                # sample NOT specified in learn()
+                if target == TARGET:
+                    # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
+                    # Missing numeric specification for target in learn() (specified as TARGET in constructor)
+                    bad_specs.append((learn_spec, learn_target,
+                                      f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
+                                      f"constructor, so it should also be specified in the 'targets argument of the "
+                                      "learn method, and assigned a numeric array (i.e., the value used for training "
+                                      "on each trial."))
+
+        # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
+        # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
+        if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
+            assert len(learn_specs) > len(legal_specs), \
+                "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
+            assert illegal_specs, \
+                "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
+            # X TEST DONE: TOO MANY SPECS IN learn()
+            # specification in learn that does not correspond to any in the constructor
+            for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
+                bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
+                                                           f"in the 'targets' argument of the constructor"))
+
+        # if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
+        #     # target specified in learn() that is is not specifed constructor;
+        #     bad_specs.append((sample, target_spec, f"does not correspond to any sample specified in the 'targets "
+        #                                            f"argument of the constructor"))
+
+        if bad_specs:
+            # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
+            def get_inflections(plural):
+                inflections = {
+                    's': 's' if plural else '',
+                    'not_s': '' if plural else 's',
+                    'a': '' if plural else 'a ',
+                    'an': '' if plural else 'an ',
+                    'the': 'the ' if plural else '',
+                    'are_is': 'are' if plural else 'is',
+                    'have_has': 'have' if plural else 'has',
+                    'entry': 'entries' if plural else 'entry',
+                    'was_were': 'were' if plural else 'was',
+                }
+                return inflections
+            _ = get_inflections(bad_specs)
+            all_bad_specs_str = []
+            sources = []
+            for bad_spec in bad_specs:
+                sources.append(bad_spec[0].source)
+                all_bad_specs_str.append(f"for SAMPLE '{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
+
+            sources = sorted(set(sources))
+            if len(sources) == 1:
+                s = ''
+                source_str = f"'{sources[0]}'"
+            else:
+                s = 's'
+                source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
+                              else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
+            source_str = f"{source_str} argument{s}"
+
+            raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
+                                           f"the following target specification{_['s']} in its {source_str} "
+                                           f"conflict{_['not_s']} with one{_['s']} in the 'targets' argument "
+                                           f"of its consructor: {'; '.join(all_bad_specs_str)}.")
+
+        return legal_specs, illegal_specs
+
+
+    def _handle_conflicting_sample_target_specs(self, samples_with_mismatching_specs:list):
+        """Override to handle conflict between sample specs and/or values from constructor and learn()
+        Handle conflicts between different target values specified for:
+             same SAMPLE Nodes specified in constructor using different references (e.g., mech vs. mech.output_port)
+             SAMPLE in constructor vs. learn() (e.g., Node in constructor vs. numeric value in learn())
         """
         # BREADCRUMB: FROM Composition --- NEED TO ADAPT TO DEAL WITH CONFLICTS BEETWEEN VALUES FROM LEARN (NUMBERS)
         #              AND VALUES FROM CONSTRUCTOR (NODES OR "TARGET")
@@ -3316,16 +3300,18 @@ class AutodiffComposition(Composition):
         # Error for redundant specs with different values
         # -----------------------------------------------
         # prepare strings for warning message
-        all_targets_str = []
-        for target, values in samples_with_mismatching_specs.items():
-            sources_str = ', '.join([f"{t.target_value} in '{t.source}'" for t in self._sample_target_specs
-                                   if t.target_spec is target])
-            all_targets_str.append(f"'{target.name}': [{sources_str}]")
-        full_str = '; '.join(all_targets_str)
+        all_samples_str = []
+        for sample, values in samples_with_mismatching_specs.items():
+            specs_and_sources = [f"{s.target_spec if isinstance( s.target_spec, str) else s.target_spec.full_name} in "
+                                 f"'{s.source}'" for s in self._sample_target_specs
+                                 for value in values if s.sample_port is sample and s.target_spec is value]
+            sources_str = ', '.join(specs_and_sources)
+            all_samples_str.append(f"'{sample.full_name}': {sources_str}")
+        full_str = '; '.join(all_samples_str)
 
         if full_str:
             # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
-            many_conflicts = len(all_targets_str) > 1
+            many_conflicts = len(all_samples_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
             s = 's' if many_conflicts else ''
             multiple = ' multiple' if many_conflicts else ""
@@ -3333,14 +3319,19 @@ class AutodiffComposition(Composition):
             node_s = 's' if many_outputs else ''
             # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
             # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-            sample_nodes = 'OUTPUT'
             # X TEST DONE
+            # # MODIFIED TEACHER_TARGET OLD:
+            # raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
+            #                        f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
+            #                        f"SAMPLE Node{node_s}: {full_str}.")
+            # MODIFIED TEACHER_TARGET NEW:
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
-                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
-                                   f"{sample_nodes} Node{node_s}: {full_str}.")
+                                   f"conflicting specifications for the target value{s} assigned to {one_of}its "
+                                   f"SAMPLE Node{node_s}: {full_str}.")
+            # MODIFIED TEACHER_TARGET END
 
 
-    # def _handle_redundant_sample_target_specs_in_learn(self, key:Literal[SAMPLE, TARGET]):
+    # def _handle_redundant_sample_target_specs(self, key:Literal[SAMPLE, TARGET]):
     #     """Override to deal with specification of TARGET in constructor and value in learn() method"""
     #     # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
     #     TARGET_nodes = self.get_target_nodes()
@@ -3356,7 +3347,7 @@ class AutodiffComposition(Composition):
     #                     f"The learn() method of '{self.name}' can't be executed because no target value is specified "
     #                     f"for '{spec.sample_spec.full_name}'.")
     #
-    #     super()._handle_redundant_sample_target_specs_in_learn()
+    #     super()._handle_redundant_sample_target_specs()
 
     def _check_nested_target_mechs(self):
         pass

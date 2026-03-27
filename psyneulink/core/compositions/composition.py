@@ -9768,7 +9768,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Get sample-target specs from inputs, inputs[TARGETS] and targets dicts - _aggregate_and_filter_sample_target_specs()
         Identify any illegal specifications - _handle_illegal_sample_target_specs_from_learn()
-        Resolve redundant specifications for a given TARGET Node - _handle_redundant_sample_target_specs_in_learn()
+        Resolve redundant specifications for a given TARGET Node - _handle_redundant_sample_target_specs()
            raise error if there are any value conflicts
            issue warning if they all have the same value
         Create targets dict with canonical entries for each TARGET Node in Composition - _canonicalize_target_specs()
@@ -9808,7 +9808,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         illegal_specs = self._aggregate_and_filter_sample_target_specs(targets_dicts)
         if illegal_specs:
             self._handle_illegal_sample_target_specs_from_learn(illegal_specs)
-        self._handle_redundant_sample_target_specs_in_learn()
+        self._handle_redundant_sample_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs()
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9865,7 +9865,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         - Composition passes inputs, inputs[TARGETS] and/or targets from learn() method;
               subclasses may pass others (e.g., AutodiffComposition passes self.targets from its constructor)
         - Redundant specifications, including ones with conflicting values, are left in self._sample_target_specs
-              and handled in _handle_redundant_sample_target_specs_in_learn()
+              and handled in _handle_redundant_sample_target_specs()
         - Illegal specificiations are handled in _handle_illegal_learn_target_specs()
         - Missing specifications are handled in _canonicalize_target_specs()
 
@@ -9963,7 +9963,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return legal_specs, illegal_specs
 
     # # MODIFIED TEACHER_TARGET OLD: SPECIFIC TO TARGETS
-    # def _handle_redundant_sample_target_specs_in_learn(self):
+    # def _handle_redundant_sample_target_specs(self):
     #     """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
     #     Use self._sample_target_specs to identify redundant specs.
     #     Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
@@ -10064,7 +10064,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #         f"obviating the need to specify the 'targets' arg. Redundant specifications for: {full_str}.")
 
     # MODIFIED TEACHER_TARGET NEW: USE SAMPLE INSTEAD OF TARGET
-    def _handle_redundant_sample_target_specs_in_learn(self):
+    def _handle_redundant_sample_target_specs(self):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
         Warning about non-conflicting redundant target_specs, but leave them;
@@ -10073,6 +10073,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Ignore bad individual specs (i.e. ones for which target is None in self._sample_target_specs:
                   they will be handled in _validate_constructor_targets_specs()
         """
+        spec_as_port = lambda spec : (spec if isinstance(spec, OutputPort)
+                                      else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
+                                            else spec))
 
         # Identify redundant specs for SAMPLE-TARGET pairs
         all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
@@ -10088,13 +10091,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for sample_port in [s for s in sample_port_counts if sample_port_counts[s] > 1]:
             # Create list of all target_specs for the sample_port
             # Note: convert values to str to make inside list hashable (counts can only handle one level of unhashables)
-            target_specs = {spec.target_spec: spec.target_port for spec in self._sample_target_specs
-                           if spec.sample_port is sample_port}
+            # # MODIFIED TEACHER_TARGET OLD:
+            # target_specs = {spec.target_spec: spec.target_port for spec in self._sample_target_specs
+            #                if spec.sample_port is sample_port}
+            # # Create histogram of target values and filter for any that have more than one entry
+            # if len(counts(target_specs.values())) > 1:
+            #     sample_ports_with_mismatching_specs.update({sample_port: target_specs})
+            # MODIFIED TEACHER_TARGET NEW:
+            target_specs = [spec_as_port(spec.target_spec) for spec in self._sample_target_specs
+                            if spec.sample_port is sample_port]
             # Create histogram of target values and filter for any that have more than one entry
-            if len(counts(target_specs.values())) > 1:
+            if len(counts(target_specs)) > 1:
                 sample_ports_with_mismatching_specs.update({sample_port: target_specs})
+            # MODIFIED TEACHER_TARGET END
 
-        self._handle_conflicting_sample_specs(sample_ports_with_mismatching_specs)
+        self._handle_conflicting_sample_target_specs(sample_ports_with_mismatching_specs)
+        # self._handle_conflicting_target_specs(sample_ports_with_mismatching_specs)
 
         # Warning for redundant specifications:
         # -----------------------------------------------
@@ -10197,8 +10209,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # MODIFIED TEACHER_TARGET END
 
 
-    def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
-        """Raise error for redundant specs with different values"""
+    # def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
+    def _handle_conflicting_sample_target_specs(self, targets_with_mismatching_specs:list):
+        """Raise error for redundant sample and/or target specs with different target values"""
         all_targets_str = []
         for target, values in targets_with_mismatching_specs.items():
             sources_str = ', '.join([f"{t.target_value} in '{t.source}'" for t in self._sample_target_specs
@@ -10240,7 +10253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - if there is a sample_port specification for it already in targets, use that;
           - otherwise, find the first entry in self._sample_target_specs that corresponds to it, and use that value
               (Note: this is OK, because any redundant specs were determined to use the same value
-              in _handle_redundant_sample_target_specs_in_learn()
+              in _handle_redundant_sample_target_specs()
           - if a spec for the TARGET is not found in self._sample_target_specs, give it the value 'MISSING'
               that will be used to generate an error in _validate_constructor_targets_specs()
           - pass along any bad specs (e.g., that are not for TARGET Nodes)
@@ -10254,8 +10267,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Convert any name (str) specs to the corresponding Node
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
-        targets = {(nodes_in_comp[t.target_spec] if isinstance(t.target_spec, str) else t.target_spec): t.target_value
-                   for t in self._sample_target_specs}
+        targets = {(nodes_in_comp[t.target_spec] if isinstance(t.target_spec, str) and t.target_spec != TARGET
+                    else t.target_spec): t.target_value for t in self._sample_target_specs}
 
         canonicalized_target_specs = {}
         sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
@@ -10308,7 +10321,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
     # BREADCRUMB: HOW MUCH OF THIS IS STILL NEEDED?
-    # BREADCRUMB: CALL THIS FROM OR AFTER _validate_constructor_targets_specs() IN AUTODIFF?
+    # BREADCRUMB: CALL THIS FROM OR AFTER _validate_constXructor_targets_specs() IN AUTODIFF?
     def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
         """Handle illegal entries in **targets** argument in learn() method
 
@@ -10327,7 +10340,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (e.g., by AutodiffCompostion._check_for_orphaned_learnable_projections()
         - redundant specs are identified in _evaluate_redundant_learn_target_specs()
           - conflicting specs raise an error _handle_conflicting_target_specs()
-          - non conflicting redundant specs elicit a warning in _handle_redundant_sample_target_specs_in_learn()
+          - non conflicting redundant specs elicit a warning in _handle_redundant_sample_target_specs()
             and are eliminated in _canonicalize_target_specs()
         """
 
@@ -10369,15 +10382,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif NodeRole.INPUT in roles:
                     assert NodeRole.TARGET not in roles, \
                         f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
-                    error_message = "INPUT Node other than a TARGET"
+                    error_message = "INPUT Node that is not a TARGET Node"
                 elif NodeRole.INTERNAL in roles:
-                    error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition"
+                    error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
                 elif not isinstance(spec, OutputPort):
                     error_message = f"{spec.componentType}"
                 else:
                     assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
                 spec_ref = spec.full_name
             else:
+                # Not in Composition
                 if isinstance(spec, (Port, ProcessingMechanism_Base)):
                     error_message = f"not in '{self.name}'"
                     spec_ref = spec.full_name
