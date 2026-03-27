@@ -10318,8 +10318,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
-    # BREADCRUMB: HOW MUCH OF THIS IS STILL NEEDED?
-    # BREADCRUMB: CALL THIS FROM OR AFTER _validate_constXructor_targets_specs() IN AUTODIFF?
     def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
         """Handle illegal entries in **targets** argument in learn() method
 
@@ -10428,7 +10426,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #  not a recognizable target or sample specification
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there {are_is} "
                                    f"the following illegal specification{s} its {source_str}: {full_str}.")
-
 
     def _parse_generator_function(self, inputs):
         """
