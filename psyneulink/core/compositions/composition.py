@@ -9929,6 +9929,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       _validate_sample_target_specs_from_learn()
                       _handle_conflicting_sample_target_specs()
           - Missing sample-target specifications are deteceted and reported in _canonicalize_target_specs()
+            (this ensures that # of specifications = # of learnable pathways)
         """
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
         nodes_in_comp = self._get_all_nodes(content_addressable=True)

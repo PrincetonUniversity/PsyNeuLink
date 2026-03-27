@@ -2797,25 +2797,6 @@ class AutodiffComposition(Composition):
             (at time of construction); compatibilty with specfications in the *targets* argument of learn()
             are handled in _validate_sample_target_specs_from_learn()
         """
-
-        # BREADCRUMB ??KEEP OR KILL:
-        # Checks here ensure that:
-        # - number must equal number of learnable pathways                      <- MOVE TO CONSTRUCTOR?
-        # # Use assert here since the number of Comparator or LossMechanisms constructed should
-        # #   equal the number of **targets** specified in the constructor and any disparities
-        # #   (e.g., due orphaned_learnable_projections) in _instantiate_loss_components() of AutodiffComposition
-        # assert num_constructor_target_specs == len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)),\
-        #     (f"PROGRAM ERROR: The number of sample-target pairs ({num_constructor_target_specs}) specified in "
-        #      f"the 'targets' argument of the constructor for '{self.name}' should equal the number of "
-        #      f"LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
-
-        # Error checks:
-        # BREADCRUMB: ??WHERE ARE THESE TESTS NOW?
-        # - number of **targets** in learn() equals number of TARGET Nodes in the Composition learnable pathways
-        # - number of **targets** in learn() equals number of learnable pathways
-
-        # BREADCRUMB:  ??CALL self._canonicalize_target_specs(targets)
-
         # TEACHER_TARGET BREADCRUMB: MOVE THIS TO globals utlities
         spec_as_mech = lambda spec : (spec.owner if isinstance(spec, OutputPort) else spec)
         def get_inflections(plural):
