@@ -837,7 +837,7 @@ class NodeRolesManager(object):
             self._determine_node_roles()
         return self.nodes_to_roles
 
-    # TEACHER_TARGET BREADCRUMB: NEED TO HANDLE FAILURE TO FIND NESTED NODE
+    # TEACHER_TARGET BREADCRUMB: CONSOLIDATE THIS WITH EXCLUDE_ROLES AS INTERNAL METHOD AND CREATE ALIASES THAT ALL IT
     def require_node_roles(self,
                            node:Mechanism_Base,
                            roles:Union[list, NodeRole],
@@ -850,27 +850,45 @@ class NodeRolesManager(object):
         Arguments
         _________
 
-        node : `Node <Composition_Nodes>`
-            `Node <Composition_Nodes>` to which **role** should be assigned.
+        node : Node
+            Node to which **role** should be assigned.
+
+        roles : NodeRole or list[NodeRole]
+            NodeRole(s) to assign to **node**.
 
         scope : `ALL` or None
             specifies whether the NodeRole(s) are assigned to nodes only at the top level of the Composition,
             or any nested within it.
 
-        roles : `NodeRole` or list[`NodeRole`]
-            `NodeRole`\\(s) to assign to **node**.
+        context : Context : default None
         """
 
         def _assign_required_roles(node, node_role_mgr, roles):
             for role in roles:
                 node_role_mgr._add_required_node_role(node, role, context)
-                node_role_mgr._need_determine_node_roles = True
+            node_role_mgr._need_determine_node_roles = True
 
         roles = convert_to_list(roles)
         bad_roles = [f"'{role.name}'" for role in roles if role not in NodeRole]
+        plural = len(bad_roles) > 1
+        s = 's' if plural else ''
+        are_is = 'are' if plural else 'is'
         if bad_roles:
-            raise NodeRoleError(f"The call to the require_node_roles() method of '{self.owner.name}' contained the "
-                                f"following specifications that are not NodeRoles: {','.join(bad_roles)}.")
+            raise NodeRoleError(f"The following invalid NodeRole{s} {are_is} specified for '{node.name}' in the "
+                                f"require_node_roles() of '{self.owner.name}': {','.join(bad_roles)}.")
+
+        prohibited_roles = [f"'{role.name}'" for role in roles if
+                            (context.source == ContextFlags.COMMAND_LINE and
+                             role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON,
+                                      NodeRole.TERMINAL, NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER,
+                                      NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING})]
+        if prohibited_roles:
+            plural = len(prohibited_roles) > 1
+            s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
+            raise NodeRoleError(f"Attempt to require the following NodeRole{s} for '{node.name}' (in '{self.name}') "
+                                f"that cannot be modified by user: {', '.join(prohibited_roles)}.")
+
 
         # Look for node in Composition (at top level only if there are nested Compositions)
         if node in self.owner.nodes:
@@ -879,7 +897,7 @@ class NodeRolesManager(object):
             return
 
         if scope == ALL:
-            # Search for node in nested Compositions if there are any and it was not found at the top level
+            # Search for node in nested Compositions if there are any, and node was not found at the top level
             nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
                                             ((None,None)))
             if nested_node:
@@ -894,49 +912,85 @@ class NodeRolesManager(object):
         raise NodeRoleError(f"The call to the require_node_roles() method of '{self.owner.name}' contained a "
                             f"node '{node.name}' that is not in the Composition{nested_str}.")
 
-    # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS AS FOR require_node_roles
-    def exclude_node_roles(self, node:Mechanism_Base, roles:list,
+    def exclude_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:list,
+                           scope:Optional[Literal[ALL]]=None,
                            context=None)->list:
+        """Exclude the NodeRole(s) specified in **roles** from being assigned to **node**.
+        Remove specified roles if they had previously been assigned either by default as a required_node_role
+        or using the required_node_roles() method.
+
+        Arguments
+        _________
+
+        node : Node
+            Node from which **role** should be removed and excluded
+
+        roles : NodeRole or list[NodeRole]
+            NodeRole(s) to remove and/or exclude from **node**.
+
+        context : Context : default None
         """
-            Exclude the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
+        def _exclude_roles(node, node_roles_mgr, roles):
+            for role in roles:
+                node_role_pair = (node, role)
+                if node_role_pair not in node_roles_mgr.excluded_node_roles:
+                    node_roles_mgr.excluded_node_roles.append(node_role_pair)
+                if node_role_pair in self.required_node_roles:
+                    node_roles_mgr.required_node_roles.remove(node_role_pair)
+                node_roles_mgr._remove_node_role(node, role)
+            node_roles_mgr._need_determine_node_roles = True
 
-            Remove specified roles if they had previously been assigned either by default as a `required_node_role
-            <Composition_Node_Role_Assignment>` or using the `required_node_roles <Composition.required_node_roles>`
-            method.
-
-            Arguments
-            _________
-
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` from which **role** should be removed.
-
-            roles : `NodeRole` or list[`NodeRole`]
-                `NodeRole`\\(s) to remove and/or exclude from **node**.
-        """
         roles = convert_to_list(roles)
-        for role in roles:
-            if role not in NodeRole:
-                raise NodeRoleError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
 
-            # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-            if (context.source == ContextFlags.COMMAND_LINE and
-                    role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                             NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
-                raise NodeRoleError(f"Attempt to exclude {role} (from {node} of {self.name})"
-                                       f"that cannot be modified by user.")
-            node_role_pair = (node, role)
-            if node_role_pair not in self.excluded_node_roles:
-                self.excluded_node_roles.append(node_role_pair)
-            if node_role_pair in self.required_node_roles:
-                self.required_node_roles.remove(node_role_pair)
-            self._remove_node_role(node, role)
+        bad_roles = [f"'{role.name}'" for role in roles if role not in NodeRole]
+        if bad_roles:
+            plural = len(bad_roles) > 1
+            s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
+            raise NodeRoleError(f"The following invalid NodeRole{s} {are_is} specified for '{node.name}' in the "
+                                f"exclude_node_roles() of '{self.owner.name}': {', '.join(bad_roles)}.")
 
-        self._need_determine_node_roles = True
+        prohibited_roles = [f"'{role.name}'" for role in roles if
+                            (context.source == ContextFlags.COMMAND_LINE and
+                             role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON,
+                                      NodeRole.TERMINAL, NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER,
+                                      NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING})]
+        if prohibited_roles:
+            plural = len(prohibited_roles) > 1
+            s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
+            raise NodeRoleError(f"Attempt to exclude the following NodeRole{s} from '{node.name}' (in '{self.name}') "
+                                f"that cannot be modified by user: {', '.join(prohibited_roles)}.")
+
+        # Look for node in Composition (at top level only if there are nested Compositions)
+        if node in self.owner.nodes:
+            # node is in top level of Composition
+            _exclude_roles(node, self, roles)
+            return
+
+        if scope == ALL:
+            # Search for node in nested Compositions if there are any, and node was not found at the top level
+            nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
+                                            ((None,None)))
+            if nested_node:
+                _exclude_roles(nested_node, nested_comp.node_roles_mgr, roles)
+                return
+            nested_str = f"or any nested within it"
+
+        else:
+            # node not found in Composition (and not searched in nested Compositions if there are any)
+            nested_str = f""
+
+        raise NodeRoleError(f"The call to the require_node_roles() method of '{self.owner.name}' contained a "
+                            f"node '{node.name}' that is not in the Composition{nested_str}.")
 
     def get_nodes_by_role(self, *args, **kwargs):
         """Interface to get_nodes_by_role that enforces prior call to _determine_node_roles
         This should be used in general,
-           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion.
+       """
         if self._need_determine_node_roles:
             self._determine_node_roles()
         return self._get_nodes_by_role(*args, **kwargs)

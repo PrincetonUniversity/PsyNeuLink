@@ -3951,7 +3951,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._sample_target_pairs = [] # SampleTargetPair tuples for SAMPLE and TARGET Nodes used for learning
         self._sample_target_specs = [] # SampleTargetSpec tuples for all specifications for SAMPLE and TARGET Nodes
                                        #   made in the the inputs and/or **targets** arguments of learn()
-                                       #   and possibly the **targets** argument of sbuclass constructors
+                                       #   and possibly the **targets** argument of subclass constructors
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
 
@@ -4734,27 +4734,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 result.reverse()
                 return result
 
-    # BREADCRUMB: ADD OPTION TO EXCLUDE COMPOSITIONS
+    # BREADCRUMB: ADD OPTION TO EXCLUDE COMPOSITIONS AND THEN ADD _get_all_mechasnisms() ALIAS THAT CALLS IT SO
     def _get_all_nodes(self,
-                       # # MODIFIED_TEACHER_TARGET OLD:
-                       # include_cims=False,
-                       # include_controller=False,
-                       # MODIFIED_TEACHER_TARGET OLD:
                        include_cims=NotImplemented,
                        include_controller=NotImplemented,
-                       # MODIFIED_TEACHER_TARGET END
                        content_addressable=False)->list:
-        """Return all nodes, including those within nested Compositions at any level
-        Note:  this is both more flexible and inclusive than the _all_nodes property,
-               which obligately includes cims and controller but returns nodes only from the top level (ie., not nested)
+        """Return all Mechanisms, including those within nested Compositions at any level
+        Notes:
+        - This is distincly different from _all_nodes property, which obligately includes cims and controller,
+          and includes nested Compositions, and does so only from the top level (ie., not any that are nested)
+        - It is named "_get_all_nodes" (even though it only returns Mechanisms) to be compatible with other classes
+          that have flat grophs (e.g., PytorchCompositionWrapper) and that can be called in some simlar contexts
+          (e.g., as agent_rep for OptimizationControlMechanism).
         """
-        # MODIFIED TEACHER_TARGET OLD:
         cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
         controller = [self.controller] if include_controller is not NotImplemented and self.controller else []
-        # # MODIFIED TEACHER_TARGET NEW:
-        # cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims else []
-        # controller = [self.controller] if include_controller and self.controller else []
-        # MODIFIED TEACHER_TARGET END
         all_nodes = ([k[0] for k in
                       self._get_nested_nodes(include_cims=include_cims,
                                              include_controller=include_controller)
@@ -5709,13 +5703,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node : `Node <Composition_Nodes>`
             `Node <Composition_Nodes>` to which **role** should be assigned.
 
+        roles : `NodeRole` or list[`NodeRole`]
+            `NodeRole`\\(s) to assign to **node**.
+
         scope : `ALL` or None : default None
             specifies whether **roles** are assigned to the **node** only if it is at the top level of the Composition
             or, if *ALL*, then any nested within it.
 
-        roles : `NodeRole` or list[`NodeRole`]
-            `NodeRole`\\(s) to assign to **node**.
-
+        context : Context : default None
         """
         self.node_roles_mgr.require_node_roles(node, roles, scope, context)
 
@@ -5740,13 +5735,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         roles : `NodeRole` or list[`NodeRole`]
             `NodeRole`\\(s) to remove and/or exclude from **node**.
+
+        scope : `ALL` or None : default None
+            specifies whether **roles** are assigned to the **node** only if it is at the top level of the Composition
+            or, if *ALL*, then any nested within it.
+
+        context : Context : default None
         """
-        self.node_roles_mgr.exclude_node_roles(node, roles, context)
+        self.node_roles_mgr.exclude_node_roles(node, roles, scope, context)
 
     def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->list:
         """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
         If **scope** is not specified, searches for and returns only nodes at top level of the Composition.
-        If **scope** is ALL, includes nodes in top level Composition and any nested within it.
+        If **scope** is *ALL*, includes nodes in top level Composition and any nested within it.
 
         Arguments
         _________
