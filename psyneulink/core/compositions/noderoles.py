@@ -837,28 +837,66 @@ class NodeRolesManager(object):
             self._determine_node_roles()
         return self.nodes_to_roles
 
-    def require_node_roles(self, node: object, roles: object, context: object = None) -> None:
+    # TEACHER_TARGET BREADCRUMB: NEED TO HANDLE FAILURE TO FIND NESTED NODE
+    def require_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:Union[list, NodeRole],
+                           scope:Optional[Literal[ALL]]=None,
+                           context:Context=None) -> bool:
+        """Assign the NodeRole(s) specified in **roles** to **node**.
+        Remove exclusion of those NodeRoles if it any had previously been specified in exclude_node_roles
+        Search recursively for Node if scope==ALL
+
+        Arguments
+        _________
+
+        node : `Node <Composition_Nodes>`
+            `Node <Composition_Nodes>` to which **role** should be assigned.
+
+        scope : `ALL` or None
+            specifies whether the NodeRole(s) are assigned to nodes only at the top level of the Composition,
+            or any nested within it.
+
+        roles : `NodeRole` or list[`NodeRole`]
+            `NodeRole`\\(s) to assign to **node**.
         """
-            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
-            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
 
-            Arguments
-            _________
+        def _assign_required_roles(node, node_role_mgr, roles):
+            for role in roles:
+                node_role_mgr._add_required_node_role(node, role, context)
+                node_role_mgr._need_determine_node_roles = True
 
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` to which **role** should be assigned.
-
-            roles : `NodeRole` or list[`NodeRole`]
-                `NodeRole`\\(s) to assign to **node**.
-
-        """
-        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
         roles = convert_to_list(roles)
-        for role in roles:
-            self._add_required_node_role(node, role, context)
-        self._need_determine_node_roles = True
+        bad_roles = [f"'{role.name}'" for role in roles if role not in NodeRole]
+        if bad_roles:
+            raise NodeRoleError(f"The call to the require_node_roles() method of '{self.owner.name}' contained the "
+                                f"following specifications that are not NodeRoles: {','.join(bad_roles)}.")
 
-    def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
+        # Look for node in Composition (at top level only if there are nested Compositions)
+        if node in self.owner.nodes:
+            # node is in top level of Composition
+            _assign_required_roles(node, self, roles)
+            return
+
+        if scope == ALL:
+            # Search for node in nested Compositions if there are any and it was not found at the top level
+            nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
+                                            ((None,None)))
+            if nested_node:
+                _assign_required_roles(nested_node, nested_comp.node_roles_mgr, roles)
+                return
+            nested_str = f"or any nested within it"
+
+        else:
+            # node not found in Composition (and not searched in nested Compositions if there are any)
+            nested_str = f""
+
+        raise NodeRoleError(f"The call to the require_node_roles() method of '{self.owner.name}' contained a "
+                            f"node '{node.name}' that is not in the Composition{nested_str}.")
+
+    # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS AS FOR require_node_roles
+    def exclude_node_roles(self, node:Mechanism_Base, roles:list,
+                           context=None)->list:
         """
             Exclude the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
 

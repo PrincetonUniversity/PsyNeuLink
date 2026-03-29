@@ -843,6 +843,7 @@ from psyneulink.core.compositions.report import (ReportOutput, ReportParams, Rep
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
+    ALL,
     AUTODIFF_COMPOSITION,
     DEFAULT,
     DEFAULT_LEARNING_RATE,
@@ -884,7 +885,7 @@ __all__ = [
 
 OPTIMIZER_PARAMS = 'optimizer_params'
 EXCLUDE_FROM_GRADIENT_CALC = 'exclude_from_gradient_calc'
-CONSTRUCTOR_TARGETS = 'autodiff_constructor_targets'
+CONSTRUCTOR_TARGETS = "AutodiffComposition constructor 'targets'"
 
 SynchRetainArg = Optional[Union[LearningScale, str]]
 
@@ -1320,6 +1321,7 @@ class AutodiffComposition(Composition):
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
+        self._constructor_target_specs = {}
         self.optimizer_type = optimizer_type
         self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
         self._runtime_learning_rate = None
@@ -1406,16 +1408,6 @@ class AutodiffComposition(Composition):
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
         self.pytorch_backprop_pathways = self._get_pytorch_backprop_pathways(context)
-        # # MODIFIED TEACHER_TARGET OLD:
-        # self._num_learnable_pathways = len([pway for pway in pathways
-        #                                     if any(item.learnable for item in pway
-        #                                             if isinstance(item, MappingProjection))])
-        # # # MODIFIED TEACHER_TARGET NEW:
-        # self._num_learnable_pathways = len([pway for pway in pathways
-        #                                     if (not isinstance(pway[-1], LossMechanism) and
-        #                                         any(item.learnable for item in pway
-        #                                             if isinstance(item, MappingProjection)))])
-        # MODIFIED TEACHER_TARGET END
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
@@ -1786,7 +1778,6 @@ class AutodiffComposition(Composition):
         target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
         self._validate_loss_mech_specs(loss_mech_specs, context)
         self._parse_constructor_targets_specs()
-
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
@@ -1930,11 +1921,9 @@ class AutodiffComposition(Composition):
                                                               target_port, target_spec, None,
                                                               CONSTRUCTOR_TARGETS))
 
-            self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
+            self.require_node_roles(sample_mech, NodeRole.SAMPLE, context=context)
 
         self._validate_constructor_targets_specs()
-
-        # return loss_mech_specs, target_mechs
 
     def _instantiate_default_targets(self, pathways:list, context, base_context)->tuple[list,list]:
         """Construct default TARGET Nodes (since none were specified in **targets** arg of constructor
@@ -1995,7 +1984,8 @@ class AutodiffComposition(Composition):
                     target_mech._initialize_from_context(context, base_context, override=False)
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
-                self.require_node_roles(output_port_for_learning.owner, NodeRole.SAMPLE, context)
+                # TEACHER_TARGET BREADCRUMB: require_node_roles() NEEDS TO HANDLE SCOPE, TO ASSIGN TO NESTED NODES
+                self.require_node_roles(output_port_for_learning.owner, NodeRole.SAMPLE, ALL, context)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
         assert len(output_ports_for_learning) == len(target_mechs), \
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
@@ -2771,7 +2761,6 @@ class AutodiffComposition(Composition):
         Register samples and targets from LossMechanism specs in loss_mechs_map
         Note: specs have been validated in _validate_targets() for autodiffcomposition.parameters.targets
         """
-        self._constructor_target_specs = {}
         spec_as_ouputport = lambda spec : (spec if isinstance(spec, OutputPort)
                                            else (spec.output_port if isinstance(spec, ProcessingMechanism)
                                                  else spec))
@@ -2818,15 +2807,19 @@ class AutodiffComposition(Composition):
         nodes_in_comp =  self._get_all_nodes()
         not_in_comp = []
         # Get entries in **targets** of constructor for Nodes that are not in the Composition
+        # Note: ignore any specified LossMechanisms; they are added in _instantiate_loss_mechanisms()
         for _, sample, _, target, _, _ in self._sample_target_specs:
-            not_in_comp.append(f"'{sample.full_name}'") if sample not in nodes_in_comp else ''
-            not_in_comp.append(f"'{target.full_name}'") if target not in nodes_in_comp and target != TARGET else ''
+            if spec_as_mech(sample) not in nodes_in_comp and not isinstance(sample, LossMechanism):
+                not_in_comp.append(f"'{sample.full_name}'")
+            if spec_as_mech(target) not in nodes_in_comp and not isinstance(target, LossMechanism) and target != TARGET:
+                not_in_comp.append(f"'{target.full_name}'")
         if not_in_comp:
+            not_in_comp = sorted(set(not_in_comp))
             _ = get_inflections(len(not_in_comp) > 1)
             # X TEST DONE
             raise CompositionError(f"The following specification{_['s']} in the 'targets' argument of the "
                                    f"constructor for '{self.name}' {_['are_is']} not in the Composition or any "
-                                   f"nested within it: {', '.join(sorted(not_in_comp))}.")
+                                   f"nested within it: {', '.join(not_in_comp)}.")
 
     def _validate_sample_target_specs_from_learn(self, learn_specs, name:str, allow_None_for_target:bool)->dict:
         """Compare learn_specs with constructor specs for SAMPLEs and TARGETs
@@ -2854,12 +2847,11 @@ class AutodiffComposition(Composition):
 
         bad_specs = []
         missing_specs = []
-        learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
         # get SampleTargetSpec from self._sample_target_specs for sample_port
         #    specified in a dict in *targets* of learn()
         _get_learn_spec = lambda spec, spec_list : next((item for item in spec_list
                                                          if (item.sample_port == spec
-                                                             and item.source in learn_dicts)), None)
+                                                             and item.source in self._learn_dicts)), None)
         _num_specs = lambda source : len([spec for spec in self._sample_target_specs if spec.source in source])
         # BREADCRUMB: MOVE THIS TO SampleTargets ONCE THAT IS IMPLEMENTED AS A SUBCLASS OF ContentAddressableLisst
         # _get_spec_from_learn = lambda spec : (learn_specs[spec] if spec in learn_specs
@@ -2880,14 +2872,21 @@ class AutodiffComposition(Composition):
                 learn_spec = _get_learn_spec(sample, self._sample_target_specs)
             if learn_spec:
                 # sample specified in learn()
-                learn_sample, learn_target = (learn_spec.sample_port, learn_spec.target_spec)
+                learn_sample, learn_target, learn_value = (learn_spec.sample_port,
+                                                           learn_spec.target_spec,
+                                                           learn_spec.target_value)
                 if target == TARGET:
                     # sample should be specified in learn() with numeric value
-                    if is_numeric(learn_target):
-                        # target in constructor is specified as TARGET, and spec in learn() is correctly numeric
-                        # BREADCRUMB: IS THE FOLLOWING OK SINCE IT IS PASSED IN?
-                        legal_specs.append(learn_spec)
-                    else:
+                    # # MODIFIED TEACHER_TARGET OLD:
+                    # if is_numeric(learn_value):
+                    #     # target in constructor is specified as TARGET, and spec in learn() is correctly numeric
+                    #     # BREADCRUMB: IS THE FOLLOWING OK SINCE IT IS PASSED IN?
+                    #     # legal_specs.update({learn_spec: learn_value})
+                    #     pass
+                    # else:
+                    # MODIFIED TEACHER_TARGET NEW:
+                    if not is_numeric(learn_value):
+                    # MODIFIED TEACHER_TARGET END
                         # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
                         # expected numeric spec for target in learn(), but got non-numeric
                         bad_specs.append((learn_spec, learn_target,
@@ -2914,23 +2913,22 @@ class AutodiffComposition(Composition):
                                       "learn method, and assigned a numeric array (i.e., the value used for training "
                                       "on each trial."))
 
-        # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
-        # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
-        if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
-            assert len(learn_specs) > len(legal_specs), \
-                "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
-            assert illegal_specs, \
-                "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
-            # X TEST DONE: TOO MANY SPECS IN learn()
-            # specification in learn that does not correspond to any in the constructor
-            for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
-                bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
-                                                           f"in the 'targets' argument of the constructor"))
-        # if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
-        #     # target specified in learn() that is is not specifed constructor;
-        #     bad_specs.append((sample, target_spec, f"does not correspond to any sample specified in the 'targets "
-        #                                            f"argument of the constructor"))
-
+        # # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
+        # # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
+        # if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
+        #     assert len(learn_specs) > len(legal_specs), \
+        #         "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
+        #     assert illegal_specs, \
+        #         "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
+        #     # X TEST DONE: TOO MANY SPECS IN learn()
+        #     # specification in learn that does not correspond to any in the constructor
+        #     for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
+        #         bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
+        #                                                    f"in the 'targets' argument of the constructor"))
+        if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
+            # target specified in learn() that is is not specifed constructor;
+            bad_specs.append((sample, target_spec, f"does not correspond to any sample specified "
+                                                   f"in the 'targets argument of the constructor"))
 
 
         if bad_specs:
@@ -2971,6 +2969,21 @@ class AutodiffComposition(Composition):
                                            f"of its consructor: {'; '.join(all_bad_specs_str)}.")
 
         return legal_specs, illegal_specs
+
+    def _get_redundant_sample_target_specs(self):
+        """Override to allow specification of TARGET in constructor and required numeric value in learn()"""
+        all_redundant_specs = super()._get_redundant_sample_target_specs()
+        for spec in all_redundant_specs:
+            # Get target_spec and target_value for each of the redundant specs
+            redundant_specs = [s for s in self._sample_target_specs if s.sample_port is spec]
+            if len(redundant_specs) == 2:
+                constructor_spec, learn_spec = redundant_specs
+                if (constructor_spec.target_spec == TARGET
+                        and constructor_spec.source == CONSTRUCTOR_TARGETS
+                        and learn_spec.source != CONSTRUCTOR_TARGETS
+                        and is_numeric(learn_spec.target_value)):
+                    all_redundant_specs.remove(spec)
+        return all_redundant_specs
 
     def _handle_conflicting_sample_target_specs(self, samples_with_mismatching_specs:list):
         """Override to handle conflict between sample specs and/or values from constructor and learn()

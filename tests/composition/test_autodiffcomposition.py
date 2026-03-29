@@ -384,7 +384,7 @@ class TestAutodiffTargetSpecs:
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
-        # TEACHER_TARGET BREACRUMB: UNCOMMENT WHEN DONE DEBUGGING
+        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
         "default",
         "internal",
         "external",
@@ -395,7 +395,11 @@ class TestAutodiffTargetSpecs:
         input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
         output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
         teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
-        expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001], [0.0, 0.0, 0.0, 0.0, 0.0]]
+        if target_spec in {'internal', 'loss_mech'}: # In these cases, 'TEACHER MECH' is SINGLETON, and thus an OUTPUT
+            expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
+        else:   # In these cases, 'TEACHER MECH' is a TARGET Node that projects to LossMechanism, and so not an OUTPUT
+            expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001], [0.0, 0.0, 0.0, 0.0, 0.0]]
+        # expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
         if target_spec == "default":
             targets_constructor_arg = None
         elif target_spec == "internal":
@@ -2305,7 +2309,7 @@ class TestTrainingCorrectness:
         np.testing.assert_allclose(pnl_sample_after_learning, torch_sample_after_learning)
         np.testing.assert_allclose(pnl_target_after_learning, torch_target_after_learning)
         np.testing.assert_allclose(pnl_outputs_after_learning, torch_out_after_learning)
-        np.testing.assert_allclose(pnl_results_after_learning[0], torch_out_after_learning)
+        np.testing.assert_allclose(pnl_results_after_learning, torch_out_after_learning)
         np.testing.assert_allclose(pnl_sample_wts_after_learning, torch_sample_wts_after_learning.T)
         np.testing.assert_allclose(pnl_target_wts_after_learning, torch_target_wts_after_learning.T)
         np.testing.assert_allclose(pnl_out_wts_after_learning, torch_out_wts_after_learning.T)
@@ -4340,6 +4344,7 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.parametrize(
         'loss, expected', [
+            # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
             pytest.param(Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]], marks=pytest.mark.llvm_not_implemented),
             pytest.param(Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]], marks=pytest.mark.llvm_not_implemented),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
