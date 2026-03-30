@@ -2653,16 +2653,13 @@ class AutodiffComposition(Composition):
             for learn_sample in learn_method_args:
                 for constructor_sample, constructor_target in [spec for spec in constructor_args]:
                     if learn_sample is constructor_sample and constructor_target is not TARGET:
-                        # uncessary_sample_specs_in_learn.append(f"'{learn_sample.full_name}'")
-                        uncessary_sample_specs_in_learn.append(learn_sample)
+                        uncessary_sample_specs_in_learn.append(f"'{learn_sample.name}'")
                 if uncessary_sample_specs_in_learn:
-                    unnecesary_specs_as_specified_in_targets = [spec.full_name if spec in targets else spec.owner.name
-                                                                for spec in uncessary_sample_specs_in_learn]
                     raise AutodiffCompositionError(
-                        f"The following Node(s), specified in the 'targets' argument of the constructor for "
+                        f"The following node(s), specified in the /targets' argument of the constructor for "
                         f"'{self.name}' as samples that receive their target values from another node, should "
                         f"not be included in the dict specified in the 'targets' argument of the learn() method: "
-                        f"{', '.join(unnecesary_specs_as_specified_in_targets)}.")
+                        f"{', '.join(uncessary_sample_specs_in_learn)}.")
 
             # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
             # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
