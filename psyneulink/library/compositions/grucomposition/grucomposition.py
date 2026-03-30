@@ -310,7 +310,7 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.composition import CompositionError, SampleTargetSpec, SampleTargetPair
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1143,7 +1143,8 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.sample_target_pairs = [(self.gru_mech, self.gru_mech.output_port, target_mech, target_mech.output_port)]
+        self._sample_target_pairs = [SampleTargetPair(self.gru_mech, self.gru_mech.output_port,
+                                                     target_mech, target_mech.output_port)]
         return [target_mech]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
@@ -1231,6 +1232,9 @@ class GRUComposition(AutodiffComposition):
             raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
+    def _get_nested_nodes(self, *args, **kwargs):
+        return [(self.gru_mech, self)] if self.gru_mech else []
+
     def add_projection(self, *args, **kwargs):
         """Override if called from command line to disallow modification of GRUComposition"""
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
@@ -1259,7 +1263,6 @@ class GRUComposition(AutodiffComposition):
         the direct pathway through the GRU mechanism (i.e., self.gru_mech), and no explicilty learnable Projections
         (since that occurs within the Pytorch module itself"""
         return 1
-
 
     @property
     def w_ih_learning_rate(self):

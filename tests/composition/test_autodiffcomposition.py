@@ -462,12 +462,13 @@ class TestAutodiffTargetSpecs:
             "'autodiff_composition', since there are no learnable Projections in any of the pathways that project "
             "to that Node.", AutodiffCompositionError),
         1: (f"The following specification in the 'targets' argument of the constructor for 'autodiff_composition' "
-            f"is not in the Composition or any nested within it: 'MECH NOT IN COMP[OutputPort-0]'.", CompositionError),
-        2: (f"Value ([((OutputPort OutputPort-0), (MappingProjection PROJ IN COMPOSITION)), "
-            f"((OutputPort OutputPort-0), (OutputPort OutputPort-0)), ((OutputPort OutputPort-0), "
-            f"(OutputPort OutputPort-0))]) assigned to parameter 'targets' of "
-            f"(AutodiffComposition autodiff_composition).parameters is not valid: target specificadtion must be "
-            f"an OutputPort, ProcessingMechanism or the keyword 'TARGET'.", ParameterError),
+             f"is not in the Composition or any nested within it: 'MECH NOT IN COMP'.", CompositionError),
+        2: (f"Value ([((ProcessingMechanism pway1_mech_C), (MappingProjection PROJ IN COMPOSITION)), "
+            f"((ProcessingMechanism pway2_mech_C), (ProcessingMechanism pway2_mech_T)), "
+            f"((ProcessingMechanism pway3_mech_C), (ProcessingMechanism pway3_mech_T))]) "
+            f"assigned to parameter 'targets' of (AutodiffComposition autodiff_composition).parameters is not valid: "
+            f"target specificadtion must be an OutputPort, ProcessingMechanism or the keyword 'TARGET' "
+            f"(got: (MappingProjection PROJ IN COMPOSITION)).", ParameterError),
         3: ("The following Projections are learnable but are in pathways that do not end in a LossMechanism, "
             "and therefore cannot be learned: "
             "'(MappingProjection MappingProjection from pway2_mech_A[OutputPort-0] to pway2_mech_B[InputPort-0])', "
@@ -485,25 +486,41 @@ class TestAutodiffTargetSpecs:
             "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])', "
             "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
             AutodiffCompositionError),
-        6: ("Specification for the following OUTPUT Node of a learnable pathway in 'autodiff_composition' is missing "
-            "from the 'targets' argument of the call to its learn() method: 'pway2_mech_C'.", CompositionError),
-        7: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' is used to "
-            "specify a target input, but is not an OUTPUT or TARGET Node: 'pway2_mech_B'.", CompositionError),
-        8: ("The following Node in the 'targets' argument of the learn() method for 'autodiff_composition' "
-            "is not in the Composition or any nested within it: 'pway3_mech_T'.", CompositionError),
-        9: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' is "
-            "used to specify a target input, but is not an OUTPUT or TARGET Node: 'pway3_mech_B'.", CompositionError),
-        10: ("The following entries in the 'targets' argument of the learn() method for 'autodiff_composition' are "
-             "used to specify target inputs, but are not OUTPUT or TARGET Nodes: 'pway1_mech_B', 'pway3_mech_B'.",
-             CompositionError),
-        11: ("The following Node in the 'targets' argument of the learn() method for 'autodiff_composition' is not "
-             "in the Composition or any nested within it: 'pway3_mech_B'.", CompositionError),
-        12: ("The following Node, specified in the 'targets' argument of the constructor for 'autodiff_composition' "
-            "as a sample that receives its target value from another node, should not be included in the dict "
-            "specified in the 'targets' argument of the learn() method: pway3_mech_C.", AutodiffCompositionError),
-        13: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' was not "
-             "specified as a TARGET Node in the 'targets' argument of the constructor for 'autodiff_composition': "
-             "pway2_mech_B.", CompositionError),
+        6: (f"The learn() method of 'autodiff_composition can't be executed because it's 'targets' argument is "
+           f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: 'pway2_mech_C'.",
+            CompositionError),
+        7: (f"The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            f"specification in its targets argument: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node (which can't be "
+            f"a SAMPLE or TARGET in a Composition).", CompositionError),
+        8: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            "specification in its targets argument: 'pway3_mech_T' (in 'targets' dict): not in 'autodiff_composition'.",
+            CompositionError),
+        8.5: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
+              "specifications in its targets arguments: 'pway1_mech_T' (in 'targets' dict): OUTPUT Node that is not a "
+              "SAMPLE; 'pway2_mech_T' (in 'targets' dict): OUTPUT Node that is not a SAMPLE; 'pway3_mech_T' "
+              "(in 'targets' dict): not in 'autodiff_composition'.", CompositionError),
+        9: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            "specification in its targets argument: 'pway3_mech_B' (in 'targets' dict): INTERNAL Node (which can't be "
+            "a SAMPLE or TARGET in a Composition).", CompositionError),
+        10: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
+            "specifications in its targets arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
+            "can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): INTERNAL Node "
+            "(which can't be a SAMPLE or TARGET in a Composition).", CompositionError),
+        11: ("The learn() method of 'autodiff_composition' can't be executed because there are the following "
+             "illegal specifications in its targets arguments: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node "
+             "(which can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): not in "
+             "'autodiff_composition'.", CompositionError),
+        11.5: ("The learn() method of 'autodiff_composition' can\'t be executed because there is the following illegal "
+               "specification in its targets argument: 'pway3_mech_B' (in 'targets' dict): not in "
+               "'autodiff_composition'.", CompositionError),
+        12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification "
+             "in its 'targets' argument conflicts with one in the 'targets' argument of its consructor: "
+             "for SAMPLE 'pway3_mech_C': a Node ('pway3_mech_T[OutputPort-0]') that provides its target value is "
+             "specified in the 'targets' argument of the constructor, so there should be no specification for the "
+             "SAMPLE in learn()", AutodiffCompositionError),
+        13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
+             "its 'targets' argument conflicts with one in the 'targets' argument of its consructor: 'pway2_mech_B': "
+             "does not correspond to any sample specified in the constructor.", CompositionError),
     }
 
     test_args_for_target_spec_errors = [
@@ -528,11 +545,12 @@ class TestAutodiffTargetSpecs:
         (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
         (      'lrn',           -1,               'bad',                    None,           7), # missing TARGET spec
         (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
+        (      'lrn',            0,              'TARGET',                 'all',         8.5), # 2 bad + 1 not in comp
         (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
         (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
         # TEACHER_TARGET BREADCRUMB:  ??CHANGE errant_spec FOR THE FOLLOWING TO None??
         (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
-        (      'lrn',           +1,               'bad',                   'mid',          11), # 1 bad + 1 extra
+        (      'lrn',           +1,               'bad',                   'mid',        11.5), # 1 bad + 1 extra
         (     'both',            0,               'both',                  'mid',          12), # cstr + same lrn
         (     'both',           +1,               'both',                  'mid',          13), # cstr + diff lrn
     ]
@@ -704,9 +722,19 @@ class TestAutodiffTargetSpecs:
                 if spec_type == pnl.TARGET:
                     if errant_spec == 'out':
                         # One bad specificatons: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_C: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_T: [[10]]}
+                    elif errant_spec == 'all':
+                        # One bad specificatons: pway3_mech_B should be pway3_mech_C)
                         learn_targets = {pway1_mech_T: [[10]],
                                          pway2_mech_T: [[10]],
                                          pway3_mech_T: [[10]]}
+                elif errant_spec == 'all':
+                    # All bad specificatons: pway[1/2]_mech_T should be pway[1/2]_mech_C & pway3_mech_T not in Comp
+                    learn_targets = {pway1_mech_T: [[10]],
+                                     pway2_mech_T: [[10]],
+                                     pway3_mech_T: [[10]]}
                 elif spec_type == 'bad':
                     if errant_spec == 'bad':
                         # One bad specificaton: pway3_mech_B should be pway3_mech_C)

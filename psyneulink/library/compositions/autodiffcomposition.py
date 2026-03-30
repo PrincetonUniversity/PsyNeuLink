@@ -2913,23 +2913,15 @@ class AutodiffComposition(Composition):
                                       "learn method, and assigned a numeric array (i.e., the value used for training "
                                       "on each trial."))
 
-        # # BREADCRUMB: IS THE FOLLOWING REDUNDANT WITH CHECK FOR illegal_specs BELOW?
-        # # If there are extra specs in learn_dicts (i.e., more than in constructor targets dict)
-        # if _num_specs(learn_dicts) > _num_specs({CONSTRUCTOR_TARGETS}):
-        #     assert len(learn_specs) > len(legal_specs), \
-        #         "FOUND SPEC IN LEARN THAT IS NOT IN CONSTRUCTOR, SO SHOULDN'T THIS BE TRUE?"
-        #     assert illegal_specs, \
-        #         "ENSURE THAT THIS IS TRUE;  IF SO, CAN GET RID OF THIS USE THE CODE BLOCK BELOW"
-        #     # X TEST DONE: TOO MANY SPECS IN learn()
-        #     # specification in learn that does not correspond to any in the constructor
-        #     for learn_spec in [spec for spec in learn_specs if spec not in legal_specs]:
-        #         bad_specs.append((learn_spec, target_spec, f"does not correspond to any sample specified "
-        #                                                    f"in the 'targets' argument of the constructor"))
-        if illegal_specs: # BREADCRUMB <- IS THIS GOOD ENOUGH TO IDENTIFY ALL EXTRA SPECS IN learn()??
-            # target specified in learn() that is is not specifed constructor;
-            bad_specs.append((sample, target_spec, f"does not correspond to any sample specified "
-                                                   f"in the 'targets argument of the constructor"))
-
+        # MODIFIED TEACHER_TARGET NEWER:
+        # Add any illegal specs passed in to bad_specs for reporting in error message
+        for spec in illegal_specs:
+            illegal_spec = (f"'{spec.target_spec.full_name}'"
+                            if isinstance (spec.target_spec, (OutputPort, ProcessingMechanism_Base))
+                            else spec.target_spec)
+            bad_specs.append((spec, illegal_spec, f"does not correspond to any sample specified "
+                                                  f"in the constructor"))
+        # MODIFIED TEACHER_TARGET END
 
         if bad_specs:
             # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
@@ -2946,12 +2938,15 @@ class AutodiffComposition(Composition):
                     'was_were': 'were' if plural else 'was',
                 }
                 return inflections
-            _ = get_inflections(bad_specs)
+            _ = get_inflections(len(bad_specs)>1)
             all_bad_specs_str = []
             sources = []
             for bad_spec in bad_specs:
                 sources.append(bad_spec[0].source)
-                all_bad_specs_str.append(f"for SAMPLE '{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
+                if bad_spec[0].sample_spec:
+                    all_bad_specs_str.append(f"for SAMPLE '{bad_spec[0].sample_spec.full_name}': {bad_spec[2]}")
+                else:
+                    all_bad_specs_str.append(f"{bad_spec[1]}: {bad_spec[2]}")
 
             sources = sorted(set(sources))
             if len(sources) == 1:
@@ -2964,7 +2959,7 @@ class AutodiffComposition(Composition):
             source_str = f"{source_str} argument{s}"
 
             raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
-                                           f"the following target specification{_['s']} in its {source_str} "
+                                           f"the following specification{_['s']} in its {source_str} "
                                            f"conflict{_['not_s']} with one{_['s']} in the 'targets' argument "
                                            f"of its consructor: {'; '.join(all_bad_specs_str)}.")
 
@@ -2973,7 +2968,7 @@ class AutodiffComposition(Composition):
     def _get_redundant_sample_target_specs(self):
         """Override to allow specification of TARGET in constructor and required numeric value in learn()"""
         all_redundant_specs = super()._get_redundant_sample_target_specs()
-        for spec in all_redundant_specs:
+        for spec in all_redundant_specs.copy():
             # Get target_spec and target_value for each of the redundant specs
             redundant_specs = [s for s in self._sample_target_specs if s.sample_port is spec]
             if len(redundant_specs) == 2:

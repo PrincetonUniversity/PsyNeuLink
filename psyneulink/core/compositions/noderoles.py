@@ -712,7 +712,8 @@ class NodeRolesManager(object):
         nodes = composition._get_all_nodes(include_cims=True, include_controller=True)
         projections = []
         for node in nodes:
-            projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])
+            (projections
+             .extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes]))
         return projections
 
     def _exclude_roles(self, nodes, composition=None):
@@ -791,8 +792,8 @@ class NodeRolesManager(object):
                     input_port.internal_only = True
                 # BIAS Node should *never* be considered as an INPUT Node;  *can* be an OUTPUT Node
                 #   if it is in an inner Composition and projects to an outer one (handed in _determine_node_roles)
-                self.exclude_node_roles(node, NodeRole.INPUT, context)
-                self.exclude_node_roles(node, NodeRole.OUTPUT, context)
+                self.exclude_node_roles(node, NodeRole.INPUT, context=context)
+                self.exclude_node_roles(node, NodeRole.OUTPUT, context=context)
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
