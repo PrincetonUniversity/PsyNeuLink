@@ -3297,7 +3297,6 @@ SampleTargetSpec = (collections.namedtuple(
 SampleTargetPair = collections.namedtuple("SampleTargetPair",
                                           "sample_mech sample_port target_mech target_port")
 
-
 class CompositionError(ComponentError):
     pass
 
@@ -3786,6 +3785,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+    _node_roles_manager_type = NodeRolesManager
+
+
     class Parameters(Composition_Base.Parameters):
         """
             Attributes
@@ -3909,9 +3911,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
-        self.node_roles_mgr = NodeRolesManager(owner=self)
         self.allow_probes = allow_probes
         self.include_probes_in_output=include_probes_in_output
+        self.node_roles_mgr = self._node_roles_manager_type(owner=self)
 
         # Pathways
         from psyneulink.core.compositions.pathway import Pathway
@@ -4674,18 +4676,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node not in visited_compositions:
                 visited_compositions.append(node)
                 # # MODIFIED TEACHER_TARGET OLD:
-                # #BREADCRUMB: WHY IS NODE NOT RETREIVED HERE AND ADDED TO LIST?
-                # node._get_nested_nodes(nested_nodes,
-                #                        root_composition,
-                #                        visited_compositions,
-                #                        include_cims,
-                #                        include_controller)
-                # MODIFIED TEACHER_TARGET NEW:
-                nested_nodes.extend(node._get_nested_nodes(nested_nodes,
-                                                           root_composition,
-                                                           visited_compositions,
-                                                           include_cims,
-                                                           include_controller))
+                #BREADCRUMB: WHY IS NODE NOT RETREIVED HERE AND ADDED TO LIST?
+                node._get_nested_nodes(nested_nodes,
+                                       root_composition,
+                                       visited_compositions,
+                                       include_cims,
+                                       include_controller)
+                # # MODIFIED TEACHER_TARGET NEW:
+                # nested_nodes.extend(node._get_nested_nodes(nested_nodes,
+                #                                            root_composition,
+                #                                            visited_compositions,
+                #                                            include_cims,
+                #                                            include_controller))
                 # MODIFIED TEACHER_TARGET END
             elif root_composition is not self:
                 nested_nodes.append((node,self))
@@ -5700,7 +5702,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            node:Mechanism_Base,
                            roles:Union[list, NodeRole],
                            scope:Optional[Literal[ALL]] = None,
-                           context:Context = None)->list:
+                           context:Context = None)->bool:
         """Assign the `NodeRole`\\(s) specified in **roles** to **node**.
         Remove exclusion of specified NodeRoles if they had previously been specified in `exclude_node_roles
         <Composition.exclude_node_roles>`.
@@ -5721,7 +5723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context : Context : default None
         """
-        self.node_roles_mgr.require_node_roles(node, roles, scope, context)
+        return self.node_roles_mgr.require_node_roles(node, roles, scope, context)
 
     # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE SCOPE AND SET TO None BY DEFAULT
     @handle_external_context()
@@ -5729,7 +5731,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            node:Mechanism_Base,
                            roles:Union[list, NodeRole],
                            scope:Optional[Literal[ALL]] = None,
-                           context:Context=None)->list:
+                           context:Context=None)->bool:
         """Exclude the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
 
         Remove specified **roles** if they had previously been assigned either by default as a `required_node_role
@@ -5751,7 +5753,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context : Context : default None
         """
-        self.node_roles_mgr.exclude_node_roles(node, roles, scope, context)
+        return self.node_roles_mgr.exclude_node_roles(node, roles, scope, context)
 
     def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->list:
         """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
@@ -7825,7 +7827,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert proj.receiver.owner == comparator and proj.receiver.name == 'SAMPLE'
                 sample_port = proj.sender
                 self._sample_target_pairs.append(SampleTargetPair(sample_port.owner, sample_port,
-                                                                  target_port.owner, target.output_port))
+                                                                  target, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
             learning_related_components = {OUTPUT_MECHANISM: output_source,
@@ -9834,13 +9836,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_targets_dict = inputs.pop(TARGETS, {})
 
         # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications)
+        #  excluding any Compositions or RecurrentTransferMechanisms, which are not allowed as TARGETS
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET))
-        # input_nodes = set(self.get_nodes_by_role(NodeRole.INPUT))
-        output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
-                            if not isinstance(node, RecurrentTransferMechanism)])
-        inputs_dict_target_specs = {spec_as_mech(k): inputs.pop(k) for k in inputs.copy()
+        non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+                                                  if not isinstance(node, (RecurrentTransferMechanism, Composition))])
+        inputs_dict_target_specs = {spec_as_mech(k): inputs.pop(k)
+                                    for k in inputs.copy()
                                     # if k in target_nodes or k not in input_nodes}
-                                    if k in target_nodes or k in output_nodes}
+                                    if k in target_nodes or k in non_comp_or_recurrent_output_nodes}
 
         # Process targets specification
         targets_dicts = {INPUTS: inputs_dict_target_specs,

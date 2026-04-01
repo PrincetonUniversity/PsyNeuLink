@@ -843,23 +843,23 @@ class NodeRolesManager(object):
                            scope:Optional[Literal[ALL]]=None,
                            context:Context=None) -> bool:
         """Assign **roles** to **node** (see _modify_node_roles() for details)"""
-        self._modify_node_roles(node, roles, 'require', scope, context)
+        return self._modify_node_roles(node, roles, 'require', scope, context)
 
     def exclude_node_roles(self,
                            node:Mechanism_Base,
                            roles:list,
                            scope:Optional[Literal[ALL]]=None,
-                           context=None)->list:
+                           context=None)->bool:
         """Exclude **roles** from being assigned to **node** (see _modify_node_roles() for details).
         """
-        self._modify_node_roles(node, roles, 'exclude', scope, context)
+        return self._modify_node_roles(node, roles, 'exclude', scope, context)
 
     def _modify_node_roles(self,
                            node:Mechanism_Base,
                            roles:list,
                            modification:Literal['require','exclude'],
                            scope:Optional[Literal[ALL]]=None,
-                           context=None)->list:
+                           context=None)->bool:
         """Modify NodeRole assignments
 
         Arguments
@@ -928,16 +928,29 @@ class NodeRolesManager(object):
         if node in self.owner.nodes:
             # node is in top level of Composition
             require_or_exclude(node, self, roles)
-            return
+            return True
 
+        # # MODIFIED TEACHER_TARGET OLD:
+        # if scope == ALL:
+        #     # BREADCRUMB: FLAT VERSION
+        #     # Search for node in nested Compositions if there are any, and node was not found at the top level
+        #     nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
+        #                                     ((None,None)))
+        #     if nested_node:
+        #         require_or_exclude(nested_node, nested_comp.node_roles_mgr, roles)
+        #         return
+        #     nested_str = f"or any nested within it"
+        # MODIFIED TEACHER_TARGET NEW:
         if scope == ALL:
+            # BREADCRUMB: RECURSIVE VERSION
+            node_found = False
             # Search for node in nested Compositions if there are any, and node was not found at the top level
-            nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
-                                            ((None,None)))
-            if nested_node:
-                require_or_exclude(nested_node, nested_comp.node_roles_mgr, roles)
-                return
-            nested_str = f"or any nested within it"
+            for comp in self.owner._get_nested_compositions():
+                # if comp.node_roles_mgr._modify_node_roles(node, roles, modification, scope, context):
+                method = comp.require_node_roles if modification == 'require' else comp.exclude_node_roles
+                if method(node, roles, scope, context):
+                    return True
+        # MODIFIED TEACHER_TARGET END
 
         else:
             # node not found in Composition (and not searched in nested Compositions if there are any)
