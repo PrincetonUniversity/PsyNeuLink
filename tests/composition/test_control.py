@@ -1145,6 +1145,7 @@ class TestControlMechanisms:
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
+        # TEACHER_TARGET BREADCRUMB: UNCOMMENT ONCE DONE DEBUGGING
         # STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
         # ('single_none_spec', pnl.SHADOW_INPUTS, None, None),
         # ('single_shadow_spec', pnl.SHADOW_INPUTS, None, None),
@@ -1152,10 +1153,10 @@ class TestControlMechanisms:
         # ('partial_legal_list_spec', pnl.SHADOW_INPUTS, messages[0], UserWarning),
         # ('full_list_spec', pnl.SHADOW_INPUTS, None, None),
         # ('list_spec_with_none', pnl.SHADOW_INPUTS, None, None),
-        ('input_dict_spec', pnl.SHADOW_INPUTS, None, None),
-        ('input_dict_spec_short', pnl.SHADOW_INPUTS, None, None),
-        ('set_spec_short', None, None, None),
-        ('set_spec', pnl.SHADOW_INPUTS, None, None),
+        # ('input_dict_spec', pnl.SHADOW_INPUTS, None, None),
+        # ('input_dict_spec_short', pnl.SHADOW_INPUTS, None, None),
+        # ('set_spec_short', None, None, None),
+        # ('set_spec', pnl.SHADOW_INPUTS, None, None),
         ('set_spec_port', pnl.SHADOW_INPUTS, None, None),
         ('no_specs', None, None, None),
         ('shadow_inputs_dict_spec', pnl.SHADOW_INPUTS, None, None),

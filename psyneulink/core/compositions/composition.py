@@ -4749,6 +4749,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_all_nodes(self,
                        include_cims=NotImplemented,
                        include_controller=NotImplemented,
+                       include_compositions=False,
                        content_addressable=False)->list:
         """Return all Mechanisms, including those within nested Compositions at any level
         Notes:
@@ -4763,7 +4764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_nodes = ([k[0] for k in
                       self._get_nested_nodes(include_cims=include_cims,
                                              include_controller=include_controller)
-                      if not isinstance(k[0], Composition)]
+                      if (not isinstance(k[0], Composition) or include_compositions is True)]
                      + [node for node in self.nodes if not isinstance(node, Composition)] + cims + controller)
         if content_addressable:
             all_nodes = ContentAddressableList(Mechanism, list=all_nodes, name=f"'_get_all_nodes()' for {self.name}")
@@ -9536,7 +9537,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if all([sender in self.nodes
                         or (hasattr(sender, PROXY_FOR) and getattr(sender, PROXY_FOR) in self._get_all_nodes()),
                         receiver in self.nodes
-                        or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self._get_all_nodes)]):
+                        or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self._get_all_nodes())]):
                     continue
 
                 if node is sender:
