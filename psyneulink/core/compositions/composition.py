@@ -9850,12 +9850,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET))
         # non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
         #                                           if not isinstance(node, (RecurrentTransferMechanism, Composition))])
-        non_singleton_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
-                                                  if not isinstance(node, (RecurrentTransferMechanism, Composition))])
+        non_singleton_or_comp_or_recurrent_output_nodes = (
+            set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT) if
+                 not (isinstance(node, (RecurrentTransferMechanism, Composition))
+                      or NodeRole.SINGLETON in self.get_roles_by_node(node))]))
         inputs_dict_target_specs = {spec_as_mech(k): inputs.pop(k)
                                     for k in inputs.copy()
                                     # if k in target_nodes or k not in input_nodes}
-                                    if k in target_nodes or k in non_comp_or_recurrent_output_nodes}
+                                    if k in target_nodes or k in non_singleton_or_comp_or_recurrent_output_nodes}
 
         # Process targets specification
         targets_dicts = {INPUTS: inputs_dict_target_specs,
