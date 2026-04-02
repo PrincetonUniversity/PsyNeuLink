@@ -858,7 +858,7 @@ class NodeRolesManager(object):
                            node:Mechanism_Base,
                            roles:list,
                            modification:Literal['require','exclude'],
-                           scope:Optional[Literal[ALL]]=None,
+                           scope:Optional[Literal[ALL, NESTED]]=None,
                            context=None)->bool:
         """Modify NodeRole assignments
 
@@ -930,34 +930,24 @@ class NodeRolesManager(object):
             require_or_exclude(node, self, roles)
             return True
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # if scope == ALL:
-        #     # BREADCRUMB: FLAT VERSION
-        #     # Search for node in nested Compositions if there are any, and node was not found at the top level
-        #     nested_node, nested_comp = next((pair for pair in self.owner._get_nested_nodes() if node is pair[0]),
-        #                                     ((None,None)))
-        #     if nested_node:
-        #         require_or_exclude(nested_node, nested_comp.node_roles_mgr, roles)
-        #         return
-        #     nested_str = f"or any nested within it"
-        # MODIFIED TEACHER_TARGET NEW:
-        if scope == ALL:
-            # BREADCRUMB: RECURSIVE VERSION
-            node_found = False
+        if scope in {ALL, NESTED}:
             # Search for node in nested Compositions if there are any, and node was not found at the top level
             for comp in self.owner._get_nested_compositions():
-                # if comp.node_roles_mgr._modify_node_roles(node, roles, modification, scope, context):
                 method = comp.require_node_roles if modification == 'require' else comp.exclude_node_roles
-                if method(node, roles, scope, context):
+                if method(node, roles, NESTED, context):
                     return True
-        # MODIFIED TEACHER_TARGET END
+            if scope == NESTED:
+                # If nested, don't bail (with error) yet, as Node might be in other nested Comps of outer Comp
+                return False
+            # If NOT nested, bail with error as the node wasn't found anywhere
+            comp_str = f"the Composition or any nested within it"
 
         else:
             # node not found in Composition (and not searched in nested Compositions if there are any)
-            nested_str = f""
+            comp_str = f"the Composition"
 
         raise NodeRoleError(f"The call to the {modification}_node_roles() method of '{self.owner.name}' contained a "
-                            f"node '{node.name}' that is not in the Composition{nested_str}.")
+                            f"node '{node.name}' that is not in {comp_str}.")
 
 
     def get_nodes_by_role(self, *args, **kwargs):
