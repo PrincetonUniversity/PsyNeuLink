@@ -4761,13 +4761,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
         controller = [self.controller] if include_controller is not NotImplemented and self.controller else []
+        nested_compositions = self._get_nested_compositions()
         all_nodes = ([k[0] for k in
                       self._get_nested_nodes(include_cims=include_cims,
                                              include_controller=include_controller)
-                      if (not isinstance(k[0], Composition) or include_compositions is True)]
-                     + [node for node in self.nodes if not isinstance(node, Composition)] + cims + controller)
+                      # if (not isinstance(k[0], Composition) or include_compositions is True)
+                      ]
+                     + [node for node in self.nodes] + cims + controller
+                     + (nested_compositions if include_compositions is True else []))
         if content_addressable:
-            all_nodes = ContentAddressableList(Mechanism, list=all_nodes, name=f"'_get_all_nodes()' for {self.name}")
+            all_nodes = ContentAddressableList(Component, # to accomodate both Mechanisms and Compositions
+                                               key='name',
+                                               list=all_nodes, 
+                                               name=f"'_get_all_nodes()' for {self.name}")
         return all_nodes
 
     def _get_all_projections(self, start_comp=None)->dict:
@@ -9836,10 +9842,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Remove TARGETS subdict from inputs if present; 
         input_targets_dict = inputs.pop(TARGETS, {})
 
-        # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications)
-        #  excluding any Compositions or RecurrentTransferMechanisms, which are not allowed as TARGETS
+        # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications), excluding
+        #   any SINGLETONs and Compositions or RecurrentTransferMechanisms as OUTPUT Nodes:
+        #   - exclude Compositions and RecurrentTransferMechanisms as OUTPUTs because, although they may be learnable
+        #       (e.g., Autoassociative Mechanism, GRUComposition or EMComposition), they are not allowed as TARGETs
+        #   - exclude Mechanisms that are SINGLETONs because they are not trainable (no learnable Projections)
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET))
-        non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+        # non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+        #                                           if not isinstance(node, (RecurrentTransferMechanism, Composition))])
+        non_singleton_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
                                                   if not isinstance(node, (RecurrentTransferMechanism, Composition))])
         inputs_dict_target_specs = {spec_as_mech(k): inputs.pop(k)
                                     for k in inputs.copy()

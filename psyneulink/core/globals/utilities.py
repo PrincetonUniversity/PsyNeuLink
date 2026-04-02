@@ -1348,7 +1348,7 @@ class ReadOnlyOrderedDict(UserDict):
 
 class ContentAddressableList(UserList):
     """
-    ContentAddressableList( component_type, key=None, list=None)
+    ContentAddressableList(component_type, key=None, list=None)
 
     Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
     entries.  If called, returns list of items.
