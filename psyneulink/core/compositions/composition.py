@@ -10131,6 +10131,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_samples_str = []
         all_sources = set()
         for sample_port in sample_ports_with_redundant_specs:
+            sample_spec = next((entry.sample_spec for entry in self._sample_target_specs
+                                if entry.sample_port == sample_port), None)
+            assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
+                                 "sample_port in _sample_target_pairs")
             sources = [f"'{source}'" for source in sorted(set(entry.source for entry in self._sample_target_specs
                                                               if sample_port is entry.sample_port))]
             if len (sources) == 1:
@@ -10139,18 +10143,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sources_str = f"{sources[0]} and {sources[1]} args"
             else:
                 source_str = f"{sources[0]}, {sources[1]} and {sources[2]} args"
-            specs_str = ', '.join([f"'{s.sample_spec.full_name} in '{s.source}'"
-                                   for s in self._sample_target_specs if s.sample_port.full_name == sample_port])
-            sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
-                          if entry.target_port.full_name == sample_port), None)
-            sample_spec = next((entry.sample_spec for entry in self._sample_target_specs
-                                if entry.sample_port == sample_port), None)
-            assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
-                                 "sample_port in _sample_target_pairs")
-            # all_samples_str.append(f"'{sample_spec}': [{specs_str}]")
             all_samples_str.append(f"'{sample_spec.full_name}' in {sources_str}")
             all_sources.update(sources)
-        full_str = '; '.join(all_samples_str)
+        full_str = '; '.join(sorted(all_samples_str))
 
         if not full_str:
             # No redundant taret_specs
