@@ -10079,6 +10079,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         sample_ports_with_redundant_specs = self._get_redundant_sample_target_specs()
         # MODIFIED TEACHER_TARGET END
 
+        # BREADCRUMB: MOVE TO _validate_sample_target
+        # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES
+        target_node_specs_and_samples = sorted(set([(f"'{spec.sample_spec.name}'", f"'{spec.sample_port.owner.name}'")
+                                                    for spec in self._sample_target_specs
+                                                    if spec.sample_spec in self.get_nodes_by_role(NodeRole.TARGET)]))
+        if target_node_specs_and_samples:
+            target_nodes_str = ', '.join([spec[0] for spec in target_node_specs_and_samples])
+            sample_nodes_str = ', '.join([spec[1] for spec in target_node_specs_and_samples])
+            warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
+                          f"entries that are TARGET Nodes ({target_nodes_str}); while this is OK, it might be easier "
+                          f"and clearer to use the SAMPLE (OUTPUT) Nodes to which they correspond ({sample_nodes_str}) "
+                          f"as the keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, "
+                          f"TARGET Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT "
+                          f"nodes, obviating the need to specify the 'targets' arg.")
+
+
         if not sample_ports_with_redundant_specs:
             return
 
@@ -10113,9 +10129,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Prepare strings for warning message
 
         all_samples_str = []
-        sources = set()
+        all_sources = set()
         for sample_port in sample_ports_with_redundant_specs:
-            sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
+            sources = [f"'{source}'" for source in sorted(set(entry.source for entry in self._sample_target_specs
+                                                              if sample_port is entry.sample_port))]
+            if len (sources) == 1:
+                source_str = f"{sources[0]} arg"
+            elif len (sources) == 2:
+                sources_str = f"{sources[0]} and {sources[1]} args"
+            else:
+                source_str = f"{sources[0]}, {sources[1]} and {sources[2]} args"
             specs_str = ', '.join([f"'{s.sample_spec.full_name} in '{s.source}'"
                                    for s in self._sample_target_specs if s.sample_port.full_name == sample_port])
             sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
@@ -10124,7 +10147,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if entry.sample_port == sample_port), None)
             assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
                                  "sample_port in _sample_target_pairs")
-            all_samples_str.append(f"'{sample_spec}': [{specs_str}]")
+            # all_samples_str.append(f"'{sample_spec}': [{specs_str}]")
+            all_samples_str.append(f"'{sample_spec.full_name}' in {sources_str}")
+            all_sources.update(sources)
         full_str = '; '.join(all_samples_str)
 
         if not full_str:
@@ -10145,12 +10170,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # sample_nodes_str = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
 
         sample_nodes_str = 'SAMPLE'
-        if len(sources) == 1:
-            source_str = f"{', '.join(sources)}"
+        if len(all_sources) == 1:
+            source_str = f"{', '.join(all_sources)}"
         else:
-            sources = sorted(sources)
-            source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
-                          else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
+            all_sources = sorted(all_sources)
+            source_str = (' and '.join([f"{str}" for str in all_sources]) if len(all_sources)==2
+                          else f"{all_sources[0]}, {all_sources[1]} and {all_sources[2]}")
         source_str = f"{source_str} argument{s}"
 
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
@@ -10380,7 +10405,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(sources) == 1:
                 source_str = f"{', '.join(sources)}"
             else:
-                source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
+                source_str = (' and '.join([f"'{str}'" for str in sources]) if len(sources)==2
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
 

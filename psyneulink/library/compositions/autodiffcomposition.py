@@ -2954,7 +2954,7 @@ class AutodiffComposition(Composition):
                 source_str = f"'{sources[0]}'"
             else:
                 s = 's'
-                source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
+                source_str = (' and '.join([f"'{str}'" for str in sources]) if len(sources)==2
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
 
