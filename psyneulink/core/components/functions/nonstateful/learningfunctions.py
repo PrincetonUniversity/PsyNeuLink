@@ -498,6 +498,7 @@ class EMStorage(LearningFunction):
 
         return self.convert_output_type(memory_matrix)
 
+    @torch.no_grad()
     def _gen_pytorch_fct(self, device, context=None):
         def func(entry_to_store,
                  memory_matrix,

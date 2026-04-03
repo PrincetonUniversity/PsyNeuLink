@@ -1552,11 +1552,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
-                    node.execute(variable=variable,
-                                 optimization_num=optimization_num,
-                                 synch_with_pnl_options=synch_with_pnl_options,
-                                 sequence_lengths=sequence_lengths,
-                                 context=context)
+                    if node.exclude_from_gradient_calc:
+                        with torch.no_grad():
+                            node.execute(variable=variable,
+                                         optimization_num=optimization_num,
+                                         synch_with_pnl_options=synch_with_pnl_options,
+                                         sequence_lengths=sequence_lengths,
+                                         context=context)
+                        memory_matrix.requires_grad_()
+                    else:
+                        node.execute(variable=variable,
+                                     optimization_num=optimization_num,
+                                     synch_with_pnl_options=synch_with_pnl_options,
+                                     sequence_lengths=sequence_lengths,
+                                     context=context)
+
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
