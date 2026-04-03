@@ -1659,7 +1659,7 @@ class TestOnResumeIntegratorMode:
         np.testing.assert_allclose(result, [[0.43636140750487973, 0.47074475219780554]])
         if comp_mode is pnl.ExecutionMode.Python:
             assert decision.num_executions.time_step == 1
-            assert decision.num_executions.pass_ == 2
+            assert decision.num_executions.pass_ == 1
             assert decision.num_executions.trial== 1
             assert decision.num_executions.run == 2
 

@@ -3703,6 +3703,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _reset_num_executions(self, context: Context, time_scale: TimeScale):
         curr_num_execs = self.parameters.num_executions._get(context)
         curr_num_execs._set_by_time_scale(time_scale, 0)
+        curr_num_execs._reset_by_time_scale(time_scale)
 
     @property
     def current_execution_time(self):
