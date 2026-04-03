@@ -2031,7 +2031,7 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import Composition
         agent_rep_input_nodes = self._get_agent_rep_input_receivers(type=NODE,comp_as_node=ALL)
         agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
-        agent_rep_all_nodes = self.agent_rep._get_all_nodes()
+        agent_rep_all_nodes = self.agent_rep._get_all_nodes(include_compositions=True)
         non_input_node_specs = [node for node in nodes
                                 if ((isinstance(node, (Mechanism, Composition)) and node not in agent_rep_input_nodes)
                                     or (isinstance(node, Port) and (not isinstance(node, InputPort)

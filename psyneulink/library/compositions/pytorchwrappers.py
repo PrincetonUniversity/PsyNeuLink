@@ -2205,7 +2205,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         ]
 
 
-        # Assign values to  all_output_values
+        # Assign values to all_output_values
         output_values = []
         for idx, port, node, comp in outputs_idx_port_node_comp:
 

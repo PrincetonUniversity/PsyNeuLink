@@ -168,7 +168,7 @@ from psyneulink.core.globals.utilities import safe_len
 __all__ = ['ComparatorMechanism', 'ComparatorMechanismError']
 
 
-def _sample_getter(owning_component=None, context=None):
+def _sample_getter(owning_component=None, context=None)->OutputPort:
     try:
         if (owning_component.input_ports
                 and SAMPLE in owning_component.input_ports

@@ -156,16 +156,26 @@ class NodeRole(enum.Enum):
         This role can, but generally should not be modified programmatically.
     COMMENT
 
+    SAMPLE
+        A `Node <Composition_Nodes>` that provides the sample value used to compute the error for a `learning pathway
+        <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`). Note that the
+        specific value used as the sample may be from any one of a SAMPLE Node's `Ports <Port>`; use the Composition's
+        `get_sample_ports()` method to identify the specific one(s) that are used. This role cannot be modified
+        programmatically.
+
     TARGET
-        A `Node <Composition_Nodes>` that receives the target for a `learning pathway <Composition_Learning_Pathway>`
-        specifying the desired output of the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` for that pathway
-        (see `TARGET_MECHANISM <Composition_Learning_Components>`). This role can, but generally should not
-        be modified programmatically.
+        COMMENT: BREADCRUMB - MODIFY THIS IF TARGET ASSIGNED TO ALL TARGETS (INCLUDING INTERNAL ONES IN AutodiffComp)
+        A `Node <Composition_Nodes>` that receives the external value used as the target value used to compute the
+        error for a `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM
+        <Composition_Learning_Components>`). At present, this role is assigned only to Nodes that receive an external
+        targer value (specified in the `targets` argument of a Composition's learn() method, and the value of that
+        Node's `primary OutputPort <OutputPort_Primary>` is used as the target value. This role cannot be modified
+        programmatically.
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can,
-        but generally should not be modified programmatically.
+        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can
+        not be modified programmatically.
 
     PROBE
         An `INTERNAL` `Node <Composition_Nodes>` that is permitted to have Projections from it to the Composition's
@@ -193,8 +203,7 @@ class NodeRole(enum.Enum):
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
         Nodes in a flattened cycle will be either all TERMINAL or all
-        not TERMINAL.
-        This role cannot be modified programmatically.
+        not TERMINAL. This role cannot be modified programmatically.
 
     """
     ORIGIN = enum.auto()
@@ -209,6 +218,7 @@ class NodeRole(enum.Enum):
     CONTROLLER = enum.auto()
     CONTROLLER_OBJECTIVE = enum.auto()
     LEARNING = enum.auto()
+    SAMPLE = enum.auto()
     TARGET = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
     PROBE = enum.auto()
@@ -216,12 +226,17 @@ class NodeRole(enum.Enum):
     TERMINAL = enum.auto()
 
 
-unmodifiable_node_roles = {NodeRole.ORIGIN,
-                           NodeRole.INTERNAL,
-                           NodeRole.SINGLETON,
-                           NodeRole.TERMINAL,
-                           NodeRole.CYCLE}
-
+unmodifiable_node_roles = {
+    NodeRole.ORIGIN,
+    NodeRole.INTERNAL,
+    NodeRole.SINGLETON,
+    NodeRole.TERMINAL,
+    NodeRole.CYCLE,
+    NodeRole.CONTROLLER,
+    NodeRole.SAMPLE,
+    NodeRole.TARGET,
+    NodeRole.LEARNING_OBJECTIVE
+}
 
 class NodeRolesManager(object):
     """Manage association of nodes with roles
@@ -697,7 +712,8 @@ class NodeRolesManager(object):
         nodes = composition._get_all_nodes(include_cims=True, include_controller=True)
         projections = []
         for node in nodes:
-            projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])
+            (projections
+             .extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes]))
         return projections
 
     def _exclude_roles(self, nodes, composition=None):
@@ -717,24 +733,23 @@ class NodeRolesManager(object):
         self._need_determine_node_roles = True
 
     def _add_required_node_role(self, node, role, context=Context()):
-        """
-            Assign the `NodeRole` specified by **role** to **node**.  Remove exclusion of that `NodeRole` if
-            it had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
+        """Assign the `NodeRole` specified by **role** to **node**.
+        Remove exclusion of that `NodeRole` if it had previously been specified in `exclude_node_roles
+        <Composition.exclude_node_roles>`.
 
-            Arguments
-            _________
+        Arguments
+        _________
 
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` to which **role** should be assigned.
+        node : `Node <Composition_Nodes>`
+            `Node <Composition_Nodes>` to which **role** should be assigned.
 
-            role : `NodeRole`
-                `NodeRole` to assign to **node**.
-
+        role : `NodeRole`
+            `NodeRole` to assign to **node**.
         """
         if role not in NodeRole:
             raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
 
-        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        # Disallow assignment of NodeRoles by user that are not programmatically modifiable:
         # FIX 4/25/20 [JDC] - CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
             if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE} and not node.control_mechanism:
@@ -777,8 +792,8 @@ class NodeRolesManager(object):
                     input_port.internal_only = True
                 # BIAS Node should *never* be considered as an INPUT Node;  *can* be an OUTPUT Node
                 #   if it is in an inner Composition and projects to an outer one (handed in _determine_node_roles)
-                self.exclude_node_roles(node, NodeRole.INPUT, context)
-                self.exclude_node_roles(node, NodeRole.OUTPUT, context)
+                self.exclude_node_roles(node, NodeRole.INPUT, context=context)
+                self.exclude_node_roles(node, NodeRole.OUTPUT, context=context)
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
@@ -822,68 +837,124 @@ class NodeRolesManager(object):
             self._determine_node_roles()
         return self.nodes_to_roles
 
-    def require_node_roles(self, node: object, roles: object, context: object = None) -> None:
+    def require_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:Union[list, NodeRole],
+                           scope:Optional[Literal[ALL]]=None,
+                           context:Context=None) -> bool:
+        """Assign **roles** to **node** (see _modify_node_roles() for details)"""
+        return self._modify_node_roles(node, roles, 'require', scope, context)
+
+    def exclude_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:list,
+                           scope:Optional[Literal[ALL]]=None,
+                           context=None)->bool:
+        """Exclude **roles** from being assigned to **node** (see _modify_node_roles() for details).
         """
-            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
-            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
+        return self._modify_node_roles(node, roles, 'exclude', scope, context)
 
-            Arguments
-            _________
+    def _modify_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:list,
+                           modification:Literal['require','exclude'],
+                           scope:Optional[Literal[ALL, NESTED]]=None,
+                           context=None)->bool:
+        """Modify NodeRole assignments
 
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` to which **role** should be assigned.
+        Arguments
+        _________
 
-            roles : `NodeRole` or list[`NodeRole`]
-                `NodeRole`\\(s) to assign to **node**.
+        node : Node
+            Node for which **roles** should be modified
+
+        roles : NodeRole or list[NodeRole]
+            NodeRole(s) to modify for **node**.
+
+        modification : Literal['require','exclude']:
+            *require*:
+              assign **roles** to **node** and remove exclusion if it any had previously been excluded using the
+              exclude_node_roles() method.
+            *exclude*:
+              remove **roles** if any previously been required either by default (as a required_node_role)
+              or using the required_node_roles() method.
+
+        scope : `ALL` or None : default None
+            If None (default) **roles** are modified for **node** only if it is at the top level of the Composition;
+            if *ALL*, then they will be applied to any node within the Composition or one nested with in it.
+
+        context : Context : default None
 
         """
-        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
+        def _assign_required_roles(node, node_role_mgr, roles):
+            for role in roles:
+                node_role_mgr._add_required_node_role(node, role, context)
+            node_role_mgr._need_determine_node_roles = True
+
+        def _exclude_roles(node, node_roles_mgr, roles):
+            for role in roles:
+                node_role_pair = (node, role)
+                if node_role_pair not in node_roles_mgr.excluded_node_roles:
+                    node_roles_mgr.excluded_node_roles.append(node_role_pair)
+                if node_role_pair in self.required_node_roles:
+                    node_roles_mgr.required_node_roles.remove(node_role_pair)
+                node_roles_mgr._remove_node_role(node, role)
+            node_roles_mgr._need_determine_node_roles = True
+
         roles = convert_to_list(roles)
-        for role in roles:
-            self._add_required_node_role(node, role, context)
-        self._need_determine_node_roles = True
+        require_or_exclude = _assign_required_roles if modification == 'require' else _exclude_roles
 
-    def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
-        """
-            Exclude the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
+        bad_roles = [f"'{role.name}'" for role in roles if role not in NodeRole]
+        plural = len(bad_roles) > 1
+        s = 's' if plural else ''
+        are_is = 'are' if plural else 'is'
+        if bad_roles:
+            raise NodeRoleError(f"The following invalid NodeRole{s} {are_is} specified for '{node.name}' in the "
+                                f"{modification}_node_roles() of '{self.owner.name}': {','.join(bad_roles)}.")
 
-            Remove specified roles if they had previously been assigned either by default as a `required_node_role
-            <Composition_Node_Role_Assignment>` or using the `required_node_roles <Composition.required_node_roles>`
-            method.
+        prohibited_roles = [f"'{role.name}'" for role in roles if
+                            (context.source == ContextFlags.COMMAND_LINE and
+                             role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON,
+                                      NodeRole.TERMINAL, NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER,
+                                      NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING})]
+        if prohibited_roles:
+            plural = len(prohibited_roles) > 1
+            s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
+            raise NodeRoleError(f"Attempt to {modification} the following NodeRole{s} for '{node.name}' (in "
+                                f"'{self.name}') that cannot be modified by user: {', '.join(prohibited_roles)}.")
 
-            Arguments
-            _________
+        # Look for node in Composition (at top level only if there are nested Compositions)
+        if node in self.owner.nodes:
+            # node is in top level of Composition
+            require_or_exclude(node, self, roles)
+            return True
 
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` from which **role** should be removed.
+        if scope in {ALL, NESTED}:
+            # Search for node in nested Compositions if there are any, and node was not found at the top level
+            for comp in self.owner._get_nested_compositions():
+                method = comp.require_node_roles if modification == 'require' else comp.exclude_node_roles
+                if method(node, roles, NESTED, context):
+                    return True
+            if scope == NESTED:
+                # If nested, don't bail (with error) yet, as Node might be in other nested Comps of outer Comp
+                return False
+            # If NOT nested, bail with error as the node wasn't found anywhere
+            comp_str = f"the Composition or any nested within it"
 
-            roles : `NodeRole` or list[`NodeRole`]
-                `NodeRole`\\(s) to remove and/or exclude from **node**.
-        """
-        roles = convert_to_list(roles)
-        for role in roles:
-            if role not in NodeRole:
-                raise NodeRoleError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
+        else:
+            # node not found in Composition (and not searched in nested Compositions if there are any)
+            comp_str = f"the Composition"
 
-            # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-            if (context.source == ContextFlags.COMMAND_LINE and
-                    role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                             NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
-                raise NodeRoleError(f"Attempt to exclude {role} (from {node} of {self.name})"
-                                       f"that cannot be modified by user.")
-            node_role_pair = (node, role)
-            if node_role_pair not in self.excluded_node_roles:
-                self.excluded_node_roles.append(node_role_pair)
-            if node_role_pair in self.required_node_roles:
-                self.required_node_roles.remove(node_role_pair)
-            self._remove_node_role(node, role)
+        raise NodeRoleError(f"The call to the {modification}_node_roles() method of '{self.owner.name}' contained a "
+                            f"node '{node.name}' that is not in {comp_str}.")
 
-        self._need_determine_node_roles = True
 
     def get_nodes_by_role(self, *args, **kwargs):
         """Interface to get_nodes_by_role that enforces prior call to _determine_node_roles
         This should be used in general,
-           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion.
+       """
         if self._need_determine_node_roles:
             self._determine_node_roles()
         return self._get_nodes_by_role(*args, **kwargs)

@@ -328,7 +328,7 @@ class CompositionRunner():
                 for idx in range(i, i + minibatch_size):
                     try:
                         self._composition._stim_num = i  # For debugging
-                        input_batch, _ = self._composition._parse_targets_spec(inputs=inputs(idx),
+                        input_batch, _ = self._composition._parse_learn_targets_specs(inputs=inputs(idx),
                                                                                targets=None,
                                                                                execution_mode=execution_mode,
                                                                                context=context,
@@ -443,7 +443,7 @@ class CompositionRunner():
 
             # By-pass parse learning spec if we are dealing with sequences for now
             if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
-                stim_input, num_input_trials = self._composition._parse_targets_spec(inputs=stim_input,
+                stim_input, num_input_trials = self._composition._parse_learn_targets_specs(inputs=stim_input,
                                                                                      targets=stim_target,
                                                                                      execution_mode=execution_mode,
                                                                                      context=context,

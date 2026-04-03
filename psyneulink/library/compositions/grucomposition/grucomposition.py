@@ -310,8 +310,8 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError
-from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.core.compositions.composition import CompositionError, SampleTargetSpec, SampleTargetPair
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -386,6 +386,22 @@ TO_HIDDEN_LAYER_INPUT = 'TO HIDDEN LAYER INPUT'
 RESET_GATING_SIGNAL = 'RESET GATING SIGNAL'
 RECURRENT_GATING_SIGNAL = 'RECURRENT GATING SIGNAL'
 NEW_GATING_SIGNAL = 'NEW GATING SIGNAL'
+
+
+class GRUNodeRolesManager(NodeRolesManager):
+
+    def require_node_roles(self, node, *args, **kwargs):
+        """Override to skip requests for 'PYTORCH GRU Node'"""
+        if node is self.owner.gru_mech:
+            return True
+        else:
+            return super().require_node_roles(*args, **kwargs)
+
+    def get_roles_by_node(self, node, scope):
+        """Override to skip requests for 'PYTORCH GRU Node'"""
+        if node is self.owner.gru_mech:
+            return [NodeRole.SAMPLE]
+        return super().get_roles_by_node(node, scope)
 
 
 class GRUCompositionError(CompositionError):
@@ -712,6 +728,8 @@ class GRUComposition(AutodiffComposition):
 
     componentCategory = GRU_COMPOSITION
 
+    _node_roles_manager_type = GRUNodeRolesManager
+
     if torch_available:
         from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import \
             (PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper)
@@ -876,6 +894,7 @@ class GRUComposition(AutodiffComposition):
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
     #region
+
     # Construct Nodes --------------------------------------------------------------------------------
 
     def _construct_pnl_composition(self, input_size, hidden_size, context):
@@ -1143,26 +1162,31 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.sample_port_to_target_port_map = {self.gru_mech.output_port: target_mech.output_port}
+        self._sample_target_pairs = [SampleTargetPair(self.gru_mech, self.gru_mech.output_port,
+                                                     target_mech, target_mech.output_port)]
         return [target_mech]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         return [[self.gru_mech]]
 
-    # *****************************************************************************************************************
-    # *********************************** Execution Methods  **********************************************************
-    # *****************************************************************************************************************
-    #region
+    def add_node(self, node, required_roles=None, context=None):
+        """Override if called from command line to disallow modification of GRUComposition"""
+        if context is None:
+            raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
+        super().add_node(node, required_roles, context)
 
-    def _get_execution_mode(self, execution_mode):
-        """Parse execution_mode argument and return a valid execution mode for the learn() method"""
-        if execution_mode is None:
-            if self._warned_about_default_execution_mode is False:
-                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
-                              f"ExecutionMode.PyTorch will be used by default.")
-                self._warned_about_default_execution_mode = True
-            execution_mode = ExecutionMode.PyTorch
-        return execution_mode
+    # # # # MODIFIED TEACHER_TARGET NEW:
+    # def _get_nested_nodes(self, *args, **kwargs):
+    #     nested_nodes = super()._get_nested_nodes(*args, **kwargs)
+    #     if self.gru_mech:
+    #         nested_nodes.append((self.gru_mech, self))
+    #     return nested_nodes
+    # # MODIFIED TEACHER_TARGET END
+    def add_projection(self, *args, **kwargs):
+        """Override if called from command line to disallow modification of GRUComposition"""
+        if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+            raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
+        return super().add_projection(*args, **kwargs)
 
     def _add_dependency(self,
                         afferent_proj:ProcessingMechanism,
@@ -1222,20 +1246,28 @@ class GRUComposition(AutodiffComposition):
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, direct_proj_in, self))
 
+    #region
+    # *****************************************************************************************************************
+    # *********************************** Execution Methods  **********************************************************
+    # *****************************************************************************************************************
+
+    def _get_execution_mode(self, execution_mode):
+        """Parse execution_mode argument and return a valid execution mode for the learn() method"""
+        if execution_mode is None:
+            if self._warned_about_default_execution_mode is False:
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                              f"ExecutionMode.PyTorch will be used by default.")
+                self._warned_about_default_execution_mode = True
+            execution_mode = ExecutionMode.PyTorch
+        return execution_mode
+
     def _identify_output_nodes(self, context):
         return [self.gru_mech, self.output_node]
 
-    def add_node(self, node, required_roles=None, context=None):
-        """Override if called from command line to disallow modification of GRUComposition"""
-        if context is None:
-            raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
-        super().add_node(node, required_roles, context)
-
-    def add_projection(self, *args, **kwargs):
-        """Override if called from command line to disallow modification of GRUComposition"""
-        if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
-            raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
-        return super().add_projection(*args, **kwargs)
+    def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
+        """Override to remove """
+        if self in specs:
+            return super()._handle_illegal_sample_target_specs_from_learn(specs)
 
     def compute_loss(self, targets, pytorch_rep, context):
         """Override to directly compute loss
@@ -1252,6 +1284,13 @@ class GRUComposition(AutodiffComposition):
             loss_function = self._get_loss(self.loss_spec)
             return loss_function(sample, target)
 
+    #endregion
+
+    # *****************************************************************************************************************
+    # **************************************** Properties  ************************************************************
+    # *****************************************************************************************************************
+    #region
+
     @property
     def num_learnable_pathways(self):
         """Override to return just 1,
@@ -1259,7 +1298,6 @@ class GRUComposition(AutodiffComposition):
         the direct pathway through the GRU mechanism (i.e., self.gru_mech), and no explicilty learnable Projections
         (since that occurs within the Pytorch module itself"""
         return 1
-
 
     @property
     def w_ih_learning_rate(self):
@@ -1290,3 +1328,5 @@ class GRUComposition(AutodiffComposition):
             return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_HIDDEN_TO_HIDDEN].projection.learning_rate
         warnings.warn(f"{self.name} does not have any bias parameters; "
                       f"it must be constructed with bias=True in its constructor to have them.")
+
+    # endregion
