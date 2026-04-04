@@ -4,51 +4,56 @@ import numpy as np
 from torch import nn
 
 
-def run_participant(params, data_loader, len_memory=2):
+def run_participant(states, len_memory=2, **kwargs):
+    # Context module = Integrator that integrates states (working memory)
+    # Context mapping = maps the current context to the representation used in the EM module (learned)
+    # EM module = Episodic memory module that stores prev_state, context representation, and next state
+    context_module, context_mapping, em_module = gen_model(**kwargs, len_memory=len_memory)
+
+    # Learning setup
     loss_fn = nn.BCELoss()
-    context_module, em_module = gen_model(params, len_memory=len_memory)
-    optimizer = torch.optim.SGD(lr=params['learning_rate'], params=em_module.parameters())
-    em_preds = []
+    optimizer = torch.optim.SGD(lr=kwargs['learning_rate'], params=context_mapping.parameters())
+
+    # Container to store predictions
+    predictions = []
+
+    # Initialization
     context = torch.zeros(11)
+    learned_context_representation = torch.zeros_like(context)
     prev_state = torch.zeros_like(context)
+    pred_init = torch.zeros_like(context)
 
     # Loop over each state of the CSW task.
-    for trial, (x, _, y) in enumerate(data_loader):
-        if trial < 1:
-            continue
+    for trial_idx, state in enumerate(states):
+        # Ensure that state is correct shape (1, state_dim). If it is (state_dim,), unsqueeze
+        if len(state.shape) == 1:
+            state = state.unsqueeze(0)
 
+        # For each state, we perform several optimization steps to update the context representations
+        for i in range(kwargs['num_optimization_steps']):
+            # get current context representation from current context
+            learned_context_representation = context_mapping(context)
+            # retrieve the next state prediction from the EM module using the previous state and current context.
+            pred_em = em_module(prev_state, learned_context_representation)
 
-
-        for i in range(params['n_optimization_steps']):
-            # Skip first state bc which sequence within the context is randomly assigned.
-            # i.e., we have not yet observed a full state transition.
-
-            pred_em = em_module(prev_state, context)
+            # Capture the initial prediction before any learning for analysis
             if i == 0:
                 pred_init = pred_em.detach().cpu().numpy().copy()
 
+                # Backpropagation step to update the context mapping
+            optimizer.zero_grad()
 
-            optimizer.zero_grad()  # Zero the gradients before each optimization step.
-              # retrieve the next state prediction from the EM module.
-            # The initial prediction is our first guess before learning
-
-            loss = loss_fn(pred_em, x)  # calculate the loss between the predicted and actual next state.
+            loss = loss_fn(pred_em, state)  # calculate the loss between the predicted and actual next state.
             loss.backward()  # compute the gradients of the context module.
             optimizer.step()  # backprop to update context module weights.
-            print(f"STIM {trial} optimization step {i}: {float(loss):{5}f}")
 
+        # After the trial, we write the new experience into EM and update the context for the next trial.
+        context_to_store = learned_context_representation.detach().cpu()
+        em_module.write(prev_state, context_to_store, state)
+        context = context_module(state)
+        prev_state = state.detach().cpu()
 
-        # with torch.no_grad():
-        #     context_to_store = em_module.context_in(context)
+        # Store the initial EM prediction for this trial for analysis.
+        predictions.append(pred_init)
 
-        # with torch.no_grad():# After optimization, write the current state to the EM module and update the context.
-        context_to_store = em_module.context_query.detach().cpu()
-        em_module.write(prev_state, context_to_store, x)
-        context = context_module(x)
-        prev_state = x.detach().cpu()
-
-        em_preds.append(pred_init)
-
-    # Collect some metrics from the training run for analysis.
-    em_preds = np.stack(em_preds).squeeze()
-    return em_preds
+    return np.stack(predictions).squeeze()

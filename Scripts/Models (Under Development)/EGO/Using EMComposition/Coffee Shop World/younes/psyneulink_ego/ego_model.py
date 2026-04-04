@@ -1,50 +1,37 @@
+import numpy as np
+
 from psyneulink import *
+
+# NAMES
+model_name: str = 'EGO'
+state_input_name: str = 'STATE'
+previous_state_name: str = 'PREVIOUS STATE'
+context_name: str = 'CONTEXT'
+prediction_layer_name = 'PREDICTION'
+em_name: str = 'EM'
 
 
 def construct_model(
-        config,
-        memory_capacity
-) -> Composition:
-    model_name: str = config['name']
+        state_size,
+        integration_rate,
+        state_retrieval_weight,
+        previous_state_retrieval_weight,
+        context_retrieval_weight,
+        learning_rate,
+        memory_fill,
+        softmax_temperature,
+        softmax_threshold,
+        loss_spec_name,
+        num_optimization_steps,
+        memory_capacity,
+        **kwargs):
+    retrieval_softmax_gain = 1 / softmax_temperature
 
-    # Input layer:
-    state_input_name: str = config['state_input_layer_name']
-    state_size: int = config['state_d']
-
-    # Previous state
-    previous_state_name: str = config['previous_state_layer_name']
-
-    # Context representation (learned):
-    context_name = config['context_layer_name']
-    context_size = config['context_d']
-    integration_rate = config['integration_rate']
-    # EM:
-    em_name = config['em_name']
-    retrieval_softmax_threshold = config['softmax_threshold']
-    state_retrieval_weight = config['state_weight']
-    previous_state_retrieval_weight = config['previous_state_weight']
-    context_retrieval_weight = config['context_weight']
-    normalize_field_weights = config['normalize_field_weights']
-    concatenate_queries = config['concatenate_queries']
-    enable_learning = config['enable_learning']
-
-    memory_init = config['memory_init']
-
-    # Output:
-    prediction_layer_name = config['prediction_layer_name']
-
-    # Learning
-    loss_spec = config['loss_spec']
-    learning_rate = config['learning_rate']
-    device = config['device']
-
-    if is_numeric_scalar(config['softmax_temperature']):  # translate to gain of softmax retrieval function
-        retrieval_softmax_gain = 1 / config['softmax_temperature']
+    enable_learning = learning_rate > 0
+    if loss_spec_name == 'BinaryCrossEntropy':
+        loss_spec = Loss.BINARY_CROSS_ENTROPY
     else:
-        retrieval_softmax_gain = config['softmax_temperature']
-
-    assert 0 <= integration_rate <= 1, \
-        f"integrator_retrieval_weight must be a number from 0 to 1"
+        raise ValueError(loss_spec_name)
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Nodes  ------------------------------------------------------
@@ -53,36 +40,44 @@ def construct_model(
     state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
     previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     context_layer = TransferMechanism(name=context_name,
-                                      input_shapes=context_size,
-                                      function=Tanh(gain=1),
+                                      input_shapes=state_size,
+                                      function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
+    context_bias = TransferMechanism(name=context_name + '[bias]',
+                                     input_shapes=1,
+                                     default_variable=[1.],
+                                     )
+
+    context_normalized = TransferMechanism(name=CONTEXT + '[normalized]',
+                                           input_shapes=state_size,
+                                           function=Normalize(),
+                                           )
 
     em = EMComposition(
         name=em_name,
         memory_template=[[0] * state_size,  # state
                          [0] * state_size,  # previous state
                          [0] * state_size],  # context
-        memory_fill=memory_init,
+        memory_fill=memory_fill,
         memory_capacity=memory_capacity,
         memory_decay_rate=0,
         softmax_gain=retrieval_softmax_gain,
-        softmax_threshold=retrieval_softmax_threshold,
-        fields={state_input_name: {FIELD_WEIGHT: state_retrieval_weight,
+        softmax_threshold=softmax_threshold,
+        fields={state_input_layer.name: {FIELD_WEIGHT: state_retrieval_weight,
                                    LEARN_FIELD_WEIGHT: False,
-                                   TARGET_FIELD: True},
-                previous_state_name: {FIELD_WEIGHT: previous_state_retrieval_weight,
+                                   TARGET_FIELD: False},
+                previous_state_layer.name: {FIELD_WEIGHT: previous_state_retrieval_weight,
                                       LEARN_FIELD_WEIGHT: False,
                                       TARGET_FIELD: False},
-                context_name: {FIELD_WEIGHT: context_retrieval_weight,
+                context_layer.name: {FIELD_WEIGHT: context_retrieval_weight,
                                LEARN_FIELD_WEIGHT: False,
                                TARGET_FIELD: False}},
-        normalize_field_weights=normalize_field_weights,
-        normalize_memories=config['normalize_memories'],
-        concatenate_queries=concatenate_queries,
-        enable_learning=enable_learning,
-        learning_rate=learning_rate,
-        device=device,
+        normalize_field_weights=False,
+        normalize_memories=False,
+        concatenate_queries=False,
+        enable_learning=False,
+        device=CPU,
         store_on_optimization='last')
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
@@ -106,42 +101,59 @@ def construct_model(
                                 context_layer]
     state_to_em_pathway = [state_input_layer,
                            MappingProjection(sender=state_input_layer,
-                                             receiver=em.nodes[state_input_name + VALUE],
+                                             receiver=em.nodes[state_input_layer.name + VALUE],
                                              matrix=IDENTITY_MATRIX,
                                              learnable=False),
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
                                     MappingProjection(sender=previous_state_layer,
-                                                      receiver=em.nodes[previous_state_name + QUERY],
+                                                      receiver=em.nodes[previous_state_layer.name + QUERY],
                                                       matrix=IDENTITY_MATRIX,
                                                       learnable=False),
                                     em]
     context_learning_pathway = [context_layer,
                                 MappingProjection(sender=context_layer,
                                                   matrix=IDENTITY_MATRIX,
-                                                  receiver=em.nodes[context_name + QUERY],
+                                                  receiver=context_normalized,
                                                   learnable=True),
+                                context_normalized,
+                                MappingProjection(sender=context_normalized,
+                                                  matrix=IDENTITY_MATRIX,
+                                                  receiver=em.nodes[context_layer.name + QUERY],
+                                                  learnable=False),
                                 em,
-                                MappingProjection(sender=em.nodes[state_input_name + RETRIEVED],
+                                MappingProjection(sender=em.nodes[state_input_layer.name + RETRIEVED],
                                                   receiver=prediction_layer,
                                                   matrix=IDENTITY_MATRIX,
                                                   learnable=False),
                                 prediction_layer]
 
     # Composition
-    EGO_comp = AutodiffComposition([state_to_previous_state_pathway,
-                                    state_to_context_pathway,
-                                    state_to_em_pathway,
-                                    previous_state_to_em_pathway,
-                                    context_learning_pathway],
-                                   learning_rate=learning_rate,
-                                   loss_spec=loss_spec,
-                                   execute_in_additional_optimizations={context_layer: LAST,
-                                                                        previous_state_layer: LAST},
-                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
-                                   optimizations_per_minibatch=config['num_optimization_steps'],
-                                   name=model_name,
-                                   device=device)
+    EGO_comp = AutodiffComposition(
+        [state_to_previous_state_pathway,
+         state_to_context_pathway,
+         state_to_em_pathway,
+         previous_state_to_em_pathway,
+         context_learning_pathway],
+        learning_rate=learning_rate,
+        loss_spec=loss_spec,
+        execute_in_additional_optimizations={
+            context_layer: LAST,
+            previous_state_layer: LAST
+        },
+        optimizations_per_minibatch=num_optimization_steps,
+        name=model_name,
+        device=CPU)
+
+    EGO_comp.add_node(context_bias)
+    EGO_comp.add_projection(
+        sender=context_bias,
+        receiver=context_normalized,
+        projection=MappingProjection(
+            matrix=np.zeros((1, state_size)),
+            learnable=True
+        )
+    )
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
@@ -149,40 +161,25 @@ def construct_model(
                                               learnable=False))
 
     EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(context_normalized, BeforeNodes(em))
     EGO_comp.scheduler.add_condition(prediction_layer, BeforeNodes(previous_state_layer, context_layer))
 
-    return EGO_comp, context_layer, state_input_layer, em
+    return EGO_comp, state_input_layer
 
 
-def run_model(model,
-              # context_layer,
-              # state_input_layer,
-              # em,
-              trials,
-              config,
-              # learning=True,
-              ):
-    model.learn(inputs={config['state_input_layer_name']: trials},
-                # learning_rate=config['learning_rate'],
-                execution_mode=config['execution_mode'],
-                optimizations_per_minibatch=config['num_optimization_steps'],
-                minibatch_size=1,
-                synch_projection_matrices_with_torch=RUN,
-                synch_node_values_with_torch=RUN,
-                synch_results_with_torch=RUN,
-                )
-    # model.learn(inputs={params_ego['state_input_layer_name']: trials},
-    #             learning_rate=params_ego['learning_rate'],
-    #             execution_mode=params_ego['execution_mode'],
-    #             synch_projection_matrices_with_torch=params_ego['synch_weights'],
-    #             synch_node_values_with_torch=params_ego['synch_values'],
-    #             synch_results_with_torch=params_ego['synch_results'],
-    #             minibatch_size=1,
-    #             )
-    # memory = em.memory
-    print(model.results)
-    # return model.results[config['num_optimization_steps'] - 1::config['num_optimization_steps']][:, 2]
-    return model.results[::config['num_optimization_steps']][:, 2]
+def run_model(model, input_layer, states, num_optimization_steps, **kwargs):
+    model.learn(
+        inputs={input_layer: states},
+        execution_mode=ExecutionMode.PyTorch,
+        optimizations_per_minibatch=num_optimization_steps,
+        minibatch_size=1,
+        synch_projection_matrices_with_torch=RUN,
+        synch_node_values_with_torch=RUN,
+        synch_results_with_torch=RUN,
+
+    )
+
+    return model.results[::num_optimization_steps][:, 2]
 
 if __name__ == '__main__':
     trials = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]
@@ -212,6 +209,6 @@ if __name__ == '__main__':
               'execution_mode': ExecutionMode.PyTorch,
               'integration_rate': 0.5,
               }
-    model, _, _, _ = construct_model(memory_capacity=5, config=config)
+    model, _, _, _ = construct_model(memory_capacity=5, **config)
     results = run_model(model, trials)
     print(results)

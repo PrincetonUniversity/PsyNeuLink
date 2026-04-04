@@ -3225,7 +3225,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import \
     MappingProjection, MappingError, PROXY_FOR, ProxyProjection
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
-    Projection_Base, ProjectionError, DuplicateProjectionError, ProjectionRegistry
+    Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -3260,9 +3260,9 @@ from psyneulink.core.globals.parameters import (
 )
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
-from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.registry import global_registry, register_category
 from psyneulink.core.globals.utilities import (
-    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, get_from_registry, is_numeric_scalar,
+    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, is_numeric_scalar,
     nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal, try_extract_0d_array_item,
     counts,
 )
@@ -9895,11 +9895,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         opt_params = {}
 
         if isinstance(projection, str):
-            import psyneulink as pnl
-
             # TODO: replace this with maybe storing only projections in
             # OptParam, then allowing get by name as well
-            reg_projection = get_from_registry(projection, pnl.ProjectionRegistry)
+            reg_projection = global_registry.get_entry(projection, Projection)
             if reg_projection:
                 projection = reg_projection
 
@@ -12497,7 +12495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj_key, _ in val_items:
                 if proj_key == o_param._default_key:
                     continue
-                reg_proj = get_from_registry(proj_key, ProjectionRegistry)
+                reg_proj = global_registry.get_entry(proj_key, Projection)
                 if reg_proj:
                     proj_key = reg_proj
                 if proj_key not in all_projections:

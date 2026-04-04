@@ -149,7 +149,6 @@ __all__ = ([
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'counts',
     'get_class_attributes', 'extended_array_equal',
     'flatten_list', 'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
-    'get_from_registry',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric',  'is_identity_matrix',
     'is_iterable', 'is_matrix', 'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number',
@@ -2655,17 +2654,5 @@ def get_stacklevel_skip_file_prefixes(
             return i + 1
     return res
 
-
-def get_from_registry(obj_name: str, registry: dict):
-    for reg in registry.values():
-        try:
-            return reg.instanceDict[obj_name]
-        except KeyError:
-            # sometimes the name attr is different than the instanceDict key
-            for o in reg.instanceDict.values():
-                if o.name == obj_name:
-                    return o
-
-    return None
 
 #endregion

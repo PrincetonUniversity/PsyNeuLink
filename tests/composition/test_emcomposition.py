@@ -1200,3 +1200,85 @@ class TestExecution:
                  0.500546005148344, 0.5002721993254642, 0.7286589222309047, 0.5002703012614821,
                  0.5007087573384702, 0.5]]
         np.testing.assert_allclose(result, expected)
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize('reverse', [False, True], ids=['none_then_query', 'query_then_none'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch],
+                             ids=['Python', 'PyTorch'])
+    def test_field_weight_none_order_does_not_break_storage(self, reverse, exec_mode):
+        a_size = 3
+        b_size = 4
+
+        memory_template = [
+            [0] * a_size,
+            [0] * b_size,
+        ]
+
+        a_field_weight = None
+        b_field_weight = 1.0
+
+        if reverse:
+            a_field_weight = 1.0
+            b_field_weight = None
+
+        fields = {
+            'A': {
+                pnl.FIELD_WEIGHT: a_field_weight,
+                pnl.LEARN_FIELD_WEIGHT: False,
+                pnl.TARGET_FIELD: False,
+            },
+            'B': {
+                pnl.FIELD_WEIGHT: b_field_weight,
+                pnl.LEARN_FIELD_WEIGHT: False,
+                pnl.TARGET_FIELD: False,
+            },
+        }
+
+        em = pnl.EMComposition(
+            name="EM",
+            memory_template=memory_template,
+            memory_capacity=10,
+            memory_fill=0.01,
+            memory_decay_rate=0.0,
+            softmax_gain=1.0,
+            softmax_threshold=0.001,
+            fields=fields,
+            normalize_field_weights=False,
+            normalize_memories=False,
+            concatenate_queries=False,
+            enable_learning=False,
+        )
+
+        QUERY = " [QUERY]"
+        VALUE = " [VALUE]"
+
+        a_in = np.array([
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+        ])
+
+        b_in = np.array([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+        ])
+
+        a_key = 'A' + VALUE
+        b_key = 'B' + QUERY
+        if reverse:
+            a_key = 'A' + QUERY
+            b_key = 'B' + VALUE
+
+        inputs = {
+            em.nodes[a_key]: a_in,
+            em.nodes[b_key]: b_in,
+        }
+
+        # Regression test:
+        # field order should not determine whether EMComposition can run when one field
+        # is a value field (FIELD_WEIGHT=None) and the other is a query field.
+        result = em.run(
+            inputs=inputs,
+            execution_mode=exec_mode,
+        )
+
+        assert result is not None
