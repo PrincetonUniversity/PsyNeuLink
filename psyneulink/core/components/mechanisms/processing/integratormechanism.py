@@ -301,7 +301,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
         builder = super()._gen_llvm_function_body(ctx, builder, base_params, state, arg_in, arg_out, tags=tags)
 
-        params, builder = self._gen_llvm_param_ports_for_obj(self, base_params, ctx, builder, base_params, state, arg_in)
+        params, builder = self._gen_llvm_param_ports_for_obj(ctx, builder, base_params, state, arg_in, obj=self, params_in=base_params)
 
         reset_ptr = ctx.get_param_or_state_ptr(builder, self, "reset", param_struct_ptr=params)
         reset_val = builder.load(reset_ptr)
