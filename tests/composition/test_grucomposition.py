@@ -124,7 +124,8 @@ if torch_available:
         ])
         @pytest.mark.parametrize('gru_enable_learning', [
             False,
-            True])
+            True
+        ])
         @pytest.mark.parametrize('pathway_type', [
             'solo',
             'gru_as_input',

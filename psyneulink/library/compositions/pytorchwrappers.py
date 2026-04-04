@@ -1834,7 +1834,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         ]
 
 
-        # Assign values to  all_output_values
+        # Assign values to all_output_values
         output_values = []
         for idx, port, node, comp in outputs_idx_port_node_comp:
 
@@ -2201,13 +2201,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
-
-        # # TEACHER_TARGET BREADCRUMB: FILTER UNUSED AFFERENTS (E.G., TO output_CIM.input_ports) BEFORE TESTING
-        # assert len(self.afferents) == len(self.input_ports), \
-        #     (f"PROGRAM ERROR: The number of afferents ({len(self.afferents)}) "
-        #      f"in the pytorch Node for '{self.mechanism.name}' "
-        #      f" does not equal the number of input_ports ({len(self.mechanism.input_ports)}) "
-        #      f"for that Mechanism.")
 
         for proj_wrapper in self.afferents:
             # TEACHER_TARGET BREADCRUMB:  AUGMENT TO SUPPORT LossMechanism FOR WHICH AFFERENTS SHOULD BE DETACHED

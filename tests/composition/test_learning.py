@@ -825,13 +825,11 @@ class TestStructural:
 
         @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
                                  ids=["Composition", "Autodiff"])
-        @pytest.mark.parametrize("target_specs", [
-            'target_mechs_in_inputs',
-            'output_mechs_in_targets',
-            'target_mechs_in_targets',
-            'target_mechs_in_inputs_and_targets',
-            'too_many_targets',
-        ])
+        @pytest.mark.parametrize("target_specs", ['target_mechs_in_inputs',
+                                                  'output_mechs_in_targets',
+                                                  'target_mechs_in_targets',
+                                                  'target_mechs_in_inputs_and_targets',
+                                                  'too_many_targets'])
         @pytest.mark.pytorch
         def test_map_external_target_values_to_target_nodes(self, target_specs, comp_type):
             """Test for checks on the validity of the inputs and targets args of the learn() method"""
@@ -865,38 +863,47 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_targets':
                 # Test for warning about TARGET_MECHANISMS in targets arg
-                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries "
-                           f"that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is "
-                           f"OK, it might be easier to clearer to use the OUTPUT Nodes to which they correspond as the "
-                           f"keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, TARGET "
-                           f"Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, "
-                           f"obviating the need to specify the 'targets' arg.")
-
+                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
+                           f"entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
+                           f"while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
+                           f"which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
+                           f"obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
+                           f"specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating the "
+                           f"need to specify the 'targets' arg.")
                 with pytest.warns(UserWarning, match=re.escape(warning)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
-                warning1 = ("There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' args "
-                            "of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
-                            "This is not technically a problem, but it is redundant; one or the other is sufficient.")
+                warning1 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
+                            "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
+                            "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
+                            "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
+                            "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
+                            "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
+                            "the need to specify the 'targets' arg.")
 
-                warning2 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries "
-                            "that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is "
-                            "OK, it might be easier to clearer to use the OUTPUT Nodes to which they correspond as the "
-                            "keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, TARGET "
-                            "Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, "
-                            "obviating the need to specify the 'targets' arg.")
+                warning2 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
+                            "(listed below) in the 'inputs' and 'targets' arguments of the learn() method of "
+                            "'TEST COMP'. While this is technically OK, it might be easier and clearer to use the "
+                            "SAMPLE Nodes to which they correspond as the keys of the dict, obviating the need to "
+                            "determine the TARGET Nodes and place them all in the 'targets' argument of the learn "
+                            "method(). Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() "
+                            "method (which can be identified using the Composition's 'get_target_nodes()' method) "
+                            "along with other INPUT nodes, obviating the need to specify the 'targets' arg.  "
+                            "Redundant specifications for: 'TARGET for OUTPUT MECH A' in 'inputs' and 'targets' args; "
+                            "'TARGET for OUTPUT MECH B' in 'inputs' and 'targets' args.")
 
                 inputs_arg.update(target_mechs)
                 with pytest.warns(UserWarning, match=re.escape(warning1)), \
-                     pytest.warns(UserWarning, match=re.escape(warning2)):
+                        pytest.warns(UserWarning, match=re.escape(warning2)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg
-                error = (f"The number of items (3) specified in the 'targets' arg of the learn() method "
-                         f"for 'TEST COMP' must equal the number of TARGET Nodes in the Composition (2).")
+                error = ("The learn() method of 'TEST COMP' can't be executed because there is the following illegal "
+                         "specification in its targets argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
+                         "not a TARGET Node.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
                                targets={comp.nodes[0]: [[1]],

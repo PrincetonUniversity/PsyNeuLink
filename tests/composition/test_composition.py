@@ -2955,17 +2955,20 @@ class TestGetMechanismsByRole:
 
         with pytest.raises(NodeRoleError) as error_text:
             comp.require_node_roles(mechs[0], NodeRole.ORIGIN)
-        assert ("Attempt to assign 'TransferMechanism-0' the NodeRole.ORIGIN which is not allowed."
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-0' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'ORIGIN'."
                 in str(error_text.value))
 
         with pytest.raises(NodeRoleError) as error_text:
             comp.require_node_roles(mechs[1], NodeRole.INTERNAL)
-        assert ("Attempt to assign 'TransferMechanism-1' the NodeRole.INTERNAL which is not allowed."
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-1' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'INTERNAL'."
                 in str(error_text.value))
 
         with pytest.raises(NodeRoleError) as error_text:
             comp.require_node_roles(mechs[2], NodeRole.TERMINAL)
-        assert ("Attempt to assign 'TransferMechanism-2' the NodeRole.TERMINAL which is not allowed."
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'TERMINAL'."
                 in str(error_text.value))
 
         comp.require_node_roles(mechs[1], NodeRole.INPUT)
