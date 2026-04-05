@@ -1175,13 +1175,6 @@ class GRUComposition(AutodiffComposition):
             raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
-    # # # # MODIFIED TEACHER_TARGET NEW:
-    # def _get_nested_nodes(self, *args, **kwargs):
-    #     nested_nodes = super()._get_nested_nodes(*args, **kwargs)
-    #     if self.gru_mech:
-    #         nested_nodes.append((self.gru_mech, self))
-    #     return nested_nodes
-    # # MODIFIED TEACHER_TARGET END
     def add_projection(self, *args, **kwargs):
         """Override if called from command line to disallow modification of GRUComposition"""
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:

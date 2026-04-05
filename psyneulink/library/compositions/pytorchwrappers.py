@@ -761,11 +761,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"from its input_CIM to '{nested_port.owner.name}'.")
             nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
             pnl_proj = incoming_projections[0]
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if pnl_proj != nested_port.path_afferents[0]:
-            # MODIFIED TEACHER_TARGET NEW:
             if pnl_proj != nested_port_afferents[0]:
-            # MODIFIED TEACHER_TARGET END
                 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
                 raise AutodiffCompositionError(
                     f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
@@ -813,11 +809,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nested_port_efferents = [proj for proj in nested_port.efferents if proj in self.composition.projections]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if nested_port.efferents[0] != projection.sender.owner.port_map[nested_port][0].path_afferents[0]:
-            # MODIFIED TEACHER_TARGET NEW:
             if nested_port_efferents[0] != projection.sender.owner.port_map[nested_port][0].path_afferents[0]:
-            # MODIFIED TEACHER_TARGET END
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
@@ -2209,7 +2201,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         output_values = []
         for idx, port, node, comp in outputs_idx_port_node_comp:
 
-            # TEACHER_TARGET BREADCRUMB: FROM DEVEL
             if comp._trained_comp_nodes_to_pytorch_nodes_map:
                 node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
 

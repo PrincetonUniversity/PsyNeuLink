@@ -620,13 +620,6 @@ class NodeRolesManager(object):
         the AutoassociativeLearningMechanism but can (or already does) project to an output_CIM.
         """
 
-        # MODIFIED TEACHER_TARGET OLD:
-        # return all((p.receiver.owner is node # <- recurrence
-        #         or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-        #         or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
-        #             if composition else None))
-        #        for p in self._get_projections(node, 'efferents'))
-        # MODIFIED TEACHER_TARGET NEW:
         recurrent = True
         for p in self._get_projections(node, 'efferents'):
             if not (p.receiver.owner is node # <- recurrence
@@ -635,8 +628,6 @@ class NodeRolesManager(object):
                     if composition else None)):
                 recurrent = False
         return recurrent
-        # MODIFIED TEACHER_TARGET END
-
 
             # IMPLEMENTATION NOTE:
             #   The following alternate version allows LEARNING_OBJECTIVE to be assigned as OUTPUT

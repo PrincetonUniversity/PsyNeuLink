@@ -1644,11 +1644,7 @@ class AutodiffComposition(Composition):
 
     def _check_if_sample_is_in_learnable_pathway(self,
                                                  sample_port:OutputPort,
-                                                 # # MODIFIED TEACHER_TARGET OLD:
-                                                 # target_mech:ProcessingMechanism_Base=None,
-                                                 # MODIFIED TEACHER_TARGET NEW:
                                                  target_spec=None,
-                                                 # MODIFIED TEACHER_TARGET END
                                                  loss_mech:LossMechanism=None,
                                                  constructed_target_mechs:list=None,
                                                  action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
@@ -1863,9 +1859,7 @@ class AutodiffComposition(Composition):
                                                               loss_mech=loss_mech_spec,
                                                               constructed_target_mechs=constructed_target_mechs,
                                                               action=ERROR)
-                # MODIFIED TEACHER_TARGET NEW:
                 sample_spec = target_spec = loss_mech_spec
-                # MODIFIED TEACHER_TARGET END
 
             elif isinstance(loss_mech_spec, tuple):
                 sample_spec, target_spec = loss_mech_spec
@@ -1878,11 +1872,7 @@ class AutodiffComposition(Composition):
                 #   then raise error, as constructing a LossMechanism with a LossFunction that tries to compute
                 #   loss in pytorch will cause a crash
                 _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
-                                                                           # # MODIFIED TEACHER_TARGET OLD:
-                                                                           # target_mech=target_mech,
-                                                                           # MODIFIED TEACHER_TARGET NEW:
                                                                            target_spec=target_spec,
-                                                                           # MODIFIED TEACHER_TARGET END
                                                                            loss_mech=None,
                                                                            constructed_target_mechs=None,
                                                                            action=ERROR)
@@ -1984,7 +1974,6 @@ class AutodiffComposition(Composition):
                     target_mech._initialize_from_context(context, base_context, override=False)
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
-                # TEACHER_TARGET BREADCRUMB: require_node_roles() NEEDS TO HANDLE SCOPE, TO ASSIGN TO NESTED NODES
                 self.require_node_roles(output_port_for_learning.owner, NodeRole.SAMPLE, ALL, context)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
         assert len(output_ports_for_learning) == len(target_mechs), \
@@ -2150,7 +2139,6 @@ class AutodiffComposition(Composition):
         # Dereference InputPort of sender and index of its afferent
         sender_port = afferent_proj.receiver
         sender_idx = sender_port.path_afferents.index(afferent_proj)
-        # MODIFIED TEACHER_TARGET NEW:
         if isinstance(sender_port.owner, CompositionInterfaceMechanism):
             sender_to_cim_info = sender_port.owner._get_source_node_for_input_CIM(sender_port)
             if sender_to_cim_info:
@@ -2162,7 +2150,6 @@ class AutodiffComposition(Composition):
                     # Use that to dereference sender_port and sender_idx
                     sender_port = direct_proj_to_sender_port.receiver
                     sender_idx = sender.path_afferents.index(direct_proj_to_sender_port)
-        # MODIFIED TEACHER_TARGET END
 
         # Dereference InputPort of receiver and index of its afferent
         if isinstance(projection.receiver.owner, CompositionInterfaceMechanism):
@@ -2387,9 +2374,19 @@ class AutodiffComposition(Composition):
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
         return optimizer
 
+    def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
+        """Override to ensure that any SAMPLE Nodes specified in **targets** argument of constructor were found."""
+        sample_nodes = super().get_sample_nodes(execution_mode, context, base_context)
+        if not sample_nodes and self._constructor_target_specs is not None:
+            # Should be SAMPLE Nodes since they were specified in the **targets** arg of the constructor
+            assert False, f"PROGRAM ERROR: {self.name} has no SAMPLE nodes even though they were specified."
+        return sample_nodes
+
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch,
                          context=None, base_context=None):
-        """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
+        """Override to call infer_backpropagation_learning_pathways
+        This instantiates any TARGET Nodes specified in **targets** argument of the constructor.
+        """
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
                                                      context=context, base_context=base_context)
         return super(AutodiffComposition, self).get_target_nodes(context, base_context)
@@ -2548,11 +2545,7 @@ class AutodiffComposition(Composition):
                 output = output.squeeze(1)
 
             output = output.detach().cpu().numpy().copy().tolist()
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if self.sample_port_to_target_port_map.values():
-            # MODIFIED TEACHER_TARGET NEW:
             if self.target_port_to_sample_port_map:
-            # MODIFIED TEACHER_TARGET END
                 trained_output_values += [output]
             all_output_values += [output]
 
@@ -2708,21 +2701,11 @@ class AutodiffComposition(Composition):
 
         # Assign target values specified in learn() to TARGET Nodes
         for port, value in target_specs.copy().items():
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if port in self.sample_port_to_target_port_map:
-            #     # Use TARGET Node (target_port owner) for key
-            #     target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
-            # # MODIFIED TEACHER_TARGET NEW:
-            # # port to be specified for sample or target; what matters is
-            # sample, target = next((item for item in self.sample_port_to_target_port_map.items()
-            #                        if port in item), (None,None))
-            # MODIFIED TEACHER_TARGET NEWER:
             # port to be specified for sample or target; what matters is
             sample, target = next(((item.sample_port, item.target_port) for item in self.sample_target_pairs
                                    if port in item), (None,None))
             if sample:
                 target_values_for_target_nodes[self.sample_port_to_target_port_map[sample].owner] = value
-            # MODIFIED TEACHER_TARGET END
 
         return target_values_for_target_nodes
 
@@ -2877,16 +2860,7 @@ class AutodiffComposition(Composition):
                                                            learn_spec.target_value)
                 if target == TARGET:
                     # sample should be specified in learn() with numeric value
-                    # # MODIFIED TEACHER_TARGET OLD:
-                    # if is_numeric(learn_value):
-                    #     # target in constructor is specified as TARGET, and spec in learn() is correctly numeric
-                    #     # BREADCRUMB: IS THE FOLLOWING OK SINCE IT IS PASSED IN?
-                    #     # legal_specs.update({learn_spec: learn_value})
-                    #     pass
-                    # else:
-                    # MODIFIED TEACHER_TARGET NEW:
                     if not is_numeric(learn_value):
-                    # MODIFIED TEACHER_TARGET END
                         # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
                         # expected numeric spec for target in learn(), but got non-numeric
                         bad_specs.append((learn_spec, learn_target,
@@ -2913,7 +2887,6 @@ class AutodiffComposition(Composition):
                                       "learn method, and assigned a numeric array (i.e., the value used for training "
                                       "on each trial."))
 
-        # MODIFIED TEACHER_TARGET NEWER:
         # Add any illegal specs passed in to bad_specs for reporting in error message
         for spec in illegal_specs:
             illegal_spec = (f"'{spec.target_spec.full_name}'"
@@ -2921,7 +2894,6 @@ class AutodiffComposition(Composition):
                             else spec.target_spec)
             bad_specs.append((spec, illegal_spec, f"does not correspond to any sample specified "
                                                   f"in the constructor"))
-        # MODIFIED TEACHER_TARGET END
 
         if bad_specs:
             # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
@@ -3172,6 +3144,7 @@ class AutodiffComposition(Composition):
         if self._built_pathways is False:
             # TEACHER_TARGET BREADCRUMB: ADD TEST HERE FOR LEARNABLE PATHWAYS AND WARN IF NONE
             if not self._has_learnable_pathways:
+                # X TEST DONE
                 raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
                                                f"therefore its learn() method cannot be executed.")
             self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
@@ -3483,9 +3456,6 @@ class AutodiffComposition(Composition):
             # Synchronize specified outcomes at end of run
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
-                # # MODIFIED TEACHER_TARGET OLD:
-                # pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
-                # MODIFIED TEACHER_TARGET NEW:
                 # Synchronize with PsyNeuLink at end of run if in learning mode (i.e., called from learn()),
                 if context.runmode == ContextFlags.LEARNING_MODE:
                     pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
@@ -3496,7 +3466,6 @@ class AutodiffComposition(Composition):
                     warnings.warn(f"Although the run() method of '{self.name}' was called with "
                                   f"'execution_mode=ExecutionMode.PyTorch' it will be run in Python mode; an "
                                   f"AutodiffComposition is only executed in PyTorch mode when its learn() is called.")
-                # MODIFIED TEACHER_TARGET END
 
         return results
 
@@ -3977,7 +3946,6 @@ class AutodiffComposition(Composition):
     def _get_default_comp_learning_rate(self):
         self._get_nested_compositions()
 
-    # MODIFIED TEACHER_TARGET NEW:
     @property
     @handle_external_context(fallback_default=True)
     def torch_sample_values(self, context=None):
@@ -4007,4 +3975,3 @@ class AutodiffComposition(Composition):
         if not pytorch_rep:
             return None
         return pytorch_rep.retained_losses
-    # MODIFIED TEACHER_TARGET END

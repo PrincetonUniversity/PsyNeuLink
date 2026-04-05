@@ -1677,6 +1677,7 @@ This can be done in either the **targets** argument of the Composition's `learn(
 or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
 
   # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF TARGET Nodes and get_target_nodes() METHOD
+  # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF SAMPLE Nodes
   * **targets** (dict): this is the simplest way of specifying target values; the key for each entry is an
     `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>` of a `learning Pathway
     <Composition_Learning_Pathway>` or the `OutputPort` of one), and the value is the target value used to
@@ -4673,20 +4674,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node.componentType == 'Composition' and \
                     node not in visited_compositions:
                 visited_compositions.append(node)
-                # # MODIFIED TEACHER_TARGET OLD:
-                #BREADCRUMB: WHY IS NODE NOT RETREIVED HERE AND ADDED TO LIST?
+                # IMPLEMENTATION NOTE: Because nested_nodes is a list, it gets populated in call to _get_nested_nodes()
                 node._get_nested_nodes(nested_nodes,
                                        root_composition,
                                        visited_compositions,
                                        include_cims,
                                        include_controller)
-                # # MODIFIED TEACHER_TARGET NEW:
-                # nested_nodes.extend(node._get_nested_nodes(nested_nodes,
-                #                                            root_composition,
-                #                                            visited_compositions,
-                #                                            include_cims,
-                #                                            include_controller))
-                # MODIFIED TEACHER_TARGET END
             elif root_composition is not self:
                 nested_nodes.append((node,self))
         return nested_nodes
@@ -5730,7 +5723,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         return self.node_roles_mgr.require_node_roles(node, roles, scope, context)
 
-    # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE SCOPE AND SET TO None BY DEFAULT
     @handle_external_context()
     def exclude_node_roles(self,
                            node:Mechanism_Base,
@@ -6331,14 +6323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes
                 and sender_mechanism != self.controller):
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if isinstance(sender, Port):
-            #     sender_name = sender.full_name
-            # else:
-            #     sender_name = sender.name
-            # MODIFIED TEACHER_TARGET NEW:
             sender_name = sender.full_name
-            # MODIFIED TEACHER_TARGET END
 
             # If the sender_mechanism is an OUTPUT Node of the nested Composition,
             #  then use the corresponding CIM on the nested comp as the sender going forward
@@ -9092,8 +9077,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return a list of all `TARGET Nodes <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
         """
-        # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE sample_port_to_target_port_map AS IN get_sample_nodes() BELOW
+        # MODIFIED TEACHER_TARGET OLD:
         target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # BREADCRUMB: IMPLEMENT WHEN NodeRole.TARGET IS ASSIGNED TO INTERNAL TARGETS (e.g. NodeRole._INTERNAL_TARGET)
+        # target_nodes = [entry.target_mech for entry in self._sample_target_pairs]
+        # assert set(target_nodes) == set(self.get_nodes_by_role(NodeRole.TARGET)), \
+        #     (f"PROGRAM ERROR: NodeRole.TARGET assignments in {self.name} are not consistent with target_mech "
+        #      f"entries in self._sample_target_pairs.")
+        # MODIFIED TEACHER_TARGET END
         if not target_nodes:
             # No TARGET Nodes were found
             if not self.learning_components:
@@ -10051,7 +10043,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         sample_port_counts = counts(all_sample_specs_as_ports)
         return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
 
-    # MODIFIED TEACHER_TARGET NEW: USE SAMPLE INSTEAD OF TARGET
     def _handle_redundant_sample_target_specs(self):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
@@ -10067,15 +10058,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
                                             else spec))
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # # BREADCRUMB: CREATE OVERRIDE FOR Autodiff TO ALLOW TARGET and VALUE
-        # # Identify redundant specs for SAMPLE-TARGET pairs
-        # all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
-        # sample_port_counts = counts(all_sample_specs_as_ports)
-        # sample_ports_with_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
-        # # MODIFIED TEACHER_TARGET NEW:
         sample_ports_with_redundant_specs = self._get_redundant_sample_target_specs()
-        # MODIFIED TEACHER_TARGET END
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES
@@ -10096,16 +10079,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not sample_ports_with_redundant_specs:
             return
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # # Identify redundant SAMPLE specs, and flag ones with mismatching values
-        # sample_ports_with_mismatching_specs = {}
-        # # # Search over all samples that have redundant specs
-        # for sample_port in [s for s in sample_port_counts if sample_port_counts[s] > 1]:
-        # MODIFIED TEACHER_TARGET NEW:
         # # Search over all samples that have redundant specs
         sample_ports_with_mismatching_specs = {}
         for sample_port in sample_ports_with_redundant_specs:
-        # MODIFIED TEACHER_TARGET END
 
             # Create list of all target_specs for the sample_port
             # Note: convert values to str to make inside list hashable (counts can only handle one level of unhashables)
@@ -10702,16 +10678,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If built-in function (e.g., 'input'), get name
                 if isinstance(entry, types.BuiltinFunctionType):
                     name = entry.__name__
-                # # MODIFIED TEACHER_TARGET OLD:
-                # # If Port, get name as Mechanism[Port]
-                # elif isinstance(entry, Port):
-                #     name = entry.full_name
-                # else:
-                #     name = entry.name
-                # MODIFIED TEACHER_TARGET NEW:
                 else:
                     name = entry.full_name
-                # MODIFIED TEACHER_TARGET END
                 bad_entry_names[i] = f"'{name}'"
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
                            f"'{self.name}' that are not a Mechanism, Composition, or an InputPort of one: "
@@ -10720,23 +10688,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate that keys for inputs all are or belong to *INPUT Nodes* of Composition (at any level of nesting)
         all_allowable_entries = self._get_input_receivers(type=PORT) \
                                 + self._get_input_receivers(type=NODE, comp_as_node=ALL)
-        # # MODIFIED TEACHER_TARGET OLD:
-        # bad_entries = [key for key in inputs if key not in all_allowable_entries]
-        # if bad_entries:
-            # bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
-            # raise RunError(f"The following items specified in the 'inputs' arg of the run() method for '{self.name}' "
-            #                f"are not INPUT Nodes of that Composition (nor InputPorts of them): "
-            #                f"{', '.join(bad_entry_names)}.")
-        # MODIFIED TEACHER_TARGET NEW:  BREADCRUMB MODIFY BELOW LIKE THIS
+
         bad_entries = [f"'{key.full_name}'" for key in inputs if key not in all_allowable_entries]
         if bad_entries:
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for '{self.name}' "
                            f"are not INPUT Nodes of that Composition (nor InputPorts of them): "
                            f"{', '.join(bad_entries)}.")
-        # MODIFIED TEACHER_TARGET END
 
         # Validate that an InputPort *and* its owner are not *both* specified in inputs
-        bad_entries = [key.full_name for key in inputs if isinstance(key, InputPort) and key.owner in inputs]
+        bad_entries = [f"'{key.full_name}'" for key in inputs if isinstance(key, InputPort) and key.owner in inputs]
         if bad_entries:
             raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
                            f"following InputPorts *and* the Mechanisms to which they belong; only one or the other "
@@ -10744,7 +10704,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Validate that an InputPort of an input_CIM *and* its Composition are not *both* specified in inputs
         #    (this is unlikely but possible)
-        bad_entries = [key.full_name for key in inputs
+        bad_entries = [f"'{key.full_name}'" for key in inputs
                        if (isinstance(key, InputPort)
                            and isinstance(key.owner, CompositionInterfaceMechanism)
                            and key.owner.composition in inputs)]
@@ -10766,19 +10726,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return bad_entries
         bad_entries = check_for_items_in_nested_comp(self)
         if bad_entries:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # bad_entry_names = [(key.full_name, comp.name) if isinstance(key, Port) else (key.name, comp.name)
-            #                    for key,comp in bad_entries]
-            # raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
-            #                f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
-            #                # f"{', '.join(bad_entry_names)}.")
-            #                f"{bad_entry_names}.")
-            # MODIFIED TEACHER_TARGET NEW:
+            # TEACHER_TARGET BREADCRUMB: ADD APOSTROPHES TO key.full_name BELOW
             raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
                            f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
                            # f"{', '.join(bad_entry_names)}.")
                            f"{[(key.full_name, comp.name) for key, comp in bad_entries]}.")
-            # MODIFIED TEACHER_TARGET END
 
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
@@ -10824,15 +10776,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 num_input_ports = len(node_spec.external_input_shape) if is_mech else None
                 # is_input_port = not num_input_ports
 
-                # MODIFIED TEACHER_TARGET OLD:
-                # if is_mech:
-                #     node_name = node_spec.name
-                # else:
-                #     node_name = node_spec.full_name
-                # error_base_msg = f"Input for '{node_name}' of '{self.name}' ({_inputs}) "
-                # MODIFIED TEACHER_TARGET NEW:
                 error_base_msg = f"Input for '{node_spec.full_name}' of '{self.name}' ({_inputs}) "
-                # MODIFIED TEACHER_TARGET END
 
                 if isinstance(_inputs, dict):
                     # entry is dict for a nested Composition, which will be handled recursively
@@ -13870,14 +13814,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def target_port_to_sample_port_map(self):
-    # MODIFIED TEACHER_TARGET OLD:
-    #     assert (len(set(self.sample_port_to_target_port_map.keys())) ==
-    #             len(set(self.sample_port_to_target_port_map.values()))), \
-    #         "PROGRAM ERROR: sample_port_to_target_port_map must be one-to-one to invert"
-    #     return {v: k for k,v in self.sample_port_to_target_port_map.items()}
-    # MODIFIED TEACHER_TARGET NEW:
         return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
-    # MODIFIED TEACHER_TARGET END
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region

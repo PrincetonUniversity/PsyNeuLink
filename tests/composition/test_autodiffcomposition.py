@@ -384,7 +384,6 @@ class TestAutodiffTargetSpecs:
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
-        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
         "default",
         "internal",
         "external",
@@ -523,7 +522,6 @@ class TestAutodiffTargetSpecs:
              "does not correspond to any sample specified in the constructor.", CompositionError),
     }
     test_args_for_target_spec_errors = [
-        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
         #     method         num_specs          spec_type                errant_spec        err_msg_num
         #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra    in/mid/out/all/bad    #
         (     'cnstr',           0,              'node',                    'in',           0), # not learnable
@@ -4367,7 +4365,6 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.parametrize(
         'loss, expected', [
-            # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
             pytest.param(Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]], marks=pytest.mark.llvm_not_implemented),
             pytest.param(Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]], marks=pytest.mark.llvm_not_implemented),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),

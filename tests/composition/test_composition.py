@@ -3202,7 +3202,7 @@ class TestRunInputSpecifications:
         ('input_port_and_mech',
          '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
          'the following InputPorts *and* the Mechanisms to which they belong; '
-         'only one or the other can be specified as inputs to run():  OA[InputPort-0]."'
+         'only one or the other can be specified as inputs to run():  \'OA[InputPort-0]\'."'
          ),
         ('nested_input_port_and_comp',
          '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
