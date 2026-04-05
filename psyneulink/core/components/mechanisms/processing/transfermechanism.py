@@ -1713,7 +1713,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                     m_state,
                                                                     m_in,
                                                                     obj=self.integrator_function,
-                                                                    params_in=if_base_params)
+                                                                    params_in=if_base_params,
+                                                                    recursive=True)
             mf_in, builder = self._gen_llvm_invoke_function(ctx,
                                                             builder,
                                                             self.integrator_function,
@@ -1736,7 +1737,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                 m_state,
                                                                 m_in,
                                                                 obj=self.function,
-                                                                params_in=mf_base_params)
+                                                                params_in=mf_base_params,
+                                                                recursive=True)
         mf_out, builder = self._gen_llvm_invoke_function(ctx,
                                                          builder,
                                                          self.function,

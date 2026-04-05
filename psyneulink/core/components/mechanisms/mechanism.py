@@ -3074,7 +3074,7 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None):
+    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None, recursive=False):
 
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
@@ -3085,7 +3085,7 @@ class Mechanism_Base(Mechanism):
         # Return early using the base parameter location if there's no modulation.
         # This is a manual optimization as it's difficult for compiler
         # to replace pointer arguments to functions with the source location.
-        if len(param_ports) == 0:
+        if len(param_ports) == 0 and params_out is None:
             return params_in, builder
 
         # Allocate a shadow structure to overload base parameters
@@ -3096,26 +3096,57 @@ class Mechanism_Base(Mechanism):
             assert params_in.type.pointee == params_out.type.pointee
 
         # Copy base values to the new structure
-        if len(param_ports) != len(obj.llvm_param_ids):
-            builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
+        mutable_parameters = set(obj.llvm_state_ids)
+        for p in obj.llvm_param_ids:
+            # Use untracked variants. Modulating a parameter doesn't mean it's
+            # used
+            src = pnlvm.helpers.get_param_ptr(builder, obj, params_in, p)
+            dst = pnlvm.helpers.get_param_ptr(builder, obj, params_out, p)
 
-        def _get_modulated_param_output_ptr(b, i):
-            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_out)
-            return b, ptr
+            # If the same id is in both parameters and state it's either a
+            # subcomponent, or a list of subcomponents
+            if p in mutable_parameters:
+                if recursive:
+                    nested_obj = getattr(obj.parameters, p).get()
+                    nested_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                                builder,
+                                                                                mech_params,
+                                                                                mech_state,
+                                                                                mech_input,
+                                                                                obj=nested_obj,
+                                                                                params_in=src,
+                                                                                params_out=dst,
+                                                                                recursive=True)
+                    assert nested_params is dst, "Nested components need to copy non-modulated parameters"
 
-        def _get_param_base_ptr(b, i):
-            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_in)
-            return b, ptr
+                continue
 
-        builder = self._gen_llvm_ports(ctx,
-                                       builder,
-                                       param_ports,
-                                       "_parameter_ports",
-                                       _get_modulated_param_output_ptr,
-                                       _get_param_base_ptr,
-                                       mech_params,
-                                       mech_state,
-                                       mech_input)
+            # Get corresponding parameter port
+            if (parameter := getattr(obj.parameters, p, None)) not in self._parameter_ports:
+                builder = pnlvm.helpers.memcpy(builder, dst, src)
+
+            else:
+                assert self._parameter_ports[parameter].source == parameter, \
+                    "Unexpected parameter ({}) {} source {}".format(p, parameter, self._parameter_ports[parameter].source)
+
+                def _get_modulated_param_output_ptr(b, i):
+                    assert i == 0
+                    return b, dst
+
+                def _get_param_base_ptr(b, i):
+                    assert i == 0
+                    return b, src
+
+                builder = self._gen_llvm_ports(ctx,
+                                               builder,
+                                               [parameter.port],
+                                               "_parameter_ports",
+                                               _get_modulated_param_output_ptr,
+                                               _get_param_base_ptr,
+                                               mech_params,
+                                               mech_state,
+                                               mech_input)
+
         return params_out, builder
 
 
@@ -3281,7 +3312,8 @@ class Mechanism_Base(Mechanism):
                                                                m_state,
                                                                m_in,
                                                                obj=self.function,
-                                                               params_in=f_base_params)
+                                                               params_in=f_base_params,
+                                                               recursive=True)
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, m_val, tags=tags)
 
