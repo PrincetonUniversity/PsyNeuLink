@@ -859,16 +859,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # TEACHER_TARGET BREADCRUMB: DO THE SAME FOR rcvr_mech_wrapper
     #                            TO DEAL WITH PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
-    # MODIFIED TEACHER_TARGET NEW:
-    # def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection)->(Mechanism_Base,
-    #                                                                                   PytorchMechanismWrapper):
     def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection):
         """Get wrapper for sndr_mech
         If sndr_mech is a Mechanism in the outer Composition, get wrapper for sndr_mech directly from its nodes_map;
         If sndr_mech is an output_CIM, then get node in nested Composition that is its source
            and add it to the nodes_map for the outer Composition;
          """
-        # TEACHER_TARGET BREADCRUMB: NEED TO GET WRAPPER FOR NODE IN NESTED NODE OF OUTER_CREATOR
         if sndr_mech in self.outer_creator.nodes_map:
             sndr_mech_wrapper = self.outer_creator.nodes_map[sndr_mech]
             sender = pnl_proj.sender
@@ -881,7 +877,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     self.outer_creator.nodes_map[sndr_mech] = sndr_mech_wrapper
                     break
         return sender, sndr_mech_wrapper
-    # MODIFIED TEACHER_TARGET END
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""

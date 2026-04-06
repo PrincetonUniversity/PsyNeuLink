@@ -152,7 +152,7 @@ class NodeRole(enum.Enum):
     LEARNING_OUTPUT
         A `Node <Composition_Nodes>` that is last one in a `learning Pathway <Composition_Learning_Pathway>`,
         the desired `value <Mechanism_Base.value>` of which is provided as input to the `TARGET_MECHANISM
-        <Composition_Learning_Components>` for that pathway (see `OUTPUT_MECHANISM <OUTPUT_MECHANISM>`.
+        <Composition_Learning_Components>` for that pathway (see `SAMPLE_MECHANISM <SAMPLE_MECHANISM>`.
         This role can, but generally should not be modified programmatically.
     COMMENT
 
