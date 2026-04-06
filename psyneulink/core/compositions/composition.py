@@ -9108,10 +9108,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_components:
                 warnings.warn(f"The 'get_sample_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            # TEACHER_TARGET BREADCRUMB: MOVE THIS TO OVERRIDE IN AutodiffCompostion
-            elif self._constructor_has_target_specs:
-                # Should be SAMPLE Nodes since they were specified in the **targets** arg of the constructor
-                assert False, f"PROGRAM ERROR: {self.name} has no SAMPLE nodes even though they were specified."
         return sample_nodes
 
     # endregion LEARNING PATHWAYS

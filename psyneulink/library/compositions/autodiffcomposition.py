@@ -1457,7 +1457,7 @@ class AutodiffComposition(Composition):
                  f"for OUTPUT Node {terminal_node.name} in {self.name}")
             entry = (afferent_proj.receiver, afferent_proj.receiver.path_afferents.index(afferent_proj))
             # TEACHER_TARGET BREADCRUMB: entry in dependency_dict FAILS TO MAKE IT PAST input_CIM
-            #                            SINCE CIMs ARE NOT IN dependency_dict, AS LEAST NOT FOR EMCOMPOSITION
+            #                            SINCE CIMs ARE NOT IN dependency_dict, AT LEAST NOT FOR EMCOMPOSITION
             #                            SHOULD PROXY / DIRECT_PROJ BE IN DEPENDENCY_DICT?
             while entry in dependency_dict:
                 # Prevent cycle from recurrent pathway
@@ -1887,9 +1887,7 @@ class AutodiffComposition(Composition):
                         continue
                     sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
                                    else sample_port.owner.name)
-                    # TEACHER_TARGET BREADCRUMB: SHOULD THIS BE FOR sample_port NOT sample_mech?
-                    target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
-                                                                                   in sample_mech.value],
+                    target_mech = ProcessingMechanism(default_variable = np.array(np.zeros_like(sample_port.value),
                                                                                   dtype=object),
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
@@ -2091,7 +2089,6 @@ class AutodiffComposition(Composition):
                 assert False, f"PROGRAM ERROR: loss_mech_spec should have been a LossMechanism or tuple by now."
 
             for proj in loss_mech.path_afferents:
-                # TEACHER_TARGET BREADCRUMB: REVISE BELOW TO ENFORCE THESE ON CONSTRUCTION in LossMechanism
                 # IMPLEMENTATION NOTE:
                 #     This is checked here because the Projections to the LossMechanism
                 #     are constructed by reference to its afferents (sample and target)
