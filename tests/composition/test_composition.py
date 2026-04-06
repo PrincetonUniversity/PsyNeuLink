@@ -3205,14 +3205,12 @@ class TestRunInputSpecifications:
          'only one or the other can be specified as inputs to run():  \'OA[InputPort-0]\'."'
          ),
         ('nested_input_port_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA[InputPort-0]\', \'Composition-0\')]."'
+        "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or Mechanisms "
+        "nested in the following Compositions: 'Composition-0': 'IA[InputPort-0]'"
          ),
         ('nested_mech_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA\', \'Composition-0\')]."'
+         "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or "
+         "Mechanisms nested in the following Compositions: 'Composition-0': 'IA'"
          ),
         ('run_nested_with_inputs', None)
     ]

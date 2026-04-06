@@ -903,12 +903,22 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
 
-    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `SAMPLE_MECHANISM
+    * *TARGET_MECHANISM* -- receives the current `value <Mechanism_Base.value>` of the `SAMPLE_MECHANISM
       <SAMPLE_MECHANISM>`, that is used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal
-      (see above);  that value must be specified as an input to the *TARGET_MECHANISM*, either in the **inputs**
-      argument of the Composition's `learn <Composition.learn>` method, or in its **targets** argument in an entry
-      for either the *TARGET_MECHANISM* or the *SAMPLE_MECHANISM* (see `below <Composition_Target_Inputs>`); the
-      Mechanism is assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+      (see above); for a Composition, that value must be specified as the input to the *TARGET_MECHANISM*,
+      either in the **inputs** argument of the Composition's `learn <Composition.learn>` method, or in its
+      **targets** argument in an entry for either the *SAMPLE_MECHANISM* (the preferred method) or the
+      *TARGET_MECAHSNIS* itself (see `below <Composition_Target_Inputs>`); the *TARGET* Mechanism is assigned the
+      `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+
+      .. _Composition_SAMPLE_MECHANISM_Note:
+
+      .. note::
+          A *TARGET_MECHANISM* is constructed automatically for the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` of
+          each `learning Pathway <Composition_Learning_Pathway>` in a Composition.  The latter is always an `OUTPUT
+          <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition. However, this may not be the case for
+          subclasses of Composition, which may allow the explicit assignment of *SAMPLE_MECHANISMs* and
+          *TARGET_MECHANISMs* (e.g., see `AutodiffComposition_Target` for `AutodiffComposition`).
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -952,8 +962,11 @@ It also assigns the following item to the list of `learning_components` for the 
     .. _SAMPLE_MECHANISM:
 
     * *SAMPLE_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
-      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`;
-      the Node is assigned the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
+      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`; the
+      Node is assigned the `NodeRoles <NodeRole>` `SAMPLE <NodeRole.SAMPLE>`.  For a Composition, this is always
+      an *OUTPUT* `Node <Composition_Nodes>`, and thus is also assigned the NodeRole  `OUTPUT <NodeRole.OUTPUT>`
+      However, this may *not* be the case for some subclasses of Composition -- see `note
+      <Composition_SAMPLE_MECHANISM_Note>` above).
 
 The items with names listed above are placed in a dict that is assigned to the `learning_components
 <Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
@@ -1676,12 +1689,11 @@ dictionary for that Mechanism generates and error.
 This can be done in either the **targets** argument of the Composition's `learn() <Composition.learn>`,
 or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
 
-  # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF TARGET Nodes and get_target_nodes() METHOD
-  # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF SAMPLE Nodes
   * **targets** (dict): this is the simplest and clearest way of specifying target values; the key for each entry
-    is a `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` (i.e., the final `Node <Composition_Nodes>` of a `learning Pathway
-    <Composition_Learning_Pathway>` or the `OutputPort` of one), and the value is the target value used to compute
-    the error for that Pathway;
+    is a `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` or the `OutputPort` of one, which must be an `OUTPUT <NodeRole.OUTPUT>`
+    `Node <Composition_Nodes>`, and the value is the target value used to compute the error for that Pathways; the
+    SAMPLE_MECHANISMS of a Composition can be listed using its `get_sample_nodes() <Composition.get_sample_nodes>`
+    method.
 
   * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`, entries
     for `TARGET_MECHANISM <Composition_Learning_Components>`\\s, that receive as input the target value for each
@@ -1689,10 +1701,10 @@ or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
     a list of the TARGET_MECHANISMs for a Composition can be obtained using its `get_target_nodes()
     <Composition.get_target_nodes>` method.
 
-  # TEACHER_TARGET BREADCRUMB:  INTEGRATE INTO TEXT ABOVE
   .. note::
-     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict,
-     although this will elicit a warning indicating that the standard way to specify targets is one of the above.
+     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict
+     (which can be listed using its `get_target_nodes() <Composition.get_target_nodes>` method), although this
+     will elicit a warning indicating that the standard way to specify targets is one of the above.
 
 In either case, the target values in the dict must be formatted as described under <Composition_Input_Dictionary>`.
 The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
@@ -10717,16 +10729,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, Composition) and node in inputs:
                     all_nested_items = node._get_input_receivers(type=PORT) \
                                        + node._get_input_receivers(type=NODE, comp_as_node=ALL)
-                    bad_entries.extend([(entry, node) for entry in inputs if entry in all_nested_items])
+                    bad_entries.extend([f"'{node.name}': '{entry.full_name}'" for entry in inputs
+                                       if entry in all_nested_items])
                     bad_entries.extend(check_for_items_in_nested_comp(node))
             return bad_entries
         bad_entries = check_for_items_in_nested_comp(self)
         if bad_entries:
-            # TEACHER_TARGET BREADCRUMB: ADD APOSTROPHES TO key.full_name BELOW
-            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
-                           f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
-                           # f"{', '.join(bad_entry_names)}.")
-                           f"{[(key.full_name, comp.name) for key, comp in bad_entries]}.")
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications for "
+                           f"InputPorts or Mechanisms nested in the following Compositions: {', '.join(bad_entries)}")
 
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
