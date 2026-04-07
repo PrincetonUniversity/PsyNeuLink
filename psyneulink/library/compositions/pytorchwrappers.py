@@ -255,15 +255,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
         in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
-    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM SAMPLES
     retained_sample_values : List[ndarray]
-        values of the trained `SAMPLE <NodeRole.SAMPLE>` Nodes (i.e., ones associated with `TARGET <NodeRole.TARGET>`
-        Nodes) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
+        values of the `SAMPLE <NodeRole.SAMPLE>` Nodes, that were used as the `sample <LossMechanism.sample>` for the
+        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
-    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM TARGETS
     retained_targets : List[ndarray]
-        values of the `TARGET <NodeRole.TARGET>` Nodes for each trial executed in a call to `learn
-        <AutoDiffComposition.learn>`.
+        values of the `TARGET <NodeRole.TARGET>` Nodes, that were used as the `target <LossMechanism.sample>` for the
+        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
     retained_losses : List[ndarray]
         losses per batch, epoch or run accumulated over a call to learn()

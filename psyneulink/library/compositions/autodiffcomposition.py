@@ -1838,6 +1838,8 @@ class AutodiffComposition(Composition):
             is_are = 'are' if plural else 'is'
             do_does = 'do' if plural else 'does'
             a_not_a = '' if plural else 'a '
+            # X TEST DONE
+            assert False, "TEST 21 REACHED"
             raise AutodiffCompositionError(f"The following Projection{s} {is_are} learnable but {is_are} in {a_not_a}"
                                            f"pathway{s} that {do_does} not end in a LossMechanism, and therefore "
                                            f"cannot be learned: {', '.join(bad_projs_names)}. Reminder: when *any* "
@@ -1863,7 +1865,6 @@ class AutodiffComposition(Composition):
         - Instantiate TARGET Nodes for any targets specified as TARGET, and assign NodeRole.TARGET
         - Update self._sample_target_pairs (with SAMPLE and TARGET Mechanisms and OutputPorts)
         """
-        # BREADCRUMB: PRESERVE SPEC RATHER THAN FULLY CONVERTING TO PORT (FOR _sample_target_specs())
 
         loss_mech_specs = []
         target_mechs = []
