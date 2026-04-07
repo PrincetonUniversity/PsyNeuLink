@@ -10171,7 +10171,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
-        # X TEST DONE
         warnings.warn(
             f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
@@ -10203,6 +10202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
             sample_nodes = 'OUTPUT'
             # X TEST DONE
+            assert False, f"TEST 2 REACHED"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
                                    f"{sample_nodes} Node{node_s}: {full_str}.")
@@ -10287,7 +10287,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             missing_specs_str = ', '.join(missing_spec_names)
             node_type = 'SAMPLE (OUTPUT)' if (len(self.get_nodes_by_role(NodeRole.SAMPLE))
                                               == len(self.get_nodes_by_role(NodeRole.SAMPLE))) else 'SAMPLE'
-            # X TEST DONE
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
                                    f"it's 'targets' argument is missing {a}specification{s} for the following "
                                    f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
@@ -10351,17 +10350,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert not constructor_has_target_specs, \
                         f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
                     error_message = "OUTPUT Node that is not a SAMPLE"
+
                 elif NodeRole.INPUT in roles:
                     assert NodeRole.TARGET not in roles, \
                         f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
                     error_message = "INPUT Node that is not a TARGET Node"
+
                 elif NodeRole.INTERNAL in roles:
                     error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
+
                 elif not isinstance(spec, OutputPort):
+                    assert False, f"TEST 7 REACHED"
                     error_message = f"{spec.componentType}"
+
                 else:
                     assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
                 spec_ref = spec.full_name
+
             else:
                 # Not in Composition
                 if isinstance(spec, (Port, ProcessingMechanism_Base)):
@@ -10369,6 +10374,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     spec_ref = spec.full_name
                 else:
                     spec_ref = spec
+                    assert False, f"TEST 9 REACHED"
                     error_message = f"not a recognizable target or sample specification'"
             bad_specs.append((spec_ref, value, source, error_message))
         sources = sorted(set([spec.source for spec in specs]))

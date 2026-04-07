@@ -110,59 +110,82 @@ COMMENT
 
 .. _AutodiffComposition_Learning_Pathways:
 
-COMMENT:
-TEACHER_TARGET BREADCRUMB: - FINISH WORDING THIS
-                           - REVISE WHEN NO LEARNABLE PATHWAYS BECOMES AN ERROR RATHER THAN A WARNING
-                           - MOVE OR COPY THIS TO SECTION ON STRUCDTURE BELOW
-Because learning in implemeted by changes to `matrix <MappingProjection.matrix>` Parameters of `MappingProjections`,
-only pathways that have at least one learnable MappingProjection (i.e., one with its `learnable <MappingProjection.learnable>`
-attribute set to ``True``) can be used for learning.  Thus, only `samples <AutodiffComposition_Sample>` that are the
-endpoints of such pathways can be specified in the **targets** argument of the AutodiffComposition's constructor,
-and only those will be trained when the `learn() <Composition.learn>` method is called.
-Pathways no learnable MappingProjections are ignored, and a warning is issued if any are specified in the
-**targets** argument of the AutodiffComposition's constructor.  This includes the case in which there is a single
-Mechanism in the pathway (i.e., it is a `SINGELTON <NodeRole.SINGLETON>`), since there are no Projections in such a pathway.
-
-.. note::
-   This differs from configuration in Pytorch, in which a single torch.nn.Module can be trained since it is
-   automatically assigned parameters (based on its input dimensionality) at construction; this can be thought of as
-   equivalent to -- and can be replicated in PsyNeulink by -- construting a pathway with a single MappingProjection
-   from an input Node to a Mechanism that that corresponds to (i.e., implements the same function os) the
-   torch.nn.Module being trained.  In other words, in PsyNeulink, the equivalent of a module's parameters must be
-   constructed explicity in the form of an afferent `MappingProjection` which, in turn, requires a node that sends
-   that Projection to the Mechanism.
-
-.. technical_note::
-   The technical reason that a pathway with only a SINGLETON <NodeRole.SINGLETON> Node cannot be trained is that
-   its afferent and efferent MappingProjections are from the `input_CIM <Composition.input_CIM>` and to the
-   `output_CIM <Composition.output_CIM>` of the Composition to which it belongs. Such MappingProjectiosn
-    (i.e., from an input_CIM to its INPUT Nodes nor those from its OUTPUT Nodes to its output_CIM) are not
-   learnable; they serve simply as conduits of information between the Composition and either the Composition within
-   which it is nested, or the "outside world."
+A learning Pathway in an AutodiffComposition, as in a `Composition <Composition_Learning_Pathway>`>, is a `Pathway`
+that contains one or more learnable `MappingProjections <MappingProjection>` -- that is, in which the `learnable
+<MappingProjection.learnable>` attribute of the MappingProjection is set to ``True``.  Unlike a Composition, however,
+the `SAMPLE_MECHANISM` ("student") and `TARGET_MECHANISM` ("teacher") for each learning Pathway can be specified
+in the **targets** argument of the AutodiffComposition's constructor, as described below under
+`AutodiffComposition_Configuring_Learning`. If these are *not* specified, then these are configured automatically as
+for a Composition, by assigning the `OUTPUT <NodeRole.OUTPUT>` `Node <Composition_Nodes>` as the `SAMPLE_MECHANISM`
+for every pathway that has at least one learnable MappingProjection, and automatically constructing a corresponding
+`TARGET_MECHANISM`, the input for which is provided in the **inputs** or **targets** argument of the
+`learn() <Composition.learn>` method, and used to train that learning Pathway.
 
 
-COMMENT
+.. _AutodiffComposition_Configuring_Learning:
 
 *Configuring Learning Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each learning pathway is configured by specifying either a `sample <AutodiffComposition_Sample>`\\-`target
+A learning Pathway can be configured by specifying either a `sample <AutodiffComposition_Sample>`\\-`target
 <AutodiffComposition_Target>` target pair, or a `LossMechanism` that uses these, in the **targets** argument of
 the AutodiffComposition's constructor. These Components are described below, followed by the ways in which they
 can be `specified <AutodiffComposition_Specifying_Learning_Pathways>` in the constructor's **targets** argument.
+However, a few important rules apply:
+
+  .. _AutodiffComposition_SAMPLE_Assginment_Rules:
+
+  - a Mechanism specified as a `SAMPLE <AutodiffComposition_Sample>` must follow at least one learnable
+    MappingProjection;
+
+  - every learnable MappingProjection must be followed somewhere by a SAMPLE Mechanism;
+
+  - if a SAMPLE is followed somewhere in a Pathway by a learnable MappingProjection, a warning will be issued.
+
+  - a SAMPLE can have only one `TARGET <AutodiffComposition_Target>`, though a TARGET can be used to train more than
+    one SAMPLE.
+
+  - a TARGET for a SAMPLE cannot be in the same Pathway as the SAMPLE.
+
+  .. note::
+      Since pathways can overlap (converge, diverge or both; e.g., see `Composition_MultilayerLearning_Figure`),
+      a learnable MappingProjection may influenced by the training of several SAMPLEs (see note `below
+      <AutodiffComposition_Sample_In_Multiple_Pathways>`).
+
+  .. note::
+     Because a learning Pathway must have at least one learnable MappingProjection, a Pathway with a single Mechanism
+     (i.e., a `SINGLETON <NodeRole.SINGLETON>` `Node <Composition_Node>`) is *not learnable*. This differs from
+     configuration in Pytorch, in which a single torch.nn.Module can be trained since it is automatically assigned
+     parameters (based on its input dimensionality) at construction; this can be thought of as equivalent to -- and
+     can be replicated in PsyNeulink by -- constructing a leaning Pathway with a single learnable MappingProjection
+     from an input Node to a Mechanism that that corresponds to (i.e., implements the same function os) the
+     torch.nn.Module being trained. In other words, in PsyNeulink, the equivalent of a module's parameters must be
+     constructed explicity in the form of a learnable afferent `MappingProjection` which, in turn, requires a node
+     that sends that Projection to the Mechanism.
+
+  .. technical_note::
+     The technical reason that a pathway with only a SINGLETON <NodeRole.SINGLETON> Node cannot be trained is that
+     its afferent and efferent MappingProjections are from the `input_CIM <Composition.input_CIM>` and to the
+     `output_CIM <Composition.output_CIM>` of the Composition to which it belongs. Such MappingProjectiosn
+      (i.e., from an input_CIM to its INPUT Nodes nor those from its OUTPUT Nodes to its output_CIM) are not
+     learnable; they serve simply as conduits of information between the Composition and either the Composition within
+     which it is nested, or the "outside world."
+
 
 .. _AutodiffComposition_Sample:
 
 *Sample*
 ^^^^^^^^
-This is a Component that generates the value of a pathway being trained (sometimes referred to as a "student"); it is
-specified by the `ProcessingMechanism` at the end of the `pathway <Composition_Pathways>`, or one of its `OutputPorts
-<OutputPort>`. The *sample* can be anywhere in the AutodiffComposition, or in one `nested <AutodiffComposition_Nesting>`
-within it. It is trained using the value of the `target <AutodiffComposition_Target>` with which it is paired, or by
-values specified in the **targets** argument of the `learn() <Composition.learn>` method (see `below
+This generates the value being trained (sometimes referred to as the "student"). It is the `OutputPort`
+of a `SAMPLE_MECHANISM` in a learning Pathways, that can be assigned anywhere in an AutodiffComposition,
+or in one `nested <AutodiffComposition_Nesting>` within it, subject to the rules outlined `above
+<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the *sample* is trained
+using the value of the `target <AutodiffComposition_Target>` with which it is paired, or by values specified
+in the **targets** argument of the `learn() <Composition.learn>` method (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). Only one *target* can be associated with a *sample*,
 though a target can be assigned to multiple *samples*.
 
+    .. _AutodiffComposition_Sample_In_Multiple_Pathways:
     .. note::
        Although a *sample* can be assigned only one *target*, it can participate in (i.e., be an intermediate Node)
        in other learning pathways, in which case the error signal it receives from its *target* will be combined with
@@ -173,19 +196,19 @@ though a target can be assigned to multiple *samples*.
 
 *Target*
 ^^^^^^^^
-This is the source of the value used to train the `sample <AutodiffComposition_Sample>`  with which it is paired
-(sometimes referred to as a "teacher"); it can be the `value <OutputPort.value>` of another Mechanism in the
-AutodiffComposition, or an external value value provided when the `learn() <Composition.learn>` method is
-executed. An internal source can be any ProcessingMechanism in the AutodiffComposition or one `nested
-<AutodiffComposition_Nesting>` within it, so long as it is not in the same `pathway <Composition_Pathways>` as the
-sample it trains. This allows the value of one pathway to be used to train another. Alternatively, the kewyord
-*TARGET* can be used to specify the *target* for a *sample*, which allows external values provided in the **targets**
-argument of the `learn() <Composition.learn>` method to be used to train the pathway (see `below
-<AutodiffComposition_Specifying_Learning_Pathways>`). In that case, a `TARGET Node
+This provides the value (sometimes referred to as a "teacher") used to train the `sample <AutodiffComposition_Sample>`
+with which it is paired. It is `value <OutputPort.value>` of the OutputPort of a specified `TARGET_MECHANISM`, or of
+an automatically constructed `INPUT <NodeRole.INPUT>` `Node  <Composition_Nodes>` that receives external values provided
+in the **targets** argument of the `learn() <Composition.learn>` when it is executed. Any ProcessingMechanism in a
+AutodiffComposition -- or one `nested <AutodiffComposition_Nesting>` within it -- can be specified as a
+`TARGET_MECHANISM`, so long as it is not in the same `pathway <Composition_Pathways>` as the sample it trains. This
+allows the value of one pathway to be used to train another. Alternatively, the kewyord *TARGET* can be used to specify
+the *target* for a *sample*, which allows external values provided in the **targets** argument of the `learn()
+<Composition.learn>` method to be used to train the Pathway (see `below
+<AutodiffComposition_Specifying_Learning_Pathways>`). In that case, a `TARGET_MECHANISM
 <AutodiffComposition_Structure_Target_Nodes>` is automtically constructed for the *sample*, to receive the external
-input when learning is executed, and the values (assigned as inputs to the those *TARGET Nodes*) must be provided in
-the **targets** argument of the `learn() <Composition.learn>` when it is called
-(see `Autodiffcomposition_PyTorch`).
+input when learning is executed, and the values (assigned as inputs to the that `TARGET_MECHANISM`) must be provided
+in the **targets** argument of the `learn() <Composition.learn>` when it is called (see `Autodiffcomposition_PyTorch`).
 
     .. hint::
       the same *target* can be used to train more than one *sample*.
@@ -1712,6 +1735,7 @@ class AutodiffComposition(Composition):
 
             # Warn if target comes before sample in the same pathway, and there is no learnable Projection between them
             # X TEST DONE
+            assert False, f"TEST 10 REACHED"
             warning_msg = (f"The target ({target_mech.name}) specified for a SAMPLE ({sample_mech.name}) in the "
                            f"'targets' argument of the constructor for '{self.name}' appears before it in the same "
                            f"pathway")
@@ -1814,7 +1838,6 @@ class AutodiffComposition(Composition):
             is_are = 'are' if plural else 'is'
             do_does = 'do' if plural else 'does'
             a_not_a = '' if plural else 'a '
-            # X TEST DONE
             raise AutodiffCompositionError(f"The following Projection{s} {is_are} learnable but {is_are} in {a_not_a}"
                                            f"pathway{s} that {do_does} not end in a LossMechanism, and therefore "
                                            f"cannot be learned: {', '.join(bad_projs_names)}. Reminder: when *any* "
@@ -1986,12 +2009,16 @@ class AutodiffComposition(Composition):
         """Validate specifications used to construct LossMechanism in _instantiate_loss_components"""
         if not loss_mech_specs:
             if context.execution_id:
+                # X TEST DONE
+                assert False, f"TEST 12 REACHED"
                 # Raise error on attempt to learn without any learnable Projections
                 raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
                                                f"since it does not have any learnable Projections.")
             else:
                 # Raise warning on attempt to construct without any learnable Projections
                 if not self._warned_about_no_learnable_projections:
+                    # X TEST DONE
+                    assert False, f"TEST 13 REACHED"
                     warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
                                   f"since it does not have any learnable Projections.")
                 self._warned_about_no_learnable_projections = True
@@ -2019,7 +2046,6 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-        # X TEST DONE
         if bad_samples or bad_targets:
             bad_samples_str = ', '.join([f"'{spec.full_name}'" for spec in bad_samples])
             bad_targets_str = ', '.join([f"'{spec.full_name}'" for spec in bad_targets])
@@ -2036,7 +2062,7 @@ class AutodiffComposition(Composition):
             both = ' and ' if plural else ''
             error_msg = (f"The specification for the 'targets' argument of the constructor for '{self.name}' "
                          f"contains {bad_samples_msg}{both}{bad_targets_msg} that {are_is} not in the Composition.")
-
+            raise AutodiffCompositionError(error_msg)
 
     def _instantiate_loss_mechanisms(self, loss_mech_specs:list, context, base_context)->list:
         """Construct and/or add LossMechanisms (and their MappingProjections) to AutodiffComposition
@@ -2797,6 +2823,7 @@ class AutodiffComposition(Composition):
             not_in_comp = sorted(set(not_in_comp))
             _ = get_inflections(len(not_in_comp) > 1)
             # X TEST DONE
+            assert False, f"TEST 15 REACHED"
             raise CompositionError(f"The following specification{_['s']} in the 'targets' argument of the "
                                    f"constructor for '{self.name}' {_['are_is']} not in the Composition or any "
                                    f"nested within it: {', '.join(not_in_comp)}.")
@@ -2859,6 +2886,7 @@ class AutodiffComposition(Composition):
                     # sample should be specified in learn() with numeric value
                     if not is_numeric(learn_value):
                         # X TEST DONE: EXPECTED NUMERIC BUT GOT NON-NUMERIC
+                        assert False, f"TEST 16 REACHED"
                         # expected numeric spec for target in learn(), but got non-numeric
                         bad_specs.append((learn_spec, learn_target,
                                           f"'TARGET' is assigned as its value in the 'targets' argument of the "
@@ -2869,6 +2897,7 @@ class AutodiffComposition(Composition):
                     # sample should NOT be specified in learn()
                     # Got unexpected specification for target in learn() (speccified as Node in constructor)
                     # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
+                    assert False, f"TEST 17 REACHED"
                     bad_specs.append((learn_spec, learn_target,
                                       f"a Node ('{learn_spec.target_spec.full_name}') that provides its target value "
                                       f"is specified in the 'targets' argument of the constructor, so there should "
@@ -2877,6 +2906,7 @@ class AutodiffComposition(Composition):
                 # sample NOT specified in learn()
                 if target == TARGET:
                     # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
+                    assert False, f"TEST 18 REACHED"
                     # Missing numeric specification for target in learn() (specified as TARGET in constructor)
                     bad_specs.append((learn_spec, learn_target,
                                       f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
@@ -2981,6 +3011,7 @@ class AutodiffComposition(Composition):
             # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
             # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
             # X TEST DONE
+            assert False, f"TEST 19 REACHED"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target value{s} assigned to {one_of}its "
                                    f"SAMPLE Node{node_s}: {full_str}.")
@@ -3139,14 +3170,11 @@ class AutodiffComposition(Composition):
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
         if self._built_pathways is False:
-            # TEACHER_TARGET BREADCRUMB: ADD TEST HERE FOR LEARNABLE PATHWAYS AND WARN IF NONE
             if not self._has_learnable_pathways:
-                # X TEST DONE
                 raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
                                                f"therefore its learn() method cannot be executed.")
             self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
             self._built_pathways = True
-
 
         synch_with_pnl_options, retain_in_pnl_options = self.parse_synch_and_retain_args(
             context,

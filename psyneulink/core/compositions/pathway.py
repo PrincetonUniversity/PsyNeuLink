@@ -39,10 +39,11 @@ Contents
 Overview
 --------
 
-A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are assigned
-to a `Compositions`, but a Pathway object can also be created on its and used as a template for specifying a Pathway for
-a Composition, as described below (see `Pathways  <Composition_Pathways>` for additional information about Pathways in
-Compositions).
+A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are
+created automatically when a sequence of Nodes and Projections is specified in the **pathways** argument of the
+constructor for a `Composition`.  However, a Pathway object can also be created on its own, and used as a template
+for specifying a Pathway for a Composition, as described below (see `Pathways  <Composition_Pathways>` for additional
+information about Pathways in Compositions).
 
 .. _Pathway_Creation:
 
