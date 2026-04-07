@@ -28,9 +28,8 @@ def construct_model(
     retrieval_softmax_gain = 1 / softmax_temperature
 
     enable_learning = learning_rate > 0
-    if loss_spec_name == 'BinaryCrossEntropy':
-        loss_spec = Loss.BINARY_CROSS_ENTROPY
-    else:
+    loss_spec = Loss(loss_spec_name)  # allow ValueError to raise if invalid
+    if loss_spec is not Loss.BINARY_CROSS_ENTROPY:
         raise ValueError(loss_spec_name)
 
     # ----------------------------------------------------------------------------------------------------------------
@@ -197,15 +196,15 @@ if __name__ == '__main__':
               'previous_state_layer_name': 'PREVIOUS_STATE',
               'context_layer_name': 'CONTEXT',
               'prediction_layer_name': 'PREDICTION',
-              'state_d': 5,
+              'state_size': 5,
               'context_d': 5,
-              'memory_init': 0.001,
-              'state_weight': 1.,
-              'previous_state_weight': 1.,
-              'context_weight': 1.,
+              'memory_fill': 0.001,
+              'state_retrieval_weight': 1.,
+              'previous_state_retrieval_weight': 1.,
+              'context_retrieval_weight': 1.,
               'normalize_field_weights': False,
               'device': 'cpu',
-              'loss_spec': Loss.BINARY_CROSS_ENTROPY,
+              'loss_spec_name': Loss.BINARY_CROSS_ENTROPY,
               'execution_mode': ExecutionMode.PyTorch,
               'integration_rate': 0.5,
               }
