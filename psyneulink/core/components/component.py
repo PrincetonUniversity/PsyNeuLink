@@ -1608,6 +1608,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
+
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state or seed are not used
+            if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
+                blacklist.add("seed")
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
