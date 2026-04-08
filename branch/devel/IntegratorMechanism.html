@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0+untagged.54.g8cffa10 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0+untagged.58.g5b7e177 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.54.g8cffa10
+                  0+untagged.58.g5b7e177
                 </div>
               
             
@@ -322,6 +322,15 @@ but make sure function’s has the same outer dimensionality as the Mechanism’
 <dd><p>Override to check for call to reset by ControlSignal</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism._gen_llvm_function_body">
+<span class="sig-name descname"><span class="pre">_gen_llvm_function_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_out</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism._gen_llvm_function_body" title="Link to this definition">¶</a></dt>
+<dd><p>Overloaded LLVM code generation method.</p>
+<p>Implements main mechanisms loop (while not finished). Calls two other internal Mechanism functions;
+‘is_finished’ to terminate the loop, and ‘_gen_llvm_function_internal’ to generate body of the
+loop (invocation of Ports and Functions).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py exception">
@@ -379,6 +388,7 @@ but make sure function’s has the same outer dimensionality as the Mechanism’
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.reset"><code class="docutils literal notranslate"><span class="pre">IntegratorMechanism.reset</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism._handle_default_variable"><code class="docutils literal notranslate"><span class="pre">IntegratorMechanism._handle_default_variable()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism._execute"><code class="docutils literal notranslate"><span class="pre">IntegratorMechanism._execute()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism._gen_llvm_function_body"><code class="docutils literal notranslate"><span class="pre">IntegratorMechanism._gen_llvm_function_body()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanismError"><code class="docutils literal notranslate"><span class="pre">IntegratorMechanismError</span></code></a></li>
@@ -401,7 +411,7 @@ but make sure function’s has the same outer dimensionality as the Mechanism’
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=6234e4e6"></script>
+         <script src="_static/documentation_options.js?v=372ea541"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
