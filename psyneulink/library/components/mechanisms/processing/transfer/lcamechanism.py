@@ -272,7 +272,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     Attributes
     ----------
 
-    matrix : 2d np.array
+    matrix : np.ndarray
         the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>` for the Mechanism, the `self_excitation
         <LCAMechanism.self_excitation>` attribute sets the values on the diagonal, and the `competition

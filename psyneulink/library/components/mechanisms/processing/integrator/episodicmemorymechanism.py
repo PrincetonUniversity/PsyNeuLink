@@ -142,7 +142,7 @@ Structure
 ~~~~~~~~~~~~~~~
 
 Entries in the `memory <EpisodicMemoryMechanism.memory>` of an EpisodicMemoryMechanism are comprised of fields: lists
-or 1d arrays within the outer list or array that comprise each entry. An entry can have an arbitrary number of fields,
+or 1d ([n-1]d) arrays within the outer list or array that comprise each entry. An entry can have an arbitrary number of fields,
 and fields can be of arbitrary length.  However, all entries must have the same form (i.e., number of fields and shape
 of corresponding fields across entries). One InputPort of the EpisodicMemoryMechanism is assigned to each field. Thus,
 fields can be used to store different types of information in each field, and to retrieve entries from memory based on
@@ -159,10 +159,10 @@ all fields, or a weighted combination of them (as determined by the `MemoryFunct
    (see `EpisodicMemoryMechanism_Creation`).  Each item of `variable <Mechanism_Base.variable>` corresponds to a field.
    Both `memory <EpisodicMemoryMechanism.memory>` and all entries are stored in the EpisodicMemoryMechanism's `function
    <EpisodicMemoryMechanism.function>` as np.ndarrays, the dimensionality of which is determined by the shape of an
-   entry and its fields. Fields are always stored as 1d arrays; if all fields have the same length (regular), then
-   entries are 2d arrays and `memory <EpisodicMemoryMechanism.memory>` is a 3d array.  However, if fields have
-   different lengths (`ragged <https://en.wikipedia.org/wiki/Jagged_array>`_) then, although each field is 1d, an
-   entry is also 1d (with dtype='object'), and `memory <EpisodicMemoryMechanism.memory>` is 2d (with dtype='object').
+   entry and its fields. Fields are always stored as 1d ([n-1]d) arrays; if all fields have the same length (regular), then
+   entries are >=2d arrays and `memory <EpisodicMemoryMechanism.memory>` is a >=3d array.  However, if fields have
+   different lengths (`ragged <https://en.wikipedia.org/wiki/Jagged_array>`_) then, although each field is 1d ([n-1]d), an
+   entry is also 1d ([n-1]d) (with dtype='object'), and `memory <EpisodicMemoryMechanism.memory>` is >=2d (with dtype='object').
 
 .. _EpisodicMemoryMechanism_Input:
 
@@ -464,8 +464,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         specifies the format used for entries in `memory <EpisodicMemoryMechanism.memory>`.
 
     memory : list or ndarray
-        initial set of entries for `memory <EpisodicMemory.memory>`.  It should be either a 3d regular
-        array or a 2d ragged array if the fields of an entry have different lengths; assigned as the
+        initial set of entries for `memory <EpisodicMemory.memory>`.  It should be either a >=3d regular
+        array or a >=2d ragged array if the fields of an entry have different lengths; assigned as the
         **initializer** argument of the constructor for the `MemoryFunction` specified in **function**
         (see `initializer <ContentAddressableMemory.initializer>` for default assignment).
 
@@ -486,7 +486,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         `EpisodicMemoryMechanism_Function` and Mechanism `function <Mechanism_Base.function>` for
         additional information).
 
-    memory : 3d array
+    memory : >=3d array
         contains entries stored in the `function <EpisodicMemoryMechanism.function>`\\s ``memory`` attribute
         (for example, `memory <ContentAddressableMemory.memory>`).
 

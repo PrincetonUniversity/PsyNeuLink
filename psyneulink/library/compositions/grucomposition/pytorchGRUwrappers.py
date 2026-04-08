@@ -408,7 +408,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;
-          - reformat biases as 2d
+          - reformat biases as >=2d
         Return formatted tensors, which are used:
          - in set_weights_from_torch_gru(), where they are converted to numpy arrays
          - for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()

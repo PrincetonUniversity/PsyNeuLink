@@ -1220,7 +1220,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         Arguments
         ---------
 
-        variable : 2d array
+        variable : np.ndarray
             ignored.
 
         params : Dict[param keyword: param value] : default None
