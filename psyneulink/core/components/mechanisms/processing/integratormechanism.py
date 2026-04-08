@@ -297,3 +297,21 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                 self.reset(context=context)
                 value = self.parameters.value._get(context).reshape(value.shape)
         return value
+
+    def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
+        builder = super()._gen_llvm_function_body(ctx, builder, base_params, state, arg_in, arg_out, tags=tags)
+
+        params, builder = self._gen_llvm_param_ports_for_obj(self, base_params, ctx, builder, base_params, state, arg_in)
+
+        reset_ptr = ctx.get_param_or_state_ptr(builder, self, "reset", param_struct_ptr=params)
+        reset_val = builder.load(reset_ptr)
+
+        # FIXME: Consider cases where reset_val is a vector (or generally not
+        # just float scalar)
+        should_reset = builder.fcmp_ordered("!=", reset_val, reset_val.type(0))
+        with builder.if_then(should_reset):
+            # TODO: Same as above. pass reset_val as input
+            reset_func = ctx.import_llvm_function(self, tags=tags | {'reset'} )
+            builder.call(reset_func, [base_params, state, arg_in, arg_out])
+
+        return builder

@@ -418,16 +418,21 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_multiple_output(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_integrator_multiple_output(self, benchmark, mech_mode, reset):
         I = IntegratorMechanism(default_variable=[5],
+                                reset_default=reset,
                                 output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'])
 
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
         val1 = ex([5])
         val2 = benchmark(ex, [5])
 
-        np.testing.assert_array_equal(val1, [[2.5], [2.5]])
-        np.testing.assert_array_equal(val2, [[3.75], [3.75]])
+        expected1 = [[0], [0]] if reset else [[2.5], [2.5]]
+        expected2 = [[0], [0]] if reset else [[3.75], [3.75]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -458,8 +463,8 @@ class TestIntegratorFunctions:
         val1 = ex(var)
         val2 = benchmark(ex, var)
 
-        expected1 = [[0.05127053], [0.05127053], [0.05127053]]
-        expected2 = [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]]
+        expected1 = [[0.05127053]] * 3
+        expected2 = [[0.10501801629915011]] * 3
 
         # The difference in results is caused by a shape mismatch;
         # default output port values are 1D, giving 2D results in compiled mode
@@ -512,8 +517,9 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_accumulator_integrator(self, mech_mode):
-        I = IntegratorMechanism(function=AccumulatorIntegrator(initializer=10.0, increment=15.0))
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_accumulator_integrator(self, mech_mode, reset):
+        I = IntegratorMechanism(function=AccumulatorIntegrator(initializer=10.0, increment=15.0), reset_default=reset)
 
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
         # accumulator integrator does not use input value (variable)
@@ -532,13 +538,17 @@ class TestIntegratorFunctions:
         # previous_value = 30
         # RETURN 40
 
-        np.testing.assert_array_equal(val1, [[25]])
-        np.testing.assert_array_equal(val2, [[40]])
+        expected1 = [[10]] if reset else [[25]]
+        expected2 = [[10]] if reset else [[40]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_adaptive_integrator(self, mech_mode):
-        I = IntegratorMechanism(function=AdaptiveIntegrator(initializer=10.0, rate=0.5, offset=10))
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_adaptive_integrator(self, mech_mode, reset):
+        I = IntegratorMechanism(function=AdaptiveIntegrator(initializer=10.0, rate=0.5, offset=10), reset_default=reset)
 
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
@@ -548,16 +558,21 @@ class TestIntegratorFunctions:
         # 15.5*0.5 + 1*0.5 + 10 = 18.25
         val2 = ex(1)
 
-        np.testing.assert_array_equal(val1, [[15.5]])
-        np.testing.assert_array_equal(val2, [[18.25]])
+        expected1 = [[10]] if reset else [[15.5]]
+        expected2 = [[10]] if reset else [[18.25]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_drift_diffusion_integrator(self, mech_mode):
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_drift_diffusion_integrator(self, mech_mode, reset):
         I = IntegratorMechanism(function=DriftDiffusionIntegrator(initializer=10.0,
                                                                   rate=10,
                                                                   time_step_size=0.5,
                                                                   offset=10),
+                                reset_default=reset,
 
                                 # Export both values via output ports
                                 output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
@@ -571,8 +586,11 @@ class TestIntegratorFunctions:
         # 25 + 10*1*0.5 + 0 + 10 = 40
         val2 = ex(1)
 
-        np.testing.assert_array_equal(val1, [[25.], [0.5]])
-        np.testing.assert_array_equal(val2, [[40.], [1.0]])
+        expected1 = [[10], [0]] if reset else [[25.], [0.5]]
+        expected2 = [[10], [0]] if reset else [[40.], [1.0]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
