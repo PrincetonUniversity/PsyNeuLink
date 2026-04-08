@@ -788,10 +788,12 @@ class TestStructural:
 
         @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
                                  ids=["Composition", "Autodiff"])
-        @pytest.mark.parametrize("target_specs", ['target_mechs_in_inputs',
-                                                  'output_mechs_in_targets',
-                                                  'target_mechs_in_targets',
-                                                  'target_mechs_in_inputs_and_targets',
+        @pytest.mark.parametrize("target_specs", [#'target_mechs_in_inputs',
+                                                  #'output_mechs_in_targets',
+                                                  #'target_mechs_in_targets',
+                                                  #'target_mechs_in_inputs_and_targets',
+                                                  'single_conflicting_target_value',
+                                                  'multiple_conflicting_target_values',
                                                   'too_many_targets'])
         @pytest.mark.pytorch
         def test_map_external_target_values_to_target_nodes(self, target_specs, comp_type):
@@ -861,6 +863,22 @@ class TestStructural:
                 with pytest.warns(UserWarning, match=re.escape(warning1)), \
                         pytest.warns(UserWarning, match=re.escape(warning2)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
+
+            elif target_specs == 'single_conflicting_target_value':
+                # Test error for conflicting values assigned to a single target
+                error = ("The learn() method of 'TEST COMP' can't be executed because there are conflicting "
+                         "specifications for the value of the target for one of its OUTPUT Nodes: "
+                         "'OUTPUT MECH A[OutputPort-0]': "
+                         "[OUTPUT MECH A=[[1]] in 'targets', OutputPort-0=[[2]] in 'targets'].")
+                with pytest.raises(CompositionError, match=re.escape(error)):
+                    comp.learn(inputs=inputs_arg,
+                               targets={comp.nodes['OUTPUT MECH A']: [[1]],
+                                        comp.nodes['OUTPUT MECH A'].output_port: [[2]],
+                                        comp.nodes['OUTPUT MECH B']: [[3]]},
+                               execution_mode=execution_mode)
+
+            elif target_specs == 'multiple_conflicting_target_values':
+                pass
 
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg

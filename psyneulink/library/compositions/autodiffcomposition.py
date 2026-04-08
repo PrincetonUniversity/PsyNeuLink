@@ -892,7 +892,7 @@ from psyneulink.core.globals.keywords import (
     WARNING
 )
 from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric, is_numeric_scalar,
-                                               convert_to_list, convert_to_np_array, deprecation_warning, counts)
+                                               convert_to_list, convert_to_np_array, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -2980,23 +2980,42 @@ class AutodiffComposition(Composition):
                     all_redundant_specs.remove(spec)
         return all_redundant_specs
 
-    def _handle_conflicting_sample_target_specs(self, samples_with_mismatching_specs:list):
+    def _handle_conflicting_sample_target_specs(self, specs_with_mismatching_values:list):
         """Override to handle conflict between sample specs and/or values from constructor and learn()
         Handle conflicts between different target values specified for:
              same SAMPLE Nodes specified in constructor using different references (e.g., mech vs. mech.output_port)
              SAMPLE in constructor vs. learn() (e.g., Node in constructor vs. numeric value in learn())
         """
-        # BREADCRUMB: FROM Composition --- NEED TO ADAPT TO DEAL WITH CONFLICTS BEETWEEN VALUES FROM LEARN (NUMBERS)
+        # TEACHER_TARGET BREADCRUMB: ??HAS THE FOLLOWING BEEN DONE, OR IS THIS JUST DUPLICATIVE OF Composition VERSION:
+        # BREADCRUMB: FROM Composition --- NEED TO ADAPT TO DEAL WITH CONFLICTS BETWEEN VALUES FROM LEARN (NUMBERS)
         #              AND VALUES FROM CONSTRUCTOR (NODES OR "TARGET")
 
         # Error for redundant specs with different values
         # -----------------------------------------------
         # prepare strings for warning message
         all_samples_str = []
-        for sample, values in samples_with_mismatching_specs.items():
-            specs_and_sources = [f"{s.target_spec if isinstance( s.target_spec, str) else s.target_spec.full_name} in "
-                                 f"'{s.source}'" for s in self._sample_target_specs
-                                 for value in values if s.sample_port is sample and s.target_spec is value]
+        # # MODIFIED TEACHER_TARGET OLD:
+        # for sample, spec_values in specs_with_mismatching_values.items():
+        # MODIFIED TEACHER_TARGET NEW:
+        for sample_port in specs_with_mismatching_values:
+        # MODIFIED TEACHER_TARGET END
+            # TEACHER_TARGET BREADCRUMB: NEED TO REFACDTOR TO DEAL WITH
+            #                            {sample_port: [(spec, value), (spec, value)} FORMAT for specs_with_mismatching_values
+            # TEACHER_TARGET BREADCRUMB: THIS NEEDS TO DETERMINE WHICH IS THE spec -- SAMPLE OR TARGET --
+            #                             AND NOT ASSUME target_spec
+
+            # MODIFIED TEACHER_TARGET OLD:
+            specs_and_sources = [f"{s.target_spec if isinstance(s.target_spec, str) else s.target_spec.full_name} "
+                                 f"in '{s.source}'"
+                                 for s in self._sample_target_specs]
+
+            # MODIFIED TEACHER_TARGET NEW: FROM COMPOSITION:
+            specs_and_sources = [f"{s.sample_spec.name if s.sample_spec else s.target_spec.name}"
+                                     f"={s.target_value} in '{s.source}'"
+                                     for s in self._sample_target_specs
+                                     if s.sample_port is sample_port]
+            # MODIFIED TEACHER_TARGET END
+
             sources_str = ', '.join(specs_and_sources)
             all_samples_str.append(f"'{sample.full_name}': {sources_str}")
         full_str = '; '.join(all_samples_str)
