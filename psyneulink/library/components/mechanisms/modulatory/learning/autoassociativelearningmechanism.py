@@ -64,7 +64,7 @@ An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all
     (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputPort), but not necessarily an
     `error_signal <LearningMechanism.error_signal>`.
 
-  * its `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` can be specified as a 1d or 2d array (or
+  * its `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` can be specified as an array (or
     matrix) to scale the contribution made, respectively, by individual elements or connections among them,
     to the weight change matrix;  as with a standard `LearningMechanism`, a scalar can also be specified to scale
     the entire weight change matrix (see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` for
@@ -149,7 +149,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     Arguments
     ---------
 
-    variable : List or 2d np.array : default None
+    variable : List or np.ndarray : default None
         it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism.function>`;  it must each be compatible (in number and type)
         with the `value <InputPort.value>` of the Mechanism's `InputPort <LearningMechanism_InputPorts>` (see
@@ -163,7 +163,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     function : LearningFunction or function : default Hebbian
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
-        list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array
+        list or 1d array of numeric values (the "activity vector") and return a list, np.ndarray
         representing a square matrix with dimensions that equal the length of its variable (the "weight change
         matrix").
 
@@ -179,7 +179,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         componentType : LEARNING_MECHANISM
     COMMENT
 
-    variable : 2d np.array
+    variable : np.ndarray
         has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism.function>`, corresponding to the `value
         <OutputPort.value>` of the `activity_source <AutoAssociativeLearningMechanism.activity_source>`.
@@ -208,7 +208,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         its `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
         length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputPort_Primary>`) InputPort.
 
-    learning_rate : float, 1d or 2d np.array of numeric values : default None
+    learning_rate : float, np.ndarray of numeric values : default None
         determines the learning rate used by the AutoAssociativeLearningMechanism's `function
         <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar,
         it is used to multiply the weight change matrix;  if it is a 2d array,
@@ -255,7 +255,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`, and followed by any additional
         (user-specified) `OutputPorts <OutputPort>`.
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         the first item is the `value <OutputPort.value>` of the LearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputPort.value>`\\s
         of any additional (user-specified) OutputPorts.

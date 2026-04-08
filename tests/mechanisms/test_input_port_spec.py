@@ -97,12 +97,12 @@ class TestInputPortSpec:
     # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
     def test_more_input_ports_than_default_variable_error(self):
 
-        with pytest.raises(PortError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_ports=[[32], [24], 'HELLO']
             )
-        assert mismatches_more_input_ports_than_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 2c
@@ -127,12 +127,17 @@ class TestInputPortSpec:
     #      seems to be adding the two axis2 values
     def test_mismatch_dim_input_ports_with_default_variable_error(self):
 
-        with pytest.raises(PortError) as error_text:
+        with pytest.raises(
+            MechanismError,
+            match=(
+                r'Default variable for[\s\S\r]*determined from the specified input_ports spec'
+                r'[\s\S\r]*is not compatible with its specified default variable[\s\S\r]*'
+            )
+        ):
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_ports=[[[32],[24]],'HELLO']
             )
-        assert 'The value' in str(error_text.value) and 'does not match the reference_value' in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -349,7 +354,8 @@ class TestInputPortSpec:
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
         assert len(T.input_port.path_afferents[0].sender.defaults.variable) == 3
-        assert len(T.input_port.defaults.variable) == 2
+        assert len(T.input_port.defaults.value) == 2
+        assert T.input_port.defaults.variable.shape == (1, 2)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -366,7 +372,8 @@ class TestInputPortSpec:
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
         assert len(T.input_port.path_afferents[0].sender.defaults.variable) == 3
-        assert len(T.input_port.defaults.variable) == 2
+        assert len(T.input_port.defaults.value) == 2
+        assert T.input_port.defaults.variable.shape == (1, 2)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -383,7 +390,7 @@ class TestInputPortSpec:
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
         assert len(T.input_port.path_afferents[0].sender.defaults.variable) == 3
-        assert len(T.input_port.defaults.variable) == 2
+        assert T.input_port.defaults.variable.shape == (1, 2)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------

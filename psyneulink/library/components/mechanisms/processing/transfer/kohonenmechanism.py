@@ -136,7 +136,7 @@ class KohonenMechanism(TransferMechanism):
         cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
         <KohonenMechanism.configure_learning>` method.
 
-    learning_rate : scalar, or list, 1d or 2d np.array of numeric values: default False
+    learning_rate : scalar, or list, np.ndarray of numeric values: default False
         specifies the learning rate used by its `learning function <KohonenMechanism.learning_function>`.
         If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
         used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
@@ -160,7 +160,7 @@ class KohonenMechanism(TransferMechanism):
         determines the function used to evaluate the distance of each element from the most active one
         one identified by `selection_function <KohonenMechanism.selection_function>`
 
-    matrix : 2d np.array
+    matrix : np.ndarray
         `matrix <AutoAssociativeProjection.matrix>` parameter of the `learned_projection
         <KohonenMechanism.learned_projection>`.
 
@@ -168,7 +168,7 @@ class KohonenMechanism(TransferMechanism):
         indicates whether `learning is enabled <KohonenMechanism_Learning>`;  see `learning_enabled
         <KohonenMechanism.learning_enabled>` for additional details.
 
-    learning_rate : float, 1d or 2d np.array of numeric values : default None
+    learning_rate : float, np.ndarray of numeric values : default None
         determines the learning rate used by the `learning_function <KohonenMechanism.learning_function>`
         of the `learning_mechanism <KohonenMechanism.learning_mechanism>` (see `learning_rate
         <KohonenLearningMechanism.learning_rate>` for details concerning specification and default value assignment).

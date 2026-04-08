@@ -116,6 +116,7 @@ import types
 from beartype import beartype
 
 from numbers import Number
+from typing import TYPE_CHECKING
 from psyneulink._typing import (
     Any,
     Callable,
@@ -155,6 +156,9 @@ from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_MET
                                               MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
 
+if TYPE_CHECKING:
+    from torch import Tensor
+
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
@@ -179,6 +183,7 @@ __all__ = [
     'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
     'PNLStrEnum',
     'clip', 'full_like', 'full', 'ones_like', 'ones', 'shape', 'zeros_like', 'zeros',
+    'convert_to_tensor',
 ]
 
 
@@ -1233,12 +1238,9 @@ def convert_to_np_array(value, dimension=None):
     elif dimension == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
         if (
-            value.ndim > 0
-            and value.dtype == object
-            and any([safe_len(x) > 1 for x in value])
+            value.ndim == 0
+            or (value.ndim == 1 and value.shape == shape(value))
         ):
-            pass
-        else:
             if torch and torch.is_tensor(value):
                 value = torch.atleast_2d(value)
             else:
@@ -1293,7 +1295,7 @@ def get_value_from_array(array):
 def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
     """Generate a random matrix
 
-    Calls np.random.rand to generate a 2d np.array with random values and shape (num_rows, num_cols):
+    Calls np.random.rand to generate a np.ndarray with random values and shape (num_rows, num_cols):
 
         :math:`matrix = (random[0.0:1.0] + offset) * scale
 
@@ -1318,7 +1320,7 @@ def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
 
     Returns
     -------
-    2d np.array
+    np.ndarray
     """
     if isinstance(offset,str):
         if offset.upper() == 'ZERO_CENTER':
@@ -3048,3 +3050,95 @@ def clip(a: ArrayLike, a_min: Optional[ArrayLike], a_max: Optional[ArrayLike], *
             else:
                 raise
     return convert_all_elements_to_np_array(_clip(convert_all_elements_to_np_array(a)))
+
+
+# ----------------------------------------------------------------------
+# _validate_np_tensordot_args is based heavily on contents of
+# numpy.tensordot v2.1.0, which provides a less detailed error message.
+#
+# NumPy License Attribution:
+# Copyright (c) 2005-2025, NumPy Developers. All rights reserved.
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+#     * Neither the name of the NumPy Developers nor the names of any contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+def _validate_np_tensordot_args(a: ArrayLike, b: ArrayLike, axes=2):
+    """
+    Checks a `numpy.tensordot(**a**, **b**, **axes**)` operation for valid axis
+    sizes with a more-detailed error message. See `numpy.tensordot`.
+
+    Raises:
+        ValueError
+    """
+    try:
+        iter(axes)
+    except Exception:
+        axes_a = list(range(-axes, 0))
+        axes_b = list(range(0, axes))
+    else:
+        axes_a, axes_b = axes
+    try:
+        na = len(axes_a)
+        axes_a = list(axes_a)
+    except TypeError:
+        axes_a = [axes_a]
+        na = 1
+    try:
+        nb = len(axes_b)
+        axes_b = list(axes_b)
+    except TypeError:
+        axes_b = [axes_b]
+        nb = 1
+
+    a = np.asarray(a)
+    b = np.asarray(b)
+    equal = True
+    if na != nb:
+        equal = False
+        reason = f'unequal number of axes ({na} and {nb})'
+    else:
+        wrong_a = []
+        wrong_b = []
+        for k in range(na):
+            if a.shape[axes_a[k]] != b.shape[axes_b[k]]:
+                equal = False
+                wrong_a.append(axes_a[k])
+                wrong_b.append(axes_b[k])
+
+        wrong_pair_strs = []
+        for i in range(len(wrong_a)):
+            ai = wrong_a[i]
+            bi = wrong_b[i]
+            wrong_pair_strs.append(f'a.shape[{ai}] != b.shape[{bi}] ({a.shape[ai]} != {b.shape[bi]})')
+        reason = '; '.join(wrong_pair_strs)
+        reason = f"axes pairs of a.shape {a.shape}, b.shape {b.shape}: {reason}"
+    if not equal:
+        raise ValueError(f'shape-mismatch for sum: {reason}')
+
+
+# ----------------------------------------------------------------------
+
+
+def convert_to_tensor(obj: Iterable, dtype: DTypeLike = None) -> Union['Tensor', List['Tensor']]:
+    """
+    Make **obj** a `torch.Tensor` or list of tensors if it is ragged
+
+    Args:
+        obj (Iterable):
+        dtype (DTypeLike, optional): explicit specification of result tensor dtype. Defaults to None.
+
+    Returns:
+        Union['Tensor', List['Tensor']]:
+    """
+    if isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], np.ndarray):
+        res = torch.from_numpy(np.asarray(obj))
+        if dtype is not None:
+            res = res.to(dtype)
+        return res
+
+    try:
+        return torch.tensor(obj, dtype=dtype)
+    except (TypeError, ValueError):
+        # We probably have a ragged array, so we need to convert to a list of tensors
+        return [convert_to_tensor(x, dtype) for x in obj]

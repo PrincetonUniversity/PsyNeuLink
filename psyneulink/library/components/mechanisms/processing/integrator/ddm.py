@@ -502,7 +502,7 @@ class DDM(ProcessingMechanism):
                is carried out.
         COMMENT
 
-    value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
+    value : np.ndarray[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`;  has six items, that are assigned based on the `function
         <DDM.function>` attribute.  The first two items are always assigned the values of `DECISION_VARIABLE
         <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` (though their interpretation depends on the
@@ -1053,7 +1053,7 @@ class DDM(ProcessingMechanism):
             + NON_DECISION_TIME (float)
             + NOISE (float)
         - context (str)
-        Returns the following values in self.value (2D np.array) and in
+        Returns the following values in self.value (>=2D np.array) and in
             the value of the corresponding outputPort in the self.output_ports dict:
             - decision variable (float)
             - mean error rate (float)

@@ -209,7 +209,7 @@ class TestRecurrentTransferMechanismInputs:
                 input_shapes=4
             )
             R.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((1, 4)) "
                 "for input to InputPort 'InputPort-0' of R.") in str(error_text.value)
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
@@ -219,7 +219,7 @@ class TestRecurrentTransferMechanismInputs:
                 input_shapes=6
             )
             R.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((1, 6)) "
                 "for input to InputPort 'InputPort-0' of R.") in str(error_text.value)
 
 
@@ -459,13 +459,13 @@ class TestRecurrentTransferMechanismMatrix:
         assert "must be square" in str(error_text.value)
 
     def test_recurrent_mech_matrix_3d(self):
-        with pytest.raises(FunctionError) as error_text:
-            R = RecurrentTransferMechanism(
-                name='R',
-                input_shapes=2,
-                matrix=[[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
-            )
-        assert "more than 2d" in str(error_text.value)
+        matrix = [[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
+        R = RecurrentTransferMechanism(
+            name='R',
+            input_shapes=2,
+            matrix=matrix
+        )
+        np.testing.assert_array_equal(R.defaults.matrix, matrix)
 
 
 class TestRecurrentTransferMechanismFunction:

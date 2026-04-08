@@ -449,8 +449,8 @@ starting with constraints that are given the highest precedence:
           InputPort's `variable <InputPort.variable>`.
 
         * `Matrix specification <MappingProjection_Matrix_Specification>` -- its receiver dimensionality determines the
-          format of the InputPort's `variable <InputPort.variable>`. For a standard 2d "weight" matrix (i.e., one that
-          maps a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
+          format of the InputPort's `variable <InputPort.variable>`. For a standard >=2d "weight" matrix (i.e., one that
+          maps a 1d ([n-1]d) array from its `sender <Projection_Base.sender>` to a 1d ([n-1]d) array of its `receiver
           <Projection_Base.receiver>`), the receiver dimensionality is its outer dimension (axis 1, or its number of
           columns).  However, if the `sender <Projection_Base.sender>` has more than one dimension, then the
           dimensionality of the receiver (used for the InputPort's `variable <InputPort.variable>`) is the
@@ -573,17 +573,19 @@ import collections
 import inspect
 import numbers
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Literal
+from psyneulink._typing import List, Literal, Optional, Tuple, Union
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, DEFAULT_INPUT, DEFAULT_VARIABLE, EXPONENT, FUNCTION, GATING_SIGNAL, \
@@ -594,8 +596,13 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    append_type_to_name, is_numeric_scalar, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
+    append_type_to_name, convert_all_elements_to_np_array, is_numeric_scalar, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
+
+if TYPE_CHECKING:
+    from psyneulink.core.compositions.composition import Composition
+
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -724,7 +731,7 @@ class InputPort(Port_Base):
            <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
            from its `input_CIM <Composition.input_CIM>`.
 
-    input_shape : 1d array
+    input_shape : 1d ([n-1]d) array
         shows the shape of the input to the InputPort;  that is, the shape of the `value <Projection_Base.value>`
         expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
@@ -1163,7 +1170,7 @@ class InputPort(Port_Base):
                         raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
                                              f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
                                              f"is already present in its port_specific_spec dict or port_dict.")
-                    port_dict.update({VARIABLE:np.zeros(port_specific_spec[INPUT_SHAPES])})
+                    port_dict.update({VARIABLE: np.zeros((1, port_specific_spec[INPUT_SHAPES]))})
                     del port_specific_spec[INPUT_SHAPES]
 
                 if COMBINE in port_specific_spec:
@@ -1445,6 +1452,19 @@ class InputPort(Port_Base):
     def socket_template(self):
         return np.zeros(self.socket_width)
 
+    # TODO: replace socket_template with this
+    @property
+    def socket_shape_template(self):
+        return np.zeros(self.socket_shape)
+
+    # must be at least 1d. list of incoming projections
+    @property
+    def socket_shape(self):
+        if self.defaults.variable.ndim > 1:
+            return self.defaults.variable[0].shape
+        else:
+            return self.defaults.variable.shape
+
     def get_label(self, context=None):
         try:
             label_dictionary = self.owner.input_labels_dict
@@ -1453,35 +1473,61 @@ class InputPort(Port_Base):
         return self._get_value_label(label_dictionary, self.owner.input_ports, context=context)
 
     @property
-    def _input_shape_template(self):
-        try:
-            if self.function.changes_shape:
-                return VARIABLE
-            else:
-                return VALUE
-        except:
-            assert False, f"PROGRAM ERROR: Missing or unrecognized 'changes_shape' attribute for " \
-                          f"('{self.function.name}') of '{self.name}'."
-
-    @property
     def input_shape(self):
-        """Alias for default_input_shape_template"""
-        return self.default_input_shape
+        """
+        shows the shape of the input to the InputPort;  that is, the
+        shape of the `value <Projection_Base.value>` expected for any
+        `path_afferent Projections <Port_Base.path_afferents>`.
+        """
+        return self.defaults.variable
 
-    @property
-    def default_input_shape(self):
-        if self._input_shape_template == VARIABLE:
+    def _input_projections(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL
+    ) -> List[Tuple[int, Projection]]:
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+
+        projections = []
+        for i, proj in enumerate(self.path_afferents):
+            if not self.afferents_info[proj].is_active_in_composition(composition):
+                continue
+
+            try:
+                owner = proj.sender.owner
+            except AttributeError:
+                pass
+            else:
+                if not isinstance(owner, CompositionInterfaceMechanism):
+                    continue
+
+            projections.append((i, proj))
+        return projections
+
+    def default_external_input(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL
+    ) -> Union[np.ndarray, None]:
+        """
+        Returns an array (or None) that will be used as input to
+        `InputPort.execute` if no input is given. **composition** is used to
+        determine what incoming `Projection`\\ s are active, if applicable.
+
+        Args:
+            composition (Union[`Composition`, `ConnectionInfo`], optional):
+                The `Composition` this `InputPort` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[`np.ndarray`, None]:
+        """
+        # filter out non-CIM projections
+        path_proj_values = []
+        for i, _ in self._input_projections(composition):
+            path_proj_values.append(self.defaults.variable[i])
+
+        # no CIM projections are active, don't return empty list
+        if len(path_proj_values) == 0:
             return self.defaults.variable
-        elif self._input_shape_template == VALUE:
-            return self.defaults.value
-        assert False, f"PROGRAM ERROR: bad _input_shape_template assignment for '{self.name}'."
-
-    def get_input_shape(self, context=None):
-        if self._input_shape_template == VARIABLE:
-            return self.get_input_variables(context)
-        elif self._input_shape_template == VALUE:
-            return self.get_input_values(context)
-        assert False, f"PROGRAM ERROR: bad _input_shape_template assignment for '{self.name}'."
+        else:
+            return convert_all_elements_to_np_array(path_proj_values)
 
     @property
     def position_in_mechanism(self):
@@ -1545,8 +1591,8 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
         - if there is only one InputPort, it is assigned the full value
 
     Note: Port._instantiate_port_list()
-              parses self.defaults.variable (2D np.array, passed in reference_value)
-              into individual 1D arrays, one for each InputPort
+              parses self.defaults.variable (>=2D np.array, passed in reference_value)
+              into individual 1D ([N-1]D) arrays, one for each InputPort
 
     (See Port._instantiate_port_list() for additional details)
 

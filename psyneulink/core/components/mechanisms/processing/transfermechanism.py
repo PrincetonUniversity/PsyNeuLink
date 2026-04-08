@@ -326,7 +326,7 @@ There are two broad types of termination condition: convergence and boundary ter
 
 *Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
 `value <Mechanism_Base.value>` and its previous_value. This is implemented by specifying `termination_measure
-<TransferMechanism.termination_measure>` with a function that accepts a 2d array with *two items* (1d arrays) as its
+<TransferMechanism.termination_measure>` with a function that accepts a >=2d array with *two items* (1d arrays) as its
 argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with `MAX_ABS_DIFF`
 as its metric).  After each execution, the function is passed the Mechanism's current
 `value <Mechanism_Base.value>` as well as its previous_value, and the scalar returned is compared to
@@ -334,7 +334,7 @@ as its metric).  After each execution, the function is passed the Mechanism's cu
 operator specified by  `termination_comparison_op <TransferMechanism.termination_comparison_op>` (which is
 *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True. A `Distance` Function with other
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function
-that accepts a single argument that is a 2d array with two entries.
+that accepts a single argument that is a >=2d array with two entries.
 
 .. _TransferMechanism_Boundary_Termination:
 
@@ -345,7 +345,7 @@ that accepts a single argument that is a 2d array with two entries.
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the `termination_threshold <TransferMechanism.termination_threshold>` Parameter.  This is
     implemented by specifying `termination_measure <TransferMechanism.termination_measure>` with a function that
-    accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single entry is the
+    accepts a >=2d array with a *single entry* as its argument and returns a scalar.  The single entry is the
     TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
     <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
     current `value <Mechanism_Base.value>`, and the scalar returned is compared to `termination_threshold
@@ -658,7 +658,7 @@ last True (in this case, where it left off in the preceding example, ``0.257``).
 
 *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
 the value specified by the **threshold** argument.  This is implemented by specifying **termination_measure** with
-a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
+a function that accepts a >=2d array with a *single entry* as its argument and returns a scalar.  The single
 entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, its previous_value
 is ignored). After each execution, the function is passed the Mechanism's current `value <Mechanism_Base.value>`,
 and the scalar returned is compared to **termination_threshold** using the comparison operator specified by

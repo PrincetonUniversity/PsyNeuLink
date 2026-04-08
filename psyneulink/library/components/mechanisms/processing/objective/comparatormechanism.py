@@ -283,7 +283,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     ----------
 
     COMMENT:
-    default_variable : Optional[List[array] or 2d np.array]
+    default_variable : Optional[List[array] or np.ndarray]
     COMMENT
 
     sample : OutputPort
@@ -299,7 +299,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     function : TransformFunction, function or method
         used to compare the `sample` with the `target`.  It can be any `TransformFunction <Transformfunctions>`,
-        or a python function that takes a 2d array with two items and returns a 1d array of the same length as the
+        or a python function that takes a >=2d array with two items and returns a 1d ([n-1]d) array of the same length as the
         two input items.
 
     output_port : OutputPort
@@ -310,7 +310,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     output_ports : ContentAddressableList[OutputPort]
         contains, by default, only the *OUTCOME* (primary) OutputPort of the ComparatorMechanism.
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         contains one item that is the value of the *OUTCOME* OutputPort.
 
     standard_output_ports : list[str]

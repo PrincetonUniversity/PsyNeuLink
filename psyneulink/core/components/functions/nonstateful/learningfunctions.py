@@ -94,7 +94,7 @@ class LearningFunction(Function_Base):
     ----------
 
     variable : list or array
-        most LearningFunctions take a list or 2d array that must contain three items:
+        most LearningFunctions take a list or array that must contain three items:
 
         * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
         * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
@@ -167,17 +167,12 @@ class LearningFunction(Function_Base):
                                     format(LEARNING_RATE, self.name, len(learning_rate),
                                            len(self.defaults.variable)))
 
-            if learning_rate_dim == 2:
+            if learning_rate_dim >= 2:
                 shape = learning_rate.shape
-                if shape[0] != shape[1] or shape[0] != len(self.defaults.variable):
+                if len(set(shape)) > 1 or shape[0] != len(self.defaults.variable):
                     raise FunctionError("Shape of {} arg for {} ({}) must be square and "
                                         "of the same width as the length of its variable ({})".
                                         format(LEARNING_RATE, self.name, shape, len(self.defaults.variable)))
-
-            if learning_rate_dim > 2:
-                raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
-                                    format(LEARNING_RATE, self.name, learning_rate))
-
         else:
             if learning_rate_dim:
                 raise FunctionError("{} arg for {} ({}) must be a single value".
@@ -247,13 +242,13 @@ class EMStorage(LearningFunction):
     Attributes
     ----------
 
-    variable: 2d array
+    variable: np.ndarray
         contains the value (`entry <EMStorage.entry>`) used as input to the `function <EMStorage.function>`.
 
     entry : 1d array
         value to be stored in `memory_matrix <EMStorage.memory_matrix>`.
 
-    memory_matrix : 2d array or ParameterPort
+    memory_matrix : np.ndarray or ParameterPort
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
     axis : int
@@ -414,11 +409,11 @@ class EMStorage(LearningFunction):
         Arguments
         ---------
 
-        variable : List or 1d array
+        variable : List or np.ndarray
            array containing `entry <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>`
            along `axis <EMStorage.axis>`.
 
-        memory_matrix : List, 2d array, ParameterPort, or MappingProjection
+        memory_matrix : List, np.ndarray, ParameterPort, or MappingProjection
             matrix to which `variable <EMStorage.variable>` is stored.
 
             .. technical_note::
@@ -434,7 +429,7 @@ class EMStorage(LearningFunction):
         Returns
         -------
 
-        new memory_matrix : 2d array
+        new memory_matrix : np.ndarray
             the new matrix contains `entry <EMStorage.entry>` stored in `memory_matrix <EMStorage.memory_matrix>`
             in slot with lowest norm along axis specified by `axis <EMStorage.axis>`.
         """
@@ -566,8 +561,8 @@ class BayesGLM(LearningFunction):
     Arguments
     ---------
 
-    default_variable : 3d array : default None
-        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+    default_variable : np.ndarray : default None
+        first item of axis 0 must be an array with one or more sub-arrays to use as predictor vectors, one for
         each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
         containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
         item.  If `None` is specified, but either **mu_0** or **sigma_0 is specified, then the they are used to
@@ -576,7 +571,7 @@ class BayesGLM(LearningFunction):
         <BayesGLM.function>`, as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
 
-    mu_0 : int, float or 1d array : default 0
+    mu_0 : int, float or np.ndarray : default 0
         specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
         the prediction weights returned by the function).  If a scalar is specified, the same value will be used
         for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
@@ -584,7 +579,7 @@ class BayesGLM(LearningFunction):
         specification for **mu_0** is used to determine the shape of `variable <BayesGLM.variable>` and
         `sigma_prior <BayesGLM.sigma_prior>`.
 
-    sigma_0 : int, float or 1d array : default 0
+    sigma_0 : int, float or np.ndarray : default 0
         specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
         for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
         all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
@@ -616,29 +611,29 @@ class BayesGLM(LearningFunction):
     Attributes
     ----------
 
-    variable : 3d array
+    variable : np.ndarray
         samples used to update parameters of prediction weight distributions.
-        variable[0] is a 2d array of predictor vectors, all of the same length;
+        variable[0] is an array of predictor vectors, all of the same length;
         variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.
 
-    mu_0 : int, float or 2d array
+    mu_0 : int, float or np.ndarray
         determines the initial prior(s) for the means of the distributions of the prediction weights;
         if it is a scalar, that value is assigned as the priors for all means.
 
-    mu_prior : 2d array
+    mu_prior : np.ndarray
         current priors for the means of the distributions of the predictions weights.
 
-    mu_n : 2d array
+    mu_n : np.ndarray
         current means for the distributions of the prediction weights.
 
-    sigma_0 : int, float or 2d array
+    sigma_0 : int, float or np.ndarray
         value used to determine the initial prior(s) for the variances of the distributions of the prediction
         weights; if it is a scalar, that value is assigned as the priors for all variances.
 
-    Lambda_prior :  2d array
+    Lambda_prior :  np.ndarray
         current priors for the variances of the distributions of the predictions weights.
 
-    Lambda_n :  2d array
+    Lambda_n :  np.ndarray
         current variances for the distributions of the prediction weights.
 
     gamma_shape_0 : int or float
@@ -658,13 +653,13 @@ class BayesGLM(LearningFunction):
     gamma_size_prior : int or float
         current prior for the size parameter of the gamma distribution used to sample the prediction weights.
 
-    gamma_size_n : 2d array with single scalar value
+    gamma_size_n : np.ndarray with single scalar value
         current value of the size parameter of the gamma distribution used to sample the prediction weights.
 
     random_state : numpy.RandomState
       private pseudorandom number generator
 
-    weights_sample : 1d array
+    weights_sample : np.ndarray
         last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
         `function <BayesGLM.function>`.
 
@@ -1044,10 +1039,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
+    variable: List[array(float64), array(float64), array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
-    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
+    learning_rate : scalar or list, np.ndarray of numeric values: default .05
         specifies the learning rate used by the `function <Kohonen.function>` (see `learning_rate
         <Kohonen.learning_rate>` for details).
 
@@ -1072,15 +1067,15 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Attributes
     ----------
 
-    variable: List[array(float64), array(float64), 2d array[[float64]]]
+    variable: List[array(float64), array(float64), array[[float64]]]
         input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
         returned by `function <Kohonen.function>`.
 
-    learning_rate : float, 1d or 2d array
+    learning_rate : float, np.ndarray
         used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
         <Kohonen.function>`.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
         it is multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight
-        change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+        change matrix;  if it is an array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
         learning_rate is not specified explicitly in the constructor for the function or otherwise (see `learning_rate
         <LearningMechanism.learning_rate>`) then the function's default learning_rate is used.
 
@@ -1233,7 +1228,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         Returns
         -------
 
-        weight change matrix : 2d array
+        weight change matrix : np.ndarray
             matrix of weight changes scaled by difference of the current weights from the input pattern in
             `variable <Kohonen.variable>`\\[0] and the distance of each element from the one with the weights most
             similar to that input pattern.
@@ -1314,7 +1309,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activations in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
+    learning_rate : scalar or list, np.ndarray of numeric values: default .05
         specifies the learning rate used by the `function <Hebbian.function>`; (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
@@ -1344,7 +1339,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : float, 1d or 2d array
+    learning_rate : float, np.ndarray
         used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
         <Hebbian.function>`.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
         it is multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight
@@ -1445,7 +1440,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         Returns
         -------
 
-        weight change matrix : 2d array
+        weight change matrix : np.ndarray
             matrix of weight changes generated by the `Hebbian Learning rule <Hebbian_Learning_Rule>`,
             with all diagonal elements = 0 (i.e., hollow matix).
 
@@ -1489,8 +1484,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
         weight_change_matrix = weight_change_matrix * (1 - np.identity(len(variable)))
 
-        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
-        if learning_rate_dim in {0, 2}:
+        # If learning_rate is scalar or n-d, multiply it by the weight change matrix
+        if learning_rate_dim != 1:
             weight_change_matrix = weight_change_matrix * learning_rate
 
         return self.convert_output_type(weight_change_matrix)
@@ -1533,7 +1528,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         activations in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
+    learning_rate : scalar or list, array of numeric values: default .05
         specifies the learning rate used by the `function <ContrastiveHebbian.function>`. (see `learning_rate
         <ContrastiveHebbian.learning_rate>` for details).
 
@@ -1665,7 +1660,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         Returns
         -------
 
-        weight change matrix : 2d array
+        weight change matrix : np.ndarray
             matrix of weight changes generated by the `ContrastiveHeabbian learning rule
             <ContrastiveHebbian_Learning_Rule>`, with all diagonal elements = 0 (i.e., hollow matix).
 
@@ -1706,8 +1701,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
         weight_change_matrix = weight_change_matrix * (1 - np.identity(len(variable)))
 
-        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
-        if learning_rate_dim in {0, 2}:
+        # If learning_rate is scalar or n-d, multiply it by the weight change matrix
+        if learning_rate_dim != 1:
             weight_change_matrix = weight_change_matrix * learning_rate
 
         return self.convert_output_type(weight_change_matrix)
@@ -1775,7 +1770,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Arguments
     ---------
 
-    default_variable : List or 2d array : default class_defaults.variable
+    default_variable : List or np.ndarray : default class_defaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
@@ -1806,7 +1801,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Attributes
     ----------
 
-    variable: 2d array
+    variable: np.ndarray
         specifies three values used as input to the `function <Reinforcement.function>`:
 
             * `activation_input <Reinforcement.activation_input>`,
@@ -1954,14 +1949,14 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default class_defaults.variable
+        variable : List or np.ndarray [length 3 in axis 0] : default class_defaults.variable
            must have three items that are (in order):
 
                * `activation_input <Reinforcement.activation_input>` (not used);
 
-               * `activation_output <Reinforcement.activation_output>` (1d array with only one non-zero value);
+               * `activation_output <Reinforcement.activation_output>` (array with only one non-zero value);
 
-               * `error_signal <Reinforcement.error_signal>` (1d array with a single scalar element);
+               * `error_signal <Reinforcement.error_signal>` (array with a single scalar element);
 
            (see `note <Reinforcement_Note>` above).
 
@@ -1973,8 +1968,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Returns
         -------
 
-        error array : List[1d array, 1d array]
-            Both 1d arrays are the same, with a single non-zero error term (see `note <Reinforcement_Note>` above).
+        error array : np.ndarray[np.ndarray, np.ndarray]
+            Both arrays are the same, with a single non-zero error term (see `note <Reinforcement_Note>` above).
 
         """
 
@@ -2135,7 +2130,7 @@ class BackPropagation(LearningFunction):
     Arguments
     ---------
 
-    variable : List or 2d array [length 3 in axis 0] : default class_defaults.variable
+    variable : List or np.ndarray [length 3 in axis 0] : default class_defaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d array),
@@ -2159,7 +2154,7 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     COMMENT:
-    error_matrix : List, 2d array, ParameterPort, or MappingProjection
+    error_matrix : List, np.ndarray, ParameterPort, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterPort it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
@@ -2191,7 +2186,7 @@ class BackPropagation(LearningFunction):
     Attributes
     ----------
 
-    variable: 2d array
+    variable: np.ndarray
         contains the three values used as input to the `function <BackPropagation.function>`:
        `activation_input <BackPropagation.activation_input>`,
        `activation_output <BackPropagation.activation_output>`,
@@ -2220,7 +2215,7 @@ class BackPropagation(LearningFunction):
         the derivative of the activation function
         with respect to activation_output.
 
-    error_matrix : 2d array or ParameterPort
+    error_matrix : np.ndarray or ParameterPort
         matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
         is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterPort`,
         it refers to the MATRIX parameterPort of the `MappingProjection` being learned.
@@ -2402,7 +2397,7 @@ class BackPropagation(LearningFunction):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterPort, MappingProjection)):
                 raise FunctionError(f"The '{ERROR_MATRIX}' arg for {self.__class__.__name__} ({error_matrix}) "
-                                    f"must be a list, 2d np.array, ParamaterPort or MappingProjection.")
+                                    f"must be a list, array, ParameterPort or MappingProjection.")
 
             if isinstance(error_matrix, MappingProjection):
                 try:
@@ -2411,7 +2406,7 @@ class BackPropagation(LearningFunction):
                 except KeyError:
                     raise FunctionError(f"The MappingProjection specified for the '{ERROR_MATRIX}' arg of "
                                         f"of {self.__class__.__name__} ({error_matrix.shape}) must have a "
-                                        f"{MATRIX} ParamaterPort that has been assigned a 2d array or matrix.")
+                                        f"{MATRIX} ParamaterPort that has been assigned an array or matrix.")
 
             elif isinstance(error_matrix, ParameterPort):
                 try:
@@ -2432,7 +2427,7 @@ class BackPropagation(LearningFunction):
 
             if error_matrix.ndim != 2:
                 raise FunctionError(f"The value of the {param_type_string} specified for the '{ERROR_MATRIX}' arg "
-                                    f"of '{self.name}' ({error_matrix}) must be a 2d array or matrix.")
+                                    f"of '{self.name}' ({error_matrix}) must be an array or matrix.")
 
             # The length of the sender outputPort.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
@@ -2463,7 +2458,7 @@ class BackPropagation(LearningFunction):
         Arguments
         ---------
 
-        variable : List or 2d array [length 3 in axis 0]
+        variable : List or np.ndarray [length 3 in axis 0]
            must have three items that are the values for (in order):
            `activation_input <BackPropagation.activation_input>` (1d array),
            `activation_output <BackPropagation.activation_output>` (1d array),
@@ -2474,7 +2469,7 @@ class BackPropagation(LearningFunction):
             other than activation_input and activation_output, to compute the derivative of the activation function
             with respect to `activation_output <BackPropagation.activation_output>`.
 
-        error_matrix : List, 2d array, ParameterPort, or MappingProjection
+        error_matrix : List, array, ParameterPort, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
