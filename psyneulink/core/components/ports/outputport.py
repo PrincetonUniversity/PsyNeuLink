@@ -464,7 +464,7 @@ In the following example, a `DDM` Mechanism named ``my_mech`` is configured with
 COMMENT:
 (also see `OutputPort_Structure` below). If the
 Mechanism's `function
-<Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a 2d np.array), then an
+<Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a np.ndarray), then an
 OutputPort can be assigned to any of those items by specifying its `index <OutputPort.index>` attribute. An
 OutputPort can also be configured to transform the value of the item, by specifying a function for its `assign
 <OutputPort.assign>` attribute; the result will then be assigned as the OutputPort's `value <OutputPort.value>`.
@@ -1246,6 +1246,15 @@ class OutputPort(Port_Base):
         return self.defaults.value.shape[-1]
 
     @property
+    def socket_shape(self):
+        return self.defaults.value.shape
+
+    # TODO: replace socket_template with this
+    @property
+    def socket_shape_template(self):
+        return np.zeros(self.socket_shape)
+
+    @property
     def owner_value_index(self):
         """Return index or indices of items of owner.value for any to which OutputPort's variable has been assigned
         If the OutputPort has been assigned to:
@@ -1381,7 +1390,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value
-        # Otherwise, use value converted to 2d np.array
+        # Otherwise, use value converted to np.ndarray
         else:
             owner_value = converted_to_2d
 

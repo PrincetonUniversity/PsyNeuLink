@@ -72,7 +72,7 @@ to access its `entries <Log.entries>`:
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
-    * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
+    * `nparray <Log.csv>` -- returns a np.ndarray with the `entries <Log.entries>` in the Log.
     ..
     * `nparray_dictionary <Log.nparray_dictionary>` -- returns a dictionary of np.arrays with the `entries <Log.entries>` in the Log.
     ..
@@ -1372,7 +1372,7 @@ class Log:
             otherwise, it is "<entry name>".
 
         Returns:
-            2d np.array
+            np.ndarray
         """
 
         entries = self._validate_entries_arg(entries, logged=True)
@@ -1519,7 +1519,7 @@ class Log:
             :type: bool
 
         Returns:
-            2d np.array
+            np.ndarray
         """
         log_dict = OrderedDict()
         entries = self._validate_entries_arg(entries, logged=True)

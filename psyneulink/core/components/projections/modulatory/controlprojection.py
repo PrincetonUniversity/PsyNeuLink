@@ -177,7 +177,7 @@ class ControlProjection(ModulatoryProjection_Base):
     receiver : ParameterPort of Mechanism
         `ParameterPort` for the parameter to be modified by the ControlProjection.
 
-    variable : 2d np.array
+    variable : np.ndarray
         same as `control_signal <ControlProjection.control_signal>`.
 
     control_signal : 1d np.array

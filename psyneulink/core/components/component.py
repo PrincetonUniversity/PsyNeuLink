@@ -516,12 +516,14 @@ import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
+from typing import TYPE_CHECKING
 
 import dill
 import graph_scheduler
 import numpy as np
+from numpy.typing import ArrayLike
 
-from psyneulink._typing import Iterable, Union
+from psyneulink._typing import Iterable, List, Union
 from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
@@ -577,13 +579,17 @@ from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix, _PNL_INHERENT_PREFIX
 from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import (
+    ArrayShape,
     ContentAddressableList,
     _get_cached_function_signature,
+    array_shapes_equal,
     call_with_pruned_args,
     contains_type,
     convert_all_elements_to_np_array,
     convert_to_np_array,
+    convert_to_tensor,
     get_all_explicit_arguments,
     get_deepcopy_with_shared,
     is_instance_or_subclass,
@@ -595,10 +601,27 @@ from psyneulink.core.globals.utilities import (
     parse_valid_identifier,
     safe_equals,
     safe_len,
+    shape,
     try_extract_0d_array_item,
 )
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
+
+
+if TYPE_CHECKING:
+    from torch import Tensor
+    from psyneulink.core.compositions.composition import Composition
+
+
+try:
+    import torch
+except (ImportError, RuntimeError) as e:
+    if 'torch' not in str(e):
+        raise
+    torch_available = False
+else:
+    torch_available = True
+
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -901,7 +924,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     Attributes
     ----------
 
-    variable : 2d np.array
+    variable : np.ndarray
         see `variable <Component_Variable>`
 
     input_shapes : Union[int, Iterable[Union[int, tuple]]]
@@ -910,7 +933,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     function : Function, function or method
         see `function <Component_Function>`
 
-    value : 2d np.array
+    value : np.ndarray
         see `value <Component_Value>`
 
     log : Log
@@ -1609,6 +1632,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "mask",
                      # LossMechanism
                      "loss", "metric",
+                     # MatrixTransform
+                     "axes",
                      }
 
         # Mechanism's need few extra entries:
@@ -4429,6 +4454,275 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         for obj in self._parameter_components:
             obj._remove_from_composition(composition)
+
+    # TODO: consider if we may need to deal with arbitrarily nested ragged
+    # arrays, or just in the first dim
+    def _input_is_compatible_with(self, inp: ArrayLike, target: ArrayLike) -> bool:
+        """
+        Determines whether array **inp** is acceptable when an array **target**
+        is expected (**inp** can be "reasonably"/"safely" be reshaped to fit
+        **target**).
+
+        Currently decides by whether the result arrays after standard
+        `np.squeeze` have the same shape.
+
+        Args:
+            inp (ArrayLike): prospective input array
+            target (ArrayLike): expected input array
+
+        Returns:
+            bool: True if **inp** is acceptable when **target** is expected,
+                False otherwise
+        """
+        inp_squeezed = np.squeeze(inp)
+        target_squeezed = np.squeeze(target)
+        return array_shapes_equal(inp_squeezed, target_squeezed)
+
+    def _reshape_irregular_input_array(self, inp: ArrayLike, match: ArrayLike, match_itemwise: bool) -> Union[ArrayLike, None]:
+        """
+        Attempts to make **inp** match the shape of input template **match**
+        (or if **match_itemwise**=True items of **inp** to items in **match**)
+        only if they are compatible as determined by
+        `Component._input_is_compatible_with`.
+
+        Args:
+            inp (ArrayLike): potential input
+            match (ArrayLike): desired input template
+            match_itemwise (bool):
+                if True, match items of **inp** to items of **match**, otherwise
+                match **inp** to **match**
+
+        Returns:
+            Union[ArrayLike, None]:
+                **inp** in the shape of **match** if compatible, otherwise None
+        """
+        reshaped_inputs = []
+
+        try:
+            iter(inp)
+        except TypeError:
+            inp = [inp]
+
+        if match_itemwise:
+            if safe_len(inp) != safe_len(match):
+                return None
+
+        for i, item in enumerate(inp):
+            if match_itemwise:
+                try:
+                    match_item = match[i]
+                except IndexError:
+                    return None
+            else:
+                match_item = match
+
+            if array_shapes_equal(item, match_item):
+                reshaped_inputs.append(item)
+            else:
+                if not self._input_is_compatible_with(item, match_item):
+                    # input_item doesn't differ from external_input by
+                    # only wrapper dimensions
+                    return None
+
+                try:
+                    reshaped_inputs.append(np.reshape(item, match_item.shape))
+                except ValueError:
+                    return None
+        else:
+            return reshaped_inputs
+
+    def parse_input_array(
+        self,
+        inp: Union[List, np.ndarray] = None,
+        composition=ConnectionInfo.ALL,
+        as_sequence: bool = False,
+        as_tensor: bool = False,
+    ) -> Union[np.ndarray, 'Tensor']:
+        """
+        Attempts to produce valid input to this Component from the given
+        **inp**, to allow more flexible input. This may involve
+        reshaping, broadcasting, or changing the dimension of **inp** to
+        match this object's `Component.default_external_input` if
+        necessary. If **inp** is not provided,
+        `Component.default_external_input` will be used.
+
+        Args:
+            inp (Union[List, np.ndarray], optional): The input to parse
+                for use with this Component, targeting
+                `Component.default_external_input`. Defaults to None.
+            composition (`Composition`, optional): The `Composition`
+                this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+            as_sequence (bool, optional): If True, **inp** will be
+                interpreted and returned as a sequence of inputs,
+                instead of a single input. Defaults to False.
+            as_tensor (bool, optional):
+                If True, **inp** and return value will be converted to
+                `torch.Tensor`
+
+        Raises:
+            ComponentError: If compatible input cannot be produced from **inp**
+
+        Returns:
+            Union[`numpy.ndarray`, `torch.Tensor`]
+        """
+        if as_tensor:
+            if not torch_available:
+                raise RuntimeError('as_tensor=True requires torch module')
+            inp = convert_to_tensor(inp)
+            squeeze = torch.squeeze
+        else:
+            inp = convert_all_elements_to_np_array(inp)
+            squeeze = np.squeeze
+
+        try:
+            inp_squeezed = squeeze(inp)
+        except TypeError:
+            inp_squeezed = inp
+
+        inp_is_sequence = False
+
+        external_input = self.default_external_input(composition)
+        res = None
+
+        # expected to be a ragged tensor (failed to be squeezed above)
+        if isinstance(inp, list):
+            res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=False)
+        # no argument, default
+        elif inp.ndim == 0 and inp.item() is None:
+            res = copy_parameter_value(external_input)
+        elif array_shapes_equal(inp, external_input):
+            res = inp
+        elif (
+            # Single scalar (alone or in list), so must be single value
+            # for single trial
+            inp_squeezed.ndim == 0
+            # 1 trial's worth of input for >1 input items
+            or self._input_is_compatible_with(inp, external_input)
+        ):
+            try:
+                res = np.reshape(inp, external_input.shape)
+            except ValueError:
+                pass
+        # check for one or more trials worth of inputs
+        else:
+            # each item is an input, and inp represents multiple trials
+            # of inputs
+            res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=False)
+            if res is not None:
+                inp_is_sequence = True
+
+            # single trial input for multiple ragged input_ports
+            if res is None:
+                res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=True)
+
+            # multiple trial input for multiple ragged input_ports
+            if res is None:
+                reshaped_inputs = []
+                for trial_item in inp:
+                    parsed_trial_item = self._reshape_irregular_input_array(
+                        trial_item, external_input, match_itemwise=True
+                    )
+
+                    if parsed_trial_item is None:
+                        break
+                    else:
+                        reshaped_inputs.append(parsed_trial_item)
+                else:
+                    res = reshaped_inputs
+                    inp_is_sequence = True
+
+        if res is None:
+            def _shape_type_strs(arr, ragged_shape):
+                try:
+                    is_np_shape = arr.shape == ragged_shape
+                except AttributeError:
+                    is_np_shape = False
+
+                if is_np_shape:
+                    return 'np.shape', 'np.zeros'
+                else:
+                    return 'pnl.shape', 'pnl.zeros'
+
+            obj_str = str(self)
+            if getattr(self, 'owner', None) is not None:
+                obj_str = f'{obj_str} of {self.owner}'
+
+            # shape is equivalent to np.shape if not ragged
+            inp_ragged_shape = shape(inp)
+            external_input_ragged_shape = shape(external_input)
+
+            inp_shape_type, _ = _shape_type_strs(inp, inp_ragged_shape)
+            expected_shape_type, expected_zeros_fct_name = _shape_type_strs(
+                external_input, external_input_ragged_shape
+            )
+
+            if external_input.shape == external_input_ragged_shape:
+                valid_sequence_shape_str = "'(<num inputs>, {0})'".format(
+                    ', '.join(str(x) for x in external_input.shape)
+                )
+            else:
+                valid_sequence_shape_str = f"'tuple({external_input_ragged_shape} for _ in range(<num inputs>))'"
+
+            raise ComponentError(
+                f"Invalid input to {obj_str}. Got {inp_shape_type} '{inp_ragged_shape}': {inp}"
+                f"\nExpecting {expected_shape_type} '{external_input_ragged_shape}' for a single input or {valid_sequence_shape_str} for a sequence."
+                f'\nTry `{expected_zeros_fct_name}({external_input_ragged_shape})` for an example input.'
+            )
+
+        if as_sequence and not inp_is_sequence:
+            # can't use np.expand_dims because of ragged arrays
+            res = [res]
+
+        if as_tensor:
+            res = convert_to_tensor(res)
+        else:
+            res = convert_all_elements_to_np_array(res)
+
+        return res
+
+    def default_external_input(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL  # noqa: U100
+    ) -> Union[np.ndarray, None]:
+        """
+        Returns an array (or None) that will be used as input to
+        `Component.execute` if no input is given. **composition** is used to
+        determine what incoming `Projection`\\ s are active, if applicable.
+
+        Args:
+            composition (Union[`Composition`, `ConnectionInfo`], optional):
+                The `Composition` this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[`np.ndarray`, None]:
+        """
+        return copy_parameter_value(self.defaults.variable)
+
+    def external_input_shape(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL
+    ) -> Union[ArrayShape, None]:
+        """
+        Returns a numpy shape-like tuple (see `shape <psyneulink.core.globals.utilities.shape>`)
+        (or None) corresponding to this `Component`\\ 's
+        `default_external_input`. This can serve as a template for passing
+        correctly shaped input into this Component. This could be created, for
+        example, by
+        `pnl.zeros(my_component.external_input_shape(my_composition))`.
+
+        Args:
+            composition (`Composition`, optional): The `Composition`
+                this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[ArrayShape, None]
+        """
+        inp = self.default_external_input(composition)
+        if inp is None:
+            return None
+        else:
+            return shape(inp)
 
     @property
     def logged_items(self):
