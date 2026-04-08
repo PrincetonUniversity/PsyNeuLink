@@ -407,9 +407,10 @@ class TestIntegratorFunctions:
             default_variable=[[1], [2]],
             input_ports=['a', 'b'],
         )
-        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
         val = benchmark(ex, [[1], [2]])
+
         np.testing.assert_allclose(val, [[3], [3]])  # output_port values
         np.testing.assert_allclose(I.value, [[3], [5]])
 
@@ -423,8 +424,8 @@ class TestIntegratorFunctions:
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
         )
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
-
         val = benchmark(ex, [5])
+
         np.testing.assert_allclose(val, [[2.5], [2.5]])
 
     @pytest.mark.mimo
@@ -439,9 +440,10 @@ class TestIntegratorFunctions:
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
-        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
         val = benchmark(ex, [[1], [2]])
+
         np.testing.assert_allclose(val, [[5], [3]])
 
     @pytest.mark.mechanism
@@ -640,6 +642,7 @@ class TestIntegratorFunctions:
 
         ex([10])
         val = benchmark(ex, [10])
+
         np.testing.assert_allclose(val, [[7.5]])
 
 
@@ -1094,13 +1097,14 @@ class TestIntegratorNoise:
                 noise=NormalDist([[0], [0], [0]]),
             ),
         )
+
         val = I.execute([[10], [10], [10]])
 
         np.testing.assert_allclose(val, [[10.660535], [11.108879], [ 9.084011]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_simple_noise_fn_var_list(self):
+    def test_integrator_simple_noise_fn_var_list(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
@@ -1109,12 +1113,14 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex([10, 10, 10, 10])
+
         np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_accumulator_noise_fn(self):
+    def test_integrator_accumulator_noise_fn(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
@@ -1122,12 +1128,14 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute(10)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex(10)
+
         np.testing.assert_allclose(val, [[1.00018]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_accumulator_noise_fn_var_list(self):
+    def test_integrator_accumulator_noise_fn_var_list(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
@@ -1136,12 +1144,14 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex([10, 10, 10, 10])
+
         np.testing.assert_allclose(val, [[1.10887925, -0.9159893, 0.30157835, 0.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_adaptive_noise_fn(self):
+    def test_integrator_adaptive_noise_fn(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AdaptiveIntegrator(
@@ -1149,13 +1159,14 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute(10)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex(10)
 
         np.testing.assert_allclose(val, [[11.00018002983055]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_adaptive_noise_fn_var_list(self):
+    def test_integrator_adaptive_noise_fn_var_list(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
@@ -1164,21 +1175,28 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex([10, 10, 10, 10])
+
         np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_drift_diffusion_noise_val(self):
+    def test_integrator_drift_diffusion_noise_val(self, mech_mode):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=DriftDiffusionIntegrator(
                 noise=np.sqrt(5.0),
                 time_step_size=1.0,
             ),
+            # Export both values via output ports
+            output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+                          {pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}]
         )
 
-        val = I.execute(10.0)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val = ex(10.0)
+
         np.testing.assert_allclose(val, [[4.29013944], [ 1.        ]])
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
