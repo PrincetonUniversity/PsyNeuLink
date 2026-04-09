@@ -1455,12 +1455,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.add('integrator_function')
 
         # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
+        if (cost_functions := getattr(self, 'enabled_cost_functions', None)) is not None:
             if cost_functions.INTENSITY not in cost_functions:
                 blacklist.add('intensity_cost_fct')
+
             if cost_functions.ADJUSTMENT not in cost_functions:
                 blacklist.add('adjustment_cost_fct')
+
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
@@ -1625,12 +1626,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.add('integrator_function')
 
         # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
+        if (cost_functions := getattr(self, 'enabled_cost_functions', None)) is not None:
             if cost_functions.INTENSITY not in cost_functions:
                 blacklist.add('intensity_cost_fct')
+
             if cost_functions.ADJUSTMENT not in cost_functions:
                 blacklist.add('adjustment_cost_fct')
+
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
