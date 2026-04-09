@@ -385,11 +385,9 @@ class LLVMBuilderContext:
 
         # FIXME: Identity Function inherits from DeterministicTransferFunction,
         # but doesn't use either scale nor offset Parameters.
-        # FIXME: OneHot Function only excludes random state+seed in
-        # deterministic mode
         # FXIME: Dropout Function includes state+seed which are only used in
         # learning mode
-        if getattr(component, 'componentName', "") in {kw.IDENTITY_FUNCTION, kw.ONE_HOT_FUNCTION, kw.DROPOUT_FUNCTION}:
+        if getattr(component, 'componentName', "") in {kw.IDENTITY_FUNCTION, kw.DROPOUT_FUNCTION}:
             return
 
         # Autodiff learning optimizers are compiled objects but don't have

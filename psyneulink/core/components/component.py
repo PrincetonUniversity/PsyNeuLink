@@ -532,7 +532,6 @@ from psyneulink.core.globals.keywords import (
     CONTEXT,
     CONTROL_PROJECTION,
     DEFERRED_INITIALIZATION,
-    DETERMINISTIC,
     EXECUTE_UNTIL_FINISHED,
     FUNCTION,
     FUNCTION_PARAMS,
@@ -553,7 +552,6 @@ from psyneulink.core.globals.keywords import (
     OWNER,
     PARAMS,
     PREFS_ARG,
-    RANDOM,
     RESET_STATEFUL_FUNCTION_WHEN,
     INPUT_SHAPES,
     VALUE,
@@ -1465,8 +1463,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
-        if getattr(self, "mode", None) == DETERMINISTIC and getattr(self, "tie", None) != RANDOM:
-            whitelist.remove('random_state')
+        if getattr(self, 'componentName', None) == kw.ONE_HOT_FUNCTION:
+            if self.mode != kw.DETERMINISTIC:
+                if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    whitelist.remove('random_state')
+
+            elif self.tie != kw.RANDOM:
+                whitelist.remove('random_state')
 
         # Drop previous_value from MemoryFunctions
         if hasattr(self.parameters, 'duplicate_keys'):
@@ -1597,10 +1600,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # OneHot:
         # * runtime abs_val and indicator are only used in deterministic mode.
         # * random_state and seed are only used in RANDOM tie resolution.
-        if getattr(self, "mode", None) != DETERMINISTIC:
-            blacklist.update(['abs_val', 'indicator'])
-        elif getattr(self, "tie", None) != RANDOM:
-            blacklist.add("seed")
+        if getattr(self, 'componentName', None) == kw.ONE_HOT_FUNCTION:
+            if self.mode != kw.DETERMINISTIC:
+                blacklist.update(['abs_val', 'indicator'])
+                if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    blacklist.add("seed")
+
+            elif self.tie != kw.RANDOM:
+                blacklist.add("seed")
 
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly
