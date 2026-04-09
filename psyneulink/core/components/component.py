@@ -527,6 +527,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
+import psyneulink.core.globals.keywords as kw
 from psyneulink.core.globals.keywords import (
     CONTEXT,
     CONTROL_PROJECTION,
@@ -1431,9 +1432,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # * use "value" state
         # * can execute 'until finished'
         # * need to track number of executions
-        if hasattr(self, 'ports'):
-            whitelist.update({"value", "num_executions_before_finished",
-                              "num_executions", "is_finished_flag"})
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
+            whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
             # it's DDM with integrator function.
@@ -1602,12 +1602,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.add("seed")
 
         # Mechanism's need few extra entries:
-        # * matrix -- is never used directly, and is flatened below
+        # * matrix -- is never used directly
         # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
-        if hasattr(self, 'ports'):
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
+
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
