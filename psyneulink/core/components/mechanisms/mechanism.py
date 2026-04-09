@@ -3089,7 +3089,7 @@ class Mechanism_Base(Mechanism):
             return params_in, builder
 
         # Allocate a shadow structure to overload base parameters
-        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
+        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters_{}".format(self))
 
         # Copy base values to the new structure
         if len(param_ports) != len(obj.llvm_param_ids):
