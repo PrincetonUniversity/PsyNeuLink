@@ -3090,7 +3090,7 @@ class Mechanism_Base(Mechanism):
 
         # Allocate a shadow structure to overload base parameters
         if params_out is None:
-            params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
+            params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters_{}".format(self))
 
         else:
             assert params_in.type.pointee == params_out.type.pointee

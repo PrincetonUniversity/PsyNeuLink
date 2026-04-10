@@ -23,18 +23,20 @@ class TestReset:
     test_args = [pytest.param(1,                None,           id='default'),
                  pytest.param(None,             pnl.OVERRIDE,   id='OVERRRIDE')]
     @pytest.mark.parametrize('reset_default, modulation', test_args)
-    def test_reset_integrator_mechanism(self, reset_default, modulation):
+    def test_reset_integrator_mechanism(self, reset_default, modulation, comp_mode):
         input = pnl.ProcessingMechanism(name='INPUT')
-        counter = IntegratorMechanism(function=SimpleIntegrator,
-                                      default_variable=1,
-                                      reset_default=reset_default,
-                                      name='COUNTER')
+        counter = pnl.IntegratorMechanism(function=SimpleIntegrator,
+                                          default_variable=1,
+                                          reset_default=reset_default,
+                                          name='COUNTER')
         ctl = pnl.ControlMechanism(monitor_for_control=input,
                                    modulation=modulation,
                                    control=('reset', counter))
         c = Composition(nodes=[input, ctl, counter])
-        c.run(inputs={input:[0,0,1,0,0]})
+
+        c.run(inputs={input:[0,0,1,0,0]}, execution_mode=comp_mode)
         expected = [[[0.],[1.]], [[0.],[2.]], [[1.],[0.]], [[0.],[1.]], [[0.],[2.]]]
+
         np.testing.assert_allclose(c.results, expected)
 
     def test_FitzHughNagumo_valid(self):
