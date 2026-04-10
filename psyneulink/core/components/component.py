@@ -1679,14 +1679,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 return x if x is not None else tuple()
 
         def _get_values(p):
-            param = p.get(context)
+            value = p.get(context)
             if p.name == 'num_trials_per_estimate': # Should always be int
-                return 0 if param is None else int(param)
+                return 0 if value is None else int(value)
 
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asarray(param, dtype=float).ravel())
+                return tuple(np.asarray(value, dtype=float).ravel())
 
-            return _convert(param)
+            elif p.name == 'seed':
+                value = np.asarray(value, dtype=float).squeeze()
+
+            return _convert(value)
 
         return tuple(map(_get_values, self._get_compilation_params()))
 

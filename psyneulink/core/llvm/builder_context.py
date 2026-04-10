@@ -499,8 +499,8 @@ class LLVMBuilderContext:
 
             # seeds are represented as np.uint32, but need to be converted to
             # float for compiled variant in order to support seed modulation
-            elif p.name in {'seed', 'function-seed'}:
-                val = float(val)
+            elif p.name == 'seed':
+                val = np.asarray(val, dtype=float).squeeze()
 
             return self.convert_python_struct_to_llvm_ir(val)
 
