@@ -2131,17 +2131,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
         fun_input_ty = fun.args[2].type.pointee
 
         mech_input = builder.alloca(fun_input_ty)
-        mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                  ctx.int32_ty(0)])
+        mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(arg_in), mech_input_ptr)
 
-        mech_params = builder.gep(params, [ctx.int32_ty(0),
-                                           ctx.int32_ty(0),
-                                           ctx.int32_ty(self._idx)])
-
-        mech_state = builder.gep(state, [ctx.int32_ty(0),
-                                         ctx.int32_ty(0),
-                                         ctx.int32_ty(self._idx)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._idx)])
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._idx)])
 
         f_params, f_state = ctx.get_param_or_state_ptr(builder,
                                                        self.mechanism,
@@ -2149,14 +2143,23 @@ class PytorchMechanismWrapper(torch.nn.Module):
                                                        param_struct_ptr=mech_params,
                                                        state_struct_ptr=mech_state)
 
-        f_params, builder = self.mechanism._gen_llvm_param_ports_for_obj(
-                self.mechanism.function, f_params, ctx, builder, mech_params, mech_state, mech_input)
+        f_params, builder = self.mechanism._gen_llvm_param_ports_for_obj(ctx,
+                                                                         builder,
+                                                                         mech_params,
+                                                                         mech_state,
+                                                                         mech_input,
+                                                                         obj=self.mechanism.function,
+                                                                         params_in=f_params)
 
-        output, _ = self.mechanism._gen_llvm_invoke_function(ctx, builder, self.mechanism.function,
-                                                              f_params, f_state, mech_input, None,
-                                                              tags=frozenset({"derivative"}))
-        return builder.gep(output, [ctx.int32_ty(0),
-                                    ctx.int32_ty(0)])
+        output, builder = self.mechanism._gen_llvm_invoke_function(ctx,
+                                                                   builder,
+                                                                   self.mechanism.function,
+                                                                   f_params,
+                                                                   f_state,
+                                                                   mech_input,
+                                                                   None,
+                                                                   tags=frozenset({"derivative"}))
+        return builder.gep(output, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
     def __repr__(self):
         return "PytorchWrapper for: " +self.mechanism.__repr__()

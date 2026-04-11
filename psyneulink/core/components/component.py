@@ -1608,6 +1608,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
+
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state or seed are not used
+            if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
+                blacklist.add("seed")
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
@@ -1673,14 +1679,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 return x if x is not None else tuple()
 
         def _get_values(p):
-            param = p.get(context)
+            value = p.get(context)
             if p.name == 'num_trials_per_estimate': # Should always be int
-                return 0 if param is None else int(param)
+                return 0 if value is None else int(value)
 
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asarray(param, dtype=float).ravel())
+                return tuple(np.asarray(value, dtype=float).ravel())
 
-            return _convert(param)
+            elif p.name == 'seed':
+                value = np.asarray(value, dtype=float).squeeze()
+
+            return _convert(value)
 
         return tuple(map(_get_values, self._get_compilation_params()))
 

@@ -1209,6 +1209,28 @@ class TestIntegratorNoise:
         np.testing.assert_allclose(val1, [[4.29013944], [1.]], **tolerance)
         np.testing.assert_allclose(val2, [[14.9673235], [2.]], **tolerance)
 
+    @pytest.mark.composition
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize(
+        "parameter, expected",
+         [('seed', [[[10.], [13.21383832]], [[20.], [15.28114669]]] * 2),
+          (pnl.DIST_MEAN, [[[10.], [11.20656132]], [[20.], [21.71995896]], [[10.], [9.57600537]], [[20.], [20.03826716]]]),
+          (pnl.STANDARD_DEVIATION, [[[10.], [27.06561325]], [[20.], [49.39917927]], [[10.], [10.76005365]], [[20.], [15.76534311]]]),
+         ])
+    def test_integrator_modulated_noise_fn(self, parameter, expected, comp_mode):
+        if not comp_mode.is_compiled():
+            pytest.skip("Python doesn't support modulating nested Parameters")
+
+        # Use higher default mean to avoid rounding issues with lower precision (fp32)
+        I = pnl.IntegratorMechanism(default_variable=[0], function=AccumulatorIntegrator(rate=0, noise=NormalDist(seed=[1], mean=15)))
+        P = pnl.ProcessingMechanism()
+        ctl = pnl.ControlMechanism(monitor_for_control=P, modulation=pnl.OVERRIDE, control=(parameter, I))
+        c = Composition(nodes=[P, ctl, I])
+
+        c.run(inputs={P:[10, 20, 10, 20]}, execution_mode=comp_mode)
+
+        np.testing.assert_allclose(c.results, expected)
+
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

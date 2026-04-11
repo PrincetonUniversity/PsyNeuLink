@@ -1272,13 +1272,13 @@ class DDM(ProcessingMechanism):
         prev_val = builder.call(llvm_fabs, [prev_val])
 
         # Get functions params and apply modulation
-        f_params, builder = self._gen_llvm_param_ports_for_obj(self.function,
-                                                               f_base_params,
-                                                               ctx,
+        f_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                builder,
                                                                m_base_params,
                                                                m_state,
-                                                               m_in)
+                                                               m_in,
+                                                               obj=self.function,
+                                                               params_in=f_base_params)
 
         # Get threshold value
         threshold_ptr = ctx.get_param_or_state_ptr(builder,
