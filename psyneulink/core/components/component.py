@@ -3553,20 +3553,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         except TypeError:
             pass
 
-        parameter_port_list = None
         try:
             # parameter is SharedParameter and ultimately points to
             # something with a corresponding ParameterPort
             parameter_port_list = parameter.final_source._owner._owner.parameter_ports
         except AttributeError:
-            # prefer parameter ports from self over owner
             try:
-                parameter_port_list = self._parameter_ports
+                parameter_port_list = parameter.final_source.port._owner.parameter_ports
             except AttributeError:
+                # prefer parameter ports from self over owner
                 try:
-                    parameter_port_list = self.owner._parameter_ports
+                    parameter_port_list = self._parameter_ports
                 except AttributeError:
-                    pass
+                    try:
+                        parameter_port_list = self.owner._parameter_ports
+                    except AttributeError:
+                        parameter_port_list = None
 
         if parameter_port_list is not None:
             try:

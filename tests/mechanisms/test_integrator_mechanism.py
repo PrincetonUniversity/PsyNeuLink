@@ -1218,8 +1218,6 @@ class TestIntegratorNoise:
           (pnl.STANDARD_DEVIATION, [[[10.], [27.06561325]], [[20.], [49.39917927]], [[10.], [10.76005365]], [[20.], [15.76534311]]]),
          ])
     def test_integrator_modulated_noise_fn(self, parameter, expected, comp_mode):
-        if not comp_mode.is_compiled():
-            pytest.skip("Python doesn't support modulating nested Parameters")
 
         # Use higher default mean to avoid rounding issues with lower precision (fp32)
         I = pnl.IntegratorMechanism(default_variable=[0], function=AccumulatorIntegrator(rate=0, noise=NormalDist(seed=[1], mean=15)))
