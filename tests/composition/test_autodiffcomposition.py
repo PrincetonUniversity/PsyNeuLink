@@ -489,34 +489,34 @@ class TestAutodiffTargetSpecs:
            f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: 'pway2_mech_C'.",
             CompositionError),
         7: (f"The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
-            f"specification in its targets argument: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node (which can't be "
-            f"a SAMPLE or TARGET in a Composition).", CompositionError),
+            f"specification in its 'targets' argument: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
+            f"be a SAMPLE or TARGET in a Composition).", CompositionError),
         8: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
-            "specification in its targets argument: 'pway3_mech_T' (in 'targets' dict): not in 'autodiff_composition'.",
-            CompositionError),
+            "specification in its 'targets' argument: 'pway3_mech_T' (in 'targets' dict): not in "
+            "'autodiff_composition'.", CompositionError),
         8.5: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
-              "specifications in its targets arguments: 'pway1_mech_T' (in 'targets' dict): OUTPUT Node that is not a "
-              "SAMPLE; 'pway2_mech_T' (in 'targets' dict): OUTPUT Node that is not a SAMPLE; 'pway3_mech_T' "
+              "specifications in its 'targets' arguments: 'pway1_mech_T' (in 'targets' dict): OUTPUT Node that is not "
+              "a SAMPLE; 'pway2_mech_T' (in 'targets' dict): OUTPUT Node that is not a SAMPLE; 'pway3_mech_T' "
               "(in 'targets' dict): not in 'autodiff_composition'.", CompositionError),
         9: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
-            "specification in its targets argument: 'pway3_mech_B' (in 'targets' dict): INTERNAL Node (which can't be "
-            "a SAMPLE or TARGET in a Composition).", CompositionError),
+            "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
+            "be a SAMPLE or TARGET in a Composition).", CompositionError),
         10: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
-            "specifications in its targets arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
+            "specifications in its 'targets' arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
             "can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): INTERNAL Node "
             "(which can't be a SAMPLE or TARGET in a Composition).", CompositionError),
         11: ("The learn() method of 'autodiff_composition' can't be executed because there are the following "
-             "illegal specifications in its targets arguments: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node "
+             "illegal specifications in its 'targets' arguments: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node "
              "(which can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): not in "
              "'autodiff_composition'.", CompositionError),
         11.5: ("The learn() method of 'autodiff_composition' can\'t be executed because there is the following illegal "
-               "specification in its targets argument: 'pway3_mech_B' (in 'targets' dict): not in "
+               "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): not in "
                "'autodiff_composition'.", CompositionError),
-        12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification "
-             "in its 'targets' argument conflicts with one in the 'targets' argument of its constructor: "
-             "for SAMPLE 'pway3_mech_C': a Node ('pway3_mech_T[OutputPort-0]') that provides its target value is "
-             "specified in the 'targets' argument of the constructor, so there should be no specification for the "
-             "SAMPLE in learn()", AutodiffCompositionError),
+        12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
+             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: for SAMPLE "
+             "'pway3_mech_C[OutputPort-0]' (specified as 'pway3_mech_C'): a source for its target value "
+             "('pway3_mech_T') is specified in the 'targets' argument of the constructor, so there should be no "
+             "specification for it in learn().", AutodiffCompositionError),
         13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
              "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: 'pway2_mech_B': "
              "does not correspond to any sample specified in the constructor.", CompositionError),
