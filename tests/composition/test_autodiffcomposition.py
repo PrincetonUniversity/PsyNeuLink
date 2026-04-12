@@ -513,12 +513,12 @@ class TestAutodiffTargetSpecs:
                "specification in its targets argument: 'pway3_mech_B' (in 'targets' dict): not in "
                "'autodiff_composition'.", CompositionError),
         12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification "
-             "in its 'targets' argument conflicts with one in the 'targets' argument of its consructor: "
+             "in its 'targets' argument conflicts with one in the 'targets' argument of its constructor: "
              "for SAMPLE 'pway3_mech_C': a Node ('pway3_mech_T[OutputPort-0]') that provides its target value is "
              "specified in the 'targets' argument of the constructor, so there should be no specification for the "
              "SAMPLE in learn()", AutodiffCompositionError),
         13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
-             "its 'targets' argument conflicts with one in the 'targets' argument of its consructor: 'pway2_mech_B': "
+             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: 'pway2_mech_B': "
              "does not correspond to any sample specified in the constructor.", CompositionError),
     }
     test_args_for_target_spec_errors = [

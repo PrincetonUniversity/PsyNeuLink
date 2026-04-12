@@ -242,7 +242,7 @@ A `Node <Composition_Nodes>` can be removed from a Composition using the `remove
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A Composition can be used as a `Node <Composition_Nodes>` of another Composition, either in the **nodes** argument
-of its consructor, in a `Pathway` specified in its **pathways** argument, or in one of the Composition's `addition
+of its constructor, in a `Pathway` specified in its **pathways** argument, or in one of the Composition's `addition
 methods <Composition_Addition_Methods>`.  Projections can be specifed to and from the nested composition (or
 created automatically if specified in a Pathway) just as for any other Node.
 
@@ -9103,10 +9103,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_components:
                 warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            elif (hasattr(self, 'targets') and
-                    len([v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET])):
-                # Should be TARGET Nodes since they were specified in the **targets** arg of the constructor
-                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
+            elif hasattr(self, 'targets'):
+                # Ensure that any TARGET specs in self.targets are duplicates; otherwise something has gone wrong
+                # - get all specs for which target_spec is TARGET
+                specs_with_TARGET = [v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET]
+                # - if entry in self.targets specifying TARGET is not redundant with one for the same sample_port
+                if specs_with_TARGET and not any(spec[0] for spec in specs_with_TARGET
+                                                 if (spec[0] == s.sample_port and s.target_spec is not TARGET
+                                                     for s in self._sample_target_specs)):
+                    # that is a problem:
+                    assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
         return target_nodes
 
     def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
@@ -10117,10 +10123,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED TEACHER_TARGET END
         for sample_port in sample_ports_with_redundant_specs:
 
+            # TEACHER_TARGET BREADCRUMB: FOR learn(), CONFLICT IS IN target_value, BUT FOR CONSTRUCTOR IT IS target_spec
             # Create list of all target_specs for the sample_port
             # Note: convert values to str to make inside list hashable (counts can only handle one level of unhashables)
-            spec_values = [(spec.sample_spec if spec.sample_spec is not None else spec.target_spec, spec.target_value)
+            # # MODIFIED TEACHER_TARGET OLD:
+            # BREADCRUMB: THIS iS NEEDED WHEN TARGETS ARE SPECIFIED AS VALUES IN LEARN()
+            # spec_values = [(spec.sample_spec if spec.sample_spec is not None else spec.target_spec, spec.target_value)
+            #                  for spec in self._sample_target_specs if spec.sample_port is sample_port]
+            # MODIFIED TEACHER_TARGET NEW:
+            # BREADCRUMB: THIS iS NEEDED WHEN TARGETS ARE SPECIFIED AS MECHS IN CONSTRUCTOR
+            # spec_values = [(spec.sample_spec if spec.sample_spec is not None else spec.target_spec, spec.target_spec)
+            #                  for spec in self._sample_target_specs if spec.sample_port is sample_port]
+            # MODIFIED TEACHER_TARGET NEWER:
+            # BREADCRUMB: THIS iS NEEDED WHEN TARGETS ARE SPECIFIED AS MECHS IN CONSTRUCTOR
+            # spec_values = []
+            # for sample_target_spec in [s for s in self._sample_target_specs if s.sample_port is sample_port]:
+            #     # Use sample spec if specified, else use target spec
+            #     spec = (sample_target_spec.sample_spec if sample_target_spec.sample_spec is not None
+            #             else sample_target_spec.target_spec)
+            #     val = sample_target_spec.target_val if sample_target_spec.target_val else sample_target_spec.target_spec
+            #     spec_values.append((spec, val))
+            # MODIFIED TEACHER_TARGET NEWEST:
+            spec_values = [(spec.sample_spec if spec.sample_spec is not None else spec.target_spec,
+                            spec.target_value if spec.target_value else spec.target_spec)
                              for spec in self._sample_target_specs if spec.sample_port is sample_port]
+            # MODIFIED TEACHER_TARGET END
             # Create histogram of target values and filter for any that have more than one entry
             # MODIFIED TEACHER_TARGET OLD:
             # if len(counts(target_specs)) > 1:
@@ -10131,8 +10158,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sample_ports_with_mismatching_specs.append(sample_port)
             # MODIFIED TEACHER_TARGET END
 
+        # This purges illegal redundant specs (e.g. with conflicting values), so remaining ones should be benigh
         self._handle_conflicting_sample_target_specs(sample_ports_with_mismatching_specs)
-        # self._handle_conflicting_target_specs(sample_ports_with_mismatching_specs)
 
         # Warning for redundant specifications:
         # -----------------------------------------------
@@ -10174,11 +10201,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         several_one = 'several' if plural else 'one'
 
         # BREADCRUMB: HANDLE SAMPLES HERE
-        # If SAMPLEs are specified in constructor (in its **targets**) arg, refer to those as targets,
-        #   else refer to OUTPUT Nodes (which are used as the SAMPLEs by default when none are specified explicitly)
-        # sample_nodes_str = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-
-        sample_nodes_str = 'SAMPLE'
         if len(all_sources) == 1:
             source_str = f"{', '.join(all_sources)}"
         else:
@@ -10190,7 +10212,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
         only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self._get_target_nodes()
                                 for target_spec in self._sample_target_specs)
-        use_sample_nodes_str = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
+        use_sample_nodes_str = (f"use the SAMPLE Node{s} to which {they_it} correspond{s_not} "
                             f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
                             if not only_sample_specs else '')
 
@@ -10203,8 +10225,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
+        # TEACHER_TARGET BREADCRUMB: SUPPRESS IF REDUNDANT SPEC IS A MISMATCH
         warnings.warn(
-            f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
+            f"There are multiple specifications of the target value{s} for {several_one} of the SAMPLE "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
             f"While this is technically OK, it might be easier and clearer to {use_sample_nodes_str}{both}{placement}. "
             f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
@@ -10223,31 +10246,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED TEACHER_TARGET END
             # sources_str = ', '.join([f"{s.target_value} in '{s.source}'" for s in self._sample_target_specs
             #                          if s.sample_port is sample_port])
-            sources_str = ', '.join([f"{s.sample_spec.name if s.sample_spec else s.target_spec.name}={s.target_value} "
-                                     f"in '{s.source}'"
-                                     for s in self._sample_target_specs
-                                     if s.sample_port is sample_port])
+            sources_str = ', '.join([f"'{s.sample_spec.full_name if s.sample_spec else s.target_spec.full_name}'"
+                                     f"={s.target_value} in '{s.source}'"
+                                     for s in self._sample_target_specs if s.sample_port is sample_port])
             # specs_str = []
             # for spec, value in specs_and_values:
             #     specs_str = f"'{spec}': {value} in '"
 
-            all_targets_str.append(f"'{sample_port.full_name}': [{sources_str}]")
+            all_targets_str.append(f"'{sample_port.full_name}': {sources_str}")
         full_str = '; '.join(all_targets_str)
 
         if full_str:
             # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
             many_conflicts = len(all_targets_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
-            s = 's' if many_conflicts else ''
             multiple = ' multiple' if many_conflicts else ""
             one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
             node_s = 's' if many_outputs else ''
             # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
             # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-            sample_nodes = 'OUTPUT'
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
-                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
-                                   f"{sample_nodes} Node{node_s}: {full_str}.")
+                                   f"conflicting specifications for the target values assigned to {one_of}its "
+                                   f"OUTPUT Node{node_s}: {full_str}.")
 
     def _canonicalize_target_specs(self, execution_mode)->(dict, dict):
         """Consolidate sample-target specs into dictionary with entries in a standard form: {sample OutputPort: value}
