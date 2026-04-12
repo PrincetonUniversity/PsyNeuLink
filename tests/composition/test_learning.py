@@ -894,9 +894,8 @@ class TestStructural:
 
         params = []
         for comp_type in [
-            # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
-            #                ADD TEST FOR WARNING ON REDUNDANT BUT NOT CONFLICTING SPECS
-            # "comp",
+            # TEACHER_TARGET BREADCRUMB: ADD TEST FOR WARNING ON REDUNDANT BUT NOT CONFLICTING SPECS
+            "comp",
             "autodiff"]:
             for arg_type in [
                 "learn",
@@ -915,13 +914,11 @@ class TestStructural:
                             marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
                         elif (comp_type == "autodiff"
                               and ((arg_type == 'learn'
-                                    # and ("conflict_in_constructor" in conflict_type
-                                    #      or "conflict_in_learn_and_constructor" in conflict_type))
                                     and (conflict_type != 'conflict_in_learn'))
                                    or (arg_type == 'constructor'
                                        and ("conflict_in_learn" in conflict_type
-                                            or "conflict_in_learn_and_constructor" in conflict_type
-                                            or "sample" in learn_sample_spec)))):
+                                            or conflict_type == "conflict_in_learn_and_constructor"
+                                            or learn_sample_spec == "sample")))):
                             marks.append(pytest.mark.skip(reason="Skipping autodiff + learn + conflict_in_constructor"))
                         params.append(pytest.param(comp_type, arg_type, conflict_type, learn_sample_spec, marks=marks))
         @pytest.mark.pytorch
@@ -957,7 +954,8 @@ class TestStructural:
                         #  conflict_in_learn
                         #  conflict_in_learn_and_constructor
                         #  conflict_in_learn_vs_constructor
-                        assert False, "TEST ERROR: should have skipped this test"
+                        assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{conflict_type}-{learn_sample_spec} "
+                                       f"should have skipped this test")
 
                 elif arg_type == 'learn_and_constructor':
                     if conflict_type == 'conflict_in_learn': # conflict is in learn()
@@ -1097,25 +1095,9 @@ class TestStructural:
                                      f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
                                      f"'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
-
-                elif conflict_type == 'conflict_in_constructor':
-                    if learn_sample_spec == 'target':
-                        learn_targets_arg = {targets[1]: [[3]]}
-                        error_msg = "ERROR MESSAGE"
-                    else:
-                        learn_targets_arg = {output_mech_B: [[3]]}
-                        error_msg = ""
-                elif conflict_type == 'conflict_in_learn_and_constructor':
-                    if learn_sample_spec == 'target':
-                        learn_targets_arg = {output_mech_A: [[1]],  # conflict is both here and in constructor
-                                             targets[0].output_port: [[2]],
-                                             targets[1]: [[3]]}
-                        error_msg = "ERROR MESSAGE HERE"
-                    else:
-                        learn_targets_arg = {output_mech_A: [[1]],  # conflict is both here and in constructor
-                                             output_mech_A.output_port: [[2]],
-                                             output_mech_B: [[3]]}
-                        error_msg = "ERROR MESSAGE HERE"
+                elif (conflict_type == 'conflict_in_constructor' or
+                      conflict_type == 'conflict_in_learn_and_constructor'):
+                    assert False, "should not make it here, as conflict in constructor should be caught first, above"
                 elif conflict_type == 'conflict_in_learn_vs_constructor':
                     if learn_sample_spec == 'sample':
                         learn_targets_arg = {output_mech_A: [[1]],  # conflict is both here and in constructor
