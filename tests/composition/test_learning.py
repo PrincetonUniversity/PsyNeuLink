@@ -1121,28 +1121,9 @@ class TestStructural:
                         learn_targets_arg = {output_mech_A: [[1]],  # conflict is both here and in constructor
                                              output_mech_B: [[3]]}
                         assert error_msg  # Should be under comp_type == 'autodiff' above
-                        # BREADCRUMB:
-                        # error_msg = (f"The learn() method of 'TEST COMP' can't be executed because the following "
-                        #              f"specifications in its 'targets' argument conflict with ones in the 'targets' "
-                        #              f"argument of its constructor: for SAMPLE 'OUTPUT MECH A[OutputPort-0]' "
-                        #              f"(specified as 'OUTPUT MECH A'): a source for its target value ('INPUT MECH C') "
-                        #              f"is specified in the 'targets' argument of the constructor, so there should be "
-                        #              f"no specification for it in learn(); for SAMPLE 'OUTPUT MECH B[OutputPort-0]' "
-                        #              f"(specified as 'OUTPUT MECH B'): a source for its target value "
-                        #              f"('INPUT MECH C[OutputPort-0]') is specified in the 'targets' argument of the "
-                        #              f"constructor, so there should be no specification for it in learn().")
                     elif learn_sample_spec == 'target':
                         learn_targets_arg = {output_mech_A: [[1]]}  # missing spec for output_mech_B: TARGET
                         assert error_msg  # Should be under comp_type == 'autodiff' above
-                        # BREADCRUMB:
-                        # error_msg = (f"The learn() method of 'TEST COMP' can't be executed because the following "
-                        #              f"specifications in its 'targets' argument conflict with ones in the 'targets' "
-                        #              f"argument of its constructor: for SAMPLE 'OUTPUT MECH A': a Node ('INPUT MECH "
-                        #              f"C[OutputPort-0]') that provides its target value is specified in the 'targets' "
-                        #              f"argument of the constructor, so there should be no specification for the SAMPLE "
-                        #              f"in learn(); for SAMPLE 'OUTPUT MECH B': a Node ('INPUT MECH C[OutputPort-0]') "
-                        #              f"that provides its target value is specified in the 'targets' argument of the "
-                        #              f"constructor, so there should be no specification for the SAMPLE in learn().")
                     else:
                         assert False, "learn_sample_spec must be one of 'sample', 'target'"
 
