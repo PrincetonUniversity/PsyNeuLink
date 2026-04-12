@@ -899,26 +899,25 @@ class TestStructural:
             # "comp",
             "autodiff"]:
             for arg_type in [
-                # "learn",
-                # "constructor",
+                "learn",
+                "constructor",
                 "learn_and_constructor"]:
                 for conflict_type in [
-                    # "conflict_in_learn",
-                    # "conflict_in_constructor",
-                    # "conflict_in_learn_and_constructor",
+                    "conflict_in_learn",
+                    "conflict_in_constructor",
+                    "conflict_in_learn_and_constructor",
                     "conflict_in_learn_vs_constructor"]:
                     for learn_sample_spec in [
-                        # "sample",
+                        "sample",
                         "target"]:
                         marks = []
-                        # BREADCRUMB: AUGMENT SKIPS HERE
                         if comp_type == "comp" and ("constructor" in arg_type or "constructor" in conflict_type):
                             marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
-                        # elif comp_type == "autodiff" and ("learn" == arg_type or "learn" in conflict_type):
                         elif (comp_type == "autodiff"
                               and ((arg_type == 'learn'
-                                    and ("conflict_in_constructor" in conflict_type
-                                         or "conflict_in_learn_and_constructor" in conflict_type))
+                                    # and ("conflict_in_constructor" in conflict_type
+                                    #      or "conflict_in_learn_and_constructor" in conflict_type))
+                                    and (conflict_type != 'conflict_in_learn'))
                                    or (arg_type == 'constructor'
                                        and ("conflict_in_learn" in conflict_type
                                             or "conflict_in_learn_and_constructor" in conflict_type
