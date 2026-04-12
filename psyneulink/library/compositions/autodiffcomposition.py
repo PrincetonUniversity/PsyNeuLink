@@ -2934,14 +2934,17 @@ class AutodiffComposition(Composition):
             else:
                 # sample NOT specified in learn()
                 if target == TARGET:
-                    # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
-                    assert False, f"TEST 18 REACHED"
+                    # # X TEST DONE: EXPECTED NUMERIC BUT GOT NOTHING
+                    # assert False, f"TEST 18 REACHED"
                     # Missing numeric specification for target in learn() (specified as TARGET in constructor)
-                    bad_specs.append((learn_spec, learn_target,
+                    #  so use sample_spec from constructor
+                    constructor_spec = next(s for s in self._sample_target_specs
+                                            if s.sample_port is sample and s.source == CONSTRUCTOR_TARGETS_ARGS)
+                    bad_specs.append((constructor_spec, sample,
                                       f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
-                                      f"constructor, so it should also be specified in the 'targets argument of the "
-                                      "learn method, and assigned a numeric array (i.e., the value used for training "
-                                      "on each trial."))
+                                      f"constructor, so it should also be specified in the 'targets' argument of the "
+                                      "learn() method, and assigned a numeric array (i.e., the value(s) to be used for "
+                                      "training on each trial)"))
 
         # Add any illegal specs passed in to bad_specs for reporting in error message
         for spec in illegal_specs:
