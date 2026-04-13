@@ -4759,7 +4759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         - This is distincly different from _all_nodes property, which obligately includes cims and controller,
           and includes nested Compositions, and does so only from the top level (ie., not any that are nested)
         - It is named "_get_all_nodes" (even though it only returns Mechanisms) to be compatible with other classes
-          that have flat grophs (e.g., PytorchCompositionWrapper) and that can be called in some simlar contexts
+          that have flat graphs (e.g., PytorchCompositionWrapper) and that can be called in some simlar contexts
           (e.g., as agent_rep for OptimizationControlMechanism).
         """
         cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
@@ -10080,21 +10080,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES
-        target_node_specs_and_samples = sorted(set([(f"'{spec.sample_spec.name}'", f"'{spec.sample_port.owner.name}'")
-                                                    for spec in self._sample_target_specs
-                                                    if spec.sample_spec in self.get_nodes_by_role(NodeRole.TARGET)]))
+        # MODIFIED TEACHER_TARGET OLD:
+        # target_node_specs_and_samples = sorted(set([(f"'{spec.sample_spec.name}'", f"'{spec.sample_port.owner.name}'")
+        #                                             for spec in self._sample_target_specs
+        #                                             if spec.sample_spec in self.get_nodes_by_role(NodeRole.TARGET)]))
+        # MODIFIED TEACHER_TARGET NEW:
+        target_node_specs_and_samples = []
+        for s in self._sample_target_specs:
+            spec = s.sample_spec if s.sample_spec else s.target_spec
+            if spec in self.get_nodes_by_role(NodeRole.TARGET):
+                target_node_specs_and_samples.append((f"'{spec.name}'", f"'{s.sample_port.owner.name}'"))
+        target_node_specs_and_samples = sorted(set(target_node_specs_and_samples))
+        # MODIFIED TEACHER_TARGET END
         if target_node_specs_and_samples:
             target_nodes_str = ', '.join([spec[0] for spec in target_node_specs_and_samples])
             sample_nodes_str = ', '.join([spec[1] for spec in target_node_specs_and_samples])
-            # SAMPLE_TARGET TEST: WARNING 1 -- DONE: X
-            assert False, f"TEST WARNING 1 REACHED"
+            # SAMPLE_TARGET TEST: WARNING 1 -- DONE: √
             warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
                           f"entries that are TARGET Nodes ({target_nodes_str}); while this is OK, it might be easier "
                           f"and clearer to use the SAMPLE (OUTPUT) Nodes to which they correspond ({sample_nodes_str}) "
                           f"as the keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, "
                           f"TARGET Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT "
                           f"nodes, obviating the need to specify the 'targets' arg.")
-
 
         if not sample_ports_with_redundant_specs:
             return
@@ -10125,8 +10132,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_samples_str = []
         all_sources = set()
         for sample_port in sample_ports_with_redundant_specs:
-            sample_spec = next((entry.sample_spec for entry in self._sample_target_specs
-                                if entry.sample_port == sample_port), None)
+            sample_spec = next(((s.sample_spec if s.sample_spec else s.target_spec) for s in self._sample_target_specs
+                               if s.sample_port == sample_port), None)
             assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
                                  "sample_port in _sample_target_pairs")
             sources = [f"'{source}'" for source in sorted(set(entry.source for entry in self._sample_target_specs
@@ -10165,8 +10172,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self._get_target_nodes()
                                 for target_spec in self._sample_target_specs)
         use_sample_nodes_str = (f"use the SAMPLE Node{s} to which {they_it} correspond{s_not} "
-                            f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
-                            if not only_sample_specs else '')
+                                f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
+                                if not only_sample_specs else '')
 
         # If not all target_specs are in the targets dict, suggest that they be placed there
         # Source(s) of target_specs: inputs, inputs[TARGETS] and/or targets
@@ -10178,8 +10185,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
         # TEACHER_TARGET BREADCRUMB: SUPPRESS IF REDUNDANT SPEC IS A MISMATCH
-        # SAMPLE_TARGET TEST: WARNING 2 -- DONE: X
-        assert False, f"TEST WARNING 2 REACHED"
+        # SAMPLE_TARGET TEST: WARNING 2 -- DONE: √
         warnings.warn(
             f"There are multiple specifications of the target value{s} for {several_one} of the SAMPLE "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
@@ -10358,8 +10364,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif NodeRole.INPUT in roles:
                     assert NodeRole.TARGET not in roles, \
                         f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
-                    # SAMPLE_TARGET TEST: ERROR 4 -- DONE: X
-                    assert False, f"TEST ERROR 4 REACHED"
+                    # SAMPLE_TARGET TEST: ERROR 4 -- DONE: √
                     error_message = "INPUT Node that is not a TARGET Node"
 
                 elif NodeRole.INTERNAL in roles:

@@ -2029,8 +2029,6 @@ class AutodiffComposition(Composition):
                                   f"since it does not have any learnable Projections.")
                 self._warned_about_no_learnable_projections = True
 
-        spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-        nodes_in_comp = self._get_all_nodes()
         bad_samples = []
         bad_targets = []
         for loss_mech_spec in list(loss_mech_specs):
@@ -2044,10 +2042,20 @@ class AutodiffComposition(Composition):
                     (f"PROGRAM ERROR: tuple in self.targets either doesn't have two items "
                      f"or one is not a Mechanisms: {loss_mech_spec}; "
                      f"should have been caught in targets Parameter validation.")
-                if spec_as_mech(loss_mech_spec[0]) not in nodes_in_comp:
-                    bad_samples.append(loss_mech_spec[0])
-                if spec_as_mech(loss_mech_spec[1]) not in nodes_in_comp:
-                    bad_targets.append(loss_mech_spec[1])
+                # MODIFIED TEACHER_TARGET OLD:
+                # spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+                # nodes_in_comp = self._get_all_nodes()
+                # if spec_as_mech(loss_mech_spec[0]) not in nodes_in_comp:
+                #     bad_samples.append(loss_mech_spec[0])
+                # if spec_as_mech(loss_mech_spec[1]) not in nodes_in_comp:
+                #     bad_targets.append(loss_mech_spec[1])
+                # MODIFIED TEACHER_TARGET NEW:
+                sample, target = loss_mech_spec
+                if sample not in [s.sample_port for s in self._sample_target_pairs]:
+                    bad_samples.append(sample)
+                if target not in [s.target_port for s in self._sample_target_pairs]:
+                    bad_targets.append(target)
+                # MODIFIED TEACHER_TARGET END
 
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")

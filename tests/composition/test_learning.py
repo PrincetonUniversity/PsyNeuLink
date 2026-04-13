@@ -786,15 +786,17 @@ class TestStructural:
                    'contains input specifications of different lengths ({2, 10})' in error_text
             assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
-        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
-                                 ids=["Composition", "Autodiff"])
         @pytest.mark.parametrize("target_specs", ['target_mechs_in_inputs',
                                                   'output_mechs_in_targets',
                                                   'target_mechs_in_targets',
                                                   'target_mechs_in_inputs_and_targets',
                                                   'single_conflicting_target_value',
                                                   'multiple_conflicting_target_values',
-                                                  'too_many_targets'])
+                                                  'too_many_targets'
+                                  ])
+        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                                 ids=["Composition",
+                                      "Autodiff"])
         @pytest.mark.pytorch
         def test_map_external_target_values_to_target_nodes(self, target_specs, comp_type):
             """Test for checks on the validity of the inputs and targets args of the learn() method"""
@@ -840,15 +842,7 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
-                warning1 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
-                            "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
-                            "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
-                            "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
-                            "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
-                            "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
-                            "the need to specify the 'targets' arg.")
-
-                warning2 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
+                warning1 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
                             "(listed below) in the 'inputs' and 'targets' arguments of the learn() method of "
                             "'TEST COMP'. While this is technically OK, it might be easier and clearer to use the "
                             "SAMPLE Nodes to which they correspond as the keys of the dict, obviating the need to "
@@ -859,17 +853,27 @@ class TestStructural:
                             "Redundant specifications for: 'TARGET for OUTPUT MECH A' in 'inputs' and 'targets' args; "
                             "'TARGET for OUTPUT MECH B' in 'inputs' and 'targets' args.")
 
+                # warning2 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
+                #             "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
+                #             "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
+                #             "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
+                #             "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
+                #             "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
+                #             "the need to specify the 'targets' arg.")
+
                 inputs_arg.update(target_mechs)
-                with pytest.warns(UserWarning, match=re.escape(warning1)), \
-                        pytest.warns(UserWarning, match=re.escape(warning2)):
+                # with pytest.warns(UserWarning, match=re.escape(warning1)), \
+                #         pytest.warns(UserWarning, match=re.escape(warning2)):
+                with pytest.warns(UserWarning, match=re.escape(warning1)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'single_conflicting_target_value':
                 # Test error for conflicting values assigned to a single target
-                error = ("The learn() method of 'TEST COMP' can't be executed because there are conflicting "
-                         "specifications for the value of the target for one of its OUTPUT Nodes: "
-                         "'OUTPUT MECH A[OutputPort-0]': "
-                         "[OUTPUT MECH A=[[1]] in 'targets', OutputPort-0=[[2]] in 'targets'].")
+                node_str = 'SAMPLE' if isinstance(comp, pnl.AutodiffComposition) else 'OUTPUT'
+                error = (f"The learn() method of 'TEST COMP' can't be executed because there are conflicting "
+                         f"specifications for the target values assigned to one of its {node_str} Nodes: "
+                         f"'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in 'targets', "
+                         f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
                                targets={comp.nodes['OUTPUT MECH A']: [[1]],
@@ -883,7 +887,7 @@ class TestStructural:
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg
                 error = ("The learn() method of 'TEST COMP' can't be executed because there is the following illegal "
-                         "specification in its targets argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
+                         "specification in its 'targets' argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
                          "not a TARGET Node.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
