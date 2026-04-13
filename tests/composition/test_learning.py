@@ -1025,7 +1025,10 @@ class TestStructural:
                     elif sample_or_target_spec == 'target':
                         learn_targets_arg = {output_mech_A: output_mech_D,
                                              output_mech_B: output_mech_C}
-                        error_msg = (f"ERROR MESSAGE LEARN TARGET NOT IN COMP")
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are the "
+                                     f"following illegal specifications in its 'targets' arguments: "
+                                     f"'OUTPUT MECH D' (in 'targets' dict): not in 'TEST COMP'; "
+                                     f"'OUTPUT MECH C' (in 'targets' dict): not in 'TEST COMP'.")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 elif bad_spec_type == 'proj':

@@ -10310,7 +10310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Errors are for SAMPLE specifications that are:
           - not an OUTPUT Node (those are the only ones allowed as specs in **targets** arg of learn() for Composition)
           - Node not in Composition
-          - non-Node key
+          - not a port or Mechanism key (for key specified as SAMPLE or TARGET)
           - non-numeric value
 
         Specs are indexed by sample_ports (consistent with furhter handling during learn())
@@ -10343,12 +10343,70 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                           if isinstance(spec, str) and spec in nodes_in_comp else None)
         spec_in_comp = lambda spec : spec_as_mech(spec) or spec_str_as_mech(spec)
 
-        # TEACHER_TARGET BREADCRUMB:  SHOULD ONES NOT IN COMP FROM inputs DICT BE CAUGHT HERE
-        #                             (BY MOVING THEM INTO inputs_targets_dict IN _parse_learning_target_specs())
-        #                             OR LEFT TO BE CAUGHT IN PROCESSING OF inputs DICT FURTHER ON
-        # Categorize violations and assign corresponing error message
+        # # MODIFIED TEACHER_TARGET OLD:
+        # # TEACHER_TARGET BREADCRUMB:  SHOULD ONES NOT IN COMP FROM inputs DICT BE CAUGHT HERE
+        # #                             (BY MOVING THEM INTO inputs_targets_dict IN _parse_learning_target_specs())
+        # #                             OR LEFT TO BE CAUGHT IN PROCESSING OF inputs DICT FURTHER ON
+        # # Categorize violations and assign corresponing error message
+        # bad_specs =[]
+        # for _, sample_spec, _, target_spec, value, source in specs:
+        #     # BREADCRUMB: REFACTOR TO CHECK WHETHER sample_spec OR target_spec WAS SPECIFIED, AND TREAT ACCORDINGLY.
+        #     spec = sample_spec if sample_spec else target_spec
+        #     if spec_in_comp(spec):
+        #         roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
+        #         assert NodeRole.SAMPLE not in roles, f"PROGRAM ERROR: SAMPLE Node found in list of illegal specs"
+        #         # TEACHER_TARGET BREADCRUMB: MOVE THIS TO Autodiff OVERRIDE?
+        #         if NodeRole.OUTPUT in roles:
+        #             # This is possible only if Constructor of subclass has a **targets** argument
+        #             # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
+        #             assert not (hasattr(self, TARGETS) and self.targets), \
+        #                 f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
+        #             # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
+        #             error_message = "OUTPUT Node that is not a SAMPLE"
+        #
+        #         elif NodeRole.INPUT in roles:
+        #             assert NodeRole.TARGET not in roles, \
+        #                 f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
+        #             # SAMPLE_TARGET TEST: ERROR 4 -- DONE: √
+        #             error_message = "INPUT Node that is not a TARGET Node"
+        #
+        #         elif NodeRole.INTERNAL in roles:
+        #             # SAMPLE_TARGET TEST: ERROR 5 -- DONE: √
+        #             error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
+        #
+        #         # MODIFIED TEACHER_TARGET OLD:
+        #         # elif not isinstance(spec, OutputPort):
+        #         # # SAMPLE_TARGET TEST: ERROR 6 -- DONE: X
+        #         #     assert False, f"TEST ERROR 6 REACHED"
+        #         #     error_message = f"{spec.componentType}"
+        #         # MODIFIED TEACHER_TARGET END
+        #         else:
+        #           assert isinstance(spec, OutputPort),\
+        #               f"PROGRAM ERROR: spec should be OutputPort but is {spec.componentType}"
+        #           assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
+        #         spec_ref = spec.full_name
+        #
+        #     else:
+        #         # Not in Composition
+        #         if isinstance(spec, (Port, ProcessingMechanism_Base)):
+        #             error_message = f"not in '{self.name}'"
+        #             # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
+        #             spec_ref = spec.full_name
+        #         elif isinstance(value, (Port, ProcessingMechanism_Base)):
+        #             error_message = f"not in '{self.name}'"
+        #             # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
+        #             spec_ref = value.full_name
+        #         else:
+        #             spec_ref = spec
+        #             # SAMPLE_TARGET TEST: ERROR 8 -- DONE: √
+        #             error_message = f"not a recognizable target or sample specification'"
+        #     bad_specs.append((spec_ref, value, source, error_message))
+        # sources = sorted(set([f"'{s.source}'" for s in specs]))
+        # MODIFIED TEACHER_TARGET NEW:
         bad_specs =[]
-        for _, _, _, spec, value, source in specs:
+        for _, sample_spec, _, target_spec, value, source in specs:
+            # BREADCRUMB: REFACTOR TO CHECK WHETHER sample_spec OR target_spec WAS SPECIFIED, AND TREAT ACCORDINGLY.
+            spec = sample_spec if sample_spec else target_spec
             if spec_in_comp(spec):
                 roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
                 assert NodeRole.SAMPLE not in roles, f"PROGRAM ERROR: SAMPLE Node found in list of illegal specs"
@@ -10379,22 +10437,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MODIFIED TEACHER_TARGET END
                 else:
                   assert isinstance(spec, OutputPort),\
-                      f"PROGRAM ERROR: target_spec should be OutputPort but is {spec.componentType}"
+                      f"PROGRAM ERROR: spec should be OutputPort but is {spec.componentType}"
                   assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
                 spec_ref = spec.full_name
 
             else:
                 # Not in Composition
                 if isinstance(spec, (Port, ProcessingMechanism_Base)):
-                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
                     error_message = f"not in '{self.name}'"
+                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
                     spec_ref = spec.full_name
+                elif isinstance(value, (Port, ProcessingMechanism_Base)):
+                    error_message = f"not in '{self.name}'"
+                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
+                    spec_ref = value.full_name
                 else:
                     spec_ref = spec
                     # SAMPLE_TARGET TEST: ERROR 8 -- DONE: √
                     error_message = f"not a recognizable target or sample specification'"
             bad_specs.append((spec_ref, value, source, error_message))
-        sources = sorted(set([f"'{spec.source}'" for spec in specs]))
+        sources = sorted(set([f"'{s.source}'" for s in specs]))
+        # MODIFIED TEACHER_TARGET END
 
         if bad_specs:
             many_specs = len(bad_specs) > 1
