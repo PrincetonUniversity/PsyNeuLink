@@ -10391,8 +10391,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     spec_ref = spec.full_name
                 else:
                     spec_ref = spec
-                    # SAMPLE_TARGET TEST: ERROR 8 -- DONE: X
-                    assert False, f"TEST ERROR 8 REACHED"
+                    # SAMPLE_TARGET TEST: ERROR 8 -- DONE: √
                     error_message = f"not a recognizable target or sample specification'"
             bad_specs.append((spec_ref, value, source, error_message))
         sources = sorted(set([f"'{spec.source}'" for spec in specs]))
