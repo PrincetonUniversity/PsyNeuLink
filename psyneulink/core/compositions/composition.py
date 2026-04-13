@@ -10371,13 +10371,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # SAMPLE_TARGET TEST: ERROR 5 -- DONE: √
                     error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
 
-                elif not isinstance(spec, OutputPort):
-                    # SAMPLE_TARGET TEST: ERROR 6 -- DONE: X
-                    assert False, f"TEST ERROR 6 REACHED"
-                    error_message = f"{spec.componentType}"
-
+                # MODIFIED TEACHER_TARGET OLD:
+                # elif not isinstance(spec, OutputPort):
+                # # SAMPLE_TARGET TEST: ERROR 6 -- DONE: X
+                #     assert False, f"TEST ERROR 6 REACHED"
+                #     error_message = f"{spec.componentType}"
+                # MODIFIED TEACHER_TARGET END
                 else:
-                    assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
+                  assert isinstance(spec, OutputPort),\
+                      f"PROGRAM ERROR: target_spec should be OutputPort but is {spec.componentType}"
+                  assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
                 spec_ref = spec.full_name
 
             else:
