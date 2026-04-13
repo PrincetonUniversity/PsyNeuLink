@@ -10213,7 +10213,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             multiple = ' multiple' if many_conflicts else ""
             one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
             node_s = 's' if many_outputs else ''
-            # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
+            # TEACHER_TARGET BREADCRUMB: HANDLE OUTPUT (??RE: learn()??) IN OVERRIDE IN AutodiffComposition
             # SAMPLE_TARGET TEST: ERROR 1 -- DONE: √
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target values assigned to {one_of}its "

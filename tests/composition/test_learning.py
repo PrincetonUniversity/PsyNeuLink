@@ -904,15 +904,18 @@ class TestStructural:
             for arg_type in [
                 "learn",
                 "constructor",
-                "learn_and_constructor"]:
+                "learn_and_constructor"
+            ]:
                 for conflict_type in [
                     "conflict_in_learn",
                     "conflict_in_constructor",
                     "conflict_in_learn_and_constructor",
-                    "conflict_in_learn_vs_constructor"]:
+                    "conflict_in_learn_vs_constructor"
+                ]:
                     for learn_sample_spec in [
                         "sample",
-                        "target"]:
+                        "target"
+                    ]:
                         marks = []
                         if comp_type == "comp" and ("constructor" in arg_type or "constructor" in conflict_type):
                             marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
@@ -1049,7 +1052,15 @@ class TestStructural:
             if arg_type == 'learn':
                 node_type = "OUTPUT" if comp_type == 'comp' else "SAMPLE"
                 if conflict_type == 'conflict_in_learn':
-                    if learn_sample_spec == 'target':
+                    if learn_sample_spec == 'sample':
+                        learn_targets_arg = {output_mech_A: [[1]],
+                                             output_mech_A.output_port: [[2]],
+                                             output_mech_B: [[3]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"{node_type} Nodes: 'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in "
+                                     f"'targets', 'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                    else:
                         learn_targets_arg = {output_mech_A: [[1]],
                                              targets[0].output_port: [[2]],
                                              targets[1]: [[3]]}
@@ -1059,15 +1070,6 @@ class TestStructural:
                                      f"'OUTPUT MECH A[OutputPort-0]': "
                                      f"'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'TARGET for OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
-                    else:
-                        learn_targets_arg = {output_mech_A: [[1]],
-                                             output_mech_A.output_port: [[2]],
-                                             output_mech_B: [[3]]}
-                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are conflicting "
-                                     f"specifications for the target values assigned to one of its {node_type} Nodes: "
-                                     f"'OUTPUT MECH A[OutputPort-0]': "
-                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
-                                     f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
                 else:
                     # Should skip these for conflict_type:
                     #  conflict_in_constructor
