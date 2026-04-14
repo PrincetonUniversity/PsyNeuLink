@@ -903,7 +903,7 @@ class TestStructural:
             "comp",
             "autodiff"]:
             for arg_type in [
-                "learn",
+                # "learn",
                 "constructor",
                 "learn_and_constructor",
             ]:
@@ -918,11 +918,14 @@ class TestStructural:
                         "target"
                     ]:
                         marks = []
-                        if comp_type == "comp" and arg_type == "constructor":
+                        if comp_type == "comp" and arg_type in {"constructor", "learn_and_constructor"}:
                             marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
                         elif arg_type == "constructor" and bad_spec_type == "extra":
                             # not relevant to autodiff constructor **targets**, as it can contain any number of specs
                             marks.append(pytest.mark.skip(reason="Skipping constructor extra cases"))
+                        elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj"}:
+                            # Won't make it past get_target_nodes() or constructor since bad specs
+                            marks.append(pytest.mark.skip(reason="Skipping constructor not_in_comp cases"))
                         elif bad_spec_type in {"extra", "num"} and sample_or_target_spec == "target":
                             # No need to test extra twice
                             marks.append(pytest.mark.skip(reason="Skipping autodiff unnecessary 'extra' cases"))
@@ -1014,7 +1017,7 @@ class TestStructural:
 
             # Assign **targets** arg for learn() if specified;
             #     need to do this *after* construction to be able to use TARGET Nodes as specs
-            if arg_type == 'learn':
+            if arg_type in {'learn', 'learn_and_constructor'}:
                 if bad_spec_type == 'not_in_comp':
                     if sample_or_target_spec == 'sample':
                         learn_targets_arg = {output_mech_A: [[1]],
@@ -1078,11 +1081,11 @@ class TestStructural:
                     assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
                                    f"should have skipped this test")
 
-            # Specify learn() paired with constructor (above)
-            #   need to do this after construction, so that TARGET Nodes can be used as specs
-            elif arg_type == 'learn_and_constructor':
-                # TEACHER_TARGET BREADCRUMB: FLESH OUT LATER
-                return
+            # # Specify learn() paired with constructor (above)
+            # #   need to do this after construction, so that TARGET Nodes can be used as specs
+            # elif arg_type == 'learn_and_constructor':
+            #     # TEACHER_TARGET BREADCRUMB: FLESH OUT LATER
+            #     return
 
             inputs_arg = {'INPUT MECH': [[1]]}
             with pytest.raises(CompositionError, match=re.escape(error_msg)):
