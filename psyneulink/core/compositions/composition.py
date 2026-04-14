@@ -10437,8 +10437,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             assert False, "ERROR 3 OUTPUT BUT NOT SAMPLE"
                             error_message = "OUTPUT Node that is not a SAMPLE"
                         elif NodeRole.INPUT in roles:
-                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: X
-                            assert False, "ERROR 4 INPUT BUT NOT TARGET"
+                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: √
                             error_message = "INPUT Node that is not a TARGET Node"
                         elif NodeRole.INTERNAL in roles:
                             # SAMPLE_TARGET TEST: ERROR 5 -- DONE: X

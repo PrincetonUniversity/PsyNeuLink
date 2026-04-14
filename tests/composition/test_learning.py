@@ -923,7 +923,7 @@ class TestStructural:
                         elif arg_type == "constructor" and bad_spec_type == "extra":
                             # not relevant to autodiff constructor **targets**, as it can contain any number of specs
                             marks.append(pytest.mark.skip(reason="Skipping constructor extra cases"))
-                        elif bad_spec_type == "extra" and sample_or_target_spec == "target":
+                        elif bad_spec_type in {"extra", "num"} and sample_or_target_spec == "target":
                             # No need to test extra twice
                             marks.append(pytest.mark.skip(reason="Skipping autodiff unnecessary 'extra' cases"))
                         params.append(pytest.param(comp_type,
@@ -1062,10 +1062,12 @@ class TestStructural:
                         assert False, f"Should have skipped 'num' + 'target' for learn()."
                 elif bad_spec_type == 'extra':
                     if sample_or_target_spec == 'sample':
-                        learn_targets_arg = {proj_in_to_A: [[1]],
+                        learn_targets_arg = {output_mech_A: [[1]],
                                              output_mech_B: [[2]],
                                              output_mech_C: [[3]]}
-                        error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: "
+                                     "'OUTPUT MECH C' (in 'targets' dict): INPUT Node that is not a TARGET Node.")
                     elif sample_or_target_spec == 'target':
                         learn_targets_arg = {output_mech_A: [[1]],
                                              output_mech_B: proj_in_to_A}
