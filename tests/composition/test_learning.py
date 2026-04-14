@@ -923,8 +923,9 @@ class TestStructural:
                         elif arg_type == "constructor" and bad_spec_type == "extra":
                             # not relevant to autodiff constructor **targets**, as it can contain any number of specs
                             marks.append(pytest.mark.skip(reason="Skipping constructor extra cases"))
-                        elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj"}:
-                            # Won't make it past get_target_nodes() or constructor since bad specs
+                        # elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj"}:
+                        elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj", "num"}:
+                            # Bad specs will raise error in constructor, which are tested elsewhere
                             marks.append(pytest.mark.skip(reason="Skipping constructor not_in_comp cases"))
                         elif bad_spec_type in {"extra", "num"} and sample_or_target_spec == "target":
                             # No need to test extra twice
@@ -978,7 +979,7 @@ class TestStructural:
                     elif bad_spec_type == 'num':
                         if sample_or_target_spec == 'sample':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
-                                                       [[1]]: output_mech_C}
+                                                       1: output_mech_C}
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
                         elif sample_or_target_spec == 'target':
                             constructor_targets_arg = {output_mech_A: [[1]],
@@ -996,6 +997,7 @@ class TestStructural:
                                                targets=constructor_targets_arg,
                                                name='TEST COMP')
                 execution_mode = pnl.ExecutionMode.PyTorch
+
             elif comp_type == 'comp':
                 # Construct Composition
                 comp = Composition(name='TEST COMP')
