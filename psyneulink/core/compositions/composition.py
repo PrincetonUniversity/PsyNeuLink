@@ -4775,7 +4775,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if content_addressable:
             all_nodes = ContentAddressableList(Component, # to accomodate both Mechanisms and Compositions
                                                key='name',
-                                               list=all_nodes, 
+                                               list=all_nodes,
                                                name=f"'_get_all_nodes()' for {self.name}")
         return all_nodes
 
@@ -9843,7 +9843,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Preserve orginal dict passed to **inputs** in case it is used elsewhere, or in another call to learn()
         inputs = inputs.copy()
 
-        # Remove TARGETS subdict from inputs if present; 
+        # Remove TARGETS subdict from inputs if present;
         input_targets_dict = inputs.pop(TARGETS, {})
 
         # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications), excluding
@@ -10245,7 +10245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Return canonicalized_target_specs and sample_ports_to_learn_specs dicts
         """
-        
+
         # BREADCRUMB: ASSERT THAT ALL SPECS ARE IN sample_target_pairs AND ISSUE PROGRAM ERROR IF NOT:
         #             [BAD SPECS SHOULD ALREADY HAVE BEEN FILTERED OUT IN _aggregate_and_filter_sample_target_specs()
 
@@ -10406,6 +10406,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         bad_specs =[]
         for _, sample_spec, _, target_spec, value, source in specs:
 
+            assert not (sample_spec and target_spec), \
+                (f"PROGRAM ERROR: sample_spec and target_spec both should not both be specified "
+                 f"in entry of **targets** for learn()")
             if sample_spec:
                 spec = sample_spec
                 sample_or_target_str = "SAMPLE"
@@ -10419,59 +10422,64 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if spec_in_comp(spec):
                 spec_ref = spec.full_name
-                # Node specified that has illegal NodeRole or bad value assignment
-                roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
+                if isinstance(spec, (OutputPort, ProcessingMechanism_Base, Composition)):
+                    roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
+                    if not ((sample_spec and NodeRole.SAMPLE in roles)
+                            or ((target_spec and NodeRole.TARGET in roles))):
+                        # spec is a Node or OutputPort that is not a SAMPLE or TARGET
+                        if NodeRole.OUTPUT in roles:
+                            # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():
+                            # # This is possible only if Constructor of subclass has specifications in its **targets** argument
+                            # # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
+                            # assert not (hasattr(self, TARGETS) and self.targets), \
+                            #     f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
+                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: X
+                            assert False, "ERROR 3 OUTPUT BUT NOT SAMPLE"
+                            error_message = "OUTPUT Node that is not a SAMPLE"
+                        elif NodeRole.INPUT in roles:
+                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: X
+                            assert False, "ERROR 4 INPUT BUT NOT TARGET"
+                            error_message = "INPUT Node that is not a TARGET Node"
+                        elif NodeRole.INTERNAL in roles:
+                            # SAMPLE_TARGET TEST: ERROR 5 -- DONE: X
+                            assert False, "ERROR 5 INTERNAL NODE"
+                            error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
+                        else:
+                            # Final checks for possible internal errors
+                            key_str = f"key for entry in **targets** of learn() should be "
+                            assert NodeRole.SAMPLE in roles or NodeRole.TARGET in roles, \
+                                f"PROGRAM ERROR: {key_str} SAMPLE or TARGET Node by now; has these roles: {roles}"
+                            assert False, "PROGRAM ERROR: Node specified with unexpected profile of NodeRoles"
 
-                # TEACHER_TARGET BREADCRUMB: NEED TO HANDLE OUTPUT ASSIGNMENT FOR COMP VS AUTODIFF:
-                #                            REINSTATE ITS OWN METHOD HERE?
-                if NodeRole.OUTPUT in roles:
-                    # This is possible only if Constructor of subclass has specifications in its **targets** argument
-                    # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
-                    assert not (hasattr(self, TARGETS) and self.targets), \
-                        f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
-                    # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
-                    error_message = "OUTPUT Node that is not a SAMPLE"
+                    elif not is_numeric(value):
+                        # spec is a Node or OutputPort that has a bad value;
+                        #   handle this last in this block, so status as SAMPLE or TARGET has already been validated
+                        # SAMPLE_TARGET TEST: ERROR 6 -- DONE: √
+                        val_str = value.full_name if hasattr(value, 'full_name') else str(value)
+                        error_message = f"specification of {sample_or_target_str}'s value ({val_str}) must be numeric"
 
-                elif NodeRole.INPUT in roles:
-                    assert NodeRole.TARGET not in roles, \
-                        f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
-                    # SAMPLE_TARGET TEST: ERROR 4 -- DONE: √
-                    error_message = "INPUT Node that is not a TARGET Node"
-
-                elif NodeRole.INTERNAL in roles:
-                    # SAMPLE_TARGET TEST: ERROR 5 -- DONE: √
-                    error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
-
-                elif not isnumeric(value):
-                    # Handle last, so that SAMPLE or TARGET has already been checked
-                    # SAMPLE_TARGET TEST: ERROR 6 -- DONE: X
-                    assert False, "ERROR 6 VALUE IS NOT NUMERIC"
-                    val_str = val_str.full_name if hasattr(value, full_name) else str(value)
-                    error_message = f"specification its value ({val_str}) must be numeric"
-
-                # Final checks for possible internal errors
-                key_str = f"key for entry in **targets** of learn() should be "
-                assert NodeRole.SAMPLE in roles or NodeRole.TARGET in roles, \
-                    f"PROGRAM ERROR: {key_str} SAMPLE or TARGET Node by now; has these roles: {roles}"
-
-                # assert isinstance(spec, OutputPort),\
-                #     f"PROGRAM ERROR: {key_str} OutputPort by now but is {spec.componentType}"
-
-            else:
-                # Not in comp or bad spec type
-                if isinstance(spec, (Port, ProcessingMechanism_Base)):
-                    # spec is not a Mechanism or OutputPort not in the Composition
-                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: √
-                    error_message = f"not in '{self.name}'"
-                    spec_ref = spec.full_name
                 else:
-                    # spec is not a Mechanism or OutputPort
-                    # SAMPLE_TARGET TEST: ERROR 8 -- DONE: X
-                    assert False, "ERROR 8 ILLEGAL OBJECT SPECIFIED FOR SAMPLE OR TARGET"
-                    # TEACHER_TARGET BREADCRUMB: THAT sample_or_target_str IS EITHER SAMPLE OR TARGET IS ASSURED ABOVE
+                    # spec is Component in Composition that is not a Node or OutputPort
+                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: X
+                    assert False, "ERROR 7 NOT AN OutputPort or Node"
                     error_message = \
                         (f"specification of {sample_or_target_str} must be a Mechanism or the OutputPort of one")
-                    spec_ref = spec.full_name if hasattr(spec, full_name) else str(spec)
+
+            else:
+                if isinstance(spec, Component):
+                    spec_ref = spec.full_name
+                    if isinstance(spec, (OutputPort, ProcessingMechanism_Base)):
+                        # spec is not a Mechanism or OutputPort not in the Composition
+                        # SAMPLE_TARGET TEST: ERROR 8.1 -- DONE: √
+                        error_message = f"not in '{self.name}'"
+                    else:
+                        # SAMPLE_TARGET TEST: ERROR 8.2 -- DONE: √
+                        error_message = (f"specification of SAMPLE (or TARGET) must be a Mechanism "
+                                         f"or the OutputPort of one in '{self.name}'")
+                else:
+                    # SAMPLE_TARGET TEST: ERROR 8.3 -- DONE: √
+                    spec_ref = str(spec)
+                    error_message = f"unrecognized specification for SAMPLE (or TARGET)"
 
             bad_specs.append((spec_ref, value, source, error_message))
 

@@ -1022,31 +1022,42 @@ class TestStructural:
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there is the "
                                      f"following illegal specification in its 'targets' argument: 'OUTPUT MECH D' "
                                      f"(in 'targets' dict): not in 'TEST COMP'.")
-                    elif sample_or_target_spec == 'target': # This also tets for bad value spec (output_mech_C)
+                    elif sample_or_target_spec == 'target': # This actually test for non-numeric value specs
                         learn_targets_arg = {output_mech_A: output_mech_D,
                                              output_mech_B: output_mech_C}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are the "
                                      f"following illegal specifications in its 'targets' arguments: "
-                                     f"'OUTPUT MECH D' (in 'targets' dict): not in 'TEST COMP'; "
-                                     f"'OUTPUT MECH C' (in 'targets' dict): not in 'TEST COMP'.")
+                                     f"'OUTPUT MECH A' (in 'targets' dict): "
+                                     f"specification of SAMPLE's value (OUTPUT MECH D) must be numeric; "
+                                     f"'OUTPUT MECH B' (in 'targets' dict): "
+                                     f"specification of SAMPLE's value (OUTPUT MECH C) must be numeric.")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 elif bad_spec_type == 'proj':
                     if sample_or_target_spec == 'sample':
                         learn_targets_arg = {proj_in_to_A: [[1]],
                                              output_mech_B: [[2]]}
-                        error_msg = (f"ERROR MESSAGE LEARN SAMPLE NOT Mechanism OR OutputPort")
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: "
+                                     "'MappingProjection from INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]' "
+                                     "(in 'targets' dict): specification of SAMPLE (or TARGET) must be a Mechanism "
+                                     "or the OutputPort of one in 'TEST COMP'.")
                     elif sample_or_target_spec == 'target':
                         learn_targets_arg = {output_mech_A: [[1]],
                                              output_mech_B: proj_in_to_A}
-                        error_msg = (f"ERROR MESSAGE LEARN TARGET NOT A NUMBER")
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: 'OUTPUT MECH B' "
+                                     "(in 'targets' dict): specification of SAMPLE's value (MappingProjection from "
+                                     "INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]) must be numeric.")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 elif bad_spec_type == 'num':
                     if sample_or_target_spec == 'sample':
-                        learn_targets_arg = {[[3]]: [[1]],
+                        learn_targets_arg = {3: [[1]],
                                              output_mech_B: [[2]]}
-                        error_msg = (f"ERROR MESSAGE LEARN SAMPLE IS A NUMBER")
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: "
+                                     "'3' (in 'targets' dict): unrecognized specification for SAMPLE (or TARGET).")
                     else:
                         assert False, f"Should have skipped 'num' + 'target' for learn()."
                 elif bad_spec_type == 'extra':
