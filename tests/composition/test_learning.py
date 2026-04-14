@@ -1022,7 +1022,7 @@ class TestStructural:
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there is the "
                                      f"following illegal specification in its 'targets' argument: 'OUTPUT MECH D' "
                                      f"(in 'targets' dict): not in 'TEST COMP'.")
-                    elif sample_or_target_spec == 'target':
+                    elif sample_or_target_spec == 'target': # This also tets for bad value spec (output_mech_C)
                         learn_targets_arg = {output_mech_A: output_mech_D,
                                              output_mech_B: output_mech_C}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are the "

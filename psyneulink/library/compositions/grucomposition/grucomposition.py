@@ -1257,6 +1257,7 @@ class GRUComposition(AutodiffComposition):
     def _identify_output_nodes(self, context):
         return [self.gru_mech, self.output_node]
 
+    # TEACHER_TARGET BREADCRUMB: STILL NEEDED?
     def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
         """Override to remove """
         if self in specs:
