@@ -899,7 +899,7 @@ class TestStructural:
 
         params = []
         for comp_type in [
-            # "comp",
+            "comp",
             "autodiff"]:
             for arg_type in [
                 "learn",
@@ -907,9 +907,9 @@ class TestStructural:
                 "learn_and_constructor",
             ]:
                 for bad_spec_type in [
-                    # "not_in_comp",
-                    # "proj",
-                    # "num",
+                    "not_in_comp",
+                    "proj",
+                    "num",
                     "extra",
                 ]:
                     for sample_or_target_spec in [
@@ -1088,9 +1088,9 @@ class TestStructural:
                                          "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
                                          "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
                             # BREADCRUMB: FOR autodiff:
-                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
-                                         "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
-                                         "(in 'targets' dict): OUTPUT Node that is not a SAMPLE Node.")
+                            # error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                            #              "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
+                            #              "(in 'targets' dict): OUTPUT Node that is not a SAMPLE Node.")
                         else:
                             learn_targets_arg = {output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
