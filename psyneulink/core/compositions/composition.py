@@ -9979,6 +9979,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - target specifications:
             - Node (per above) or numeric value
         Construct self._sample_target_pairs (which itself is created during pathway construction)
+        Place any entries in illegal_specs,
+            and return that for error handling in subclass override of this method
+            or _handle_illegal_sample_target_specs_from_learn()
 
         Notes:
           - Names (str) can be used for Nodes but not Ports
@@ -10007,8 +10010,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             try:
-                input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
-            except TypeError:
+                input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
+            except (ValueError, TypeError):
                 illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
                 continue
 
@@ -10016,31 +10019,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether input_item is SAMPLE or TARGET to accurately identify it in_sample_target_pairs below
             #   (since it might also appear in another spec
             #     e.g., test_bad_target_values, autodiff-learn_and_constructor-extra-sample)
-            if NodeRole.OUTPUT in self.get_roles_by_node(input_item):
+            if NodeRole.OUTPUT in self.get_roles_by_node(spec_as_mech(input_item)):
                 input_item_role = SAMPLE
-            elif NodeRole.INPUT in self.get_roles_by_node(input_item):
+            elif NodeRole.INPUT in self.get_roles_by_node(spec_as_mech(input_item)):
                 input_item_role = TARGET
             assert input_item_role in {SAMPLE, TARGET}, f"PROGRAM ERROR: input_item should be SAMPLE OR TARGET by now"
             # MODIFIED TEACHER_TARGET END
 
-            # MODIFIED TEACHER_TARGET OLD:
-            # sample_target_pair = next((pair for pair in self._sample_target_pairs
-            #                            if input_item in pair), None)
-            # MODIFIED TEACHER_TARGET NEW:
             sample_target_pair = next((pair for pair in self._sample_target_pairs
-                                       if ((input_item_role == SAMPLE
-                                            and input_item in {pair.sample_port, pair.sample_mech})
-                                           or (input_item_role == TARGET
-                                              and input_item in {pair.target_port, pair.target_mech}))), None)
-            # MODIFIED TEACHER_TARGET END
+                                       if input_item in pair), None)
+
             if sample_target_pair:
             # Node is SAMPLE or TARGET
-                if not any(role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-                           for role in {NodeRole.SAMPLE, NodeRole.TARGET}):
+                if not any(role for role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
+                           if role == NodeRole.SAMPLE):
                     # Node is not SAMPLE or TARGET
-                    illegal_specs.append(SampleTargetSpec(sample_target_pair.sample_port, input_item,
-                                                          sample_target_pair.target_port, None,
+                    # # MODIFIED TEACHER_TARGET OLD:
+                    # illegal_specs.append(SampleTargetSpec(sample_target_pair.sample_port, input_item,
+                    #                                       sample_target_pair.target_port, None,
+                    #                                       value, name))
+                    # MODIFIED TEACHER_TARGET NEW:  BREADCRUMB: IS BELOW STILL NEEDED?  REVERT TO OLD ABOVE?
+                    input_item_port = spec_as_port(input_item)
+                    illegal_specs.append(SampleTargetSpec(input_item_port if input_item_role == SAMPLE else None,
+                                                          input_item if input_item_role == SAMPLE else None,
+                                                          input_item_port if input_item_role == TARGET else None,
+                                                          input_item if input_item_role == TARGET else None,
                                                           value, name))
+                    # MODIFIED TEACHER_TARGET END
                     continue
                 # MODIFIED TEACHER_TARGET END
 
@@ -10449,18 +10454,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if not ((sample_spec and NodeRole.SAMPLE in roles)
                             or ((target_spec and NodeRole.TARGET in roles))):
                         # spec is a Node or OutputPort that is not a SAMPLE or TARGET
-                        if NodeRole.OUTPUT in roles:
+                        # TEACHER_TARGET BREADCRUMB: ADD CONDITION FOR SINGLETON OR INCLUDED W/ INPUT:
+                        if NodeRole.INPUT in roles:
+                            # SAMPLE_TARGET TEST: ERROR 4.2 -- DONE: X
+                            error_message = "INPUT Node that is not a TARGET Node"
+                        elif NodeRole.OUTPUT in roles:
                             # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():
                             # # This is possible only if Constructor of subclass has specifications in its **targets** argument
                             # # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
                             # assert not (hasattr(self, TARGETS) and self.targets), \
                             #     f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
-                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: X
-                            assert False, "ERROR 3 OUTPUT BUT NOT SAMPLE"
+                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
+                            # assert False, "ERROR 3 OUTPUT BUT NOT SAMPLE"
                             error_message = "OUTPUT Node that is not a SAMPLE"
-                        elif NodeRole.INPUT in roles:
-                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: √
-                            error_message = "INPUT Node that is not a TARGET Node"
                         elif NodeRole.INTERNAL in roles:
                             # SAMPLE_TARGET TEST: ERROR 5 -- DONE: X
                             assert False, "ERROR 5 INTERNAL NODE"
