@@ -9113,7 +9113,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      for s in self._sample_target_specs)):
                     # that is a problem:
                     assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
-        return target_nodes
+        return sorted(target_nodes)
 
     def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
         """Return a list of all SAMPLE Nodes <Composition_Learning_Components>`\\s for `learning Pathways
