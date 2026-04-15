@@ -10035,7 +10035,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if sample_target_pair:
             # Node is SAMPLE or TARGET
                 if not any(role for role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-                           if role == NodeRole.SAMPLE):
+                           # if role == NodeRole.SAMPLE):
+                           if role in {NodeRole.SAMPLE, NodeRole.TARGET}):
                     # Node is not SAMPLE or TARGET
                     # # MODIFIED TEACHER_TARGET OLD:
                     # illegal_specs.append(SampleTargetSpec(sample_target_pair.sample_port, input_item,

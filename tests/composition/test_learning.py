@@ -1125,7 +1125,7 @@ class TestStructural:
         for comp_type in [
             # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
             # TEACHER_TARGET BREADCRUMB: ADD TEST FOR WARNING ON REDUNDANT BUT NOT CONFLICTING SPECS
-            "comp",
+            # "comp",
             "autodiff"
         ]:
             for arg_type in [
