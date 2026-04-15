@@ -10010,7 +10010,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             try:
-                input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
+                # input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
+                nodes_in_comp[(spec_as_mech(input_item)
+                               if isinstance(input_item, (OutputPort, ProcessingMechanism_Base))
+                               else input_item) if isinstance(input_item, Component) else str(input_item)]
             except (ValueError, TypeError):
                 illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
                 continue

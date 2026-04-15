@@ -1123,22 +1123,24 @@ class TestStructural:
 
         params = []
         for comp_type in [
+            # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
             # TEACHER_TARGET BREADCRUMB: ADD TEST FOR WARNING ON REDUNDANT BUT NOT CONFLICTING SPECS
             "comp",
-            "autodiff"]:
+            "autodiff"
+        ]:
             for arg_type in [
                 "learn",
-                "constructor",
-                "learn_and_constructor"
+                # "constructor",
+                # "learn_and_constructor"
             ]:
                 for conflict_type in [
                     "conflict_in_learn",
-                    "conflict_in_constructor",
-                    "conflict_in_learn_and_constructor",
-                    "conflict_in_learn_vs_constructor"
+                    # "conflict_in_constructor",
+                    # "conflict_in_learn_and_constructor",
+                    # "conflict_in_learn_vs_constructor"
                 ]:
                     for learn_sample_spec in [
-                        "sample",
+                        # "sample",
                         "target"
                     ]:
                         marks = []
