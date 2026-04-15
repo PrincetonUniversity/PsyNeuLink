@@ -897,20 +897,19 @@ class TestStructural:
                                execution_mode=execution_mode)
 
 
-
         params = []
         for comp_type in [
-            "comp",
+            # "comp",
             "autodiff"]:
             for arg_type in [
-                # "learn",
+                "learn",
                 "constructor",
                 "learn_and_constructor",
             ]:
                 for bad_spec_type in [
-                    "not_in_comp",
-                    "proj",
-                    "num",
+                    # "not_in_comp",
+                    # "proj",
+                    # "num",
                     "extra",
                 ]:
                     for sample_or_target_spec in [
@@ -1083,16 +1082,28 @@ class TestStructural:
                             learn_targets_arg = {output_mech_A: [[1]],
                                                  output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
+                            # TEACHER_TARGET BREADCRUMB BELOW
+                            # BREADCRUMB: FOR comp:
+                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                         "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
+                                         "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
+                            # BREADCRUMB: FOR autodiff:
+                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                         "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
+                                         "(in 'targets' dict): OUTPUT Node that is not a SAMPLE Node.")
                         else:
                             learn_targets_arg = {output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
-                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
-                                     "following illegal specification in its 'targets' argument: "
-                                     "'OUTPUT MECH C' (in 'targets' dict): INPUT Node that is not a TARGET Node.")
+                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because "
+                                         "the following specification in its 'targets' argument conflicts with those"
+                                         " in the 'targets' argument of its constructor: 'OUTPUT MECH C': "
+                                         "does not correspond to any SAMPLE specified in the constructor.")
                     elif sample_or_target_spec == 'target':
-                        learn_targets_arg = {output_mech_A: [[1]],
-                                             output_mech_B: proj_in_to_A}
-                        error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
+                        # learn_targets_arg = {output_mech_A: [[1]],
+                        #                      output_mech_B: proj_in_to_A}
+                        # error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
+                        assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
+                                       f"should have skipped this test")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 else:

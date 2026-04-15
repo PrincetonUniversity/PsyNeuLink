@@ -2933,12 +2933,14 @@ class AutodiffComposition(Composition):
                                       "learn() method, and assigned a numeric array (i.e., the value(s) to be used for "
                                       "training on each trial)"))
 
-        # Add any illegal specs passed in to bad_specs for reporting in error message
+        # Add any remaining illegal specs passed in to bad_specs for reporting in error message
+        # This is used t
+        extra_specs = not bad_specs and illegal_specs and len(constructor_specs) > 1
         for spec in illegal_specs:
             illegal_spec = (f"'{spec.target_spec.full_name}'"
                             if isinstance (spec.target_spec, (OutputPort, ProcessingMechanism_Base))
                             else spec.target_spec)
-            bad_specs.append((spec, illegal_spec, f"does not correspond to any sample specified "
+            bad_specs.append((spec, illegal_spec, f"does not correspond to any SAMPLE specified "
                                                   f"in the constructor"))
 
         if bad_specs:
@@ -2977,10 +2979,11 @@ class AutodiffComposition(Composition):
                 source_str = (' and '.join([f"'{str}'" for str in sources]) if len(sources)==2
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
+            one_or_ones = "those" if extra_specs else("one" if len(constructor_specs) == 1 else "ones")
 
             raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
                                            f"the following specification{_['s']} in its {source_str} "
-                                           f"conflict{_['not_s']} with one{_['s']} in the 'targets' argument "
+                                           f"conflict{_['not_s']} with {one_or_ones} in the 'targets' argument "
                                            f"of its constructor: {'; '.join(all_bad_specs_str)}.")
 
         return legal_specs, illegal_specs
