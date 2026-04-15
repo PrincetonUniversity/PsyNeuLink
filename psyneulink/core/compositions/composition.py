@@ -10009,18 +10009,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
             except TypeError:
-                illegal_specs.append(SampleTargetSpec(None, None,
-                                                      None, input_item,
-                                                      value, name))
+                illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
                 continue
 
+            # MODIFIED TEACHER_TARGET NEW:
+            # Determine whether input_item is SAMPLE or TARGET to accurately identify it in_sample_target_pairs below
+            #   (since it might also appear in another spec
+            #     e.g., test_bad_target_values, autodiff-learn_and_constructor-extra-sample)
+            if NodeRole.OUTPUT in self.get_roles_by_node(input_item):
+                input_item_role = SAMPLE
+            elif NodeRole.INPUT in self.get_roles_by_node(input_item):
+                input_item_role = TARGET
+            assert input_item_role in {SAMPLE, TARGET}, f"PROGRAM ERROR: input_item should be SAMPLE OR TARGET by now"
+            # MODIFIED TEACHER_TARGET END
+
+            # MODIFIED TEACHER_TARGET OLD:
+            # sample_target_pair = next((pair for pair in self._sample_target_pairs
+            #                            if input_item in pair), None)
+            # MODIFIED TEACHER_TARGET NEW:
             sample_target_pair = next((pair for pair in self._sample_target_pairs
-                                       if input_item in pair), None)
+                                       if ((input_item_role == SAMPLE
+                                            and input_item in {pair.sample_port, pair.sample_mech})
+                                           or (input_item_role == TARGET
+                                              and input_item in {pair.target_port, pair.target_mech}))), None)
+            # MODIFIED TEACHER_TARGET END
             if sample_target_pair:
-                # Node is SAMPLE or TARGET
-                assert any(role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-                           for role in {NodeRole.SAMPLE, NodeRole.TARGET}), \
-                    f"PROGRAM ERROR: Node specified ({input_item}) expected to be a SAMPLE or TARGET"
+            # Node is SAMPLE or TARGET
+                if not any(role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
+                           for role in {NodeRole.SAMPLE, NodeRole.TARGET}):
+                    # Node is not SAMPLE or TARGET
+                    illegal_specs.append(SampleTargetSpec(sample_target_pair.sample_port, input_item,
+                                                          sample_target_pair.target_port, None,
+                                                          value, name))
+                    continue
+                # MODIFIED TEACHER_TARGET END
 
                 sample_port = sample_target_pair.sample_port
                 target_port = sample_target_pair.target_port

@@ -987,6 +987,15 @@ class TestStructural:
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
                         else:
                             assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                    elif bad_spec_type == 'extra':
+                        # extra spec can't be implemented in constructor, since it allows any node to be
+                        # a SAMPLE or TARGET, so, implemented here in learn() (and only for "learn_and_constructor"
+                        if sample_or_target_spec == 'sample' and arg_type == 'learn_and_constructor':
+                            constructor_targets_arg = {output_mech_A: output_mech_C,
+                                                       output_mech_B: pnl.TARGET}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
+                        else:
+                            assert False, f"should have skipped this test"
                     else:
                         assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
                                        f"should have skipped this test")
@@ -1008,8 +1017,11 @@ class TestStructural:
             else:
                 assert False, "comp_type must be 'comp' or 'autodiff'"
 
-            # if 'constructor' in arg_type and 'target' in sample_or_target_spec:
-            if 'constructor' in arg_type:
+            # MODIFIED TEACHER_TARGET OLD:
+            # if 'constructor' in arg_type:
+            # MODIFIED TEACHER_TARGET NEW:
+            if arg_type == 'constructor':
+            # MODIFIED TEACHER_TARGET END
                 with pytest.raises(CompositionError, match=re.escape(error_msg)):
                     # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate methods
                     comp.get_target_nodes()
@@ -1067,9 +1079,13 @@ class TestStructural:
                         assert False, f"Should have skipped 'num' + 'target' for learn()."
                 elif bad_spec_type == 'extra':
                     if sample_or_target_spec == 'sample':
-                        learn_targets_arg = {output_mech_A: [[1]],
-                                             output_mech_B: [[2]],
-                                             output_mech_C: [[3]]}
+                        if arg_type == 'learn':
+                            learn_targets_arg = {output_mech_A: [[1]],
+                                                 output_mech_B: [[2]],
+                                                 output_mech_C: [[3]]}
+                        else:
+                            learn_targets_arg = {output_mech_B: [[2]],
+                                                 output_mech_C: [[3]]}
                         error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
                                      "following illegal specification in its 'targets' argument: "
                                      "'OUTPUT MECH C' (in 'targets' dict): INPUT Node that is not a TARGET Node.")

@@ -2919,7 +2919,6 @@ class AutodiffComposition(Composition):
                                       f"is specified in the 'targets' argument of the constructor, "
                                       f"so there should be no specification for it in learn()"))
 
-                    # MODIFIED TEACHER_TARGET END
             else:
                 # sample NOT specified in learn()
                 if target == TARGET:
