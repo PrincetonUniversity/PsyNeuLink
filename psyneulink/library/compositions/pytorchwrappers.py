@@ -254,15 +254,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
         in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
-    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM SAMPLES
     retained_sample_values : List[ndarray]
-        values of the trained `SAMPLE <NodeRole.SAMPLE>` Nodes (i.e., ones associated with `TARGET <NodeRole.TARGET>`
-        Nodes) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
+        values of the `SAMPLE <NodeRole.SAMPLE>` Nodes, that were used as the `sample <LossMechanism.sample>` for the
+        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
-    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM TARGETS
     retained_targets : List[ndarray]
-        values of the `TARGET <NodeRole.TARGET>` Nodes for each trial executed in a call to `learn
-        <AutoDiffComposition.learn>`.
+        values of the `TARGET <NodeRole.TARGET>` Nodes, that were used as the `target <LossMechanism.sample>` for the
+        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
     retained_losses : List[ndarray]
         losses per batch, epoch or run accumulated over a call to learn()
@@ -757,11 +755,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"from its input_CIM to '{nested_port.owner.name}'.")
             nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
             pnl_proj = incoming_projections[0]
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if pnl_proj != nested_port.path_afferents[0]:
-            # MODIFIED TEACHER_TARGET NEW:
             if pnl_proj != nested_port_afferents[0]:
-            # MODIFIED TEACHER_TARGET END
                 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
                 raise AutodiffCompositionError(
                     f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
@@ -809,11 +803,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nested_port_efferents = [proj for proj in nested_port.efferents if proj in self.composition.projections]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if nested_port.efferents[0] != projection.sender.owner.port_map[nested_port][0].path_afferents[0]:
-            # MODIFIED TEACHER_TARGET NEW:
             if nested_port_efferents[0] != projection.sender.owner.port_map[nested_port][0].path_afferents[0]:
-            # MODIFIED TEACHER_TARGET END
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
@@ -863,16 +853,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # TEACHER_TARGET BREADCRUMB: DO THE SAME FOR rcvr_mech_wrapper
     #                            TO DEAL WITH PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
-    # MODIFIED TEACHER_TARGET NEW:
-    # def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection)->(Mechanism_Base,
-    #                                                                                   PytorchMechanismWrapper):
     def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection):
         """Get wrapper for sndr_mech
         If sndr_mech is a Mechanism in the outer Composition, get wrapper for sndr_mech directly from its nodes_map;
         If sndr_mech is an output_CIM, then get node in nested Composition that is its source
            and add it to the nodes_map for the outer Composition;
          """
-        # TEACHER_TARGET BREADCRUMB: NEED TO GET WRAPPER FOR NODE IN NESTED NODE OF OUTER_CREATOR
         if sndr_mech in self.outer_creator.nodes_map:
             sndr_mech_wrapper = self.outer_creator.nodes_map[sndr_mech]
             sender = pnl_proj.sender
@@ -885,7 +871,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     self.outer_creator.nodes_map[sndr_mech] = sndr_mech_wrapper
                     break
         return sender, sndr_mech_wrapper
-    # MODIFIED TEACHER_TARGET END
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
@@ -1838,7 +1823,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         output_values = []
         for idx, port, node, comp in outputs_idx_port_node_comp:
 
-            # TEACHER_TARGET BREADCRUMB: FROM DEVEL
             if comp._trained_comp_nodes_to_pytorch_nodes_map:
                 node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
 

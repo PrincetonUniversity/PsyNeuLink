@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DEFAULT_INPUT, DEFAULT_VARIABLE, DISABLE,
      INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL,
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE,
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, SAMPLE_MECHANISM, OVERRIDE,
      PARAMS, SLOPE, TARGET_MECHANISM,
     VARIABLE, VARIANCE)
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval, graph_structure_conditions_available, gsc_unavailable_message
@@ -1646,8 +1646,8 @@ class TestCompositionPathwaysArg:
         c = Composition(pathways=[(P1, BackPropagation), (P2, BackPropagation)])
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
-        assert c.pathways['P1'].learning_components[OUTPUT_MECHANISM] is C
-        assert c.pathways['P2'].learning_components[OUTPUT_MECHANISM] is E
+        assert c.pathways['P1'].learning_components[SAMPLE_MECHANISM] is C
+        assert c.pathways['P2'].learning_components[SAMPLE_MECHANISM] is E
 
     def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
         A = ProcessingMechanism(name='A')
@@ -3202,17 +3202,15 @@ class TestRunInputSpecifications:
         ('input_port_and_mech',
          '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
          'the following InputPorts *and* the Mechanisms to which they belong; '
-         'only one or the other can be specified as inputs to run():  OA[InputPort-0]."'
+         'only one or the other can be specified as inputs to run():  \'OA[InputPort-0]\'."'
          ),
         ('nested_input_port_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA[InputPort-0]\', \'Composition-0\')]."'
+        "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or Mechanisms "
+        "nested in the following Compositions: 'Composition-0': 'IA[InputPort-0]'"
          ),
         ('nested_mech_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA\', \'Composition-0\')]."'
+         "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or "
+         "Mechanisms nested in the following Compositions: 'Composition-0': 'IA'"
          ),
         ('run_nested_with_inputs', None)
     ]

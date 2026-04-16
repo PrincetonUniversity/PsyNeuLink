@@ -242,7 +242,7 @@ A `Node <Composition_Nodes>` can be removed from a Composition using the `remove
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A Composition can be used as a `Node <Composition_Nodes>` of another Composition, either in the **nodes** argument
-of its consructor, in a `Pathway` specified in its **pathways** argument, or in one of the Composition's `addition
+of its constructor, in a `Pathway` specified in its **pathways** argument, or in one of the Composition's `addition
 methods <Composition_Addition_Methods>`.  Projections can be specifed to and from the nested composition (or
 created automatically if specified in a Pathway) just as for any other Node.
 
@@ -903,12 +903,22 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
 
-    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `OUTPUT_MECHANISM
-      <OUTPUT_MECHANISM>`, that is used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal
-      (see above);  that value must be specified as an input to the *TARGET_MECHANISM*, either in the **inputs**
-      argument of the Composition's `learn <Composition.learn>` method, or in its **targets** argument in an entry
-      for either the *TARGET_MECHANISM* or the *OUTPUT_MECHANISM* (see `below <Composition_Target_Inputs>`); the
-      Mechanism is assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+    * *TARGET_MECHANISM* -- receives the current `value <Mechanism_Base.value>` of the `SAMPLE_MECHANISM
+      <SAMPLE_MECHANISM>`, that is used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal
+      (see above); for a Composition, that value must be specified as the input to the *TARGET_MECHANISM*,
+      either in the **inputs** argument of the Composition's `learn <Composition.learn>` method, or in its
+      **targets** argument in an entry for either the *SAMPLE_MECHANISM* (the preferred method) or the
+      *TARGET_MECAHSNIS* itself (see `below <Composition_Target_Inputs>`); the *TARGET* Mechanism is assigned the
+      `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+
+      .. _Composition_SAMPLE_MECHANISM_Note:
+
+      .. note::
+          A *TARGET_MECHANISM* is constructed automatically for the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` of
+          each `learning Pathway <Composition_Learning_Pathway>` in a Composition.  The latter is always an `OUTPUT
+          <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition. However, this may not be the case for
+          subclasses of Composition, which may allow the explicit assignment of *SAMPLE_MECHANISMs* and
+          *TARGET_MECHANISMs* (e.g., see `AutodiffComposition_Target` for `AutodiffComposition`).
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -949,11 +959,14 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
 
 It also assigns the following item to the list of `learning_components` for the pathway:
 
-    .. _OUTPUT_MECHANISM:
+    .. _SAMPLE_MECHANISM:
 
-    * *OUTPUT_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
-      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`;
-      the Node is assigned the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
+    * *SAMPLE_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
+      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`; the
+      Node is assigned the `NodeRoles <NodeRole>` `SAMPLE <NodeRole.SAMPLE>`.  For a Composition, this is always
+      an *OUTPUT* `Node <Composition_Nodes>`, and thus is also assigned the NodeRole  `OUTPUT <NodeRole.OUTPUT>`
+      However, this may *not* be the case for some subclasses of Composition -- see `note
+      <Composition_SAMPLE_MECHANISM_Note>` above).
 
 The items with names listed above are placed in a dict that is assigned to the `learning_components
 <Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
@@ -1676,22 +1689,22 @@ dictionary for that Mechanism generates and error.
 This can be done in either the **targets** argument of the Composition's `learn() <Composition.learn>`,
 or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
 
-  # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF TARGET Nodes and get_target_nodes() METHOD
-  * **targets** (dict): this is the simplest way of specifying target values; the key for each entry is an
-    `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>` of a `learning Pathway
-    <Composition_Learning_Pathway>` or the `OutputPort` of one), and the value is the target value used to
-    compute the error for that Pathway;
+  * **targets** (dict): this is the simplest and clearest way of specifying target values; the key for each entry
+    is a `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` or the `OutputPort` of one, which must be an `OUTPUT <NodeRole.OUTPUT>`
+    `Node <Composition_Nodes>`, and the value is the target value used to compute the error for that Pathways; the
+    SAMPLE_MECHANISMS of a Composition can be listed using its `get_sample_nodes() <Composition.get_sample_nodes>`
+    method.
 
   * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`, entries
     for `TARGET_MECHANISM <Composition_Learning_Components>`\\s, that receive as input the target value for each
-    `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` in a `learning Pathway <Composition_Learning_Pathway>` of the Composition;
+    `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` in a `learning Pathway <Composition_Learning_Pathway>` of the Composition;
     a list of the TARGET_MECHANISMs for a Composition can be obtained using its `get_target_nodes()
     <Composition.get_target_nodes>` method.
 
-  # TEACHER_TARGET BREADCRUMB:  INTEGRATE INTO TEXT ABOVE
   .. note::
-     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict,
-     alt though this will elicit a warning indicating that the standard way to specify targets is one of the above.
+     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict
+     (which can be listed using its `get_target_nodes() <Composition.get_target_nodes>` method), although this
+     will elicit a warning indicating that the standard way to specify targets is one of the above.
 
 In either case, the target values in the dict must be formatted as described under <Composition_Input_Dictionary>`.
 The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
@@ -3242,7 +3255,7 @@ from psyneulink.core.globals.keywords import \
      LEARNING_RATE, LEARNING_SIGNAL, Loss,
      MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM,
      NAME, NESTED, NO_CLAMP, NODE, NODES,
-     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE,
+     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, SAMPLE_MECHANISM, OUTPUT_PORTS, OWNER_VALUE,
      PARAMETER, PARAMETER_CIM_NAME, PORT,
      PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
      RECEIVER, RETAIN_IN_PNL_OPTIONS,
@@ -3990,8 +4003,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` of the last epoch of learning executed in a call to
         `learn <Composition.learn>`. Each item in the outermost list is a list of values for a given trial; each item
-        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT_MECHANI`
-        SM <OUTPUT_MECHANISM>` for that trial.
+        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `SAMPLE_MECHANISM
+        <SAMPLE_MECHANISM>` for that trial.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
@@ -4940,20 +4953,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node.componentType == 'Composition' and \
                     node not in visited_compositions:
                 visited_compositions.append(node)
-                # # MODIFIED TEACHER_TARGET OLD:
-                #BREADCRUMB: WHY IS NODE NOT RETREIVED HERE AND ADDED TO LIST?
+                # IMPLEMENTATION NOTE: Because nested_nodes is a list, it gets populated in call to _get_nested_nodes()
                 node._get_nested_nodes(nested_nodes,
                                        root_composition,
                                        visited_compositions,
                                        include_cims,
                                        include_controller)
-                # # MODIFIED TEACHER_TARGET NEW:
-                # nested_nodes.extend(node._get_nested_nodes(nested_nodes,
-                #                                            root_composition,
-                #                                            visited_compositions,
-                #                                            include_cims,
-                #                                            include_controller))
-                # MODIFIED TEACHER_TARGET END
             elif root_composition is not self:
                 nested_nodes.append((node,self))
         return nested_nodes
@@ -5021,7 +5026,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         - This is distincly different from _all_nodes property, which obligately includes cims and controller,
           and includes nested Compositions, and does so only from the top level (ie., not any that are nested)
         - It is named "_get_all_nodes" (even though it only returns Mechanisms) to be compatible with other classes
-          that have flat grophs (e.g., PytorchCompositionWrapper) and that can be called in some simlar contexts
+          that have flat graphs (e.g., PytorchCompositionWrapper) and that can be called in some simlar contexts
           (e.g., as agent_rep for OptimizationControlMechanism).
         """
         cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
@@ -5061,7 +5066,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if component in self._all_nodes:
             return True
         if nested:
-            return any(component in comp._all_nodes for comp in self._get_nested_compositions())
+            return any(comp._is_in_composition(component, nested) for comp in self._get_nested_compositions())
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -5997,7 +6002,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         return self.node_roles_mgr.require_node_roles(node, roles, scope, context)
 
-    # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE SCOPE AND SET TO None BY DEFAULT
     @handle_external_context()
     def exclude_node_roles(self,
                            node:Mechanism_Base,
@@ -6613,14 +6617,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes
                 and sender_mechanism != self.controller):
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if isinstance(sender, Port):
-            #     sender_name = sender.full_name
-            # else:
-            #     sender_name = sender.name
-            # MODIFIED TEACHER_TARGET NEW:
             sender_name = sender.full_name
-            # MODIFIED TEACHER_TARGET END
 
             # If the sender_mechanism is an OUTPUT Node of the nested Composition,
             #  then use the corresponding CIM on the nested comp as the sender going forward
@@ -7970,7 +7967,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         The `learning components <Composition_Learning_Components>` created are placed in a dict
         with the following entries:
 
-            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`)
+            *SAMPLE_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`)
 
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
 
@@ -8149,7 +8146,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   target, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
-            learning_related_components = {OUTPUT_MECHANISM: output_source,
+            learning_related_components = {SAMPLE_MECHANISM: output_source,
                                            TARGET_MECHANISM: target,
                                            OBJECTIVE_MECHANISM: comparator,
                                            LEARNING_MECHANISMS: [learning_mechanism],
@@ -8853,7 +8850,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 s.parameters.require_projection_in_composition.set(False,
                                                                    override=True)
 
-        learning_related_components = {OUTPUT_MECHANISM: pathway[-1],
+        learning_related_components = {SAMPLE_MECHANISM: pathway[-1],
                                        TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
@@ -9323,18 +9320,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return a list of all `TARGET Nodes <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
         """
-        # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE sample_port_to_target_port_map AS IN get_sample_nodes() BELOW
+        # MODIFIED TEACHER_TARGET OLD:
         target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # BREADCRUMB: IMPLEMENT WHEN NodeRole.TARGET IS ASSIGNED TO INTERNAL TARGETS (e.g. NodeRole._INTERNAL_TARGET)
+        # target_nodes = [entry.target_mech for entry in self._sample_target_pairs]
+        # assert set(target_nodes) == set(self.get_nodes_by_role(NodeRole.TARGET)), \
+        #     (f"PROGRAM ERROR: NodeRole.TARGET assignments in {self.name} are not consistent with target_mech "
+        #      f"entries in self._sample_target_pairs.")
+        # MODIFIED TEACHER_TARGET END
         if not target_nodes:
             # No TARGET Nodes were found
             if not self.learning_components:
                 warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            elif (hasattr(self, 'targets') and
-                    len([v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET])):
-                # Should be TARGET Nodes since they were specified in the **targets** arg of the constructor
-                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
-        return target_nodes
+            elif hasattr(self, 'targets'):
+                # Ensure that any TARGET specs in self.targets are duplicates; otherwise something has gone wrong
+                # - get all specs for which target_spec is TARGET
+                specs_with_TARGET = [v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET]
+                # - if entry in self.targets specifying TARGET is not redundant with one for the same sample_port
+                if specs_with_TARGET and not any(spec[0] for spec in specs_with_TARGET
+                                                 if (spec[0] == s.sample_port and s.target_spec is not TARGET
+                                                     for s in self._sample_target_specs)):
+                    # that is a problem:
+                    assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
+        return sorted(target_nodes)
 
     def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
         """Return a list of all SAMPLE Nodes <Composition_Learning_Components>`\\s for `learning Pathways
@@ -9347,10 +9357,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_components:
                 warnings.warn(f"The 'get_sample_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            # TEACHER_TARGET BREADCRUMB: MOVE THIS TO OVERRIDE IN AutodiffCompostion
-            elif self._constructor_has_target_specs:
-                # Should be SAMPLE Nodes since they were specified in the **targets** arg of the constructor
-                assert False, f"PROGRAM ERROR: {self.name} has no SAMPLE nodes even though they were specified."
         return sample_nodes
 
     # endregion LEARNING PATHWAYS
@@ -10408,10 +10414,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return inputs, num_inputs_sets
 
-
-    # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
-    # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
-    #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
     def _aggregate_and_filter_sample_target_specs(self, targets_dicts: Optional[Dict[str, Dict]] = None) -> List:
         """Consolidate all sample and target specifciations in learn() and possibly a sublcass constructor
         In learn() specifications can be in **inputs** or **targets** args, or TARGETS subdict of **inputs**
@@ -10490,6 +10492,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - target specifications:
             - Node (per above) or numeric value
         Construct self._sample_target_pairs (which itself is created during pathway construction)
+        Place any entries in illegal_specs,
+            and return that for error handling in subclass override of this method
+            or _handle_illegal_sample_target_specs_from_learn()
 
         Notes:
           - Names (str) can be used for Nodes but not Ports
@@ -10505,7 +10510,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - Missing sample-target specifications are deteceted and reported in _canonicalize_target_specs()
             (this ensures that # of specifications = # of learnable pathways)
         """
+        # TEACHER_TARGET BREADCRUMB: MAKE THESE UTILITIES
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+        spec_as_port = lambda spec : (spec if isinstance(spec, OutputPort)
+                                      else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
+                                            else spec))
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
         legal_specs = {}
         illegal_specs = []
@@ -10513,37 +10522,68 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for input_item, value in specs_dict.items():
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
-            try:
-                input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
-            except TypeError:
-                illegal_specs.append(SampleTargetSpec(None, None,
-                                                      None, input_item,
-                                                      value, name))
+            if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
+                illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
+                continue
+
+            # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
+            #                            **roles** ARG, AND IF None, USE NodeRole.OUTPUT IN CONDITIONAL FOR SAMPLE HERE
+            # Determine whether input_item is SAMPLE or TARGET to accurately identify it in_sample_target_pairs below
+            #   (since it might also appear in another spec
+            #     e.g., test_bad_target_values, autodiff-learn_and_constructor-extra-sample)
+            roles = self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
+            # MODIFIED TEACHER_TARGET OLD:
+            # if NodeRole.OUTPUT in roles:
+            # MODIFIED TEACHER_TARGET NEW:
+            if NodeRole.SAMPLE in roles:
+            # MODIFIED TEACHER_TARGET END
+                # A SAMPLE Node does not have to be an OUTPUT Node for all subclasses (e.g., AutodiffComposition)
+                input_item_role = SAMPLE
+            elif NodeRole.INPUT in roles:
+                # BREADCRUMB: AT PRESENT, NodeRole.TARGET IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET Nodes,
+                #             WHEN IT CAN BE ASSIGNED TO INTERNAL NODES, THEN HANLDE AS WITH SAMPLE ABOVE
+                input_item_role = TARGET
+            else:
+                illegal_specs.append(SampleTargetSpec(None, input_item, None, None, value, name))
                 continue
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
                                        if input_item in pair), None)
+
             if sample_target_pair:
-                # Node is SAMPLE or TARGET
-                assert any(role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-                           for role in {NodeRole.SAMPLE, NodeRole.TARGET}), \
-                    f"PROGRAM ERROR: Node specified ({input_item}) expected to be a SAMPLE or TARGET"
+            # Node is SAMPLE or TARGET
+                if not any(role for role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
+                           # if role == NodeRole.SAMPLE):
+                           if role in {NodeRole.SAMPLE, NodeRole.TARGET}):
+                    # Node is not SAMPLE or TARGET
+                    input_item_port = spec_as_port(input_item)
+                    illegal_specs.append(SampleTargetSpec(input_item_port if input_item_role == SAMPLE else None,
+                                                          input_item if input_item_role == SAMPLE else None,
+                                                          input_item_port if input_item_role == TARGET else None,
+                                                          input_item if input_item_role == TARGET else None,
+                                                          value, name))
+                    continue
+
                 sample_port = sample_target_pair.sample_port
-                sample_spec = input_item if input_item in sample_target_pair else None
                 target_port = sample_target_pair.target_port
-                # target_spec = input_item if input_item in sample_target_pair else None
-                target_spec = target_port if target_port in sample_target_pair else None
-                # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULE BE ALLOWED FOR AutodiffComposition:
+                if spec_as_port(input_item) is sample_port:
+                    sample_spec = input_item
+                    target_spec = None
+                else:
+                    assert spec_as_port(input_item) is target_port
+                    target_spec = input_item
+                    sample_spec = None
+
+                # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULD ?NOT? BE ALLOWED FOR AutodiffComposition:
                 if not is_numeric(value):
                     illegal_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                           target_port, target_spec,
                                                           value, name))
                     continue
-                # Don't incude spec if None is not allowed for target spec
-                # BREADCRUMB: IS THIS STILL NEEDED:
                 #  IMPLEMENTATION NOTE:  this is used to exclude illegal sample-target specs in **inputs** dict
                 #                        while allowing bad specs in **targets** dicts to be included,
                 #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
+                # Don't incude spec if None is not allowed for target spec
                 if target_port or allow_None_for_target:
                     self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                                       target_port, target_spec,
@@ -10557,15 +10597,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return legal_specs, illegal_specs
 
     def _get_redundant_sample_target_specs(self):
-        # BREADCRUMB: CREATE OVERRIDE FOR Autodiff TO ALLOW TARGET and VALUE
-        #             ULTIMATELY, MOVE TO sample_target_specs CLASS
+        # BREADCRUMB: MOVE TO sample_target_specs CLASS
         """Identify redundant specs for SAMPLE-TARGET pairs
         """
         all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
         return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
 
-    # MODIFIED TEACHER_TARGET NEW: USE SAMPLE INSTEAD OF TARGET
     def _handle_redundant_sample_target_specs(self):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
@@ -10581,24 +10619,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
                                             else spec))
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # # BREADCRUMB: CREATE OVERRIDE FOR Autodiff TO ALLOW TARGET and VALUE
-        # # Identify redundant specs for SAMPLE-TARGET pairs
-        # all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
-        # sample_port_counts = counts(all_sample_specs_as_ports)
-        # sample_ports_with_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
-        # # MODIFIED TEACHER_TARGET NEW:
         sample_ports_with_redundant_specs = self._get_redundant_sample_target_specs()
-        # MODIFIED TEACHER_TARGET END
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES
-        target_node_specs_and_samples = sorted(set([(f"'{spec.sample_spec.name}'", f"'{spec.sample_port.owner.name}'")
-                                                    for spec in self._sample_target_specs
-                                                    if spec.sample_spec in self.get_nodes_by_role(NodeRole.TARGET)]))
+        target_node_specs_and_samples = []
+        for s in self._sample_target_specs:
+            spec = s.sample_spec if s.sample_spec else s.target_spec
+            if spec in self.get_nodes_by_role(NodeRole.TARGET):
+                target_node_specs_and_samples.append((f"'{spec.name}'", f"'{s.sample_port.owner.name}'"))
+        target_node_specs_and_samples = sorted(set(target_node_specs_and_samples))
         if target_node_specs_and_samples:
             target_nodes_str = ', '.join([spec[0] for spec in target_node_specs_and_samples])
             sample_nodes_str = ', '.join([spec[1] for spec in target_node_specs_and_samples])
+            # SAMPLE_TARGET TEST: WARNING 1 -- DONE: √
             warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
                           f"entries that are TARGET Nodes ({target_nodes_str}); while this is OK, it might be easier "
                           f"and clearer to use the SAMPLE (OUTPUT) Nodes to which they correspond ({sample_nodes_str}) "
@@ -10606,31 +10640,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f"TARGET Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT "
                           f"nodes, obviating the need to specify the 'targets' arg.")
 
-
         if not sample_ports_with_redundant_specs:
             return
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # # Identify redundant SAMPLE specs, and flag ones with mismatching values
-        # sample_ports_with_mismatching_specs = {}
-        # # # Search over all samples that have redundant specs
-        # for sample_port in [s for s in sample_port_counts if sample_port_counts[s] > 1]:
-        # MODIFIED TEACHER_TARGET NEW:
-        # # Search over all samples that have redundant specs
-        sample_ports_with_mismatching_specs = {}
+        # Search over all samples that have redundant specs
+        sample_ports_with_mismatching_specs = []
         for sample_port in sample_ports_with_redundant_specs:
-        # MODIFIED TEACHER_TARGET END
 
-            # Create list of all target_specs for the sample_port
-            # Note: convert values to str to make inside list hashable (counts can only handle one level of unhashables)
-            target_specs = [spec_as_port(spec.target_spec) for spec in self._sample_target_specs
-                            if spec.sample_port is sample_port]
+            # TEACHER_TARGET BREADCRUMB: ADD EXPLANATORY COMMENT HERE
+            spec_values = [(spec.sample_spec if spec.sample_spec is not None else spec.target_spec,
+                            spec.target_value if spec.target_value else spec.target_spec)
+                             for spec in self._sample_target_specs if spec.sample_port is sample_port]
             # Create histogram of target values and filter for any that have more than one entry
-            if len(counts(target_specs)) > 1:
-                sample_ports_with_mismatching_specs.update({sample_port: target_specs})
+            if len(counts([str(spec_val[1]) for spec_val in spec_values])) > 1:
+                sample_ports_with_mismatching_specs.append(sample_port)
 
+        # This purges illegal redundant specs (e.g. with conflicting values), so remaining ones should be benigh
         self._handle_conflicting_sample_target_specs(sample_ports_with_mismatching_specs)
-        # self._handle_conflicting_target_specs(sample_ports_with_mismatching_specs)
 
         # Warning for redundant specifications:
         # -----------------------------------------------
@@ -10643,18 +10669,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_samples_str = []
         all_sources = set()
         for sample_port in sample_ports_with_redundant_specs:
-            sample_spec = next((entry.sample_spec for entry in self._sample_target_specs
-                                if entry.sample_port == sample_port), None)
+            sample_spec = next(((s.sample_spec if s.sample_spec else s.target_spec) for s in self._sample_target_specs
+                               if s.sample_port == sample_port), None)
             assert sample_spec, ("PROGRAM ERROR: unable to find sample_spec associated with "
                                  "sample_port in _sample_target_pairs")
             sources = [f"'{source}'" for source in sorted(set(entry.source for entry in self._sample_target_specs
                                                               if sample_port is entry.sample_port))]
             if len(sources) == 1:
-                source_str = f"{sources[0]} arg"
+                sources_str = f"{sources[0]} arg"
             elif len(sources) == 2:
                 sources_str = f"{sources[0]} and {sources[1]} args"
             else:
-                source_str = f"{sources[0]}, {sources[1]} and {sources[2]} args"
+                sources_str = f"{sources[0]}, {sources[1]} and {sources[2]} args"
             all_samples_str.append(f"'{sample_spec.full_name}' in {sources_str}")
             all_sources.update(sources)
         full_str = '; '.join(sorted(all_samples_str))
@@ -10671,12 +10697,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         they_it = 'they' if plural else 'it'
         several_one = 'several' if plural else 'one'
 
-        # BREADCRUMB: HANDLE SAMPLES HERE
-        # If SAMPLEs are specified in constructor (in its **targets**) arg, refer to those as targets,
-        #   else refer to OUTPUT Nodes (which are used as the SAMPLEs by default when none are specified explicitly)
-        # sample_nodes_str = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-
-        sample_nodes_str = 'SAMPLE'
         if len(all_sources) == 1:
             source_str = f"{', '.join(all_sources)}"
         else:
@@ -10688,9 +10708,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
         only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self._get_target_nodes()
                                 for target_spec in self._sample_target_specs)
-        use_sample_nodes_str = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
-                            f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
-                            if not only_sample_specs else '')
+        use_sample_nodes_str = (f"use the SAMPLE Node{s} to which {they_it} correspond{s_not} "
+                                f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
+                                if not only_sample_specs else '')
 
         # If not all target_specs are in the targets dict, suggest that they be placed there
         # Source(s) of target_specs: inputs, inputs[TARGETS] and/or targets
@@ -10701,9 +10721,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
-        # X TEST DONE
+        # TEACHER_TARGET BREADCRUMB: SUPPRESS IF REDUNDANT SPEC IS A MISMATCH
+        # SAMPLE_TARGET TEST: WARNING 2 -- DONE: √
         warnings.warn(
-            f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
+            f"There are multiple specifications of the target value{s} for {several_one} of the SAMPLE "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
             f"While this is technically OK, it might be easier and clearer to {use_sample_nodes_str}{both}{placement}. "
             f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
@@ -10712,30 +10733,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _warned_about_targets_mechs_in_inputs_and_targets = True
 
     # def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
-    def _handle_conflicting_sample_target_specs(self, targets_with_mismatching_specs:list):
+    def _handle_conflicting_sample_target_specs(self, sample_ports_with_mismatching_specs:list):
         """Raise error for redundant sample and/or target specs with different target values"""
         all_targets_str = []
-        for target, values in targets_with_mismatching_specs.items():
-            sources_str = ', '.join([f"{t.target_value} in '{t.source}'" for t in self._sample_target_specs
-                                   if t.target_port.full_name == target])
-            all_targets_str.append(f"'{target}': [{sources_str}]")
+        for sample_port in sample_ports_with_mismatching_specs:
+            sources_str = ', '.join([f"'{s.sample_spec.full_name if s.sample_spec else s.target_spec.full_name}'"
+                                     f"={s.target_value} in '{s.source}'"
+                                     for s in self._sample_target_specs if s.sample_port is sample_port])
+            all_targets_str.append(f"'{sample_port.full_name}': {sources_str}")
         full_str = '; '.join(all_targets_str)
 
         if full_str:
             # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
             many_conflicts = len(all_targets_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
-            s = 's' if many_conflicts else ''
             multiple = ' multiple' if many_conflicts else ""
             one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
             node_s = 's' if many_outputs else ''
-            # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
-            # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-            sample_nodes = 'OUTPUT'
-            # X TEST DONE
+            # TEACHER_TARGET BREADCRUMB: HANDLE OUTPUT (??RE: learn()??) IN OVERRIDE IN AutodiffComposition
+            # SAMPLE_TARGET TEST: ERROR 1 -- DONE: √
+            # assert False, "ERROR 1 CONFLICTING SPECS"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
-                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
-                                   f"{sample_nodes} Node{node_s}: {full_str}.")
+                                   f"conflicting specifications for the target values assigned to {one_of}its "
+                                   f"OUTPUT Node{node_s}: {full_str}.")
 
     def _canonicalize_target_specs(self, execution_mode)->(dict, dict):
         """Consolidate sample-target specs into dictionary with entries in a standard form: {sample OutputPort: value}
@@ -10769,9 +10789,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Convert any name (str) specs to the corresponding Node
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
-        targets = {(nodes_in_comp[t.target_spec] if isinstance(t.target_spec, str) and t.target_spec != TARGET
-                    else t.target_spec): t.target_value for t in self._sample_target_specs}
-
+        targets = {t.target_port: t.target_value for t in self._sample_target_specs}
         canonicalized_target_specs = {}
         sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
 
@@ -10780,7 +10798,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #  - if found, assign as entry in canonicalized_target_specs,
             #    using corresponding sample_port as key and the value specified in specs
             #  - if NOT found, assign 'MISSING' as the value
-            # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
+            # TEACHER_TARGET BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
             target_nodes = self.get_target_nodes(execution_mode=execution_mode)
             for TARGET_node in target_nodes:
                 # Get all aliases for the TARGET (from self._sample_target_pairs)
@@ -10817,7 +10835,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             missing_specs_str = ', '.join(missing_spec_names)
             node_type = 'SAMPLE (OUTPUT)' if (len(self.get_nodes_by_role(NodeRole.SAMPLE))
                                               == len(self.get_nodes_by_role(NodeRole.SAMPLE))) else 'SAMPLE'
-            # X TEST DONE
+            # SAMPLE_TARGET TEST: ERROR 2 -- DONE: √
+            # assert False, "ERROR 2 MISSING"
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
                                    f"it's 'targets' argument is missing {a}specification{s} for the following "
                                    f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
@@ -10830,7 +10849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Errors are for SAMPLE specifications that are:
           - not an OUTPUT Node (those are the only ones allowed as specs in **targets** arg of learn() for Composition)
           - Node not in Composition
-          - non-Node key
+          - not a port or Mechanism key (for key specified as SAMPLE or TARGET)
           - non-numeric value
 
         Specs are indexed by sample_ports (consistent with furhter handling during learn())
@@ -10854,9 +10873,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # assert all(k in valid_sample_ports for k in specs),\
         #     f"PROGRAM ERROR: Problem purging targets_from_learn_as_sample_ports of all bad specs"
 
-
         # BREADCRUMB: PROMOTE THIS TO UTILITY OR AS CLASS METHODS? OR INCLUDE IN SUBCLASS OVERRIDE
-        constructor_has_target_specs = hasattr(self, TARGETS) and self.targets
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
         spec_as_mech = lambda spec : ((spec.owner if isinstance(spec, Port) else spec)
                                       if isinstance(spec, (Port, ProcessingMechanism_Base))
@@ -10865,43 +10882,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                           if isinstance(spec, str) and spec in nodes_in_comp else None)
         spec_in_comp = lambda spec : spec_as_mech(spec) or spec_str_as_mech(spec)
 
-        # BREADCRUMB:  SHOULD ONES NOT IN COMP FROM inputs DICT BE CAUGHT HERE
-        #              (BY MOVING THEM INTO inputs_targets_dict IN _parse_learning_target_specs())
-        #              OR LEFT TO BE CAUGHT IN PROCESSING OF inputs DICT FURTHER ON
-        # Categorize violations and assign corresponing error message
         bad_specs =[]
-        for _, _, _, spec, value, source in specs:
-            if spec_in_comp(spec):
-                roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
-                assert NodeRole.SAMPLE not in roles, f"PROGRAM ERROR: SAMPLE Node found in list of illegal specs"
-                # BREADCRUMB: MOVE THIS TO Autodiff OVERRIDE?
-                if NodeRole.OUTPUT in roles:
-                    # This is possible only if Constructor of subclass has a **targets** argument
-                    # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
-                    assert not constructor_has_target_specs, \
-                        f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
-                    error_message = "OUTPUT Node that is not a SAMPLE"
-                elif NodeRole.INPUT in roles:
-                    assert NodeRole.TARGET not in roles, \
-                        f"PROGRAM ERROR: TARGET Node found in list of illegal target specs for Composition"
-                    error_message = "INPUT Node that is not a TARGET Node"
-                elif NodeRole.INTERNAL in roles:
-                    error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
-                elif not isinstance(spec, OutputPort):
-                    error_message = f"{spec.componentType}"
-                else:
-                    assert False, f"PROGRAM ERROR: unaccounted for type of bad target specification"
-                spec_ref = spec.full_name
+        for _, sample_spec, _, target_spec, value, source in specs:
+
+            assert not (sample_spec and target_spec), \
+                (f"PROGRAM ERROR: sample_spec and target_spec both should not both be specified "
+                 f"in entry of **targets** for learn()")
+            if sample_spec:
+                spec = sample_spec
+                sample_or_target_str = "SAMPLE"
+            elif target_spec:
+                spec = target_spec
+                sample_or_target_str = "TARGET"
             else:
-                # Not in Composition
-                if isinstance(spec, (Port, ProcessingMechanism_Base)):
-                    error_message = f"not in '{self.name}'"
-                    spec_ref = spec.full_name
+                # For entries in **targets** of learn(), the key of the targets dict must be either the SAMPLE or TARGET
+                assert False, (f"PROGRAM ERROR: sample_spec and target_spec both "
+                               f"unexpectedly specified in entry of **targets** for learn()")
+
+            if spec_in_comp(spec):
+                spec_ref = spec.full_name
+                if isinstance(spec, (OutputPort, ProcessingMechanism_Base, Composition)):
+                    roles = self.get_roles_by_node(spec_as_mech(spec), scope=ALL)
+                    if not ((sample_spec and NodeRole.SAMPLE in roles)
+                            or ((target_spec and NodeRole.TARGET in roles))):
+                        # spec is a Node or OutputPort that is not a SAMPLE or TARGET
+                        if NodeRole.SINGLETON in roles:
+                            # SAMPLE_TARGET TEST: ERROR 2.5 -- DONE: √
+                            # assert False, "ERROR 2.5 INPUT NOT A TARGET"
+                            error_message = "SINGLETON Node that is neither a SAMPLE nor a TARGET Node"
+                        elif NodeRole.INPUT in roles:
+                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
+                            # assert False, "ERROR 3 INPUT NOT A TARGET"
+                            error_message = "INPUT Node that is not a TARGET Node"
+                        elif NodeRole.OUTPUT in roles:
+                            # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():
+                            # # This is possible only if Constructor of subclass has specifications in its **targets** argument
+                            # # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
+                            # assert not (hasattr(self, TARGETS) and self.targets), \
+                            #     f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
+                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: X
+                            assert False, "ERROR 4 OUTPUT BUT NOT SAMPLE"
+                            error_message = "OUTPUT Node that is not a SAMPLE"
+                        elif NodeRole.INTERNAL in roles:
+                            # SAMPLE_TARGET TEST: ERROR 5 -- DONE: √
+                            # assert False, "ERROR 5 INTERNAL NODE"
+                            error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
+                        else:
+                            # Final checks for possible internal errors
+                            key_str = f"key for entry in **targets** of learn() should be "
+                            assert NodeRole.SAMPLE in roles or NodeRole.TARGET in roles, \
+                                f"PROGRAM ERROR: {key_str} SAMPLE or TARGET Node by now; has these roles: {roles}"
+                            assert False, "PROGRAM ERROR: Node specified with unexpected profile of NodeRoles"
+
+                    elif not is_numeric(value):
+                        # spec is a Node or OutputPort that has a bad value;
+                        #   handle this last in this block, so status as SAMPLE or TARGET has already been validated
+                        # SAMPLE_TARGET TEST: ERROR 6 -- DONE:
+                        # assert False, "ERROR 6 MUST BE NUMERIC"
+                        val_str = value.full_name if hasattr(value, 'full_name') else str(value)
+                        error_message = f"specification of {sample_or_target_str}'s value ({val_str}) must be numeric"
+
                 else:
-                    spec_ref = spec
-                    error_message = f"not a recognizable target or sample specification'"
+                    # spec is Component in Composition that is not a Node or OutputPort
+                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: X
+                    assert False, "ERROR 7 NOT A MECH OR OUTPUTPORT"
+                    error_message = \
+                        (f"specification of {sample_or_target_str} must be a Mechanism or the OutputPort of one")
+
+            else:
+                if isinstance(spec, Component):
+                    spec_ref = spec.full_name
+                    if isinstance(spec, (OutputPort, ProcessingMechanism_Base)):
+                        # spec is not a Mechanism or OutputPort not in the Composition
+                        # SAMPLE_TARGET TEST: ERROR 8 -- DONE: √
+                        # assert False, "ERROR 8 NOT IN"
+                        error_message = f"not in '{self.name}'"
+                    else:
+                        # SAMPLE_TARGET TEST: ERROR 9 -- DONE: √
+                        # assert False, "ERROR 8 MUST BE MECH OR OUTPUTPORT IN COMP"
+                        error_message = (f"specification of SAMPLE (or TARGET) must be a Mechanism "
+                                         f"or the OutputPort of one in '{self.name}'")
+                else:
+                    # SAMPLE_TARGET TEST: ERROR 10 -- DONE: √
+                    # assert False, "ERROR 10 UNRECOGNIZED"
+                    spec_ref = str(spec)
+                    error_message = f"unrecognized specification for SAMPLE (or TARGET)"
+
             bad_specs.append((spec_ref, value, source, error_message))
-        sources = sorted(set([spec.source for spec in specs]))
+
+        sources = sorted(set([f"'{s.source}'" for s in specs]))
 
         if bad_specs:
             many_specs = len(bad_specs) > 1
@@ -11216,16 +11285,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If built-in function (e.g., 'input'), get name
                 if isinstance(entry, types.BuiltinFunctionType):
                     name = entry.__name__
-                # # MODIFIED TEACHER_TARGET OLD:
-                # # If Port, get name as Mechanism[Port]
-                # elif isinstance(entry, Port):
-                #     name = entry.full_name
-                # else:
-                #     name = entry.name
-                # MODIFIED TEACHER_TARGET NEW:
                 else:
                     name = entry.full_name
-                # MODIFIED TEACHER_TARGET END
                 bad_entry_names[i] = f"'{name}'"
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
                            f"'{self.name}' that are not a Mechanism, Composition, or an InputPort of one: "
@@ -11234,23 +11295,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate that keys for inputs all are or belong to *INPUT Nodes* of Composition (at any level of nesting)
         all_allowable_entries = self._get_input_receivers(type=PORT) \
                                 + self._get_input_receivers(type=NODE, comp_as_node=ALL)
-        # # MODIFIED TEACHER_TARGET OLD:
-        # bad_entries = [key for key in inputs if key not in all_allowable_entries]
-        # if bad_entries:
-            # bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
-            # raise RunError(f"The following items specified in the 'inputs' arg of the run() method for '{self.name}' "
-            #                f"are not INPUT Nodes of that Composition (nor InputPorts of them): "
-            #                f"{', '.join(bad_entry_names)}.")
-        # MODIFIED TEACHER_TARGET NEW:  BREADCRUMB MODIFY BELOW LIKE THIS
+
         bad_entries = [f"'{key.full_name}'" for key in inputs if key not in all_allowable_entries]
         if bad_entries:
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for '{self.name}' "
                            f"are not INPUT Nodes of that Composition (nor InputPorts of them): "
                            f"{', '.join(bad_entries)}.")
-        # MODIFIED TEACHER_TARGET END
 
         # Validate that an InputPort *and* its owner are not *both* specified in inputs
-        bad_entries = [key.full_name for key in inputs if isinstance(key, InputPort) and key.owner in inputs]
+        bad_entries = [f"'{key.full_name}'" for key in inputs if isinstance(key, InputPort) and key.owner in inputs]
         if bad_entries:
             raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
                            f"following InputPorts *and* the Mechanisms to which they belong; only one or the other "
@@ -11258,7 +11311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Validate that an InputPort of an input_CIM *and* its Composition are not *both* specified in inputs
         #    (this is unlikely but possible)
-        bad_entries = [key.full_name for key in inputs
+        bad_entries = [f"'{key.full_name}'" for key in inputs
                        if (isinstance(key, InputPort)
                            and isinstance(key.owner, CompositionInterfaceMechanism)
                            and key.owner.composition in inputs)]
@@ -11275,24 +11328,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, Composition) and node in inputs:
                     all_nested_items = node._get_input_receivers(type=PORT) \
                                        + node._get_input_receivers(type=NODE, comp_as_node=ALL)
-                    bad_entries.extend([(entry, node) for entry in inputs if entry in all_nested_items])
+                    bad_entries.extend([f"'{node.name}': '{entry.full_name}'" for entry in inputs
+                                       if entry in all_nested_items])
                     bad_entries.extend(check_for_items_in_nested_comp(node))
             return bad_entries
         bad_entries = check_for_items_in_nested_comp(self)
         if bad_entries:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # bad_entry_names = [(key.full_name, comp.name) if isinstance(key, Port) else (key.name, comp.name)
-            #                    for key,comp in bad_entries]
-            # raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
-            #                f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
-            #                # f"{', '.join(bad_entry_names)}.")
-            #                f"{bad_entry_names}.")
-            # MODIFIED TEACHER_TARGET NEW:
-            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
-                           f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
-                           # f"{', '.join(bad_entry_names)}.")
-                           f"{[(key.full_name, comp.name) for key, comp in bad_entries]}.")
-            # MODIFIED TEACHER_TARGET END
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications for "
+                           f"InputPorts or Mechanisms nested in the following Compositions: {', '.join(bad_entries)}")
 
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
@@ -11338,15 +11381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 num_input_ports = len(node_spec.external_input_shape) if is_mech else None
                 # is_input_port = not num_input_ports
 
-                # MODIFIED TEACHER_TARGET OLD:
-                # if is_mech:
-                #     node_name = node_spec.name
-                # else:
-                #     node_name = node_spec.full_name
-                # error_base_msg = f"Input for '{node_name}' of '{self.name}' ({_inputs}) "
-                # MODIFIED TEACHER_TARGET NEW:
                 error_base_msg = f"Input for '{node_spec.full_name}' of '{self.name}' ({_inputs}) "
-                # MODIFIED TEACHER_TARGET END
 
                 if isinstance(_inputs, dict):
                     # entry is dict for a nested Composition, which will be handled recursively
@@ -12556,8 +12591,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             targets: {`Node <Composition_Nodes>`:list }
                 a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition
                 that receives target values as input to the Composition for training `learning pathways
-                <Composition_Learning_Pathway>`. The key of each entry can be either the `OUTPUT_MECHANISM
-                <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>`) of a `learning pathway
+                <Composition_Learning_Pathway>`. The key of each entry can be either the `SAMPLE_MECHANISM
+                <SAMPLE_MECHANISM>` (i.e., the final `Node <Composition_Nodes>`) of a `learning pathway
                 <Composition_Learning_Components>` in the Composition, or the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for that pathway, and the value is the target value used for that
                 Node on each trial (see `target inputs <Composition_Target_Inputs>` for additional details concerning
@@ -14455,14 +14490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def target_port_to_sample_port_map(self):
-    # MODIFIED TEACHER_TARGET OLD:
-    #     assert (len(set(self.sample_port_to_target_port_map.keys())) ==
-    #             len(set(self.sample_port_to_target_port_map.values()))), \
-    #         "PROGRAM ERROR: sample_port_to_target_port_map must be one-to-one to invert"
-    #     return {v: k for k,v in self.sample_port_to_target_port_map.items()}
-    # MODIFIED TEACHER_TARGET NEW:
         return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
-    # MODIFIED TEACHER_TARGET END
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region

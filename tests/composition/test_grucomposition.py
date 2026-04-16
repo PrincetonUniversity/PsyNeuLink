@@ -113,7 +113,6 @@ if torch_available:
             with pytest.raises(pnl.CompositionError) as error_text:
                 gru.add_projection(pnl.MappingProjection())
             assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
-
         @pytest.mark.parametrize('execution_type', [
             'run',
             'learn'

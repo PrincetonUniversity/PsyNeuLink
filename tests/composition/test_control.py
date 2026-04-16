@@ -1145,7 +1145,6 @@ class TestControlMechanisms:
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
-        # TEACHER_TARGET BREADCRUMB: UNCOMMENT ONCE DONE DEBUGGING
         # STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
         ('single_none_spec', pnl.SHADOW_INPUTS, None, None),
         ('single_shadow_spec', pnl.SHADOW_INPUTS, None, None),

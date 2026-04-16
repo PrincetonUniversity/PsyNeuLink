@@ -823,13 +823,17 @@ class TestStructural:
                    'contains input specifications of different lengths ({2, 10})' in error_text
             assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
-        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
-                                 ids=["Composition", "Autodiff"])
         @pytest.mark.parametrize("target_specs", ['target_mechs_in_inputs',
                                                   'output_mechs_in_targets',
                                                   'target_mechs_in_targets',
                                                   'target_mechs_in_inputs_and_targets',
-                                                  'too_many_targets'])
+                                                  'single_conflicting_target_value',
+                                                  'multiple_conflicting_target_values',
+                                                  'too_many_targets'
+                                  ])
+        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                                 ids=["Composition",
+                                      "Autodiff"])
         @pytest.mark.pytorch
         def test_map_external_target_values_to_target_nodes(self, target_specs, comp_type):
             """Test for checks on the validity of the inputs and targets args of the learn() method"""
@@ -875,15 +879,7 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
-                warning1 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
-                            "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
-                            "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
-                            "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
-                            "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
-                            "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
-                            "the need to specify the 'targets' arg.")
-
-                warning2 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
+                warning1 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
                             "(listed below) in the 'inputs' and 'targets' arguments of the learn() method of "
                             "'TEST COMP'. While this is technically OK, it might be easier and clearer to use the "
                             "SAMPLE Nodes to which they correspond as the keys of the dict, obviating the need to "
@@ -894,15 +890,41 @@ class TestStructural:
                             "Redundant specifications for: 'TARGET for OUTPUT MECH A' in 'inputs' and 'targets' args; "
                             "'TARGET for OUTPUT MECH B' in 'inputs' and 'targets' args.")
 
+                # warning2 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
+                #             "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
+                #             "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
+                #             "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
+                #             "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
+                #             "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
+                #             "the need to specify the 'targets' arg.")
+
                 inputs_arg.update(target_mechs)
-                with pytest.warns(UserWarning, match=re.escape(warning1)), \
-                        pytest.warns(UserWarning, match=re.escape(warning2)):
+                # with pytest.warns(UserWarning, match=re.escape(warning1)), \
+                #         pytest.warns(UserWarning, match=re.escape(warning2)):
+                with pytest.warns(UserWarning, match=re.escape(warning1)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
+
+            elif target_specs == 'single_conflicting_target_value':
+                # Test error for conflicting values assigned to a single target
+                node_str = 'SAMPLE' if isinstance(comp, pnl.AutodiffComposition) else 'OUTPUT'
+                error = (f"The learn() method of 'TEST COMP' can't be executed because there are conflicting "
+                         f"specifications for the target values assigned to one of its {node_str} Nodes: "
+                         f"'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in 'targets', "
+                         f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                with pytest.raises(CompositionError, match=re.escape(error)):
+                    comp.learn(inputs=inputs_arg,
+                               targets={comp.nodes['OUTPUT MECH A']: [[1]],
+                                        comp.nodes['OUTPUT MECH A'].output_port: [[2]],
+                                        comp.nodes['OUTPUT MECH B']: [[3]]},
+                               execution_mode=execution_mode)
+
+            elif target_specs == 'multiple_conflicting_target_values':
+                pass
 
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg
                 error = ("The learn() method of 'TEST COMP' can't be executed because there is the following illegal "
-                         "specification in its targets argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
+                         "specification in its 'targets' argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
                          "not a TARGET Node.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
@@ -910,6 +932,461 @@ class TestStructural:
                                         comp.nodes[1]: [[1]],
                                         comp.nodes[2]: [[2]]},
                                execution_mode=execution_mode)
+
+
+        params = []
+        for comp_type in [
+            "comp",
+            "autodiff"]:
+            for arg_type in [
+                "learn",
+                "constructor",
+                "learn_and_constructor",
+            ]:
+                for bad_spec_type in [
+                    "not_in_comp",
+                    "proj",
+                    "num",
+                    "extra",
+                ]:
+                    for sample_or_target_spec in [
+                        "sample",
+                        "target"
+                    ]:
+                        marks = []
+                        if comp_type == "comp" and arg_type in {"constructor", "learn_and_constructor"}:
+                            marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
+                        elif arg_type == "constructor" and bad_spec_type == "extra":
+                            # not relevant to autodiff constructor **targets**, as it can contain any number of specs
+                            marks.append(pytest.mark.skip(reason="Skipping constructor extra cases"))
+                        # elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj"}:
+                        elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj", "num"}:
+                            # Bad specs will raise error in constructor, which are tested elsewhere
+                            marks.append(pytest.mark.skip(reason="Skipping constructor not_in_comp cases"))
+                        elif bad_spec_type in {"extra", "num"} and sample_or_target_spec == "target":
+                            # No need to test extra twice
+                            marks.append(pytest.mark.skip(reason="Skipping autodiff unnecessary 'extra' cases"))
+                        params.append(pytest.param(comp_type,
+                                                   arg_type,
+                                                   bad_spec_type,
+                                                   sample_or_target_spec,
+                                                   marks=marks))
+        @pytest.mark.pytorch
+        @pytest.mark.parametrize("comp_type, arg_type, bad_spec_type, sample_or_target_spec", params)
+        def test_bad_target_values(self, comp_type, arg_type, bad_spec_type, sample_or_target_spec):
+
+            input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
+            output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
+            output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
+            output_mech_C = pnl.ProcessingMechanism(name='OUTPUT MECH C')
+            output_mech_D = pnl.ProcessingMechanism(name='OUTPUT MECH D')
+            proj_in_to_A = pnl.MappingProjection(input_mech, output_mech_A)
+
+            learn_targets_arg = {}
+            constructor_targets_arg = {}
+
+            if comp_type == 'autodiff':
+                # Construct AutodiffComposition
+                # Assign **targets** arg for constructor if specified (and possibly learn());
+                #     need to do this *before* construction to be able to use **target** args in constructor
+                if arg_type in {'constructor', 'learn_and_constructor'}:
+                    if bad_spec_type == 'not_in_comp':
+                        if sample_or_target_spec == 'sample':
+                            constructor_targets_arg = {output_mech_A: output_mech_C,
+                                                       output_mech_D: output_mech_C}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT IN COMP")
+                        elif sample_or_target_spec == 'target':
+                            constructor_targets_arg = {output_mech_A: output_mech_D,
+                                                       output_mech_B: output_mech_C}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT IN COMP")
+                        else:
+                            assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                    elif bad_spec_type == 'proj':
+                        if sample_or_target_spec == 'sample':
+                            constructor_targets_arg = {proj_in_to_A: output_mech_C,
+                                                       output_mech_B: output_mech_C}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
+                        elif sample_or_target_spec == 'target':
+                            constructor_targets_arg = {output_mech_A: output_mech_C,
+                                                       output_mech_B: proj_in_to_A}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
+                        else:
+                            assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                    elif bad_spec_type == 'num':
+                        if sample_or_target_spec == 'sample':
+                            constructor_targets_arg = {output_mech_A: output_mech_C,
+                                                       1: output_mech_C}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
+                        elif sample_or_target_spec == 'target':
+                            constructor_targets_arg = {output_mech_A: [[1]],
+                                                       output_mech_B: output_mech_C}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
+                        else:
+                            assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                    elif bad_spec_type == 'extra':
+                        # extra spec can't be implemented in constructor, since it allows any node to be
+                        # a SAMPLE or TARGET, so, implemented here in learn() (and only for "learn_and_constructor"
+                        if sample_or_target_spec == 'sample' and arg_type == 'learn_and_constructor':
+                            constructor_targets_arg = {output_mech_A: output_mech_C,
+                                                       output_mech_B: pnl.TARGET}
+                            error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
+                        else:
+                            assert False, f"should have skipped this test"
+                    else:
+                        assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
+                                       f"should have skipped this test")
+
+                comp = pnl.AutodiffComposition([[input_mech, proj_in_to_A, output_mech_A],
+                                                [input_mech, output_mech_B],
+                                                output_mech_C],
+                                               targets=constructor_targets_arg,
+                                               name='TEST COMP')
+                execution_mode = pnl.ExecutionMode.PyTorch
+
+            elif comp_type == 'comp':
+                # Construct Composition
+                comp = Composition(name='TEST COMP')
+                comp.add_backpropagation_learning_pathway([input_mech, proj_in_to_A, output_mech_A])
+                comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
+                comp.add_linear_processing_pathway([output_mech_C, output_mech_A])
+                execution_mode = pnl.ExecutionMode.Python
+            else:
+                assert False, "comp_type must be 'comp' or 'autodiff'"
+
+            # MODIFIED TEACHER_TARGET OLD:
+            # if 'constructor' in arg_type:
+            # MODIFIED TEACHER_TARGET NEW:
+            if arg_type == 'constructor':
+            # MODIFIED TEACHER_TARGET END
+                with pytest.raises(CompositionError, match=re.escape(error_msg)):
+                    # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate methods
+                    comp.get_target_nodes()
+                return
+            else:
+                targets = comp.get_target_nodes()
+
+            # Assign **targets** arg for learn() if specified;
+            #     need to do this *after* construction to be able to use TARGET Nodes as specs
+            if arg_type in {'learn', 'learn_and_constructor'}:
+                if bad_spec_type == 'not_in_comp':
+                    if sample_or_target_spec == 'sample':
+                        learn_targets_arg = {output_mech_A: [[1]],
+                                             output_mech_D: [[2]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     f"following illegal specification in its 'targets' argument: 'OUTPUT MECH D' "
+                                     f"(in 'targets' dict): not in 'TEST COMP'.")
+                    elif sample_or_target_spec == 'target': # This actually test for non-numeric value specs
+                        learn_targets_arg = {output_mech_A: output_mech_D,
+                                             output_mech_B: output_mech_C}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are the "
+                                     f"following illegal specifications in its 'targets' arguments: "
+                                     f"'OUTPUT MECH A' (in 'targets' dict): "
+                                     f"specification of SAMPLE's value (OUTPUT MECH D) must be numeric; "
+                                     f"'OUTPUT MECH B' (in 'targets' dict): "
+                                     f"specification of SAMPLE's value (OUTPUT MECH C) must be numeric.")
+                    else:
+                        assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                elif bad_spec_type == 'proj':
+                    if sample_or_target_spec == 'sample':
+                        learn_targets_arg = {proj_in_to_A: [[1]],
+                                             output_mech_B: [[2]]}
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: "
+                                     "'MappingProjection from INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]' "
+                                     "(in 'targets' dict): specification of SAMPLE (or TARGET) must be a Mechanism "
+                                     "or the OutputPort of one in 'TEST COMP'.")
+                    elif sample_or_target_spec == 'target':
+                        learn_targets_arg = {output_mech_A: [[1]],
+                                             output_mech_B: proj_in_to_A}
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: 'OUTPUT MECH B' "
+                                     "(in 'targets' dict): specification of SAMPLE's value (MappingProjection from "
+                                     "INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]) must be numeric.")
+                    else:
+                        assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                elif bad_spec_type == 'num':
+                    if sample_or_target_spec == 'sample':
+                        learn_targets_arg = {3: [[1]],
+                                             output_mech_B: [[2]]}
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                     "following illegal specification in its 'targets' argument: "
+                                     "'3' (in 'targets' dict): unrecognized specification for SAMPLE (or TARGET).")
+                    else:
+                        assert False, f"Should have skipped 'num' + 'target' for learn()."
+                elif bad_spec_type == 'extra':
+                    if sample_or_target_spec == 'sample':
+                        if arg_type == 'learn':
+                            learn_targets_arg = {output_mech_A: [[1]],
+                                                 output_mech_B: [[2]],
+                                                 output_mech_C: [[3]]}
+                            if comp_type == 'comp':
+                                error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                             "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
+                                             "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
+                            else:
+                                error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                             "following illegal specification in its 'targets' argument: "
+                                             "'OUTPUT MECH C' (in 'targets' dict): "
+                                             "SINGLETON Node that is neither a SAMPLE nor a TARGET Node.")
+                        else:
+                            learn_targets_arg = {output_mech_B: [[2]],
+                                                 output_mech_C: [[3]]}
+                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because "
+                                         "the following specification in its 'targets' argument conflicts with those"
+                                         " in the 'targets' argument of its constructor: 'OUTPUT MECH C': "
+                                         "does not correspond to any SAMPLE specified in the constructor.")
+                    elif sample_or_target_spec == 'target':
+                        # learn_targets_arg = {output_mech_A: [[1]],
+                        #                      output_mech_B: proj_in_to_A}
+                        # error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
+                        assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
+                                       f"should have skipped this test")
+                    else:
+                        assert False, f"sample_or_target_spec must be 'sample' or 'target'."
+                else:
+                    assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
+                                   f"should have skipped this test")
+
+            # # Specify learn() paired with constructor (above)
+            # #   need to do this after construction, so that TARGET Nodes can be used as specs
+            # elif arg_type == 'learn_and_constructor':
+            #     # TEACHER_TARGET BREADCRUMB: FLESH OUT LATER
+            #     return
+
+            inputs_arg = {'INPUT MECH': [[1]]}
+            with pytest.raises(CompositionError, match=re.escape(error_msg)):
+                comp.learn(inputs=inputs_arg, targets=learn_targets_arg, execution_mode=execution_mode)
+
+
+        params = []
+        for comp_type in [
+            # TEACHER_TARGET BREADCRUMB: ADD TEST FOR WARNING ON REDUNDANT BUT NOT CONFLICTING SPECS
+            "comp",
+            "autodiff"
+        ]:
+            for arg_type in [
+                "learn",
+                "constructor",
+                "learn_and_constructor"
+            ]:
+                for conflict_type in [
+                    "conflict_in_learn",
+                    "conflict_in_constructor",
+                    "conflict_in_learn_and_constructor",
+                    "conflict_in_learn_vs_constructor"
+                ]:
+                    for learn_sample_spec in [
+                        "sample",
+                        "target"
+                    ]:
+                        marks = []
+                        if comp_type == "comp" and ("constructor" in arg_type or "constructor" in conflict_type):
+                            marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
+                        elif (comp_type == "autodiff"
+                              and ((arg_type == 'learn'
+                                    and (conflict_type != 'conflict_in_learn'))
+                                   or (arg_type == 'constructor'
+                                       and ("conflict_in_learn" in conflict_type
+                                            or conflict_type == "conflict_in_learn_and_constructor"
+                                            or learn_sample_spec == "sample")))):
+                            marks.append(pytest.mark.skip(reason="Skipping autodiff + learn + conflict_in_constructor"))
+                        params.append(pytest.param(comp_type,
+                                                   arg_type,
+                                                   conflict_type,
+                                                   learn_sample_spec,
+                                                   marks=marks))
+        @pytest.mark.pytorch
+        @pytest.mark.parametrize("comp_type,arg_type,conflict_type,learn_sample_spec", params)
+        def test_conflicting_target_values(self, comp_type, arg_type, conflict_type, learn_sample_spec):
+
+            input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
+            output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
+            output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
+            input_mech_C = pnl.ProcessingMechanism(name='INPUT MECH C')
+            input_mech_D = pnl.ProcessingMechanism(name='INPUT MECH D')
+
+            learn_targets_arg = {}
+            constructor_targets_arg = {}
+
+            if comp_type == 'autodiff':
+                # Construct AutodiffComposition
+                # Assign **targets** arg for constructor if specified (and possibly learn());
+                #     need to do this *before* construction to be able to use **target** args in constructor
+                if arg_type == 'constructor':
+                    if conflict_type == 'conflict_in_constructor':
+                        constructor_targets_arg = {output_mech_A: input_mech_C,
+                                                   output_mech_A.output_port: input_mech_D,
+                                                   output_mech_B: input_mech_C}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
+                                     f"'OUTPUT MECH A[OutputPort-0]'=INPUT MECH D "
+                                     f"in AutodiffComposition constructor 'targets'.")
+                    else:
+                        # Should skip these for conflict_type:
+                        #  conflict_in_learn
+                        #  conflict_in_learn_and_constructor
+                        #  conflict_in_learn_vs_constructor
+                        assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{conflict_type}-{learn_sample_spec} "
+                                       f"should have skipped this test")
+
+                elif arg_type == 'learn_and_constructor':
+                    if conflict_type == 'conflict_in_learn': # conflict is in learn()
+                        constructor_targets_arg = {output_mech_A: pnl.TARGET,
+                                                   output_mech_B: pnl.TARGET}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
+                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
+                                     f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                    elif conflict_type == 'conflict_in_constructor':
+                        constructor_targets_arg = {output_mech_A: input_mech_C,  # conflict is here (in constructor)
+                                                   output_mech_A.output_port: pnl.TARGET,
+                                                   output_mech_B: pnl.TARGET}
+                        error_msg = ("The learn() method of 'TEST COMP' can't be executed because there are "
+                                     "conflicting specifications for the target values assigned to one of its "
+                                     "SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     "'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
+                                     "'OUTPUT MECH A[OutputPort-0]'=TARGET in AutodiffComposition constructor 'targets'.")
+                    elif conflict_type == 'conflict_in_learn_and_constructor':  # conflict is here and in constructor
+                        constructor_targets_arg = {output_mech_A: input_mech_C,
+                                                   output_mech_A.output_port: pnl.TARGET,
+                                                   output_mech_B: pnl.TARGET}
+                        error_msg = \
+                            (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                             f"conflicting specifications for the target values assigned to one of its "
+                             f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                             f"'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
+                             f"'OUTPUT MECH A[OutputPort-0]'=TARGET in AutodiffComposition constructor 'targets'.")
+                    elif conflict_type == 'conflict_in_learn_vs_constructor':  # conflict is here and in constructor
+                        if learn_sample_spec == 'sample':
+                            constructor_targets_arg = {output_mech_A: input_mech_C,
+                                                       output_mech_B: input_mech_C.output_port}
+                            error_msg = \
+                                (f"The learn() method of 'TEST COMP' can't be executed because the following "
+                                 f"specifications in its 'targets' argument conflict with ones in the "
+                                 f"'targets' argument of its constructor: for SAMPLE 'OUTPUT MECH A[OutputPort-0]' "
+                                 f"(specified as 'OUTPUT MECH A'): a source for its target value ('INPUT MECH C') "
+                                 f"is specified in the 'targets' argument of the constructor, so there should be "
+                                 f"no specification for it in learn(); for SAMPLE 'OUTPUT MECH B[OutputPort-0]' "
+                                 f"(specified as 'OUTPUT MECH B'): a source for its target value "
+                                 f"('INPUT MECH C[OutputPort-0]') is specified in the 'targets' argument of the "
+                                 f"constructor, so there should be no specification for it in learn().")
+                        elif learn_sample_spec == 'target':
+                            constructor_targets_arg = {output_mech_A: input_mech_C,
+                                                       output_mech_B.output_port: pnl.TARGET}
+                            error_msg = \
+                                (f"The learn() method of 'TEST COMP' can't be executed because the following "
+                                 f"specifications in its 'AutodiffComposition constructor 'targets'' and 'targets' "
+                                 f"arguments conflict with ones in the 'targets' argument of its constructor: "
+                                 f"for SAMPLE 'OUTPUT MECH A[OutputPort-0]' (specified as 'OUTPUT MECH A'): "
+                                 f"a source for its target value ('INPUT MECH C') is specified in the 'targets' "
+                                 f"argument of the constructor, so there should be no specification for it in learn(); "
+                                 f"for SAMPLE 'OUTPUT MECH B[OutputPort-0]': the sample is assigned 'TARGET' as its "
+                                 f"value in the 'targets' argument of the constructor, so it should also be specified "
+                                 f"in the 'targets' argument of the learn() method, and assigned a numeric array "
+                                 f"(i.e., the value(s) to be used for training on each trial).")
+                        else:
+                            assert False, "learn_sample_spec must be 'sample' or 'target'."
+
+                comp = pnl.AutodiffComposition([[input_mech,{output_mech_A, output_mech_B}],
+                                                input_mech_C,
+                                                input_mech_D],
+                                               targets=constructor_targets_arg,
+                                               name='TEST COMP')
+                execution_mode = pnl.ExecutionMode.PyTorch
+            elif comp_type == 'comp':
+                # Construct Composition
+                comp = Composition(name='TEST COMP')
+                comp.add_backpropagation_learning_pathway([input_mech, output_mech_A])
+                comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
+                execution_mode = pnl.ExecutionMode.Python
+            else:
+                assert False, "comp_type must be 'comp' or 'autodiff'"
+
+            # if 'constructor' in arg_type and 'target' in learn_sample_spec:
+            if conflict_type == "conflict_in_constructor" or conflict_type == "conflict_in_learn_and_constructor":
+                with pytest.raises(CompositionError, match=re.escape(error_msg)):
+                    # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate methods
+                    comp.get_target_nodes()
+                return
+            else:
+                targets = comp.get_target_nodes()
+
+            # Assign **targets** arg for learn() if specified;
+            #     need to do this *after* construction to be able to use TARGET Nodes as specs
+            if arg_type == 'learn':
+                node_type = "OUTPUT" if comp_type == 'comp' else "SAMPLE"
+                if conflict_type == 'conflict_in_learn':
+                    if learn_sample_spec == 'sample':
+                        learn_targets_arg = {output_mech_A: [[1]],
+                                             output_mech_A.output_port: [[2]],
+                                             output_mech_B: [[3]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"{node_type} Nodes: 'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in "
+                                     f"'targets', 'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                    else:
+                        learn_targets_arg = {output_mech_A: [[1]],
+                                             targets[0].output_port: [[2]],
+                                             targets[1]: [[3]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"{node_type} Nodes: "
+                                     f"'OUTPUT MECH A[OutputPort-0]': "
+                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
+                                     f"'TARGET for OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                else:
+                    # Should skip these for conflict_type:
+                    #  conflict_in_constructor
+                    #  conflict_in_learn_and_constructor
+                    #  conflict_in_learn_vs_constructor
+                    assert False, "TEST ERROR: should have skipped this test"
+
+            # Specify learn() paired with constructor (above)
+            #   need to do after construction, so that TARGET Nodes can be used as specs
+            elif arg_type == 'learn_and_constructor':
+                if conflict_type == 'conflict_in_learn':
+                    if learn_sample_spec == 'target':
+                        learn_targets_arg = {output_mech_A: [[1]],  # conflict is here (in learn())
+                                             targets[0].output_port: [[2]],
+                                             output_mech_B: [[3]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
+                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
+                                     f"'TARGET for OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                    else:
+                        learn_targets_arg = {output_mech_A: [[1]],  # conflict is here (in learn()
+                                             output_mech_A.output_port: [[2]],
+                                             output_mech_B: [[3]]}
+                        error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
+                                     f"conflicting specifications for the target values assigned to one of its "
+                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
+                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
+                                     f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
+                elif (conflict_type == 'conflict_in_constructor' or
+                      conflict_type == 'conflict_in_learn_and_constructor'):
+                    assert False, "should not make it here, as conflict in constructor should be caught first, above"
+                elif conflict_type == 'conflict_in_learn_vs_constructor':
+                    if learn_sample_spec == 'sample':
+                        learn_targets_arg = {output_mech_A: [[1]],  # conflict is both here and in constructor
+                                             output_mech_B: [[3]]}
+                        assert error_msg  # Should be under comp_type == 'autodiff' above
+                    elif learn_sample_spec == 'target':
+                        learn_targets_arg = {output_mech_A: [[1]]}  # missing spec for output_mech_B: TARGET
+                        assert error_msg  # Should be under comp_type == 'autodiff' above
+                    else:
+                        assert False, "learn_sample_spec must be one of 'sample', 'target'"
+
+            inputs_arg = {'INPUT MECH': [[1]]}
+            with pytest.raises(CompositionError, match=re.escape(error_msg)):
+                comp.learn(inputs=inputs_arg, targets=learn_targets_arg, execution_mode=execution_mode)
+                assert True
 
 
     class TestLearningPathwayMethods:

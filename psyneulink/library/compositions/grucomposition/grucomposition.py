@@ -1115,6 +1115,11 @@ class GRUComposition(AutodiffComposition):
         setattr(self.gru_mech, PROXY_FOR, self.output_node)
         setattr(self.output_node, PROXY_FOR, self.gru_mech)
 
+    def _is_in_composition(self, component, nested=True):
+        if component is self.gru_mech:
+            return True
+        return super()._is_in_composition(component, nested)
+
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
         wts_iu = self.wts_iu.parameters.matrix.get(context)
@@ -1185,13 +1190,6 @@ class GRUComposition(AutodiffComposition):
             raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
-    # # # # MODIFIED TEACHER_TARGET NEW:
-    # def _get_nested_nodes(self, *args, **kwargs):
-    #     nested_nodes = super()._get_nested_nodes(*args, **kwargs)
-    #     if self.gru_mech:
-    #         nested_nodes.append((self.gru_mech, self))
-    #     return nested_nodes
-    # # MODIFIED TEACHER_TARGET END
     def add_projection(self, *args, **kwargs):
         """Override if called from command line to disallow modification of GRUComposition"""
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
@@ -1273,6 +1271,7 @@ class GRUComposition(AutodiffComposition):
     def _identify_output_nodes(self, context):
         return [self.gru_mech, self.output_node]
 
+    # TEACHER_TARGET BREADCRUMB: STILL NEEDED?
     def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
         """Override to remove
         """
