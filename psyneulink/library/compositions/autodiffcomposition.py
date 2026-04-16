@@ -2968,9 +2968,13 @@ class AutodiffComposition(Composition):
             for spec, illegal_spec, err_msg in bad_specs:
                 sources.append(spec.source)
                 if spec.sample_spec:
-                    sample_spec_str = (f" (specified as '{spec.sample_spec.full_name}')"
-                                       if spec.sample_spec.full_name != spec.sample_port.full_name  else "")
-                    all_bad_specs_str.append(f"for SAMPLE '{spec.sample_port.full_name}'{sample_spec_str}: {err_msg}")
+                    if spec.sample_port:
+                        sample_spec_str = (f" (specified as '{spec.sample_spec.full_name}')"
+                                           if spec.sample_spec.full_name !=spec.sample_port.full_name else "")
+                        sample_str = f"'{spec.sample_port.full_name}'{sample_spec_str}"
+                    else:
+                        sample_str = f"'{spec.sample_spec.full_name}'"
+                    all_bad_specs_str.append(f"for SAMPLE {sample_str}: {err_msg}")
                 else:
                     all_bad_specs_str.append(f"{illegal_spec}: {err_msg}")
 
@@ -2983,8 +2987,9 @@ class AutodiffComposition(Composition):
                 source_str = (' and '.join([f"'{str}'" for str in sources]) if len(sources)==2
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
-            one_or_ones = "those" if extra_specs else("one" if len(constructor_specs) == 1 else "ones")
-
+            one_or_ones = ("those" if extra_specs
+                           else("one" if (len(constructor_specs) == 1 or len(bad_specs) == 1)
+                                else "ones"))
             raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
                                            f"the following specification{_['s']} in its {source_str} "
                                            f"conflict{_['not_s']} with {one_or_ones} in the 'targets' argument "

@@ -519,37 +519,37 @@ class TestAutodiffTargetSpecs:
              "('pway3_mech_T') is specified in the 'targets' argument of the constructor, so there should be no "
              "specification for it in learn().", AutodiffCompositionError),
         13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
-             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: 'pway2_mech_B': "
-             "does not correspond to any sample specified in the constructor.", CompositionError),
+             "its 'targets' argument conflicts with those in the 'targets' argument of its constructor: "
+             "for SAMPLE 'pway2_mech_B': does not correspond to any SAMPLE specified in the constructor.",
+             CompositionError),
     }
     test_args_for_target_spec_errors = [
         #     method         num_specs          spec_type                errant_spec        err_msg_num
         #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra    in/mid/out/all/bad    #
-        # TEACHER_TARGET BREADCRUMB:  UNCOMMENT WHEN DONE DEBUGGING
-        # (     'cnstr',           0,              'node',                    'in',           0), # not learnable
-        # (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
-        # (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
-        # (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
-        # (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
-        # (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
-        # (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
-        # (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
-        # (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
-        # (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
-        # (      'lrn'  ,         -1,               'node',                   None,           6), # missing target spec
-        # (      'lrn'  ,         -1,              'TARGET',                  None,           6), # missing TARGET spec
-        # (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
-        # (      'lrn',           -1,               'bad',                    None,           7), # missing TARGET spec
-        # (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
-        # (      'lrn',            0,              'TARGET',                 'all',         8.5), # 2 bad + 1 not in comp
-        # (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
+        (     'cnstr',           0,              'node',                    'in',           0), # not learnable
+        (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
+        (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
+        (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
+        (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
+        (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
+        (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
+        (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
+        (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
+        (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
+        (      'lrn'  ,         -1,               'node',                   None,           6), # missing target spec
+        (      'lrn'  ,         -1,              'TARGET',                  None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'bad',                    None,           7), # missing TARGET spec
+        (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
+        (      'lrn',            0,              'TARGET',                 'all',         8.5), # 2 bad + 1 not in comp
+        (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
         (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
         # # TEACHER_TARGET BREADCRUMB:  ??CHANGE errant_spec FOR THE FOLLOWING TO None??
-        # (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
-        # (      'lrn',           +1,               'bad',                   'mid',        11.5), # 1 bad + 1 extra
+        (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
+        (      'lrn',           +1,               'bad',                   'mid',        11.5), # 1 bad + 1 extra
         (     'both',            0,               'both',                  'mid',          12), # cstr + same lrn
         (     'both',           +1,               'both',                  'mid',          13), # cstr + diff lrn
     ]

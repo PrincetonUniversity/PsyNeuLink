@@ -10035,7 +10035,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # BREADCRUMB: AT PRESENT, NodeRole.TARGET IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET Nodes,
                 #             WHEN IT CAN BE ASSIGNED TO INTERNAL NODES, THEN HANLDE AS WITH SAMPLE ABOVE
                 input_item_role = TARGET
-            assert input_item_role in {SAMPLE, TARGET}, f"PROGRAM ERROR: input_item should be SAMPLE OR TARGET by now"
+            # # MODIFIED TEACHER_TARGET OLD:
+            # assert input_item_role in {SAMPLE, TARGET}, f"PROGRAM ERROR: input_item should be SAMPLE OR TARGET by now"
+            # MODIFIED TEACHER_TARGET NEW:
+            else:
+                illegal_specs.append(SampleTargetSpec(None, input_item, None, None, value, name))
+                continue
+            # MODIFIED TEACHER_TARGET END
+
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
                                        if input_item in pair), None)
@@ -10414,8 +10421,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # assert False, "ERROR 2.5 INPUT NOT A TARGET"
                             error_message = "SINGLETON Node that is neither a SAMPLE nor a TARGET Node"
                         elif NodeRole.INPUT in roles:
-                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: X
-                            assert False, "ERROR 3 INPUT NOT A TARGET"
+                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
+                            # assert False, "ERROR 3 INPUT NOT A TARGET"
                             error_message = "INPUT Node that is not a TARGET Node"
                         elif NodeRole.OUTPUT in roles:
                             # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():

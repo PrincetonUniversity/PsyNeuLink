@@ -1082,15 +1082,15 @@ class TestStructural:
                             learn_targets_arg = {output_mech_A: [[1]],
                                                  output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
-                            # TEACHER_TARGET BREADCRUMB BELOW
-                            # BREADCRUMB: FOR comp:
-                            error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
-                                         "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
-                                         "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
-                            # BREADCRUMB: FOR autodiff:
-                            # error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
-                            #              "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
-                            #              "(in 'targets' dict): OUTPUT Node that is not a SAMPLE Node.")
+                            if comp_type == 'comp':
+                                error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                             "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
+                                             "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
+                            else:
+                                error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
+                                             "following illegal specification in its 'targets' argument: "
+                                             "'OUTPUT MECH C' (in 'targets' dict): "
+                                             "SINGLETON Node that is neither a SAMPLE nor a TARGET Node.")
                         else:
                             learn_targets_arg = {output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
