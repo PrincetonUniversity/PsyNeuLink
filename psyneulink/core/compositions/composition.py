@@ -4799,11 +4799,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if component in self._all_nodes:
             return True
         if nested:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # return any(component in comp._all_nodes for comp in self._get_nested_compositions())
-            # MODIFIED TEACHER_TARGET NEW:
             return any(comp._is_in_composition(component, nested) for comp in self._get_nested_compositions())
-            # MODIFIED TEACHER_TARGET END
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -10013,20 +10009,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for input_item, value in specs_dict.items():
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
-            # MODIFIED TEACHER_TARGET OLD:
-            # try:
-            #     # input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
-            #     nodes_in_comp[(spec_as_mech(input_item)
-            #                    if isinstance(input_item, (OutputPort, ProcessingMechanism_Base))
-            #                    else input_item) if isinstance(input_item, Component) else str(input_item)]
-            # except (ValueError, TypeError):
-            #     illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
-            #     continue
-            # MODIFIED TEACHER_TARGET NEW:
             if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
                 illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
                 continue
-            # MODIFIED TEACHER_TARGET END
 
             # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
             #                            **roles** ARG, AND IF None, USE NodeRole.OUTPUT IN CONDITIONAL FOR SAMPLE HERE
@@ -10045,14 +10030,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # BREADCRUMB: AT PRESENT, NodeRole.TARGET IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET Nodes,
                 #             WHEN IT CAN BE ASSIGNED TO INTERNAL NODES, THEN HANLDE AS WITH SAMPLE ABOVE
                 input_item_role = TARGET
-            # # MODIFIED TEACHER_TARGET OLD:
-            # assert input_item_role in {SAMPLE, TARGET}, f"PROGRAM ERROR: input_item should be SAMPLE OR TARGET by now"
-            # MODIFIED TEACHER_TARGET NEW:
             else:
                 illegal_specs.append(SampleTargetSpec(None, input_item, None, None, value, name))
                 continue
-            # MODIFIED TEACHER_TARGET END
-
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
                                        if input_item in pair), None)
@@ -10063,20 +10043,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            # if role == NodeRole.SAMPLE):
                            if role in {NodeRole.SAMPLE, NodeRole.TARGET}):
                     # Node is not SAMPLE or TARGET
-                    # # MODIFIED TEACHER_TARGET OLD:
-                    # illegal_specs.append(SampleTargetSpec(sample_target_pair.sample_port, input_item,
-                    #                                       sample_target_pair.target_port, None,
-                    #                                       value, name))
-                    # MODIFIED TEACHER_TARGET NEW:  BREADCRUMB: IS BELOW STILL NEEDED?  REVERT TO OLD ABOVE?
                     input_item_port = spec_as_port(input_item)
                     illegal_specs.append(SampleTargetSpec(input_item_port if input_item_role == SAMPLE else None,
                                                           input_item if input_item_role == SAMPLE else None,
                                                           input_item_port if input_item_role == TARGET else None,
                                                           input_item if input_item_role == TARGET else None,
                                                           value, name))
-                    # MODIFIED TEACHER_TARGET END
                     continue
-                # MODIFIED TEACHER_TARGET END
 
                 sample_port = sample_target_pair.sample_port
                 target_port = sample_target_pair.target_port
@@ -10136,18 +10109,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES
-        # MODIFIED TEACHER_TARGET OLD:
-        # target_node_specs_and_samples = sorted(set([(f"'{spec.sample_spec.name}'", f"'{spec.sample_port.owner.name}'")
-        #                                             for spec in self._sample_target_specs
-        #                                             if spec.sample_spec in self.get_nodes_by_role(NodeRole.TARGET)]))
-        # MODIFIED TEACHER_TARGET NEW:
         target_node_specs_and_samples = []
         for s in self._sample_target_specs:
             spec = s.sample_spec if s.sample_spec else s.target_spec
             if spec in self.get_nodes_by_role(NodeRole.TARGET):
                 target_node_specs_and_samples.append((f"'{spec.name}'", f"'{s.sample_port.owner.name}'"))
         target_node_specs_and_samples = sorted(set(target_node_specs_and_samples))
-        # MODIFIED TEACHER_TARGET END
         if target_node_specs_and_samples:
             target_nodes_str = ', '.join([spec[0] for spec in target_node_specs_and_samples])
             sample_nodes_str = ', '.join([spec[1] for spec in target_node_specs_and_samples])
@@ -10425,7 +10392,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if not ((sample_spec and NodeRole.SAMPLE in roles)
                             or ((target_spec and NodeRole.TARGET in roles))):
                         # spec is a Node or OutputPort that is not a SAMPLE or TARGET
-                        # TEACHER_TARGET BREADCRUMB: ADD CONDITION FOR SINGLETON OR INCLUDED W/ INPUT:
                         if NodeRole.SINGLETON in roles:
                             # SAMPLE_TARGET TEST: ERROR 2.5 -- DONE: √
                             # assert False, "ERROR 2.5 INPUT NOT A TARGET"
@@ -10491,7 +10457,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_specs.append((spec_ref, value, source, error_message))
 
         sources = sorted(set([f"'{s.source}'" for s in specs]))
-        # MODIFIED TEACHER_TARGET END
 
         if bad_specs:
             many_specs = len(bad_specs) > 1

@@ -1908,12 +1908,10 @@ class AutodiffComposition(Composition):
                     # target is TARGET keyword, so attempt to construct TARGET Node
                     if sample_port in self.sample_port_to_target_port_map:
                         # TARGET Node has already been constructed for specified sample Port,
-                        # # MODIFIED TEACHER_TARGET NEW:
-                        #    so register for later error reporting, and then move on
+                        #   so register for later error reporting, and then move on
                         self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                                           target_port, target_spec, None,
                                                                           CONSTRUCTOR_TARGETS_ARGS))
-                        # MODIFIED TEACHER_TARGET END
                         continue
                     sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
                                    else sample_port.owner.name)
@@ -2043,20 +2041,11 @@ class AutodiffComposition(Composition):
                     (f"PROGRAM ERROR: tuple in self.targets either doesn't have two items "
                      f"or one is not a Mechanisms: {loss_mech_spec}; "
                      f"should have been caught in targets Parameter validation.")
-                # MODIFIED TEACHER_TARGET OLD:
-                # spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-                # nodes_in_comp = self._get_all_nodes()
-                # if spec_as_mech(loss_mech_spec[0]) not in nodes_in_comp:
-                #     bad_samples.append(loss_mech_spec[0])
-                # if spec_as_mech(loss_mech_spec[1]) not in nodes_in_comp:
-                #     bad_targets.append(loss_mech_spec[1])
-                # MODIFIED TEACHER_TARGET NEW:
                 sample, target = loss_mech_spec
                 if sample not in [s.sample_port for s in self._sample_target_pairs]:
                     bad_samples.append(sample)
                 if target not in [s.target_port for s in self._sample_target_pairs]:
                     bad_targets.append(target)
-                # MODIFIED TEACHER_TARGET END
 
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
@@ -3018,10 +3007,6 @@ class AutodiffComposition(Composition):
              same SAMPLE Nodes specified in constructor using different references (e.g., mech vs. mech.output_port)
              SAMPLE in constructor vs. learn() (e.g., Node in constructor vs. numeric value in learn())
         """
-        # TEACHER_TARGET BREADCRUMB: ??HAS THE FOLLOWING BEEN DONE, OR IS THIS JUST DUPLICATIVE OF Composition VERSION:
-        # BREADCRUMB: FROM Composition --- NEED TO ADAPT TO DEAL WITH CONFLICTS BETWEEN VALUES FROM LEARN (NUMBERS)
-        #              AND VALUES FROM CONSTRUCTOR (NODES OR "TARGET")
-
         # Error for redundant specs with different values
         # -----------------------------------------------
         # prepare strings for warning message
