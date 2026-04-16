@@ -930,9 +930,9 @@ class TestStructural:
                             # No need to test extra twice
                             marks.append(pytest.mark.skip(reason="Skipping autodiff unnecessary 'extra' cases"))
                         params.append(pytest.param(comp_type,
-                                                   arg_type, 
-                                                   bad_spec_type, 
-                                                   sample_or_target_spec, 
+                                                   arg_type,
+                                                   bad_spec_type,
+                                                   sample_or_target_spec,
                                                    marks=marks))
         @pytest.mark.pytorch
         @pytest.mark.parametrize("comp_type, arg_type, bad_spec_type, sample_or_target_spec", params)
@@ -951,7 +951,7 @@ class TestStructural:
             if comp_type == 'autodiff':
                 # Construct AutodiffComposition
                 # Assign **targets** arg for constructor if specified (and possibly learn());
-                #     need to do this *before* construction to be able to use **target** args in constructor 
+                #     need to do this *before* construction to be able to use **target** args in constructor
                 if arg_type in {'constructor', 'learn_and_constructor'}:
                     if bad_spec_type == 'not_in_comp':
                         if sample_or_target_spec == 'sample':
@@ -1153,10 +1153,10 @@ class TestStructural:
                                             or conflict_type == "conflict_in_learn_and_constructor"
                                             or learn_sample_spec == "sample")))):
                             marks.append(pytest.mark.skip(reason="Skipping autodiff + learn + conflict_in_constructor"))
-                        params.append(pytest.param(comp_type, 
-                                                   arg_type, 
-                                                   conflict_type, 
-                                                   learn_sample_spec, 
+                        params.append(pytest.param(comp_type,
+                                                   arg_type,
+                                                   conflict_type,
+                                                   learn_sample_spec,
                                                    marks=marks))
         @pytest.mark.pytorch
         @pytest.mark.parametrize("comp_type,arg_type,conflict_type,learn_sample_spec", params)
@@ -1174,7 +1174,7 @@ class TestStructural:
             if comp_type == 'autodiff':
                 # Construct AutodiffComposition
                 # Assign **targets** arg for constructor if specified (and possibly learn());
-                #     need to do this *before* construction to be able to use **target** args in constructor 
+                #     need to do this *before* construction to be able to use **target** args in constructor
                 if arg_type == 'constructor':
                     if conflict_type == 'conflict_in_constructor':
                         constructor_targets_arg = {output_mech_A: input_mech_C,
@@ -1278,7 +1278,7 @@ class TestStructural:
             else:
                 targets = comp.get_target_nodes()
 
-            # Assign **targets** arg for learn() if specified; 
+            # Assign **targets** arg for learn() if specified;
             #     need to do this *after* construction to be able to use TARGET Nodes as specs
             if arg_type == 'learn':
                 node_type = "OUTPUT" if comp_type == 'comp' else "SAMPLE"

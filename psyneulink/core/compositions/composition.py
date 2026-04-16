@@ -10023,7 +10023,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether input_item is SAMPLE or TARGET to accurately identify it in_sample_target_pairs below
             #   (since it might also appear in another spec
             #     e.g., test_bad_target_values, autodiff-learn_and_constructor-extra-sample)
-            roles = self.get_roles_by_node(spec_as_mech(input_item))
+            roles = self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
             # MODIFIED TEACHER_TARGET OLD:
             # if NodeRole.OUTPUT in roles:
             # MODIFIED TEACHER_TARGET NEW:
