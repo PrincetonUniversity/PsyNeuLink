@@ -4799,7 +4799,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if component in self._all_nodes:
             return True
         if nested:
-            return any(component in comp._all_nodes for comp in self._get_nested_compositions())
+            # # MODIFIED TEACHER_TARGET OLD:
+            # return any(component in comp._all_nodes for comp in self._get_nested_compositions())
+            # MODIFIED TEACHER_TARGET NEW:
+            return any(comp._is_in_composition(component, nested) for comp in self._get_nested_compositions())
+            # MODIFIED TEACHER_TARGET END
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -10009,14 +10013,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for input_item, value in specs_dict.items():
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
-            try:
-                # input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
-                nodes_in_comp[(spec_as_mech(input_item)
-                               if isinstance(input_item, (OutputPort, ProcessingMechanism_Base))
-                               else input_item) if isinstance(input_item, Component) else str(input_item)]
-            except (ValueError, TypeError):
+            # MODIFIED TEACHER_TARGET OLD:
+            # try:
+            #     # input_item = nodes_in_comp[input_item if isinstance(input_item, Component) else str(input_item)]
+            #     nodes_in_comp[(spec_as_mech(input_item)
+            #                    if isinstance(input_item, (OutputPort, ProcessingMechanism_Base))
+            #                    else input_item) if isinstance(input_item, Component) else str(input_item)]
+            # except (ValueError, TypeError):
+            #     illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
+            #     continue
+            # MODIFIED TEACHER_TARGET NEW:
+            if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
                 illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
                 continue
+            # MODIFIED TEACHER_TARGET END
 
             # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
             #                            **roles** ARG, AND IF None, USE NodeRole.OUTPUT IN CONDITIONAL FOR SAMPLE HERE

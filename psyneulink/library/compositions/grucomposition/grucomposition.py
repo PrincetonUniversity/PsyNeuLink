@@ -1106,6 +1106,11 @@ class GRUComposition(AutodiffComposition):
         setattr(self.gru_mech, PROXY_FOR, self.output_node)
         setattr(self.output_node, PROXY_FOR, self.gru_mech)
 
+    def _is_in_composition(self, component, nested=True):
+        if component is self.gru_mech:
+            return True
+        return super()._is_in_composition(component, nested)
+
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
         wts_iu = self.wts_iu.parameters.matrix.get(context)
