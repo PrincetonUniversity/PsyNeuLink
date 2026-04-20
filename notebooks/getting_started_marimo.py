@@ -8,7 +8,7 @@
 
 import marimo
 
-__generated_with = "0.13.0"
+__generated_with = "0.23.2"
 app = marimo.App()
 
 
@@ -42,14 +42,12 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
-        ## Create a simple Transfer Mechanism
+    mo.md("""
+    ## Create a simple Transfer Mechanism
 
-        A `TransferMechanism` is one of the most basic components in PsyNeuLink.
-        It takes an input, applies a function, and produces an output.
-        """
-    )
+    A `TransferMechanism` is one of the most basic components in PsyNeuLink.
+    It takes an input, applies a function, and produces an output.
+    """)
     return
 
 
@@ -66,13 +64,11 @@ def _(pnl):
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
-        ## Build a simple Composition
+    mo.md("""
+    ## Build a simple Composition
 
-        A `Composition` connects mechanisms together into a runnable model.
-        """
-    )
+    A `Composition` connects mechanisms together into a runnable model.
+    """)
     return
 
 
@@ -94,15 +90,28 @@ def _(pnl):
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
-        ## Next Steps
+    mo.md("""
+    ## Next Steps
 
-        - See `tutorial/PsyNeuLink Tutorial.ipynb` for a comprehensive walkthrough
-        - Browse the [PsyNeuLink documentation](https://princetonuniversity.github.io/PsyNeuLink/)
-        - Add your own notebooks to this `notebooks/` directory
-        """
-    )
+    - See `tutorial/PsyNeuLink Tutorial.ipynb` for a comprehensive walkthrough
+    - Browse the [PsyNeuLink documentation](https://princetonuniversity.github.io/PsyNeuLink/)
+    - Add your own notebooks to this `notebooks/` directory
+    """)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
     return
 
 
