@@ -85,23 +85,29 @@ source .venv/bin/activate
 python -c "import psyneulink as pnl; print(pnl.__version__)"
 ```
 
-## Running the Tutorial
+## Working with Notebooks
 
-```bash
-make tutorial
-```
+### Your own notebooks
 
-This installs tutorial dependencies (if needed) and opens the
-PsyNeuLink tutorial notebook directly in your browser.
-
-To launch a general Jupyter notebook server instead:
+The `notebooks/` directory is the place to put your own notebooks.
+A starter notebook (`Getting Started.ipynb`) is included to verify your
+installation and demonstrate basic usage.
 
 ```bash
 make jupyter
 ```
 
-Then navigate to `tutorial/PsyNeuLink Tutorial.ipynb` in the Jupyter
-file browser.
+This opens Jupyter in the `notebooks/` directory. Click
+**Getting Started.ipynb** to begin, or create a new notebook from there.
+
+### The official tutorial
+
+```bash
+make tutorial
+```
+
+This opens the PsyNeuLink tutorial notebook (`tutorial/PsyNeuLink Tutorial.ipynb`)
+directly in your browser.
 
 ## Running Tests
 

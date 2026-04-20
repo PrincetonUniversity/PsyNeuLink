@@ -50,8 +50,8 @@ install-all: venv ## Install PsyNeuLink with all optional dependencies
 
 # --- Running ---
 
-jupyter: install-tutorial ## Launch Jupyter notebook server
-	$(JUPYTER) notebook
+jupyter: install-tutorial ## Launch Jupyter notebook server (opens notebooks/ dir)
+	$(JUPYTER) notebook --notebook-dir=notebooks
 
 tutorial: install-tutorial ## Open the PsyNeuLink tutorial notebook
 	$(JUPYTER) notebook "tutorial/PsyNeuLink Tutorial.ipynb"
