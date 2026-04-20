@@ -10959,7 +10959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_message = f"not in '{self.name}'"
                     else:
                         # SAMPLE_TARGET TEST: ERROR 9 -- DONE: √
-                        # assert False, "ERROR 8 MUST BE MECH OR OUTPUTPORT IN COMP"
+                        # assert False, "ERROR 9 MUST BE MECH OR OUTPUTPORT IN COMP"
                         error_message = (f"specification of SAMPLE (or TARGET) must be a Mechanism "
                                          f"or the OutputPort of one in '{self.name}'")
                 else:

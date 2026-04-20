@@ -934,12 +934,13 @@ class TestStructural:
                                execution_mode=execution_mode)
 
 
+        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
         params = []
         for comp_type in [
-            "comp",
+            # "comp",
             "autodiff"]:
             for arg_type in [
-                "learn",
+                # "learn",
                 "constructor",
                 "learn_and_constructor",
             ]:
@@ -951,18 +952,18 @@ class TestStructural:
                 ]:
                     for sample_or_target_spec in [
                         "sample",
-                        "target"
+                        # "target"
                     ]:
                         marks = []
                         if comp_type == "comp" and arg_type in {"constructor", "learn_and_constructor"}:
                             marks.append(pytest.mark.skip(reason="Skipping comp + constructor cases"))
                         elif arg_type == "constructor" and bad_spec_type == "extra":
                             # not relevant to autodiff constructor **targets**, as it can contain any number of specs
-                            marks.append(pytest.mark.skip(reason="Skipping constructor extra cases"))
+                            marks.append(pytest.mark.skip(reason="Skipping constructor 'extra' cases"))
                         # elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj"}:
-                        elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj", "num"}:
-                            # Bad specs will raise error in constructor, which are tested elsewhere
-                            marks.append(pytest.mark.skip(reason="Skipping constructor not_in_comp cases"))
+                        # elif "constructor" in arg_type and bad_spec_type in {"not_in_comp", "proj", "num"}:
+                        #     # Bad specs will raise error in constructor, which are tested elsewhere
+                        #     marks.append(pytest.mark.skip(reason="Skipping constructor 'not_in_comp' cases"))
                         elif bad_spec_type in {"extra", "num"} and sample_or_target_spec == "target":
                             # No need to test extra twice
                             marks.append(pytest.mark.skip(reason="Skipping autodiff unnecessary 'extra' cases"))
@@ -994,10 +995,12 @@ class TestStructural:
                         if sample_or_target_spec == 'sample':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
                                                        output_mech_D: output_mech_C}
+                            # assert False, "DIDN'T GET TO autodiff-constructor-not_in_comp-sample"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT IN COMP")
                         elif sample_or_target_spec == 'target':
                             constructor_targets_arg = {output_mech_A: output_mech_D,
                                                        output_mech_B: output_mech_C}
+                            assert False, "DIDN'T GET TO autodiff-constructor-not_in_comp-target"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT IN COMP")
                         else:
                             assert False, f"sample_or_target_spec must be 'sample' or 'target'."
@@ -1005,10 +1008,12 @@ class TestStructural:
                         if sample_or_target_spec == 'sample':
                             constructor_targets_arg = {proj_in_to_A: output_mech_C,
                                                        output_mech_B: output_mech_C}
+                            assert False, "DIDN'T GET TO autodiff-constructor-proj-sample"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
                         elif sample_or_target_spec == 'target':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
                                                        output_mech_B: proj_in_to_A}
+                            assert False, "DIDN'T GET TO autodiff-constructor-proj-target"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
                         else:
                             assert False, f"sample_or_target_spec must be 'sample' or 'target'."
@@ -1016,10 +1021,12 @@ class TestStructural:
                         if sample_or_target_spec == 'sample':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
                                                        1: output_mech_C}
+                            assert False, "DIDN'T GET TO autodiff-constructor-num-sample"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
                         elif sample_or_target_spec == 'target':
                             constructor_targets_arg = {output_mech_A: [[1]],
                                                        output_mech_B: output_mech_C}
+                            assert False, "DIDN'T GET TO autodiff-constructor-num-target"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR TARGET NOT Mechanism OR OutputPort")
                         else:
                             assert False, f"sample_or_target_spec must be 'sample' or 'target'."
@@ -1029,6 +1036,8 @@ class TestStructural:
                         if sample_or_target_spec == 'sample' and arg_type == 'learn_and_constructor':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
                                                        output_mech_B: pnl.TARGET}
+                            # TEACHER_TARGET BREADCRUMB: WHAT IS HAPPENING HERE:
+                            # assert False, "DIDN'T GET TO autodiff-constructor-extra-sample"
                             error_msg = (f"ERROR MESSAGE CONSTRUCTOR SAMPLE NOT Mechanism OR OutputPort")
                         else:
                             assert False, f"should have skipped this test"
@@ -1053,11 +1062,7 @@ class TestStructural:
             else:
                 assert False, "comp_type must be 'comp' or 'autodiff'"
 
-            # MODIFIED TEACHER_TARGET OLD:
-            # if 'constructor' in arg_type:
-            # MODIFIED TEACHER_TARGET NEW:
             if arg_type == 'constructor':
-            # MODIFIED TEACHER_TARGET END
                 with pytest.raises(CompositionError, match=re.escape(error_msg)):
                     # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate methods
                     comp.get_target_nodes()
