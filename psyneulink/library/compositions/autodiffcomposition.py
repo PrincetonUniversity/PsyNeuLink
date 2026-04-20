@@ -1855,8 +1855,6 @@ class AutodiffComposition(Composition):
             is_are = 'are' if plural else 'is'
             do_does = 'do' if plural else 'does'
             a_not_a = '' if plural else 'a '
-            # SAMPLE_TARGET TEST: ERROR 11 -- DONE: √
-            # assert False, "ERROR 11 NO LOSS MECH"
             raise AutodiffCompositionError(f"The following Projection{s} {is_are} learnable but {is_are} in {a_not_a}"
                                            f"pathway{s} that {do_does} not end in a LossMechanism, and therefore "
                                            f"cannot be learned: {', '.join(bad_projs_names)}. Reminder: when *any* "
@@ -2872,8 +2870,6 @@ class AutodiffComposition(Composition):
         if not_in_comp:
             not_in_comp = sorted(set(not_in_comp))
             _ = get_inflections(len(not_in_comp) > 1)
-            # SAMPLE_TARGET TEST: ERROR 12 -- DONE: √
-            # assert False, "ERROR 12 CONSTRUCTOR ARG(S) NOT IN COMP"
             raise CompositionError(f"The following specification{_['s']} in the 'targets' argument of the "
                                    f"constructor for '{self.name}' {_['are_is']} not in the Composition or any "
                                    f"nested within it: {', '.join(not_in_comp)}.")
@@ -2935,20 +2931,17 @@ class AutodiffComposition(Composition):
                 if target == TARGET:
                     # sample should be specified in learn() with numeric value
                     if not is_numeric(learn_value):
-                        # SAMPLE_TARGET TEST: ERROR 13 -- DONE: X
-                        assert False, "ERROR 13 TARGET IN CONSTRUCTOR SO MUST BE NUMERIC"
-                        # expected numeric spec for target in learn(), but got non-numeric
-                        bad_specs.append((learn_spec, learn_target,
-                                          f"'TARGET' is assigned as its value in the 'targets' argument of the "
-                                          f"constructor, specifying that its actual value is provided as an input "
-                                          f"in learn(), so the entry for it in the 'targets' argument of learn() "
-                                          f"must be a numeric value (rather than '{learn_spec.target_value})'"))
+                        assert False, "PROGRAM ERROR: should have been handled in call to super() above"
+                        # # expected numeric spec for target in learn(), but got non-numeric
+                        # bad_specs.append((learn_spec, learn_target,
+                        #                   f"'TARGET' is assigned as its value in the 'targets' argument of the "
+                        #                   f"constructor, specifying that its actual value is provided as an input "
+                        #                   f"in learn(), so the entry for it in the 'targets' argument of learn() "
+                        #                   f"must be a numeric value (rather than '{learn_spec.target_value})'"))
                 else:
                     # sample should NOT be specified in learn()
                     # Got unexpected specification for target in learn() (speccified as Node in constructor)
                     # # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
-                    # SAMPLE_TARGET TEST: ERROR 14 -- DONE: √
-                    # assert False, "ERROR 14 ALREADY SPECIFIED SOURCE IN CONSTRUCTOR"
                     source_str = next(s for s in self._sample_target_specs if s.sample_port == sample
                                       and s.source == CONSTRUCTOR_TARGETS_ARGS).target_spec.full_name
                     bad_specs.append((learn_spec, learn_target,
@@ -2959,8 +2952,6 @@ class AutodiffComposition(Composition):
             else:
                 # sample NOT specified in learn()
                 if target == TARGET:
-                    # SAMPLE_TARGET TEST: ERROR 15 -- DONE: √
-                    # assert False, "ERROR 15 MISSING NUMERIC SPEC IN LEARN"
                     # Missing numeric specification for target in learn() (specified as TARGET in constructor)
                     #  so use sample_spec from constructor
                     constructor_spec = next(s for s in self._sample_target_specs
@@ -3084,8 +3075,6 @@ class AutodiffComposition(Composition):
             node_s = 's' if many_outputs else ''
             # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
             # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-            # SAMPLE_TARGET TEST: ERROR 16 -- DONE: √
-            # assert False, "ERROR 16 CONFLICTING SPECS IN CONSTRUCTOR"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target values assigned to {one_of}its "
                                    f"SAMPLE Node{node_s}: {full_str}.")

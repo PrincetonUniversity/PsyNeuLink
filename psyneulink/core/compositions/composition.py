@@ -10751,8 +10751,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
             node_s = 's' if many_outputs else ''
             # TEACHER_TARGET BREADCRUMB: HANDLE OUTPUT (??RE: learn()??) IN OVERRIDE IN AutodiffComposition
-            # SAMPLE_TARGET TEST: ERROR 1 -- DONE: √
-            # assert False, "ERROR 1 CONFLICTING SPECS"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target values assigned to {one_of}its "
                                    f"OUTPUT Node{node_s}: {full_str}.")
@@ -10835,8 +10833,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             missing_specs_str = ', '.join(missing_spec_names)
             node_type = 'SAMPLE (OUTPUT)' if (len(self.get_nodes_by_role(NodeRole.SAMPLE))
                                               == len(self.get_nodes_by_role(NodeRole.SAMPLE))) else 'SAMPLE'
-            # SAMPLE_TARGET TEST: ERROR 2 -- DONE: √
-            # assert False, "ERROR 2 MISSING"
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
                                    f"it's 'targets' argument is missing {a}specification{s} for the following "
                                    f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
@@ -10907,12 +10903,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             or ((target_spec and NodeRole.TARGET in roles))):
                         # spec is a Node or OutputPort that is not a SAMPLE or TARGET
                         if NodeRole.SINGLETON in roles:
-                            # SAMPLE_TARGET TEST: ERROR 2.5 -- DONE: √
-                            # assert False, "ERROR 2.5 INPUT NOT A TARGET"
                             error_message = "SINGLETON Node that is neither a SAMPLE nor a TARGET Node"
                         elif NodeRole.INPUT in roles:
-                            # SAMPLE_TARGET TEST: ERROR 3 -- DONE: √
-                            # assert False, "ERROR 3 INPUT NOT A TARGET"
                             error_message = "INPUT Node that is not a TARGET Node"
                         elif NodeRole.OUTPUT in roles:
                             # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():
@@ -10924,8 +10916,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             assert False, "ERROR 4 OUTPUT BUT NOT SAMPLE"
                             error_message = "OUTPUT Node that is not a SAMPLE"
                         elif NodeRole.INTERNAL in roles:
-                            # SAMPLE_TARGET TEST: ERROR 5 -- DONE: √
-                            # assert False, "ERROR 5 INTERNAL NODE"
                             error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
                         else:
                             # Final checks for possible internal errors
@@ -10937,15 +10927,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     elif not is_numeric(value):
                         # spec is a Node or OutputPort that has a bad value;
                         #   handle this last in this block, so status as SAMPLE or TARGET has already been validated
-                        # SAMPLE_TARGET TEST: ERROR 6 -- DONE:
-                        # assert False, "ERROR 6 MUST BE NUMERIC"
                         val_str = value.full_name if hasattr(value, 'full_name') else str(value)
                         error_message = f"specification of {sample_or_target_str}'s value ({val_str}) must be numeric"
 
                 else:
                     # spec is Component in Composition that is not a Node or OutputPort
-                    # SAMPLE_TARGET TEST: ERROR 7 -- DONE: X
-                    assert False, "ERROR 7 NOT A MECH OR OUTPUTPORT"
+                    # IMPLEMENTATION NOTE: this is handled elsewhere in all tested cases, but left here jsut in case
                     error_message = \
                         (f"specification of {sample_or_target_str} must be a Mechanism or the OutputPort of one")
 
@@ -10954,17 +10941,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     spec_ref = spec.full_name
                     if isinstance(spec, (OutputPort, ProcessingMechanism_Base)):
                         # spec is not a Mechanism or OutputPort not in the Composition
-                        # SAMPLE_TARGET TEST: ERROR 8 -- DONE: √
-                        # assert False, "ERROR 8 NOT IN"
                         error_message = f"not in '{self.name}'"
                     else:
-                        # SAMPLE_TARGET TEST: ERROR 9 -- DONE: √
-                        # assert False, "ERROR 9 MUST BE MECH OR OUTPUTPORT IN COMP"
                         error_message = (f"specification of SAMPLE (or TARGET) must be a Mechanism "
                                          f"or the OutputPort of one in '{self.name}'")
                 else:
-                    # SAMPLE_TARGET TEST: ERROR 10 -- DONE: √
-                    # assert False, "ERROR 10 UNRECOGNIZED"
                     spec_ref = str(spec)
                     error_message = f"unrecognized specification for SAMPLE (or TARGET)"
 
