@@ -9,7 +9,7 @@ PYTHON_VENV := $(VENV_DIR)/bin/python
 JUPYTER := $(VENV_DIR)/bin/jupyter
 
 .PHONY: help venv install install-dev install-tutorial install-all \
-        jupyter test clean-venv clean info
+        jupyter marimo tutorial test clean-venv clean info
 
 help: ## Show this help message
 	@echo "PsyNeuLink Development Makefile"
@@ -52,6 +52,10 @@ install-all: venv ## Install PsyNeuLink with all optional dependencies
 
 jupyter: install-tutorial ## Launch Jupyter notebook server (opens notebooks/ dir)
 	$(JUPYTER) notebook --notebook-dir=notebooks
+
+marimo: venv ## Launch Marimo with the getting started notebook
+	$(PIP) install --quiet marimo
+	$(VENV_DIR)/bin/marimo edit notebooks/getting_started_marimo.py
 
 tutorial: install-tutorial ## Open the PsyNeuLink tutorial notebook
 	$(JUPYTER) notebook "tutorial/PsyNeuLink Tutorial.ipynb"

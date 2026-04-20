@@ -87,18 +87,59 @@ python -c "import psyneulink as pnl; print(pnl.__version__)"
 
 ## Working with Notebooks
 
-### Your own notebooks
+### Notebook directory layout
 
-The `notebooks/` directory is the place to put your own notebooks.
-A starter notebook (`Getting Started.ipynb`) is included to verify your
-installation and demonstrate basic usage.
+All user notebooks live in `notebooks/` at the repo root. We use a flat
+directory with naming conventions to distinguish notebook formats:
+
+| File                            | Format  | Use with                        |
+|---------------------------------|---------|---------------------------------|
+| `Getting Started.ipynb`         | Jupyter | `make jupyter` or Google Colab  |
+| `getting_started_marimo.py`     | Marimo  | `make marimo`                   |
+
+**Conventions:**
+- **Jupyter notebooks** (`.ipynb`) — standard format, also runs on Google
+  Colab. Include a commented-out `!pip install psyneulink` cell at the top
+  for Colab compatibility.
+- **Marimo notebooks** (`.py`, `_marimo` suffix) — reactive Python
+  notebooks stored as plain `.py` files. Use the `_marimo` suffix to
+  distinguish them from regular scripts.
+- **One `notebooks/` directory** — we keep all formats together rather
+  than splitting into subdirectories, since the file extensions and naming
+  conventions are sufficient to tell them apart.
+- **`tutorial/`** is reserved for the official upstream PsyNeuLink
+  tutorial. Put your own notebooks in `notebooks/`.
+
+### Jupyter (local)
 
 ```bash
 make jupyter
 ```
 
-This opens Jupyter in the `notebooks/` directory. Click
+Opens Jupyter in the `notebooks/` directory. Click
 **Getting Started.ipynb** to begin, or create a new notebook from there.
+
+### Google Colab
+
+The starter notebook includes an "Open in Colab" badge. Click it to
+launch directly in Google Colab. Uncomment the `!pip install psyneulink`
+cell to install PsyNeuLink in the Colab runtime.
+
+### Marimo
+
+```bash
+make marimo
+```
+
+Installs [Marimo](https://marimo.io) (if needed) and opens the getting
+started notebook in the Marimo editor. Marimo notebooks are reactive —
+cells automatically re-run when their dependencies change.
+
+### Binder
+
+The repo supports [Binder](https://mybinder.org) for running notebooks
+in the browser without any local setup. Click the Binder badge in the
+README to launch.
 
 ### The official tutorial
 
@@ -106,7 +147,7 @@ This opens Jupyter in the `notebooks/` directory. Click
 make tutorial
 ```
 
-This opens the PsyNeuLink tutorial notebook (`tutorial/PsyNeuLink Tutorial.ipynb`)
+Opens the PsyNeuLink tutorial notebook (`tutorial/PsyNeuLink Tutorial.ipynb`)
 directly in your browser.
 
 ## Running Tests
