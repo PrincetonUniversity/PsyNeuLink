@@ -1218,15 +1218,14 @@ class AutodiffComposition(Composition):
                     return (f"must be a (sample, target) tuple, LossMechanism, or a list containing these.")
                 if isinstance(item, tuple):
                     if not isinstance(item[0], (OutputPort, ProcessingMechanism_Base)):
-                        return (f"sample specification must be an OutputPort or ProcessingMechanism (got: {item[0]}).")
+                        return (f"sample specification '{item[0]}' must be an OutputPort or ProcessingMechanism.")
                     if isinstance(item[0], OutputPort) and not isinstance(item[0].owner, ProcessingMechanism_Base):
-                        return (f"sample specification must be a ProcessingMechanism or the OutputPort of one (got: {item[0]}).")
+                        return (f"sample specification '{item[0]}' must be the OutputPort of a ProcessingMechanism.")
                     if not isinstance(item[1], (OutputPort, ProcessingMechanism_Base, str)):
-                        return (f"target specificadtion must be an OutputPort, ProcessingMechanism "
-                                f"or the keyword '{TARGET}' (got: {item[1]}).")
+                        return (f"target specification '{item[1]}' must be an OutputPort, ProcessingMechanism "
+                                f"or the keyword '{TARGET}'.")
                     if isinstance(item[1], OutputPort) and not isinstance(item[1].owner, ProcessingMechanism_Base):
-                        return (f"target specification must be a ProcessingMechanism or the OutputPort of one "
-                                f"(got: {item[1]}).")
+                        return (f"target specification '{item[1]}' must be the OutPort of a ProcessingMechanism.")
                     if isinstance(item[1], str) and item[1] != TARGET:
                         return (f"the only keyword that can be used for the target specification is '{TARGET}' "
                                 f"(got: {item[1]}).")
@@ -1955,9 +1954,15 @@ class AutodiffComposition(Composition):
                                                               target_port, target_spec, None,
                                                               CONSTRUCTOR_TARGETS_ARGS))
 
-            self.require_node_roles(sample_mech, NodeRole.SAMPLE, context=context)
-
         self._validate_constructor_targets_specs()
+
+        # Assign NodeRoles to SAMPLEs BREADCRUMB: and TARGETs
+        for sample, _, target, _ in self._sample_target_pairs:
+            self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
+            # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET
+            # self.require_node_roles(target, NodeRole.TARGET, context=context)
+
+
 
     def _instantiate_default_targets(self, pathways: list, context, base_context) -> Tuple[List, List]:
         """Construct default TARGET Nodes (since none were specified in **targets** arg of constructor
@@ -2024,6 +2029,8 @@ class AutodiffComposition(Composition):
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
         self._sample_target_pairs.extend([SampleTargetPair(s.owner, s, t, t.output_port)
                                           for s, t in zip(output_ports_for_learning, target_mechs)])
+
+        self._validate_constructor_targets_specs()
 
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
