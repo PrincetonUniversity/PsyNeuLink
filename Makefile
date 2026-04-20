@@ -55,7 +55,7 @@ jupyter: install-tutorial ## Launch Jupyter notebook server (opens notebooks/ di
 
 marimo: install ## Launch Marimo with the getting started notebook
 	$(PIP) install --quiet marimo
-	$(VENV_DIR)/bin/marimo edit --sandbox=false notebooks/getting_started_marimo.py
+	$(VENV_DIR)/bin/marimo edit --no-sandbox notebooks/getting_started_marimo.py
 
 tutorial: install-tutorial ## Open the PsyNeuLink tutorial notebook
 	$(JUPYTER) notebook "tutorial/PsyNeuLink Tutorial.ipynb"
