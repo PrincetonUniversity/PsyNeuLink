@@ -2028,8 +2028,6 @@ class AutodiffComposition(Composition):
         self._sample_target_pairs.extend([SampleTargetPair(s.owner, s, t, t.output_port)
                                           for s, t in zip(output_ports_for_learning, target_mechs)])
 
-        self._validate_constructor_targets_specs()
-
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
 
@@ -2860,7 +2858,7 @@ class AutodiffComposition(Composition):
         # Check that all specified Nodes are in the Composition
         nodes_in_comp = self._get_all_nodes()
         not_in_comp = []
-        # Get entries in **targets** of constructor for Nodes that are not in the Composition
+        # Get (errant) entries in **targets** of constructor for Nodes that are not in the Composition
         # Note: ignore any specified LossMechanisms; they are added in _instantiate_loss_mechanisms()
         for _, sample, _, target, _, _ in self._sample_target_specs:
             if spec_as_mech(sample) not in nodes_in_comp and not isinstance(sample, LossMechanism):
@@ -2941,7 +2939,6 @@ class AutodiffComposition(Composition):
                 else:
                     # sample should NOT be specified in learn()
                     # Got unexpected specification for target in learn() (speccified as Node in constructor)
-                    # # X TEST DONE: EXPECTED NO SPECIFICATION BUT GOT ONE
                     source_str = next(s for s in self._sample_target_specs if s.sample_port == sample
                                       and s.source == CONSTRUCTOR_TARGETS_ARGS).target_spec.full_name
                     bad_specs.append((learn_spec, learn_target,
@@ -3073,8 +3070,6 @@ class AutodiffComposition(Composition):
             multiple = ' multiple' if many_conflicts else ""
             one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
             node_s = 's' if many_outputs else ''
-            # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
-            # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target values assigned to {one_of}its "
                                    f"SAMPLE Node{node_s}: {full_str}.")

@@ -10468,7 +10468,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # For inputs dict, if target_node is None then it is not a target spec, so ignore
                 allow_None_for_target=False
             else:
-                # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_constructor_targets_specs)
+                # Here, allow None,
+                #   since that needs to be picked up as a bad target_spec (in _validate_sample_target_specs_from_learn)
                 allow_None_for_target=True
             sample_target_specs, non_sample_target_specs = (
                 self._validate_sample_target_specs_from_learn(targets_dict, name, allow_None_for_target))
@@ -10532,16 +10533,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   (since it might also appear in another spec
             #     e.g., test_bad_target_values, autodiff-learn_and_constructor-extra-sample)
             roles = self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-            # MODIFIED TEACHER_TARGET OLD:
-            # if NodeRole.OUTPUT in roles:
-            # MODIFIED TEACHER_TARGET NEW:
             if NodeRole.SAMPLE in roles:
-            # MODIFIED TEACHER_TARGET END
                 # A SAMPLE Node does not have to be an OUTPUT Node for all subclasses (e.g., AutodiffComposition)
                 input_item_role = SAMPLE
             elif NodeRole.INPUT in roles:
                 # BREADCRUMB: AT PRESENT, NodeRole.TARGET IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET Nodes,
-                #             WHEN IT CAN BE ASSIGNED TO INTERNAL NODES, THEN HANLDE AS WITH SAMPLE ABOVE
+                #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
                 input_item_role = TARGET
             else:
                 illegal_specs.append(SampleTargetSpec(None, input_item, None, None, value, name))
@@ -10613,7 +10610,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Leave conflicting redundant target_specs; they will be removed in _canonicalize_target_specs()
         Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
         Ignore bad individual specs (i.e. ones for which target is None in self._sample_target_specs:
-            they will be handled in _validate_constructor_targets_specs()
+            they will be handled in _validate_sample_target_specs_from_learn()
         """
         spec_as_port = lambda spec : (spec if isinstance(spec, OutputPort)
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
@@ -10690,6 +10687,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return
 
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
+        #               or _validate_sample_target_specs_from_learn??
         plural = len(all_samples_str)
         s = 's' if plural else ''
         s_not = '' if plural else 's'
@@ -10745,6 +10743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if full_str:
             # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
+            #              or _validate_sample_target_specs_from_learn??
             many_conflicts = len(all_targets_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
             multiple = ' multiple' if many_conflicts else ""
@@ -10762,9 +10761,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            redundant specs are removed, so that there is only one specification for each TARGET Node;
            name (str) specifications for any Nodes are converted to the Node itself;
            key (<sample_port for TARGET>) == <bad spec>  for ones that are not a legal alias for a TARGET Node
-              (error will be raised in _validate_constructor_targets_specs()
+              (error will be raised in _validate_sample_target_specs_from_learn()
            value (<input specification>) == 'MISSING' if there is no specification for the TARGET in targets
-              (error will be raised in _validate_constructor_targets_specs()
+              (error will be raised in _validate_sample_target_specs_from_learn()
 
         Construct sample_ports_to_learn_specs: {<sample_port for TARGET>: <key used for it in targets>}
            used for identifying errant specs in error message(s) raised in _validate_targets_specs()
@@ -10775,9 +10774,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (Note: this is OK, because any redundant specs were determined to use the same value
               in _handle_redundant_sample_target_specs()
           - if a spec for the TARGET is not found in self._sample_target_specs, give it the value 'MISSING'
-              that will be used to generate an error in _validate_constructor_targets_specs()
+              that will be used to generate an error in _validate_sample_target_specs_from_learn()
           - pass along any bad specs (e.g., that are not for TARGET Nodes)
-              that will be used to generate an error in _validate_constructor_targets_specs()
+              that will be used to generate an error in _validate_sample_target_specs_from_learn()
 
         Return canonicalized_target_specs and sample_ports_to_learn_specs dicts
         """
@@ -10907,14 +10906,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         elif NodeRole.INPUT in roles:
                             error_message = "INPUT Node that is not a TARGET Node"
                         elif NodeRole.OUTPUT in roles:
-                            # # TEACHER_TARGET BREADCRUMB: STILL NEEDED?  SHOULD NOT OCCUR IN **targets** FOR learn():
-                            # # This is possible only if Constructor of subclass has specifications in its **targets** argument
-                            # # (since otherwise *all* OUTPUT Nodes of a Composition are automatically assigned as SAMPLES)
-                            # assert not (hasattr(self, TARGETS) and self.targets), \
-                            #     f"PROGRAM ERROR: OUTPUT Node found in list of illegal target specs for Composition"
-                            # SAMPLE_TARGET TEST: ERROR 4 -- DONE: X
-                            assert False, "ERROR 4 OUTPUT BUT NOT SAMPLE"
-                            error_message = "OUTPUT Node that is not a SAMPLE"
+                            # This should not occur, since all OUTPUT Nodes of a Composition are automatically assigned
+                            #    as SAMPLES (unless subclass constructor contains **targets** specs)
+                            assert False, f"PROGRAM ERROR: OUTPUT Node ({spec}) that is not a SAMPLE"
                         elif NodeRole.INTERNAL in roles:
                             error_message = f"INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition)"
                         else:

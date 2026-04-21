@@ -935,22 +935,22 @@ class TestStructural:
 
         params = []
         for comp_type in [
-            # "comp",
+            "comp",
             "autodiff"
         ]:
             for arg_type in [
                 "learn",
-                # "constructor",
-                # "learn_and_constructor",
+                "constructor",
+                "learn_and_constructor",
             ]:
                 for bad_spec_type in [
-                    # "not_in_comp",
+                    "not_in_comp",
                     "proj",
-                    # "num",
-                    # "extra",
+                    "num",
+                    "extra",
                 ]:
                     for sample_or_target_spec in [
-                        # "sample",
+                        "sample",
                         "target"
                     ]:
                         marks = []

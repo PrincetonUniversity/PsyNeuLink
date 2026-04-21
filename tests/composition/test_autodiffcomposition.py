@@ -469,8 +469,8 @@ class TestAutodiffTargetSpecs:
             f"((ProcessingMechanism pway2_mech_C), (ProcessingMechanism pway2_mech_T)), "
             f"((ProcessingMechanism pway3_mech_C), (ProcessingMechanism pway3_mech_T))]) "
             f"assigned to parameter 'targets' of (AutodiffComposition autodiff_composition).parameters is not valid: "
-            f"target specificadtion must be an OutputPort, ProcessingMechanism or the keyword 'TARGET' "
-            f"(got: (MappingProjection PROJ IN COMPOSITION)).", ParameterError),
+            f"target specification '(MappingProjection PROJ IN COMPOSITION)' must be an OutputPort, "
+            f"ProcessingMechanism or the keyword 'TARGET'.", ParameterError),
         3: ("The following Projections are learnable but are in pathways that do not end in a LossMechanism, "
             "and therefore cannot be learned: "
             "'(MappingProjection MappingProjection from pway2_mech_A[OutputPort-0] to pway2_mech_B[InputPort-0])', "
