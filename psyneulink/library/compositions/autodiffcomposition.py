@@ -864,8 +864,7 @@ from psyneulink.core.compositions.composition import (
     CompositionError,
     LearningScale,
     OptimizerParams,
-    SampleTargetPair,
-    SampleTargetSpec,
+    SampleTargetInfo
 )
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,

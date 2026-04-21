@@ -3295,7 +3295,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole', 'LearningScale',
-    'OptimizerParams', 'SampleTargetPair'
+    'OptimizerParams', 'SampleTargetInfo'
     ]
 
 logger = logging.getLogger(__name__)
