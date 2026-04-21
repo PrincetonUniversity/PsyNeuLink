@@ -1811,8 +1811,13 @@ class AutodiffComposition(Composition):
             # No target specifications in constructor, so instantiate default TARGET Node assignments,
             self._instantiate_default_targets(pathways, context, base_context)
 
-        loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
-        target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
+        # MODIFIED SAMPLE_TARGET OLD:
+        # loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
+        # target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
+        # MODIFIED SAMPLE_TARGET NEW:
+        loss_mech_specs = list(self.sample_port_to_target_port_map.items())
+        target_mechs = self._samples_and_targets.target_mechs
+        # MODIFIED SAMPLE_TARGET END
         self._validate_loss_mech_specs(loss_mech_specs, context)
         self._parse_constructor_targets_specs()
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
@@ -1920,13 +1925,17 @@ class AutodiffComposition(Composition):
                     self._check_if_target_is_in_sample_pathway(sample_port, target_port, pathways, context)
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so attempt to construct TARGET Node
-                    if sample_port in self.sample_port_to_target_port_map:
+                    # MODIFIED SAMPLE_AND_TARGET OLD:
+                    # if sample_port in self.sample_port_to_target_port_map:
+                    # MODIFIED SAMPLE_AND_TARGET NEW:
+                    if sample_port in self._samples_and_ports.sample_ports:
+                        # MODIFIED SAMPLE_AND_TARGET END
                         # TARGET Node has already been constructed for specified sample Port,
                         #   so register for later error reporting, and then move on
-                        self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                                          target_port, target_spec, None,
-                                                                          CONSTRUCTOR_TARGETS_ARGS))
-                        continue
+                        self._sample_target_specs.append(SampleTargetInfo.Spec(sample_port, sample_spec,
+                                                                               target_port, target_spec, None,
+                                                                               CONSTRUCTOR_TARGETS_ARGS))
+                    continue
                     sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
                                    else sample_port.owner.name)
                     target_mech = ProcessingMechanism(default_variable = np.array(np.zeros_like(sample_port.value),
@@ -1943,18 +1952,32 @@ class AutodiffComposition(Composition):
                 assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
                                f"({sample_target_spec} for '{self.name}'.")
 
-            self._sample_target_pairs.append(SampleTargetPair(sample_port.owner,
-                                                              sample_port,
-                                                              target_mech,
-                                                              target_port))
-            self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                              target_port, target_spec, None,
-                                                              CONSTRUCTOR_TARGETS_ARGS))
+            # MODIFIED SAMPLE_TARGET OLD:
+            # self._sample_target_pairs.append(SampleTargetPair(sample_port.owner,
+            #                                                   sample_port,
+            #                                                   target_mech,
+            #                                                   target_port))
+            # self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
+            #                                                   target_port, target_spec, None,
+            #                                                   CONSTRUCTOR_TARGETS_ARGS))
+            # MODIFIED SAMPLE_TARGET NEW:
+            self._samples_and_targets.add_pair(SampleTargetInfo.Pair(sample_port.owner,
+                                                                     sample_port,
+                                                                     target_mech,
+                                                                     target_port))
+            self._samples_and_targets.add_spec(SampleTargetInfo.Spec(sample_port, sample_spec,
+                                                                     target_port, target_spec, None,
+                                                                     CONSTRUCTOR_TARGETS_ARGS))
+            # MODIFIED SAMPLE_TARGET END
 
         self._validate_constructor_targets_specs()
 
         # Assign NodeRoles to SAMPLEs BREADCRUMB: and TARGETs
-        for sample, _, target, _ in self._sample_target_pairs:
+        # MODIFIED SAMPLE_TARGET OLD:
+        # for sample, _, target, _ in self._sample_target_pairs:
+        # MODIFIED SAMPLE_TARGET NEW:
+        for sample, target in zip(self._samples_and_targets.sample_mechs, self._samples_and_targets.target_mechs):
+        # MODIFIED SAMPLE_TARGET END
             self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
             # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET
             # self.require_node_roles(target, NodeRole.TARGET, context=context)
@@ -2024,8 +2047,14 @@ class AutodiffComposition(Composition):
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
         assert len(output_ports_for_learning) == len(target_mechs), \
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
-        self._sample_target_pairs.extend([SampleTargetPair(s.owner, s, t, t.output_port)
-                                          for s, t in zip(output_ports_for_learning, target_mechs)])
+        # MODIFIED SAMPLE_TARGET OLD:
+        # self._sample_target_pairs.extend([SampleTargetPair(s.owner, s, t, t.output_port)
+        #                                   for s, t in zip(output_ports_for_learning, target_mechs)])
+        # MODIFIED SAMPLE_TARGET NEW:
+        for sample_target_pair in [SampleTargetInfo.Pair(s.owner, s, t, t.output_port)
+                                   for s, t in zip(output_ports_for_learning, target_mechs)]:
+            self._samples_and_targets.add_pair(sample_target_pair)
+        # MODIFIED SAMPLE_TARGET END
 
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
@@ -2062,10 +2091,17 @@ class AutodiffComposition(Composition):
                      f"or one is not a Mechanisms: {loss_mech_spec}; "
                      f"should have been caught in targets Parameter validation.")
                 sample, target = loss_mech_spec
-                if sample not in [s.sample_port for s in self._sample_target_pairs]:
+                # MODIFIED SAMPLE_TARGET OLD:
+                # if sample not in [s.sample_port for s in self._sample_target_pairs]:
+                #     bad_samples.append(sample)
+                # if target not in [s.target_port for s in self._sample_target_pairs]:
+                #     bad_targets.append(target)
+                # MODIFIED SAMPLE_TARGET NEW:
+                if sample not in self._samples_and_targets.sample_ports:
                     bad_samples.append(sample)
-                if target not in [s.target_port for s in self._sample_target_pairs]:
+                if target not in self._samples_and_targets.target_ports:
                     bad_targets.append(target)
+                # MODIFIED SAMPLE_TARGET END
 
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
@@ -2769,8 +2805,13 @@ class AutodiffComposition(Composition):
         # Assign target values specified in learn() to TARGET Nodes
         for port, value in target_specs.copy().items():
             # port to be specified for sample or target; what matters is
-            sample, target = next(((item.sample_port, item.target_port) for item in self.sample_target_pairs
+            # MODIFIED SAMPLE_TARGET OLD:
+            # sample, target = next(((item.sample_port, item.target_port) for item in self._sample_target_pairs
+            #                        if port in item), (None,None))
+            # MODIFIED SAMPLE_TARGET NEW:
+            sample, target = next((item for item in list(self.sample_port_to_target_port_map.items())
                                    if port in item), (None,None))
+            # MODIFIED SAMPLE_TARGET END
             if sample:
                 target_values_for_target_nodes[self.sample_port_to_target_port_map[sample].owner] = value
 

@@ -3318,41 +3318,72 @@ class SampleTargetInfo():
     Pair = collections.namedtuple("SampleTargetPair",
                                   "sample_mech sample_port target_mech target_port")
     def __init__(self):
-        specs = []
-        pairs = []
+        self._specs = []
+        self._pairs = []
 
     def add_pair(self, pair: Pair):
-        self.pairs.append(pair)
+        self._pairs.append(pair)
 
     def add_spec(self, spec: Spec):
-        self.specs.append(spec)
+        self._specs.append(spec)
 
-    def get_sample_ports(self):
-        return [pair.sample_port for pair in self.pairs]
+    def remove_pair(self, pair: Pair):
+        self._pairs.remove(pair)
 
-    def get_sample_mechs(self):
-        return [pair.mech for pair in self.pairs]
+    def remove_spec(self, spec: Spec):
+        self._specs.remove(spec)
 
-    def get_target_ports(self):
-        return [pair.target_port for pair in self.pairs]
+    @property
+    def pairs():
+        return sorted(self._pairs)
 
-    def get_target_mechs(self):
-        return [pair.mech for pair in self.pairs]
+    @property
+    def specs():
+        return sorted(self._specs)
 
-    def get_sample_specs(self):
-        return [spec.sample_port for spec in self.specs]
+    @property
+    def sample_ports(self):
+        return [pair.sample_port for pair in self._pairs]
 
-    def get_target_specs(self):
-        return [spec.target_spec for spec in self.specs]
+    @property
+    def sample_mechs(self):
+        return [pair.mech for pair in self._pairs]
 
-    def get_target_vals(self):
-        return [spec.target_value for spec in self.specs]
+    @property
+    def target_ports(self):
+        return [pair.target_port for pair in self._pairs]
 
+    @property
+    def target_mechs(self):
+        return [pair.mech for pair in self._pairs]
+
+    @property
+    def sample_specs(self):
+        return [spec.sample_spec for spec in self._specs]
+
+    @property
+    def target_specs(self):
+        return [spec.target_spec for spec in self._specs]
+
+    @property
+    def target_values(self):
+        return [spec.target_value for spec in self._specs]
+
+    @property
+    def spec_sources(self):
+        return [spec.source for spec in self._specs]
+
+    @property
+    def sample_port_to_target_port_map(self):
+        return {sample_port: target_port for sample_port, target_port in zip(self.sample_ports, self.target_ports)}
+
+    @property
+    def target_port_to_sample_port_map(self):
+        return {target_port: sample_port for target_port, sample_port in zip(self.target_ports, self.sample_ports)}
 
 
 class CompositionError(ComponentError):
     pass
-
 
 
 class RunError(Exception):
@@ -4259,10 +4290,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Learning-related attributes
         self._learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
-        self._sample_target_pairs = [] # SampleTargetPair tuples for SAMPLE and TARGET Nodes used for learning
-        self._sample_target_specs = [] # SampleTargetSpec tuples for all specifications for SAMPLE and TARGET Nodes
-                                       #   made in the the inputs and/or **targets** arguments of learn()
-                                       #   and possibly the **targets** argument of subclass constructors
+        self._samples_and_targets = SampleTargetInfo() # SAMPLE and TARGET ino used for learning
+        self._sample_target_pairs = self._samples_and_targets.pairs # SAMPLE and TARGET mechs and ports
+        self._sample_target_specs = self._samples_and_targets.specs # specifications from learn() and/or constructor
         self.optimizer_params = {}
         self.runtime_optimizer_params = {}
 
@@ -8173,8 +8203,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in sample_projs:
                 assert proj.receiver.owner == comparator and proj.receiver.name == 'SAMPLE'
                 sample_port = proj.sender
-                self._sample_target_pairs.append(SampleTargetPair(sample_port.owner, sample_port,
-                                                                  target, target.output_port))
+                self._samples_and_targets.add_pair(SampleTargetInfo.Pair(sample_port.owner, sample_port,
+                                                                         target, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
             learning_related_components = {SAMPLE_MECHANISM: output_source,
@@ -9003,8 +9033,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for proj in sample_projs:
             assert proj.receiver.owner == objective_mechanism and proj.receiver.name == 'SAMPLE'
             sample_port = proj.sender
-            self._sample_target_pairs.append(SampleTargetPair(sample_port.owner, sample_port,
-                                                              target_mechanism, target_mechanism.output_port))
+            self._samples_and_targets.add_pair(SampleTargetInfo.Pair(sample_port.owner, sample_port,
+                                                                     target_mechanism, target_mechanism.output_port))
             self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
         return target_mechanism, objective_mechanism, learning_mechanism
@@ -9382,7 +9412,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Learning_Pathway>` in the Composition, in which keys are Nodes and values are OutputPorts that
         provide the sample value used to compute the error for learning.
         """
-        sample_nodes = {entry.sample_mech: entry.sample_port for entry in self._sample_target_pairs}
+        # # MODIFIED SAMPLE_TARGET OLD:
+        # sample_nodes = {entry.sample_mech: entry.sample_port for entry in self._sample_target_pairs}
+        # MODIFIED SAMPLE_TARGET NEW:
+        sample_nodes = {mech: port for mech, port in zip(self._samples_and_targets.sample_mechs,
+                                                         self._samples_and_targets.sample_ports)}
+        # MODIFIED SAMPLE_TARGET END
+
         if not sample_nodes:
             # No TARGET Nodes were found
             if not self.learning_components:
@@ -10489,7 +10525,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # purge specs from previous calls to learn()
         for spec in self._sample_target_specs.copy():
             if spec.source in self._learn_dicts:
-                self._sample_target_specs.remove(spec)
+                self._samples_and_targets.remove_spec(spec)
 
         for name, targets_dict in targets_dicts.items():
             if not targets_dict:
@@ -10613,9 +10649,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
                 # Don't incude spec if None is not allowed for target spec
                 if target_port or allow_None_for_target:
-                    self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                                      target_port, target_spec,
-                                                                      value, name))
+                    self._samples_and_targets.add_spec(SampleTargetSpec(sample_port, sample_spec,
+                                                                        target_port, target_spec,
+                                                                        value, name))
                 legal_specs.update({input_item:value})
             else:
                 illegal_specs.append(SampleTargetSpec(None, None,
@@ -10628,8 +10664,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # BREADCRUMB: MOVE TO sample_target_specs CLASS
         """Identify redundant specs for SAMPLE-TARGET pairs
         """
-        all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
-        sample_port_counts = counts(all_sample_specs_as_ports)
+        # MODIFIED SAMPLE_TARGET OLD:
+        # all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
+        # sample_port_counts = counts(all_sample_specs_as_ports)
+        # MODIFIED SAMPLE_TARGET NEW:
+        sample_port_counts = counts(self._samples_and_targets.sample_ports)
+        # MODIFIED SAMPLE_TARGET END
         return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
 
     def _handle_redundant_sample_target_specs(self):
@@ -10744,9 +10784,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are in the targets dict, suggest that they be placed there
         # Source(s) of target_specs: inputs, inputs[TARGETS] and/or targets
         # Determine whether all specs are in targets dict:
-        all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
-        placement = (f"place them all in the 'targets' argument of the learn method()"
-                     if not all_in_targets else '')
+        # MODIFIED SAMPLE_TARGET OLD:
+        # all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
+        # placement = (f"place them all in the 'targets' argument of the learn method()"
+        #              if not all_in_targets else '')
+        # MODIFIED SAMPLE_TARGET NEW:
+        all_in_targets = all(source == TARGETS for source in self._samples_and_targets.spec_sources)
+        placement = (f"place them all in the '{TARGETS}' argument of the learn method()" if not all_in_targets else '')
+        # MODIFIED SAMPLE_TARGET END
 
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
@@ -10817,7 +10862,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Convert any name (str) specs to the corresponding Node
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
-        targets = {t.target_port: t.target_value for t in self._sample_target_specs}
+        # MODIFIED SAMPLE_TARGET OLD:
+        # targets = {t.target_port: t.target_value for t in self._sample_target_specs}
+        # MODIFIED SAMPLE_TARGET NEW:
+        targets = {port: value for port, value in zip(self._samples_and_targets.target_ports,
+                                                      self._samples_and_targets.target_values)}
+        # MODIFIED SAMPLE_TARGET END
         canonicalized_target_specs = {}
         sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
 
@@ -14481,15 +14531,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def sample_target_pairs(self):
-        return sorted(self._sample_target_pairs)
+        return self._samples_and_targets.pairs
 
     @property
     def sample_port_to_target_port_map(self):
-        return {pair.sample_port: pair.target_port for pair in self._sample_target_pairs}
+        return self._sample_and_targets.sample_port_to_target_port_map
 
     @property
-    def target_port_to_sample_port_map(self):
-        return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
+    def target_port_to_sample_port_map(self):        # return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
+        return self._sample_and_targets.target_port_to_sample_port_map
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region
