@@ -3308,16 +3308,41 @@ LearningRateArg = Union[LearningRate, Dict[Union[Component, str], LearningRate]]
 
 CompositionRegistry = {}
 
+class SampleTargetInfo():
+    # Specifications for SAMPLE and TARGET in **targets** dict
+    #    (used to keep track of original specifications for warnings or errors)
+    SampleTargetSpec = (collections.namedtuple(
+        "SampleTargetSpec",
+        "sample_port sample_spec target_port target_spec target_value source"))
+    # Instantiated Components for SAMPLE and TARGET Nodes
+    SampleTargetPair = collections.namedtuple("SampleTargetPair",
+                                              "sample_mech sample_port target_mech target_port")
+    def __init__(self):
+        specs = []
+        pairs = []
 
-# Specifications for SAMPLE and TARGET in **targets** dict
-#    (used to keep track of original specifications for warnings or errors)
-SampleTargetSpec = (collections.namedtuple(
-    "SampleTargetSpec",
-    "sample_port sample_spec target_port target_spec target_value source"))
+    def get_sample_ports(self):
+        return [pair.sample_port for pair in self.pairs]
 
-# Instantiated Components for SAMPLE and TARGET Nodes
-SampleTargetPair = collections.namedtuple("SampleTargetPair",
-                                          "sample_mech sample_port target_mech target_port")
+    def get_sample_mechs(self):
+        return [pair.mech for pair in self.pairs]
+
+    def get_target_ports(self):
+        return [pair.target_port for pair in self.pairs]
+
+    def get_target_mechs(self):
+        return [pair.mech for pair in self.pairs]
+
+    def get_sample_specs(self):
+        return [spec.sample_port for spec in self.specs]
+
+    def get_target_specs(self):
+        return [spec.target_spec for spec in self.specs]
+
+    def get_target_vals(self):
+        return [spec.target_value for spec in self.specs]
+
+
 
 class CompositionError(ComponentError):
     pass
