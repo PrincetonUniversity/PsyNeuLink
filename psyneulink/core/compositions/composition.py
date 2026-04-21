@@ -3311,15 +3311,21 @@ CompositionRegistry = {}
 class SampleTargetInfo():
     # Specifications for SAMPLE and TARGET in **targets** dict
     #    (used to keep track of original specifications for warnings or errors)
-    SampleTargetSpec = (collections.namedtuple(
+    Spec = (collections.namedtuple(
         "SampleTargetSpec",
         "sample_port sample_spec target_port target_spec target_value source"))
     # Instantiated Components for SAMPLE and TARGET Nodes
-    SampleTargetPair = collections.namedtuple("SampleTargetPair",
-                                              "sample_mech sample_port target_mech target_port")
+    Pair = collections.namedtuple("SampleTargetPair",
+                                  "sample_mech sample_port target_mech target_port")
     def __init__(self):
         specs = []
         pairs = []
+
+    def add_pair(self, pair: Pair):
+        self.pairs.append(pair)
+
+    def add_spec(self, spec: Spec):
+        self.specs.append(spec)
 
     def get_sample_ports(self):
         return [pair.sample_port for pair in self.pairs]
