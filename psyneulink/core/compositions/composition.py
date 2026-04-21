@@ -12071,7 +12071,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if num_execs is None:
                 node.parameters.num_executions._set(Time(), context)
             else:
-                node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
+                node._reset_num_executions(context, TimeScale.RUN)
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
@@ -13055,7 +13055,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reset_stateful_functions_to = {}
 
             for node in self.nodes:
-                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
+                node._reset_num_executions(context, TimeScale.TRIAL)
                 if node.parameters.has_initializers._get(context):
                     try:
                         if (
@@ -13147,7 +13147,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # the scheduler terminates a trial immediately
             next_pass_before = 1
             next_pass_after = 1
-            last_pass = None
 
             if clamp_input:
                 soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
@@ -13256,11 +13255,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
-                new_pass = False
-                if curr_pass != last_pass:
-                    new_pass = True
-                    last_pass = curr_pass
                 if next_pass_after == curr_pass:
+                    for n in self.nodes:
+                        n._reset_num_executions(context, TimeScale.PASS)
                     if call_after_pass:
                         logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                         call_with_pruned_args(call_after_pass, context=context)
@@ -13349,11 +13346,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
 
-                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
-                    if new_pass:
-                        node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
-
-
+                    node._reset_num_executions(context, TimeScale.TIME_STEP)
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
                     frozen_values[node] = copy_parameter_value(node.get_output_values(context))

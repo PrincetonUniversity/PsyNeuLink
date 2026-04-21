@@ -105,6 +105,20 @@ class TestComponent:
         assert T2.parameter_ports[pnl.SLOPE].execution_count == 0
         assert T2.output_port.execution_count == 0
 
+    def test_num_executions_reset_across_trials(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.TransferMechanism()
+
+        comp = pnl.Composition([a, b])
+        comp.run(inputs={a: [1, 1, 1]})
+
+        num_executions = b.parameters.num_executions.get(comp)
+        assert num_executions.life == 3
+        assert num_executions.run == 3
+        assert num_executions.trial == 1
+        assert num_executions.pass_ == 1
+        assert num_executions.time_step == 1
+
     def test__set_all_parameter_properties_recursively(self):
         A = pnl.ProcessingMechanism(name='A')
         A._set_all_parameter_properties_recursively(history_max_length=0)
