@@ -3334,6 +3334,27 @@ class SampleTargetInfo():
     def remove_spec(self, spec: Spec):
         self._specs.remove(spec)
 
+    def _get_redundant_specs(self, allow_TARGET:Union[bool, str]=False):
+        # SAMPLE_TARGET BREADCRUMB:  DOCUMENT RE: allow_TARGET
+        """Identify redundant specs for SAMPLE-TARGET pairs"""
+        all_sample_specs_as_ports = [spec.sample_port for spec in self._specs]
+        sample_port_counts = counts(all_sample_specs_as_ports)
+        all_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
+
+        if allow_TARGET:
+            """allow specification of 'TARGET' as target and required numeric value"""
+            for spec in all_redundant_specs.copy():
+                # Get target_spec and target_value for each of the redundant specs
+                redundant_specs = [s for s in self._specs if s.sample_port is spec]
+                if len(redundant_specs) == 2:
+                    constructor_spec, learn_spec = redundant_specs
+                    if (constructor_spec.target_spec == TARGET
+                            and constructor_spec.source == allow_TARGET
+                            and learn_spec.source != allow_TARGET
+                            and is_numeric(learn_spec.target_value)):
+                        all_redundant_specs.remove(spec)
+        return all_redundant_specs
+
     @property
     def pairs(self):
         return sorted(self._pairs)
@@ -10657,20 +10678,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return legal_specs, illegal_specs
 
-    def _get_redundant_sample_target_specs(self):
-        # SAMPLE_TARGET BREADCRUMB: MOVE TO sample_target_specs CLASS --
-        #                           BUT THEN NEEED TO DEAL WITH OVERRIDE IN AutodiffComposition
-        """Identify redundant specs for SAMPLE-TARGET pairs
-        """
-        # MODIFIED SAMPLE_TARGET OLD:
-        all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
-        sample_port_counts = counts(all_sample_specs_as_ports)
-        # # MODIFIED SAMPLE_TARGET NEW:
-        # sample_port_counts = counts(self._samples_and_targets.sample_ports)
-        # MODIFIED SAMPLE_TARGET END
-        return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
-
-    def _handle_redundant_sample_target_specs(self):
+    def _handle_redundant_sample_target_specs(self, allow_TARGET=False):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
         Warn about non-conflicting redundant target_specs:
@@ -10685,7 +10693,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
                                             else spec))
 
-        sample_ports_with_redundant_specs = self._get_redundant_sample_target_specs()
+        sample_ports_with_redundant_specs = self._samples_and_targets._get_redundant_specs(allow_TARGET)
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES

@@ -3062,21 +3062,9 @@ class AutodiffComposition(Composition):
 
         return legal_specs, illegal_specs
 
-    # SAMPLE_TARGET BREADCRUMB: MOVE TO sample_target_specs CLASS
-    def _get_redundant_sample_target_specs(self):
-        """Override to allow specification of TARGET in constructor and required numeric value in learn()"""
-        all_redundant_specs = super()._get_redundant_sample_target_specs()
-        for spec in all_redundant_specs.copy():
-            # Get target_spec and target_value for each of the redundant specs
-            redundant_specs = [s for s in self._sample_target_specs if s.sample_port is spec]
-            if len(redundant_specs) == 2:
-                constructor_spec, learn_spec = redundant_specs
-                if (constructor_spec.target_spec == TARGET
-                        and constructor_spec.source == CONSTRUCTOR_TARGETS_ARGS
-                        and learn_spec.source != CONSTRUCTOR_TARGETS_ARGS
-                        and is_numeric(learn_spec.target_value)):
-                    all_redundant_specs.remove(spec)
-        return all_redundant_specs
+    def _handle_redundant_sample_target_specs(self):
+        """Override to include specs in **targets** arg of constructor"""
+        return super()._handle_redundant_sample_target_specs(allow_TARGET=CONSTRUCTOR_TARGETS_ARGS)
 
     def _handle_conflicting_sample_target_specs(self, specs_with_mismatching_values:list):
         """Override to handle conflict between sample specs and/or values from constructor and learn()
