@@ -1078,7 +1078,6 @@ class TestStructural:
             else:
                 assert False, "comp_type must be 'comp' or 'autodiff'"
 
-            # if arg_type == 'constructor':
             if (arg_type == 'constructor'
                     # Skip 'extra' for learn_and_constructor, as it is in *targets* of learn() and so should be tested
                     or (arg_type == 'learn_and_constructor' and 'extra' not in bad_spec_type)):

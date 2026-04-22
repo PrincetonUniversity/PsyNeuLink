@@ -3340,7 +3340,7 @@ class SampleTargetInfo():
 
     @property
     def specs(self):
-        return sorted(self._specs)
+        return self._specs
 
     @property
     def sample_ports(self):
@@ -10590,7 +10590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
-                illegal_specs.append(self._samples_and_targets.Spec(None, None, None, input_item, value, name))
+                illegal_specs.append(SampleTargetInfo.Spec(None, None, None, input_item, value, name))
                 continue
 
             # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
@@ -10620,11 +10620,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            if role in {NodeRole.SAMPLE, NodeRole.TARGET}):
                     # Node is not SAMPLE or TARGET
                     input_item_port = spec_as_port(input_item)
-                    illegal_specs.append(SampleTargetSpec(input_item_port if input_item_role == SAMPLE else None,
-                                                          input_item if input_item_role == SAMPLE else None,
-                                                          input_item_port if input_item_role == TARGET else None,
-                                                          input_item if input_item_role == TARGET else None,
-                                                          value, name))
+                    illegal_specs.append(SampleTargetInfo.Spec(input_item_port if input_item_role == SAMPLE else None,
+                                                               input_item if input_item_role == SAMPLE else None,
+                                                               input_item_port if input_item_role == TARGET else None,
+                                                               input_item if input_item_role == TARGET else None,
+                                                               value, name))
                     continue
 
                 sample_port = sample_target_pair.sample_port
@@ -10639,23 +10639,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULD ?NOT? BE ALLOWED FOR AutodiffComposition:
                 if not is_numeric(value):
-                    illegal_specs.append(self._samples_and_targets.Spec(sample_port, sample_spec,
-                                                                        target_port, target_spec,
-                                                                        value, name))
+                    illegal_specs.append(SampleTargetInfo.Spec(sample_port, sample_spec,
+                                                               target_port, target_spec,
+                                                               value, name))
                     continue
                 #  IMPLEMENTATION NOTE:  this is used to exclude illegal sample-target specs in **inputs** dict
                 #                        while allowing bad specs in **targets** dicts to be included,
                 #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
                 # Don't incude spec if None is not allowed for target spec
                 if target_port or allow_None_for_target:
-                    self._samples_and_targets.add_spec(self._samples_and_targets.Spec(sample_port, sample_spec,
-                                                                                      target_port, target_spec,
-                                                                                      value, name))
+                    self._samples_and_targets.add_spec(SampleTargetInfo.Spec(sample_port, sample_spec,
+                                                                             target_port, target_spec,
+                                                                             value, name))
                 legal_specs.update({input_item:value})
             else:
-                illegal_specs.append(self._samples_and_targets.Spec(None, None,
-                                                                    None, input_item,
-                                                                    value, name))
+                illegal_specs.append(SampleTargetInfo.Spec(None, None, None, input_item, value, name))
 
         return legal_specs, illegal_specs
 
@@ -10664,10 +10662,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Identify redundant specs for SAMPLE-TARGET pairs
         """
         # MODIFIED SAMPLE_TARGET OLD:
-        # all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
-        # sample_port_counts = counts(all_sample_specs_as_ports)
-        # MODIFIED SAMPLE_TARGET NEW:
-        sample_port_counts = counts(self._samples_and_targets.sample_ports)
+        all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
+        sample_port_counts = counts(all_sample_specs_as_ports)
+        # # MODIFIED SAMPLE_TARGET NEW:
+        # sample_port_counts = counts(self._samples_and_targets.sample_ports)
         # MODIFIED SAMPLE_TARGET END
         return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
 
