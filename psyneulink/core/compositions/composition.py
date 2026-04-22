@@ -3334,16 +3334,17 @@ class SampleTargetInfo():
     def remove_spec(self, spec: Spec):
         self._specs.remove(spec)
 
-    def _get_redundant_specs(self, allow_TARGET:Union[bool, str]=False):
+    def _get_redundant_specs(self, include_specs_from:Union[bool, str]=False):
         """Identify redundant specs for SAMPLE-TARGET pairs
-        allow_TARGET can be used to specify and additional source of target specs to check for redundancies
-        the name of which must be one specified in the 'sources' field of a Spec
+        **include_specs_from** specifies an additional source of target specs, other than those in the
+        **targets** argument of the learn() method, to check for redundancies, the name of which is used in the
+        'sources' field of Spec.
         """
         all_sample_specs_as_ports = [spec.sample_port for spec in self._specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
         all_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
 
-        if allow_TARGET:
+        if include_specs_from:
             """allow specification of 'TARGET' as target and required numeric value"""
             for spec in all_redundant_specs.copy():
                 # Get target_spec and target_value for each of the redundant specs
@@ -3351,8 +3352,8 @@ class SampleTargetInfo():
                 if len(redundant_specs) == 2:
                     constructor_spec, learn_spec = redundant_specs
                     if (constructor_spec.target_spec == TARGET
-                            and constructor_spec.source == allow_TARGET
-                            and learn_spec.source != allow_TARGET
+                            and constructor_spec.source == include_specs_from
+                            and learn_spec.source != include_specs_from
                             and is_numeric(learn_spec.target_value)):
                         all_redundant_specs.remove(spec)
         return all_redundant_specs
@@ -10680,7 +10681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return legal_specs, illegal_specs
 
-    def _handle_redundant_sample_target_specs(self, allow_TARGET=False):
+    def _handle_redundant_sample_target_specs(self, include_specs_from=False):
         """Identify specs refering to the same SAMPLE-TARGET pair
         Use self._sample_target_specs to identify redundant specs.
         Warn about non-conflicting redundant target_specs:
@@ -10695,7 +10696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       else (spec.output_port if isinstance(spec, ProcessingMechanism_Base)
                                             else spec))
 
-        sample_ports_with_redundant_specs = self._samples_and_targets._get_redundant_specs(allow_TARGET)
+        sample_ports_with_redundant_specs = self._samples_and_targets._get_redundant_specs(include_specs_from)
 
         # BREADCRUMB: MOVE TO _validate_sample_target
         # If TARGETS are used as specifications, advise that it is simpler to use SAMPLES

@@ -3064,7 +3064,7 @@ class AutodiffComposition(Composition):
 
     def _handle_redundant_sample_target_specs(self):
         """Override to include specs in **targets** arg of constructor"""
-        return super()._handle_redundant_sample_target_specs(allow_TARGET=CONSTRUCTOR_TARGETS_ARGS)
+        return super()._handle_redundant_sample_target_specs(include_specs_from=CONSTRUCTOR_TARGETS_ARGS)
 
     def _handle_conflicting_sample_target_specs(self, specs_with_mismatching_values:list):
         """Override to handle conflict between sample specs and/or values from constructor and learn()
