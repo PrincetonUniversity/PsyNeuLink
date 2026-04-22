@@ -3295,7 +3295,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole', 'LearningScale',
-    'OptimizerParams', 'SampleTargetInfo'
+    'OptimizerParams', 'SamplesAndTargets'
     ]
 
 logger = logging.getLogger(__name__)
@@ -3309,7 +3309,7 @@ LearningRateArg = Union[LearningRate, Dict[Union[Component, str], LearningRate]]
 CompositionRegistry = {}
 
 
-class SampleTargetInfo():
+class SamplesAndTargets():
     # Specifications for SAMPLE and TARGET in **targets** dict
     #    (used to keep track of original specifications for warnings or errors)
     Spec = (collections.namedtuple(
@@ -4315,7 +4315,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Learning-related attributes
         self._learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
-        self._samples_and_targets = SampleTargetInfo() # SAMPLE and TARGET ino used for learning
+        self._samples_and_targets = SamplesAndTargets() # SAMPLE and TARGET ino used for learning
         self.optimizer_params = {}
         self.runtime_optimizer_params = {}
 
@@ -8226,7 +8226,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in sample_projs:
                 assert proj.receiver.owner == comparator and proj.receiver.name == 'SAMPLE'
                 sample_port = proj.sender
-                self._samples_and_targets.add_pair(SampleTargetInfo.Pair(sample_port.owner, sample_port,
+                self._samples_and_targets.add_pair(SamplesAndTargets.Pair(sample_port.owner, sample_port,
                                                                          target, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
@@ -9056,7 +9056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for proj in sample_projs:
             assert proj.receiver.owner == objective_mechanism and proj.receiver.name == 'SAMPLE'
             sample_port = proj.sender
-            self._samples_and_targets.add_pair(SampleTargetInfo.Pair(sample_port.owner, sample_port,
+            self._samples_and_targets.add_pair(SamplesAndTargets.Pair(sample_port.owner, sample_port,
                                                                      target_mechanism, target_mechanism.output_port))
             self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context=context)
 
@@ -9435,12 +9435,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Learning_Pathway>` in the Composition, in which keys are Nodes and values are OutputPorts that
         provide the sample value used to compute the error for learning.
         """
-        # # MODIFIED SAMPLE_TARGET OLD:
-        # sample_nodes = {entry.sample_mech: entry.sample_port for entry in self._sample_target_pairs}
-        # MODIFIED SAMPLE_TARGET NEW:
         sample_nodes = {mech: port for mech, port in zip(self._samples_and_targets.sample_mechs,
                                                          self._samples_and_targets.sample_ports)}
-        # MODIFIED SAMPLE_TARGET END
 
         if not sample_nodes:
             # No TARGET Nodes were found
@@ -10614,7 +10610,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
-                illegal_specs.append(SampleTargetInfo.Spec(None, None, None, input_item, value, name))
+                illegal_specs.append(SamplesAndTargets.Spec(None, None, None, input_item, value, name))
                 continue
 
             # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
@@ -10631,7 +10627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
                 input_item_role = TARGET
             else:
-                illegal_specs.append(SampleTargetInfo.Spec(None, input_item, None, None, value, name))
+                illegal_specs.append(SamplesAndTargets.Spec(None, input_item, None, None, value, name))
                 continue
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
@@ -10644,11 +10640,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            if role in {NodeRole.SAMPLE, NodeRole.TARGET}):
                     # Node is not SAMPLE or TARGET
                     input_item_port = spec_as_port(input_item)
-                    illegal_specs.append(SampleTargetInfo.Spec(input_item_port if input_item_role == SAMPLE else None,
-                                                               input_item if input_item_role == SAMPLE else None,
-                                                               input_item_port if input_item_role == TARGET else None,
-                                                               input_item if input_item_role == TARGET else None,
-                                                               value, name))
+                    illegal_specs.append(SamplesAndTargets.Spec(input_item_port if input_item_role == SAMPLE else None,
+                                                                input_item if input_item_role == SAMPLE else None,
+                                                                input_item_port if input_item_role == TARGET else None,
+                                                                input_item if input_item_role == TARGET else None,
+                                                                value, name))
                     continue
 
                 sample_port = sample_target_pair.sample_port
@@ -10663,21 +10659,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULD ?NOT? BE ALLOWED FOR AutodiffComposition:
                 if not is_numeric(value):
-                    illegal_specs.append(SampleTargetInfo.Spec(sample_port, sample_spec,
-                                                               target_port, target_spec,
-                                                               value, name))
+                    illegal_specs.append(SamplesAndTargets.Spec(sample_port, sample_spec,
+                                                                target_port, target_spec,
+                                                                value, name))
                     continue
                 #  IMPLEMENTATION NOTE:  this is used to exclude illegal sample-target specs in **inputs** dict
                 #                        while allowing bad specs in **targets** dicts to be included,
                 #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
                 # Don't incude spec if None is not allowed for target spec
                 if target_port or allow_None_for_target:
-                    self._samples_and_targets.add_spec(SampleTargetInfo.Spec(sample_port, sample_spec,
-                                                                             target_port, target_spec,
-                                                                             value, name))
+                    self._samples_and_targets.add_spec(SamplesAndTargets.Spec(sample_port, sample_spec,
+                                                                              target_port, target_spec,
+                                                                              value, name))
                 legal_specs.update({input_item:value})
             else:
-                illegal_specs.append(SampleTargetInfo.Spec(None, None, None, input_item, value, name))
+                illegal_specs.append(SamplesAndTargets.Spec(None, None, None, input_item, value, name))
 
         return legal_specs, illegal_specs
 
@@ -10709,7 +10705,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if target_node_specs_and_samples:
             target_nodes_str = ', '.join([spec[0] for spec in target_node_specs_and_samples])
             sample_nodes_str = ', '.join([spec[1] for spec in target_node_specs_and_samples])
-            # SAMPLE_TARGET TEST: WARNING 1 -- DONE: √
             warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
                           f"entries that are TARGET Nodes ({target_nodes_str}); while this is OK, it might be easier "
                           f"and clearer to use the SAMPLE (OUTPUT) Nodes to which they correspond ({sample_nodes_str}) "
@@ -10793,19 +10788,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are in the targets dict, suggest that they be placed there
         # Source(s) of target_specs: inputs, inputs[TARGETS] and/or targets
         # Determine whether all specs are in targets dict:
-        # MODIFIED SAMPLE_TARGET OLD:
-        # all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
-        # placement = (f"place them all in the 'targets' argument of the learn method()"
-        #              if not all_in_targets else '')
-        # MODIFIED SAMPLE_TARGET NEW:
         all_in_targets = all(source == TARGETS for source in self._samples_and_targets.spec_sources)
         placement = (f"place them all in the '{TARGETS}' argument of the learn method()" if not all_in_targets else '')
-        # MODIFIED SAMPLE_TARGET END
 
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
         # TEACHER_TARGET BREADCRUMB: SUPPRESS IF REDUNDANT SPEC IS A MISMATCH
-        # SAMPLE_TARGET TEST: WARNING 2 -- DONE: √
         warnings.warn(
             f"There are multiple specifications of the target value{s} for {several_one} of the SAMPLE "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "

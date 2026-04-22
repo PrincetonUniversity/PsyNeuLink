@@ -310,7 +310,7 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError, OptParam, OptimizerParams, SampleTargetInfo
+from psyneulink.core.compositions.composition import CompositionError, OptParam, OptimizerParams, SamplesAndTargets
 from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1177,10 +1177,10 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self._samples_and_targets.add_pair(self._samples_and_targets.Pair(self.gru_mech,
-                                                                          self.gru_mech.output_port,
-                                                                          target_mech,
-                                                                          target_mech.output_port))
+        self._samples_and_targets.add_pair(SamplesAndTargets.Pair(self.gru_mech,
+                                                                  self.gru_mech.output_port,
+                                                                  target_mech,
+                                                                  target_mech.output_port))
         return [target_mech]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
