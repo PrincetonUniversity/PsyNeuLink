@@ -3335,8 +3335,10 @@ class SampleTargetInfo():
         self._specs.remove(spec)
 
     def _get_redundant_specs(self, allow_TARGET:Union[bool, str]=False):
-        # SAMPLE_TARGET BREADCRUMB:  DOCUMENT RE: allow_TARGET
-        """Identify redundant specs for SAMPLE-TARGET pairs"""
+        """Identify redundant specs for SAMPLE-TARGET pairs
+        allow_TARGET can be used to specify and additional source of target specs to check for redundancies
+        the name of which must be one specified in the 'sources' field of a Spec
+        """
         all_sample_specs_as_ports = [spec.sample_port for spec in self._specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
         all_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
