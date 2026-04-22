@@ -16,12 +16,15 @@ updates:
       include: "scope"
     labels:
       - "CI"
+      - "deps"
     rebase-strategy: "disabled"
 
   - package-ecosystem: "pip"
     directory: "/" # use top dir
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     target-branch: "devel"
     commit-message:
       prefix: "requirements"
