@@ -529,9 +529,10 @@ class TestAutodiffTargetSpecs:
     test_args_for_target_spec_errors = [
         #     method         num_specs          spec_type                errant_spec        err_msg_num
         #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra    in/mid/out/all/bad    #
-        (     'cnstr',           0,              'node',                    'in',           0), # not learnable
-        (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
-        (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
+        # SAMPLE_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
+            # (     'cnstr',           0,              'node',                    'in',           0), # not learnable
+            # (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
+            # (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
         (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
         (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
         (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR

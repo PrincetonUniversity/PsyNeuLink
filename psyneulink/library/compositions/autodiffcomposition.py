@@ -3062,6 +3062,7 @@ class AutodiffComposition(Composition):
 
         return legal_specs, illegal_specs
 
+    # SAMPLE_TARGET BREADCRUMB: MOVE TO sample_target_specs CLASS
     def _get_redundant_sample_target_specs(self):
         """Override to allow specification of TARGET in constructor and required numeric value in learn()"""
         all_redundant_specs = super()._get_redundant_sample_target_specs()

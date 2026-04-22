@@ -10458,7 +10458,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = inputs['inputs'].copy()
 
         if sample_ports_to_learn_specs:
-            targets = self._map_external_target_values_to_target_nodes(targets,execution_mode)
+            targets = self._map_external_target_values_to_target_nodes(targets, execution_mode)
 
             def _insert_targets_into_inputs_dict(d, u):
                 """
@@ -10607,7 +10607,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
                 input_item_role = TARGET
             else:
-                illegal_specs.append(SampleTargetSpec(None, input_item, None, None, value, name))
+                illegal_specs.append(SampleTargetInfo.Spec(None, input_item, None, None, value, name))
                 continue
 
             sample_target_pair = next((pair for pair in self._sample_target_pairs
@@ -10658,7 +10658,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return legal_specs, illegal_specs
 
     def _get_redundant_sample_target_specs(self):
-        # BREADCRUMB: MOVE TO sample_target_specs CLASS
+        # SAMPLE_TARGET BREADCRUMB: MOVE TO sample_target_specs CLASS --
+        #                           BUT THEN NEEED TO DEAL WITH OVERRIDE IN AutodiffComposition
         """Identify redundant specs for SAMPLE-TARGET pairs
         """
         # MODIFIED SAMPLE_TARGET OLD:
@@ -10839,7 +10840,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (error will be raised in _validate_sample_target_specs_from_learn()
 
         Construct sample_ports_to_learn_specs: {<sample_port for TARGET>: <key used for it in targets>}
-           used for identifying errant specs in error message(s) raised in _validate_targets_specs()
+           used for identifying errant specs in error message(s) raised in _validate_sample_target_specs_from_learn()
 
         For each TARGET Node in the Composition:
           - if there is a sample_port specification for it already in targets, use that;
@@ -10854,17 +10855,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return canonicalized_target_specs and sample_ports_to_learn_specs dicts
         """
 
-        # BREADCRUMB: ASSERT THAT ALL SPECS ARE IN sample_target_pairs AND ISSUE PROGRAM ERROR IF NOT:
-        #             [BAD SPECS SHOULD ALREADY HAVE BEEN FILTERED OUT IN _aggregate_and_filter_sample_target_specs()
-
         # Convert any name (str) specs to the corresponding Node
         nodes_in_comp = self._get_all_nodes(content_addressable=True)
-        # MODIFIED SAMPLE_TARGET OLD:
-        # targets = {t.target_port: t.target_value for t in self._sample_target_specs}
-        # MODIFIED SAMPLE_TARGET NEW:
-        targets = {port: value for port, value in zip(self._samples_and_targets.target_ports,
-                                                      self._samples_and_targets.target_values)}
-        # MODIFIED SAMPLE_TARGET END
+        targets = {t.target_port: t.target_value for t in self._sample_target_specs}
         canonicalized_target_specs = {}
         sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
 
@@ -10913,6 +10906,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
                                    f"it's 'targets' argument is missing {a}specification{s} for the following "
                                    f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
+
+        assert all(is_numeric(spec) for spec in canonicalized_target_specs.values()), \
+            f"PROGRAM ERROR: failure to assign values to all specified TARGET Nodes in learn() of '{self.name}'"
+        assert all(isinstance(spec, OutputPort) for spec in sample_ports_to_learn_specs.values()), \
+            f"PROGRAM ERROR: failure to assign target to all specified SAMPLE Nodes in learn() of '{self.name}'"
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
