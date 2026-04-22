@@ -3335,11 +3335,11 @@ class SampleTargetInfo():
         self._specs.remove(spec)
 
     @property
-    def pairs():
+    def pairs(self):
         return sorted(self._pairs)
 
     @property
-    def specs():
+    def specs(self):
         return sorted(self._specs)
 
     @property
@@ -3348,7 +3348,7 @@ class SampleTargetInfo():
 
     @property
     def sample_mechs(self):
-        return [pair.mech for pair in self._pairs]
+        return [pair.sample_mech for pair in self._pairs]
 
     @property
     def target_ports(self):
@@ -3356,7 +3356,7 @@ class SampleTargetInfo():
 
     @property
     def target_mechs(self):
-        return [pair.mech for pair in self._pairs]
+        return [pair.target_mech for pair in self._pairs]
 
     @property
     def sample_specs(self):
@@ -4292,8 +4292,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Learning-related attributes
         self._learn_dicts = {'inputs', 'inputs[TARGETS]', 'targets'}
         self._samples_and_targets = SampleTargetInfo() # SAMPLE and TARGET ino used for learning
-        self._sample_target_pairs = self._samples_and_targets.pairs # SAMPLE and TARGET mechs and ports
-        self._sample_target_specs = self._samples_and_targets.specs # specifications from learn() and/or constructor
         self.optimizer_params = {}
         self.runtime_optimizer_params = {}
 
@@ -10592,7 +10590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Determine whether specified Node is in Composition
             # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
             if not self._is_in_composition(input_item if isinstance(input_item, Component) else str(input_item)):
-                illegal_specs.append(SampleTargetSpec(None, None, None, input_item, value, name))
+                illegal_specs.append(self._samples_and_targets.Spec(None, None, None, input_item, value, name))
                 continue
 
             # TEACHER_TARGET BREADCRUMB: TRY TO MOVE THIS BLOCK TO OVERRIDE IN AUTODIFF; IF THAT WORKS: PASS IN
@@ -10641,23 +10639,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULD ?NOT? BE ALLOWED FOR AutodiffComposition:
                 if not is_numeric(value):
-                    illegal_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                          target_port, target_spec,
-                                                          value, name))
+                    illegal_specs.append(self._samples_and_targets.Spec(sample_port, sample_spec,
+                                                                        target_port, target_spec,
+                                                                        value, name))
                     continue
                 #  IMPLEMENTATION NOTE:  this is used to exclude illegal sample-target specs in **inputs** dict
                 #                        while allowing bad specs in **targets** dicts to be included,
                 #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
                 # Don't incude spec if None is not allowed for target spec
                 if target_port or allow_None_for_target:
-                    self._samples_and_targets.add_spec(SampleTargetSpec(sample_port, sample_spec,
-                                                                        target_port, target_spec,
-                                                                        value, name))
+                    self._samples_and_targets.add_spec(self._samples_and_targets.Spec(sample_port, sample_spec,
+                                                                                      target_port, target_spec,
+                                                                                      value, name))
                 legal_specs.update({input_item:value})
             else:
-                illegal_specs.append(SampleTargetSpec(None, None,
-                                                      None, input_item,
-                                                      value, name))
+                illegal_specs.append(self._samples_and_targets.Spec(None, None,
+                                                                    None, input_item,
+                                                                    value, name))
 
         return legal_specs, illegal_specs
 
@@ -14531,16 +14529,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.graph_processing.prune_feedback_edges()[0]
 
     @property
-    def sample_target_pairs(self):
+    def _sample_target_pairs(self):
         return self._samples_and_targets.pairs
 
     @property
+    def _sample_target_specs(self):
+        return self._samples_and_targets.specs
+
+    @property
     def sample_port_to_target_port_map(self):
-        return self._sample_and_targets.sample_port_to_target_port_map
+        return self._samples_and_targets.sample_port_to_target_port_map
 
     @property
     def target_port_to_sample_port_map(self):        # return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
-        return self._sample_and_targets.target_port_to_sample_port_map
+        return self._samples_and_targets.target_port_to_sample_port_map
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region

@@ -1928,13 +1928,13 @@ class AutodiffComposition(Composition):
                     # MODIFIED SAMPLE_AND_TARGET OLD:
                     # if sample_port in self.sample_port_to_target_port_map:
                     # MODIFIED SAMPLE_AND_TARGET NEW:
-                    if sample_port in self._samples_and_ports.sample_ports:
+                    if sample_port in self._samples_and_targets.sample_ports:
                         # MODIFIED SAMPLE_AND_TARGET END
                         # TARGET Node has already been constructed for specified sample Port,
                         #   so register for later error reporting, and then move on
-                        self._sample_target_specs.append(SampleTargetInfo.Spec(sample_port, sample_spec,
-                                                                               target_port, target_spec, None,
-                                                                               CONSTRUCTOR_TARGETS_ARGS))
+                        self._samples_and_targets.add_spec(self._samples_and_targets.Spec(sample_port, sample_spec,
+                                                                                          target_port, target_spec, None,
+                                                                                          CONSTRUCTOR_TARGETS_ARGS))
                     continue
                     sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
                                    else sample_port.owner.name)
