@@ -87,7 +87,7 @@ class PytorchShowGraph(ShowGraph):
                                      show_projection_labels, show_projections_not_in_composition,
                                      context):
         """Override to add Loss components to graph
-        Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE)
+        Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE_MECHANISM)
         """
         if not self.show_pytorch:
             return super()._make_additional_assignments(
@@ -98,7 +98,7 @@ class PytorchShowGraph(ShowGraph):
                 show_projection_labels, show_projections_not_in_composition,
                 context)
 
-        # If a node projects to a LossMechanism as its SAMPLE, add LossMechanism as dependency
+        # If a node projects to a LossMechanism as its SAMPLE_MECHANISM, add LossMechanism as dependency
         #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
         loss_mechs = [n for n in composition.nodes if isinstance(n, LossMechanism)]
         if loss_mechs:
@@ -118,7 +118,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_processing_graph(self, composition, context):
         """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode
         IMPLEMENTATION NOTE:
-            learning_components (LossMechanism(s) and TARGET nodes) are included
+            learning_components (LossMechanism(s) and TARGET_MECHANISMs) are included
             since these are always part of the graph in PyTorch mode
         """
         if self.show_pytorch:
@@ -139,7 +139,7 @@ class PytorchShowGraph(ShowGraph):
         """Override to return nodes of PyTorch graph"""
         if self.show_pytorch:
             projections = self.pytorch_rep.composition._pytorch_projections
-            # Add any Projections to TARGET nodes
+            # Add any Projections to TARGET_MECHANISMs
             projections += [afferent
                             for node in self.composition.learning_components
                             for afferent in node.path_afferents

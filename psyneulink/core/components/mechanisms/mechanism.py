@@ -398,7 +398,7 @@ InputPorts
 These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism's
 `function <Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputPort_Primary>`) `InputPort`,
 identified in its `input_port <Mechanism_Base.input_port>` attribute. However some Mechanisms have more than one
-InputPort. For example, a `ComparatorMechanism` has one InputPort for its **SAMPLE** and another for its **TARGET**
+InputPort. For example, a `ComparatorMechanism` has one InputPort for its *SAMPLE* and another for its *TARGET*
 input. All of the Mechanism's InputPorts (including its primary InputPort <InputPort_Primary>` are listed in its
 `input_ports <Mechanism_Base.input_ports>` attribute (note the plural).
 

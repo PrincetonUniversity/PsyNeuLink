@@ -255,12 +255,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
     retained_sample_values : List[ndarray]
-        values of the `SAMPLE <NodeRole.SAMPLE>` Nodes, that were used as the `sample <LossMechanism.sample>` for the
-        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
+        values of the `SAMPLE_MECHANIMs <NodeRole.SAMPLE>` Nodes, that were used as the
+        `sample <LossMechanism.sample>` for the `LossMechanism` to compute the loss for
+        each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
     retained_targets : List[ndarray]
-        values of the `TARGET <NodeRole.TARGET>` Nodes, that were used as the `target <LossMechanism.sample>` for the
-        `LossMechanism` to compute the loss for each trial executed in a call to `learn<AutoDiffComposition.learn>`.
+        values of the `TARGET_MECHANISMs <NodeRole.TARGET>`, that were used as the `target <LossMechanism.sample>`
+        for the `LossMechanism` to compute the loss for each trial executed in a call to
+        `learn<AutoDiffComposition.learn>`.
 
     retained_losses : List[ndarray]
         losses per batch, epoch or run accumulated over a call to learn()
@@ -336,17 +338,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
 
-            # Ensure that all PytorchLossMechanismWrappers have at least one SAMPLE and one TARGET afferent
+            # Ensure that all PytorchLossMechanismWrappers have at least
+            #   one SAMPLE_MECHANISM and one TARGET_MECHANISM afferent
             def _validate_loss_nodes():
                 for loss_node in [node for node in self.node_wrappers
                                   if (isinstance(node, PytorchLossMechanismWrapper)
                                       and len(node.afferents) < 2)]:
                     if not loss_node.afferents:
-                        sample_or_target_msg = "any SAMPLE or TARGET afferents"
+                        sample_or_target_msg = "any SAMPLE_MECHANISM or TARGET_MECHANISM afferents"
                     sender = loss_node.afferents[0].sender_wrapper
                     sample_or_target_msg = (
-                        "a SAMPLE afferent" if sender.mechanism is not loss_node.mechanism.sample.owner
-                        else "a TARGET afferent")
+                        "a SAMPLE_MECHANISM afferent" if sender.mechanism is not loss_node.mechanism.sample.owner
+                        else "a TARGET_MECHANISM afferent")
                     assert False, (f"PROGRAM ERROR: the Loss Node of the pytorch wrapper for '{composition.name}' "
                                    f"has not been assigned {sample_or_target_msg}.")
             _validate_loss_nodes()
@@ -478,7 +481,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Remove all PNL learning-specific components
         nodes = set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING))
-        # Remove LossMechanisms and any TARGET Nodes if this is for a nested Composition
+        # Remove LossMechanisms and any TARGET_MECHANISMs if this is for a nested Composition
         #   (those are constructed for the outermost Composition and only those are used)
         if self.is_nested:
             nodes = nodes - set(node for node in nodes
@@ -934,7 +937,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def processing_graph(self)->dict:
         """Creates graph (dependencies) for nodes of AutodiffComposition in PyTorch mode
         IMPLEMENTATION NOTE:
-            learning_components (LossMechanism(s) and TARGET nodes) are included
+            learning_components (LossMechanism(s) and TARGET_MECHANISMs) are included
             since these are always part of the graph in PyTorch mode
         """
         # TEACHER_TARGET BREADCRUMB:
@@ -1852,7 +1855,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.all_output_values = output_values
 
-        # Get value of all SAMPLE (student) Nodes:
+        # Get value of all SAMPLE_MECHANISM (student) Nodes:
         sample_values = [node.output for node in self.sample_wrappers]
         self.sample_values = sample_values
 
@@ -2133,9 +2136,9 @@ class PytorchMechanismWrapper(torch.nn.Module):
         if self.composition.is_nested:
             # Ensure wrapper for LossMechanism gets afferent from 'PYTORCH GRU NODE'
             # IMPLEMENTATION NOTE:
-            #   Do this by adding PytorchProjectionWrapper for nested sample node->LossMechanism.sample.owner
+            #   Do this by adding PytorchProjectionWrapper for nested SAMPLE_MECHANISM->LossMechanism.sample.owner
             #   This is needed because the LossMechanism is constructed after _get_pytorch_backprop_pathways
-            #   so that the dependency on the nested sample node is not seen.  This ensures that it *is* seen
+            #   so that the dependency on the nested SAMPLE_MECHANISM is not seen.  This ensures that it *is* seen
             #   in _instantiate_pytorch_projection_wrappers() in the call to _get_composition_projections()
             outer_comp = context.composition
             outer_comp_pytorch_rep = outer_creator

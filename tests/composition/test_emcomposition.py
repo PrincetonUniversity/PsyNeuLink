@@ -1113,7 +1113,7 @@ class TestExecution:
         assert len(learning_components) == 1
         assert learning_components[0].name == 'LOSS for PREDICTION'
         # # TEACHER_TARGET BREADCRUMB: OLD,BUT KEEP FOR TESTING
-        # #                            configuration in which another node is assigned a projection to a TARGET Node
+        # #                            configuration in which another node is assigned a projection to a TARGET_MECHANISM
         # #                            instead of assigning that node as a target in the *targets* arg of the constructor
         # EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
         #                                          receiver=learning_components[1],

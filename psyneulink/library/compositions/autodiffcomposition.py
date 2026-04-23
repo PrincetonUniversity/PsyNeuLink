@@ -29,7 +29,7 @@ Contents
   * `AutodiffComposition_Structure`
       - `AutodiffComposition_Learning_Components`
           - `AutodiffComposition_Structure_LossMechanisms`
-          - `AutodiffComposition_Structure_Target_Nodes`
+          - `AutodiffComposition_Structure_Target_Mechanisms`
       - `AutodiffComposition_PytorchRepresentation`
       - `AutodiffComposition_Nesting`
   * `AutodiffComposition_Execution`
@@ -127,25 +127,25 @@ for every pathway that has at least one learnable MappingProjection, and automat
 *Configuring Learning Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A learning Pathway can be configured by specifying either a `sample <AutodiffComposition_Sample>`\\-`target
-<AutodiffComposition_Target>` target pair, or a `LossMechanism` that uses these, in the **targets** argument of
-the AutodiffComposition's constructor. These Components are described below, followed by the ways in which they
-can be `specified <AutodiffComposition_Specifying_Learning_Pathways>` in the constructor's **targets** argument.
-However, a few important rules apply:
+A learning Pathway can be configured by specifying either a `SAMPLE_MECHANISM
+<AutodiffComposition_Sample>`\\-`TARGET_MECHANISM <AutodiffComposition_Target>` target pair, or a `LossMechanism`
+that uses these, in the **targets** argument of the AutodiffComposition's constructor. These Components are described
+below, followed by the ways in which they can be `specified <AutodiffComposition_Specifying_Learning_Pathways>` in
+the constructor's **targets** argument. However, a few important rules apply:
 
   .. _AutodiffComposition_SAMPLE_Assginment_Rules:
 
-  - a Mechanism specified as a `SAMPLE <AutodiffComposition_Sample>` must follow at least one learnable
+  - a Mechanism specified as a `SAMPLE_MECHANISM <AutodiffComposition_Sample>` must follow at least one learnable
     MappingProjection;
 
-  - every learnable MappingProjection must be followed somewhere by a SAMPLE Mechanism;
+  - every learnable MappingProjection must be followed somewhere by a SAMPLE_MECHANISM;
 
-  - if a SAMPLE is followed somewhere in a Pathway by a learnable MappingProjection, a warning will be issued.
+  - if a SAMPLE_MECHANISM is followed somewhere in a Pathway by a learnable MappingProjection, a warning will be issued.
 
-  - a SAMPLE can have only one `TARGET <AutodiffComposition_Target>`, though a TARGET can be used to train more than
-    one SAMPLE.
+  - a SAMPLE_MECHANISM can have only one `TARGET_MECHANISM <AutodiffComposition_Target>`,
+    though a TARGET_MECHANISM can be used to train more than one SAMPLE_MECHANISM.
 
-  - a TARGET for a SAMPLE cannot be in the same Pathway as the SAMPLE.
+  - a TARGET_MECHANISM for a SAMPLE_MECHANISM cannot be in the same Pathway as the SAMPLE_MECHANISM.
 
   .. note::
       Since pathways can overlap (converge, diverge or both; e.g., see `Composition_MultilayerLearning_Figure`),
@@ -177,9 +177,9 @@ However, a few important rules apply:
 *Sample*
 ^^^^^^^^
 This generates the value being trained (sometimes referred to as the "student"). It is the `OutputPort`
-of a `SAMPLE_MECHANISM` in a learning Pathways, that can be assigned anywhere in an AutodiffComposition,
+of a `SAMPLE_MECHANISM` in a learning Pathway, that can be assigned anywhere in an AutodiffComposition,
 or in one `nested <AutodiffComposition_Nesting>` within it, subject to the rules outlined `above
-<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the *sample* is trained
+<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the lennlenlenlenlenle is trained
 using the value of the `target <AutodiffComposition_Target>` with which it is paired, or by values specified
 in the **targets** argument of the `learn() <Composition.learn>` method (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). Only one *target* can be associated with a *sample*,
@@ -201,12 +201,12 @@ with which it is paired. It is `value <OutputPort.value>` of the OutputPort of a
 an automatically constructed `INPUT <NodeRole.INPUT>` `Node  <Composition_Nodes>` that receives external values provided
 in the **targets** argument of the `learn() <Composition.learn>` when it is executed. Any ProcessingMechanism in a
 AutodiffComposition -- or one `nested <AutodiffComposition_Nesting>` within it -- can be specified as a
-`TARGET_MECHANISM`, so long as it is not in the same `pathway <Composition_Pathways>` as the sample it trains. This
+`TARGET_MECHANISM`, so long as it is not in the same `pathway <Composition_Pathways>` as the *sample* it trains. This
 allows the value of one pathway to be used to train another. Alternatively, the kewyord *TARGET* can be used to specify
 the *target* for a *sample*, which allows external values provided in the **targets** argument of the `learn()
 <Composition.learn>` method to be used to train the Pathway (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). In that case, a `TARGET_MECHANISM
-<AutodiffComposition_Structure_Target_Nodes>` is automtically constructed for the *sample*, to receive the external
+<AutodiffComposition_Structure_Target_Mechanisms>` is automtically constructed for the *sample*, to receive the external
 input when learning is executed, and the values (assigned as inputs to the that `TARGET_MECHANISM`) must be provided
 in the **targets** argument of the `learn() <Composition.learn>` when it is called (see `Autodiffcomposition_PyTorch`).
 
@@ -248,7 +248,7 @@ of the AutodiffComposition.
 This is done in the **targets** argument of the AutodiffComposition's constructor, using any of the forms of
 specificaiton listed below. If *any* *sample-target* pairs are specified, *only* those are used; if *none* are
 specified, then all of `OUTPUT Nodes <Composition_Nodes>` of the AutodiffComposition are used as *samples*, and
-corresponding `TARGET Nodes <AutodiffComposition_Structure_Target_Nodes>` are automatically constructed to receive
+corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanisms>` are automatically constructed to receive
 the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()` method
 when it is called.
 
@@ -419,16 +419,16 @@ uses the form of `Loss` specified in the **loss** argument of its constructor, o
 
 .. _AutodiffComposition_Structure_Target_Nodes:
 
-*TARGET Nodes*
-^^^^^^^^^^^^^^
+*TARGET_MECHANISMS*
+^^^^^^^^^^^^^^^^^^^
 
 If any external `targets <AutodiffComposition_Target>` are specified in **targets** argument of the
-AutodiffComposition's constructor, then a `TARGET Node <NodeRole.TARGET>` is constructed for the corresponding
-`samples <AutodiffComposition_Sample>`.  If *no* *targets* are specified, then a *TARGET Node* is constructed for
+AutodiffComposition's constructor, then a `TARGET_MECHANISM <NodeRole.TARGET>` is constructed for the corresponding
+`samples <AutodiffComposition_Sample>`.  If *no* *targets* are specified, then a *TARGET_MECHANISM* is constructed for
 every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
-`learnable <MappingProjection.learnable>` Projection.  Each *TARGET Node* receives the input specified for its
+`learnable <MappingProjection.learnable>` Projection.  Each *TARGET_MECHANISM* receives the input specified for its
 corresponding *sample* in the **targets** argument of the `learn() <AutodiffComposition>` method, and projects to
-the corresponding `LossMechanism`. The *TARGET Nodes* for an AutodiffComposition are listed in its `target_nodes
+the corresponding `LossMechanism`. The *TARGET_MECHANISMs* for an AutodiffComposition are listed in its `target_nodes
 <AutodiffCompostion.target_nodes>` and `learning_components <Composition.learning_components>` attributes.
 
 COMMENT:
@@ -467,8 +467,8 @@ method is called with its **show_pytorch** argument set to `True`, which generat
 `pytorch_representation <AutodiffComposition.pytorch_representation>`. As noted above, this shows the "flattened" verion
 of the AutodiffComposition (if it has any `nested AutodiffCompositions <AutodiffComposition_Nesting>` within it) that
 will execute in PyTorch, with direct Projections between Nodes at different levels of nesting. This also shows any
-`LossMechanisms <AutodiffComposition_Structure_LossMechanisms>` and `TARGET Nodes
-<AutodiffComposition_Structure_Target_Nodes>` that have been automatically constructed
+`LossMechanisms <AutodiffComposition_Structure_LossMechanisms>` and `TARGET_MECHANISMs
+<AutodiffComposition_Structure_Target_Mechanisms>` that have been automatically constructed
 (see `AutodiffComposition_LossMechanism` and `AutodiffComposition_Target`, respectively). Furthermore, note that `no
 control-related components <Autodiff_Control_Components> are shown. Finally, Projections that are `excluded from
 gradient calculations <PytorchMechanismWrapper.exclude_from_gradient_calc>` are shown with dotted arrows, which are also
@@ -1431,31 +1431,31 @@ class AutodiffComposition(Composition):
               see `PytorchCompositionWrapper` for table of how Projections are handled and further details.
         For Python mode:
           - calls add_backpropagation_learning_pathway() for each identified pathway
-            which also creates TARGET Nodes for TERMINAL Nodes in each pathway
+            which also creates TARGET_MECHANISMs for TERMINAL Nodes in each pathway
         For PyTorch mode:
           - if **targets** are specified in the AutodiffComposition constructor,
              LossMechanisms and MappingProjections are constructed for them;
-          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and TARGET Nodes
+          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and TARGET_MECHANISMs
             with associated MappingProjections) to allow targets to be specified in inputs argument of learn().
           - the above allow:
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
             - losses to be tracked for logging (as mechs of a Composition)
-        Return list of LossMechanisms and TARGET Nodes
+        Return list of LossMechanisms and TARGET_MECHANISMs
         """
         context = context or Context()
         base_context = base_context or Context()
 
-        # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
+        # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET_MECHANISM)
         self.pytorch_backprop_pathways = self._get_pytorch_backprop_pathways(context)
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
-            # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
+            # Construct LossMechanisms, and TARGET_MECHANISMs if needed, for inclusion in pathway construction below
             self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
 
         else:
         # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
-            #    that will construct learning components, including TARGET Nodes for all TERMINAL Nodes
+            #    that will construct learning components, including TARGET_MECHANISMs for all TERMINAL Nodes
             for pathway in self.pytorch_backprop_pathways:
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
@@ -1707,7 +1707,7 @@ class AutodiffComposition(Composition):
                   (constructed_target_mechs and target_spec in constructed_target_mechs)):
                 target_msg = "An external TARGET input"
             else:
-                target_msg = f"A TARGET node ('{target_spec.full_name}')"
+                target_msg = f"A TARGET_MECHANISM ('{target_spec.full_name}')"
             error_msg = (f"{target_msg} can't be assigned to '{sample_mech.name}' in the 'targets' argument of "
                          f"'{self.name}', since there are no learnable Projections in any of the pathways that "
                          f"project to that Node.")
@@ -1719,7 +1719,7 @@ class AutodiffComposition(Composition):
                 #   and warning about potential non-learnability is handled in _instantiate_optimizer()
                 # return False
                 return SINGLETON
-            # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
+            # TARGET_MECHANISMs being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             error_msg = (f"A target value is specified for '{sample_mech.name}' in the learn() method of "
                          f"'{self.name}', but that Node has no afferent pathways with any learnable Projections.")
 
@@ -1765,38 +1765,38 @@ class AutodiffComposition(Composition):
                 self._warned_about_target_before_sample_in_pathway = True
 
     def _instantiate_loss_components(self, pathways, context, base_context):
-        """Instantiate sample:target pairs, LossMechanisms, and any TARGET Nodes needed
+        """Instantiate sample:target pairs, LossMechanisms, and any TARGET_MECHANISMs needed
 
         Overivew:
         - Use any specifications in self.targets (from **targets** arg of AutodiffComposition constructor)
-            to identify sample-target pairs, and constuct LossMechanisms and any needed TARGET Nodes
+            to identify sample-target pairs, and constuct LossMechanisms and any needed TARGET_MECHANISMs
         - If there are no specifications in self.targets, then use OUTPUT Nodes of pathways as samples
-            and construct TARGET Nodes for each.
+            and construct TARGET_MECHANISMs for each.
 
         Procedure:
         1) Handle specifications from constructor (in self.targets) in call to _instantiate_constructor_targets_args():
             - identifies sample-target pairs:
                - places them in self.sample_port_to_target_port_map
                - returns them as first item, placed in loss_mech_specs
-            - creates TARGET Nodes (that receive external input) for any targets specified using TARGET keyword
+            - creates TARGET_MECHANISMs (that receive external input) for any targets specified using TARGET keyword
               - returns them as second item, placed in target_mechs
         2) If there are no constructor specifications, then call _instantiate_default_targets():
-            - assigns all OUTPUT Nodes of pathways as samples and TARGET Nodes as targets
+            - assigns all OUTPUT Nodes of pathways as samples and TARGET_MECHANISMs as targets
                   this allows:
                     - external targets to be specified in learn() in the same way as for other execution_modes:
-                        learn(targets = {<OUTPUT Node> : <value>}) -> TARGET Node
+                        learn(targets = {<OUTPUT Node> : <value>}) -> TARGET_MECHANISM
                         (mapping is done in _map_external_target_values_to_target_nodes()
                     - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
                     - losses to be tracked for logging (as mechs of a Composition)
               - places them in self.sample_port_to_target_port_map
               - returns them as first item, placed in loss_mech_specs
-           - creates any TARGET Nodes that have not yet been constructed
+           - creates any TARGET_MECHANISMs that have not yet been constructed
               - returns them as second item, placed in target_mechs
         3) Validate loss_mech_specs
         4) Use loss_mechs and target_mechs to instantiate LossMechanisms in call to _instantiate_loss_mechanisms():
            - constructs self.loss_mechs_map: {<LossMechanism>: (sample OutputPort, target OutputPort)}
            - adds LossMechanisms to AutodiffComposition
-        5) Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
+        5) Exclude LossMechanisms and TARGET_MECHANISMs from OUTPUT role and suppress warnings about role assignments
         """
         # If loss_components have already been instantiated, skip
         if self._sample_target_pairs and any(isinstance(node, LossMechanism) for node in self.nodes):
@@ -1808,7 +1808,7 @@ class AutodiffComposition(Composition):
             # Instantiate any sample-target specifications in **targets** arg of AutodiffComposition constructor
             self._instantiate_constructor_targets_args(pathways, context, base_context)
         else:
-            # No target specifications in constructor, so instantiate default TARGET Node assignments,
+            # No target specifications in constructor, so instantiate default TARGET_MECHANISM assignments,
             self._instantiate_default_targets(pathways, context, base_context)
 
         loss_mech_specs = list(self.sample_port_to_target_port_map.items())
@@ -1817,7 +1817,7 @@ class AutodiffComposition(Composition):
         self._parse_constructor_targets_specs()
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
-        # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
+        # Exclude LossMechanisms and TARGET_MECHANISMs from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context=context)
             for output_port in mech.output_ports:
@@ -1861,7 +1861,7 @@ class AutodiffComposition(Composition):
                                            f"an AutodiffComposition, then ones must be specified for *all* learnable "
                                            f"pathways in that Composition; if none are specified, the OUTPUT Nodes of "
                                            f"all learnable pathways in that Composition are treated as SAMPLEs, and "
-                                           f"TARGET Nodes are automatically constructed for each, for which inputs "
+                                           f"TARGET_MECHANISMs are automatically constructed for each, for which inputs "
                                            f"must then be provided in the 'targets' argument of the learn() method "
                                            f"when it is called.")
 
@@ -1876,7 +1876,7 @@ class AutodiffComposition(Composition):
               sample = OutputPort or ProcessingMechanism,
               target = OutputPort, ProcessingMechanism, or TARGET keyword
         - Identify all samples and assign NodeRole.SAMPLE to them
-        - Instantiate TARGET Nodes for any targets specified as TARGET, and assign NodeRole.TARGET
+        - Instantiate TARGET_MECHANISMs for any targets specified as TARGET, and assign NodeRole.TARGET
         - Update self._sample_target_pairs (with SAMPLE and TARGET Mechanisms and OutputPorts)
         """
 
@@ -1919,14 +1919,9 @@ class AutodiffComposition(Composition):
                     # target is internal Node
                     self._check_if_target_is_in_sample_pathway(sample_port, target_port, pathways, context)
                 elif target_spec == TARGET:
-                    # target is TARGET keyword, so attempt to construct TARGET Node
-                    # MODIFIED SAMPLE_AND_TARGET OLD:
-                    # if sample_port in self.sample_port_to_target_port_map:
-                    # MODIFIED SAMPLE_AND_TARGET NEW:  BREADCRUMB:  WHY ISN'T sample_port IN
-                    #                                               self._samples_and_targets.sample_ports??
+                    # target is TARGET keyword, so attempt to construct TARGET_MECHANISM
                     if sample_port in self._samples_and_targets.sample_ports:
-                        # MODIFIED SAMPLE_AND_TARGET END
-                        # TARGET Node has already been constructed for specified sample Port,
+                        # TARGET_MECHANISM has already been constructed for specified sample Port,
                         #   so register for later error reporting, and then move on
                         self._samples_and_targets.add_spec(self._samples_and_targets.Spec(sample_port, sample_spec,
                                                                                           target_port, target_spec, None,
@@ -1967,16 +1962,16 @@ class AutodiffComposition(Composition):
 
 
     def _instantiate_default_targets(self, pathways: list, context, base_context) -> Tuple[List, List]:
-        """Construct default TARGET Nodes (since none were specified in **targets** arg of constructor
-        Current default is to treat all OUTPUT Nodes as samples, and assign them TARGET Nodes
+        """Construct default TARGET_MECHANISMs (since none were specified in **targets** arg of constructor
+        Current default is to treat all OUTPUT Nodes as samples, and assign them TARGET_MECHANISMs
         IMPLEMENTATION NOTE:
            This is to support legacy behavior, in which targets are not specified explicitly
-        - Only add TARGET Nodes if *not* already present in self.sample_port_to_target_port_map.values(),
+        - Only add TARGET_MECHANISMs if *not* already present in self.sample_port_to_target_port_map.values(),
            to avoid duplication in multiple calls, including from command line
            (see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-        - Update self.sample_port_to_target_port_map with construted TARGET Nodes
-        - Add constructed TARGET Nodes to AutodiffComposition with NodeRole.TARGET and NodeRole.INPUT
-        Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET Nodes
+        - Update self.sample_port_to_target_port_map with construted TARGET_MECHANISMs
+        - Add constructed TARGET_MECHANISMs to AutodiffComposition with NodeRole.TARGET and NodeRole.INPUT
+        Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET_MECHANISMs
         """
         pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
         identified_output_nodes = self._identify_output_nodes(context)
@@ -1996,11 +1991,11 @@ class AutodiffComposition(Composition):
             if _learnable is SINGLETON or _learnable is False:
                 output_ports_for_learning.remove(output_port_for_learning)
                 continue
-            # Check for existing TARGET Nodes
+            # Check for existing TARGET_MECHANISMs
             existing_output_ports_for_learnings = [sample for sample, target in self.loss_mechs_map.values()]
-            # Get or construct TARGET Node if none exists for OUTPUT Node
+            # Get or construct TARGET_MECHANISM if none exists for OUTPUT Node
             if output_port_for_learning not in existing_output_ports_for_learnings:
-                # Check that TARGET Node doesn't already exist for OUTPUT Node
+                # Check that TARGET_MECHANISM doesn't already exist for OUTPUT Node
                 #    (may have been created for PNL learning in call to add_backpropagation_learning_pathway)
                 existing_comparators = [mech for mech in self.nodes if
                                         isinstance(mech, ComparatorMechanism) and
@@ -2011,9 +2006,9 @@ class AutodiffComposition(Composition):
                                                f"for '{output_port_for_learning.full_name}' in {self.name}'.")
                 if comparators_for_output_port:
                     target_mech = comparators_for_output_port[0].input_ports[TARGET].path_afferents[0].sender.owner
-                    # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
+                    # Autodiff now owns this TARGET_MECHANISM, so dissociate from learning_components used for Python
                     self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context=context)
-                    # TARGET Node already exists, so no need to construct
+                    # TARGET_MECHANISM already exists, so no need to construct
                     continue
                 else:
                     sample = output_port_for_learning
@@ -2129,9 +2124,9 @@ class AutodiffComposition(Composition):
                 # Construct LossMechanism
                     # If there is no loss_mech for the current sample, instantiate one
                     # IMPLEMENTATION NOTE:
-                    #        Don't allow multiple LossMechanisms to train the same SAMPLE Node
-                    #        But it IS OK to have multiple LossMechanisms use the same TARGET Node
-                    #        (i.e., to train multiple SAMPLES)
+                    #        Don't allow multiple LossMechanisms to train the same SAMPLE_MECHANISM
+                    #        But it IS OK to have multiple LossMechanisms use the same TARGET_MECHANISM
+                    #        (i.e., to train multiple SAMPLE_MECHANISMs)
                     name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
                     loss_mech = LossMechanism(name=f"LOSS for {name}",
                                               sample=sample,
@@ -2458,7 +2453,7 @@ class AutodiffComposition(Composition):
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch,
                          context=None, base_context=None):
         """Override to call infer_backpropagation_learning_pathways
-        This instantiates any TARGET Nodes specified in **targets** argument of the constructor.
+        This instantiates any TARGET_MECHANISMs specified in **targets** argument of the constructor.
         """
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
                                                      context=context, base_context=base_context)
@@ -2538,11 +2533,11 @@ class AutodiffComposition(Composition):
         IMPLEMENTATION NOTE:
             this is legacy code that may be restored for use in the future, though would need to be revised/validated
         """
-        # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
+        # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET_MECHANISMs)
         curr_tensors_for_sample_values = {k:v for k,v in curr_tensors_for_outputs.items()
                                             if k in self.outputs_to_targets_map}
 
-        # Get value of TARGET nodes for current trial
+        # Get value of TARGET_MECHANISMs for current trial
         curr_tensors_for_targets = {}
         for component, target in targets.items():
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
@@ -2552,7 +2547,7 @@ class AutodiffComposition(Composition):
                 num_outputs = len(target[0][0])
                 curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 
-        # Map value of TARGET nodes to trained OUTPUT nodes
+        # Map value of TARGET_MECHANISMs to trained OUTPUT nodes
         curr_target_tensors_for_sample_values = {}
         for trained_output, target in self.outputs_to_targets_map.items():
             curr_target_tensors_for_sample_values[trained_output] = curr_tensors_for_targets[target]
@@ -2706,7 +2701,7 @@ class AutodiffComposition(Composition):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
     def _get_autodiff_inputs_values(self, input_dict: dict):
-        """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
+        """Remove TARGET_MECHANISMs, and return dict with values of INPUT Nodes for single trial
         For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
         For InuptPorts, replace with owner
 
@@ -2729,28 +2724,28 @@ class AutodiffComposition(Composition):
         return autodiff_input_dict
 
     def _get_autodiff_target_node_input_values(self, input_dict):
-        """Return dict with input values for TARGET Nodes
-        Get inputs to TARGET Nodes used for computation of loss in autodiff_forward().
-        Use input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
-        If a TARGET Node is not an INPUT Node, it is assumed to be an internal target as is ignored,
+        """Return dict with input values for TARGET_MECHANISMs
+        Get inputs to TARGET_MECHANISMs used for computation of loss in autodiff_forward().
+        Use input_dict to get input values for TARGET_MECHANISMs that are INPUT Nodes of the AutodiffComposition,
+        If a TARGET_MECHANISM is not an INPUT Node, it is assumed to be an internal target as is ignored,
            as those are assumed to be executed in autodiff_forward()
 
         Returns
         ---------
-        A dict mapping TARGET Nodes -> target values
+        A dict mapping TARGET_MECHANISMs -> target values
         """
         target_values = {}
         def get_target_value(target):
             if target in self.get_nodes_by_role(NodeRole.INPUT):
                 return input_dict[target]
             if len(target.path_afferents) > 1:
-                # TARGET Nodes should only have a single afferent input
-                raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}') "
+                # TARGET_MECHANISMs should only have a single afferent input
+                raise AutodiffCompositionError(f"TARGET_MECHANISM '{target.name}' (for '{self.name}') "
                                                f"cannot have more than one afferent projection.")
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        # Get OutputPorts for TARGET Nodes
+        # Get OutputPorts for TARGET_MECHANISMs
         for target_port in [t for t in self.target_port_to_sample_port_map
                             if t.owner in self.get_nodes_by_role(NodeRole.TARGET)]:
             target_values[target_port.owner] = get_target_value(target_port.owner)
@@ -2772,7 +2767,7 @@ class AutodiffComposition(Composition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
 
-        # Assign target values specified in learn() to TARGET Nodes
+        # Assign target values specified in learn() to TARGET_MECHANISMs
         for port, value in target_specs.copy().items():
             # port to be specified for sample or target; what matters is
             sample, target = next((item for item in list(self.sample_port_to_target_port_map.items())
@@ -2882,7 +2877,7 @@ class AutodiffComposition(Composition):
         Issue error for:
         - missing entries in learn() or ones with a non-numeric value
             for SAMPLEs specified with the keyword 'TARGET' in the constructor
-        - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
+        - *any* specifications for sample-target pairs specified with an internal TARGET_MECHANISM in the constructor
 
         Notes:
         - validation of SAMPLES happens in _validate_constructor_targets_specs()
@@ -2959,10 +2954,10 @@ class AutodiffComposition(Composition):
                     constructor_spec = next(s for s in self._sample_target_specs
                                             if s.sample_port is sample and s.source == CONSTRUCTOR_TARGETS_ARGS)
                     bad_specs.append((constructor_spec, sample,
-                                      f"the sample is assigned 'TARGET' as its value in the 'targets' argument of the "
-                                      f"constructor, so it should also be specified in the 'targets' argument of the "
-                                      "learn() method, and assigned a numeric array (i.e., the value(s) to be used for "
-                                      "training on each trial)"))
+                                      f"the SAMPLE_MECHANISM is assigned 'TARGET' as its value in the 'targets' "
+                                      f"argument of the constructor, so it should also be specified in the 'targets' "
+                                      f"argument of the learn() method, and assigned a numeric array (i.e., the "
+                                      f"value(s) to be used for training on each trial)"))
 
         # Add any remaining illegal specs passed in to bad_specs for reporting in error message
         # This is used t
@@ -2973,8 +2968,8 @@ class AutodiffComposition(Composition):
                 if isinstance(spec.target_spec, (OutputPort, ProcessingMechanism_Base))
                 else spec.target_spec
             )
-            bad_specs.append((spec, illegal_spec, f"does not correspond to any SAMPLE specified "
-                                                  f"in the constructor"))
+            bad_specs.append((spec, illegal_spec, f"does not correspond to any SAMPLE_MECHANISM "
+                                                  f"specified in the constructor"))
 
         if bad_specs:
             # BREADCRUMB: MOVE THIS TO SamplePairs class ONCE THAT IS IMPLEMENTED
@@ -3003,7 +2998,7 @@ class AutodiffComposition(Composition):
                         sample_str = f"'{spec.sample_port.full_name}'{sample_spec_str}"
                     else:
                         sample_str = f"'{spec.sample_spec.full_name}'"
-                    all_bad_specs_str.append(f"for SAMPLE {sample_str}: {err_msg}")
+                    all_bad_specs_str.append(f"for SAMPLE_MECHANISM {sample_str}: {err_msg}")
                 else:
                     all_bad_specs_str.append(f"{illegal_spec}: {err_msg}")
 
@@ -3066,13 +3061,13 @@ class AutodiffComposition(Composition):
             node_s = 's' if many_outputs else ''
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
                                    f"conflicting specifications for the target values assigned to {one_of}its "
-                                   f"SAMPLE Node{node_s}: {full_str}.")
+                                   f"SAMPLE_MECHANISM{node_s}: {full_str}.")
 
     def _check_nested_target_mechs(self):
         pass
 
     def _identify_output_nodes(self, context)->list:
-        """Recursively call all nested AutodiffCompositions to assign TARGET nodes for learning"""
+        """Recursively call all nested AutodiffCompositions to assign TARGET_MECHANISMs for learning"""
         # Default is to use OUTPUT
         output_nodes = set(node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
                            if not isinstance(node, Composition))
@@ -3969,7 +3964,7 @@ class AutodiffComposition(Composition):
         """Return number of unique learnable pathways in the AutodiffComposition
         Learnable pathways are ones that end in a non-loss Node and contain at least one learnableMappingProjection;
         Unique learnable pathways are defined as those that have different sets of learnable MappingProjections.
-        NOTE: THis method is used to insure that all learnable pathways are assigned a TARGET Node and LossMechanism.
+        NOTE: THis method is used to insure that all learnable pathways are assigned a TARGET_MECHANISM and LossMechanism.
         """
         # Get pathways that end in a non-loss Node and contain at least one learnable MappingProjection
         learning_pathways = [pway for pway in self.pytorch_backprop_pathways

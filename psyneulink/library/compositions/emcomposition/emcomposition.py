@@ -2934,7 +2934,7 @@ class EMComposition(AutodiffComposition):
         return execution_mode
 
     def _identify_output_nodes(self, context)->list:
-        """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
+        """Identify retrieval_nodes specified by **target_field_weights** as TARGET_MECHANISMs"""
         target_fields = self.target_fields
         if target_fields is False:
             if self.enable_learning:

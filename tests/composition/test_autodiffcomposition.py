@@ -70,107 +70,107 @@ class TestAutodiffConstructor:
         solo_mech = ProcessingMechanism(name="SOLO")
 
         # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
-        # # Test without **targets** specification
-        # pathway_1 = Pathway([input_mech,
-        #                      MappingProjection(input_mech, hidden_mech_1, learnable=False),
-        #                      hidden_mech_1,
-        #                      MappingProjection(hidden_mech_1, output_mech, learnable=False),
-        #                      output_mech])
-        # pathway_2 = [input_mech,
-        #              MappingProjection(input_mech, hidden_mech_2, learnable=False),
-        #              hidden_mech_2,
-        #              MappingProjection(hidden_mech_2, output_mech, learnable=False),
-        #              output_mech]
-        # autodiff_comp = AutodiffComposition(name="AUTODIFF COMP", pathways=[pathway_1, pathway_2])
-        #
-        # # Test for warning that show_graph(show_learning=True) is uncessary for AutodiffComposition
-        # warning_message_1 = ("The 'show_learning' argument in the call to show_graph() for 'AUTODIFF COMP' is "
-        #                      "unnecessary since learning components are shown for an AutodiffComposition only when "
-        #                      "'show_pytorch' is used.")
-        # with pytest.warns(UserWarning, match=re.escape(warning_message_1)):
-        #     autodiff_comp.show_graph(show_learning=True, output_fmt='source')
-        #
-        # # Test for warning if show_pytorch=True with no learnable pathways
-        # warning_message_2 = ("No learnable pathways were found in 'AUTODIFF COMP'; therefore, no "
-        #                      "pytorch_representation will be constructed, and learning will not be possible.")
-        # with pytest.warns(UserWarning, match=re.escape(warning_message_2)):
-        #     autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
-        # autodiff_comp.run(inputs={input_mech: [[1.0]]})
-        #
-        # # Test for error on learn() with no learnable pathways
-        # error_msg = (f"'AUTODIFF COMP' does not have any learnable pathways, "
-        #              f"therefore its learn() method cannot be executed.")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp.learn(inputs={input_mech: [[1.0]]})
-        #
-        # # Test for error on **targets** specification for unlearnable pathway
-        # unlearnable_proj = MappingProjection(input_mech, output_mech, learnable=False)
-        # unlearnable_pathway = [input_mech, unlearnable_proj, output_mech]
-        # # Test for **targets** specification with no learnable pathways
-        # error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_2', but it has no learnable pathways")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_2",
-        #                                         pathways=unlearnable_pathway,
-        #                                         targets={output_mech: pnl.TARGET})
-        #     autodiff_comp.show_graph(show_pytorch=True)
-        #
-        # # Test for **targets** specification of a non-learnable pathway when there are other learnable ones
-        # input_mech_2 = ProcessingMechanism(name="INPUT_2")
-        # output_mech_2 = ProcessingMechanism(name="OUTPUT_2")
-        # learnable_proj = MappingProjection(input_mech_2, output_mech_2, learnable=True)
-        # learnable_pathway = [input_mech_2, learnable_proj, output_mech_2]
-        # error_msg = ("An external TARGET input can't be assigned to 'OUTPUT' in the 'targets' argument of "
-        #              "'AUTODIFF COMP_3', since there are no learnable Projections in any of the pathways that "
-        #              "project to that Node.")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_3",
-        #                                         pathways=[unlearnable_pathway, learnable_pathway],
-        #                                         targets={output_mech: pnl.TARGET})
-        #     autodiff_comp.show_graph(show_pytorch=True)
-        #
-        # # Test for **targets** specification of SINGLETON Node when there are other learnable ones
-        # error_msg = ("An external TARGET input can't be assigned to 'SOLO' in the 'targets' argument of "
-        #              "'AUTODIFF COMP_4', since there are no learnable Projections in any of the pathways that "
-        #              "project to that Node.")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_4",
-        #                                         pathways=[learnable_pathway, solo_mech],
-        #                                         targets={solo_mech: pnl.TARGET})
-        #     autodiff_comp.show_graph(show_pytorch=True)
-        #
-        # # Test for **targets** specification of SINGLETON Node when there are other learnable ones
-        # error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_5', but it has no learnable pathways")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_5",
-        #                                         pathways=[unlearnable_pathway, solo_mech],
-        #                                         targets={output_mech: solo_mech})
-        #     autodiff_comp.show_graph(show_pytorch=True)
-        #
-        # # Test for **targets** specification of SINGLETON Node when there are other learnable ones
-        # error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_6', but it has no learnable pathways")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_6",
-        #                                         pathways=[unlearnable_pathway, solo_mech],
-        #                                         targets={output_mech: solo_mech})
-        #     autodiff_comp.show_graph(show_pytorch=True)
-        #
-        # # Test for warning on nested SINGELTON without any learnable projections on show_graph(show_pytorch=True)
-        # warning_message = ("No learnable pathways were found in 'AUTODIFF COMP_7'; therefore, no "
-        #                      "pytorch_representation will be constructed, and learning will not be possible.")
-        # with pytest.warns(UserWarning, match=re.escape(warning_message)):
-        #     nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_7",
-        #                                         pathways=[nested_comp])
-        #     autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
-        #
-        # # Test for error on nested SINGELTON without any learnable projections on learn()
-        # error_msg = (f"'AUTODIFF COMP_8' does not have any learnable pathways, "
-        #              f"therefore its learn() method cannot be executed.")
-        # with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
-        #     autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
-        #                                         pathways=[nested_comp],
-        #                                         targets={output_mech: solo_mech})
-        #     autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+        # Test without **targets** specification
+        pathway_1 = Pathway([input_mech,
+                             MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                             hidden_mech_1,
+                             MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                             output_mech])
+        pathway_2 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP", pathways=[pathway_1, pathway_2])
+
+        # Test for warning that show_graph(show_learning=True) is uncessary for AutodiffComposition
+        warning_message_1 = ("The 'show_learning' argument in the call to show_graph() for 'AUTODIFF COMP' is "
+                             "unnecessary since learning components are shown for an AutodiffComposition only when "
+                             "'show_pytorch' is used.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_1)):
+            autodiff_comp.show_graph(show_learning=True, output_fmt='source')
+
+        # Test for warning if show_pytorch=True with no learnable pathways
+        warning_message_2 = ("No learnable pathways were found in 'AUTODIFF COMP'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_2)):
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        autodiff_comp.run(inputs={input_mech: [[1.0]]})
+
+        # Test for error on learn() with no learnable pathways
+        error_msg = (f"'AUTODIFF COMP' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
+        # Test for error on **targets** specification for unlearnable pathway
+        unlearnable_proj = MappingProjection(input_mech, output_mech, learnable=False)
+        unlearnable_pathway = [input_mech, unlearnable_proj, output_mech]
+        # Test for **targets** specification with no learnable pathways
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_2', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_2",
+                                                pathways=unlearnable_pathway,
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of a non-learnable pathway when there are other learnable ones
+        input_mech_2 = ProcessingMechanism(name="INPUT_2")
+        output_mech_2 = ProcessingMechanism(name="OUTPUT_2")
+        learnable_proj = MappingProjection(input_mech_2, output_mech_2, learnable=True)
+        learnable_pathway = [input_mech_2, learnable_proj, output_mech_2]
+        error_msg = ("An external TARGET input can't be assigned to 'OUTPUT' in the 'targets' argument of "
+                     "'AUTODIFF COMP_3', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_3",
+                                                pathways=[unlearnable_pathway, learnable_pathway],
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("An external TARGET input can't be assigned to 'SOLO' in the 'targets' argument of "
+                     "'AUTODIFF COMP_4', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_4",
+                                                pathways=[learnable_pathway, solo_mech],
+                                                targets={solo_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_5', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_5",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_6', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_6",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for warning on nested SINGELTON without any learnable projections on show_graph(show_pytorch=True)
+        warning_message = ("No learnable pathways were found in 'AUTODIFF COMP_7'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message)):
+            nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_7",
+                                                pathways=[nested_comp])
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+
+        # Test for error on nested SINGELTON without any learnable projections on learn()
+        error_msg = (f"'AUTODIFF COMP_8' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+                                                pathways=[nested_comp],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
 
         # Test learn() for nested SINGELTON with learnable projections in outer and no **targets** spec in constructor
 
@@ -399,7 +399,7 @@ class TestAutodiffTargetSpecs:
         teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
         if target_spec in {'internal', 'loss_mech'}: # In these cases, 'TEACHER MECH' is SINGLETON, and thus an OUTPUT
             expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
-        else:   # In these cases, 'TEACHER MECH' is a TARGET Node that projects to LossMechanism, and so not an OUTPUT
+        else:   # In these cases, 'TEACHER MECH' is a TARGET_MECHANISM that projects to LossMechanism, and so not an OUTPUT
             expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001], [0.0, 0.0, 0.0, 0.0, 0.0]]
         # expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
         if target_spec == "default":
@@ -419,9 +419,9 @@ class TestAutodiffTargetSpecs:
             targets_learn_arg = None
 
         if target_spec == "str":
-            error_msg = ("Value ('TARGET') assigned to parameter 'targets' of (AutodiffComposition AUTO-COMP).parameters "
-                         "is not valid: should be a dict of sample:target pairs or, alternatively, a set or list of "
-                         "(sample, target) tuples.")
+            error_msg = ("Value ('TARGET') assigned to parameter 'targets' of "
+                         "(AutodiffComposition AUTO-COMP).parameters is not valid: should be a dict of "
+                         "sample:target pairs or, alternatively, a set or list of (sample, target) tuples.")
             with pytest.raises(pnl.ParameterError, match=re.escape(error_msg)):
                 autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
                                                     targets=targets_constructor_arg,
@@ -432,10 +432,10 @@ class TestAutodiffTargetSpecs:
                                             targets=targets_constructor_arg,
                                             name='AUTO-COMP')
         if target_spec == 'default':
-            # Here, test use of SAMPLE as key in **targets** arg of learn()
+            # Here, test use of SAMPLE_MECHANISM as key in **targets** arg of learn()
             targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
         elif target_spec == 'external':
-            # Here, test use of TARGET Node for SAMPLE as key in **targets** arg of learn()
+            # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
             targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
 
         results = autodiff_comp.learn(num_trials = 2,
@@ -444,15 +444,16 @@ class TestAutodiffTargetSpecs:
                                       execution_mode=pnl.ExecutionMode.PyTorch)
         np.testing.assert_allclose(results, np.array(expected))
 
-        # For compleness, reverse use of SAMPLE and TARGET nodes in **targets** of learn() for default and external
+        # For completeness, reverse use of SAMPLE_MECHANISM and TARGET_MECHANISMs in **targets** of learn()
+        #   for default and external
         if target_spec == 'default':
-            # Here, test use of TARGET Node for SAMPLE as key in **targets** arg of learn()
+            # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
             targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
             autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
                                 targets=targets_learn_arg,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
         elif target_spec == 'external':
-            # Here, test use of SAMPLE as key in **targets** arg of learn()
+            # Here, test use of SAMPLE_MECHANISM as key in **targets** arg of learn()
             targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
             autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
                                 targets=targets_learn_arg,
@@ -460,7 +461,7 @@ class TestAutodiffTargetSpecs:
 
 
     error_messages_for_target_spec_errors = {
-        0: ("A TARGET node ('pway3_mech_T') can't be assigned to 'pway3_mech_A' in the 'targets' argument of "
+        0: ("A TARGET_MECHANISM ('pway3_mech_T') can't be assigned to 'pway3_mech_A' in the 'targets' argument of "
             "'autodiff_composition', since there are no learnable Projections in any of the pathways that project "
             "to that Node.", AutodiffCompositionError),
         1: (f"The following specification in the 'targets' argument of the constructor for 'autodiff_composition' "
@@ -489,42 +490,43 @@ class TestAutodiffTargetSpecs:
             "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
             AutodiffCompositionError),
         6: (f"The learn() method of 'autodiff_composition can't be executed because it's 'targets' argument is "
-           f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: 'pway2_mech_C'.",
-            CompositionError),
+           f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: "
+            f"'pway2_mech_C'.", CompositionError),
         7: (f"The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
             f"specification in its 'targets' argument: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
-            f"be a SAMPLE or TARGET in a Composition).", CompositionError),
+            f"be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).", CompositionError),
         8: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
             "specification in its 'targets' argument: 'pway3_mech_T' (in 'targets' dict): not in "
             "'autodiff_composition'.", CompositionError),
         8.5: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
               "specifications in its 'targets' arguments: 'pway1_mech_T' (in 'targets' dict): SINGLETON Node that is "
-              "neither a SAMPLE nor a TARGET Node; 'pway2_mech_T' (in 'targets' dict): SINGLETON Node that is neither "
-              "a SAMPLE nor a TARGET Node; 'pway3_mech_T' (in 'targets' dict): not in 'autodiff_composition'.",
-              CompositionError),
+              "neither a SAMPLE_MECHANISM nor a TARGET_MECHANISM; 'pway2_mech_T' (in 'targets' dict): SINGLETON Node "
+              "that is neither a SAMPLE_MECHANISM nor a TARGET_MECHANISM; 'pway3_mech_T' (in 'targets' dict): not in "
+              "'autodiff_composition'.", CompositionError),
         9: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
             "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
-            "be a SAMPLE or TARGET in a Composition).", CompositionError),
+            "be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).", CompositionError),
         10: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
-            "specifications in its 'targets' arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
-            "can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): INTERNAL Node "
-            "(which can't be a SAMPLE or TARGET in a Composition).", CompositionError),
+             "specifications in its 'targets' arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
+             "can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition); 'pway3_mech_B' (in 'targets' dict): "
+             "INTERNAL Node (which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).",
+             CompositionError),
         11: ("The learn() method of 'autodiff_composition' can't be executed because there are the following "
              "illegal specifications in its 'targets' arguments: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node "
-             "(which can't be a SAMPLE or TARGET in a Composition); 'pway3_mech_B' (in 'targets' dict): not in "
-             "'autodiff_composition'.", CompositionError),
+             "(which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition); 'pway3_mech_B' (in 'targets' "
+             "dict): not in 'autodiff_composition'.", CompositionError),
         11.5: ("The learn() method of 'autodiff_composition' can\'t be executed because there is the following illegal "
                "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): not in "
                "'autodiff_composition'.", CompositionError),
         12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
-             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: for SAMPLE "
-             "'pway3_mech_C[OutputPort-0]' (specified as 'pway3_mech_C'): a source for its target value "
-             "('pway3_mech_T') is specified in the 'targets' argument of the constructor, so there should be no "
+             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: for "
+             "SAMPLE_MECHANISM 'pway3_mech_C[OutputPort-0]' (specified as 'pway3_mech_C'): a source for its target "
+             "value ('pway3_mech_T') is specified in the 'targets' argument of the constructor, so there should be no "
              "specification for it in learn().", AutodiffCompositionError),
-        13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
-             "its 'targets' argument conflicts with those in the 'targets' argument of its constructor: "
-             "for SAMPLE 'pway2_mech_B': does not correspond to any SAMPLE specified in the constructor.",
-             CompositionError),
+        13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification "
+             "in its 'targets' argument conflicts with those in the 'targets' argument of its constructor: "
+             "for SAMPLE_MECHANISM 'pway2_mech_B': does not correspond to any SAMPLE_MECHANISM specified in "
+             "the constructor.", CompositionError),
     }
     test_args_for_target_spec_errors = [
         #     method         num_specs          spec_type                errant_spec        err_msg_num
@@ -567,8 +569,8 @@ class TestAutodiffTargetSpecs:
         Note:  these overlap to some extent with tests in test_learning.py: TestInputAndTargetSpecs
 
         constructor:
-        - pathway that has target spec for middle but not subequent projections
-        - pathway that has TARGET spec for middle but not subequent projections
+        - pathway that has TARGET_MECHANISM spec for middle but not subequent projections
+        - pathway that has TARGET_MECHANISM spec for middle but not subequent projections
         - pathway that has no spec (should be error in _instantiate_loss, not _validate_constructor_targets_specs)
                    [TEACHER_TARGET BREADCRUMB: CHANGE ERROR in _validate_targets_specss to assert]
         - bad spec: type -> _validate_targets
@@ -578,19 +580,19 @@ class TestAutodiffTargetSpecs:
           - all keys are in composition
           - Warning for any target specs in **targets** arg of learn() that are also in **inputs** arg
           - w/ constructor **targets**:
-            - learn() should have an entry for every sample specified as TARGET in the constructor
+            - learn() should have an entry for every SAMPLE_MECHANISM specified as TARGET in the constructor
             - no extra specs in **targets** arg of learn()
           - no constructor **targets**:
             - keys not in Comp
             - keys that do not refer to an OUTPUT Node
-            - there is a spec for every TARGET Node (OUTPUT Node) in Comp
+            - there is a spec for every TARGET_MECHANISM (OUTPUT Node) in Comp
 
 
         TEACHER_TARGET BREADCRUMB: TODO:
-                        - TWO TARGETS FOR SAME SAMPLE -> ERROR
-                        - TWO SAMPLES FOR SAME TARGET Node -> OK
+                        - TWO TARGET_MECHANISMs FOR SAME _MECHANISM -> ERROR
+                        - TWO SAMPLES FOR SAME TARGET_MECHANISM -> OK
                         - BAD SPEC TYPE (e.g., string that isn't 'TARGET' or 'node') -> ERROR
-                        - SAMPLE AND TARGET Node FOR THAT SAME BOTH AS ENTRIES IN **targets** FOR learn()
+                        - SAMPLE_MECHANISM AND TARGET_MECHANISM FOR THAT SAME BOTH AS ENTRIES IN **targets** FOR learn()
                                        (SEE EXAMPLE IN SCRATCH PAD)
                                        (POSSIBLE SINCE THEY ARE DIFFERENT KEYS IN THE DICT) -> ERROR
         """
@@ -705,14 +707,15 @@ class TestAutodiffTargetSpecs:
             constructor_targets = None
             if num_specs == -1:
                 if spec_type == 'node':
-                    # Missing spec in **targets** arg of learn(); others specified with sample Node
+                    # Missing spec in **targets** arg of learn(); others specified with SAMPLE_MECHANISM
                     learn_targets = {pway1_mech_C: [[10]],
                                      pway3_mech_C: [[10]]}
                 elif spec_type == pnl.TARGET:
-                    # Missing spec in **targets** arg of learn(); others specified with TARGET Node
+                    # Missing spec in **targets** arg of learn(); others specified with TARGET_MECHANISM
                     learn_targets = {'ADD TARGETS': [0, 2]}
                 elif spec_type == 'both':
-                    # Missing sample spec in **targets** arg of learn(); others specified as: other node, TARGET Node
+                    # Missing SAMPLE_MECHANISM spec in **targets** arg of learn();
+                    #   others specified as: other node, TARGET_MECHANISM
                     learn_targets = {pway1_mech_C: [[10]],
                                      'ADD TARGETS': [2]}
                 elif spec_type == 'bad':
@@ -772,9 +775,9 @@ class TestAutodiffTargetSpecs:
             constructor_targets = {pway1_mech_C: pway1_mech_T,
                                    pway2_mech_C: pway2_mech_T,
                                    pway3_mech_C: pway3_mech_T}
-            if num_specs == 0:  # Specification in learn for TARGET Node already specified in constructor
+            if num_specs == 0:  # Specification in learn for TARGET_MECHANISM already specified in constructor
                 learn_targets = {pway3_mech_C: [[10]]}
-            elif num_specs == +1: # Specification in learn for TARGET Node not specified in constructor
+            elif num_specs == +1: # Specification in learn for TARGET_MECHANISM not specified in constructor
                 learn_targets = {pway2_mech_B: [[10]]}
             else:
                 assert False, f"TEST ERROR: bad num_specs: {num_specs}"
@@ -795,7 +798,7 @@ class TestAutodiffTargetSpecs:
                 inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
             if num_specs == 0:
                 if spec_type == pnl.TARGET:
-                    # Construct 3 pathways but only two TARGET Nodes, to test "not in Comp" error for missing one
+                    # Construct 3 pathways but only two TARGET_MECHANISMs, to test "not in Comp" error for missing one
                     pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T]
                     inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
                 elif spec_type in {'bad', 'both'}:
@@ -826,7 +829,7 @@ class TestAutodiffTargetSpecs:
             autodiff_comp = pnl.AutodiffComposition(pathways=pathways,
                                                     targets=constructor_targets)
             if learn_targets and 'ADD TARGETS' in learn_targets:
-                # Add automatically constructed TARGET Nodes if specified
+                # Add automatically constructed TARGET_MECHANISMs if specified
                 target_nodes = sorted(autodiff_comp.get_target_nodes())
                 specs = learn_targets.pop('ADD TARGETS')
                 learn_targets.update({target_nodes[spec]:[[1]] for spec in specs})

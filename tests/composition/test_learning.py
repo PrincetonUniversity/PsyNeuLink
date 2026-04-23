@@ -867,36 +867,36 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_targets':
                 # Test for warning about TARGET_MECHANISMS in targets arg
-                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
-                           f"entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
+                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries"
+                           f" that are TARGET_MECHANISMs ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
                            f"while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
                            f"which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
-                           f"obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
-                           f"specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating the "
-                           f"need to specify the 'targets' arg.")
+                           f"obviating the need to determine the TARGET_MECHANISMs. Alternatively, TARGET_MECHANISMs "
+                           f"can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
+                           f"the need to specify the 'targets' arg.")
                 with pytest.warns(UserWarning, match=re.escape(warning)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
-                warning1 = ("There are multiple specifications of the target values for several of the SAMPLE Nodes "
-                            "(listed below) in the 'inputs' and 'targets' arguments of the learn() method of "
-                            "'TEST COMP'. While this is technically OK, it might be easier and clearer to use the "
-                            "SAMPLE Nodes to which they correspond as the keys of the dict, obviating the need to "
-                            "determine the TARGET Nodes and place them all in the 'targets' argument of the learn "
-                            "method(). Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() "
-                            "method (which can be identified using the Composition's 'get_target_nodes()' method) "
-                            "along with other INPUT nodes, obviating the need to specify the 'targets' arg.  "
+                warning1 = ("There are multiple specifications of the target values for several of the "
+                            "SAMPLE_MECHANISMs (listed below) in the 'inputs' and 'targets' arguments of the learn() "
+                            "method of 'TEST COMP'. While this is technically OK, it might be easier and clearer to "
+                            "use the SAMPLE_MECHANISMs to which they correspond as the keys of the dict, obviating the "
+                            "need to determine the TARGET_MECHANISMs and place them all in the 'targets' argument of "
+                            "the learn method(). Alternatively, TARGET_MECHANISMs can be specified in the 'inputs' arg "
+                            "of learn() method (which can be identified using the Composition's 'get_target_nodes()' "
+                            "method) along with other INPUT nodes, obviating the need to specify the 'targets' arg.  "
                             "Redundant specifications for: 'TARGET for OUTPUT MECH A' in 'inputs' and 'targets' args; "
                             "'TARGET for OUTPUT MECH B' in 'inputs' and 'targets' args.")
 
                 # warning2 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
-                #             "entries that are TARGET Nodes ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
-                #             "while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
-                #             "which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
-                #             "obviating the need to determine the TARGET Nodes. Alternatively, TARGET Nodes can be "
-                #             "specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
-                #             "the need to specify the 'targets' arg.")
+                #             "entries that are TARGET_MECHANISMs ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH
+                #             B'); while this is OK, it might be easier and clearer to use the SAMPLE_MECHANISM
+                #             (OUTPUT) Nodes to which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys
+                #             of the dict, obviating the need to determine the TARGET_MECHANISMs. Alternatively,
+                #             TARGET_MECHANISMs can be specified in the 'inputs' arg of learn() method, along with
+                #             INPUT nodes, obviating the need to specify the 'targets' arg.")
 
                 inputs_arg.update(target_mechs)
                 # with pytest.warns(UserWarning, match=re.escape(warning1)), \
@@ -906,9 +906,9 @@ class TestStructural:
 
             elif target_specs == 'single_conflicting_target_value':
                 # Test error for conflicting values assigned to a single target
-                node_str = 'SAMPLE' if isinstance(comp, pnl.AutodiffComposition) else 'OUTPUT'
+                node_str = 'SAMPLE_MECHANISMs' if isinstance(comp, pnl.AutodiffComposition) else 'OUTPUT Nodes'
                 error = (f"The learn() method of 'TEST COMP' can't be executed because there are conflicting "
-                         f"specifications for the target values assigned to one of its {node_str} Nodes: "
+                         f"specifications for the target values assigned to one of its {node_str}: "
                          f"'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in 'targets', "
                          f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
@@ -925,7 +925,7 @@ class TestStructural:
                 # Test error for too many entries in targets arg
                 error = ("The learn() method of 'TEST COMP' can't be executed because there is the following illegal "
                          "specification in its 'targets' argument: 'INPUT MECH' (in 'targets' dict): INPUT Node that is "
-                         "not a TARGET Node.")
+                         "not a TARGET_MECHANISM.")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
                                targets={comp.nodes[0]: [[1]],
@@ -1036,14 +1036,15 @@ class TestStructural:
                                                        output_mech_B: output_mech_C}
                             error_msg = ("Value ([((ProcessingMechanism OUTPUT MECH A), [[1]]), ((ProcessingMechanism "
                                          "OUTPUT MECH B), (ProcessingMechanism OUTPUT MECH C))]) assigned to parameter "
-                                         "'targets' of (AutodiffComposition TEST COMP).parameters is not valid: target "
-                                         "specification '[[1]]' must be an OutputPort, ProcessingMechanism or the "
-                                         "keyword 'TARGET'.")
+                                         "'targets' of (AutodiffComposition TEST COMP).parameters is not valid: "
+                                         "target specification '[[1]]' must be an OutputPort, "
+                                         "ProcessingMechanism or the keyword 'TARGET'.")
                         else:
                             assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                     elif bad_spec_type == 'extra':
-                        # extra spec can't be implemented in constructor, since it allows any node to be
-                        # a SAMPLE or TARGET, so, implemented here in learn() (and only for "learn_and_constructor")
+                        # extra spec can't be implemented in constructor, since it allows any node to be a
+                        # SAMPLE_MECHANISM or TARGET_MECHANISM, so, implemented here in learn()
+                        # (and only for "learn_and_constructor")
                         if sample_or_target_spec == 'sample' and arg_type == 'learn_and_constructor':
                             constructor_targets_arg = {output_mech_A: output_mech_C,
                                                        output_mech_B: pnl.TARGET}
@@ -1089,7 +1090,7 @@ class TestStructural:
                 targets = comp.get_target_nodes()
 
             # Assign **targets** arg for learn() if specified;
-            #     need to do this *after* construction to be able to use TARGET Nodes as specs
+            #     need to do this *after* construction to be able to use TARGET_MECHANISMs as specs
             if arg_type in {'learn', 'learn_and_constructor'}:
                 if bad_spec_type == 'not_in_comp':
                     if sample_or_target_spec == 'sample':
@@ -1104,9 +1105,9 @@ class TestStructural:
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are the "
                                      f"following illegal specifications in its 'targets' arguments: "
                                      f"'OUTPUT MECH A' (in 'targets' dict): "
-                                     f"specification of SAMPLE's value (OUTPUT MECH D) must be numeric; "
+                                     f"specification of SAMPLE_MECHANISM's value (OUTPUT MECH D) must be numeric; "
                                      f"'OUTPUT MECH B' (in 'targets' dict): "
-                                     f"specification of SAMPLE's value (OUTPUT MECH C) must be numeric.")
+                                     f"specification of SAMPLE_MECHANISM's value (OUTPUT MECH C) must be numeric.")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 elif bad_spec_type == 'proj':
@@ -1123,8 +1124,9 @@ class TestStructural:
                                              output_mech_B: proj_in_to_A}
                         error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
                                      "following illegal specification in its 'targets' argument: 'OUTPUT MECH B' "
-                                     "(in 'targets' dict): specification of SAMPLE's value (MappingProjection from "
-                                     "INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]) must be numeric.")
+                                     "(in 'targets' dict): specification of SAMPLE_MECHANISM's value "
+                                     "(MappingProjection from INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]) "
+                                     "must be numeric.")
                     else:
                         assert False, f"sample_or_target_spec must be 'sample' or 'target'."
                 elif bad_spec_type == 'num':
@@ -1145,19 +1147,19 @@ class TestStructural:
                             if comp_type == 'comp':
                                 error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
                                              "following illegal specification in its 'targets' argument: 'OUTPUT MECH C' "
-                                             "(in 'targets' dict): INPUT Node that is not a TARGET Node.")
+                                             "(in 'targets' dict): INPUT Node that is not a TARGET_MECHANISM.")
                             else:
                                 error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
                                              "following illegal specification in its 'targets' argument: "
-                                             "'OUTPUT MECH C' (in 'targets' dict): "
-                                             "SINGLETON Node that is neither a SAMPLE nor a TARGET Node.")
+                                             "'OUTPUT MECH C' (in 'targets' dict): SINGLETON Node that is neither "
+                                             "a SAMPLE_MECHANISM nor a TARGET_MECHANISM.")
                         else:
                             learn_targets_arg = {output_mech_B: [[2]],
                                                  output_mech_C: [[3]]}
                             error_msg = ("The learn() method of 'TEST COMP' can't be executed because "
                                          "the following specification in its 'targets' argument conflicts with those"
                                          " in the 'targets' argument of its constructor: 'OUTPUT MECH C': "
-                                         "does not correspond to any SAMPLE specified in the constructor.")
+                                         "does not correspond to any SAMPLE_MECHANISM specified in the constructor.")
                     elif sample_or_target_spec == 'target':
                         assert False, (f"TEST ERROR: {comp_type}-{arg_type}-{bad_spec_type}-{sample_or_target_spec} "
                                        f"should have skipped this test")
@@ -1233,7 +1235,7 @@ class TestStructural:
                                                    output_mech_B: input_mech_C}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"SAMPLE_MECHANISMs: 'OUTPUT MECH A[OutputPort-0]': "
                                      f"'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
                                      f"'OUTPUT MECH A[OutputPort-0]'=INPUT MECH D "
                                      f"in AutodiffComposition constructor 'targets'.")
@@ -1251,7 +1253,7 @@ class TestStructural:
                                                    output_mech_B: pnl.TARGET}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"SAMPLE_MECHANISMS: 'OUTPUT MECH A[OutputPort-0]': "
                                      f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
                                      f"'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
@@ -1261,7 +1263,7 @@ class TestStructural:
                                                    output_mech_B: pnl.TARGET}
                         error_msg = ("The learn() method of 'TEST COMP' can't be executed because there are "
                                      "conflicting specifications for the target values assigned to one of its "
-                                     "SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     "SAMPLE_MECHANISMs: 'OUTPUT MECH A[OutputPort-0]': "
                                      "'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
                                      "'OUTPUT MECH A[OutputPort-0]'=TARGET in AutodiffComposition constructor 'targets'.")
                     elif conflict_type == 'conflict_in_learn_and_constructor':  # conflict is here and in constructor
@@ -1271,7 +1273,7 @@ class TestStructural:
                         error_msg = \
                             (f"The learn() method of 'TEST COMP' can't be executed because there are "
                              f"conflicting specifications for the target values assigned to one of its "
-                             f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                             f"SAMPLE_MECHANISMs: 'OUTPUT MECH A[OutputPort-0]': "
                              f"'OUTPUT MECH A'=INPUT MECH C in AutodiffComposition constructor 'targets', "
                              f"'OUTPUT MECH A[OutputPort-0]'=TARGET in AutodiffComposition constructor 'targets'.")
                     elif conflict_type == 'conflict_in_learn_vs_constructor':  # conflict is here and in constructor
@@ -1280,11 +1282,11 @@ class TestStructural:
                                                        output_mech_B: input_mech_C.output_port}
                             error_msg = \
                                 (f"The learn() method of 'TEST COMP' can't be executed because the following "
-                                 f"specifications in its 'targets' argument conflict with ones in the "
-                                 f"'targets' argument of its constructor: for SAMPLE 'OUTPUT MECH A[OutputPort-0]' "
+                                 f"specifications in its 'targets' argument conflict with ones in the 'targets' "
+                                 f"argument of its constructor: for SAMPLE_MECHANISM 'OUTPUT MECH A[OutputPort-0]' "
                                  f"(specified as 'OUTPUT MECH A'): a source for its target value ('INPUT MECH C') "
-                                 f"is specified in the 'targets' argument of the constructor, so there should be "
-                                 f"no specification for it in learn(); for SAMPLE 'OUTPUT MECH B[OutputPort-0]' "
+                                 f"is specified in the 'targets' argument of the constructor, so there should be no "
+                                 f"specification for it in learn(); for SAMPLE_MECHANISM 'OUTPUT MECH B[OutputPort-0]' "
                                  f"(specified as 'OUTPUT MECH B'): a source for its target value "
                                  f"('INPUT MECH C[OutputPort-0]') is specified in the 'targets' argument of the "
                                  f"constructor, so there should be no specification for it in learn().")
@@ -1294,14 +1296,14 @@ class TestStructural:
                             error_msg = \
                                 (f"The learn() method of 'TEST COMP' can't be executed because the following "
                                  f"specifications in its 'AutodiffComposition constructor 'targets'' and 'targets' "
-                                 f"arguments conflict with ones in the 'targets' argument of its constructor: "
-                                 f"for SAMPLE 'OUTPUT MECH A[OutputPort-0]' (specified as 'OUTPUT MECH A'): "
-                                 f"a source for its target value ('INPUT MECH C') is specified in the 'targets' "
-                                 f"argument of the constructor, so there should be no specification for it in learn(); "
-                                 f"for SAMPLE 'OUTPUT MECH B[OutputPort-0]': the sample is assigned 'TARGET' as its "
-                                 f"value in the 'targets' argument of the constructor, so it should also be specified "
-                                 f"in the 'targets' argument of the learn() method, and assigned a numeric array "
-                                 f"(i.e., the value(s) to be used for training on each trial).")
+                                 f"arguments conflict with ones in the 'targets' argument of its constructor: for "
+                                 f"SAMPLE_MECHANISM 'OUTPUT MECH A[OutputPort-0]' (specified as 'OUTPUT MECH A'): a "
+                                 f"source for its target value ('INPUT MECH C') is specified in the 'targets' argument "
+                                 f"of the constructor, so there should be no specification for it in learn(); for "
+                                 f"SAMPLE_MECHANISM 'OUTPUT MECH B[OutputPort-0]': the SAMPLE_MECHANISM is assigned "
+                                 f"'TARGET' as its value in the 'targets' argument of the constructor, so it should "
+                                 f"also be specified in the 'targets' argument of the learn() method, and assigned a "
+                                 f"numeric array (i.e., the value(s) to be used for training on each trial).")
                         else:
                             assert False, "learn_sample_spec must be 'sample' or 'target'."
 
@@ -1330,9 +1332,9 @@ class TestStructural:
                 targets = comp.get_target_nodes()
 
             # Assign **targets** arg for learn() if specified;
-            #     need to do this *after* construction to be able to use TARGET Nodes as specs
+            #     need to do this *after* construction to be able to use TARGET_MECHANISMs as specs
             if arg_type == 'learn':
-                node_type = "OUTPUT" if comp_type == 'comp' else "SAMPLE"
+                node_type = "OUTPUT Nodes" if comp_type == 'comp' else "SAMPLE_MECHANISMs"
                 if conflict_type == 'conflict_in_learn':
                     if learn_sample_spec == 'sample':
                         learn_targets_arg = {output_mech_A: [[1]],
@@ -1340,7 +1342,7 @@ class TestStructural:
                                              output_mech_B: [[3]]}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"{node_type} Nodes: 'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in "
+                                     f"{node_type}: 'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in "
                                      f"'targets', 'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
                     else:
                         learn_targets_arg = {output_mech_A: [[1]],
@@ -1348,9 +1350,7 @@ class TestStructural:
                                              targets[1]: [[3]]}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"{node_type} Nodes: "
-                                     f"'OUTPUT MECH A[OutputPort-0]': "
-                                     f"'OUTPUT MECH A'=[[1]] in 'targets', "
+                                     f"{node_type}: 'OUTPUT MECH A[OutputPort-0]': 'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'TARGET for OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
                 else:
                     # Should skip these for conflict_type:
@@ -1360,7 +1360,7 @@ class TestStructural:
                     assert False, "TEST ERROR: should have skipped this test"
 
             # Specify learn() paired with constructor (above)
-            #   need to do after construction, so that TARGET Nodes can be used as specs
+            #   need to do after construction, so that TARGET_MECHANISMs can be used as specs
             elif arg_type == 'learn_and_constructor':
                 if conflict_type == 'conflict_in_learn':
                     if learn_sample_spec == 'target':
@@ -1369,7 +1369,7 @@ class TestStructural:
                                              output_mech_B: [[3]]}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"SAMPLE_MECHANISMs: 'OUTPUT MECH A[OutputPort-0]': "
                                      f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
                                      f"'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'TARGET for OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")
@@ -1379,7 +1379,7 @@ class TestStructural:
                                              output_mech_B: [[3]]}
                         error_msg = (f"The learn() method of 'TEST COMP' can't be executed because there are "
                                      f"conflicting specifications for the target values assigned to one of its "
-                                     f"SAMPLE Nodes: 'OUTPUT MECH A[OutputPort-0]': "
+                                     f"SAMPLE_MECHANISMs: 'OUTPUT MECH A[OutputPort-0]': "
                                      f"'OUTPUT MECH A'=TARGET in AutodiffComposition constructor 'targets', "
                                      f"'OUTPUT MECH A'=[[1]] in 'targets', "
                                      f"'OUTPUT MECH A[OutputPort-0]'=[[2]] in 'targets'.")

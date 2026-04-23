@@ -110,7 +110,7 @@ pathway_pickup = [state_input,
 agent_comp = AutodiffComposition([pathway_dx, pathway_dy, pathway_open, pathway_pickup],
                                  name='KEYS AND DOORS COMPOSITION')
 
-# Add the retrieved action nodes as target nodes for learning.
+# Add the retrieved action nodes as TARGET_MECHANISMs for learning.
 agent_comp.add_node(instruct_em.nodes["DX [RETRIEVED]"])
 agent_comp.add_node(instruct_em.nodes["DY [RETRIEVED]"])
 agent_comp.add_node(instruct_em.nodes["OPEN ACTION [RETRIEVED]"])

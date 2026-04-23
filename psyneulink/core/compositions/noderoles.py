@@ -157,11 +157,11 @@ class NodeRole(enum.Enum):
     COMMENT
 
     SAMPLE
-        A `Node <Composition_Nodes>` that provides the sample value used to compute the error for a `learning pathway
-        <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`). Note that the
-        specific value used as the sample may be from any one of a SAMPLE Node's `Ports <Port>`; use the Composition's
-        `get_sample_ports()` method to identify the specific one(s) that are used. This role cannot be modified
-        programmatically.
+        A `Node <Composition_Nodes>` that provides the sample value used to compute the error for a
+        `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+        Note that the specific value used as the sample may be from any one of a `SAMPLE_MECHANISM`\'s `Ports <Port>`;
+        use the Composition's `get_sample_ports()` method to identify the specific one(s) that are used.
+        This role cannot be modified programmatically.
 
     TARGET
         COMMENT: BREADCRUMB - MODIFY THIS IF TARGET ASSIGNED TO ALL TARGETS (INCLUDING INTERNAL ONES IN AutodiffComp)

@@ -1100,7 +1100,7 @@ class ShowGraph():
         # DEAL WITH LEARNING
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
-        #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
+        #    (node: this allows TARGET_MECHANISM for learning to remain marked as an INPUT node)
         if (NodeRole.LEARNING in self._get_roles_by_node(rcvr)):
             return
 
@@ -2404,7 +2404,7 @@ class ShowGraph():
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
-            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
+            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET_MECHANISM FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
                                proj:Projection,

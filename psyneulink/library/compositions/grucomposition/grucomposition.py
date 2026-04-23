@@ -346,7 +346,7 @@ HIDDEN_LAYER = 'HIDDEN\nLAYER'
 OUTPUT_NODE = 'OUTPUT'
 GRU_INTERNAL_STATE_NAMES = [NEW_NODE, RESET_NODE, UPDATE_NODE, HIDDEN_LAYER]
 GRU_NODE = 'PYTORCH GRU NODE'
-GRU_TARGET_NODE = 'GRU TARGET NODE'
+GRU_TARGET_NODE = 'GRU TARGET_MECHANISM'
 BIAS_NODE_INPUT_TO_NEW = 'BIAS NODE IN'
 BIAS_NODE_INPUT_TO_UPDATE = 'BIAS NODE IU'
 BIAS_NODE_INPUT_TO_RESET = 'BIAS NODE IR'
@@ -1157,8 +1157,8 @@ class GRUComposition(AutodiffComposition):
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
-        """Override to construct only TARGET Node and LossMechanism for GRUComposition.
-        Return a list containing TARGET Nodes, that needs to be referenced in inputs argument of learn()
+        """Override to construct only TARGET_MECHANISM and LossMechanism for GRUComposition.
+        Return a list containing TARGET_MECHANISM, that needs to be referenced in inputs argument of learn()
         """
 
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
@@ -1170,7 +1170,7 @@ class GRUComposition(AutodiffComposition):
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
         target_mech = self.target_node
 
-        # Add target Node to GRUComposition to support learning in standalone or solo nested composition
+        # Add TARGET_MECHANISM to GRUComposition to support learning in standalone or solo nested composition
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING],
                       context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context=context)
@@ -1283,7 +1283,7 @@ class GRUComposition(AutodiffComposition):
     def compute_loss(self, targets, pytorch_rep, context):
         """Override to directly compute loss
         Invoked when GRUComposition is run as a standalone Composition, in which case:
-           - TARGET Node *is* constructed (and included in GRUComposition) to accept targets specified in learn()
+           - TARGET_MECHANISM *is* constructed (and included in GRUComposition) to accept targets specified in learn()
            - LossMechanism is *not* constructed
            - loss is computed directly using torch loss function specified by self.loss_spec
         """
