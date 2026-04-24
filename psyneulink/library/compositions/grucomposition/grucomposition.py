@@ -1171,7 +1171,7 @@ class GRUComposition(AutodiffComposition):
         target_mech = self.target_node
 
         # Add TARGET_MECHANISM to GRUComposition to support learning in standalone or solo nested composition
-        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING],
+        self.add_node(target_mech, required_roles=[NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING],
                       context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context=context)
 

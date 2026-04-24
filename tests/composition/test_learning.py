@@ -3822,7 +3822,7 @@ class TestBackPropLearning:
         # RUN MODEL ---------------------------------------------------------------------------
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
-        target = comp.get_nodes_by_role(pnl.NodeRole.TARGET)[0]
+        target = comp.get_nodes_by_role(pnl.NodeRole.TARGET_EXTERNAL)[0]
         comp.learn(inputs={color_comp: [[1, 1]],
                            word_comp: [[-2, -2]],
                            target: [[1, 1]]},

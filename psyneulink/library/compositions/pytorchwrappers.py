@@ -260,7 +260,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
     retained_targets : List[ndarray]
-        values of the `TARGET_MECHANISMs <NodeRole.TARGET>`, that were used as the `target <LossMechanism.sample>`
+        values of the `TARGET_MECHANISMs <NodeRole.TARGET_EXTERNAL>`, that were used as the `target <LossMechanism.sample>`
         for the `LossMechanism` to compute the loss for each trial executed in a call to
         `learn<AutoDiffComposition.learn>`.
 
@@ -486,7 +486,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if self.is_nested:
             nodes = nodes - set(node for node in nodes
                                 if (isinstance(node, LossMechanism)
-                                    or node in composition.get_nodes_by_role(NodeRole.TARGET)))
+                                    or node in composition.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)))
 
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
         #   so that they don't interfere with construction of execution_sets by scheduler
@@ -1419,7 +1419,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
                 if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
-                        and NodeRole.TARGET not in self.composition.get_roles_by_node(component.mechanism)):
+                        and NodeRole.TARGET_EXTERNAL not in self.composition.get_roles_by_node(component.mechanism)):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                     input_id = component._idx

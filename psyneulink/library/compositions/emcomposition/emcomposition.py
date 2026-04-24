@@ -446,7 +446,7 @@ forms of learning are enable.
 <EMComposition.memory>` when the EMComposition is executed during learning can be used for error computation
 and backpropagation through the EMComposition to its inputs.  By default, the values of all of its `retrieved_nodes
 <EMComposition.retrieved_nodes>` are included. For those that do not project to an outer Composition (i.e., one in
-which the EMComposition is `nested <Composition_Nested>`), a `TARGET <NodeRole.TARGET>` node is constructed
+which the EMComposition is `nested <Composition_Nested>`), a `TARGET <NodeRole.TARGET_EXTERNAL>` node is constructed
 for each, and used to compute errors that are backpropagated through the network to its `query_input_nodes
 <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and on to any
 nodes that project to those from a Composition within which the EMComposition is `nested <Composition_Nested>`.

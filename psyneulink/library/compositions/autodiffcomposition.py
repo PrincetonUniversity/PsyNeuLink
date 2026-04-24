@@ -423,7 +423,7 @@ uses the form of `Loss` specified in the **loss** argument of its constructor, o
 ^^^^^^^^^^^^^^^^^^^
 
 If any external `targets <AutodiffComposition_Target>` are specified in **targets** argument of the
-AutodiffComposition's constructor, then a `TARGET_MECHANISM <NodeRole.TARGET>` is constructed for the corresponding
+AutodiffComposition's constructor, then a `TARGET_MECHANISM <NodeRole.TARGET_EXTERNAL>` is constructed for the corresponding
 `samples <AutodiffComposition_Sample>`.  If *no* *targets* are specified, then a *TARGET_MECHANISM* is constructed for
 every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
 `learnable <MappingProjection.learnable>` Projection.  Each *TARGET_MECHANISM* receives the input specified for its
@@ -1471,7 +1471,7 @@ class AutodiffComposition(Composition):
         self._analyze_graph()
         return [pathway
                     for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
-                    if node not in self.get_nodes_by_role(NodeRole.TARGET)
+                    if node not in self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)
                     for pathway in self._get_pytorch_backprop_pathway(node, context)]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
@@ -1876,7 +1876,7 @@ class AutodiffComposition(Composition):
               sample = OutputPort or ProcessingMechanism,
               target = OutputPort, ProcessingMechanism, or TARGET keyword
         - Identify all samples and assign NodeRole.SAMPLE to them
-        - Instantiate TARGET_MECHANISMs for any targets specified as TARGET, and assign NodeRole.TARGET
+        - Instantiate TARGET_MECHANISMs for any targets specified as TARGET, and assign NodeRole.TARGET_EXTERNAL
         - Update self._sample_target_pairs (with SAMPLE and TARGET Mechanisms and OutputPorts)
         """
 
@@ -1934,7 +1934,7 @@ class AutodiffComposition(Composition):
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
                     target_port = target_mech.output_port
-                    self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+                    self.add_node(target_mech, required_roles=[NodeRole.TARGET_EXTERNAL, NodeRole.INPUT], context=context)
                     constructed_target_mechs.append(target_mech)
                 else:
                     assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
@@ -1956,8 +1956,8 @@ class AutodiffComposition(Composition):
         # Assign NodeRoles to SAMPLEs BREADCRUMB: and TARGETs
         for sample, target in zip(self._samples_and_targets.sample_mechs, self._samples_and_targets.target_mechs):
             self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
-            # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET
-            # self.require_node_roles(target, NodeRole.TARGET, context=context)
+            # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET_EXTERNAL
+            # self.require_node_roles(target, NodeRole.TARGET_EXTERNAL, context=context)
 
 
 
@@ -1970,7 +1970,7 @@ class AutodiffComposition(Composition):
            to avoid duplication in multiple calls, including from command line
            (see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
         - Update self.sample_port_to_target_port_map with construted TARGET_MECHANISMs
-        - Add constructed TARGET_MECHANISMs to AutodiffComposition with NodeRole.TARGET and NodeRole.INPUT
+        - Add constructed TARGET_MECHANISMs to AutodiffComposition with NodeRole.TARGET_EXTERNAL and NodeRole.INPUT
         Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET_MECHANISMs
         """
         pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
@@ -1979,7 +1979,7 @@ class AutodiffComposition(Composition):
         constructed_target_mechs = []
         for node in [n for n in identified_output_nodes if n in pathway_terminal_nodes]:
             output_ports_for_learning.extend(node.output_ports)
-        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
+        target_mechs = self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)
         for output_port_for_learning in output_ports_for_learning.copy():
             _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
                                                                        target_spec=None,
@@ -2028,7 +2028,7 @@ class AutodiffComposition(Composition):
                                    for s, t in zip(output_ports_for_learning, target_mechs)]:
             self._samples_and_targets.add_pair(sample_target_pair)
 
-        self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+        self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET_EXTERNAL, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
 
     def _validate_loss_mech_specs(self, loss_mech_specs: list, context) -> Tuple[List, List]:
@@ -2713,7 +2713,7 @@ class AutodiffComposition(Composition):
         for node, values in input_dict.items():
             mech = node.owner if isinstance(node, InputPort) else node
             if (mech in self.get_nested_input_nodes_at_all_levels()
-                    and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
+                    and mech not in self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
                 # (those are handled separately in _get_autodiff_target_node_input_values)
                 if torch_available:
@@ -2747,7 +2747,7 @@ class AutodiffComposition(Composition):
 
         # Get OutputPorts for TARGET_MECHANISMs
         for target_port in [t for t in self.target_port_to_sample_port_map
-                            if t.owner in self.get_nodes_by_role(NodeRole.TARGET)]:
+                            if t.owner in self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)]:
             target_values[target_port.owner] = get_target_value(target_port.owner)
         return target_values
 
@@ -2761,7 +2761,7 @@ class AutodiffComposition(Composition):
             Dict mapping TargetMechanisms -> target values
         """
         target_values_for_target_nodes = {}
-        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
+        target_mechs = self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)
 
 
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
@@ -3988,7 +3988,7 @@ class AutodiffComposition(Composition):
     @property
     def learning_components(self):
         pytorch_learning_components = (self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)
-                                       + self.get_nodes_by_role(NodeRole.TARGET))
+                                       + self.get_nodes_by_role(NodeRole.TARGET_EXTERNAL))
         return pytorch_learning_components or super().learning_components
 
     @property
