@@ -6,7 +6,7 @@ graphviz>=0.20.0, <0.22.0
 grpcio>=1.60.0, <1.81.0
 leabra-psyneulink>=0.3.2, <0.3.3
 llvmlite>=0.40, <0.48
-matplotlib>=3.7.0, <3.10.9
+matplotlib>=3.10.9, <3.10.10
 modeci_mdf>=0.4.3, <0.4.14; (platform_machine == 'AMD64' or platform_machine == 'x86_64' or platform_machine == 'arm64' or platform_machine == 'aarch64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 networkx>=2.6, <3.7
 numpy>=1.21.0, <2.3.6
