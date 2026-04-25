@@ -145,8 +145,8 @@ class NodeRole(enum.Enum):
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role can, but generally should not be
-        modified programmatically.
+        `TARGET_INTERNAL`, `TARGET_EXTERNAL` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
+        This role can, but generally should not be modified programmatically.
 
     COMMENT:
     LEARNING_OUTPUT
@@ -163,17 +163,22 @@ class NodeRole(enum.Enum):
         use the Composition's `get_sample_ports()` method to identify the specific one(s) that are used.
         This role cannot be modified programmatically.
 
+    COMMENT:
     TARGET_EXTERNAL
-        COMMENT:
         BREADCRUMB - MODIFY THIS IF TARGET ASSIGNED TO ALL TARGETS (INCLUDING INTERNAL ONES IN AutodiffComp)
-        COMMENT
+    COMMENT
+
+    TARGET_EXTERNAL
         A `Node <Composition_Nodes>` that receives an external value (i.e., one specified in the **targets**,
         or optionally the **inputs** argument, of a call to `learn() <Composition.learn>`; see
         `Composition_Target_Inputs`) that, in turn, is used as the target value in computing the error for a
         `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`).
-        This role is assigned only to Mechanisms that receive an external target
-        value and the value of that Node's `primary
-        OutputPort <OutputPort_Primary>` is used as the target value. This role cannot be modified programmatically.
+        This role cannot be modified programmatically.
+
+        .. note::
+           This role is assigned only to `TARGET_MECHANISM`\\s that are `INPUT` Nodes (i.e., that receive an
+           externally-provided target value; `TARGET_MECHANISM`\\s that are `INTERNAL` Nodes (i.e., that generate
+           the target value on their own) are assigned the NodeRole `TARGET_INTERNAL`.
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway

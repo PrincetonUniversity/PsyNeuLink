@@ -523,7 +523,7 @@ class Pathway(object, metaclass=UsesParametersMeta):
         `OUTPUT` node if Pathway contains one.
 
     target : `Mechanism <Mechanism>` or None
-        `TARGET` node if if Pathway contains one; same as `learning_components
+        `TARGET_MECHANISM` if if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
     learning_objective : `Mechanism <Mechanism>` or None

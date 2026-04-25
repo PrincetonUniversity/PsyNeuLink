@@ -1117,8 +1117,8 @@ class TestStructural:
                         error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
                                      "following illegal specification in its 'targets' argument: "
                                      "'MappingProjection from INPUT MECH[OutputPort-0] to OUTPUT MECH A[InputPort-0]' "
-                                     "(in 'targets' dict): specification of SAMPLE (or TARGET) must be a Mechanism "
-                                     "or the OutputPort of one in 'TEST COMP'.")
+                                     "(in 'targets' dict): specification of SAMPLE_MECHANISM (or TARGET_MECHANISM) "
+                                     "must be a Mechanism or the OutputPort of one in 'TEST COMP'.")
                     elif sample_or_target_spec == 'target':
                         learn_targets_arg = {output_mech_A: [[1]],
                                              output_mech_B: proj_in_to_A}
@@ -1134,8 +1134,8 @@ class TestStructural:
                         learn_targets_arg = {3: [[1]],
                                              output_mech_B: [[2]]}
                         error_msg = ("The learn() method of 'TEST COMP' can't be executed because there is the "
-                                     "following illegal specification in its 'targets' argument: "
-                                     "'3' (in 'targets' dict): unrecognized specification for SAMPLE (or TARGET).")
+                                     "following illegal specification in its 'targets' argument: '3' (in 'targets' "
+                                     "dict): unrecognized specification for SAMPLE_MECHANISM (or TARGET_MECHANISM).")
                     else:
                         assert False, f"Should have skipped 'num' + 'target' for learn()."
                 elif bad_spec_type == 'extra':
