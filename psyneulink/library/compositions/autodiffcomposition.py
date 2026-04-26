@@ -246,11 +246,11 @@ of the AutodiffComposition.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is done in the **targets** argument of the AutodiffComposition's constructor, using any of the forms of
-specificaiton listed below. If *any* *sample-target* pairs are specified, *only* those are used; if *none* are
+specification listed below. If *any* *sample-target* pairs are specified, *only* those are used; if *none* are
 specified, then all of `OUTPUT Nodes <Composition_Nodes>` of the AutodiffComposition are used as *samples*, and
-corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanisms>` are automatically constructed to receive
-the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()` method
-when it is called.
+corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanisms>` are automatically constructed to
+receive the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()`
+method when it is called (see `Target inputs for learning <Composition_Target_Inputs>`).
 
     * *tuple*: (sample, <target or *TARGET*>);
 
@@ -267,7 +267,7 @@ when it is called.
      but *not* all of the learnable pathways (i.e. ones with `learnable <MappingProjection.learnable>` Projections)
      in the **targets** argument of the AutodiffComposition's constructor, a warning is issued indicating the learnable
      pathways that lack learning components (and, in particular, a `LossMechanism`), and for which learning will
-     not occur.
+     not occur. If this is not corrected, an error is raised when the `learn() <Composition.learn>` method is called.
 
 COMMENT:
 +============+==========================+==========================================================
@@ -422,14 +422,34 @@ uses the form of `Loss` specified in the **loss** argument of its constructor, o
 *TARGET_MECHANISMS*
 ^^^^^^^^^^^^^^^^^^^
 
-If any external `targets <AutodiffComposition_Target>` are specified in **targets** argument of the
-AutodiffComposition's constructor, then a `TARGET_MECHANISM <NodeRole.TARGET_INPUT>` is constructed for the corresponding
-`samples <AutodiffComposition_Sample>`.  If *no* *targets* are specified, then a *TARGET_MECHANISM* is constructed for
-every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
-`learnable <MappingProjection.learnable>` Projection.  Each *TARGET_MECHANISM* receives the input specified for its
-corresponding *sample* in the **targets** argument of the `learn() <AutodiffComposition>` method, and projects to
-the corresponding `LossMechanism`. The *TARGET_MECHANISMs* for an AutodiffComposition are listed in its `target_nodes
-<AutodiffCompostion.target_nodes>` and `learning_components <Composition.learning_components>` attributes.
+
+*TARGET_MECHANISMS*
+^^^^^^^^^^^^^^^^^^^
+
+The target value used to train a *SAMPLE_MECHANISM* is provided to the `LossMechanism
+<AutodiffComposition_Structure_LossMechanisms> by a *TARGET_MECHANISM*, which can be one of two types:
+a *TARGET INPUT MECHANISM*, that is specified in the AutodiffComposition's constructor using the keyword *TARGET*,
+or *TARGET INTERNAL MECHANISM* that is specified as another Mechanism or the OutputPort of one (see
+`AutodiffComposition_Specifying_Learning_Pathways`). Each of these types is described below.  All of the
+*TARGET_MECHANISMs* of an AutodiffComposition are listed in its `target_mechanisms <Composition.target_mechanisms>`
+attibute, and included in its `learning_components <AutodiffComposition.learning_components>` attribute.
+
+*TARGET INPUT MECHANISMS*. These are automatically constructed for each *sample* specified with the keywor *TARGET*
+in the **targets** argument of the AutodiffComposition's constructor, along with a Projection from its OutputPort
+to the *TARGET* `InputPort of the `LossMechanism` construced for that *sample*-*target* pair. The *TARGET_MECHANISM*
+is assigned the `NodeRole` `TARGET_INPUT`, and receives the target value from the **targets** (or **inputs** argument
+of the `learn() <AutodiffComposition>` (see `Target inputs for learning <Composition_Target_Inputs>`). If no
+**targets** argument is specified in the AutodiffComposition's constructor, a *TARGET INPUT MECHANISM* is constructed
+for every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
+`learnable <MappingProjection.learnable>` Projection. The *TARGET INPUT MECHANISMs* of an AutodiffComposition are
+listed in it's `target_input_mechanisms <Composition.target_input_mechanisms>` attribute.
+
+*TARGET INTERNAL MECHANISMS*. A Projection is automatically constructed from each of these specified in the **targets**
+argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort of the `LossMechanism` construced for
+that *sample*-*target* pair. The *TARGET_MECHANISM* is assigned the `NodeRole` `TARGET_INTERNAL`, and its `OutputPort`
+provides the target value used to train the corresponing *sample*.  The *TARGET INPUT MECHANISMs* of an
+AutodiffComposition are listed in it's `target_internal_mechanisms <AutodiffComposition.target_internal_mechanisms>`
+attribute.
 
 COMMENT:
 TEACHER_TARGET BREADCRUMB: ADD NOTE HERE FROM ABOVE ABOUT SINGLETONS NOT BEING LEARNABLE
@@ -1960,12 +1980,10 @@ class AutodiffComposition(Composition):
         # Assign NodeRoles to SAMPLE_MECHANISMs and TARGET_MECHANISMs
         for sample, target in zip(self._samples_and_targets.sample_mechs, self._samples_and_targets.target_mechs):
             self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
-            # MODIFIED TARGET_INTERNAL NEW:  ??BREADCRUMB IS THE FOLLOWING OK:
             if TARGET == next(s.target_spec for s in self._samples_and_targets.specs if s.sample_port.owner == sample):
                 self.require_node_roles(target, NodeRole.TARGET_INPUT, context=context)
             else:
                 self.require_node_roles(target, NodeRole.TARGET_INTERNAL, context=context)
-            # MODIFIED TARGET_INTERNAL END
 
     def _instantiate_default_targets(self, pathways: list, context, base_context) -> Tuple[List, List]:
         """Construct default TARGET_MECHANISMs (since none were specified in **targets** arg of constructor
@@ -4013,7 +4031,8 @@ class AutodiffComposition(Composition):
     @property
     def learning_components(self):
         pytorch_learning_components = (self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)
-                                       + self.get_nodes_by_role(NodeRole.TARGET_INPUT))
+                                       + self.get_nodes_by_role(NodeRole.TARGET_INPUT)
+                                       + self.get_nodes_by_role(NodeRole.TARGET_INTERNAL))
         return pytorch_learning_components or super().learning_components
 
     @property

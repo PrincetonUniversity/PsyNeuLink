@@ -905,7 +905,7 @@ Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
     * *TARGET_MECHANISM* -- a Mechanism, the `value <Mechanism_Base.value>` of which is used by the
       *OBJECTIVE_MECHANISM* as the target in computing the error signal with respect to the `value <Mechanism_Base>`
       of a corresponding *SAMPLE_MECHANISM*. For a standard Composition, the `TARGET_MECHANISM` is always an `INPUT`
-      Node, that reveives its input from the **targets** or **inputs** argument of the Composition's `learn
+      Node, that receives its input from the **targets** or **inputs** argument of the Composition's `learn
       <Composition.learn>` (see `below <Composition_Target_Inputs>`). It is assigned the `NodeRoles <NodeRole>`
       `TARGET_INPUT` and `LEARNING` in addition to `INPUT`.
 
@@ -958,7 +958,7 @@ It also assigns the following item to the list of `learning_components` for the 
     .. _SAMPLE_MECHANISM:
 
       COMMENT:
-      ADD THE FOLLOWING TO BELOW, WITH REF TO DISCUSSION IN AUTODIFF OF TARGET_INTERNAL
+      ADD THE FOLLOWING TO BELOW, WITH REF TO DISCUSSION IN AUTODIFF OF TARGET_INTERNAL DOCUMENTATION
       (which is an `output <LearningMechanism_Activation_Output>` of the last Processing Mechanism in the `learning
       Pathway <Composition_Learning_Pathway>`)
       COMMENT
@@ -1529,11 +1529,11 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 *Input Dictionary*
 ==================
 
-``Composition_Input_Dictionary_Input_Values`
-`Composition_Input_Dictionary_Node_Entries`
-`Composition_Input_Dictionary_InputPort_Entries`
-`Composition_Input_Labels`
-`Composition_Target_Inputs`
+`Input values <Composition_Input_Dictionary_Input_Values>`
+`Node entries <Composition_Input_Dictionary_Node_Entries>`
+`InputPort entries <Composition_Input_Dictionary_InputPort_Entries>`
+`Input labels <Composition_Input_Labels>`
+`Target inputs for learning <Composition_Target_Inputs>`
 
 .. _Composition_Input_Dictionary_Entries:
 
@@ -1600,7 +1600,7 @@ case shorthand notations are allowed, as illustrated in the `examples  <Composit
 
 .. _Composition_Input_Dictionary_InputPort_Entries:
 
-*InputPort Entries*. The key must be an `external InputPort <Composition_Input_External_InputPorts>` for an
+*InputPort entries*. The key must be an `external InputPort <Composition_Input_External_InputPorts>` for an
 `INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the `full_name <Port_Base.full_name>` of one,
 and the value must specify the input for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  Any or all of the
 InputPorts for an`INPUT <NodeRole>` `Node <Composition_Nodes>` can be specified, but an inputs dictionary cannot
@@ -1674,7 +1674,7 @@ COMMENT
 
 .. _Composition_Input_Labels:
 
-*Input Labels*. In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an
+*Input labels*. In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an
 `input_labels_dict
 <Mechanism_Base.input_labels_dict>` that specifies a mapping from strings (labels) to numeric values, in which those
 strings can be used to specify inputs to that Mechanism (these are translated to their numeric values on execution).
@@ -9403,14 +9403,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_target_mechs(self, execution_mode=pnlvm.ExecutionMode.Python,
                           scope:Literal[INPUT,INTERNAL,ALL]=ALL, context=None, base_context=None)->list:
-        # BREADCRUMB: IF NodeRole.TARGET_INTERNAL IS ASSIGNED TO INTERNAL TARGES,
-        #             MODIFY THIS TO BE SIMILAR TO get_sample_mechs()
-        #             BY RETURNING A DICT WITH TARGET_MECHANISM AS KEY AND TARGET port AS VALUE
-        #             ADD ARG TO RETURN DICT AS PER ABOVE
-        # TARGET_INTERNAL BREADCRUMB: ADD TESTS FOR INTERNAL and ALL
         """Return a list of all `TARGET_MECHANISMs <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
-        # TARGET_INTERNAL BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
+        # TARGET_INTERNAL DOCUMENTATION BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
         """
         if scope == None or scope == INPUT:
             target_nodes = self.get_nodes_by_role(NodeRole.TARGET_INPUT)
