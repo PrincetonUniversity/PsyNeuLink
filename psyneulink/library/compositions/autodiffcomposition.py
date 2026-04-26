@@ -1919,12 +1919,6 @@ class AutodiffComposition(Composition):
                 if isinstance(target_spec, (OutputPort, ProcessingMechanism_Base)):
                     # target is internal Node
                     self._check_if_target_is_in_sample_pathway(sample_port, target_port, pathways, context)
-                    try:
-                        self.node_roles_mgr.require_node_roles(target_mech, NodeRole.TARGET_INTERNAL, ALL, context)
-                    except NodeRoleError as e:
-                        if "not in the Composition or any nested within it." in e.error_value:
-                            # Error will be handled in _validate_constructor_targets_specs
-                            pass
 
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so attempt to construct TARGET_MECHANISM
@@ -1963,11 +1957,15 @@ class AutodiffComposition(Composition):
 
         self._validate_constructor_targets_specs()
 
-        # Assign NodeRoles to SAMPLEs BREADCRUMB: and TARGETs
+        # Assign NodeRoles to SAMPLE_MECHANISMs and TARGET_MECHANISMs
         for sample, target in zip(self._samples_and_targets.sample_mechs, self._samples_and_targets.target_mechs):
             self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
-            # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET_INPUT
-            # self.require_node_roles(target, NodeRole.TARGET_INPUT, context=context)
+            # MODIFIED TARGET_INTERNAL NEW:  ??BREADCRUMB IS THE FOLLOWING OK:
+            if TARGET == next(s.target_spec for s in self._samples_and_targets.specs if s.sample_port.owner == sample):
+                self.require_node_roles(target, NodeRole.TARGET_INPUT, context=context)
+            else:
+                self.require_node_roles(target, NodeRole.TARGET_INTERNAL, context=context)
+            # MODIFIED TARGET_INTERNAL END
 
     def _instantiate_default_targets(self, pathways: list, context, base_context) -> Tuple[List, List]:
         """Construct default TARGET_MECHANISMs (since none were specified in **targets** arg of constructor
@@ -2052,7 +2050,7 @@ class AutodiffComposition(Composition):
                 # Raise warning on attempt to construct without any learnable Projections
                 if not self._warned_about_no_learnable_projections:
                     # X TEST DONE
-                    assert False, f"TEST 13 REACHED"
+                    # assert False, f"TEST 13 REACHED"
                     warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
                                   f"since it does not have any learnable Projections.")
                 self._warned_about_no_learnable_projections = True
@@ -3999,7 +3997,6 @@ class AutodiffComposition(Composition):
     def sample_mechs_str(self):
         return [loss_mech.sample for loss_mech in self.loss_mechs_map]
 
-    # MODIFIED TARGET_INTERNAL NEW:
     @property
     def target_mechanisms(self):
         """Override to call infer_backpropagation_learning_pathways
@@ -4012,8 +4009,6 @@ class AutodiffComposition(Composition):
     def loss_mechanisms(self):
         self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
         return sorted(list(self.loss_mechs_map.keys()))
-
-    # MODIFIED TARGET_INTERNAL END
 
     @property
     def learning_components(self):

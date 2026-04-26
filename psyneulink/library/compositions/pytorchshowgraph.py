@@ -197,12 +197,16 @@ class PytorchShowGraph(ShowGraph):
             elif isinstance(rcvr, LossMechanism):
                 kwargs['color'] = self.learning_color
             # MODIFIED TARGET_INTERNAL OLD:
-            # elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
-            # MODIFIED TARGET_INTERNAL NEW:
-            elif rcvr in self.composition.target_mechanisms:
-            # MODIFIED TARGET_INTERNAL END
+            elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
                 kwargs['color'] = self.learning_color
                 kwargs['penwidth'] = str(self.bold_width)
+            # # MODIFIED TARGET_INTERNAL NEW:
+            # elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
+            #     kwargs['color'] = self.learning_color
+            #     kwargs['penwidth'] = str(self.bold_width)
+            # elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INTERNAL):
+            #     kwargs['penwidth'] = str(self.bold_width)
+            # MODIFIED TARGET_INTERNAL END
 
             elif rcvr not in self.composition.nodes:
                 #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph

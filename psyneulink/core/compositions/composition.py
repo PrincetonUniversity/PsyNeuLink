@@ -9403,13 +9403,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_target_mechs(self, execution_mode=pnlvm.ExecutionMode.Python,
                           scope:Literal[INPUT,INTERNAL,ALL]=ALL, context=None, base_context=None)->list:
-        # BREADCRUMB: IF NodeRole.TARGET_INPUT IS ASSIGNED TO INTERNAL TARGES, MODIFY THIS TO BE SIMILAR TO get_sample_mechs()
+        # BREADCRUMB: IF NodeRole.TARGET_INTERNAL IS ASSIGNED TO INTERNAL TARGES,
+        #             MODIFY THIS TO BE SIMILAR TO get_sample_mechs()
         #             BY RETURNING A DICT WITH TARGET_MECHANISM AS KEY AND TARGET port AS VALUE
         #             ADD ARG TO RETURN DICT AS PER ABOVE
-        # TEACHER_TARGET BREADCRUMB: ADD TESTS FOR INTERNAL and ALL
+        # TARGET_INTERNAL BREADCRUMB: ADD TESTS FOR INTERNAL and ALL
         """Return a list of all `TARGET_MECHANISMs <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
-        # TEACHER_TARGET BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
+        # TARGET_INTERNAL BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
         """
         if scope == None or scope == INPUT:
             target_nodes = self.get_nodes_by_role(NodeRole.TARGET_INPUT)
@@ -10652,15 +10653,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.SAMPLE in roles:
                 # A SAMPLE_MECHNISM does not have to be an OUTPUT Node for all subclasses (e.g., AutodiffComposition)
                 input_item_role = SAMPLE
-            # MODIFIED TARGET_INPUT OLD:
-            # elif NodeRole.INPUT in roles:
-            #     # BREADCRUMB: AT PRESENT, NodeRole.TARGET_INPUT IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET_MECHANISMs,
-            #     #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
-            #     input_item_role = TARGET
-            # MODIFIED TARGET_INPUT NEW:
             elif NodeRole.TARGET_INPUT in roles or NodeRole.TARGET_INTERNAL in roles:
                 input_item_role = TARGET
-            # MODIFIED TARGET_INPUT END
             else:
                 illegal_specs.append(SamplesAndTargets.Spec(None, input_item, None, None, value, name))
                 continue
