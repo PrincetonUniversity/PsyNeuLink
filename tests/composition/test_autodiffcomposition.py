@@ -436,7 +436,7 @@ class TestAutodiffTargetSpecs:
             targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
         elif target_spec == 'external':
             # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
-            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
+            targets_learn_arg = {autodiff_comp.get_target_input_mechs()[0]:[[0,0,0,0,0]]}
 
         results = autodiff_comp.learn(num_trials = 2,
                                       inputs={input_mech:[[1,2,3,4,5]]},
@@ -448,7 +448,7 @@ class TestAutodiffTargetSpecs:
         #   for default and external
         if target_spec == 'default':
             # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
-            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
+            targets_learn_arg = {autodiff_comp.get_target_input_mechs()[0]:[[0,0,0,0,0]]}
             autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
                                 targets=targets_learn_arg,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
@@ -830,7 +830,7 @@ class TestAutodiffTargetSpecs:
                                                     targets=constructor_targets)
             if learn_targets and 'ADD TARGETS' in learn_targets:
                 # Add automatically constructed TARGET_MECHANISMs if specified
-                target_nodes = sorted(autodiff_comp.get_target_nodes())
+                target_nodes = sorted(autodiff_comp.get_target_input_mechs())
                 specs = learn_targets.pop('ADD TARGETS')
                 learn_targets.update({target_nodes[spec]:[[1]] for spec in specs})
             autodiff_comp.learn(inputs=inputs,
@@ -975,7 +975,7 @@ class TestAutodiffLearningRateArgs:
 
         # Test learning
         outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        targets = outer_comp.get_target_nodes()
+        targets = outer_comp.get_target_input_mechs()
         if "learn" in condition:
             used_learn_method_lr = learn_method_learning_rate_dict
         else:
@@ -1106,7 +1106,7 @@ class TestAutodiffLearningRateArgs:
 
         # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
         outer_comp.learn(inputs={outer_mech_in: [[1]],
-                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                                 outer_comp.get_target_input_mechs()[0]: [[1]]},
                          num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                          learning_rate={input_proj:12,
                                         "NESTED 2 PROJ BC": 13,
@@ -1125,7 +1125,7 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 12
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
 
-        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]},
                          num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # learning_rates should revert to constructor-speficied values (e.g., input_proj) or composition defaults
@@ -1164,7 +1164,7 @@ class TestAutodiffLearningRateArgs:
 
             # check that it has been assigned as the current parameter value;
             #     i.e., that it persists after a call to learn():
-            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]},
                              learning_rate={"NESTED 2 PROJ BC": 99},)
 
             pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
@@ -1175,7 +1175,7 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == .3
 
             # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
-            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]})
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
@@ -1260,7 +1260,7 @@ class TestAutodiffLearningRateArgs:
         error_re = re.sub(r'([\(\)\[\{])', r'\\\1', error_msg)
         with pytest.raises(CompositionError, match=error_re):
             outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
-            target = outer_comp.get_target_nodes()[0]
+            target = outer_comp.get_target_input_mechs()[0]
             outer_comp.learn(inputs={outer_mech_in: [[1.0]]},
                              targets={target:target.value},
                              learning_rate=comp_lr)
@@ -1337,13 +1337,13 @@ class TestAutodiffLearningRateArgs:
 
         if enable_learning:
             # Execute learning without run
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]},
                                                num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                                learning_rate={input_proj:input_proj_lr})
 
         else:
             # Execute run, then enable learning and execute learning()
-            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]},
                                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
             # Check that learning rates are ones from construction
@@ -1354,7 +1354,7 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == nested_proj_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_input_mechs()[0]: [[1]]},
                                                num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                                learning_rate={input_proj:input_proj_lr})
             # Ensure learning occurred
@@ -1373,7 +1373,7 @@ def test_autodiff_without_torch():
     mech_B = TransferMechanism()
     comp = AutodiffComposition([mech_A, mech_B])
     comp.run()
-    targets = {target: target.value for target in comp.get_target_nodes()}
+    targets = {target: target.value for target in comp.get_target_input_mechs()}
     result = comp.learn(inputs={mech_A:[[1], [2]]}, targets=targets, epochs=3, execution_mode=pnl.ExecutionMode.Python)
 
     assert comp.pytorch_representation is None
@@ -1387,7 +1387,7 @@ def test_autodiff_without_torch():
         comp = AutodiffComposition([mech_A, mech_B])
         comp.run()
         with pytest.raises(AutodiffCompositionError) as error:
-            targets = {target: target.value for target in comp.get_target_nodes()}
+            targets = {target: target.value for target in comp.get_target_input_mechs()}
             result = comp.learn(inputs={mech_A:[[1], [2]]},
                                 targets=targets,
                                 epochs=3,
@@ -1438,7 +1438,7 @@ def test_retain_results():
     input_node = input_mech
     comp = AutodiffComposition([input_mech, output_mech])
     comp.run(inputs={input_node:inputs}, num_trials=1)
-    targets = {target: target.value for target in comp.get_target_nodes()}
+    targets = {target: target.value for target in comp.get_target_input_mechs()}
     comp.learn(inputs={input_node:inputs}, targets=targets, num_trials=2)
     comp.run(inputs={input_node:inputs}, num_trials=3)
     comp.learn(inputs={input_node:inputs}, targets=targets, num_trials=4)
@@ -3207,7 +3207,7 @@ class TestNestedLearning:
             else:
                 assert False, f'Invalid comp_type: {comp_type}'
 
-            targets = {target: target.value for target in comp.get_target_nodes()}
+            targets = {target: target.value for target in comp.get_target_input_mechs()}
             comp.learn(inputs=inputs,
                        targets=targets,
                        learning_rate = learning_rate,
@@ -3989,7 +3989,7 @@ class TestAutodiffMultipleOutput_ports:
                                                       hidden_B,
                                                       output]],
                                            name='autodiff')
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                                targets=targets,
@@ -4010,7 +4010,7 @@ class TestAutodiffMultipleOutput_ports:
                                                      [input_B, hidden_B, hidden_C, output]],
                                            name='autodiff')
 
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                                targets=targets,
@@ -4039,7 +4039,7 @@ class TestAutodiffMultipleOutput_ports:
                                                    pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
                                                    hidden_B,
                                                    output])
-        targets = {target: target.value for target in comp.get_target_nodes()}
+        targets = {target: target.value for target in comp.get_target_input_mechs()}
         result_comp_ports = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                        targets=targets,
@@ -4064,7 +4064,7 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_B,
                                                    hidden_C,
                                                    output])
-        targets = {target: target.value for target in comp.get_target_nodes()}
+        targets = {target: target.value for target in comp.get_target_input_mechs()}
         result_comp_nodes = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                        targets=targets,
@@ -4100,7 +4100,7 @@ class TestAutodiffMultipleOutput_ports:
                                                       output]],
                                            name='autodiff')
         result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]],
-                                                       autodiff.get_target_nodes()[0]: [0,0]},
+                                                       autodiff.get_target_input_mechs()[0]: [0,0]},
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -4188,7 +4188,7 @@ class TestAutodiffMultipleOutput_ports:
                                                   pnl.MappingProjection(hidden.output_ports[1],output),
                                                   output]                                         ],
                                        name='autodiff')
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_ports = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
                                                targets=targets,
                                                learning_rate=.01,
@@ -4203,7 +4203,7 @@ class TestAutodiffMultipleOutput_ports:
         hidden_B = nodes[HIDDEN_B]
         output = nodes[OUTPUT_A]
         autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output], [input, hidden_B, output]], name='autodiff')
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_nodes = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
                                                targets=targets,
                                                learning_rate=.01,
@@ -4220,7 +4220,7 @@ class TestAutodiffMultipleOutput_ports:
         comp = Composition(name='comp')
         comp.add_backpropagation_learning_pathway([input, hidden_A, output])
         comp.add_backpropagation_learning_pathway([input, hidden_B, output])
-        targets = {target: target.value for target in comp.get_target_nodes()}
+        targets = {target: target.value for target in comp.get_target_input_mechs()}
         result_comp_nodes = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
                                        targets=targets,
                                        learning_rate=.01,
@@ -4243,7 +4243,7 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden,
                                                    pnl.MappingProjection(hidden.output_ports[1],output),
                                                    output])
-        targets = {target: target.value for target in comp.get_target_nodes()}
+        targets = {target: target.value for target in comp.get_target_input_mechs()}
         result_comp_ports = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
                                        targets=targets,
                                        learning_rate=.01,
@@ -4266,7 +4266,7 @@ class TestAutodiffMultipleOutput_ports:
         autodiff = AutodiffComposition(pathways=[[input_A, MappingProjection(input_A, output.input_ports[0]), output],
                                                  [input_B, MappingProjection(input_B, output.input_ports[1]), output]],
                                        name='autodiff')
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                                targets=targets,
@@ -4284,7 +4284,7 @@ class TestAutodiffMultipleOutput_ports:
         autodiff = AutodiffComposition(pathways=[[input_A, output_A],
                                                  [input_B, output_B]],
                                        name='autodiff')
-        targets = {target: target.value for target in autodiff.get_target_nodes()}
+        targets = {target: target.value for target in autodiff.get_target_input_mechs()}
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                                targets=targets,
@@ -4571,7 +4571,7 @@ class TestMiscTrainingFunctionality:
     #     outer_comp._build_pytorch_representation()
     #     # Learn
     #     outer_comp.learn(inputs={outer_mech_in: [[1],[2],[3],[4]],
-    #                              outer_comp.get_target_nodes()[0]: [[.5],[.6],[.7],[.8]]},
+    #                              outer_comp.get_target_input_mechs()[0]: [[.5],[.6],[.7],[.8]]},
     #                      num_trials=4,
     #                      minibatch_size=minibatch_size,
     #                      optimizations_per_minibatch=num_optimizations,
@@ -4632,7 +4632,7 @@ class TestMiscTrainingFunctionality:
         )
 
         learn_args = {'inputs': {input_mech: [[1,2],[3,4],[5,6],[7,8]],
-                                 autodiff_comp.get_target_nodes()[0]: [[.1, .2, .3],
+                                 autodiff_comp.get_target_input_mechs()[0]: [[.1, .2, .3],
                                                                        [.4, .5, .6],
                                                                        [.7, .8, .9],
                                                                        [1.1, 1.2, 1.3]]},
@@ -4979,7 +4979,7 @@ class TestMiscTrainingFunctionality:
             outer_proj_expected = outer_learn_lr or outer_learn_lr or self.default
 
         outer_comp.learn(inputs={inner_node_input:[[1]],
-                                 outer_comp.get_target_nodes()[0]:[[0]]},
+                                 outer_comp.get_target_input_mechs()[0]:[[0]]},
                          learning_rate=learning_rate_arg)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == proj_1_expected
@@ -5109,7 +5109,7 @@ class TestMiscTrainingFunctionality:
         outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
         nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
         outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
-        target_mechs = outer_comp.get_target_nodes()
+        target_mechs = outer_comp.get_target_input_mechs()
 
         # Execute autodiff with learning (but not weight updates yet)
         autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim,
@@ -5879,7 +5879,7 @@ class TestACLogging:
                                              # Note: no need to specify synch_node_values_with_torch, since default=RUN
                                              synch_node_variables_with_torch=pnl.RUN)
         outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        targets = outer_comp.get_target_nodes()
+        targets = outer_comp.get_target_input_mechs()
         result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
                                           targets[0]: [[1,1,1,1,1]]},
                                   execution_mode=pnl.ExecutionMode.PyTorch)

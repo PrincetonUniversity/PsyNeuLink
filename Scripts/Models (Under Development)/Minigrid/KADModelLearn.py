@@ -116,10 +116,10 @@ agent_comp.add_node(instruct_em.nodes["DY [RETRIEVED]"])
 agent_comp.add_node(instruct_em.nodes["OPEN ACTION [RETRIEVED]"])
 agent_comp.add_node(instruct_em.nodes["PICKUP [RETRIEVED]"])
 
-agent_comp.nodes_to_roles[instruct_em.nodes["DX [RETRIEVED]"]] = {NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING}
-agent_comp.nodes_to_roles[instruct_em.nodes["DY [RETRIEVED]"]] = {NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING}
-agent_comp.nodes_to_roles[instruct_em.nodes["OPEN ACTION [RETRIEVED]"]] = {NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING}
-agent_comp.nodes_to_roles[instruct_em.nodes["PICKUP [RETRIEVED]"]] = {NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING}
+agent_comp.nodes_to_roles[instruct_em.nodes["DX [RETRIEVED]"]] = {NodeRole.TARGET_INPUT, NodeRole.LEARNING}
+agent_comp.nodes_to_roles[instruct_em.nodes["DY [RETRIEVED]"]] = {NodeRole.TARGET_INPUT, NodeRole.LEARNING}
+agent_comp.nodes_to_roles[instruct_em.nodes["OPEN ACTION [RETRIEVED]"]] = {NodeRole.TARGET_INPUT, NodeRole.LEARNING}
+agent_comp.nodes_to_roles[instruct_em.nodes["PICKUP [RETRIEVED]"]] = {NodeRole.TARGET_INPUT, NodeRole.LEARNING}
 
 # Mark the query nodes for learning so that gradients flow back:
 agent_comp.nodes_to_roles[instruct_em.nodes["AGENT X [QUERY]"]] = {NodeRole.LEARNING}

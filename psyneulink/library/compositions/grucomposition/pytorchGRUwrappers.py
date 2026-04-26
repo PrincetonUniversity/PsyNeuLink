@@ -341,7 +341,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         if outer_comp:
             # GRU-related nodes are LossMechanism and TARGET_MECHANISM for PYTORCH GRU NODE.
             non_GRU_related_nodes = [n for n in outer_comp.nodes if n is not gru_comp
-                                     and NodeRole.TARGET_EXTERNAL not in outer_comp.get_roles_by_node(n)
+                                     and NodeRole.TARGET_INPUT not in outer_comp.get_roles_by_node(n)
                                      and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(n)]
             if non_GRU_related_nodes:
             # If GRUComposition is nested and there are any other Nodes in the OUTER Compostion,

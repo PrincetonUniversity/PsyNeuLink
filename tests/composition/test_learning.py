@@ -373,7 +373,7 @@ class TestStructural:
 
         # First run of learning
         outer_comp.learn(inputs={outer_mech_in: [[1]],
-                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                                 outer_comp.get_target_input_mechs()[0]: [[1]]},
                          num_trials=2,
                          execution_mode=pnl.ExecutionMode.PyTorch,
                          learning_rate=lr)
@@ -386,7 +386,7 @@ class TestStructural:
 
         # Second run of learning to test rest to constructor learning_rates
         outer_comp.learn(inputs={outer_mech_in: [[1]],
-                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                                 outer_comp.get_target_input_mechs()[0]: [[1]]},
                          num_trials=2,
                          execution_mode=pnl.ExecutionMode.PyTorch)
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
@@ -561,7 +561,7 @@ class TestStructural:
             comp1 = Composition()
             p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B])
             # Call learn with default_variable specified for target (for comparison with missing target)
-            targets = {target:target.value for target in comp1.get_target_nodes()}
+            targets = {target:target.value for target in comp1.get_target_input_mechs()}
             comp1.learn(inputs={A: 1.0,
                                 p1.target: 0.0},
                         targets=targets,
@@ -574,7 +574,7 @@ class TestStructural:
             comp2 = Composition()
             comp2.add_backpropagation_learning_pathway(pathway=[C,D])
             # Call learn with no target specification
-            targets = {target:target.value for target in comp2.get_target_nodes()}
+            targets = {target:target.value for target in comp2.get_target_input_mechs()}
             comp2.learn(inputs={C: 1.0},
                         targets=targets,
                        num_trials=2)
@@ -850,7 +850,7 @@ class TestStructural:
                 comp = comp_type([input_mech,{output_mech_A, output_mech_B}], name='TEST COMP')
                 execution_mode = pnl.ExecutionMode.PyTorch
 
-            targets = comp.get_target_nodes()
+            targets = comp.get_target_input_mechs()
             inputs_arg = {'INPUT MECH': [[1]]}
             target_mechs = {targets[0]: [[1]],
                             targets[1]: [[2]]}
@@ -869,7 +869,7 @@ class TestStructural:
                 # Test for warning about TARGET_MECHANISMS in targets arg
                 warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries"
                            f" that are TARGET_MECHANISMs ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH B'); "
-                           f"while this is OK, it might be easier and clearer to use the SAMPLE (OUTPUT) Nodes to "
+                           f"while this is OK, it might be easier and clearer to use the SAMPLE_MECHANISMs to "
                            f"which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys of the dict, "
                            f"obviating the need to determine the TARGET_MECHANISMs. Alternatively, TARGET_MECHANISMs "
                            f"can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, obviating "
@@ -885,15 +885,15 @@ class TestStructural:
                             "use the SAMPLE_MECHANISMs to which they correspond as the keys of the dict, obviating the "
                             "need to determine the TARGET_MECHANISMs and place them all in the 'targets' argument of "
                             "the learn method(). Alternatively, TARGET_MECHANISMs can be specified in the 'inputs' arg "
-                            "of learn() method (which can be identified using the Composition's 'get_target_nodes()' "
+                            "of learn() method (which can be identified using the Composition's 'get_target_input_mechs()' "
                             "method) along with other INPUT nodes, obviating the need to specify the 'targets' arg.  "
                             "Redundant specifications for: 'TARGET for OUTPUT MECH A' in 'inputs' and 'targets' args; "
                             "'TARGET for OUTPUT MECH B' in 'inputs' and 'targets' args.")
 
                 # warning2 = ("The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
                 #             "entries that are TARGET_MECHANISMs ('TARGET for OUTPUT MECH A', 'TARGET for OUTPUT MECH
-                #             B'); while this is OK, it might be easier and clearer to use the SAMPLE_MECHANISM
-                #             (OUTPUT) Nodes to which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys
+                #             B'); while this is OK, it might be easier and clearer to use the SAMPLE_MECHANISMs
+                #             to which they correspond ('OUTPUT MECH A', 'OUTPUT MECH B') as the keys
                 #             of the dict, obviating the need to determine the TARGET_MECHANISMs. Alternatively,
                 #             TARGET_MECHANISMs can be specified in the 'inputs' arg of learn() method, along with
                 #             INPUT nodes, obviating the need to specify the 'targets' arg.")
@@ -1084,10 +1084,10 @@ class TestStructural:
                     or (arg_type == 'learn_and_constructor' and 'extra' not in bad_spec_type)):
                 with pytest.raises(CompositionError, match=re.escape(error_msg)):
                     # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate_xxx methods
-                    comp.get_target_nodes()
+                    comp.get_target_input_mechs()
                 return
             else:
-                targets = comp.get_target_nodes()
+                targets = comp.get_target_input_mechs()
 
             # Assign **targets** arg for learn() if specified;
             #     need to do this *after* construction to be able to use TARGET_MECHANISMs as specs
@@ -1326,10 +1326,10 @@ class TestStructural:
             if conflict_type == "conflict_in_constructor" or conflict_type == "conflict_in_learn_and_constructor":
                 with pytest.raises(CompositionError, match=re.escape(error_msg)):
                     # This calls infer_backpropagation_learning_pathways() which, in turn, calls _validate methods
-                    comp.get_target_nodes()
+                    comp.get_target_input_mechs()
                 return
             else:
-                targets = comp.get_target_nodes()
+                targets = comp.get_target_input_mechs()
 
             # Assign **targets** arg for learn() if specified;
             #     need to do this *after* construction to be able to use TARGET_MECHANISMs as specs
@@ -3822,7 +3822,7 @@ class TestBackPropLearning:
         # RUN MODEL ---------------------------------------------------------------------------
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
-        target = comp.get_nodes_by_role(pnl.NodeRole.TARGET_EXTERNAL)[0]
+        target = comp.get_nodes_by_role(pnl.NodeRole.TARGET_INPUT)[0]
         comp.learn(inputs={color_comp: [[1, 1]],
                            word_comp: [[-2, -2]],
                            target: [[1, 1]]},

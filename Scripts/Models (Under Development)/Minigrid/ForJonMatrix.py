@@ -316,7 +316,7 @@ def main():
     #         # Get teacher-forced actions for the current observation
     #         teacher_actions = get_teacher_actions(input_array)
     #         # Build the inputs dictionary:
-    #         targets = agent_comp.get_target_nodes()
+    #         targets = agent_comp.get_target_input_mechs()
     #         inputs = {state_input: input_array,
     #                   targets[0]: [[teacher_actions[0]]],
     #                   targets[1]: [[teacher_actions[1]]],

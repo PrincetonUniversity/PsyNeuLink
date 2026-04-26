@@ -102,7 +102,7 @@ class PytorchShowGraph(ShowGraph):
         #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
         loss_mechs = [n for n in composition.nodes if isinstance(n, LossMechanism)]
         if loss_mechs:
-            for node in [n for n in processing_graph if n not in composition.get_nodes_by_role(NodeRole.TARGET_EXTERNAL)]:
+            for node in [n for n in processing_graph if n not in composition.get_nodes_by_role(NodeRole.TARGET_INPUT)]:
                 for loss_mech in loss_mechs:
                     if node is loss_mech.sample.owner:
                         processing_graph[node].add(loss_mech)
@@ -192,7 +192,7 @@ class PytorchShowGraph(ShowGraph):
             # elif rcvr in self.composition.autodiff_learning_components:
             elif isinstance(rcvr, LossMechanism):
                 kwargs['color'] = self.learning_color
-            elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_EXTERNAL):
+            elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
                 kwargs['color'] = self.learning_color
                 kwargs['penwidth'] = str(self.bold_width)
 

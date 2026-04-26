@@ -1171,7 +1171,7 @@ class GRUComposition(AutodiffComposition):
         target_mech = self.target_node
 
         # Add TARGET_MECHANISM to GRUComposition to support learning in standalone or solo nested composition
-        self.add_node(target_mech, required_roles=[NodeRole.TARGET_EXTERNAL, NodeRole.LEARNING],
+        self.add_node(target_mech, required_roles=[NodeRole.TARGET_INPUT, NodeRole.LEARNING],
                       context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context=context)
 
@@ -1291,7 +1291,7 @@ class GRUComposition(AutodiffComposition):
             return super().compute_loss(context)
         else:
             sample = pytorch_rep.node_wrappers[0].output
-            target  = targets[self.get_target_nodes()[0]]
+            target  = targets[self.get_target_input_mechs()[0]]
             loss_function = self._get_loss(self.loss_spec)
             return loss_function(sample, target)
 

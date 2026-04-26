@@ -145,7 +145,7 @@ class NodeRole(enum.Enum):
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-        `TARGET_INTERNAL`, `TARGET_EXTERNAL` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
+        `TARGET_INTERNAL`, `TARGET_INPUT` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
         This role can, but generally should not be modified programmatically.
 
     COMMENT:
@@ -163,12 +163,14 @@ class NodeRole(enum.Enum):
         use the Composition's `get_sample_ports()` method to identify the specific one(s) that are used.
         This role cannot be modified programmatically.
 
-    COMMENT:
-    TARGET_EXTERNAL
-        BREADCRUMB - MODIFY THIS IF TARGET ASSIGNED TO ALL TARGETS (INCLUDING INTERNAL ONES IN AutodiffComp)
-    COMMENT
+    TARGET_INPUT
+        A `Node <Composition_Nodes>` that receives an external value (i.e., one specified in the **targets**,
+        or optionally the **inputs** argument, of a call to `learn() <Composition.learn>`; see
+        `Composition_Target_Inputs`) that, in turn, is used as the target value in computing the error for a
+        `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+        This role cannot be modified programmatically.
 
-    TARGET_EXTERNAL
+    TARGET_INTERNAL
         A `Node <Composition_Nodes>` that receives an external value (i.e., one specified in the **targets**,
         or optionally the **inputs** argument, of a call to `learn() <Composition.learn>`; see
         `Composition_Target_Inputs`) that, in turn, is used as the target value in computing the error for a
@@ -227,7 +229,7 @@ class NodeRole(enum.Enum):
     CONTROLLER_OBJECTIVE = enum.auto()
     LEARNING = enum.auto()
     SAMPLE = enum.auto()
-    TARGET_EXTERNAL = enum.auto()
+    TARGET_INPUT = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
     PROBE = enum.auto()
     OUTPUT = enum.auto()
@@ -242,7 +244,7 @@ unmodifiable_node_roles = {
     NodeRole.CYCLE,
     NodeRole.CONTROLLER,
     NodeRole.SAMPLE,
-    NodeRole.TARGET_EXTERNAL,
+    NodeRole.TARGET_INPUT,
     NodeRole.LEARNING_OBJECTIVE
 }
 
@@ -542,7 +544,7 @@ class NodeRolesManager(object):
                     continue
 
                 # Exclude TARGETS as OUTPUT Node
-                if NodeRole.TARGET_EXTERNAL in self._get_roles_by_node(node):
+                if NodeRole.TARGET_INPUT in self._get_roles_by_node(node):
                     continue
 
                 # Exclude ModulatoryMechanisms as OUTPUT Node
@@ -758,7 +760,7 @@ class NodeRolesManager(object):
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
                               f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
-            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE, NodeRole.TARGET_EXTERNAL}:
+            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE, NodeRole.TARGET_INPUT}:
                 warnings.warn(f"{role} should be assigned with caution to {self.owner.name}. "
                               f"Learning Components are generally constructed automatically as part of "
                               f"a learning Pathway. Doing so otherwise may cause unexpected results.")
