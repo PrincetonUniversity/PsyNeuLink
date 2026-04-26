@@ -3999,10 +3999,21 @@ class AutodiffComposition(Composition):
     def sample_mechs_str(self):
         return [loss_mech.sample for loss_mech in self.loss_mechs_map]
 
-    # # MODIFIED TEACHER_TARGET OLD:
-    # def target_nodes(self):
-    #     return [loss_mech.target for loss_mech in self.loss_mechs_map]
-    # MODIFIED TEACHER_TARGET END
+    # MODIFIED TARGET_INTERNAL NEW:
+    @property
+    def target_mechanisms(self):
+        """Override to call infer_backpropagation_learning_pathways
+        This instantiates any TARGET_MECHANISMs specified in **targets** argument of the constructor.
+        """
+        self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+        return super().target_mechanisms
+
+    @property
+    def loss_mechanisms(self):
+        self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+        return sorted(list(self.loss_mechs_map.keys()))
+
+    # MODIFIED TARGET_INTERNAL END
 
     @property
     def learning_components(self):

@@ -2202,7 +2202,11 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
-            if NodeRole.TARGET_INPUT in self._get_roles_by_node(rcvr):
+            # # MODIFIED TARGET_INTERNAL OLD:
+            # if NodeRole.TARGET_INPUT in self._get_roles_by_node(rcvr):
+            # MODIFIED TARGET_INTERNAL NEW:
+            if rcvr in self.target_mechanisms:
+            # MODIFIED TARGET_INTERNAL END
                 rcvr_width = self.bold_width
             else:
                 rcvr_width = self.default_width
