@@ -866,7 +866,7 @@ from psyneulink.core.compositions.composition import (
     OptimizerParams,
     SamplesAndTargets
 )
-from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRoleError
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -1919,6 +1919,13 @@ class AutodiffComposition(Composition):
                 if isinstance(target_spec, (OutputPort, ProcessingMechanism_Base)):
                     # target is internal Node
                     self._check_if_target_is_in_sample_pathway(sample_port, target_port, pathways, context)
+                    try:
+                        self.node_roles_mgr.require_node_roles(target_mech, NodeRole.TARGET_INTERNAL, ALL, context)
+                    except NodeRoleError as e:
+                        if "not in the Composition or any nested within it." in e.error_value:
+                            # Error will be handled in _validate_constructor_targets_specs
+                            pass
+
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so attempt to construct TARGET_MECHANISM
                     if sample_port in self._samples_and_targets.sample_ports:
@@ -1937,9 +1944,11 @@ class AutodiffComposition(Composition):
                     target_port = target_mech.output_port
                     self.add_node(target_mech, required_roles=[NodeRole.TARGET_INPUT, NodeRole.INPUT], context=context)
                     constructed_target_mechs.append(target_mech)
+
                 else:
                     assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                    f"({sample_target_spec[1]} for '{self.name}'.")
+
             else:
                 assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
                                f"({sample_target_spec} for '{self.name}'.")
@@ -1959,8 +1968,6 @@ class AutodiffComposition(Composition):
             self.require_node_roles(sample, NodeRole.SAMPLE, context=context)
             # TEACHER_TARGET BREADCRUMB: REINSTATE WHEN INTERNAL TARGETS ARE ASSIGNED NodeRole.TARGET_INPUT
             # self.require_node_roles(target, NodeRole.TARGET_INPUT, context=context)
-
-
 
     def _instantiate_default_targets(self, pathways: list, context, base_context) -> Tuple[List, List]:
         """Construct default TARGET_MECHANISMs (since none were specified in **targets** arg of constructor

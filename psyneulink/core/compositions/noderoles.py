@@ -171,10 +171,10 @@ class NodeRole(enum.Enum):
         This role cannot be modified programmatically.
 
     TARGET_INTERNAL
-        A `Node <Composition_Nodes>` that receives an external value (i.e., one specified in the **targets**,
-        or optionally the **inputs** argument, of a call to `learn() <Composition.learn>`; see
-        `Composition_Target_Inputs`) that, in turn, is used as the target value in computing the error for a
-        `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+        An `INTENRAL` `Node <Composition_Nodes>` with an `OutputPort` the `value <OutputPort.value>` of which is
+        is used as the target value in computing the error for a `learning pathway <Composition_Learning_Pathway>`
+        (see `TARGET_MECHANISM <Composition_Learning_Components>`). This is used only by Composition subclasses
+        (such as `AutodiffComposition`) that permit the explicit specification of `SAMPLE_MECHANISM`\\s.
         This role cannot be modified programmatically.
 
         .. note::
@@ -230,6 +230,7 @@ class NodeRole(enum.Enum):
     LEARNING = enum.auto()
     SAMPLE = enum.auto()
     TARGET_INPUT = enum.auto()
+    TARGET_INTERNAL = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
     PROBE = enum.auto()
     OUTPUT = enum.auto()
@@ -245,6 +246,7 @@ unmodifiable_node_roles = {
     NodeRole.CONTROLLER,
     NodeRole.SAMPLE,
     NodeRole.TARGET_INPUT,
+    NodeRole.TARGET_INTERNAL,
     NodeRole.LEARNING_OBJECTIVE
 }
 

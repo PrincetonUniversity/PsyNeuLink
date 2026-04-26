@@ -10653,13 +10653,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # A SAMPLE_MECHNISM does not have to be an OUTPUT Node for all subclasses (e.g., AutodiffComposition)
                 input_item_role = SAMPLE
             # MODIFIED TARGET_INPUT OLD:
-            elif NodeRole.INPUT in roles:
-                # BREADCRUMB: AT PRESENT, NodeRole.TARGET_INPUT IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET_MECHANISMs,
-                #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
-                input_item_role = TARGET
-            # MODIFIED TARGET_INPUT NEW:
-            # elif NodeRole.TARGET_INPUT in roles or NodeRole.TARGET_INTERNAL in roles:
+            # elif NodeRole.INPUT in roles:
+            #     # BREADCRUMB: AT PRESENT, NodeRole.TARGET_INPUT IS ASSIGNED ONLY TO AUTOMATICALLY CONSTRUCTED TARGET_MECHANISMs,
+            #     #             WHEN IT CAN BE ASSIGNED TO INTERNAL TARGETS, THEN HANLDE AS WITH SAMPLE ABOVE
             #     input_item_role = TARGET
+            # MODIFIED TARGET_INPUT NEW:
+            elif NodeRole.TARGET_INPUT in roles or NodeRole.TARGET_INTERNAL in roles:
+                input_item_role = TARGET
             # MODIFIED TARGET_INPUT END
             else:
                 illegal_specs.append(SamplesAndTargets.Spec(None, input_item, None, None, value, name))
