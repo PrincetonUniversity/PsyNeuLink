@@ -345,7 +345,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
-    INPUT_SHAPES, SOFT_CLAMP, TARGET, VARIABLE
+    INPUT, INPUT_SHAPES, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
@@ -359,7 +359,9 @@ __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism',
 ]
 
-INPUT = 'INPUT'
+# MODIFIED TEACHER_TARGET OLD:
+# INPUT = 'INPUT'
+# MODIFIED TEACHER_TARGET END
 
 INPUT_SIZE = 'input_size'
 HIDDEN_SIZE = 'hidden_size'

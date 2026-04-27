@@ -396,35 +396,46 @@ class TestAutodiffTargetSpecs:
         pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
         pway4_mech_A = pnl.ProcessingMechanism(name='pway4_mech_A')
         pway4_mech_B = pnl.ProcessingMechanism(name='pway4_mech_B')
-        pway5_mech_A = pnl.ProcessingMechanism(name='pway5_mech_A')
-        pway5_mech_B = pnl.ProcessingMechanism(name='pway5_mech_B')
-        pway5_mech_C = pnl.ProcessingMechanism(name='pway5_mech_C')
-        loss_mech = LossMechanism(sample=pway1_mech_B.output_port, target=pway2_mech_A.output_port,
-                                  name='MANUALLY SPECIFIED LOSS MECHANISM')
+        # loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port, target=pway2_mech_A.output_port,
+        #                           name='MANUALLY SPECIFIED LOSS MECHANISM')
         pway1 = [pway1_mech_A, pway1_mech_B]
         pway2 = [pway2_mech_A, pway2_mech_B]
         pway3 = [pway3_mech_A, pway3_mech_B]
         pway4 = [pway4_mech_A, pway4_mech_B]
 
-        autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4,loss_mech],
-                                   targets={pway1_mech_B:pway2_mech_A,
-                                             pway2_mech_B.output_port:pway4_mech_A, #| <-
-                                             pway3_mech_B:pway4_mech_A,        # <- DUPLICATE
-                                             pway4_mech_B:TARGET,
-                                             })
+        # autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4,loss_mech],
+        autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4],
+                                            targets={pway1_mech_B:pway2_mech_A,
+                                                     pway2_mech_B.output_port:pway4_mech_A,
+                                                     pway3_mech_B:pway4_mech_A,
+                                                     pway4_mech_B:pnl.TARGET,
+                                                     })
+
+        # Assign attributes to variables for comparison with values after call to learn() below
+        samples_and_targets = autodiff_comp._samples_and_targets
         target_mechanisms = autodiff_comp.target_mechanisms
+        assert set(target_mechanisms) == set(samples_and_targets.target_mechs)
         target_input_mechs = autodiff_comp.target_input_mechanisms
-        target_internal_mechs = autodiff_comp._get_target_mechs(scope=INTERNAL)
-        target_internal_mechs_2 = autodiff_comp.target_internal_mechanisms
+        assert len(target_input_mechs) == 1 and target_input_mechs[0].name == 'TARGET for pway4_mech_B'
+        assert target_input_mechs == autodiff_comp._get_target_mechs(scope=pnl.INPUT)
+        target_internal_mechs = autodiff_comp.target_internal_mechanisms
+        assert target_internal_mechs == [pway2_mech_A, pway4_mech_A]
+        assert target_internal_mechs ==  autodiff_comp._get_target_mechs(scope=pnl.INTERNAL)
         targets_dict = autodiff_comp._get_targets_dict()
         sample_mechs = autodiff_comp.sample_mechanisms
+        assert set(sample_mechs) == set(samples_and_targets.sample_mechs)
+        # Should show pway2_mech_A as orange (since it is TARGET_INPUT Node)
         gv = autodiff_comp.show_graph(output_fmt='source', show_pytorch=True)
+        assert gv == ('digraph autodiff_composition {\n\tgraph [label=autodiff_composition overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tpway4_mech_A [color=orange penwidth=3 rank=source shape=oval]\n\tpway3_mech_A [color=green penwidth=3 rank=source shape=oval]\n\tpway2_mech_A [color=orange penwidth=3 rank=source shape=oval]\n\tpway1_mech_A [color=green penwidth=3 rank=source shape=oval]\n\t"TARGET for pway4_mech_B" [color=orange penwidth=3 rank=source shape=oval]\n\t"LOSS for pway1_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway1_mech_B -> "LOSS for pway1_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway2_mech_A -> "LOSS for pway1_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway2_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway2_mech_B -> "LOSS for pway2_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_A -> "LOSS for pway2_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway3_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway3_mech_B -> "LOSS for pway3_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_A -> "LOSS for pway3_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway4_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\t"TARGET for pway4_mech_B" -> "LOSS for pway4_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_B -> "LOSS for pway4_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway1_mech_A -> pway1_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway2_mech_A -> pway2_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway3_mech_A -> pway3_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway4_mech_A -> pway4_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for pway1_mech_B" -> pway1_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway2_mech_B" -> pway2_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway3_mech_B" -> pway3_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway4_mech_B" -> pway4_mech_B [color=brown penwidth=1 style=dotted]\n\tpway1_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway2_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway3_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway4_mech_B [color=red penwidth=3 rank=max shape=oval]\n}\n')
 
-        autodiff_comp.learn(inputs=, targets=, )
+        # Test after call to learn()
+        inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]], pway4_mech_A:[[4]]}
+        targets = {pway4_mech_B:[[9]]}
+        autodiff_comp.learn(inputs, targets, execution_mode=pnl.ExecutionMode.PyTorch)
         assert autodiff_comp.target_mechanisms == target_mechanisms
         assert autodiff_comp.target_input_mechanisms == target_input_mechs
-        assert autodiff_comp._get_target_mechs(scope=INTERNAL) == target_internal_mechs
-        assert autodiff_comp.target_internal_mechanisms == target_internal_mechs_2
+        assert autodiff_comp._get_target_mechs(scope=pnl.INTERNAL) == target_internal_mechs
+        assert autodiff_comp.target_internal_mechanisms == target_internal_mechs
         assert autodiff_comp._get_targets_dict() == targets_dict
         assert autodiff_comp.sample_mechanisms == sample_mechs
 
