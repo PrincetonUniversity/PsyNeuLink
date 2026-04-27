@@ -935,7 +935,7 @@ class TestExecution:
                                              name='OUTER COMP')
 
         input_array = [[0], [0]]
-        targets = outer_comp.get_target_input_mechs()
+        targets = outer_comp.target_input_mechanisms
         inputs = {external_input: input_array,
                   targets[0]: [1],
                   targets[1]: [1]}
@@ -1013,7 +1013,7 @@ class TestExecution:
                                    [[400., 500., 600.], [444., 555., 666.]],
                                    [[25., 50., 75.], [27.75, 55.5,  83.25]],
                                    [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
-                targets = {target:target.value for target in em.get_target_input_mechs()}
+                targets = {target:target.value for target in em.target_input_mechanisms}
                 em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)
 

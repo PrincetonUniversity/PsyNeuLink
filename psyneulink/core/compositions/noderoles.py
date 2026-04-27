@@ -175,7 +175,7 @@ class NodeRole(enum.Enum):
         is used as the target value in computing the error for a `learning pathway <Composition_Learning_Pathway>`
         (see `TARGET INPUT MECHANISMS <Composition_Learning_Components>`). This is used only by Composition subclasses
         (such as `AutodiffComposition`) that permit the explicit specification of `SAMPLE_MECHANISM`\\s (e.g., see
-        `AutodiffComposition_Structure_Target_Nodes`)
+        `AutodiffComposition_Structure_Target_Mechanisms`)
         This role cannot be modified programmatically.
 
         .. note::

@@ -1291,7 +1291,7 @@ class GRUComposition(AutodiffComposition):
             return super().compute_loss(context)
         else:
             sample = pytorch_rep.node_wrappers[0].output
-            target  = targets[self.get_target_input_mechs()[0]]
+            target  = targets[self.target_input_mechanisms[0]]
             loss_function = self._get_loss(self.loss_spec)
             return loss_function(sample, target)
 

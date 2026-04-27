@@ -417,24 +417,20 @@ uses the form of `Loss` specified in the **loss** argument of its constructor, o
      its use in computing the loss, in order to prevent gradient propagation to the target Mechanism, which may
      be in its own `learning pathway <AutodiffComposition_Learning_Pathways>`.
 
-.. _AutodiffComposition_Structure_Target_Nodes:
+.. _AutodiffComposition_Structure_Target_Mechanisms:
 
-*TARGET_MECHANISMS*
+*TARGET_MECHANISMs*
 ^^^^^^^^^^^^^^^^^^^
 
+A *TARGET_MECHANISM* provides the target value to the `LossMechanism <AutodiffComposition_Structure_LossMechanisms>`
+used to train a *SAMPLE_MECHANISM*. There are two types of *TARGET_MECHANISM*: *TARGET_INPUT MECHANISM*, specified in
+the **targets** argument of the AutodiffComposition's constructor using the keyword *TARGET*; and *TARGET_INTERNAL
+MECHANISM*, specified as Mechanism or the OutputPort of one (see `AutodiffComposition_Specifying_Learning_Pathways`).
+Each type is described below.  All of the *TARGET_MECHANISMs* of an AutodiffComposition are listed in its
+`target_mechanisms <Composition.target_mechanisms>` attibute, and included in its `learning_components
+<AutodiffComposition.learning_components>` attribute.
 
-*TARGET_MECHANISMS*
-^^^^^^^^^^^^^^^^^^^
-
-The target value used to train a *SAMPLE_MECHANISM* is provided to the `LossMechanism
-<AutodiffComposition_Structure_LossMechanisms> by a *TARGET_MECHANISM*, which can be one of two types:
-a *TARGET INPUT MECHANISM*, that is specified in the AutodiffComposition's constructor using the keyword *TARGET*,
-or *TARGET INTERNAL MECHANISM* that is specified as another Mechanism or the OutputPort of one (see
-`AutodiffComposition_Specifying_Learning_Pathways`). Each of these types is described below.  All of the
-*TARGET_MECHANISMs* of an AutodiffComposition are listed in its `target_mechanisms <Composition.target_mechanisms>`
-attibute, and included in its `learning_components <AutodiffComposition.learning_components>` attribute.
-
-*TARGET INPUT MECHANISMS*. These are automatically constructed for each *sample* specified with the keywor *TARGET*
+*TARGET_INPUT MECHANISMS*. These are automatically constructed for each *sample* specified with the keywor *TARGET*
 in the **targets** argument of the AutodiffComposition's constructor, along with a Projection from its OutputPort
 to the *TARGET* `InputPort of the `LossMechanism` construced for that *sample*-*target* pair. The *TARGET_MECHANISM*
 is assigned the `NodeRole` `TARGET_INPUT`, and receives the target value from the **targets** (or **inputs** argument
@@ -444,7 +440,7 @@ for every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belong
 `learnable <MappingProjection.learnable>` Projection. The *TARGET INPUT MECHANISMs* of an AutodiffComposition are
 listed in it's `target_input_mechanisms <Composition.target_input_mechanisms>` attribute.
 
-*TARGET INTERNAL MECHANISMS*. A Projection is automatically constructed from each of these specified in the **targets**
+*TARGET_INTERNAL MECHANISMS*. A Projection is automatically constructed from each of these specified in the **targets**
 argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort of the `LossMechanism` construced for
 that *sample*-*target* pair. The *TARGET_MECHANISM* is assigned the `NodeRole` `TARGET_INTERNAL`, and its `OutputPort`
 provides the target value used to train the corresponing *sample*.  The *TARGET INPUT MECHANISMs* of an
@@ -899,6 +895,7 @@ from psyneulink.core.globals.keywords import (
     ERROR,
     EXECUTION_MODE,
     EXTERNAL,
+    INTERNAL,
     LEARNING_RATE,
     Loss,
     LOSSES,
@@ -989,7 +986,8 @@ class AutodiffComposition(Composition):
 
     targets : LossMechanism, tuple, list or dict  : default None
         specifies the target(s) used for training the model;
-        see `AutodiffComposition_Target_Specification` for additional details;
+        see `AutodiffComposition_Target_Specification` for details of specification, and `targets
+        <AutodiffComposition.targets for additional information).
 
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
@@ -1079,11 +1077,20 @@ class AutodiffComposition(Composition):
     loss_spec : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
-    targets : list of LossMechanisms
+    loss_mechanisms : list of LossMechanisms
         each LossMechanism computes the loss for the output of the Node from which it recieves its *SAMPLE* input
         (the "student" Node) by comparing it to the output of the Node from which it receives its *TARGET* input
         (the "teacher" Node), using the specified loss function; see `AutodiffComposition_Target` for additional
         details.
+        
+    targets : dict
+        dictionary of {`sample <AutodiffComposition_Sample>`:`target <AutodiffComposition_Target>`} specifiations,
+        used to specify the `TARGET_MECHANISM` for each `SAMPLE_MECHANISM` in an AutodiffComposition (see
+         `AutodiffComposition_Structure_Target_Mechanisms` for details).
+
+    target_internal_mechanisms : list of `TARGET_MECHANISM`\\s
+        list of the `TARGET_MECHANISM`\\s for a Composition assigned the `NodeRole` `TARGET_INTERNAL`
+        (see `AutodiffComposition_Structure_Target_Mechanisms` for details)
 
     learning_rate : float or bool
         determines the default learning_rate passed the `optimizer <PytorchCompositionWrappe.optimizer>`,
@@ -4022,6 +4029,22 @@ class AutodiffComposition(Composition):
         """
         self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
         return super().target_mechanisms
+
+    @property
+    def target_input_mechanisms(self):
+        """Override to call infer_backpropagation_learning_pathways
+        This instantiates any TARGET_MECHANISMs specified in **targets** argument of the constructor.
+        """
+        self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+        return super().target_input_mechanisms
+
+    @property
+    def target_internal_mechanisms(self):
+        """Return list of TARGET_MECHANISMs with NodeRole.TARGET_INTERNAL
+        This instantiates any TARGET_MECHANISMs specified in **targets** argument of the constructor.
+        """
+        self.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+        return self._get_target_mechs(execution_mode=pnlvm.ExecutionMode.PyTorch, scope=INTERNAL)
 
     @property
     def loss_mechanisms(self):

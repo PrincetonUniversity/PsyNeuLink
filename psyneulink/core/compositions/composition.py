@@ -1699,13 +1699,13 @@ or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
   * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`, entries
     for `TARGET_MECHANISM <Composition_Learning_Components>`\\s, that receive as input the target value for each
     `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` in a `learning Pathway <Composition_Learning_Pathway>` of the Composition;
-    a list of the TARGET_MECHANISMs for a Composition can be obtained using its `get_target_input_mechs()
-    <Composition.get_target_input_mechs>` method.
+    the TARGET_MECHANISMs for a Composition are listed in its `target_input_mechanisms
+    <Composition.target_input_mechanisms>` attribute.
 
   .. note::
      `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict
-     (which can be listed using its `get_target_input_mechs() <Composition.get_target_input_mechs>` method), although this
-     will elicit a warning indicating that the standard way to specify targets is one of the above.
+     (which can be listed using its `target_input_mechanisms <Composition.target_input_mechanisms>` attribute),
+     although this will elicit a warning indicating that the standard way to specify targets is one of the above.
 
 In either case, the target values in the dict must be formatted as described under <Composition_Input_Dictionary>`.
 The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
@@ -4068,6 +4068,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
         <ProcessingMechanism>` or `MappingProjections <MappingProjection>` in the pathway(s) being learned;
         those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
+
+    target_mechanisms : list[list]
+        a list of the `TARGET_MECHANISM`\\s for a Composition; this includes both its `target_input_mechanisms
+        <Composition.target_input_mechanisms>` as well as `target_internal_nodes` for subclasses that support it
+        (e.g., see `target_internal_nodes <AutodiffComposition.target_internal_nodes>`).
+
+    target_input_mechanisms : list[list]
+        a list of the `TARGET_MECHANISM`\\s for a Composition assigned the `NodeRole` `TARGET_INPUT`.
 
     learned_components : list[list]
         a list of the components subject to learning in the Composition (`ProcessingMechanisms
@@ -9423,7 +9431,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not target_nodes:
             # No TARGET_MECHANISMs were found
             if not self.learning_components:
-                warnings.warn(f"The 'get_target_input_mechs()' method for {self.name} was called, "
+                warnings.warn(f"The 'target_input_mechanisms' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
             elif hasattr(self, 'targets'):
                 # Ensure that any TARGET specs in self.targets are duplicates; otherwise something has gone wrong
@@ -9438,8 +9446,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         (f"PROGRAM ERROR: {self.name} has no TARGET_MECHANISMs even though they were specified.")
         return sorted(target_nodes)
 
+    # MODIFIED TARGET_INTERN OLD:
     def get_target_input_mechs(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
         return self._get_target_mechs(execution_mode, scope=INPUT, context=context, base_context=base_context)
+    # MODIFIED TARGET_INTERN END
 
     def _get_targets_dict(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
         """Return dict of all TARGET_MECHANISMs <Composition_Learning_Components>`\\s and their Ports in Composition
@@ -10803,7 +10813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         source_str = f"{source_str} argument{s}"
 
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
-        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self.get_target_input_mechs()
+        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self.target_input_mechanisms
                                 for target_spec in self._sample_target_specs)
         use_sample_mechs_str = (f"use the SAMPLE_MECHANISM{s} to which {they_it} correspond{s_not} "
                                 f"as the key{s} of the dict, obviating the need to determine the TARGET_MECHANISMs"
@@ -10823,7 +10833,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"(listed below) in the {source_str} of the learn() method of '{self.name}'. While this is technically OK, "
             f"it might be easier and clearer to {use_sample_mechs_str}{both}{placement}. Alternatively, "
             f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn() method (which can be identified using "
-            f"the Composition's 'get_target_input_mechs()' method) along with other INPUT nodes, obviating the need to "
+            f"the Composition's 'target_input_mechanisms' method) along with other INPUT nodes, obviating the need to "
             f"specify the 'targets' arg.  Redundant specifications for: {full_str}.")
         _warned_about_targets_mechs_in_inputs_and_targets = True
 
@@ -12672,8 +12682,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <Composition_Learning_Components>` in the Composition, or the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for that pathway, and the value is the target value used for that
                 Node on each trial (see `target inputs <Composition_Target_Inputs>` for additional details concerning
-                the formatting of targets); a list of the TARGET_MECHANISMs for a Composition can be obtained using
-                its `get_target_input_mechs() <Composition.get_target_input_mechs>` method.
+                the formatting of targets); the TARGET_MECHANISMs for a Composition are listed in its
+                `target_input_mechanisms <Composition.get_target_input_mechs>` attribute.
 
             num_trials : int (default=None)
                 typically, the Composition infers the number of trials to execute from the length of its input
@@ -14574,6 +14584,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def target_mechanisms(self):
         return self._get_target_mechs(scope=ALL)
+
+    @property
+    def target_input_mechanisms(self):
+        return self._get_target_mechs(pnlvm.ExecutionMode.Python, INPUT)
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region
