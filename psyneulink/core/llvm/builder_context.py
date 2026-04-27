@@ -383,11 +383,6 @@ class LLVMBuilderContext:
         if getattr(component, 'componentType', "") == kw.COMPOSITION:
             return
 
-        # FIXME: Identity Function inherits from DeterministicTransferFunction,
-        # but doesn't use either scale nor offset Parameters.
-        if getattr(component, 'componentName', "") in {kw.IDENTITY_FUNCTION}:
-            return
-
         # Autodiff learning optimizers are compiled objects but don't have
         # parameter or state ids
         if not hasattr(component, 'llvm_param_ids'):
