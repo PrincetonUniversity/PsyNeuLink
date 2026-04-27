@@ -102,11 +102,7 @@ class PytorchShowGraph(ShowGraph):
         #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
         loss_mechs = [n for n in composition.nodes if isinstance(n, LossMechanism)]
         if loss_mechs:
-            # # MODIFIED TARGET_INTERNAL OLD:
-            # for node in [n for n in processing_graph if n not in composition.get_nodes_by_role(NodeRole.TARGET_INPUT)]:
-            # MODIFIED TARGET_INTERNAL NEW:
             for node in [n for n in processing_graph if n not in composition.target_mechanisms]:
-            # MODIFIED TARGET_INTERNAL END
                 for loss_mech in loss_mechs:
                     if node is loss_mech.sample.owner:
                         processing_graph[node].add(loss_mech)
@@ -192,18 +188,10 @@ class PytorchShowGraph(ShowGraph):
             if rcvr in self.pytorch_rep.nodes_map and self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
                 kwargs['color'] = self.exclude_from_gradient_calc_color
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
-            # # MODIFIED TARGET_INTERNAL OLD:
-            # elif isinstance(rcvr, LossMechanism):
-            #     kwargs['color'] = self.learning_color
-            # elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
-            #     kwargs['color'] = self.learning_color
-            #     kwargs['penwidth'] = str(self.bold_width)
-            # MODIFIED TARGET_INTERNAL NEW:
             elif rcvr in self.composition.learning_components:
                 kwargs['color'] = self.learning_color
                 if rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
                     kwargs['penwidth'] = str(self.bold_width)
-            # MODIFIED TARGET_INTERNAL END
 
             elif rcvr not in self.composition.nodes:
                 #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph

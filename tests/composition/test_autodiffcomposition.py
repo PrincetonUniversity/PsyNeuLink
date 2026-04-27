@@ -384,6 +384,50 @@ class TestAutodiffConstructor:
 
 class TestAutodiffTargetSpecs:
 
+
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    def test_sample_and_target_attributes(self):
+        pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
+        pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
+        pway2_mech_A = pnl.ProcessingMechanism(name='pway2_mech_A')
+        pway2_mech_B = pnl.ProcessingMechanism(name='pway2_mech_B')
+        pway3_mech_A = pnl.ProcessingMechanism(name='pway3_mech_A')
+        pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
+        pway4_mech_A = pnl.ProcessingMechanism(name='pway4_mech_A')
+        pway4_mech_B = pnl.ProcessingMechanism(name='pway4_mech_B')
+        pway5_mech_A = pnl.ProcessingMechanism(name='pway5_mech_A')
+        pway5_mech_B = pnl.ProcessingMechanism(name='pway5_mech_B')
+        pway5_mech_C = pnl.ProcessingMechanism(name='pway5_mech_C')
+        loss_mech = LossMechanism(sample=pway1_mech_B.output_port, target=pway2_mech_A.output_port,
+                                  name='MANUALLY SPECIFIED LOSS MECHANISM')
+        pway1 = [pway1_mech_A, pway1_mech_B]
+        pway2 = [pway2_mech_A, pway2_mech_B]
+        pway3 = [pway3_mech_A, pway3_mech_B]
+        pway4 = [pway4_mech_A, pway4_mech_B]
+
+        autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4,loss_mech],
+                                   targets={pway1_mech_B:pway2_mech_A,
+                                             pway2_mech_B.output_port:pway4_mech_A, #| <-
+                                             pway3_mech_B:pway4_mech_A,        # <- DUPLICATE
+                                             pway4_mech_B:TARGET,
+                                             })
+        target_mechanisms = autodiff_comp.target_mechanisms
+        target_input_mechs = autodiff_comp.target_input_mechanisms
+        target_internal_mechs = autodiff_comp._get_target_mechs(scope=INTERNAL)
+        target_internal_mechs_2 = autodiff_comp.target_internal_mechanisms
+        targets_dict = autodiff_comp._get_targets_dict()
+        sample_mechs = autodiff_comp.sample_mechanisms
+        gv = autodiff_comp.show_graph(output_fmt='source', show_pytorch=True)
+
+        autodiff_comp.learn(inputs=, targets=, )
+        assert autodiff_comp.target_mechanisms == target_mechanisms
+        assert autodiff_comp.target_input_mechanisms == target_input_mechs
+        assert autodiff_comp._get_target_mechs(scope=INTERNAL) == target_internal_mechs
+        assert autodiff_comp.target_internal_mechanisms == target_internal_mechs_2
+        assert autodiff_comp._get_targets_dict() == targets_dict
+        assert autodiff_comp.sample_mechanisms == sample_mechs
+
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
@@ -458,7 +502,6 @@ class TestAutodiffTargetSpecs:
             autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
                                 targets=targets_learn_arg,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
-
 
     error_messages_for_target_spec_errors = {
         0: ("A TARGET_MECHANISM ('pway3_mech_T') can't be assigned to 'pway3_mech_A' in the 'targets' argument of "

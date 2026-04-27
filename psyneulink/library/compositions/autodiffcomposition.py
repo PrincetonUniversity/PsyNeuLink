@@ -18,7 +18,7 @@ Contents
       COMMENT:
       - `AutodiffComposition_Optimizer`
       COMMENT
-      - `AutodiffComposition_Learning_Pathways`
+      - `Learning Pathways <AutodiffComposition_Learning_Pathways>`
           - `AutodiffComposition_Sample`
           - `AutodiffComposition_Target`
           - `AutodiffComposition_LossMechanism`
@@ -128,10 +128,11 @@ for every pathway that has at least one learnable MappingProjection, and automat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A learning Pathway can be configured by specifying either a `SAMPLE_MECHANISM
-<AutodiffComposition_Sample>`\\-`TARGET_MECHANISM <AutodiffComposition_Target>` target pair, or a `LossMechanism`
-that uses these, in the **targets** argument of the AutodiffComposition's constructor. These Components are described
-below, followed by the ways in which they can be `specified <AutodiffComposition_Specifying_Learning_Pathways>` in
-the constructor's **targets** argument. However, a few important rules apply:
+<AutodiffComposition_Sample>`\\-`TARGET_MECHANISM <AutodiffComposition_Target>` target pair -- or a `LossMechanism`
+that specifies these as its *SAMPLE* and *TARGET* InputPorts -- in the **targets** argument of the AutodiffComposition's
+constructor. These Components are described below, followed by the ways in which they can be `specified
+<AutodiffComposition_Specifying_Learning_Pathways>` in the constructor's **targets** argument. However, a few important
+rules apply:
 
   .. _AutodiffComposition_SAMPLE_Assginment_Rules:
 
