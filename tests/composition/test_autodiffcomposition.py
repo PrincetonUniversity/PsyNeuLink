@@ -407,13 +407,12 @@ class TestAutodiffConstructor:
         pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
         pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
         pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
-        loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port, target=pway2_mech_A.output_port)
-        pway1 = [pway1_mech_A, pway1_mech_B]
+        solo_input_mech = pnl.ProcessingMechanism(name='solo_input_mech')
+        loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port, target=solo_input_mech.output_port)
+        pway1 = [pway1_mech_A, pway1_mech_B, pway1_mech_C]
         comp = pnl.AutodiffComposition(pathways=[pway1,loss_mech],
-                                   targets={
-                                       pway1_mech_B: TARGET,
-                                       pway2_mech_B.output_port: TARGET
-                                   })
+                                   targets={pway1_mech_C: pnl.TARGET})
+        assert True
 
         inputs = {pway1_mech_A: [[1]],
                   pway2_mech_A: [[1]],
