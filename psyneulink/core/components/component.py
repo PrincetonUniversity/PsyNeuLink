@@ -1463,13 +1463,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
-        if getattr(self, 'componentName', None) == kw.ONE_HOT_FUNCTION:
+        if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
             if self.mode != kw.DETERMINISTIC:
                 if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
                     whitelist.remove('random_state')
 
             elif self.tie != kw.RANDOM:
                 whitelist.remove('random_state')
+
+        elif componentName == kw.DROPOUT_FUNCTION:
+            whitelist.remove('random_state')
 
         # Drop previous_value from MemoryFunctions
         if hasattr(self.parameters, 'duplicate_keys'):
@@ -1600,7 +1603,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # OneHot:
         # * runtime abs_val and indicator are only used in deterministic mode.
         # * random_state and seed are only used in RANDOM tie resolution.
-        if getattr(self, 'componentName', None) == kw.ONE_HOT_FUNCTION:
+        if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
             if self.mode != kw.DETERMINISTIC:
                 blacklist.update(['abs_val', 'indicator'])
                 if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
@@ -1608,6 +1611,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
             elif self.tie != kw.RANDOM:
                 blacklist.add("seed")
+
+        # Dropout:
+        # random state is only used in learning mode
+        elif componentName == kw.DROPOUT_FUNCTION:
+            blacklist.update(["seed", "p"])
 
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly
