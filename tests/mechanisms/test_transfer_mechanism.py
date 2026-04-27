@@ -1659,7 +1659,7 @@ class TestOnResumeIntegratorMode:
         np.testing.assert_allclose(result, [[0.43636140750487973, 0.47074475219780554]])
         if comp_mode is pnl.ExecutionMode.Python:
             assert decision.num_executions.time_step == 1
-            assert decision.num_executions.pass_ == 2
+            assert decision.num_executions.pass_ == 1
             assert decision.num_executions.trial== 1
             assert decision.num_executions.run == 2
 
@@ -1827,3 +1827,29 @@ def test_integrator_mode_reset_in_composition(comp_mode):
 
     comp.run([[1, 0], [0, 1]], execution_mode=comp_mode)
     np.testing.assert_allclose(comp.results, [[[0.52293998, 0.40526519]], [[0.4336115, 0.46026939]]])
+
+
+class TestTerminationMeasure:
+    # NOTE (as in TestOnResumeIntegratorMode::test_termination_measures above):
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler
+    # and python num_execution values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
+    def test_measure_pass_as_non_input(self, comp_mode):
+        # derived from dupont/jongkees issue, 2026-03-31
+        drive = pnl.ProcessingMechanism()
+        pass_mech = pnl.TransferMechanism(
+            integrator_mode=True,
+            integrator_function=pnl.SimpleIntegrator,
+            integration_rate=1,
+            termination_threshold=5,
+            termination_measure=pnl.TimeScale.PASS,
+            execute_until_finished=True,
+        )
+        gate = pnl.ProcessingMechanism()
+
+        comp = pnl.Composition([drive, pass_mech, gate])
+        comp.scheduler.termination_conds[pnl.TimeScale.TRIAL] = pnl.AfterNCalls(gate, 3)
+        comp.run(inputs={drive: 1}, execution_mode=comp_mode)
+
+        # 3 passes of 5 executions each
+        np.testing.assert_array_equal(pass_mech.value, [[15]])

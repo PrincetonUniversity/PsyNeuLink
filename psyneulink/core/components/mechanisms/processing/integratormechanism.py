@@ -130,6 +130,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
@@ -301,10 +302,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
         builder = super()._gen_llvm_function_body(ctx, builder, base_params, state, arg_in, arg_out, tags=tags)
 
-        params, builder = self._gen_llvm_param_ports_for_obj(self, base_params, ctx, builder, base_params, state, arg_in)
+        params, builder = self._gen_llvm_param_ports_for_obj(ctx, builder, base_params, state, arg_in, obj=self, params_in=base_params)
 
         reset_ptr = ctx.get_param_or_state_ptr(builder, self, "reset", param_struct_ptr=params)
-        reset_val = builder.load(reset_ptr)
+        reset_val = pnlvm.helpers.load_extract_scalar_array_one(builder, reset_ptr)
 
         # FIXME: Consider cases where reset_val is a vector (or generally not
         # just float scalar)

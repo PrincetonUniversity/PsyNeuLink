@@ -23,18 +23,20 @@ class TestReset:
     test_args = [pytest.param(1,                None,           id='default'),
                  pytest.param(None,             pnl.OVERRIDE,   id='OVERRRIDE')]
     @pytest.mark.parametrize('reset_default, modulation', test_args)
-    def test_reset_integrator_mechanism(self, reset_default, modulation):
+    def test_reset_integrator_mechanism(self, reset_default, modulation, comp_mode):
         input = pnl.ProcessingMechanism(name='INPUT')
-        counter = IntegratorMechanism(function=SimpleIntegrator,
-                                      default_variable=1,
-                                      reset_default=reset_default,
-                                      name='COUNTER')
+        counter = pnl.IntegratorMechanism(function=SimpleIntegrator,
+                                          default_variable=1,
+                                          reset_default=reset_default,
+                                          name='COUNTER')
         ctl = pnl.ControlMechanism(monitor_for_control=input,
                                    modulation=modulation,
                                    control=('reset', counter))
         c = Composition(nodes=[input, ctl, counter])
-        c.run(inputs={input:[0,0,1,0,0]})
+
+        c.run(inputs={input:[0,0,1,0,0]}, execution_mode=comp_mode)
         expected = [[[0.],[1.]], [[0.],[2.]], [[1.],[0.]], [[0.],[1.]], [[0.],[2.]]]
+
         np.testing.assert_allclose(c.results, expected)
 
     def test_FitzHughNagumo_valid(self):
@@ -1206,6 +1208,26 @@ class TestIntegratorNoise:
 
         np.testing.assert_allclose(val1, [[4.29013944], [1.]], **tolerance)
         np.testing.assert_allclose(val2, [[14.9673235], [2.]], **tolerance)
+
+    @pytest.mark.composition
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize(
+        "parameter, expected",
+         [('seed', [[[10.], [13.21383832]], [[20.], [15.28114669]]] * 2),
+          (pnl.DIST_MEAN, [[[10.], [11.20656132]], [[20.], [21.71995896]], [[10.], [9.57600537]], [[20.], [20.03826716]]]),
+          (pnl.STANDARD_DEVIATION, [[[10.], [27.06561325]], [[20.], [49.39917927]], [[10.], [10.76005365]], [[20.], [15.76534311]]]),
+         ])
+    def test_integrator_modulated_noise_fn(self, parameter, expected, comp_mode):
+
+        # Use higher default mean to avoid rounding issues with lower precision (fp32)
+        I = pnl.IntegratorMechanism(default_variable=[0], function=AccumulatorIntegrator(rate=0, noise=NormalDist(seed=[1], mean=15)))
+        P = pnl.ProcessingMechanism()
+        ctl = pnl.ControlMechanism(monitor_for_control=P, modulation=pnl.OVERRIDE, control=(parameter, I))
+        c = Composition(nodes=[P, ctl, I])
+
+        c.run(inputs={P:[10, 20, 10, 20]}, execution_mode=comp_mode)
+
+        np.testing.assert_allclose(c.results, expected)
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
