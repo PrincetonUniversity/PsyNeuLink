@@ -396,14 +396,11 @@ class TestAutodiffTargetSpecs:
         pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
         pway4_mech_A = pnl.ProcessingMechanism(name='pway4_mech_A')
         pway4_mech_B = pnl.ProcessingMechanism(name='pway4_mech_B')
-        # loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port, target=pway2_mech_A.output_port,
-        #                           name='MANUALLY SPECIFIED LOSS MECHANISM')
         pway1 = [pway1_mech_A, pway1_mech_B]
         pway2 = [pway2_mech_A, pway2_mech_B]
         pway3 = [pway3_mech_A, pway3_mech_B]
         pway4 = [pway4_mech_A, pway4_mech_B]
 
-        # autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4,loss_mech],
         autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4],
                                             targets={pway1_mech_B:pway2_mech_A,
                                                      pway2_mech_B.output_port:pway4_mech_A,
