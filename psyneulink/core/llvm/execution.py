@@ -659,9 +659,12 @@ class CompExecution(CUDAExecution):
         num_inputs = np.asarray(num_input_sets, dtype=np.uint32)
         if "stat" in self._debug_env:
             print("Evaluate result struct type size:",
-                  _pretty_size(ctypes.sizeof(outputs.nbytes)),
-                  "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
-                  "for", self._obj.name)
+                  _pretty_size(outputs.nbytes),
+                  "( evaluations:", num_evaluations,
+                  "element size:",
+                  _pretty_size(outputs.itemsize),
+                  ") for",
+                  self._obj.name)
 
         return comp_params, comp_state, comp_data, ct_inputs, outputs, num_inputs
 
