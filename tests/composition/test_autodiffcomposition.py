@@ -420,7 +420,7 @@ class TestAutodiffTargetSpecs:
         assert target_input_mechs == autodiff_comp._get_target_mechs(scope=pnl.INPUT)
         target_internal_mechs = autodiff_comp.target_internal_mechanisms
         assert target_internal_mechs == [pway2_mech_A, pway4_mech_A]
-        assert target_internal_mechs ==  autodiff_comp._get_target_mechs(scope=pnl.INTERNAL)
+        assert target_internal_mechs == autodiff_comp._get_target_mechs(scope=pnl.INTERNAL)
         targets_dict = autodiff_comp._get_targets_dict()
         sample_mechs = autodiff_comp.sample_mechanisms
         assert set(sample_mechs) == set(samples_and_targets.sample_mechs)

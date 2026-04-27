@@ -345,7 +345,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
-    INPUT, INPUT_SHAPES, SOFT_CLAMP, TARGET, VARIABLE
+    INPUT_SHAPES, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
@@ -354,13 +354,13 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN', 'INPUT',
+    'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN',
     'MINUS_PHASE_ACTIVITY', 'PLUS_PHASE_ACTIVITY', 'OUTPUT_ACTIVITY',
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism',
 ]
 
 # MODIFIED TEACHER_TARGET OLD:
-# INPUT = 'INPUT'
+INPUT = 'INPUT'
 # MODIFIED TEACHER_TARGET END
 
 INPUT_SIZE = 'input_size'
