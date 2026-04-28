@@ -1308,7 +1308,7 @@ speed-up, but not all `Function`\\s are supported.
   .. warning::
     * `ExecutionMode.PyTorch` and `ExecutionMode.LLVMRun` and can be used in the `learn
       <AutodiffComposition.learn>` method only of an `AutodiffComposition`;  specifying them in the
-      `learn() <Composition.learn>` method of a standard `Composition` causes an error.
+      `learn() <Composition.learn>` method of a standard `Composition` raises an error.
 
 |
 .. _Composition_Compilation_Table:
@@ -8830,9 +8830,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Otherwise, create new ones
             else:
-                if len(output_source.input_ports) > 1:
+                # MODIFIED TEACHER_TARGET OLD:
+                # if len(output_source.input_ports) > 1:
+                # MODIFIED TEACHER_TARGET NEW:
+                if len(output_source.output_ports) > 1:
+                # MODIFIED TEACHER_TARGET END
                     raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
-                                           f"in '{self.name}', has a more than one output_port "
+                                           f"in '{self.name}', has more than one output_port "
                                            f"({len(output_source.output_ports)}), which is not currently supported "
                                            f"for learning. Trying using a different Mechanism for each output.")
                 target, comparator, learning_mechanism = \
@@ -8892,9 +8896,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
             # Create terminal_sequence
-            if len(output_source.input_ports) > 1:
+            # MODIFIED TEACHER_TARGET OLD:
+            # if len(output_source.input_ports) > 1:
+            # MODIFIED TEACHER_TARGET NEW:
+            if len(output_source.output_ports) > 1:
+            # MODIFIED TEACHER_TARGET END
                 raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
-                                       f"in '{self.name}', has a more than one output_port "
+                                       f"in '{self.name}', has more than one output_port "
                                        f"({len(output_source.output_ports)}), which is not currently supported "
                                        f"for learning. Trying using a different Mechanism for each output.")
             target, comparator, learning_mechanism = \

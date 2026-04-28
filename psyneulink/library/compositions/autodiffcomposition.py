@@ -1245,6 +1245,12 @@ class AutodiffComposition(Composition):
                 if not isinstance(item, (LossMechanism, tuple)):
                     return (f"must be a (sample, target) tuple, LossMechanism, or a list containing these.")
                 if isinstance(item, tuple):
+                    if isinstance(item[0], LossMechanism):
+                        return (f"sample specification '{item[0].name}' cannot be a LossMechanism; that can only be "
+                                f"used as an entry on its own to specify a sample-target pair.")
+                    if isinstance(item[1], LossMechanism):
+                        return (f"target specification '{item[1].name}' cannot be a LossMechanism; that can only be "
+                                f"used as an entry on its own to specify a sample-target pair.")
                     if not isinstance(item[0], (OutputPort, ProcessingMechanism_Base)):
                         return (f"sample specification '{item[0]}' must be an OutputPort or ProcessingMechanism.")
                     if isinstance(item[0], OutputPort) and not isinstance(item[0].owner, ProcessingMechanism_Base):
@@ -1257,10 +1263,6 @@ class AutodiffComposition(Composition):
                     if isinstance(item[1], str) and item[1] != TARGET:
                         return (f"the only keyword that can be used for the target specification is '{TARGET}' "
                                 f"(got: {item[1]}).")
-                    # assert isinstance(item[0], OutputPort), \
-                    #     ("PROGRAM ERROR: 1st item of tuple specification for targets arg should be OutputPort by now.")
-                    # assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
-                    #     ("PROGRAM ERROR: 2nd item of tuple specification for targets arg should be OutputPort by now.")
 
         def _parse_LearningScale_param(self, value):
             try:
@@ -1469,6 +1471,10 @@ class AutodiffComposition(Composition):
           - the above allow:
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
             - losses to be tracked for logging (as mechs of a Composition)
+        For both:
+          - check that no LossMechanisms have been added to the AutodiffComposition on their own
+              (i.e., outside of the **targets** argument of the constructor)
+
         Return list of LossMechanisms and TARGET_MECHANISMs
         """
         context = context or Context()
@@ -1480,14 +1486,17 @@ class AutodiffComposition(Composition):
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET_MECHANISMs if needed, for inclusion in pathway construction below
             self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
+            # There should not be any "free-standing" LossMechanisms, only those specified in **targets**
+            self._check_for_errant_loss_mechs(AutodiffCompositionError)
 
         else:
         # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+            # There is hould not be *any* LossMechanisms specified
+            self._check_for_errant_loss_mechs(CompositionError)
             # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
             #    that will construct learning components, including TARGET_MECHANISMs for all TERMINAL Nodes
             for pathway in self.pytorch_backprop_pathways:
-                self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                          loss_spec=self.loss_spec)
+                self.add_backpropagation_learning_pathway(pathway=pathway, loss_spec=self.loss_spec)
 
         self._analyze_graph()
         return self.learning_components
@@ -1893,6 +1902,22 @@ class AutodiffComposition(Composition):
                                            f"TARGET_MECHANISMs are automatically constructed for each, for which inputs "
                                            f"must then be provided in the 'targets' argument of the learn() method "
                                            f"when it is called.")
+
+    def _check_for_errant_loss_mechs(self, error_type):
+        """Check if there are any "free-standing" LossMechanisms in any pathways
+        This should only be specified in the **targets** argument of an AutodiffComposition
+        """
+        errant_loss_mechs = [f"'{node.name}'" for node in self.nodes
+                             if isinstance(node, LossMechanism) and node not in self.loss_mechs_map]
+        if errant_loss_mechs:
+            plural = len(errant_loss_mechs) > 1
+            s = 's' if plural else ''
+            was_were = 'were' if plural else 'was'
+            raise error_type(
+                f"The following LossMechanism{s} {was_were} specified in the 'pathways' argument of the constructor "
+                f"for '{self.name}' or in one of its 'add' methods; this is not allowed, as LossMechanisms cannot "
+                f"be added as standalone Nodes of a Composition; they can only be added in the 'targets' argument "
+                f"of an AutodiffComposition's constructor: {', '.join(errant_loss_mechs)}.")
 
     def _instantiate_constructor_targets_args(self, pathways, context, base_context):
         """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
@@ -2899,13 +2924,16 @@ class AutodiffComposition(Composition):
         # Check that all specified Nodes are in the Composition
         nodes_in_comp = self._get_all_nodes()
         not_in_comp = []
-        # Get (errant) entries in **targets** of constructor for Nodes that are not in the Composition
-        # Note: ignore any specified LossMechanisms; they are added in _instantiate_loss_mechanisms()
-        for _, sample, _, target, _, _ in self._sample_target_specs:
+        loss_mech_as_target_spec = []
+        # Get errant entries in **targets** of constructor for Nodes that are not in the Composition
+        #   or for which the target_spec is a LossMechanism (vs. LossMechanism as the *sample-target* spec)
+        # Note: ignore any LossMechanisms as sample-target spec; they are added in _instantiate_loss_mechanisms()
+        for _, sample, target_port, target, _, _ in self._sample_target_specs:
             if spec_as_mech(sample) not in nodes_in_comp and not isinstance(sample, LossMechanism):
                 not_in_comp.append(f"'{sample.full_name}'")
             if spec_as_mech(target) not in nodes_in_comp and not isinstance(target, LossMechanism) and target != TARGET:
                 not_in_comp.append(f"'{target.full_name}'")
+
         if not_in_comp:
             not_in_comp = sorted(set(not_in_comp))
             _ = get_inflections(len(not_in_comp) > 1)
