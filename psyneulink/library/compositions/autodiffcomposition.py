@@ -1233,6 +1233,14 @@ class AutodiffComposition(Composition):
             """
             if isinstance(specs, (LossMechanism, tuple, set, dict, list)):
                 specs = convert_to_list(specs)
+                if any(isinstance(spec, dict) for spec in specs):
+                    parsed_specs = []
+                    for spec in specs:
+                        if isinstance(spec, dict):
+                            parsed_specs.extend(spec.items())
+                        else:
+                            parsed_specs.append(spec)
+                    specs = parsed_specs
             return specs
 
         def _validate_targets(self, spec):

@@ -385,12 +385,10 @@ class TestAutodiffConstructor:
         pway2 = [pway2_mech_A, pway2_mech_B, pway2_mech_C]
         pway3 = [pway3_mech_A, pway3_mech_B]
         comp = pnl.AutodiffComposition(pathways=[pway1,pway2,pway3,solo_input_mech],
-                                       targets=[(pway1_mech_B, pway2_mech_B.output_port),
-                                                (pway1_mech_C, solo_input_mech),
-                                                (pway2_mech_C, pnl.TARGET),
-                                                loss_mech
-                                                ]
-                                       )
+                                       targets=[{pway1_mech_B: pway2_mech_B.output_port,
+                                                pway1_mech_C: solo_input_mech,
+                                                pway2_mech_C: pnl.TARGET},
+                                                loss_mech])
         loss_mechs = comp.loss_mechanisms
 
         assert loss_mechs[0].sample == pway1_mech_B.output_port
