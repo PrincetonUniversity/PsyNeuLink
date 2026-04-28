@@ -1790,7 +1790,7 @@ def test_integrator_mode_reset(mech_mode, initializer_param):
     result = ex([3])
     np.testing.assert_array_equal(result, [[2.125 + initializer_value / 8]])
 
-    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags=frozenset({"reset"}), member="reset")
+    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags={"reset"}, member="reset")
 
     reset_result = reset_ex(None if mech_mode == "Python" else [0])
     np.testing.assert_array_equal(reset_result, [[initializer_value]])

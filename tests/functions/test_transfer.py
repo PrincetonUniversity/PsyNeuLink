@@ -392,7 +392,7 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
 
     f = func(default_variable=variable, **params)
-    EX = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({"derivative"}), member='derivative')
+    EX = pytest.helpers.get_func_execution(f, func_mode, tags={'derivative'}, member='derivative')
 
     res = benchmark(EX, variable)
 
