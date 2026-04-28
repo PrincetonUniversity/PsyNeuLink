@@ -253,42 +253,61 @@ corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanism
 receive the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()`
 method when it is called (see `Target inputs for learning <Composition_Target_Inputs>`).
 
-    * *tuple*: (sample, <target or *TARGET*>);
+* *tuple*: (sample, <target or *TARGET*>);
 
-    * *LossMechanism*: the **sample** and **target** arguments of its constructor must be specified; its **loss**
-      argument can also be used to specify a form of `Loss`; if none is specified, then the loss is determined by
-      the AutodiffComposition's `loss_spec <AutodiffComposition.loss_spec>` Parameter.
+* *LossMechanism*: the **sample** and **target** arguments of its constructor must be specified; its **loss**
+  argument can also be used to specify a form of `Loss`; if none is specified, then the loss is determined by
+  the AutodiffComposition's `loss_spec <AutodiffComposition.loss_spec>` Parameter.
 
-    * *list*: any combination of the above;
+* *list*: any combination of the above;
 
-    * *dict*: {sample: <target or *TARGET*}; each entry specifies a *sample-target* pair.
+* *dict*: {sample: <target or *TARGET*}; each entry specifies a *sample-target* pair.
 
-  .. note::
-     If `samples <AutodiffComposition_Sample>` and `targets <AutodiffComposition_Target>` are specified for *some*
-     but *not* all of the learnable pathways (i.e. ones with `learnable <MappingProjection.learnable>` Projections)
-     in the **targets** argument of the AutodiffComposition's constructor, a warning is issued indicating the learnable
-     pathways that lack learning components (and, in particular, a `LossMechanism`), and for which learning will
-     not occur. If this is not corrected, an error is raised when the `learn() <Composition.learn>` method is called.
+.. note::
+ If `samples <AutodiffComposition_Sample>` and `targets <AutodiffComposition_Target>` are specified for *some*
+ but *not* all of the learnable pathways (i.e. ones with `learnable <MappingProjection.learnable>` Projections)
+ in the **targets** argument of the AutodiffComposition's constructor, a warning is issued indicating the learnable
+ pathways that lack learning components (and, in particular, a `LossMechanism`), and for which learning will
+ not occur. If this is not corrected, an error is raised when the `learn() <Composition.learn>` method is called.
 
-COMMENT:
-+============+==========================+==========================================================
-|            |          constructor     |         learn()
-+============+==========================+==========================================================
-|            |                          |
-|Composition |          N/A             |    all OUTPUT Nodes
-|            |                          |    or none (assigned default_variables as target values)
-|            |                          |
-+============+==========================+==========================================================
-|            |                          |
-|            |  Any ProcessingMechanism |    All of the ones specified as TARGET in constructor
-|            |                          |
-| Autodiff   +------------------------- OR -------------------------------------------------------
-|            |                          |
-|            |          None            |    all OUTPUT Nodes
-|            |                          |    or none (assigned default_variables as target values)
-|            |                          |
-|============+=====================================================================================
-COMMENT
+.. table::
+
+   +------------+----------------------------------+--------------------------------+----------------------------------+
+   |            | constructor(**targets**)         |         learn(**targets**)     |        Assignments               |
+   +============+==================================+================================+==================================+
+   |            |                                  |                                |                                  |
+   |            |                                  |                                | all OUTPUT Nodes assigned as     |
+   |            |                                  |                                |   SAMPLE_MECHANISMs              |
+   |            |                                  |                                |                                  |
+   |Composition |         N/A                      |{SAMPLE_MECHANISM: target value}| all TARGET_MECHANISMs            |
+   |            |                                  |                                |   constructed automatically and  |
+   |            |                                  |                                |   assigned NodeRole.TARGET_INPUT |
+   |            |                                  |                                |                                  |
+   +------------+----------------------------------+--------------------------------+----------------------------------+
+   |            |                                  |                                |                                  |
+   |            |                                  |                                |                                  |
+   |            |                                  |                                |                                  |
+   |            |SAMPLE_MECHANISM: TARGET_MECHANISM|                                |                                  |
+   |            |                                  |       N/A                      |    TARGET_MECHANISM assigned     |
+   | Autodiff   |                                  |                                |    NodeRole.TARGET_INTERNAL      |
+   | with dict  |                                  |                                |                                  |
+   | containing |                                  |                                |                                  |
+   |            +----------------------------------+--------------------------------+----------------------------------+
+   |            |                                  |                                |                                  |
+   |            |    SAMPLE_MECHANISM: *TARGET*    |                                |                                  |
+   |            |                                  |                                |  TARGET_MECHANISM                |
+   |            |                                  |{SAMPLE_MECHANISM: target value}|  constructed automatically and   |
+   |            |                                  |                                |  assigned NodeRole.TARGET_INPUT  |
+   |            |                                  |                                |                                  |
+   +------------+----------------------------------+--------------------------------+----------------------------------+
+   |            |                                  |                                |                                  |
+   | Autodiff   |                                  |                                |  all OUTPUT Nodes assigned       |
+   | with no    |             None                 |{SAMPLE_MECHANISM: target value}|  as SAMPLE_MECHANISMS            |
+   | **targets**|                                  |                                |                                  |
+   | argument   |                                  |                                |  all TARGET_MECHANISMs           |
+   | specified  |                                  |                                |  constructed automatically and   |
+   |            |                                  |                                |  assigned NodeRole.TARGET_INPUT  |
+   +------------+----------------------------------+--------------------------------+----------------------------------+
 
 .. _AutodiffComposition_Learning_Rates:
 

@@ -11086,12 +11086,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bad_specs_str.append(spec_str)
             full_str = '; '.join(bad_specs_str)
 
-            # X TEST DONE:
-            #  OUTPUT Node that is not a SAMPLE_MECHANISM
-            #  INPUT Node other than a TARGET_MECHANISM
-            #  INTERNAL Node (which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition
-            #  not in Composition
-            #  not a recognizable target or sample specification
+            # Following error messages are handled here:
+            #  "SINGLETON Node that is neither a SAMPLE_MECHANISM nor a TARGET_MECHANISM"
+            #  "INPUT Node that is not a TARGET_MECHANISM"
+            #  "INTERNAL Node (which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition)"
+            #  "specification of {sample_or_target_str} must be a Mechanism or the OutputPort of one"
+            #   "not in Composition"
+            #   "unrecognized specification for SAMPLE_MECHANISM (or TARGET_MECHANISM)"
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there {are_is} "
                                    f"the following illegal specification{s} in its {source_str}: {full_str}.")
 
