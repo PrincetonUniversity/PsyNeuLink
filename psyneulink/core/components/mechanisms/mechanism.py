@@ -3360,8 +3360,38 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
 
-        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
+            reinit_int_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
+            reinit_int_in = builder.alloca(reinit_int_func.args[2].type.pointee, name="integrator_reinit_in")
+            reinit_int_out = builder.alloca(reinit_int_func.args[3].type.pointee, name="integrator_reinit_out")
+
+            reinit_int_base_params, reinit_int_state = ctx.get_param_or_state_ptr(builder,
+                                                                                      self,
+                                                                                      "integrator_function",
+                                                                                      param_struct_ptr=m_base_params,
+                                                                                      state_struct_ptr=m_state)
+            reinit_int_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                              builder,
+                                                                              m_base_params,
+                                                                              m_state,
+                                                                              m_arg_in,
+                                                                              obj=self.integrator_function,
+                                                                              params_in=reinit_int_base_params)
+
+            builder.call(reinit_int_func, [reinit_int_params, reinit_int_state, reinit_int_in, reinit_int_out])
+
+            # In integrator mode only the integrator_function gets reset,
+            # the main function just processes the value produced by reset.
+            func_tags = tags - {'reset'}
+            reinit_in = reinit_int_out
+
+        else:
+            func_tags = tags
+            reinit_in = None
+
+
+        reinit_func = ctx.import_llvm_function(self.function, tags=func_tags)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in") if reinit_in is None else reinit_in
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
         reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
@@ -3378,26 +3408,6 @@ class Mechanism_Base(Mechanism):
                                                                     params_in=reinit_base_params)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
-
-        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
-            reinit_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
-            reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="integrator_reinit_in")
-            reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="integrator_reinit_out")
-
-            reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
-                                                                          self,
-                                                                          "integrator_function",
-                                                                          param_struct_ptr=m_base_params,
-                                                                          state_struct_ptr=m_state)
-            reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
-                                                                        builder,
-                                                                        m_base_params,
-                                                                        m_state,
-                                                                        m_arg_in,
-                                                                        obj=self.integrator_function,
-                                                                        params_in=reinit_base_params)
-
-            builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
         # update output ports after getting the reinitialized value
         builder = self._gen_llvm_output_ports(ctx, builder, reinit_out, m_base_params, m_state, m_arg_in, m_arg_out)

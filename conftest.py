@@ -208,7 +208,9 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
-def get_func_execution(func, func_mode, *, tags:frozenset=frozenset(), member='function'):
+def get_func_execution(func, func_mode, *, tags=frozenset(), member='function'):
+    tags=frozenset(tags)
+
     if func_mode == 'LLVM':
         return pnlvm.execution.FuncExecution(func, tags=tags).execute
 
@@ -221,7 +223,9 @@ def get_func_execution(func, func_mode, *, tags:frozenset=frozenset(), member='f
         assert False, "Unknown function mode: {}".format(func_mode)
 
 @pytest.helpers.register
-def get_mech_execution(mech, mech_mode, *, tags:frozenset=frozenset(), member='execute'):
+def get_mech_execution(mech, mech_mode, *, tags=frozenset(), member='execute'):
+    tags = frozenset(tags)
+
     if mech_mode == 'LLVM':
         return pnlvm.execution.MechExecution(mech, tags=tags).execute
 

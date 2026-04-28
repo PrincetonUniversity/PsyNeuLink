@@ -1780,7 +1780,8 @@ class TestOutputPorts:
 @pytest.mark.parametrize("initializer_param", [{}, {pnl.INITIALIZER: 5.0}], ids=["default_initializer", "custom_initializer"])
 def test_integrator_mode_reset(mech_mode, initializer_param):
     T = pnl.TransferMechanism(integrator_mode=True,
-                              integrator_function=pnl.AdaptiveIntegrator(**initializer_param))
+                              integrator_function=pnl.AdaptiveIntegrator(**initializer_param),
+                              function=pnl.Linear(slope=2))
 
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
     initializer_value = initializer_param.get(pnl.INITIALIZER, 0)
@@ -1788,12 +1789,12 @@ def test_integrator_mode_reset(mech_mode, initializer_param):
     ex([1])
     ex([2])
     result = ex([3])
-    np.testing.assert_array_equal(result, [[2.125 + initializer_value / 8]])
+    np.testing.assert_array_equal(result, [[(2.125 + initializer_value / 8) * 2]])
 
-    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags=frozenset({"reset"}), member="reset")
+    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags={"reset"}, member="reset")
 
     reset_result = reset_ex(None if mech_mode == "Python" else [0])
-    np.testing.assert_array_equal(reset_result, [[initializer_value]])
+    np.testing.assert_array_equal(reset_result, [[initializer_value * 2]])
 
 @pytest.mark.composition
 @pytest.mark.usefixtures("comp_mode_no_per_node")
