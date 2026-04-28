@@ -404,24 +404,26 @@ class TestAutodiffConstructor:
 
     def test_illegal_manual_LossMechanism(self):
         # Test error for (manual) construction of free-standing LossMechanism
+        #    (i.e. outside of **targets** argument of Constructor)
         pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
         pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
         pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
         solo_input_mech = pnl.ProcessingMechanism(name='solo_input_mech')
-        loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port, target=solo_input_mech.output_port)
+        loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port,
+                                      target=solo_input_mech.output_port,
+                                      name='MANUALLY SPECIFIED LOSS MECHANISM')
         pway1 = [pway1_mech_A, pway1_mech_B, pway1_mech_C]
-        comp = pnl.AutodiffComposition(pathways=[pway1,loss_mech],
-                                   targets={pway1_mech_C: pnl.TARGET})
-        assert True
+        comp = pnl.AutodiffComposition(pathways=[pway1,loss_mech], targets={pway1_mech_C: pnl.TARGET})
 
-        inputs = {pway1_mech_A: [[1]],
-                  pway2_mech_A: [[1]],
-                  }
-        targets = {pway1_mech_B: [[1]],
-                   comp.get_target_nodes()[1]: [[1]]}
-        comp.learn(inputs=inputs,
-                   targets=targets,
-                   execution_mode=pnl.ExecutionMode.PyTorch)
+        error_msg = ("The following LossMechanism was specified in the 'pathways' argument of the constructor for "
+                     "'autodiff_composition' or in one of its 'add' methods; this is not allowed, as LossMechanisms "
+                     "cannot be added as standalone Nodes of a Composition; they can only be added in the 'targets' "
+                     "argument of an AutodiffComposition's constructor: 'MANUALLY SPECIFIED LOSS MECHANISM'.")
+        with pytest.raises(CompositionError, match=re.escape(error_msg)):
+            comp.infer_backpropagation_learning_pathways(execution_mode=pnl.ExecutionMode.Python)
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            comp.infer_backpropagation_learning_pathways(execution_mode=pnl.ExecutionMode.PyTorch)
+
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
@@ -576,6 +578,12 @@ class TestAutodiffTargetSpecs:
             f"assigned to parameter 'targets' of (AutodiffComposition autodiff_composition).parameters is not valid: "
             f"target specification '(MappingProjection PROJ IN COMPOSITION)' must be an OutputPort, "
             f"ProcessingMechanism or the keyword 'TARGET'.", ParameterError),
+        2.5: ("Value ([((ProcessingMechanism pway1_mech_C), (ProcessingMechanism pway1_mech_T)), "
+              "((ProcessingMechanism pway2_mech_C), (ProcessingMechanism pway2_mech_T)), "
+              "((ProcessingMechanism pway3_mech_C), (LossMechanism loss mech))]) assigned to parameter 'targets' "
+              "of (AutodiffComposition autodiff_composition).parameters is not valid: target specification "
+              "'loss mech' cannot be a LossMechanism; that can only be used as an entry on its own to specify "
+              "a sample-target pair.", ParameterError),
         3: ("The following Projections are learnable but are in pathways that do not end in a LossMechanism, "
             "and therefore cannot be learned: "
             "'(MappingProjection MappingProjection from pway2_mech_A[OutputPort-0] to pway2_mech_B[InputPort-0])', "
@@ -634,20 +642,21 @@ class TestAutodiffTargetSpecs:
     }
     test_args_for_target_spec_errors = [
         #     method         num_specs          spec_type                errant_spec        err_msg_num
-        #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra    in/mid/out/all/bad    #
-        # (     'cnstr',           0,              'node',                    'in',           0), # not learnable
-        # (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
-        # (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
-        # (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
-        # (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
-        # (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
-        # (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
-        # (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
-        # (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
-        # (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
-        # (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
+        #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra  in/out/loss/all/bad/both   #
+        (     'cnstr',           0,              'node',                    'in',           0), # not learnable
+        (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
+        (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
+        (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
+        (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
+        (     'cnstr',           0,               'bad',                  'loss',         2.5),# LossMechanism as target
+        (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
+        (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
+        (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
+        (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
+        (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
         (      'lrn'  ,         -1,               'node',                   None,           6), # missing target spec
         (      'lrn'  ,         -1,              'TARGET',                  None,           6), # missing TARGET spec
         (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
@@ -656,11 +665,10 @@ class TestAutodiffTargetSpecs:
         (      'lrn',            0,              'TARGET',                 'all',         8.5), # 2 bad + 1 not in comp
         (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
         (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
-        # # TEACHER_TARGET BREADCRUMB:  ??CHANGE errant_spec FOR THE FOLLOWING TO None??
-        (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
-        (      'lrn',           +1,               'bad',                   'mid',        11.5), # 1 bad + 1 extra
-        (     'both',            0,               'both',                  'mid',          12), # cstr + same lrn
-        (     'both',           +1,               'both',                  'mid',          13), # cstr + diff lrn
+        (      'lrn',           +1,              'TARGET',                  None,          11), # extra TARGET spec
+        (      'lrn',           +1,               'bad',                    None,        11.5), # 1 bad + 1 extra
+        (     'both',            0,               'both',                   None,          12), # cstr + same lrn
+        (     'both',           +1,               'both',                   None,          13), # cstr + diff lrn
     ]
     @pytest.mark.pytorch
     @pytest.mark.composition
@@ -712,6 +720,7 @@ class TestAutodiffTargetSpecs:
         pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
         pway3_mech_C = pnl.ProcessingMechanism(name='pway3_mech_C')
         pway3_mech_T = pnl.ProcessingMechanism(name='pway3_mech_T')
+        loss_mech = pnl.LossMechanism(name='loss mech', sample=pway1_mech_B, target=pway1_mech_T)
 
         proj_1_A_B = MappingProjection(pway1_mech_A, pway1_mech_B, name='PROJ IN COMPOSITION')
         pway1 = [pway1_mech_A, proj_1_A_B, pway1_mech_B, pway1_mech_C]
@@ -760,6 +769,10 @@ class TestAutodiffTargetSpecs:
                         constructor_targets = {pway1_mech_C: proj_1_A_B, # <- Projection in Composition
                                                pway2_mech_C: pway2_mech_T,
                                                pway3_mech_C: pway3_mech_T}
+                    elif errant_spec == 'loss': # Target spec is a LossMechanism
+                        constructor_targets = {pway1_mech_C: pway1_mech_T,
+                                               pway2_mech_C: pway2_mech_T,
+                                               pway3_mech_C: loss_mech} # <- LossMechanism as target spec
                     elif errant_spec == 'out':   # Spec is for node not in ("out" of) Composition
                         constructor_targets = {pway1_mech_C: ProcessingMechanism(name='MECH NOT IN COMP'),
                                                pway2_mech_C: pway2_mech_T,
