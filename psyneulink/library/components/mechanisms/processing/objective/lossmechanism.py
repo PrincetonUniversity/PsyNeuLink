@@ -27,7 +27,7 @@ Overview
 
 A LossMechanism is a subclass of `ComparatorMechanism` that receives two inputs (a sample and a target), compares
 them using its `function <LossMechanism.function>`, and places the calculated discrepancy between the two in its
-*OUTCOME* `OutputPort <LossMechanism.output_port>`.  It is used to comput the loss (error) signal for learning in
+*OUTCOME* `OutputPort <LossMechanism.output_port>`. It is used to compute the loss (error) signal for learning
 in the forward method of an `AutodiffComposition`.
 
 .. _LossMechanism_Creation:
@@ -35,11 +35,16 @@ in the forward method of an `AutodiffComposition`.
 Creating a LossMechanism
 ------------------------------
 
-LossMechanisms are created automatically when specified in the constructor of an `AutodiffComposition`.
+LossMechanisms are created automatically when specified in the constructor of an `AutodiffComposition`
+(see `AutodiffComposition_LossMechanism` and `AutodiffComposition_Specifying_Learning_Pathways`).
+
+    .. note::
+       A LossMechanism cannot be added as a standalone `Node <Composition_Nodes>` in a Composition; it can only be
+       added to in the **targets** argument of an AutodiffComposition; adding it in amy other way raises an error.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET* InputPorts must have the same length and
-type, so that they can be compared using the LossMechanism's `function <LossMechanism.function>`. They use format
-of the OutputPorts (or those of the Mechanisms) specified in the **sample** and **target**  arguments, respectively,
+type, so that they can be compared using the LossMechanism's `function <LossMechanism.function>`. They use the format
+of the OutputPorts (or those of the Mechanisms) specified in the **sample** and **target** arguments, respectively,
 and the `MappingProjection` to each preserves those dimensions. Therefore, the OutputPorts (or Mechanisms) specified
 in the **sample** and **target** arguments must have values of the same length and type. If the **input_ports**
 argument is used, then *both* the *SAMPLE* and *TARGET* InputPorts must be specified. Any of the formats for

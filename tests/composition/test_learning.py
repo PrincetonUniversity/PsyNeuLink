@@ -3139,7 +3139,7 @@ class TestBackPropLearning:
                                                        pnl.MappingProjection(input_A, output.input_ports[0]),
                                                        output])
         error_msg = ("'OUTPUT', which is the terminal node of a learning pathway in 'comp', "
-                     "has a more than one output_port (2), which is not currently supported for learning. "
+                     "has more than one output_port (2), which is not currently supported for learning. "
                      "Trying using a different Mechanism for each output.")
         assert error_msg in str(error_text.value)
         # # FIX: Add these when/if learning is supported for multiple output_ports
