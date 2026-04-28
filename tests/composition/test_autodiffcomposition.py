@@ -370,7 +370,9 @@ class TestAutodiffConstructor:
             assert error_text.value.error_value == error_msg
 
     def test_LossMechanism_construction(self):
-        """Test sample and target assignments to LossMechanism"""
+        """Test sample and target assignments to LossMechanism
+        Also test dict + tuple + LossMechanism specification in **targets** argument of constructor
+        """
         pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
         pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
         pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
@@ -386,8 +388,8 @@ class TestAutodiffConstructor:
         pway3 = [pway3_mech_A, pway3_mech_B]
         comp = pnl.AutodiffComposition(pathways=[pway1,pway2,pway3,solo_input_mech],
                                        targets=[{pway1_mech_B: pway2_mech_B.output_port,
-                                                pway1_mech_C: solo_input_mech,
-                                                pway2_mech_C: pnl.TARGET},
+                                                pway1_mech_C: solo_input_mech},
+                                                 (pway2_mech_C, pnl.TARGET),
                                                 loss_mech])
         loss_mechs = comp.loss_mechanisms
 

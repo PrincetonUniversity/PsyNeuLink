@@ -2834,10 +2834,6 @@ class AutodiffComposition(Composition):
             Dict mapping TargetMechanisms -> target values
         """
         target_values_for_target_nodes = {}
-        # TEACHER_TARGET BREADCRUMB: CHECK WHETEHR THIS SHOULD ALSO INCLUDE TARGET.INTERNAL
-        target_mechs = self.get_nodes_by_role(NodeRole.TARGET_INPUT)
-
-
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
 
