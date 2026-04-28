@@ -39,7 +39,7 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MIN, ARG_MIN_INDICATOR
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
@@ -51,7 +51,6 @@ from psyneulink.core.globals.keywords import (
     ContentAddressableMemory_FUNCTION,
     DictionaryMemory_FUNCTION,
     MIN_INDICATOR,
-    MIN_VAL,
     MULTIPLICATIVE_PARAM,
     NEWEST,
     NOISE,
