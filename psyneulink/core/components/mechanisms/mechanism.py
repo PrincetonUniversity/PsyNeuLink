@@ -2594,15 +2594,14 @@ class Mechanism_Base(Mechanism):
 
                 self.parameters.value._set(value, context=context)
 
+            # UPDATE OUTPUTPORT(S)
+            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
+
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
             num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
-
-            # Update OutputPorts after execution state is current so ports that depend on
-            # num_executions_before_finished (e.g., DECISION_STEPS/TIME) see the final count.
-            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
             if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
@@ -3075,18 +3074,7 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports_for_obj(
-        self,
-        obj,
-        params_in,
-        ctx,
-        builder,
-        mech_params,
-        mech_state,
-        mech_input,
-        *,
-        track_param_use=True,
-    ):
+    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None, recursive=False):
 
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
@@ -3097,73 +3085,67 @@ class Mechanism_Base(Mechanism):
         # Return early using the base parameter location if there's no modulation.
         # This is a manual optimization as it's difficult for compiler
         # to replace pointer arguments to functions with the source location.
-        if len(param_ports) == 0:
+        if len(param_ports) == 0 and params_out is None:
             return params_in, builder
 
         # Allocate a shadow structure to overload base parameters
-        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
+        if params_out is None:
+            params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters_{}".format(self))
+
+        else:
+            assert params_in.type.pointee == params_out.type.pointee
 
         # Copy base values to the new structure
-        if len(param_ports) != len(obj.llvm_param_ids):
-            builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
+        mutable_parameters = set(obj.llvm_state_ids)
+        for p in obj.llvm_param_ids:
+            # Use untracked variants. Modulating a parameter doesn't mean it's
+            # used
+            src = pnlvm.helpers.get_param_ptr(builder, obj, params_in, p)
+            dst = pnlvm.helpers.get_param_ptr(builder, obj, params_out, p)
 
-        def _get_modulated_param_output_ptr(b, i):
-            if track_param_use:
-                ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_out)
+            # If the same id is in both parameters and state it's either a
+            # subcomponent, or a list of subcomponents
+            if p in mutable_parameters:
+                if recursive:
+                    nested_obj = getattr(obj.parameters, p).get()
+                    nested_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                                builder,
+                                                                                mech_params,
+                                                                                mech_state,
+                                                                                mech_input,
+                                                                                obj=nested_obj,
+                                                                                params_in=src,
+                                                                                params_out=dst,
+                                                                                recursive=True)
+                    assert nested_params is dst, "Nested components need to copy non-modulated parameters"
+
+                continue
+
+            # Get corresponding parameter port
+            if (parameter := getattr(obj.parameters, p, None)) not in self._parameter_ports:
+                builder = pnlvm.helpers.memcpy(builder, dst, src)
+
             else:
-                param_name = getattr(param_ports[i].source, "name", param_ports[i].source)
-                ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out, param_name)
-            return b, ptr
+                assert self._parameter_ports[parameter].source == parameter, \
+                    "Unexpected parameter ({}) {} source {}".format(p, parameter, self._parameter_ports[parameter].source)
 
-        def _get_param_base_ptr(b, i):
-            if track_param_use:
-                ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_in)
-            else:
-                param_name = getattr(param_ports[i].source, "name", param_ports[i].source)
-                ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in, param_name)
-            return b, ptr
+                def _get_modulated_param_output_ptr(b, i):
+                    assert i == 0
+                    return b, dst
 
-        builder = self._gen_llvm_ports(ctx,
-                                       builder,
-                                       param_ports,
-                                       "_parameter_ports",
-                                       _get_modulated_param_output_ptr,
-                                       _get_param_base_ptr,
-                                       mech_params,
-                                       mech_state,
-                                       mech_input)
+                def _get_param_base_ptr(b, i):
+                    assert i == 0
+                    return b, src
 
-        # Apply modulation to nested function-valued parameters (e.g., integrator_function.noise.seed)
-        # by recursively compiling ParameterPorts for those nested objects and storing back the
-        # modulated parameter structures.
-        for param_id in obj.llvm_param_ids:
-            param_obj = getattr(obj.parameters, param_id, None)
-            if param_obj is None:
-                continue
-
-            nested_obj = param_obj.get(None)
-            if not isinstance(nested_obj, Component):
-                continue
-            if not hasattr(nested_obj, "llvm_param_ids"):
-                continue
-
-            # Pull nested object parameters strictly from the parameter structure.
-            # Some nested attributes also have state entries, and get_param_or_state_ptr
-            # requires state pointers for those; here we only need the parameter branch.
-            nested_base_params = pnlvm.helpers.get_param_ptr(builder, obj, params_out, param_id)
-            nested_params, builder = self._gen_llvm_param_ports_for_obj(
-                nested_obj,
-                nested_base_params,
-                ctx,
-                builder,
-                mech_params,
-                mech_state,
-                mech_input,
-                track_param_use=False,
-            )
-
-            if nested_params is not nested_base_params:
-                builder.store(builder.load(nested_params), nested_base_params)
+                builder = self._gen_llvm_ports(ctx,
+                                               builder,
+                                               [parameter.port],
+                                               "_parameter_ports",
+                                               _get_modulated_param_output_ptr,
+                                               _get_param_base_ptr,
+                                               mech_params,
+                                               mech_state,
+                                               mech_input)
 
         return params_out, builder
 
@@ -3306,23 +3288,38 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_inputs):
         return ctx.bool_ty(1)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
-                                      m_val, ip_output, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self,
+                                      ctx,
+                                      builder,
+                                      m_base_params,
+                                      m_params,
+                                      m_state,
+                                      m_in,
+                                      m_val,
+                                      ip_output,
+                                      *,
+                                      tags:frozenset):
 
         # Default mechanism runs only the main function
-        f_base_params, f_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-        f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
+        f_base_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            "function",
+                                                            param_struct_ptr=m_base_params,
+                                                            state_struct_ptr=m_state)
+        f_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                               builder,
+                                                               m_base_params,
+                                                               m_state,
+                                                               m_in,
+                                                               obj=self.function,
+                                                               params_in=f_base_params,
+                                                               recursive=True)
 
-        return self._gen_llvm_invoke_function(ctx, builder, self.function,
-                                              f_params, f_state, ip_output,
-                                              m_val, tags=tags)
+        return self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, m_val, tags=tags)
 
-    def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in,
-                                    arg_out, m_base_params, *, tags:frozenset):
+    def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in, arg_out, m_base_params, *, tags:frozenset):
 
-        ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
-                                                        m_base_params, m_state, arg_in)
+        ip_output, builder = self._gen_llvm_input_ports(ctx, builder, m_base_params, m_state, arg_in)
 
         # This will move history items around to make space for a new entry
         mech_val_ptr = ctx.get_state_space(builder, self, m_state, VALUE)
@@ -3352,16 +3349,7 @@ class Mechanism_Base(Mechanism):
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        # Keep execution-before-finished count in sync with Python semantics:
-        # increment before evaluating output ports that depend on it (e.g., DECISION_STEPS/TIME).
-        is_finished_count_ptr = ctx.get_param_or_state_ptr(
-            builder, self, "num_executions_before_finished", state_struct_ptr=m_state
-        )
-        is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
-        builder.store(is_finished_count, is_finished_count_ptr)
-
-        # Run output ports after updating the mech state (num_executions, num_executions_before_finished, and value)
+        # Run output ports after updating the mech state (num_executions and value)
         builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         # is_finished should be checked after output ports ran
@@ -3372,8 +3360,38 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
 
-        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
+            reinit_int_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
+            reinit_int_in = builder.alloca(reinit_int_func.args[2].type.pointee, name="integrator_reinit_in")
+            reinit_int_out = builder.alloca(reinit_int_func.args[3].type.pointee, name="integrator_reinit_out")
+
+            reinit_int_base_params, reinit_int_state = ctx.get_param_or_state_ptr(builder,
+                                                                                      self,
+                                                                                      "integrator_function",
+                                                                                      param_struct_ptr=m_base_params,
+                                                                                      state_struct_ptr=m_state)
+            reinit_int_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                              builder,
+                                                                              m_base_params,
+                                                                              m_state,
+                                                                              m_arg_in,
+                                                                              obj=self.integrator_function,
+                                                                              params_in=reinit_int_base_params)
+
+            builder.call(reinit_int_func, [reinit_int_params, reinit_int_state, reinit_int_in, reinit_int_out])
+
+            # In integrator mode only the integrator_function gets reset,
+            # the main function just processes the value produced by reset.
+            func_tags = tags - {'reset'}
+            reinit_in = reinit_int_out
+
+        else:
+            func_tags = tags
+            reinit_in = None
+
+
+        reinit_func = ctx.import_llvm_function(self.function, tags=func_tags)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in") if reinit_in is None else reinit_in
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
         reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
@@ -3381,35 +3399,15 @@ class Mechanism_Base(Mechanism):
                                                                       "function",
                                                                       param_struct_ptr=m_base_params,
                                                                       state_struct_ptr=m_state)
-        reinit_params, builder = self._gen_llvm_param_ports_for_obj(self.function,
-                                                                    reinit_base_params,
-                                                                    ctx,
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                     builder,
                                                                     m_base_params,
                                                                     m_state,
-                                                                    m_arg_in)
+                                                                    m_arg_in,
+                                                                    obj=self.function,
+                                                                    params_in=reinit_base_params)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
-
-        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
-            reinit_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
-            reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="integrator_reinit_in")
-            reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="integrator_reinit_out")
-
-            reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
-                                                                          self,
-                                                                          "integrator_function",
-                                                                          param_struct_ptr=m_base_params,
-                                                                          state_struct_ptr=m_state)
-            reinit_params, builder = self._gen_llvm_param_ports_for_obj(self.integrator_function,
-                                                                        reinit_base_params,
-                                                                        ctx,
-                                                                        builder,
-                                                                        m_base_params,
-                                                                        m_state,
-                                                                        m_arg_in)
-
-            builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
         # update output ports after getting the reinitialized value
         builder = self._gen_llvm_output_ports(ctx, builder, reinit_out, m_base_params, m_state, m_arg_in, m_arg_out)
@@ -3454,8 +3452,13 @@ class Mechanism_Base(Mechanism):
         assert "reset" not in tags
         assert "is_finished" not in tags
 
-        params, builder = self._gen_llvm_param_ports_for_obj(
-                self, base_params, ctx, builder, base_params, state, arg_in)
+        params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                             builder,
+                                                             base_params,
+                                                             state,
+                                                             arg_in,
+                                                             obj=self,
+                                                             params_in=base_params)
 
         is_finished_flag_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=state)
         is_finished_count_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions_before_finished", state_struct_ptr=state)
@@ -3466,8 +3469,7 @@ class Mechanism_Base(Mechanism):
         current_flag = builder.load(is_finished_flag_ptr)
         was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
         with builder.if_then(was_finished):
-            builder.store(is_finished_count_ptr.type.pointee(0),
-                          is_finished_count_ptr)
+            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -3480,13 +3482,19 @@ class Mechanism_Base(Mechanism):
         # 'stackrestore', but not all LLVM targets support those ops.
         args_t = [a.type for a in builder.function.args]
         args_t[4:4] = [base_params.type]
-        internal_builder = ctx.create_llvm_function(args_t, self,
+        internal_builder = ctx.create_llvm_function(args_t,
+                                                    self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=ctx.bool_ty)
         iparams, istate, iin, iout, ibase_params = internal_builder.function.args[:5]
-        internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout,
-                                                                         ibase_params, tags=tags)
+        internal_builder, is_finished = self._gen_llvm_function_internal(ctx,
+                                                                         internal_builder,
+                                                                         iparams,
+                                                                         istate,
+                                                                         iin,
+                                                                         iout,
+                                                                         ibase_params,
+                                                                         tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
@@ -3496,9 +3504,11 @@ class Mechanism_Base(Mechanism):
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
+
+        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
-        max_reached = builder.fcmp_ordered(">=", is_finished_count,
-                                           is_finished_max)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count, is_finished_max)
 
         # Check if execute until finished mode is enabled
         exec_until_fin_ptr = ctx.get_param_or_state_ptr(builder, self, "execute_until_finished", param_struct_ptr=params)
@@ -3519,7 +3529,6 @@ class Mechanism_Base(Mechanism):
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
-
             builder.branch(end_block)
 
         builder.branch(loop_block)

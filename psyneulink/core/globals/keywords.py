@@ -602,7 +602,6 @@ EXECUTION_COUNT = 'execution_count' # Total number of executions of a Component
 EXECUTE_UNTIL_FINISHED = 'execute_until_finished' # Specifies mode of execution
 NUM_EXECUTIONS_BEFORE_FINISHED = 'num_executions_before_finished' # Number of executions since last finished
 MAX_EXECUTIONS_BEFORE_FINISHED = 'max_executions_before_finished'
-IS_FINISHED_FLAG = 'is_finished_flag' # Indicates whether Component has finished executing
 
 INITIALIZE_CYCLE_VALUES = 'initialize_cycle_values'
 CURRENT_EXECUTION_TIME = 'current_execution_time'

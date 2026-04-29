@@ -831,9 +831,7 @@ class OptimizationFunction(Function_Base):
         state_features = ocm.parameters.state_feature_values._get(context)
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
-        # np.prod([]) returns 1.0 (float), which propagates a float into shapes used by numpy buffers
-        # and breaks compiled execution.  Cast explicitly to int and handle the empty search_space case.
-        num_evals = int(np.prod([d._num for d in self.search_space])) if len(self.search_space) > 0 else 1
+        num_evals = np.prod([d._num for d in self.search_space])
 
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)
