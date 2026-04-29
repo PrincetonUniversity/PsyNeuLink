@@ -903,34 +903,39 @@ Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
     .. _TARGET_MECHANISM:
 
     * *TARGET_MECHANISM* -- a Mechanism, the `value <Mechanism_Base.value>` of which is used by the
-      *OBJECTIVE_MECHANISM* as the target in computing the error signal with respect to the `value <Mechanism_Base>`
-      of a corresponding *SAMPLE_MECHANISM*. For a standard Composition, the `TARGET_MECHANISM` is always an `INPUT`
-      Node, that receives its input from the **targets** or **inputs** argument of the Composition's `learn
-      <Composition.learn>` (see `below <Composition_Target_Inputs>`). It is assigned the `NodeRoles <NodeRole>`
-      `TARGET_INPUT` and `LEARNING` in addition to `INPUT`.
+      `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as the target in computing the error signal with respect to the
+      `value <Mechanism_Base>` of a corresponding `SAMPLE_MECHANISM <SAMPLE_MECHANISM>`. For a standard Composition,
+      the *TARGET_MECHANISM* is always an `INPUT` `Node <Composition_Nodes>`, that receives its input from the
+      **targets** or **inputs** argument of the Composition's `learn() <Composition.learn>` method (see `below
+      <Composition_Target_Inputs>`); however, this may *not* be the case for some subclasses of Composition,
+      such as `AutodiffComposition` (see `note <Composition_TARGET_MECHANISM_Note>` below). If a *TARGET_MECHANISM*
+      is an `INPUT` Node, it is assigned the `NodeRoles <NodeRole>` `TARGET_INPUT` and `LEARNING` in addition to
+      `INPUT`; otherwise, it is assigned the NodeRles `TARGET_INTERNAL` and `LEARNING`.
 
       .. _Composition_TARGET_MECHANISM_Note:
 
       .. note::
-          For a base class Composition, all *TARGET_MECHANISMs* are constructed automatically for the corresponding
-          *SAMPLE_MECHANISMs*, all of which are `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of the
-          Composition. However, this may not be the case for subclasses of Composition, which may allow the explicit
-          assignment of *SAMPLE_MECHANISMs* and *TARGET_MECHANISMs* (e.g., see `AutodiffComposition_Target` for
-          `AutodiffComposition`).
+          For a base class Composition, all *TARGET_MECHANISMs* are constructed automatically for `OUTPUT
+          <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of the Composition, which are assigned as its
+          `SAMPLE_MECHANISMs <SAMPLE_MECHANISM>. However, this may not be the case for subclasses of Composition,
+          which may allow the explicit assignment of *SAMPLE_MECHANISMs* and *TARGET_MECHANISMs* (e.g., see
+          `AutodiffComposition_Target` for `AutodiffComposition`).
     ..
-    * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
-      <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
+    * a MappingProjection that projects from the `TARGET_MECHANISM <TARGET_MECHANISM>` to the *TARGET* `InputPort
+      <ComparatorMechanism_Structure>` of the `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>`.
     ..
-    * a MappingProjection that projects from the last ProcessingMechanism in the learning Pathway to the *SAMPLE*
-      `InputPort  <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
+    * a MappingProjection that projects from the last ProcessingMechanism in the learning Pathway
+      to the `SAMPLE <SAMPLE_MECHANISM>` `InputPort  <ComparatorMechanism_Structure>` of the
+      `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>`.
     ..
     .. _OBJECTIVE_MECHANISM:
 
     * *OBJECTIVE_MECHANISM* -- a `ComparatorMechanism` used to `calculate the error signal
       <ComparatorMechanism_Execution>` (i.e., loss) for the sequence by comparing the value received by the
-      ComparatorMechanism's *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `SAMPLE_MECHANISM`) with
-      the value received in its *TARGET* `InputPort <ComparatorMechanism_Structure>` (from the `TARGET_MECHANISM`).
-      This is assigned the `NodeRoles <NodeRole>` `LEARNING_OBJECTIVE` and `LEARNING`.
+      ComparatorMechanism's *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `SAMPLE_MECHANISM
+      <SAMPLE_MECHANISM>`) with the value received in its *TARGET* `InputPort <ComparatorMechanism_Structure>`
+      (from the `TARGET_MECHANISM <TARGET_MECHANISM>`). This is assigned the `NodeRoles <NodeRole>`
+      `LEARNING_OBJECTIVE` and `LEARNING`.
     ..
     .. _LEARNING_MECHANISMS:
 
@@ -958,16 +963,18 @@ It also assigns the following item to the list of `learning_components` for the 
     .. _SAMPLE_MECHANISM:
 
       COMMENT:
+      TEACHER_TARGET BREADCRUMB:
       ADD THE FOLLOWING TO BELOW, WITH REF TO DISCUSSION IN AUTODIFF OF TARGET_INTERNAL DOCUMENTATION
       (which is an `output <LearningMechanism_Activation_Output>` of the last Processing Mechanism in the `learning
       Pathway <Composition_Learning_Pathway>`)
       COMMENT
-    * *SAMPLE_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
-      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`; the
-      Node is assigned the `NodeRoles <NodeRole>` `SAMPLE <NodeRole.SAMPLE>`.  For a Composition, this is always
-      an *OUTPUT* `Node <Composition_Nodes>`, and thus is also assigned the NodeRole  `OUTPUT <NodeRole.OUTPUT>`
-      However, this may *not* be the case for some subclasses of Composition -- see `note
-      <Composition_TARGET_MECHANISM_Note>` above).
+    * *SAMPLE_MECHANISM* -- the final `Node <Composition_Nodes>` in a learning Pathway, that generates in one of its
+      designated OutputPorts the `value <OutputPort.value>` that is trained, through learning, to be as close to a
+      specified target value as possible; the latter is provided by the `value <OutputPort.value>` of a designated
+      OutputPort of the `TARGET_MECHANISM <TARGET_MECHANISM>`. For a Composition, this is always an *OUTPUT* `Node
+      <Composition_Nodes>`; however, this may *not* be the case for some subclasses of Composition, such as
+      `AutodiffComposition` (see `note <Composition_TARGET_MECHANISM_Note>` above). A *SAMPLE_MECHANISM* is assigned
+      the `NodeRole` `SAMPLE <NodeRole.SAMPLE>` along with any others that are relevant.
 
 The items with names listed above are placed in a dict that is assigned to the `learning_components
 <Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
@@ -1419,10 +1426,10 @@ can also be called directly, but this is useful mostly for debugging.
        has executed previously, the `result <Composition_Execution_Results>` of the last `TRIAL <TimeScale.TRIAL>`
        of execution is returned; otherwise None is returned.  If it is called with arguments, then either `run
        <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
-       Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
-       <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
-       then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
-       the return value of the corresponding method is returned.
+       Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISMs
+       <TARGET_MECHANISM>` are specified in the `inputs argument <Composition_Execution_Inputs>`, then `learn
+       <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case, the return
+       value of the corresponding method is returned.
 
 .. _Composition_Execution_Num_Trials:
 
@@ -1696,14 +1703,14 @@ or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
     `Node <Composition_Nodes>`, and the value is the target value used to compute the error for that Pathways; the
     SAMPLE_MECHANISMS of a Composition can be listed using its `sample_mechanisms <Composition.sample_mechs>` attribute.
 
-  * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`, entries
-    for `TARGET_MECHANISM <Composition_Learning_Components>`\\s, that receive as input the target value for each
+  * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`,
+    entries for `TARGET_MECHANISMs <TARGET_MECHANISM>`, that receive as input the target value for each
     `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` in a `learning Pathway <Composition_Learning_Pathway>` of the Composition;
-    the TARGET_MECHANISMs for a Composition are listed in its `target_input_mechanisms
+    the *TARGET_MECHANISMs* for a Composition are listed in its `target_input_mechanisms
     <Composition.target_input_mechanisms>` attribute.
 
   .. note::
-     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict
+     `TARGET_MECHANISMs <TARGET_MECHANISM>` can also be used as entries in the **targets** dict
      (which can be listed using its `target_input_mechanisms <Composition.target_input_mechanisms>` attribute),
      although this will elicit a warning indicating that the standard way to specify targets is one of the above.
 
@@ -4070,7 +4077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
 
     target_mechanisms : list[list]
-        a list of the `TARGET_MECHANISM`\\s for a Composition; this includes both its `target_input_mechanisms
+        a list of the `TARGET_MECHANISMs <>` for a Composition; this includes both its `target_input_mechanisms
         <Composition.target_input_mechanisms>` as well as `target_internal_nodes` for subclasses that support it
         (e.g., see `target_internal_nodes <AutodiffComposition.target_internal_nodes>`).
 
@@ -4103,7 +4110,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` of the last epoch of learning executed in a call to
         `learn <Composition.learn>`. Each item in the outermost list is a list of values for a given trial; each item
-        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `SAMPLE_MECHANISM
+        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of a `SAMPLE_MECHANISM
         <SAMPLE_MECHANISM>` for that trial.
 
     simulation_results : list[list[list]]
@@ -8100,8 +8107,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             of the `LearningMechanism`\\(s) in the **pathway** (see `Composition_Learning_Rate` for additional details).
 
         error_function : function : default LinearCombination
-            specifies the function assigned to the `OBJECTIVE_MECHANISM` used to compute the error from the
-            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM` and TARGET_MECHANISM in the **pathway**.
+            specifies the function assigned to the `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` used to compute
+            the error from the `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` and
+            `TARGET_MECHANISM <TARGET_MECHANISM>` in the **pathway**.
 
             .. note::
                For most learning algorithms (and by default), a `ComparatorMechanism` is used to compute the error.
@@ -8309,7 +8317,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         error_function : function : default LinearCombination
             specifies the function assigned to the `OBJECTIVE_MECHANISM` used to compute the error from the
-            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM` and TARGET_MECHANISM in the **pathway**.
+            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` and `TARGET_MECHANISM
+            <TARGET_MECHANISM>` in the **pathway**.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
@@ -8360,7 +8369,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         error_function : function : default LinearCombination
             specifies the function assigned to the `OBJECTIVE_MECHANISM` used to compute the error from the
-            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM` and TARGET_MECHANISM in the **pathway**.
+            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` and TARGET_MECHANISM
+             <TARGET_MECHANISM> in the **pathway**.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
@@ -8416,7 +8426,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         error_function : function : default LinearCombination
             specifies the function assigned to the `OBJECTIVE_MECHANISM` used to compute the error from the
-            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM` and TARGET_MECHANISM in the **pathway**.
+            `values <Mechanism_Base.value>` of the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` and `TARGET_MECHANISM
+             <TARGET_MECHANISM>` in the **pathway**.
 
         loss_spec : Loss : default Loss.MSE
             specifies the loss function used in computing the error term;  see `Loss` for values.
@@ -9419,7 +9430,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_target_mechs(self, execution_mode=pnlvm.ExecutionMode.Python,
                           scope:Literal[INPUT,INTERNAL,ALL]=ALL, context=None, base_context=None)->list:
-        """Return a list of all `TARGET_MECHANISMs <Composition_Learning_Components>`\\s for `learning Pathways
+        """Return a list of all `TARGET_MECHANISMs <TARGET_MECHANISM>` for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
         # TARGET_INTERNAL DOCUMENTATION BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
         """
@@ -9460,7 +9471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # MODIFIED TARGET_INTERN END
 
     def _get_targets_dict(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
-        """Return dict of all TARGET_MECHANISMs <Composition_Learning_Components>`\\s and their Ports in Composition
+        """Return dict of all `TARGET_MECHANISMs <TARGET_MECHANISM>` and their Ports in Composition
         Return dict containing {TARGET_MECHANISM: OutputPort} for all `learning Pathways <Composition_Learning_Pathway>`
         in the Composition; OutputPorts are the ones that provide the target value used to compute error for learning.
         """
@@ -9474,7 +9485,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return targets_dict
 
     def _get_samples_dict(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
-        """Return dict of all SAMPLE_MECHANISMs <Composition_Learning_Components>`\\s and their Ports in Composition
+        """Return dict of all SAMPLE_MECHANISMs <SAMPLE_MECHANISM>` and their Ports in Composition
         Return dict containing {SAMPLE_MECHANISM: OutputPort} for all `learning Pathways <Composition_Learning_Pathway>`
         in the Composition; OutputPorts are the ones that provide the sample value used to compute error for learning.
         """
@@ -12689,7 +12700,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <Composition_Learning_Pathway>`. The key of each entry can be either the `SAMPLE_MECHANISM
                 <SAMPLE_MECHANISM>` (i.e., the final `Node <Composition_Nodes>`) of a `learning pathway
                 <Composition_Learning_Components>` in the Composition, or the `TARGET_MECHANISM
-                <Composition_Learning_Components>` for that pathway, and the value is the target value used for that
+                <TARGET_MECHANISM>` for that pathway, and the value is the target value used for that
                 Node on each trial (see `target inputs <Composition_Target_Inputs>` for additional details concerning
                 the formatting of targets); the TARGET_MECHANISMs for a Composition are listed in its
                 `target_input_mechanisms <Composition.get_target_input_mechs>` attribute.

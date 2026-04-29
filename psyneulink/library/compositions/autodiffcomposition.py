@@ -78,12 +78,12 @@ Creating an AutodiffComposition
 
 An AutodiffComposition is created in the same way as a standard Composition, with the following differences:
 
-- learning pathways are configured by specifing pairs of `samples <AutodiffComposition_Sample>` (or
-  "students") and `targets <AutodiffComposition_Target>` (or "teachers"), each of which is a `Mechanism`
-  or the `OutputPort` of one, and the values of which are used to compute the loss on each trial of training
-  (see `AutodiffComposition_Learning_Pathways` for details of specification);
+- learning pathways are configured by specifing pairs of `samples <AutodiffComposition_Sample>` and
+  `targets <AutodiffComposition_Target>` (or "teachers"), each of which is a `Mechanism` or the `OutputPort`
+  of one and the values of which are used to compute the loss on each trial of training (see `below
+  <AutodiffComposition_Learning_Pathways>` for details of specification);
 
-- the constructor includes a number of `additional arguments <AutodiffComposition_Configuring_Learning>`
+- the constructor includes a number of `additional arguments <AutodiffComposition_Learning_Pathways>`
   that are specific to the AutodiffComposition;
 
 - there are some `restrictions <AutodiffComposition_Restrictions>` that apply to its construction;
@@ -110,16 +110,17 @@ COMMENT
 
 .. _AutodiffComposition_Learning_Pathways:
 
-A learning Pathway in an AutodiffComposition, as in a `Composition <Composition_Learning_Pathway>`>, is a `Pathway`
+A `learning Pathway <Composition_Learning_Pathway>` in an AutodiffComposition, as in a Composition, is a `Pathway`
 that contains one or more learnable `MappingProjections <MappingProjection>` -- that is, in which the `learnable
 <MappingProjection.learnable>` attribute of the MappingProjection is set to ``True``.  Unlike a Composition, however,
-the `SAMPLE_MECHANISM` ("student") and `TARGET_MECHANISM` ("teacher") for each learning Pathway can be specified
-in the **targets** argument of the AutodiffComposition's constructor, as described below under
-`AutodiffComposition_Configuring_Learning`. If these are *not* specified, then these are configured automatically as
-for a Composition, by assigning the `OUTPUT <NodeRole.OUTPUT>` `Node <Composition_Nodes>` as the `SAMPLE_MECHANISM`
-for every pathway that has at least one learnable MappingProjection, and automatically constructing a corresponding
-`TARGET_MECHANISM`, the input for which is provided in the **inputs** or **targets** argument of the
-`learn() <Composition.learn>` method, and used to train that learning Pathway.
+the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` ("student") and `TARGET_MECHANISM <TARGET_MECHANISM>` ("teacher") for each
+*learning Pathway* can be specified in the **targets** argument of the AutodiffComposition's constructor, as described
+`below <AutodiffComposition_Configuring_Learning>`. If these are *not* specified, then these are configured
+automatically as for a Composition, by assigning the `OUTPUT <NodeRole.OUTPUT>` `Node <Composition_Nodes>` as the
+`SAMPLE_MECHANISM <SAMPLE_MECHANISM>` for every pathway that has at least one learnable MappingProjection, and
+aautomatically constructing a corresponding `TARGET_MECHANISM <TARGET_MECHANISM>`, the input for which is provided
+in the **inputs** or **targets** argument of the `learn() <Composition.learn>` method, and used to train that
+*learning Pathway*.
 
 
 .. _AutodiffComposition_Configuring_Learning:
@@ -127,64 +128,66 @@ for every pathway that has at least one learnable MappingProjection, and automat
 *Configuring Learning Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A learning Pathway can be configured by specifying either a `SAMPLE_MECHANISM
-<AutodiffComposition_Sample>`\\-`TARGET_MECHANISM <AutodiffComposition_Target>` target pair -- or a `LossMechanism`
-that specifies these as its *SAMPLE* and *TARGET* InputPorts -- in the **targets** argument of the AutodiffComposition's
-constructor. These Components are described below, followed by the ways in which they can be `specified
-<AutodiffComposition_Specifying_Learning_Pathways>` in the constructor's **targets** argument. However, a few important
-rules apply:
+A learning Pathway can be configured by specifying either a `sample <AutodiffComposition_Sample>`\\-`target
+<AutodiffComposition_Target>` target pair -- or a `LossMechanism` that specifies these as its *SAMPLE* and *TARGET*
+InputPorts -- in the **targets** argument of the AutodiffComposition's constructor. These Components are described
+below, followed by the ways in which they can be `specified <AutodiffComposition_Specifying_Learning_Pathways>` in
+the constructor's **targets** argument. However, a few important rules apply:
 
   .. _AutodiffComposition_SAMPLE_Assginment_Rules:
 
-  - a Mechanism specified as a `SAMPLE_MECHANISM <AutodiffComposition_Sample>` must follow at least one learnable
-    MappingProjection;
+  - a `Mechanism` or `OutputPort` specified as a `sample <AutodiffComposition_Sample>` must follow at least one
+    learnable `MappingProjection` in its `Pathway`;
 
-  - every learnable MappingProjection must be followed somewhere by a SAMPLE_MECHANISM;
+  - every learnable MappingProjection must be followed somewhere by a `sample <AutodiffComposition_Sample>`;
 
-  - if a SAMPLE_MECHANISM is followed somewhere in a Pathway by a learnable MappingProjection, a warning will be issued.
+  - if a `sample <AutodiffComposition_Sample>` is followed somewhere in a Pathway by a learnable MappingProjection,
+    a warning will be issued.
 
-  - a SAMPLE_MECHANISM can have only one `TARGET_MECHANISM <AutodiffComposition_Target>`,
-    though a TARGET_MECHANISM can be used to train more than one SAMPLE_MECHANISM.
+  - a `sample <AutodiffComposition_Sample>` can have only one `target <AutodiffComposition_Target>`, though a
+    `target <AutodiffComposition_Target>` can be used to train more than one `sample <AutodiffComposition_Sample>`.
 
-  - a TARGET_MECHANISM for a SAMPLE_MECHANISM cannot be in the same Pathway as the SAMPLE_MECHANISM.
-
-  .. note::
-      Since pathways can overlap (converge, diverge or both; e.g., see `Composition_MultilayerLearning_Figure`),
-      a learnable MappingProjection may influenced by the training of several SAMPLEs (see note `below
-      <AutodiffComposition_Sample_In_Multiple_Pathways>`).
+  - the `target <AutodiffComposition_Target>` for a `sample <AutodiffComposition_Sample>` cannot be in the same
+    Pathway as that *sample*.
 
   .. note::
-     Because a learning Pathway must have at least one learnable MappingProjection, a Pathway with a single Mechanism
-     (i.e., a `SINGLETON <NodeRole.SINGLETON>` `Node <Composition_Node>`) is *not learnable*. This differs from
-     configuration in Pytorch, in which a single torch.nn.Module can be trained since it is automatically assigned
-     parameters (based on its input dimensionality) at construction; this can be thought of as equivalent to -- and
-     can be replicated in PsyNeulink by -- constructing a leaning Pathway with a single learnable MappingProjection
-     from an input Node to a Mechanism that that corresponds to (i.e., implements the same function os) the
-     torch.nn.Module being trained. In other words, in PsyNeulink, the equivalent of a module's parameters must be
-     constructed explicity in the form of a learnable afferent `MappingProjection` which, in turn, requires a node
-     that sends that Projection to the Mechanism.
+      Since pathways can overlap (converge and/or diverge; e.g., see `figure <Composition_MultilayerLearning_Figure>`),
+      a learnable `MappingProjection` may influenced by the training of several `samples <AutodiffComposition_Sample>`
+      (see note `below <AutodiffComposition_Sample_In_Multiple_Pathways>`).
+
+  .. note::
+     Because a `learning Pathway <Composition_Learning_Pathway>` must have at least one learnable MappingProjection,
+     a Pathway with a single Mechanism (i.e., a `SINGLETON <NodeRole.SINGLETON>` `Node <Composition_Nodes>`) is *not
+     learnable*. This differs from configuration in Pytorch, in which a single torch.nn.Module can be trained since
+     it is automatically assigned parameters (based on its input dimensionality) at construction; this can be thought
+     of as equivalent to -- and can be replicated in PsyNeulink by -- constructing a leaning Pathway with a single
+     learnable MappingProjection from an input Node to a Mechanism that that corresponds to (i.e., implements the
+     same function as) the torch.nn.Module being trained. In other words, in PsyNeulink, the equivalent of a module's
+     parameters must be constructed explicity in the form of a learnable afferent `MappingProjection` which, in turn,
+     requires a node that sends that Projection to the Mechanism.
 
   .. technical_note::
-     The technical reason that a pathway with only a SINGLETON <NodeRole.SINGLETON> Node cannot be trained is that
+     The technical reason that a pathway with only a `SINGLETON <NodeRole.SINGLETON>` Node cannot be trained is that
      its afferent and efferent MappingProjections are from the `input_CIM <Composition.input_CIM>` and to the
-     `output_CIM <Composition.output_CIM>` of the Composition to which it belongs. Such MappingProjectiosn
-      (i.e., from an input_CIM to its INPUT Nodes nor those from its OUTPUT Nodes to its output_CIM) are not
-     learnable; they serve simply as conduits of information between the Composition and either the Composition within
-     which it is nested, or the "outside world."
+     `output_CIM <Composition.output_CIM>` of the Composition to which it belongs. Such MappingProjections (i.e.,
+     from an input_CIM to its `INPUT` Nodes nor those from its `OUTPUT` Nodes to its output_CIM) are not learnable;
+     they serve simply as conduits of information between the Composition and either the Composition within which it
+     is nested, or the "outside world."
 
 
 .. _AutodiffComposition_Sample:
 
 *Sample*
 ^^^^^^^^
-This generates the value being trained (sometimes referred to as the "student"). It is the `OutputPort`
-of a `SAMPLE_MECHANISM` in a learning Pathway, that can be assigned anywhere in an AutodiffComposition,
+This generates the value being trained (sometimes referred to as the "student"). It is the `OutputPort` of a
+`SAMPLE_MECHANISM <SAMPLE_MECHANISM>` in a learning Pathway, that can be assigned anywhere in an AutodiffComposition,
 or in one `nested <AutodiffComposition_Nesting>` within it, subject to the rules outlined `above
-<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the lennlenlenlenlenle is trained
-using the value of the `target <AutodiffComposition_Target>` with which it is paired, or by values specified
-in the **targets** argument of the `learn() <Composition.learn>` method (see `below
-<AutodiffComposition_Specifying_Learning_Pathways>`). Only one *target* can be associated with a *sample*,
-though a target can be assigned to multiple *samples*.
+<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the *sample* is trained
+using the `value <OutputPort>` of the `target <AutodiffComposition_Target>` with which it is paired, or by values
+specified in the **targets** argument of the `learn() <Composition.learn>` method (see `below
+<AutodiffComposition_Specifying_Learning_Pathways>`). A *sample* can be assigned only a single *target*, though
+a *target can* be assigned to multiple *samples*. The *SAMPLE_MECHANISMs* of an AutodiffComposition are assigned the
+`NodeRole` `SAMPLE` and are listed in its `sample_mechanisms <Composition.sample_mechanisms>` attribute.
 
     .. _AutodiffComposition_Sample_In_Multiple_Pathways:
     .. note::
@@ -198,21 +201,34 @@ though a target can be assigned to multiple *samples*.
 *Target*
 ^^^^^^^^
 This provides the value (sometimes referred to as a "teacher") used to train the `sample <AutodiffComposition_Sample>`
-with which it is paired. It is `value <OutputPort.value>` of the OutputPort of a specified `TARGET_MECHANISM`, or of
-an automatically constructed `INPUT <NodeRole.INPUT>` `Node  <Composition_Nodes>` that receives external values provided
-in the **targets** argument of the `learn() <Composition.learn>` when it is executed. Any ProcessingMechanism in a
-AutodiffComposition -- or one `nested <AutodiffComposition_Nesting>` within it -- can be specified as a
-`TARGET_MECHANISM`, so long as it is not in the same `pathway <Composition_Pathways>` as the *sample* it trains. This
-allows the value of one pathway to be used to train another. Alternatively, the kewyord *TARGET* can be used to specify
-the *target* for a *sample*, which allows external values provided in the **targets** argument of the `learn()
-<Composition.learn>` method to be used to train the Pathway (see `below
-<AutodiffComposition_Specifying_Learning_Pathways>`). In that case, a `TARGET_MECHANISM
-<AutodiffComposition_Structure_Target_Mechanisms>` is automtically constructed for the *sample*, to receive the external
-input when learning is executed, and the values (assigned as inputs to the that `TARGET_MECHANISM`) must be provided
-in the **targets** argument of the `learn() <Composition.learn>` when it is called (see `Autodiffcomposition_PyTorch`).
+with which it is paired. It is the `value <OutputPort.value>` of the `OutputPort` of a specified `TARGET_MECHANISM
+<TARGET_MECHANISM>`.  Any ProcessingMechanism (or the OutputPort of one) in a AutodiffComposition (or one `nested
+<AutodiffComposition_Nesting>` within it) can be specified as a *target*, so long as it is not in the same `pathway
+<Composition_Pathways>` as the *sample* it trains. This allows the value of one pathway to be used to train another.
+Such *TARGET_MECHANISMs* are assigned the `NodeRole` `TARGET_INTERNAL`, and are listed in the AutodiffComposition's
+`target_internal_mechanisms <Composition.target_internal_mechanisms>` attribute as well as its `target_mechanisms
+<Composition.target_mechanisms>` attribute.
+
+Alternatively, the kewyord *TARGET* can be used to specify the *target* for a *sample* in the **targets** argument of
+of the AutodiffComposition's constructor, which allows external values provided in the **targets** (or **inputs**)
+argument of the `learn() <Composition.learn>` method to be used to train the Pathway (see `Target Inputs for learning
+<Composition_Target_Inputs>`). In that case, a *TARGET_MECHANISM* is automtically constructed for the *sample*,
+to receive the external input when learning is executed, and the values (assigned as inputs to the that
+*TARGET_MECHANISM*) must be provided in the **targets** (or **inputs**) argument of the `learn() <Composition.learn>`
+when it is called (see `Target Inputs for learning <Composition_Target_Inputs>`). If no *sample-target* pairs are
+specified in the **targets** argument of the AutodiffComposition's constructor, then a *TARGET_MECHANISM* is
+automatically constructed for each `OUTPUT` Node in the Composition, which serves as its `sample
+<AutodiffComposition_Sample>`. Automtically constructed *TARGET_MECHANISMs* are always `INPUT <NodeRole.INPUT>` Nodes
+that are assigned the NodeRole `TARGET_INPUT` as well as `INPUT`, and receive their values from the **targets**
+(or **inputs**) argument of the `learn() <Composition.learn>` method.  These are listed in its `target_input_mechanisms
+<AutodiffComposition.target_input_mechanisms>` attribute of the AutodiffComposition, as well as its
+`target_mehanisms <Composition.target_mechanisms>` attribute.
+
+The `table <AutodiffComposition_Sample_and_Target_Specification_Table>` below provides a summary of the options for
+specifying *samples* and their *targets*.
 
     .. hint::
-      the same *target* can be used to train more than one *sample*.
+      The same *target* can be used to train more than one *sample*.
 
     .. warning::
        If an internal source (i.e., a ProcessingMechanism) is specified for the *target* of a `sample
@@ -220,7 +236,7 @@ in the **targets** argument of the `learn() <Composition.learn>` when it is call
        then there should *NOT* be an entry for that *sample-target* pair in the **targets** argument of
        the `learn() <Composition.learn>` method; the presence of one will raise an error.
 
-       Conversely, any *sample* paired with the keyword `TARGET` in the **targets** argument of
+       Conversely, any *sample* paired with the keyword *TARGET* in the **targets** argument of
        the AutodiffComposition's constructor (specifying the use of external training signals)
        *MUST* appear in the **targets** argument of the `learn() <Composition.learn>`
        method, paired with one or more values to be used for training that sample during learning
@@ -248,12 +264,13 @@ of the AutodiffComposition.
 
 This is done in the **targets** argument of the AutodiffComposition's constructor, using any of the forms of
 specification listed below. If *any* *sample-target* pairs are specified, *only* those are used; if *none* are
-specified, then all of `OUTPUT Nodes <Composition_Nodes>` of the AutodiffComposition are used as *samples*, and
-corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanisms>` are automatically constructed to
-receive the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()`
-method when it is called (see `Target inputs for learning <Composition_Target_Inputs>`).
+specified, then all `OUTPUT` `Nodes <Composition_Nodes>` of the AutodiffComposition are used as *samples*, and
+corresponding `TARGET_MECHANISMs <TARGET_MECHANISM>` are automatically constructed to receive the target values
+specified for each in the **targets** argument of the AutodiffComposition's `learn()` method when it is called
+(see `Target inputs for learning <Composition_Target_Inputs>`).
 
-* *tuple*: (sample, <target or *TARGET*>);
+* *tuple*: (<*sample*>, <*target* or *TARGET*>), where *sample* and *target* are each a `ProcessingMechanism` or the
+  `OutputPort` of one, and the tuple specifies a *sample-target* pair.
 
 * *LossMechanism*: the **sample** and **target** arguments of its constructor must be specified; its **loss**
   argument can also be used to specify a form of `Loss`; if none is specified, then the loss is determined by
@@ -261,15 +278,17 @@ method when it is called (see `Target inputs for learning <Composition_Target_In
 
 * *list*: any combination of the above;
 
-* *dict*: {sample: <target or *TARGET*}; each entry specifies a *sample-target* pair.
+* *dict*: {*sample*: <*target* or *TARGET*} where *sample* and *target* are each a `ProcessingMechanism` or the
+  `OutputPort` of one, and each entry specifies a *sample-target* pair.
 
 .. note::
- If `samples <AutodiffComposition_Sample>` and `targets <AutodiffComposition_Target>` are specified for *some*
- but *not* all of the learnable pathways (i.e. ones with `learnable <MappingProjection.learnable>` Projections)
- in the **targets** argument of the AutodiffComposition's constructor, a warning is issued indicating the learnable
- pathways that lack learning components (and, in particular, a `LossMechanism`), and for which learning will
- not occur. If this is not corrected, an error is raised when the `learn() <Composition.learn>` method is called.
+   If `samples <AutodiffComposition_Sample>` and `targets <AutodiffComposition_Target>` are specified in the **targets**
+   argument of the AutodiffComposition's constructor for *some* but *not* all of the learnable pathways (i.e. ones with
+   `learnable <MappingProjection.learnable>` Projections), a warning is issued listing the learnable pathways that
+   lack learning components (and, in particular, a `LossMechanism`); if this is not corrected, an error is raised when
+   the `learn() <Composition.learn>` method is called.
 
+.. _AutodiffComposition_Sample_and_Target_Specification_Table:
 .. table::
 
    +------------+----------------------------------+--------------------------------+----------------------------------+
@@ -277,7 +296,8 @@ method when it is called (see `Target inputs for learning <Composition_Target_In
    +============+==================================+================================+==================================+
    |            |                                  |                                |                                  |
    |            |                                  |                                | all OUTPUT Nodes assigned as     |
-   |            |                                  |                                |   SAMPLE_MECHANISMs              |
+   |            |                                  |                                |   SAMPLE_MECHANISMs and          |
+   |            |                                  |                                |   assigned NodeRole.SAMPLE       |
    |            |                                  |                                |                                  |
    |Composition |         N/A                      |{SAMPLE_MECHANISM: target value}| all TARGET_MECHANISMs            |
    |            |                                  |                                |   constructed automatically and  |
@@ -291,10 +311,10 @@ method when it is called (see `Target inputs for learning <Composition_Target_In
    |            |                                  |       N/A                      |    TARGET_MECHANISM assigned     |
    | Autodiff   |                                  |                                |    NodeRole.TARGET_INTERNAL      |
    | with dict  |                                  |                                |                                  |
-   | containing |                                  |                                |                                  |
-   |            +----------------------------------+--------------------------------+----------------------------------+
+   | containing:|                                  |                                |                                  |
+   |            +----------- and/or ---------------+--------------------------------+----------------------------------+
    |            |                                  |                                |                                  |
-   |            |    SAMPLE_MECHANISM: *TARGET*    |                                |                                  |
+   |            |SAMPLE_MECHANISM: *TARGET*        |                                |                                  |
    |            |                                  |                                |  TARGET_MECHANISM                |
    |            |                                  |{SAMPLE_MECHANISM: target value}|  constructed automatically and   |
    |            |                                  |                                |  assigned NodeRole.TARGET_INPUT  |
@@ -303,9 +323,10 @@ method when it is called (see `Target inputs for learning <Composition_Target_In
    |            |                                  |                                |                                  |
    | Autodiff   |                                  |                                |  all OUTPUT Nodes assigned       |
    | with no    |             None                 |{SAMPLE_MECHANISM: target value}|  as SAMPLE_MECHANISMS            |
-   | **targets**|                                  |                                |                                  |
-   | argument   |                                  |                                |  all TARGET_MECHANISMs           |
-   | specified  |                                  |                                |  constructed automatically and   |
+   | **targets**|                                  |                                |  assigned NodeRole.SAMPLE        |
+   | argument   |                                  |                                |                                  |
+   | specified  |                                  |                                |  all TARGET_MECHANISMs           |
+   |            |                                  |                                |  constructed automatically and   |
    |            |                                  |                                |  assigned NodeRole.TARGET_INPUT  |
    +------------+----------------------------------+--------------------------------+----------------------------------+
 
