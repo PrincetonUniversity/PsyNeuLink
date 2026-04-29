@@ -202,7 +202,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX, IS_FINISHED_FLAG,
+    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX,
      LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED,
      OWNER_VALUE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE,
      VALUE, VARIABLE)
