@@ -18,6 +18,7 @@ Contents
       COMMENT:
       - `AutodiffComposition_Optimizer`
       COMMENT
+      - `AutodiffComposition_Configuring_Learning
       - `Learning Pathways <AutodiffComposition_Learning_Pathways>`
           - `AutodiffComposition_Sample`
           - `AutodiffComposition_Target`
@@ -29,7 +30,7 @@ Contents
   * `AutodiffComposition_Structure`
       - `AutodiffComposition_Learning_Components`
           - `AutodiffComposition_Structure_LossMechanisms`
-          - `AutodiffComposition_Structure_Target_Mechanisms`
+          - `AutodiffComposition_Structure_Target_Mechanism`
       - `AutodiffComposition_PytorchRepresentation`
       - `AutodiffComposition_Nesting`
   * `AutodiffComposition_Execution`
@@ -113,14 +114,14 @@ COMMENT
 A `learning Pathway <Composition_Learning_Pathway>` in an AutodiffComposition, as in a Composition, is a `Pathway`
 that contains one or more learnable `MappingProjections <MappingProjection>` -- that is, in which the `learnable
 <MappingProjection.learnable>` attribute of the MappingProjection is set to ``True``.  Unlike a Composition, however,
-the `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` ("student") and `TARGET_MECHANISM <TARGET_MECHANISM>` ("teacher") for each
-*learning Pathway* can be specified in the **targets** argument of the AutodiffComposition's constructor, as described
-`below <AutodiffComposition_Configuring_Learning>`. If these are *not* specified, then these are configured
-automatically as for a Composition, by assigning the `OUTPUT <NodeRole.OUTPUT>` `Node <Composition_Nodes>` as the
-`SAMPLE_MECHANISM <SAMPLE_MECHANISM>` for every pathway that has at least one learnable MappingProjection, and
-aautomatically constructing a corresponding `TARGET_MECHANISM <TARGET_MECHANISM>`, the input for which is provided
-in the **inputs** or **targets** argument of the `learn() <Composition.learn>` method, and used to train that
-*learning Pathway*.
+the `SAMPLE_MECHANISM <AutodiffComposition_Structure_Sample_Mechanism>` ("student") and `TARGET_MECHANISM
+<AutodiffComposition_Structure_Target_Mechanism>` ("teacher") for each *learning Pathway* can be
+specified in the **targets** argument of the AutodiffComposition's constructor, as described `below
+<AutodiffComposition_Configuring_Learning>`. If these are *not* specified, then these are configured automatically
+as for a Composition, by assigning the `OUTPUT <NodeRole.OUTPUT>` `Node <Composition_Nodes>` as the `SAMPLE_MECHANISM
+<AutodiffComposition_Structure_Sample_Mechanism>` for every pathway that has at least one learnable MappingProjection,
+and aautomatically constructing a corresponding *TARGET_MECHANISM*, the input for which is provided in the **inputs**
+or **targets** argument of the `learn() <Composition.learn>` method, and used to train that *learning Pathway*.
 
 
 .. _AutodiffComposition_Configuring_Learning:
@@ -180,14 +181,14 @@ the constructor's **targets** argument. However, a few important rules apply:
 *Sample*
 ^^^^^^^^
 This generates the value being trained (sometimes referred to as the "student"). It is the `OutputPort` of a
-`SAMPLE_MECHANISM <SAMPLE_MECHANISM>` in a learning Pathway, that can be assigned anywhere in an AutodiffComposition,
-or in one `nested <AutodiffComposition_Nesting>` within it, subject to the rules outlined `above
-<AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the *sample* is trained
-using the `value <OutputPort>` of the `target <AutodiffComposition_Target>` with which it is paired, or by values
-specified in the **targets** argument of the `learn() <Composition.learn>` method (see `below
+`SAMPLE_MECHANISM <AutodiffComposition_Structure_Sample_Mechanism>` in a learning Pathway, that can be assigned
+anywhere in an AutodiffComposition, or in one `nested <AutodiffComposition_Nesting>` within it, subject to the rules
+outlined `above <AutodiffComposition_SAMPLE_Assginment_Rules>`. The `value <OutputPort.value>` of the *sample* is
+trained using the `value <OutputPort>` of the `target <AutodiffComposition_Target>` with which it is paired, or by
+values specified in the **targets** argument of the `learn() <Composition.learn>` method (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). A *sample* can be assigned only a single *target*, though
-a *target can* be assigned to multiple *samples*. The *SAMPLE_MECHANISMs* of an AutodiffComposition are assigned the
-`NodeRole` `SAMPLE` and are listed in its `sample_mechanisms <Composition.sample_mechanisms>` attribute.
+a *target can* be assigned to multiple *samples*. The *SAMPLE_MECHANISMs* of an AutodiffComposition are assigned
+the `NodeRole` `SAMPLE` and are listed in its `sample_mechanisms <Composition.sample_mechanisms>` attribute.
 
     .. _AutodiffComposition_Sample_In_Multiple_Pathways:
     .. note::
@@ -202,12 +203,12 @@ a *target can* be assigned to multiple *samples*. The *SAMPLE_MECHANISMs* of an 
 ^^^^^^^^
 This provides the value (sometimes referred to as a "teacher") used to train the `sample <AutodiffComposition_Sample>`
 with which it is paired. It is the `value <OutputPort.value>` of the `OutputPort` of a specified `TARGET_MECHANISM
-<TARGET_MECHANISM>`.  Any ProcessingMechanism (or the OutputPort of one) in a AutodiffComposition (or one `nested
-<AutodiffComposition_Nesting>` within it) can be specified as a *target*, so long as it is not in the same `pathway
-<Composition_Pathways>` as the *sample* it trains. This allows the value of one pathway to be used to train another.
-Such *TARGET_MECHANISMs* are assigned the `NodeRole` `TARGET_INTERNAL`, and are listed in the AutodiffComposition's
-`target_internal_mechanisms <Composition.target_internal_mechanisms>` attribute as well as its `target_mechanisms
-<Composition.target_mechanisms>` attribute.
+<AutodiffComposition_Structure_Target_Mechanism>`.  Any ProcessingMechanism (or the OutputPort of one) in an
+AutodiffComposition (or one `nested <AutodiffComposition_Nesting>` within it) can be specified as a *target*,
+so long as it is not in the same `pathway <Composition_Pathways>` as the *sample* it trains. This allows the value of
+one pathway to be used to train another. Such *TARGET_MECHANISMs* are assigned the `NodeRole` `TARGET_INTERNAL`,
+and are listed in the AutodiffComposition's `target_internal_mechanisms <Composition.target_internal_mechanisms>`
+attribute as well as its `target_mechanisms <Composition.target_mechanisms>` attribute.
 
 Alternatively, the kewyord *TARGET* can be used to specify the *target* for a *sample* in the **targets** argument of
 of the AutodiffComposition's constructor, which allows external values provided in the **targets** (or **inputs**)
@@ -265,9 +266,9 @@ of the AutodiffComposition.
 This is done in the **targets** argument of the AutodiffComposition's constructor, using any of the forms of
 specification listed below. If *any* *sample-target* pairs are specified, *only* those are used; if *none* are
 specified, then all `OUTPUT` `Nodes <Composition_Nodes>` of the AutodiffComposition are used as *samples*, and
-corresponding `TARGET_MECHANISMs <TARGET_MECHANISM>` are automatically constructed to receive the target values
-specified for each in the **targets** argument of the AutodiffComposition's `learn()` method when it is called
-(see `Target inputs for learning <Composition_Target_Inputs>`).
+corresponding `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanism>` are automatically constructed
+to receive the target values specified for each in the **targets** argument of the AutodiffComposition's `learn()`
+method when it is called (see `Target inputs for learning <Composition_Target_Inputs>`).
 
 * *tuple*: (<*sample*>, <*target* or *TARGET*>), where *sample* and *target* are each a `ProcessingMechanism` or the
   `OutputPort` of one, and the tuple specifies a *sample-target* pair.
@@ -360,7 +361,7 @@ See `Composition_Learning_rate` for additional information about specifying lear
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
 *Exchanging Parameters with Pytorch Modules*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The AutodiffComposition's `copy_torch_param_to_projection_matrix` and `copy_projection_matrix_to_torch_param` methods
 can be used to exchange weight matrices between the parameters of a PyTorch module and the `matrix
@@ -436,16 +437,16 @@ attribute:
 
 .. _AutodiffComposition_Structure_LossMechanisms:
 
-*Loss Mechanisms*
-^^^^^^^^^^^^^^^^^
+*Loss Mechanism*
+^^^^^^^^^^^^^^^^
 
 This computes the loss for a given pathway, using its `sample <LossMechanism.sample>`, `target
 <LossMechanism.target>`, and assigned form of `loss <LossMechanism.loss>`. It receives `MappingProjections
 <MappingProjection>` from `sample <LossMechanism.sample>` and `target <LossMechanism.target>` Mechanisms,
 each of which is non-learnable and assigned an `IDENTITY_MATRIX`. If the LossMechanism was generated
-automatically (see `AutodiffComposition_Loss_Mechanism_Specification`), it uses the `loss_spec
-<AutodiffComposition.loss_spec>` specified for the AutodiffComposition; if it was specified explicity, it
-uses the form of `Loss` specified in the **loss** argument of its constructor, or the `PyTorch loss function
+automatically (see `AutodiffComposition_LossMechanism`), it uses the `loss_spec <AutodiffComposition.loss_spec>`
+specified for the AutodiffComposition; if it was specified explicity, it uses the form of `Loss` specified in the
+**loss** argument of its constructor, or the `PyTorch loss function
 <https://pytorch.org/docs/stable/nn.html#loss-functions>`_ specified in the **function** argument of its constructor.
 
   .. technical_note::
@@ -458,33 +459,49 @@ uses the form of `Loss` specified in the **loss** argument of its constructor, o
      its use in computing the loss, in order to prevent gradient propagation to the target Mechanism, which may
      be in its own `learning pathway <AutodiffComposition_Learning_Pathways>`.
 
-.. _AutodiffComposition_Structure_Target_Mechanisms:
+.. _AutodiffComposition_Structure_Sample_Mechanism:
 
-*TARGET_MECHANISMs*
-^^^^^^^^^^^^^^^^^^^
+*SAMPLE_MECHANISM*
+^^^^^^^^^^^^^^^^^^
+
+A *SAMPLE_MECHANISM* generates, in a designated `OutputPort` (or its `primary OutputPort <OutputPort_Primary>` if one
+is not specified) the `value <OutputPort.value>` that is trained through learning to be as close to the value provided
+by the `TARGET_MECHANISM <AutodiffComposition_Structure_Target_Mechanism>` as possible.  In an AutodiffComposition,
+unlike a standard Composition, this can be any ProcessingMechanism (or the OutputPort of one), subject to the
+`restrictions <AutodiffComposition_Configuring_Learning>` outlined above.  See `SAMPLE_MECHANISM <SAMPLE_MECHANISM>` for
+additional information.
+
+.. _AutodiffComposition_Structure_Target_Mechanism:
+
+*TARGET_MECHANISM*
+^^^^^^^^^^^^^^^^^^
 
 A *TARGET_MECHANISM* provides the target value to the `LossMechanism <AutodiffComposition_Structure_LossMechanisms>`
-used to train a *SAMPLE_MECHANISM*. There are two types of *TARGET_MECHANISM*: *TARGET_INPUT MECHANISM*, specified in
-the **targets** argument of the AutodiffComposition's constructor using the keyword *TARGET*; and *TARGET_INTERNAL
-MECHANISM*, specified as Mechanism or the OutputPort of one (see `AutodiffComposition_Specifying_Learning_Pathways`).
-Each type is described below.  All of the *TARGET_MECHANISMs* of an AutodiffComposition are listed in its
-`target_mechanisms <Composition.target_mechanisms>` attibute, and included in its `learning_components
-<AutodiffComposition.learning_components>` attribute.
+used to train a `SAMPLE_MECHANISM <AutodiffComposition_Structure_Sample_Mechanism>`. There are two types of
+*TARGET_MECHANISM*: *TARGET_INPUT*, specified in the **targets** argument of the AutodiffComposition's constructor
+using the keyword *TARGET*; and *TARGET_INTERNAL*, specified as a `ProcessingMechanism` or the `OutputPort` of one (see
+`AutodiffComposition_Specifying_Learning_Pathways`). Each type is described below. All of the *TARGET_MECHANISMs* of
+an AutodiffComposition are listed in its `target_mechanisms <Composition.target_mechanisms>` attibute, and included
+in its `learning_components <Composition.learning_components>` attribute.
 
-*TARGET_INPUT MECHANISMS*. These are automatically constructed for each *sample* specified with the keywor *TARGET*
+.. _AutodiffComposition_Structure_TARGET_INPUT
+
+*TARGET_INPUT* Mechanisms. These are automatically constructed for each *sample* specified with the keywor *TARGET*
 in the **targets** argument of the AutodiffComposition's constructor, along with a Projection from its OutputPort
-to the *TARGET* `InputPort of the `LossMechanism` construced for that *sample*-*target* pair. The *TARGET_MECHANISM*
-is assigned the `NodeRole` `TARGET_INPUT`, and receives the target value from the **targets** (or **inputs** argument
+to the *TARGET* `InputPort` of the `LossMechanism` construced for that *sample*-*target* pair. The *TARGET_MECHANISM*
+is assigned the `NodeRole` `TARGET_INPUT`, and receives the target value from the **targets** (or **inputs**) argument
 of the `learn() <AutodiffComposition>` (see `Target inputs for learning <Composition_Target_Inputs>`). If no
-**targets** argument is specified in the AutodiffComposition's constructor, a *TARGET INPUT MECHANISM* is constructed
+**targets** argument is specified in the AutodiffComposition's constructor, a *TARGET_INPUT* Mechanism is constructed
 for every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
-`learnable <MappingProjection.learnable>` Projection. The *TARGET INPUT MECHANISMs* of an AutodiffComposition are
+`learnable <MappingProjection.learnable>` Projection. The *TARGET_INPUT* Mechanisms of an AutodiffComposition are
 listed in it's `target_input_mechanisms <Composition.target_input_mechanisms>` attribute.
 
-*TARGET_INTERNAL MECHANISMS*. A Projection is automatically constructed from each of these specified in the **targets**
-argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort of the `LossMechanism` construced for
+.. _AutodiffComposition_Structure_TARGET_INTERNAL
+
+*TARGET_INTERNAL* Mechanisms. A Projection is automatically constructed from each of these specified in the **targets**
+argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort` of the `LossMechanism` construced for
 that *sample*-*target* pair. The *TARGET_MECHANISM* is assigned the `NodeRole` `TARGET_INTERNAL`, and its `OutputPort`
-provides the target value used to train the corresponing *sample*.  The *TARGET INPUT MECHANISMs* of an
+provides the target value used to train the corresponing *sample*.  The *TARGET_INPUT Mechanisms of an
 AutodiffComposition are listed in it's `target_internal_mechanisms <AutodiffComposition.target_internal_mechanisms>`
 attribute.
 
@@ -525,7 +542,7 @@ method is called with its **show_pytorch** argument set to `True`, which generat
 of the AutodiffComposition (if it has any `nested AutodiffCompositions <AutodiffComposition_Nesting>` within it) that
 will execute in PyTorch, with direct Projections between Nodes at different levels of nesting. This also shows any
 `LossMechanisms <AutodiffComposition_Structure_LossMechanisms>` and `TARGET_MECHANISMs
-<AutodiffComposition_Structure_Target_Mechanisms>` that have been automatically constructed
+<AutodiffComposition_Structure_Target_Mechanism>` that have been automatically constructed
 (see `AutodiffComposition_LossMechanism` and `AutodiffComposition_Target`, respectively). Furthermore, note that `no
 control-related components <Autodiff_Control_Components> are shown. Finally, Projections that are `excluded from
 gradient calculations <PytorchMechanismWrapper.exclude_from_gradient_calc>` are shown with dotted arrows, which are also
@@ -656,7 +673,7 @@ operations:
     (i.e., call to learn()).
 
 
-.. _AutodiffComposition_Configuring_Learning:
+.. _AutodiffComposition_Customizing_Learning:
 
 Which nodes are executed in each optimization step, and which parameters are included in the gradient calculation
 can be further customized as described below.
@@ -1123,21 +1140,32 @@ class AutodiffComposition(Composition):
         (the "student" Node) by comparing it to the output of the Node from which it receives its *TARGET* input
         (the "teacher" Node), using the specified loss function; see `AutodiffComposition_Target` for additional
         details.
-        
-    targets : dict
-        dictionary of {`sample <AutodiffComposition_Sample>`:`target <AutodiffComposition_Target>`} specifiations,
-        used to specify the `TARGET_MECHANISM` for each `SAMPLE_MECHANISM` in an AutodiffComposition (see
-         `AutodiffComposition_Structure_Target_Mechanisms` for details).
-
-    target_internal_mechanisms : list of `TARGET_MECHANISM`\\s
-        list of the `TARGET_MECHANISM`\\s for a Composition assigned the `NodeRole` `TARGET_INTERNAL`
-        (see `AutodiffComposition_Structure_Target_Mechanisms` for details)
 
     learning_rate : float or bool
         determines the default learning_rate passed the `optimizer <PytorchCompositionWrappe.optimizer>`,
         that is applied to all `Projections <Projection>` in the AutodiffComposition that are `learnable
         <MappingProjection.learnable>`, and for which individual rates have not been specified (see
         `AutodiffComposition_Learning_Rates` for additional details).
+
+    targets : dict
+        dictionary of {`sample <AutodiffComposition_Sample>`:`target <AutodiffComposition_Target>`}
+        specifiations, used to specify the `TARGET_MECHANISM <AutodiffComposition_Structure_Target_Mechanism>`
+        for each `SAMPLE_MECHANISM <AutodiffComposition_Structure_Sample_Mechanism>` in an AutodiffComposition
+        (see `AutodiffComposition_Structure_Target_Mechanism` for details).
+
+    sample_mechanisms : list of *SAMPLE_MECHANISMs*
+        list of all `SAMPLE_MECHANISMs <AutodiffComposition_Structure_Sample_Mechanism>` in the AutodiffComposition.
+
+    target_mechanisms : list of *TARGET_MECHANISMs*
+        list of all `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanism>` in the AutodiffComposition.
+
+    target_input_mechanisms : list of *TARGET_MECHANISMs*
+        list of the `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanism>` in the AutodiffComposition
+        assigned the `NodeRole` `TARGET_INPUT` (see `AutodiffComposition_Structure_TARGET_INPUT` for details)
+
+    target_internal_mechanisms : list of *TARGET_MECHANISMs*
+        list of the `TARGET_MECHANISMs <AutodiffComposition_Structure_Target_Mechanism>` in the AutodiffComposition
+        assigned the `NodeRole` `TARGET_INTERNAL` (see `AutodiffComposition_Structure_TARGET_INTERNAL` for details)
 
     execute_in_additional_optimizations : dict{Node:[(Parameter, value)]}
         determines which `Nodes <Composition_Nodes>` of the AutodiffComposition should be included in the forward
