@@ -273,7 +273,7 @@ Implementation of Modulation
 
 Although the `purpose of a ModulatorySignal <ModulatorySignal_Uses>` is to modify the operation of a `Mechanism
 <Mechanism>` or `MappingProjection`, it does not do this *directly*; rather, it does it by way of a `Port` that
-modulates the input, function parameter, or output of the Mechanism or MappingProjeciton to be regulated. More
+modulates the input, function parameter, or output of the Mechanism or MappingProjecition to be regulated. More
 specifically, a ModulatorySignal modulates the `function <Port_Base.function>` of a *Port* responsible for
 generating those values, by modifying a parameter of that Port's `function <Port_Base.function>`.  This is shown
 in the figure below:

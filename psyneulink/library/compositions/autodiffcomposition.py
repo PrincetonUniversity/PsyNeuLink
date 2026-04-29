@@ -659,7 +659,7 @@ operations:
     in the `minibatch <LearningScale.MINIBATCH>` -- the number of which is specified by the value of `minibatch_size
     <Composition.minibatch_size>` -- to generate the values used to compute the `Losses <Loss>` for each stimulus;
 
-  - aggregate the losses across all stimuli in the minibatch, which is then passed to the AutdoiffCompositon's
+  - aggregate the losses across all stimuli in the minibatch, which is then passed to the AutdoiffComposition's
     `backward <AutodiffComposition.autodiff_backward>` method to compute the gradients and corresponding weight
     changes for all learnable parameters in the AutodiffComposition;
 
@@ -682,12 +682,12 @@ can be further customized as described below.
 *Additional Optimizations Steps*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*optimizatons_per_minibatch*: By default, a single optimization_step is carried out for all of the stimuli in a
+*optimizations_per_minibatch*: By default, a single optimization_step is carried out for all of the stimuli in a
 `minibatch <LearningScale.MINIBATCH>`. However, as long as there is only one stimulus in a minibatch (i.e.,
 `minibatch_size <Composition.minibatch_size>`\\==1), then multiple optimization_steps can be specified for each
 stimulus, using the **optimizations_per_minibatch** argument of the AutodiffComposition's constructor (to specify
 the default number) or its `learn() <Composition.learn>` method (to specify it for just that execution).
-Specifying optimizatons_per_minibatch > 1 can be similar to, but is *not* the same as increasing the `learning_rate
+Specifying optimizations_per_minibatch > 1 can be similar to, but is *not* the same as increasing the `learning_rate
 <Composition.learning_rate>` (see `note <Composition_Optimizations_per_Minibatch_Note>`) and, when used with
 `execute_in_additional_optimizations <AutodiffComposition.execute_in_additional_optimizations>` can produce important
 differences, as described below.
@@ -796,7 +796,7 @@ Compositions or AutodiffCompositions; nor can it be used to specify internal *ta
 *LLVM mode*
 ~~~~~~~~~~~
 This is specified by setting **execution_mode** = `ExecutionMode.LLVMRun` in the `learn <Composition.learn>`
-method of an AutodiffCompositon. This provides the fastest performance, but is limited to `supervised learning
+method of an AutodiffComposition. This provides the fastest performance, but is limited to `supervised learning
 <Composition_Learning_Supervised>` using the `BackPropagation` algorithm, and does not support learning of `nested
  Compositions <Composition_Nested>` nor subclasses of AutodiffComposition that rely on PyTorch (e.g.,
  `GRUComposition` and `EMComposition`) -- `PyTorch mode <AutodiffComposition_PyTorch>` should be used for these.
@@ -1235,7 +1235,7 @@ class AutodiffComposition(Composition):
     torch_losses : list of floats
         stores the average loss after each weight update (i.e. each minibatch) during learning, at the frequency
         specified by `retain_torch_sample_values <AutodiffComposition.retain_torch_sample_values>` if it is set to *MINIBATCH*,
-        *EPOCH*, or *RUN*; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for additonal details.
+        *EPOCH*, or *RUN*; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for additional details.
 
     COMMENT:  FIX: NOT CURRENTLY BEING POPULTED, BUT SEEMS TO BE USED BY _get_total_loss() and early_stopper
     trial_losses = Parameter([])
@@ -3254,7 +3254,7 @@ class AutodiffComposition(Composition):
         .. _technical_note::
            defaults for synch and retain args are set to NotImplemented, so that the user can specify None if they
            want to locally override the default values for the AutodiffComposition (see docstrings for run() and
-           parse_synch_and_retain_args() for additonal details).
+           parse_synch_and_retain_args() for additional details).
 
         Arguments
         ---------

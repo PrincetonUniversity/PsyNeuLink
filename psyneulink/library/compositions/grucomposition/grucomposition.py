@@ -78,7 +78,7 @@ are specified.
 **learning_rate** argument of a call to the `learn <AutodiffComposition.learn>` method of the GRUComposition or the
 AutodiffComposition within which the GRUComposition is nested (see `AutodiffComposition_Learning_Rates` for details
 of specification).  It can be assigned any of the following values (see `eeComposition_Learning_Rate_Specification`
-for additonal details of specification):
+for additional details of specification):
 
 .. _GRUComposition_Learning_Rate_Specification:
 
@@ -98,7 +98,7 @@ for additonal details of specification):
     .. _GRUComposition_Individual_Learning_Rates:
 
     * *dict*: {Projection or Projection name: learning_rate}; used to specify parameter-specific learning rates,
-      which supercede the value of the GRUCompositon's `learning_rate <GRUComposition.learning_rate>`. Keys of the
+      which supercede the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>`. Keys of the
       dict must be one of the keys below that reference parameters of the `GRU
       <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module; values specify their learning_rates
       (see `AutodiffComposition_Learning_Rates` for additional information):

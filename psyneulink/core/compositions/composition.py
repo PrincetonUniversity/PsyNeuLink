@@ -118,7 +118,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
         the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
         same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` for
-        additonal details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then assigning
+        additional details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then assigning
         ``False`` to the constructor's **enable_learning** argument disables learning on those by default (though it
         will still allow learning to occur on any other Compositions, either nested within it or within which it is
         nested;  see `Composition_Learning` for a full description).
@@ -194,7 +194,7 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
 
         adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition, inserting
         a default Projection between any adjacent set(s) of Nodes for which a Projection is not otherwise specified
-        (see method documentation and `Pathway_Specification` for additonal details); returns the `Pathway` added to
+        (see method documentation and `Pathway_Specification` for additional details); returns the `Pathway` added to
         the Composition.
 
     COMMENT:
@@ -342,7 +342,7 @@ Node, that can also be modified by `learning <Composition_Learning>`. A BIAS Nod
 any of the methods described `above <Composition_Nodes>` for assigning `NodeRoles <NodeRole>` to a Node. The
 ProcessingMechanism cannot have any afferent Projections, and should project to the `InputPort` of the Node that
 receives the values to be biased, which *must* be in the same Composition. If the bias is to be learned, the `learnable
-<MappingProjection.learnable>` attribute of the MappingProjeciton should be set to True. The value of the bias,
+<MappingProjection.learnable>` attribute of the MappingProjecition should be set to True. The value of the bias,
 and how it is applied to the values being biased are specified as described below:
 
     *Single bias value*. To apply a single scalar bias value to all elements of the array being biased, the
@@ -359,7 +359,7 @@ and how it is applied to the values being biased are specified as described belo
     *Multiple bias arrays*. A single BIAS Node can be used to bias multiple arrays by specifying the
     `default_variable <Component_Variable>` of the BIAS Node as a 2d array, with each array in the outer
     dimension containing the bias values for a different array; this will generate an `OutputPort` for each
-    bias array, which can be assigned a MappingProjeciton to do different Node to be biased.
+    bias array, which can be assigned a MappingProjecition to do different Node to be biased.
 
     .. hint::
        Bias signals can be `modulated <ModulatorySignal_Modulation>` by a `ControlMechanism`, by including
@@ -1077,7 +1077,7 @@ network from the `example above <Composition_XOR_Example>`:
         they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 The Composition's `learn <Composition.learn>` method takes all of the same arguments as its `run <Composition.run>`
-method, as well as additonal ones that are specific to learning.  Also like `run <Composition.run>`, it returns the
+method, as well as additional ones that are specific to learning.  Also like `run <Composition.run>`, it returns the
 `output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
 last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
 
@@ -1179,7 +1179,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 .. _Composition_Learning_Rate_Precedence_Hierarchy:
 
 As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
-general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
+general heuristics that more local, lower level and immediate specificaitions take precedence over broader,
 higher level, more general ones. More specifically:
 
   * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
@@ -1285,8 +1285,8 @@ determining the learning_rate for a Projection used at execution:
 
 .. _Composition_Learning_AutodiffComposition:
 
-*Learning Using AutodiffCompositon*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Using AutodiffComposition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
@@ -2240,7 +2240,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
           The `reset <Component.reset>` method of most Nodes with a `StatefulFunction` takes only a single value, that
           is used to reset the `previous_value <StatefulFunction.previous_value>` attribute of the Function.  However
           some (such as those that use `DualAdaptiveIntegrator <DualAdaptiveIntegrator>`) take more than one value.
-          For such Nodes, a list of values must be specified as the value of their dicitonary entry in
+          For such Nodes, a list of values must be specified as the value of their dictionary entry in
           **reset_stateful_functions_to**.
 
      The **reset_stateful_functions_when** and **reset_stateful_functions_to** arguments can be used in conjunction or

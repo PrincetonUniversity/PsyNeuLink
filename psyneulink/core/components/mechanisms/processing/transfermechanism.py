@@ -96,7 +96,7 @@ can be used to specify any subclass of `IntegratorFunction`, so long as it can a
 itself has arguments that can be used to confifure its `integrator_function <TransferMechanism.integrator_function>`:
 **initial_value**, **integration_rate**, and **noise**.  If any of these are specified in the TransferMechanism's
 constructor, their value is used to specify the corresponding parameter of its `integrator_function
-<TransferMechanism.integrator_function>`. Additonal parameters that govern how integration occurs are described under
+<TransferMechanism.integrator_function>`. Additional parameters that govern how integration occurs are described under
 `TransferMechanism_Execution_With_Integration`.
 
 .. _TransferMechanism_Structure:

@@ -877,7 +877,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it is checked for
         compatibility against **input_shapes** (see
-        `input_shapes <Component_Input_Shapes>` for additonal details).
+        `input_shapes <Component_Input_Shapes>` for additional details).
 
     COMMENT:
     param_defaults :   :  default None,

@@ -2064,7 +2064,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         * *AFTER*: the node is executed on every optimization step, after all gradient updates have been done;
 
-        * *LAST*: if `Compositon.optimizations_per_minibatch` is greater than 1, the node is executed only
+        * *LAST*: if `Composition.optimizations_per_minibatch` is greater than 1, the node is executed only
           after the last optimization step
 
         * *BEFORE*: not currently supported

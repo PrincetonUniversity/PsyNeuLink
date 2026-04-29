@@ -3724,7 +3724,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator._function>`;
         if it is a list or array, it must be the same length as `variable <LeakyCompetingIntegrator.variable>`
-        (see `noise <Integrator.noise>` for additonal details).
+        (see `noise <Integrator.noise>` for additional details).
 
     offset : float, list or 1d array : default 0.0
         specifies a constant value added to integral in each call to `function <LeakyCompetingIntegrator._function>`;
