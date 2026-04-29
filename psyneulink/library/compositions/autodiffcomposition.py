@@ -206,8 +206,8 @@ with which it is paired. It is the `value <OutputPort.value>` of the `OutputPort
 <AutodiffComposition_Structure_Target_Mechanism>`.  Any ProcessingMechanism (or the OutputPort of one) in an
 AutodiffComposition (or one `nested <AutodiffComposition_Nesting>` within it) can be specified as a *target*,
 so long as it is not in the same `pathway <Composition_Pathways>` as the *sample* it trains. This allows the value of
-one pathway to be used to train another. Such *TARGET_MECHANISMs* are assigned the `NodeRole` `TARGET_INTERNAL`,
-and are listed in the AutodiffComposition's `target_internal_mechanisms <Composition.target_internal_mechanisms>`
+one pathway to be used to train another. Such *TARGET_MECHANISMs* are assigned the `NodeRole` `TARGET_INTERNAL`, and
+are listed in the AutodiffComposition's `target_internal_mechanisms <AutodiffComposition.target_internal_mechanisms>`
 attribute as well as its `target_mechanisms <Composition.target_mechanisms>` attribute.
 
 Alternatively, the kewyord *TARGET* can be used to specify the *target* for a *sample* in the **targets** argument of
@@ -273,9 +273,9 @@ method when it is called (see `Target inputs for learning <Composition_Target_In
 * *tuple*: (<*sample*>, <*target* or *TARGET*>), where *sample* and *target* are each a `ProcessingMechanism` or the
   `OutputPort` of one, and the tuple specifies a *sample-target* pair.
 
-* *LossMechanism*: the **sample** and **target** arguments of its constructor must be specified; its **loss**
-  argument can also be used to specify a form of `Loss`; if none is specified, then the loss is determined by
-  the AutodiffComposition's `loss_spec <AutodiffComposition.loss_spec>` Parameter.
+* *LossMechanism*: the **sample** and **target** arguments of the `LossMechanism`\\'s constructor must be specified;
+  its **loss** argument can also be used to specify a form of `Loss`; if none is specified, then the loss is
+  determined by the AutodiffComposition's `loss_spec <AutodiffComposition.loss_spec>` Parameter.
 
 * *list*: any combination of the above;
 
@@ -386,10 +386,10 @@ for cases in which the matrix of a Project corresponds to only a subpart of the 
 .. _Autodiff_Control_Components:
 
 *Control Components*. An AutodiffComposition can contain `ControlMechanisms <ControlMechanism>` or a `controller
-<Composition_Controller>`, that will operate normally when it's `run() <Composition.run>`is run in both `Python mode
-<AutodiffComposition_Python>` and `PyTorch mode <AutodiffComposition_PyTorch>`. However, at present, these are not
-supported for learning in `PyTorch mode <AutodiffComposition_PyTorch>`; a warning is issued and these are ignored
-when the `learn() <Composition.learn>` method is called with **execution_mode** = `ExecutionMode.PyTorch`.
+<Composition_Controller>`, that will operate normally when it's `run() <Composition.run>` method is called in both
+`Python mode <AutodiffComposition_Python>` and `PyTorch mode <AutodiffComposition_PyTorch>`. However, at present,
+these are not supported for learning in `PyTorch mode <AutodiffComposition_PyTorch>`; a warning is issued and these
+are ignored when the `learn() <Composition.learn>` method is called with **execution_mode** = `ExecutionMode.PyTorch`.
 Accomodation of control during learning in `PyTorch mode <AutodiffComposition_PyTorch>` will be implemented in a
 future version.
 
@@ -418,7 +418,7 @@ this functionality.
 
   .. technical_note::
      Post-construction modification is currently not possible because the `pytorch_representation
-     <AutodiffComposition.pytorch_representation` is constructed at the time the AutodiffComposition is first
+     <AutodiffComposition.pytorch_representation>` is constructed at the time the AutodiffComposition is first
      constructed, and can't be modified after that.  This will be fixed in a future version.
 
 .. _AutodiffComposition_Structure:
@@ -488,22 +488,22 @@ in its `learning_components <Composition.learning_components>` attribute.
 
 *TARGET_INPUT* Mechanisms. These are automatically constructed for each *sample* specified with the keywor *TARGET*
 in the **targets** argument of the AutodiffComposition's constructor, along with a Projection from its OutputPort
-to the *TARGET* `InputPort` of the `LossMechanism` construced for that *sample*-*target* pair. The *TARGET_MECHANISM*
+to the *TARGET* `InputPort` of the `LossMechanism` constructed for that *sample*-*target* pair. The *TARGET_MECHANISM*
 is assigned the `NodeRole` `TARGET_INPUT`, and receives the target value from the **targets** (or **inputs**) argument
 of the `learn() <AutodiffComposition>` (see `Target inputs for learning <Composition_Target_Inputs>`). If no
 **targets** argument is specified in the AutodiffComposition's constructor, a *TARGET_INPUT* Mechanism is constructed
 for every `OUTPUT Node <NodeRole.OUTPUT>` of the AutodiffComposition that belongs to a pathway with at least one
 `learnable <MappingProjection.learnable>` Projection. The *TARGET_INPUT* Mechanisms of an AutodiffComposition are
-listed in it's `target_input_mechanisms <Composition.target_input_mechanisms>` attribute.
+listed in its `target_input_mechanisms <AutodiffComposition.target_input_mechanisms>` attribute.
 
 .. _AutodiffComposition_Structure_TARGET_INTERNAL
 
-*TARGET_INTERNAL* Mechanisms. A Projection is automatically constructed from each of these specified in the **targets**
-argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort` of the `LossMechanism` construced for
-that *sample*-*target* pair. The *TARGET_MECHANISM* is assigned the `NodeRole` `TARGET_INTERNAL`, and its `OutputPort`
-provides the target value used to train the corresponing *sample*.  The *TARGET_INPUT Mechanisms of an
-AutodiffComposition are listed in it's `target_internal_mechanisms <AutodiffComposition.target_internal_mechanisms>`
-attribute.
+*TARGET_INTERNAL* Mechanisms. A Projection is automatically constructed from each of these specified in the
+**targets** argument of the AutodiffComposition's constructor, to the the *TARGET* `InputPort` of the
+`LossMechanism` constructed for that *sample*-*target* pair. The *TARGET_MECHANISM* is assigned the `NodeRole`
+`TARGET_INTERNAL`, and its `OutputPort` provides the target value used to train the corresponing *sample*.
+The *TARGET_INPUT* Mechanisms of an AutodiffComposition are listed in its `target_internal_mechanisms
+<AutodiffComposition.target_internal_mechanisms>` attribute.
 
 COMMENT:
 TEACHER_TARGET BREADCRUMB: ADD NOTE HERE FROM ABOVE ABOUT SINGLETONS NOT BEING LEARNABLE
@@ -524,30 +524,29 @@ COMMENT
 
 
 An AutodiffComposition uses a `pytorch_representation <AutodiffComposition.pytorch_representation>` to execute
-learning when it's `learn() <Composition.learn>` method is called in `Pytorch mode
-<AutodiffComposition_PyTorch>`.  This is comprised of a outer `PytorchCompositionWrapper` for the AutodiffComposition,
-that is comprised of `PytorchMechanismWrappers <PytorchMechanismWrapper` and `PytorchProjectionWrappers
-<PytorchProjectionWrappers>` for the Compositions Mechanisms and Projections, and `PytorchCompositionWrapper
-<PytorchCompositionWrappers>` for any AutodCompositions that are nested within it. Although the `pytorch_representation
-<AutodiffComposition.pytorch_representation>` maintains the hierarchical structure of any `nested Compositions
-<Composition_Nested>`, when it is executed it "flattens" this, incorporating the nodes of any nested
-AutodiffCompositions into the top level.  This can be shown graphically using the AutodiffComposition's
-`show_graph <Composition.show_graph>` method, as described below.
+learning when its `learn() <Composition.learn>` method is called in `Pytorch mode
+<AutodiffComposition_PyTorch>`.  This is comprised of an outer *PytorchCompositionWrapper* for the AutodiffComposition,
+that itself is comprised of *PytorchMechanismWrappers* and *PytorchProjectionWrappers* for the Composition's
+Mechanisms and Projections, and PytorchCompositionWrappers for any AutodCompositions that are nested within it.
+Although the `pytorch_representation <AutodiffComposition.pytorch_representation>` maintains the hierarchical
+structure of any `nested Compositions <Composition_Nested>`, when it is executed it "flattens" this, incorporating
+the nodes of any nested AutodiffCompositions into the top level.  This can be shown graphically using the
+AutodiffComposition's `show_graph <Composition.show_graph>` method, as described below.
 
 The `pytorch_representation <AutodiffComposition.pytorch_representation>` is constructed automtically when the `learn()
-<AutodiffComposition>` method of AutodiffComposition is executed in `PyTorch mode <AutodiffComposition_Pytorch>`
-(the default), and is used to execute it in PyTorch. It is also constructed when the `show_graph <Composition.show_graph
-method is called with its **show_pytorch** argument set to `True`, which generates a graphic display of the
-`pytorch_representation <AutodiffComposition.pytorch_representation>`. As noted above, this shows the "flattened" verion
-of the AutodiffComposition (if it has any `nested AutodiffCompositions <AutodiffComposition_Nesting>` within it) that
-will execute in PyTorch, with direct Projections between Nodes at different levels of nesting. This also shows any
+<AutodiffComposition>` method of AutodiffComposition is executed in `PyTorch mode <AutodiffComposition_Pytorch>` (the
+default), and is used to execute it in PyTorch. It is also constructed when the `show_graph <Composition.show_graph>`
+method is called with its **show_pytorch** argument set to ``True``, which generates a graphic display of the
+`pytorch_representation <AutodiffComposition.pytorch_representation>`. As noted above, this shows the "flattened"
+version of the AutodiffComposition (if it has any `nested AutodiffCompositions <AutodiffComposition_Nesting>` within it)
+that will execute in PyTorch, with direct Projections between Nodes at different levels of nesting. This also shows any
 `LossMechanisms <AutodiffComposition_Structure_LossMechanisms>` and `TARGET_MECHANISMs
 <AutodiffComposition_Structure_Target_Mechanism>` that have been automatically constructed
-(see `AutodiffComposition_LossMechanism` and `AutodiffComposition_Target`, respectively). Furthermore, note that `no
-control-related components <Autodiff_Control_Components> are shown. Finally, Projections that are `excluded from
-gradient calculations <PytorchMechanismWrapper.exclude_from_gradient_calc>` are shown with dotted arrows, which are also
-used to show the flow of the training signal from the a `LossMechanism <AutodiffComposition_LossMechanism>` to the
-`sample <AutodiffComposition_Sample>` for which it calculates the loss.
+(see `AutodiffComposition_LossMechanism` and `AutodiffComposition_Target`, respectively). Furthermore, note that no
+`control-related components <Autodiff_Control_Components>` are shown. Finally, Projections that are `excluded from
+gradient calculations <PytorchMechanismWrapper.exclude_from_gradient_calc>` are shown with dotted arrows; dotted arrows
+are also used to show the flow of the training signal from a `LossMechanism <AutodiffComposition_LossMechanism>` to the
+`SAMPLE_MECHANISM <AutodiffComposition_Sample>` for which it calculates the loss.
 
   .. note::
      Calling `show_graph <Composition.show_graph>` with **show_pytorch=True** is sufficient to show the learning
@@ -570,7 +569,7 @@ used to show the flow of the training signal from the a `LossMechanism <Autodiff
 
 An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and
 there can be any number of such nestings.  However, all of the nested Compositions must be AutodiffCompositions.
-As noted `above <AutodiffComposition_PytorchRepresentation>`, the AutodiffComposition is "flattened" when it's
+As noted `above <AutodiffComposition_PytorchRepresentation>`, the AutodiffComposition is "flattened" when its
 `pytorch_representation <AutodiffComposition.pytorch_representation>` is used for learning in `PyTorch mode
 <AutodiffComposition_PyTorch>`; this can be seen by calling the AutodiffComposition's `show_graph
 <Composition.show_graph>` method with **show_pytorch=True**.
@@ -613,12 +612,12 @@ by default and if either `ExecutionMode.Python` or `ExecutionMode.PyTorch` are s
 (see `note <AutodiffComposition_PyTorch_Note>` below); `LLVM compilation <AutodiffComposition_LLVM>`
 is attempted if one of the  `ExecutionMode.LLVM` modes is specified.
 
-For `learn() <Composition.learn>`, `PyTorch mode <Autodiff_PyTorch>` is used by default, which uses the
-`pytorch_representation <AutodiffComposition.pytorch_representation` for execution. Python execution and LLVM
+For `learn() <Composition.learn>`, `PyTorch mode <AutodiffComposition_PyTorch>` is used by default, which uses the
+`pytorch_representation <AutodiffComposition.pytorch_representation>` for execution. Python execution and LLVM
 Compilation can be specified explicity (using `ExecutionMode.Python` or `ExecutionMode.LLVMRun`, respectively),
-but `restrictions apply. Each mode of exeuction is each described in greater detail below, and summarized in `this
-table <Composition_Compilation_Table>`, which provides a comparison of the different modes of execution for an
-AutodiffComposition and standard `Composition`.
+but `restrictions <AutodiffComposition_Restrictions>` apply. Each mode of exeuction is described in greater detail
+below, and summarized in `this table <Composition_Compilation_Table>`, which provides a comparison of the different
+modes of execution for an AutodiffComposition and standard `Composition`.
 
 .. _AutodiffComposition_PyTorch:
 
@@ -2684,7 +2683,7 @@ class AutodiffComposition(Composition):
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
                 curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
             else:
-                # It's  a list, of lists, of torch tensors because it is ragged
+                # It's a list, of lists, of torch tensors because it is ragged
                 num_outputs = len(target[0][0])
                 curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 

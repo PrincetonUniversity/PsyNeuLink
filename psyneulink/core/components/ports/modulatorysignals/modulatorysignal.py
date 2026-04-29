@@ -231,14 +231,14 @@ four keywords that can be used to specify generic forms of modulation supported 
     the Port's `function <Port_Base.function>` specified as its `multiplicative_param <Function_Modulatory_Params>`.
     For example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then
     the ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `slope <Linear.slope>`
-    parameter (it's multiplicative_param), thus multiplying the Port's `variable <Port_Base.variable>` by that
+    parameter (its multiplicative_param), thus multiplying the Port's `variable <Port_Base.variable>` by that
     amount each time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
 
   * *ADDITIVE_PARAM* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the parameter of the
     Port's `function <Port_Base.function>` specified as its `additive_param <Function_Modulatory_Params>`. For
     example, if the Port's `function <Port_Base.function>` is `Linear` (the default for most Ports), then the
     ModulatorySignal's `value <ModulatorySignal.value>` is assigned to the function's `intercept <Linear.intercept>`
-    parameter (it's additive_param), thus adding that value to the Port's `variable <Port_Base.variable>` each
+    parameter (its additive_param), thus adding that value to the Port's `variable <Port_Base.variable>` each
     time the Port is executed, and assigning the result as the Port's `value <Port_Base.value>`.
 
   * *OVERRIDE* - assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the Port's

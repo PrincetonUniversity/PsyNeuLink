@@ -2224,7 +2224,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator._function>`
-        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
+        if its absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
         if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
@@ -2287,7 +2287,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     offset : float or 1d array
         constant value added to integral in each call to `function <DriftDiffusionIntegrator._function>`
-        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
+        if its absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
         If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for

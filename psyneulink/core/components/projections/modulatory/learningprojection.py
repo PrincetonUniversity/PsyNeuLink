@@ -168,7 +168,7 @@ learned.
 Execution
 ---------
 
-A LearningProjection cannot be executed directly.  It's execution is determined by its `learning_enabled
+A LearningProjection cannot be executed directly.  its execution is determined by its `learning_enabled
 <LearningProjection.learning_enabled>` attribute.  If that is False`, it is never executed.  If it is True or
 *ONLINE*, is executed when the *MATRIX* ParameterPort to which it projects is updated.  This occurs when the
 `learned_projection <LearningProjection.learned_projection>` (the `MappingProjection` to which the *MATRIX*

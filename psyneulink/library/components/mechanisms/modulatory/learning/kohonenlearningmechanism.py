@@ -209,7 +209,7 @@ class KohonenLearningMechanism(LearningMechanism):
     function : LearningFunction or function : default Kohonen
         the function used to calculate the `learning_signal <KohonenLearningMechanism.learning_signal>`
         (assigned to the KohonenLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
-        It's `variable <Function_Base.variable>` must be a list of three items (two 1d arrays and one 2d array, all of
+        its `variable <Function_Base.variable>` must be a list of three items (two 1d arrays and one 2d array, all of
         numeric values);  returns a list, 2d np.array that is a square matrix with the same dimensions
         as the third item of its `variable <Kohonen.variable>`).
 

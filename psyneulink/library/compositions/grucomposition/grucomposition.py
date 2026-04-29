@@ -44,7 +44,7 @@ sequence of stimuli at once, and learn to predict the next stimulus in the seque
 Creation
 --------
 
-An GRUComposition is created by calling its constructor.  When it's `learn <AutoDiffComposition.learn>`
+An GRUComposition is created by calling its constructor.  When its `learn <AutoDiffComposition.learn>`
 method is called, it automatically creates a PytorchGRUCompositionWrapper that implements the GRUComposition
 using the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, that is trained
 using PyTorch. Its constructor takes the following arguments that are in addition to or handled differently

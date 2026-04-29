@@ -1249,7 +1249,7 @@ class EMComposition(AutodiffComposition):
         )
 
     Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
-    differentiable form and in which it's `field_weights <EMComposition.field_weights>` parameter can be learned.
+    differentiable form and in which its `field_weights <EMComposition.field_weights>` parameter can be learned.
 
     Takes only the following arguments, all of which are optional
 

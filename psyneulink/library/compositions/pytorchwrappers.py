@@ -196,13 +196,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         - Note: RESULTS is handled in an idiosyncratic way: it is specified along with the synchronization
                 parameters, since it is a value ordinarily generated in the execution of a Composition;
-                however it's helper parallels the retain_for_psyneulink helper methods, and it is called
+                however its helper parallels the retain_for_psyneulink helper methods, and it is called
                 from _update_results if TRIAL is specified, in order to integrate with the standard execution
                 of a Composition.
 
+    COMMENT:
     Arguments
     ---------
-
+    COMMENT
 
     Attributes
     ----------

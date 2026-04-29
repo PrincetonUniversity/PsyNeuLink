@@ -651,7 +651,7 @@ class DefaultsFlexibility(Enum):
 
             ``pnl.TransferMechanism(default_variable=[0, 0], function=pnl.Linear())``
 
-            the Linear function is assigned a default variable ([0]) based on it's ClassDefault,
+            the Linear function is assigned a default variable ([0]) based on its ClassDefault,
             which conflicts with the default variable specified by its future owner ([0, 0]). Since
             the default for Linear was not explicitly stated, we allow the TransferMechanism to
             reassign the Linear's default variable as needed (`FLEXIBLE`)
@@ -845,7 +845,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             - specify a default Function
             - this is checked in Component._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
-            - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
+            - if params[FUNCTION] IS specified, it assigns its value to self.function (superceding existing value):
                 self.function is aliased to it (in Component._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
@@ -1436,7 +1436,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                               "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
-            # it's DDM with integrator function.
+            # its DDM with integrator function.
             # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
@@ -1612,7 +1612,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
 
             # If both the mechanism and its function use random_state.
-            # it's DDM with integrator function.
+            # its DDM with integrator function.
             # The mechanism's random_state or seed are not used
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 blacklist.add("seed")

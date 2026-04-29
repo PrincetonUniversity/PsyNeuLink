@@ -992,9 +992,9 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
-       OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
+       OutputPorts of a Mechanism, then its function will not be executed, and the `value <Mechanism_Base.value>`
        will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>`), though its
-       OutputPorts *will* be executed using the assigned values, and it's `execution_count <Component_Execution_Count>`
+       OutputPorts *will* be executed using the assigned values, and its `execution_count <Component_Execution_Count>`
        and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
 
@@ -3098,8 +3098,7 @@ class Mechanism_Base(Mechanism):
         # Copy base values to the new structure
         mutable_parameters = set(obj.llvm_state_ids)
         for p in obj.llvm_param_ids:
-            # Use untracked variants. Modulating a parameter doesn't mean it's
-            # used
+            # Use untracked variants. Modulating a parameter doesn't mean it's used
             src = pnlvm.helpers.get_param_ptr(builder, obj, params_in, p)
             dst = pnlvm.helpers.get_param_ptr(builder, obj, params_out, p)
 

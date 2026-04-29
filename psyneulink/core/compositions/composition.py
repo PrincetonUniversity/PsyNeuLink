@@ -3990,7 +3990,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     shadows : dict
         a dictionary in which the keys are all `Nodes <Composition_Nodes>` in the Composition,
-        and the values of each is a list of any Nodes that `shadow <InputPort_Shadow_Inputs>` it's input.
+        and the values of each is a list of any Nodes that `shadow <InputPort_Shadow_Inputs>` its input.
 
     controller : OptimizationControlMechanism
         identifies the `OptimizationControlMechanism` used as the Composition's controller
@@ -10562,7 +10562,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Create:
         - self._sample_target_pairs: list of all Components for each sample-target pair
-            (`SAMPLE_MECHANISM`, it's OutputPort, `TARGET_MECHANISM`, and it's OutputPort)
+            (`SAMPLE_MECHANISM`, its OutputPort, `TARGET_MECHANISM`, and its OutputPort)
         - self._sample_target_specs: table of all sample-target specifications
             that includes the form in which the Components were specified by the user, and the TARGET value
 
@@ -10956,7 +10956,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_type = 'SAMPLE (OUTPUT)' if (len(self.get_nodes_by_role(NodeRole.SAMPLE))
                                               == len(self.get_nodes_by_role(NodeRole.SAMPLE))) else 'SAMPLE'
             raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
-                                   f"it's 'targets' argument is missing {a}specification{s} for the following "
+                                   f"its 'targets' argument is missing {a}specification{s} for the following "
                                    f"{node_type} Node{s} of {a}learnable pathway{s}: {missing_specs_str}.")
 
         assert all(is_numeric(spec) for spec in canonicalized_target_specs.values()), \

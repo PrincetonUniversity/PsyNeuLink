@@ -56,7 +56,7 @@ z = pnl.Pathway(
     pathway=[
         Input_Layer,
         # The following reference to Input_Weights is needed to use it in the pathway
-        #    since it's sender and receiver args are not specified in its declaration above
+        #    since its sender and receiver args are not specified in its declaration above
         Input_Weights,
         Hidden_Layer_1,
         # Middle_Weights,

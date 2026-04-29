@@ -781,7 +781,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
-        <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
+        <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  its
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
         numeric values, corresponding to values provided by the LearningMechanism's *ACTIVATION_INPUT*,
         *ACTIVATION_OUTPUT*, and *ERROR_SOURCES* InputPorts, respectively (see `LearningMechanism_InputPorts
