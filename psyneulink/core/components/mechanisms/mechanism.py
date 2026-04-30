@@ -2594,14 +2594,15 @@ class Mechanism_Base(Mechanism):
 
                 self.parameters.value._set(value, context=context)
 
-            # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
-
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
             num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
+
+            # OutputPorts that read num_executions_before_finished should see the
+            # execution count from the iteration that just completed.
+            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
             if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
@@ -3349,7 +3350,16 @@ class Mechanism_Base(Mechanism):
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        # Run output ports after updating the mech state (num_executions and value)
+        # OutputPorts that read num_executions_before_finished should see the
+        # execution count from the iteration that just completed.
+        is_finished_count_ptr = ctx.get_param_or_state_ptr(
+            builder, self, "num_executions_before_finished", state_struct_ptr=m_state
+        )
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+
+        # Run output ports after updating the mechanism state used by port variable specs.
         builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         # is_finished should be checked after output ports ran
@@ -3504,9 +3514,6 @@ class Mechanism_Base(Mechanism):
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
-
-        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count, is_finished_max)
 
