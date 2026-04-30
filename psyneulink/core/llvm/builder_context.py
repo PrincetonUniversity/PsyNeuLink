@@ -22,6 +22,7 @@ import weakref
 
 from psyneulink._typing import Set
 from psyneulink.core.scheduling.time import Time, TimeScale
+from psyneulink.core.globals import keywords as kw
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
@@ -373,13 +374,19 @@ class LLVMBuilderContext:
         block list in the Component class.
         """
 
-        # Skip the check if the parameter use is not tracked. Some components (like node wrappers)
-        # don't even have parameters.
-        if component not in self._component_state_use and component not in self._component_param_use:
-            return
-
         # Skip the check for variant functions
         if len(tags) != 0:
+            return
+
+        # Composition 'nodes' and 'projection' are used in functions tagged
+        # 'node assembly'.
+        if getattr(component, 'componentType', "") == kw.COMPOSITION:
+            return
+
+        # Autodiff learning optimizers are compiled objects but don't have
+        # parameter or state ids
+        if not hasattr(component, 'llvm_param_ids'):
+            assert not hasattr(component, 'llvm_state_ids')
             return
 
         component_param_ids = set(component.llvm_param_ids)
