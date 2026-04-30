@@ -1463,7 +1463,8 @@ class AutodiffComposition(Composition):
             retain_torch_losses = retain_torch_losses,
             **kwargs)
 
-        self._update_backprop_pathways = True
+        self._update_python_backprop_pathways = True
+        self._update_pytorch_backprop_pathways = True
         self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
@@ -1552,7 +1553,9 @@ class AutodiffComposition(Composition):
 
         Return list of LossMechanisms and TARGET_MECHANISMs
         """
-        if self._update_backprop_pathways:
+        if (execution_mode is pnlvm.ExecutionMode.Python and self._update_python_backprop_pathways
+                # or execution_mode is pnlvm.ExecutionMode.PyTorch and self._update_pytorch_backprop_pathways):
+                or execution_mode is not pnlvm.ExecutionMode.Python and self._update_pytorch_backprop_pathways):
 
             if not self._has_learnable_pathways:
                 raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
@@ -1572,7 +1575,7 @@ class AutodiffComposition(Composition):
 
             else:
             # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
-                # There is hould not be *any* LossMechanisms specified
+                # There should not be *any* LossMechanisms specified
                 self._check_for_errant_loss_mechs(CompositionError)
                 # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
                 #    that will construct learning components, including TARGET_MECHANISMs for all TERMINAL Nodes
@@ -1580,7 +1583,10 @@ class AutodiffComposition(Composition):
                     self.add_backpropagation_learning_pathway(pathway=pathway, loss_spec=self.loss_spec)
 
             self._analyze_graph()
-            self._update_backprop_pathways = False
+            if execution_mode is pnlvm.ExecutionMode.Python:
+                self._update_python_backprop_pathways = False
+            else:
+                self._update_pytorch_backprop_pathways = False
         return self.learning_components
 
     @handle_external_context()
