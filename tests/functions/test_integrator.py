@@ -240,7 +240,7 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
         np.testing.assert_allclose(res, expected, **tolerance)
 
     elif mode == "test_reset":
-        ex_res = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({'reset'}), member='reset')
+        ex_res = pytest.helpers.get_func_execution(f, func_mode, tags={'reset'}, member='reset')
 
         # Compiled mode ignores input variable, but python uses it if it's provided
         post_reset = benchmark(ex_res, None if func_mode == "Python" else variable)

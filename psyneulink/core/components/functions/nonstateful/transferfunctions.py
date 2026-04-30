@@ -272,7 +272,7 @@ class DeterministicTransferFunction(TransferFunction):
 # **********************************************************************************************************************
 
 
-class Identity(DeterministicTransferFunction):  #
+class Identity(TransferFunction):  #
     # ----------------------------------------------------------------------
     """
     Identity(                  \

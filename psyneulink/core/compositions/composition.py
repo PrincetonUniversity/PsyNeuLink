@@ -3216,7 +3216,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import \
     MappingProjection, MappingError, PROXY_FOR, ProxyProjection
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
-    Projection_Base, ProjectionError, DuplicateProjectionError, ProjectionRegistry
+    Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -3251,9 +3251,9 @@ from psyneulink.core.globals.parameters import (
 )
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
-from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.registry import global_registry, register_category
 from psyneulink.core.globals.utilities import (
-    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, get_from_registry, is_numeric_scalar,
+    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, is_numeric_scalar,
     nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal, try_extract_0d_array_item,
 )
 from psyneulink.core.scheduling.condition import Always, Condition, Never
@@ -10427,11 +10427,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         opt_params = {}
 
         if isinstance(projection, str):
-            import psyneulink as pnl
-
             # TODO: replace this with maybe storing only projections in
             # OptParam, then allowing get by name as well
-            reg_projection = get_from_registry(projection, pnl.ProjectionRegistry)
+            reg_projection = global_registry.get_entry(projection, Projection)
             if reg_projection:
                 projection = reg_projection
 
@@ -12047,7 +12045,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if num_execs is None:
                 node.parameters.num_executions._set(Time(), context)
             else:
-                node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
+                node._reset_num_executions(context, TimeScale.RUN)
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
@@ -12483,7 +12481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj_key, _ in val_items:
                 if proj_key == o_param._default_key:
                     continue
-                reg_proj = get_from_registry(proj_key, ProjectionRegistry)
+                reg_proj = global_registry.get_entry(proj_key, Projection)
                 if reg_proj:
                     proj_key = reg_proj
                 if proj_key not in all_projections:
@@ -13058,7 +13056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reset_stateful_functions_to = {}
 
             for node in self.nodes:
-                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
+                node._reset_num_executions(context, TimeScale.TRIAL)
                 if node.parameters.has_initializers._get(context):
                     try:
                         if (
@@ -13150,7 +13148,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # the scheduler terminates a trial immediately
             next_pass_before = 1
             next_pass_after = 1
-            last_pass = None
 
             if clamp_input:
                 soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
@@ -13259,11 +13256,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
-                new_pass = False
-                if curr_pass != last_pass:
-                    new_pass = True
-                    last_pass = curr_pass
                 if next_pass_after == curr_pass:
+                    for n in self.nodes:
+                        n._reset_num_executions(context, TimeScale.PASS)
                     if call_after_pass:
                         logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                         call_with_pruned_args(call_after_pass, context=context)
@@ -13349,11 +13344,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
 
-                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
-                    if new_pass:
-                        node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
-
-
+                    node._reset_num_executions(context, TimeScale.TIME_STEP)
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
                     frozen_values[node] = copy_parameter_value(node.get_output_values(context))

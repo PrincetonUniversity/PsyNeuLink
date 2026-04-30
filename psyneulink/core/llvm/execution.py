@@ -183,8 +183,14 @@ class Execution:
 
                         # Reshape to match the shape of the old value.
                         # Do not try to reshape ragged arrays.
-                        if getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
+                        if pnl_param.name == 'seed':
+                            # Seed should always be a scalar when compiled,
+                            # that's what the seed setter expects. Event if
+                            # the current PNL value is a 1d array.
+                            assert value.shape == (), "Compiled seed should always be a scalar"
+                            assert pnl_value.shape == (1,) or pnl_value.shape == ()
 
+                        elif getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
                             # Reshape to match numpy 0d arrays and "matrix"
                             # parameters that are flattened in compiled form
                             assert pnl_value.shape == () or pnl_param.name == "matrix", \
@@ -653,9 +659,12 @@ class CompExecution(CUDAExecution):
         num_inputs = np.asarray(num_input_sets, dtype=np.uint32)
         if "stat" in self._debug_env:
             print("Evaluate result struct type size:",
-                  _pretty_size(ctypes.sizeof(outputs.nbytes)),
-                  "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
-                  "for", self._obj.name)
+                  _pretty_size(outputs.nbytes),
+                  "( evaluations:", num_evaluations,
+                  "element size:",
+                  _pretty_size(outputs.itemsize),
+                  ") for",
+                  self._obj.name)
 
         return comp_params, comp_state, comp_data, ct_inputs, outputs, num_inputs
 

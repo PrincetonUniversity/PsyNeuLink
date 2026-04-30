@@ -1597,8 +1597,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
 
-        m_params, builder = self._gen_llvm_param_ports_for_obj(
-                self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+        m_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                               builder,
+                                                               m_base_params,
+                                                               m_state,
+                                                               m_in,
+                                                               obj=self,
+                                                               params_in=m_base_params)
 
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
         current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
@@ -1628,7 +1633,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if not is_in_params and not is_in_state:
 
-            # This can be any builtint function, but currently only max() is supported
+            # This can be any builtin function, but currently only max() is supported
             assert measure_ptrs is None
             assert self.termination_measure is max
             assert self._termination_measure_num_items_expected == 1
@@ -1690,37 +1695,72 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params,
-                                      m_state, m_in, m_val, ip_out, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self,
+                                      ctx,
+                                      builder,
+                                      m_base_params,
+                                      m_params,
+                                      m_state,
+                                      m_in,
+                                      m_val,
+                                      ip_out,
+                                      *,
+                                      tags:frozenset):
 
         if self.integrator_mode:
-            if_base_params, if_state = ctx.get_param_or_state_ptr(builder, self, "integrator_function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-            if_params, builder = self._gen_llvm_param_ports_for_obj(
-                    self.integrator_function, if_base_params, ctx, builder,
-                    m_base_params, m_state, m_in)
+            if_base_params, if_state = ctx.get_param_or_state_ptr(builder,
+                                                                  self,
+                                                                  "integrator_function",
+                                                                  param_struct_ptr=m_base_params,
+                                                                  state_struct_ptr=m_state)
 
-            mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params,
-                    if_state, ip_out, None, tags=tags)
+            if_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                    builder,
+                                                                    m_base_params,
+                                                                    m_state,
+                                                                    m_in,
+                                                                    obj=self.integrator_function,
+                                                                    params_in=if_base_params,
+                                                                    recursive=True)
+            mf_in, builder = self._gen_llvm_invoke_function(ctx,
+                                                            builder,
+                                                            self.integrator_function,
+                                                            if_params,
+                                                            if_state,
+                                                            ip_out,
+                                                            None,
+                                                            tags=tags)
         else:
             mf_in = ip_out
 
-        mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-        mf_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, mf_base_params, ctx, builder, m_base_params, m_state, m_in)
-
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
-                                                         self.function, mf_params,
-                                                         mf_state, mf_in, m_val,
+        mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder,
+                                                              self,
+                                                              "function",
+                                                              param_struct_ptr=m_base_params,
+                                                              state_struct_ptr=m_state)
+        mf_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                builder,
+                                                                m_base_params,
+                                                                m_state,
+                                                                m_in,
+                                                                obj=self.function,
+                                                                params_in=mf_base_params,
+                                                                recursive=True)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx,
+                                                         builder,
+                                                         self.function,
+                                                         mf_params,
+                                                         mf_state,
+                                                         mf_in,
+                                                         m_val,
                                                          tags=tags)
 
         clip_ptr = ctx.get_param_or_state_ptr(builder, self, CLIP, param_struct_ptr=m_params)
         if len(clip_ptr.type.pointee) != 0:
             assert len(clip_ptr.type.pointee) == 2
-            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(0)]))
-            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(1)]))
+            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):

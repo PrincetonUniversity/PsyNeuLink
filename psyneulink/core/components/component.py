@@ -527,11 +527,11 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
+import psyneulink.core.globals.keywords as kw
 from psyneulink.core.globals.keywords import (
     CONTEXT,
     CONTROL_PROJECTION,
     DEFERRED_INITIALIZATION,
-    DETERMINISTIC,
     EXECUTE_UNTIL_FINISHED,
     FUNCTION,
     FUNCTION_PARAMS,
@@ -552,7 +552,6 @@ from psyneulink.core.globals.keywords import (
     OWNER,
     PARAMS,
     PREFS_ARG,
-    RANDOM,
     RESET_STATEFUL_FUNCTION_WHEN,
     INPUT_SHAPES,
     VALUE,
@@ -1431,9 +1430,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # * use "value" state
         # * can execute 'until finished'
         # * need to track number of executions
-        if hasattr(self, 'ports'):
-            whitelist.update({"value", "num_executions_before_finished",
-                              "num_executions", "is_finished_flag"})
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
+            whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
             # it's DDM with integrator function.
@@ -1455,16 +1453,25 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.add('integrator_function')
 
         # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
+        if (cost_functions := getattr(self, 'enabled_cost_functions', None)) is not None:
             if cost_functions.INTENSITY not in cost_functions:
                 blacklist.add('intensity_cost_fct')
+
             if cost_functions.ADJUSTMENT not in cost_functions:
                 blacklist.add('adjustment_cost_fct')
+
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
-        if getattr(self, "mode", None) == DETERMINISTIC and getattr(self, "tie", None) != RANDOM:
+        if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
+            if self.mode != kw.DETERMINISTIC:
+                if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    whitelist.remove('random_state')
+
+            elif self.tie != kw.RANDOM:
+                whitelist.remove('random_state')
+
+        elif componentName == kw.DROPOUT_FUNCTION:
             whitelist.remove('random_state')
 
         # Drop previous_value from MemoryFunctions
@@ -1596,18 +1603,34 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # OneHot:
         # * runtime abs_val and indicator are only used in deterministic mode.
         # * random_state and seed are only used in RANDOM tie resolution.
-        if getattr(self, "mode", None) != DETERMINISTIC:
-            blacklist.update(['abs_val', 'indicator'])
-        elif getattr(self, "tie", None) != RANDOM:
-            blacklist.add("seed")
+        if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
+            if self.mode != kw.DETERMINISTIC:
+                blacklist.update(['abs_val', 'indicator'])
+                if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    blacklist.add("seed")
+
+            elif self.tie != kw.RANDOM:
+                blacklist.add("seed")
+
+        # Dropout:
+        # random state is only used in learning mode
+        elif componentName == kw.DROPOUT_FUNCTION:
+            blacklist.update(["seed", "p"])
 
         # Mechanism's need few extra entries:
-        # * matrix -- is never used directly, and is flatened below
+        # * matrix -- is never used directly
         # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
-        if hasattr(self, 'ports'):
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
+
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state or seed are not used
+            if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
+                blacklist.add("seed")
+
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
@@ -1624,12 +1647,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.add('integrator_function')
 
         # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
+        if (cost_functions := getattr(self, 'enabled_cost_functions', None)) is not None:
             if cost_functions.INTENSITY not in cost_functions:
                 blacklist.add('intensity_cost_fct')
+
             if cost_functions.ADJUSTMENT not in cost_functions:
                 blacklist.add('adjustment_cost_fct')
+
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
@@ -1673,14 +1697,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 return x if x is not None else tuple()
 
         def _get_values(p):
-            param = p.get(context)
+            value = p.get(context)
             if p.name == 'num_trials_per_estimate': # Should always be int
-                return 0 if param is None else int(param)
+                return 0 if value is None else int(value)
 
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asarray(param, dtype=float).ravel())
+                return tuple(np.asarray(value, dtype=float).ravel())
 
-            return _convert(param)
+            elif p.name == 'seed':
+                value = np.asarray(value, dtype=float).squeeze()
+
+            return _convert(value)
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
@@ -3544,20 +3571,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         except TypeError:
             pass
 
-        parameter_port_list = None
         try:
             # parameter is SharedParameter and ultimately points to
             # something with a corresponding ParameterPort
             parameter_port_list = parameter.final_source._owner._owner.parameter_ports
         except AttributeError:
-            # prefer parameter ports from self over owner
             try:
-                parameter_port_list = self._parameter_ports
+                parameter_port_list = parameter.final_source.port._owner.parameter_ports
             except AttributeError:
+                # prefer parameter ports from self over owner
                 try:
-                    parameter_port_list = self.owner._parameter_ports
+                    parameter_port_list = self._parameter_ports
                 except AttributeError:
-                    pass
+                    try:
+                        parameter_port_list = self.owner._parameter_ports
+                    except AttributeError:
+                        parameter_port_list = None
 
         if parameter_port_list is not None:
             try:
@@ -3688,6 +3717,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             curr_num_execs._set_by_time_scale(time_scale, new_val)
         self.parameters.num_executions.set(curr_num_execs, override=True)
         return curr_num_execs
+
+    def _reset_num_executions(self, context: Context, time_scale: TimeScale):
+        curr_num_execs = self.parameters.num_executions._get(context)
+        curr_num_execs._set_by_time_scale(time_scale, 0)
+        curr_num_execs._reset_by_time_scale(time_scale)
 
     @property
     def current_execution_time(self):
