@@ -601,7 +601,7 @@ class TestAutodiffTargetSpecs:
             "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])', "
             "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
             AutodiffCompositionError),
-        6: (f"The learn() method of 'autodiff_composition can't be executed because it's 'targets' argument is "
+        6: (f"The learn() method of 'autodiff_composition can't be executed because its 'targets' argument is "
            f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: "
             f"'pway2_mech_C'.", CompositionError),
         7: (f"The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
