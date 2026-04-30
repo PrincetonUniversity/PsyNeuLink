@@ -1463,7 +1463,7 @@ class AutodiffComposition(Composition):
             retain_torch_losses = retain_torch_losses,
             **kwargs)
 
-        self._built_pathways = False
+        self._update_backprop_pathways = True
         self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
@@ -1552,28 +1552,35 @@ class AutodiffComposition(Composition):
 
         Return list of LossMechanisms and TARGET_MECHANISMs
         """
-        context = context or Context()
-        base_context = base_context or Context()
+        if self._update_backprop_pathways:
 
-        # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET_MECHANISM)
-        self.pytorch_backprop_pathways = self._get_pytorch_backprop_pathways(context)
+            if not self._has_learnable_pathways:
+                raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
+                                               f"therefore its learn() method cannot be executed.")
 
-        if execution_mode is pnlvm.ExecutionMode.PyTorch:
-            # Construct LossMechanisms, and TARGET_MECHANISMs if needed, for inclusion in pathway construction below
-            self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
-            # There should not be any "free-standing" LossMechanisms, only those specified in **targets**
-            self._check_for_errant_loss_mechs(AutodiffCompositionError)
+            context = context or Context()
+            base_context = base_context or Context()
 
-        else:
-        # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
-            # There is hould not be *any* LossMechanisms specified
-            self._check_for_errant_loss_mechs(CompositionError)
-            # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
-            #    that will construct learning components, including TARGET_MECHANISMs for all TERMINAL Nodes
-            for pathway in self.pytorch_backprop_pathways:
-                self.add_backpropagation_learning_pathway(pathway=pathway, loss_spec=self.loss_spec)
+            # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET_MECHANISM)
+            self.pytorch_backprop_pathways = self._get_pytorch_backprop_pathways(context)
 
-        self._analyze_graph()
+            if execution_mode is pnlvm.ExecutionMode.PyTorch:
+                # Construct LossMechanisms, and TARGET_MECHANISMs if needed, for inclusion in pathway construction below
+                self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
+                # There should not be any "free-standing" LossMechanisms, only those specified in **targets**
+                self._check_for_errant_loss_mechs(AutodiffCompositionError)
+
+            else:
+            # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+                # There is hould not be *any* LossMechanisms specified
+                self._check_for_errant_loss_mechs(CompositionError)
+                # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
+                #    that will construct learning components, including TARGET_MECHANISMs for all TERMINAL Nodes
+                for pathway in self.pytorch_backprop_pathways:
+                    self.add_backpropagation_learning_pathway(pathway=pathway, loss_spec=self.loss_spec)
+
+            self._analyze_graph()
+            self._update_backprop_pathways = False
         return self.learning_components
 
     @handle_external_context()
@@ -3361,12 +3368,7 @@ class AutodiffComposition(Composition):
                                                f"because it contains nested Composition(s) "
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
-        if self._built_pathways is False:
-            if not self._has_learnable_pathways:
-                raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
-                                               f"therefore its learn() method cannot be executed.")
-            self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
-            self._built_pathways = True
+        self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
 
         synch_with_pnl_options, retain_in_pnl_options = self.parse_synch_and_retain_args(
             context,
