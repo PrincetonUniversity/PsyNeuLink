@@ -1582,6 +1582,21 @@ class AutodiffComposition(Composition):
                 for pathway in self.pytorch_backprop_pathways:
                     self.add_backpropagation_learning_pathway(pathway=pathway, loss_spec=self.loss_spec)
 
+            # Ensure that the number of sample_target pairs specified in the constructor equals the number of
+            #   associated Comparator and/or LossMechanisms (note there can be one of each for a single pair)
+            # - get number of Comparators and/or LossMechanisms with distinct SAMPLE and TARGET afferent Projections
+            learning_objective_nodes = self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)
+            distinct_learning_objectives = []
+            for node in learning_objective_nodes:
+                if not any(node.sample == learning_objective.sample and node.target == learning_objective.target
+                           for learning_objective in distinct_learning_objectives):
+                    distinct_learning_objectives.append(node)
+            # - assert number of distinct Comparator mechanisms equals the number TARGET_MECHANISMs
+            assert len(distinct_learning_objectives) == len(self._samples_and_targets.pairs), \
+                (f"PROGRAM ERROR: The number of sample-target pairs ({len(self._samples_and_targets.pairs)}) "
+                 f"specified in the 'targets' argument of the constructor for '{self.name}' does not equal the number "
+                 f"of LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
+
             self._analyze_graph()
             if execution_mode is pnlvm.ExecutionMode.Python:
                 self._update_python_backprop_pathways = False

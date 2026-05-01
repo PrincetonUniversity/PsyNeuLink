@@ -3331,7 +3331,8 @@ class SamplesAndTargets():
         self._pairs = []
 
     def add_pair(self, pair: Pair):
-        self._pairs.append(pair)
+        if pair not in self._pairs:
+            self._pairs.append(pair)
 
     def add_spec(self, spec: Spec):
         self._specs.append(spec)
