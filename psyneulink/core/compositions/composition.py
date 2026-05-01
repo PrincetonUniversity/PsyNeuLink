@@ -3343,7 +3343,7 @@ class SamplesAndTargets():
     def remove_spec(self, spec: Spec):
         self._specs.remove(spec)
 
-    def _get_redundant_specs(self, include_specs_from:Union[bool, str]=False)->list[Spec]:
+    def _get_redundant_specs(self, include_specs_from:Union[bool, str]=False)->list:
         """Identify redundant specs for SAMPLE_MECHANISM-TARGET_MECHANISM pairs
 
         Arguments
@@ -7632,7 +7632,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # The preceding entry is a Node or set of them:
                 #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
-                                   else {pathway[c - 1] if not isinstance(pathway[c - 1], tuple) 
+                                   else {pathway[c - 1] if not isinstance(pathway[c - 1], tuple)
                                          else pathway[c - 1][0]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
@@ -9435,7 +9435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Learning_Pathway>` in the Composition.
         # TARGET_INTERNAL DOCUMENTATION BREADCRUMB: ADD ADDITIONAL DOCUMENTATION HERE
         """
-        if scope == None or scope == INPUT:
+        if scope is None or scope == INPUT:
             target_nodes = self.get_nodes_by_role(NodeRole.TARGET_INPUT)
         elif scope == INTERNAL:
             target_nodes = self.get_nodes_by_role(NodeRole.TARGET_INTERNAL)
@@ -10467,7 +10467,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _parse_learn_targets_specs(self, inputs, targets, execution_mode, context, base_context):
         """Convert inputs and targets for learning to a standardized form
 
-        Get sample-target specs from inputs, inputs[TARGETS] and targets dicts - 
+        Get sample-target specs from inputs, inputs[TARGETS] and targets dicts -
             _aggregate_and_filter_sample_target_specs()
         Identify any illegal specifications - _handle_illegal_sample_target_specs_from_learn()
         Resolve redundant specifications for a given TARGET_MECHANISM - _handle_redundant_sample_target_specs()
@@ -14600,7 +14600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def sample_mechanisms(self)->list:
         sample_mechs = self._get_samples_dict().keys()
         assert set(sample_mechs) == set(s.sample_mech for s in self._sample_target_pairs)
-        return sorted(list(sample_mechs)) 
+        return sorted(list(sample_mechs))
 
     @property
     def target_mechanisms(self):

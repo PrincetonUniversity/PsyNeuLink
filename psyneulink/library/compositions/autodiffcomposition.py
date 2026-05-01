@@ -3180,8 +3180,8 @@ class AutodiffComposition(Composition):
                               else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
             source_str = f"{source_str} argument{s}"
             one_or_ones = ("those" if extra_specs
-                           else("one" if (len(constructor_specs) == 1 or len(bad_specs) == 1)
-                                else "ones"))
+                           else ("one" if (len(constructor_specs) == 1 or len(bad_specs) == 1)
+                                 else "ones"))
             raise AutodiffCompositionError(f"The learn() method of '{self.name}' can't be executed because "
                                            f"the following specification{_['s']} in its {source_str} "
                                            f"conflict{_['not_s']} with {one_or_ones} in the 'targets' argument "
