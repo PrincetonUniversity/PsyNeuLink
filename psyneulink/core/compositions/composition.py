@@ -3343,7 +3343,7 @@ class SamplesAndTargets():
     def remove_spec(self, spec: Spec):
         self._specs.remove(spec)
 
-    def _get_redundant_specs(self, include_specs_from:Union[bool, str]=False)->list[Spec]:
+    def _get_redundant_specs(self, include_specs_from:Union[bool, str]=False)->list:
         """Identify redundant specs for SAMPLE_MECHANISM-TARGET_MECHANISM pairs
 
         Arguments
