@@ -1630,10 +1630,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 blacklist.add('integrator_function')
 
         else:
-            # Execute until finished is only used by mechanisms
+            # "execute_until_finished is only used by Mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
 
-            # "has_initializers" is only used by RTM
+            # "has_initializers" is only used by Mechanisms
             blacklist.add('has_initializers')
 
             # OneHot:
