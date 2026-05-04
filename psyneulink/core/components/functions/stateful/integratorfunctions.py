@@ -2620,7 +2620,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         builder = super()._gen_llvm_function_reset(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
-        # Return the reconstructed combination of previous value and previous tim
+        # Return the reconstructed combination of previous value and previous time
         prev_value_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
         value_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(prev_value_ptr), value_out_ptr)
