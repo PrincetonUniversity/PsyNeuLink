@@ -723,7 +723,8 @@ class TestExecution:
         params.update({'softmax_threshold': None})
         # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
-        em = EMComposition(**params)
+        # em = EMComposition(**params)
+        em = pnl.EMComposition2(**params)
 
         # Construct inputs
         input_nodes = em.query_input_nodes + em.value_input_nodes

@@ -21,20 +21,20 @@
 """
 Refactored EMComposition prototype.
 
-This module introduces EMFieldMechanism, a field-local episodic memory mechanism
+This module introduces EpisodicMemoryFieldMechanism, a field-local episodic memory mechanism
 that owns the memory matrix for a single field.  The refactored EMComposition
-uses one EMFieldMechanism per memory field instead of using EMStorageMechanism
+uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
 High-level execution per field:
 
-1. QUERY input is sent to EMFieldMechanism.input_port[QUERY].
-2. EMFieldMechanism computes a match-weight vector over its memory rows and emits SCORES.
+1. QUERY input is sent to EpisodicMemoryFieldMechanism.input_port[QUERY].
+2. EpisodicMemoryFieldMechanism computes a match-weight vector over its memory rows and emits SCORES.
 3. SCORES from key fields are weighted and combined by COMBINE MATCHES.
 4. The combined match vector is softmax-normalized by RETRIEVE.
-5. The normalized combined scores are sent back to each EMFieldMechanism.input_port[COMBINED_SCORES].
-6. Each EMFieldMechanism retrieves its field value and emits RETRIEVED.
-7. Each EMFieldMechanism stores its QUERY input into its own memory matrix according to storage_prob.
+5. The normalized combined scores are sent back to each EpisodicMemoryFieldMechanism.input_port[COMBINED_SCORES].
+6. Each EpisodicMemoryFieldMechanism retrieves its field value and emits RETRIEVED.
+7. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix according to storage_prob.
 """
 
 import copy
@@ -103,8 +103,8 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 __all__ = [
     "EMComposition2",
     "EMComposition2Error",
-    "EMFieldMechanism",
-    "EMFieldMechanismError",
+    "EpisodicMemoryFieldMechanism",
+    "EpisodicMemoryFieldMechanismError",
     "FieldType",
     "FIELD_WEIGHT",
     "KEY",
@@ -127,7 +127,7 @@ FIELD_WEIGHT = "field_weight"
 LEARN_FIELD_WEIGHT = "learn_field_weight"
 TARGET_FIELD = "target_field"
 
-# EMFieldMechanism port names
+# EpisodicMemoryFieldMechanism port names
 QUERY = "QUERY"
 SCORES = "SCORES"
 COMBINED_SCORES = "COMBINED_SCORES"
@@ -158,7 +158,7 @@ class EMComposition2Error(CompositionError):
         return repr(self.error_value)
 
 
-class EMFieldMechanismError(EpisodicMemoryMechanismError):
+class EpisodicMemoryFieldMechanismError(EpisodicMemoryMechanismError):
     pass
 
 
@@ -243,11 +243,16 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1) -> float:
     return scale * (base + entropy_weighting * np.log(entropy))
 
 
-class EMFieldMechanism(EpisodicMemoryMechanism):
+class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     """
-    EMFieldMechanism
+    EpisodicMemoryFieldMechanism
 
-    A field-local episodic memory Mechanism used by the refactored EMComposition.
+    A field-local EpisodicMemoryMechanism used by EMComposition2, that stores each field's memory
+    directly on the Mechanism as field_memory
+
+    IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition, in which each field's memory
+                          was stored in Projection matrices managed by EMStorageMechanism.
+
 
     Ports
     -----
@@ -264,10 +269,6 @@ class EMFieldMechanism(EpisodicMemoryMechanism):
     output_port[RETRIEVED]
         Dot product of COMBINED_SCORES with field_memory.
 
-    Notes
-    -----
-    This prototype stores each field's memory directly on the mechanism as
-    field_memory, rather than in Projection matrices managed by EMStorageMechanism.
     """
 
     componentName = "EM_FIELD_MECHANISM"
@@ -318,10 +319,12 @@ class EMFieldMechanism(EpisodicMemoryMechanism):
         self.field_shape = field_shape
         self.memory_capacity = len(field_memory)
 
-        default_variable = [
-            np.zeros(field_shape),
-            np.zeros(self.memory_capacity),
-        ]
+        # MODIFIED EM2 OLD:
+        # default_variable = [
+        #     np.zeros(field_shape),
+        #     np.zeros(self.memory_capacity),
+        # ]
+        # MODIFIED EM2 END
 
         super().__init__(
             default_variable=default_variable,
@@ -343,9 +346,10 @@ class EMFieldMechanism(EpisodicMemoryMechanism):
             prefs=prefs,
             **kwargs,
         )
-        self.parameters.field_memory._set(np.asarray(field_memory, dtype=float), Context(), override=True)
         # BREADCRUMB -- OR SHOULD THIS BE:
         # self.parameters.field_memory._set(np.asarray(self.memory, dtype=float), override=True)
+        # self.parameters.memory_matrix._set(np.asarray(field_memory, dtype=float), context=None)
+        self.parameters.field_memory._set(np.asarray(field_memory, dtype=float), Context(), override=True)
 
 
     def _handle_default_variable(self, default_variable=None, input_shapes=None, input_ports=None, function=None, params=None):
@@ -372,15 +376,15 @@ class EMFieldMechanism(EpisodicMemoryMechanism):
     def _validate_variable(self, variable, context=None):
         variable = np.asarray(variable, dtype=object)
         if len(variable) != 2:
-            raise EMFieldMechanismError(
+            raise EpisodicMemoryFieldMechanismError(
                 f"Variable for {self.name} must contain two items: QUERY and COMBINED_SCORES."
             )
         if len(variable[0]) != self.field_shape:
-            raise EMFieldMechanismError(
+            raise EpisodicMemoryFieldMechanismError(
                 f"QUERY input for {self.name} has length {len(variable[0])}; expected {self.field_shape}."
             )
         if len(variable[1]) != self.memory_capacity:
-            raise EMFieldMechanismError(
+            raise EpisodicMemoryFieldMechanismError(
                 f"COMBINED_SCORES input for {self.name} has length {len(variable[1])}; "
                 f"expected {self.memory_capacity}."
             )
@@ -537,7 +541,7 @@ class EMComposition2(AutodiffComposition):
       - EMStorageMechanism
 
     with:
-      - one EMFieldMechanism per field, each owning its field memory matrix.
+      - one EpisodicMemoryFieldMechanism per field, each owning its field memory matrix.
 
     The externally visible structure is kept similar to the original EMComposition:
       - input_nodes
@@ -1220,7 +1224,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
-            field.field_mechanism = EMFieldMechanism(
+            field.field_mechanism = EpisodicMemoryFieldMechanism(
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
                 storage_prob=storage_prob,
@@ -1548,9 +1552,9 @@ class EMComposition2(AutodiffComposition):
         return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
-        # EM storage is field-local and executed by EMFieldMechanism after retrieval.
+        # EM storage is field-local and executed by EpisodicMemoryFieldMechanism after retrieval.
         # Field-weight learning can be restored by calling super() once the PyTorch wrapper
-        # supports EMFieldMechanism as a differentiable memory component.
+        # supports EpisodicMemoryFieldMechanism as a differentiable memory component.
         pass
 
     def add_node(self, node, required_roles=None, context=None):
@@ -1593,7 +1597,7 @@ class EMComposition2(AutodiffComposition):
 
     @property
     def match_nodes(self):
-        # Compatibility alias: the old "match_nodes" are now the key EMFieldMechanisms.
+        # Compatibility alias: the old "match_nodes" are now the key EpisodicMemoryFieldMechanisms.
         return [field.field_mechanism for field in self.key_fields]
 
     @property
