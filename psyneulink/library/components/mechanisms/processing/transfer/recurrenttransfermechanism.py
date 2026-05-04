@@ -1254,47 +1254,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
         return (*transfer_init, tuple(retval_init))
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reset" in tags
-
-        # Check if we have reinitializers
-        has_reinitializers_ptr = ctx.get_param_or_state_ptr(builder,
-                                                            self,
-                                                            "has_initializers",
-                                                            param_struct_ptr=params)
-        has_initializers = builder.load(has_reinitializers_ptr)
-        not_initializers = builder.fcmp_ordered("==", has_initializers,
-                                                has_initializers.type(0))
-        with builder.if_then(not_initializers):
-            builder.ret_void()
-
-        # Reinit main function. This is a no-op if it's not a stateful function.
-        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params, reinit_state = ctx.get_param_or_state_ptr(builder,
-                                                                 self,
-                                                                 "function",
-                                                                 param_struct_ptr=params,
-                                                                 state_struct_ptr=state)
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
-        reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
-        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
-
-        # Reinit integrator function
-        if self.integrator_mode:
-            reinit_f = ctx.import_llvm_function(self.integrator_function, tags=tags)
-            reinit_in = builder.alloca(reinit_f.args[2].type.pointee, name="integ_reinit_in")
-            reinit_out = builder.alloca(reinit_f.args[3].type.pointee, name="integ_reinit_out")
-            reinit_params, reinit_state = ctx.get_param_or_state_ptr(builder,
-                                                                     self,
-                                                                     "integrator_function",
-                                                                     param_struct_ptr=params,
-                                                                     state_struct_ptr=state)
-            builder.call(reinit_f, [reinit_params, reinit_state, reinit_in, reinit_out])
-
-        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
-        builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
-        return builder
-
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         recurrent_params, recurrent_state = ctx.get_param_or_state_ptr(builder,
                                                                        self,
