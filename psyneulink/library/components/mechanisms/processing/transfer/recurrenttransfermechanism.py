@@ -1251,7 +1251,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
-        retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
+        retval_init = (tuple(value) if not np.isscalar(value := op.parameters.value.get(context)) else value for op in self.output_ports)
         return (*transfer_init, tuple(retval_init))
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
@@ -1263,9 +1263,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
         # Extract the correct output port value
-        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
+        old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
         recurrent_index = self.output_ports.index(self.recurrent_projection.sender)
-        recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(recurrent_index)])
+        recurrent_in = builder.gep(old_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(recurrent_index)])
 
         # Get the correct recurrent output location
         recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
@@ -1287,11 +1287,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-    def _gen_llvm_output_ports(self, ctx, builder, value,
-                               mech_params, mech_state, mech_in, mech_out):
-        ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params,
-                                             mech_state, mech_in, mech_out)
+    def _gen_llvm_output_ports(self, ctx, builder, value, mech_params, mech_state, mech_in, mech_out):
+        ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params, mech_state, mech_in, mech_out)
 
-        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
-        builder.store(builder.load(mech_out), prev_val_ptr)
+        old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
+        builder.store(builder.load(mech_out), old_val_ptr)
         return ret
