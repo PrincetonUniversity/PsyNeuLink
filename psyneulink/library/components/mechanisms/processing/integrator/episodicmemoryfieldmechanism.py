@@ -206,8 +206,8 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         field_memory = np.asarray(field_memory, dtype=float)
 
-        scores = self._compute_scores(query, field_memory, context)
-        retrieved = self._retrieve(combined_scores, field_memory)
+        scores = self._compute_scores(query, field_memory, context).squeeze()
+        retrieved = self._retrieve(combined_scores, field_memory).squeeze()
         self._store(query, field_memory, context)
 
         value = convert_all_elements_to_np_array([scores, retrieved])

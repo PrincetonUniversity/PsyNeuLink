@@ -159,7 +159,7 @@ def _memory_getter(owning_component=None, context=None):
         return None
 
     field_memories = [
-        field.field_mechanism.parameters.field_memory.get(context)
+        field.field_mechanism.parameters.memory.get(context).squeeze()
         for field in owning_component.fields
     ]
 
@@ -293,7 +293,7 @@ class Field:
         return self.field_mechanism.output_ports[RETRIEVED].value
 
     @property
-    def memories(self):
+    def memory(self):
         return self.field_mechanism.memory
 
 
