@@ -153,18 +153,6 @@ class FieldType(Enum):
     VALUE = 1
 
 
-def _normalize_rows(matrix):
-    matrix = np.asarray(matrix, dtype=float)
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
-
-
-# def _field_memory_getter(owning_component=None, context=None):
-#     if owning_component is None or owning_component.is_initializing:
-#         return None
-#     return owning_component.parameters.field_memory._get(context)
-
-
 def _memory_getter(owning_component=None, context=None):
     """Return EMComposition memory as a 3d object array: entries x fields x field_values."""
     if owning_component is None or owning_component.is_initializing:

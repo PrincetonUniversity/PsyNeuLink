@@ -14,12 +14,12 @@ from psyneulink._typing import Optional, Union
 
 import numpy as np
 
-from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.functions.function import _random_state_getter, _seed_setter, DEFAULT_SEED
 from psyneulink.core.globals.keywords import (
     MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
+from psyneulink.core.globals.context import Context
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import (
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError)
 
@@ -34,6 +34,12 @@ RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
 DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
+
+
+def _normalize_rows(matrix):
+    matrix = np.asarray(matrix, dtype=float)
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
 
 
 class EpisodicMemoryFieldMechanismError(EpisodicMemoryMechanismError):
