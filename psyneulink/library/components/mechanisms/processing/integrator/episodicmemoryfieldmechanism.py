@@ -149,7 +149,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         # BREADCRUMB -- OR SHOULD THIS BE:
         # self.parameters.field_memory._set(np.asarray(self.memory, dtype=float), override=True)
         # self.parameters.memory_matrix._set(np.asarray(field_memory, dtype=float), context=None)
-        self.parameters.field_memory._set(np.asarray(field_memory, dtype=float), Context(), override=True)
+        # self.parameters.field_memory._set(np.asarray(field_memory, dtype=float), Context(), override=True)
 
 
     def _handle_default_variable(self, default_variable=None, input_shapes=None, input_ports=None, function=None, params=None):
@@ -196,7 +196,11 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         query = np.asarray(variable[0], dtype=float)
         combined_scores = np.asarray(variable[1], dtype=float)
 
-        field_memory = copy.deepcopy(self.parameters.field_memory._get(context))
+        # MODIFIED EM2 OLD:
+        # field_memory = copy.deepcopy(self.parameters.field_memory._get(context))
+        # MODIFIED EM2 NEW:
+        field_memory = copy.deepcopy(self.parameters.memory._get(context))
+        # MODIFIED EM2 END
         if field_memory is None:
             field_memory = np.zeros((self.memory_capacity, self.field_shape))
 
@@ -244,10 +248,14 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         idx_of_weakest_memory = int(np.argmin(np.linalg.norm(field_memory, axis=1)))
         field_memory[idx_of_weakest_memory] = query
 
-        self.parameters.field_memory._set(field_memory, context, override=True)
+        # MODIFIED EM2 OLD:
+        # self.parameters.field_memory._set(field_memory, context, override=True)
+        # MODIFIED EM2 NEW:
+        self.parameters.memory._set(field_memory, context, override=True)
+        # MODIFIED EM2 END
 
-    @property
-    def memory(self):
-        return self.parameters.field_memory.get(self.most_recent_context)
+    # @property
+    # def memory(self):
+    #     return self.parameters.field_memory.get(self.most_recent_context)
 
 
