@@ -220,6 +220,7 @@ class NormalDist(DistributionFunction):
         ret_val = builder.fmul(ret_val, std_dev)
         ret_val = builder.fadd(ret_val, mean)
 
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
         if ret_val.type != arg_out.type.pointee:
             assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
             assert len(arg_out.type.pointee) == 1
@@ -650,6 +651,7 @@ class UniformDist(DistributionFunction):
         ret_val = builder.fmul(ret_val, scale)
         ret_val = builder.fadd(ret_val, low)
 
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
         if ret_val.type != arg_out.type.pointee:
             assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
             assert len(arg_out.type.pointee) == 1
