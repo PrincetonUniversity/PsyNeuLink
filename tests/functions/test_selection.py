@@ -1,3 +1,5 @@
+from unittest import mock
+
 import numpy as np
 import pytest
 
@@ -272,3 +274,76 @@ def test_one_hot_mode_deterministic(benchmark, variable, tie, indicator, directi
         expected = np.where(np.asarray(expected) != 0, np.ones_like(expected), expected)
 
     np.testing.assert_allclose(res, expected)
+
+
+# Regression test for the float-rounding edge case in OneHot's PROB sampling.
+# np.cumsum of a probability distribution can land just below 1.0 due to
+# float-rounding (e.g. cumsum([0.7, 0.2, 0.1])[-1] == 0.9999999999999999).
+# random_state.uniform() draws from [0, 1), so it can return a value >=
+# cum_sum[-1]. The pre-fix code did
+#     next(element for element in cum_sum if element > random_value)
+# which raised StopIteration when no element of cum_sum was strictly greater
+# than the draw. The fix uses np.searchsorted with a clamp so the last index
+# is selected in that case.
+@pytest.mark.function
+@pytest.mark.parametrize("mode, expected_factory", [
+    (kw.PROB, lambda data: data * np.array([0., 0., 1.])),
+    (kw.PROB_INDICATOR, lambda data: np.array([0., 0., 1.])),
+])
+def test_one_hot_prob_cumsum_below_one_due_to_float_rounding(mode, expected_factory):
+    # cumsum drifts below 1.0 in float64 -- np.allclose(sum, 1) is still True
+    # so OneHot validation accepts it.
+    prob_dist = np.array([0.7, 0.2, 0.1])
+    cum_sum_last = float(np.cumsum(prob_dist)[-1])
+    assert cum_sum_last < 1.0, "test premise: cumsum should drift under 1.0"
+
+    data = np.array([10.0, 20.0, 30.0])
+    f = pnl.OneHot(default_variable=[data, prob_dist], mode=mode)
+
+    # Force uniform() to return cum_sum[-1] exactly (a value uniform() can
+    # legally produce). Pre-fix this triggered StopIteration; post-fix the
+    # last index wins.
+    class _StubRandomState:
+        used_seed = [0]
+        def uniform(self, *args, **kwargs):
+            return cum_sum_last
+
+    real = pnl.OneHot._get_current_parameter_value
+    def patched(self, name, context=None):
+        if name == "random_state":
+            return _StubRandomState()
+        return real(self, name, context)
+
+    with mock.patch.object(pnl.OneHot, "_get_current_parameter_value", patched):
+        res = f([data, prob_dist])
+
+    np.testing.assert_allclose(res, expected_factory(data))
+
+
+# Same boundary case, exercised on both Python and LLVM paths. Validation runs
+# at construction against `default_variable`, so we construct OneHot with a
+# well-formed prob_dist and then call it with a runtime prob_dist whose
+# cumulative sum falls strictly under 1.0. About half of all uniform() draws
+# then land in the (cum_sum[-1], 1.0) gap. Pre-fix the Python path raised
+# StopIteration on those draws and the LLVM path silently produced an
+# all-zero output; post-fix both paths fall back to the last index and
+# return a valid one-hot.
+@pytest.mark.function
+def test_one_hot_prob_runtime_cumsum_under_one_never_all_zero(func_mode):
+    default_prob = np.array([0.7, 0.2, 0.1])
+    default_data = np.array([10.0, 20.0, 30.0])
+    f = pnl.OneHot(default_variable=[default_data, default_prob],
+                   mode=kw.PROB_INDICATOR)
+
+    # cum_sum = [0.5, 0.5, 0.5]; any uniform draw >= 0.5 misses every bucket.
+    runtime_prob = np.array([0.5, 0.0, 0.0])
+    runtime_data = np.array([10.0, 20.0, 30.0])
+
+    EX = pytest.helpers.get_func_execution(f, func_mode)
+
+    # 32 draws is enough that with overwhelming probability some draws fall
+    # in the gap (the seed is fixed by the conftest, so this is deterministic
+    # per CI run).
+    for _ in range(32):
+        res = np.asarray(EX([runtime_data, runtime_prob]))
+        assert res.sum() == 1.0, f"unexpected output (all-zero or invalid): {res}"
