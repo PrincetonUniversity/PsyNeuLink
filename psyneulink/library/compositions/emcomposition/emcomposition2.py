@@ -1160,21 +1160,12 @@ class EMComposition2(AutodiffComposition):
         for node in self.get_nodes_by_role(NodeRole.INPUT):
             self.scheduler.add_condition(node, Always())
 
-        # BREADCRUMB: NEED TO DO THIS FIELD_NODE BY FIELD_NODE
-        for node in self.field_memory_nodes:
+        for node in self.field_mechanisms:
+            # BREADCRUMB: NEED TO IDENTIFY CORRESPONDING KEY_QUERY, VALUE, RETRIEVE AND KEY_RETRIEVED NODES
             self.scheduler.add_condition(
                 node, Any(
-                    pnl.All(
-                        pnl.AfterNCalls(key_query, 1),
-                        pnl.AfterNCalls(value_value, 1),
-                        pnl.BeforeNCalls(retrieve, 1),
-                    ),
-                    pnl.All(
-                        pnl.AfterNCalls(retrieve, 1),
-                        pnl.BeforeNCalls(key_retrieved, 1),
-                    ),
-                ),
-            )
+                    All(AfterNCalls(key_query, 1), AfterNCalls(value_value, 1), BeforeNCalls(retrieve, 1)),
+                    All(AfterNCalls(retrieve, 1), BeforeNCalls(key_retrieved, 1))))
 
         # Set attributes for show_graph()
         for node in self.value_input_nodes:
