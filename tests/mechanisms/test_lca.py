@@ -298,8 +298,6 @@ class TestLCA:
                             pnl.DECISION_TIME
                             ]
         )
-        if comp_mode not in {pnl.ExecutionMode.Python, pnl.ExecutionMode.LLVMRun}:
-            pytest.skip("LCAMechanism_standard_output_ports only works for ExecutionMode = Python or LLVMRun.")
         comp = pnl.Composition(lca)
         lca.execute_until_finished = True
 
