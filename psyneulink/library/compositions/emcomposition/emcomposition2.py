@@ -528,19 +528,7 @@ class EMComposition2(AutodiffComposition):
 
         self._set_learning_attributes()
 
-        for field_mechanism in self.field_mechanisms:
-            self.scheduler.add_condition(field_mechanism, conditions.AfterNodes(self.softmax_node))
-
-        for node in self.value_input_nodes:
-            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-
-        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-
-        for node in self.field_weight_nodes:
-            self.exclude_node_roles(node, NodeRole.INPUT)
-
-        for node in self.value_input_nodes:
-            self.exclude_node_roles(node, NodeRole.OUTPUT)
+        self._set_processing_attributes()
 
         memory = self.memory
         if memory is not None and not np.any([
@@ -1159,6 +1147,45 @@ class EMComposition2(AutodiffComposition):
                 },
             )
             field.retrieved_projection = field.retrieved_node.path_afferents[0]
+
+    def _set_processing_attributes(self):
+
+        # Set conditions
+        for field_mechanism in self.field_mechanisms:
+            self.scheduler.add_condition(field_mechanism, conditions.AfterNodes(self.softmax_node))
+
+        # BREADCRUMB: ADD CODE FROM AI HERE
+
+        # The input nodes are origins; they can run at the start of the trial.
+        for node in self.get_nodes_by_role(NodeRole.INPUT):
+            self.scheduler.add_condition(node, Always())
+
+        # BREADCRUMB: NEED TO DO THIS FIELD_NODE BY FIELD_NODE
+        for node in self.field_memory_nodes:
+            self.scheduler.add_condition(
+                node, Any(
+                    pnl.All(
+                        pnl.AfterNCalls(key_query, 1),
+                        pnl.AfterNCalls(value_value, 1),
+                        pnl.BeforeNCalls(retrieve, 1),
+                    ),
+                    pnl.All(
+                        pnl.AfterNCalls(retrieve, 1),
+                        pnl.BeforeNCalls(key_retrieved, 1),
+                    ),
+                ),
+            )
+
+        # Set attributes for show_graph()
+        for node in self.value_input_nodes:
+            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+
+        # Set NodeRoles
+        for node in self.field_weight_nodes:
+            self.exclude_node_roles(node, NodeRole.INPUT)
+        for node in self.value_input_nodes:
+            self.exclude_node_roles(node, NodeRole.OUTPUT)
 
     def _set_learning_attributes(self):
         self.execute_in_additional_optimizations = {}
