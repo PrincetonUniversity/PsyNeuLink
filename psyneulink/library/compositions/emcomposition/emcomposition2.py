@@ -46,7 +46,6 @@ import numpy as np
 
 import psyneulink.core.scheduling.condition as conditions
 
-from psyneulink._typing import Literal
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -94,6 +93,7 @@ from psyneulink.core.llvm import ExecutionMode
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemoryfieldmechanism import (
     EpisodicMemoryFieldMechanism, QUERY, SCORES, COMBINED_SCORES, RETRIEVED)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
+from psyneulink.core.scheduling.condition import All, Always, Any, BeforeNCalls, AfterNCalls
 
 
 __all__ = [
@@ -159,7 +159,7 @@ def _memory_getter(owning_component=None, context=None):
         return None
 
     field_memories = [
-        field.field_mechanism.parameters.memory.get(context).squeeze()
+        field.field_node.parameters.memory.get(context).squeeze()
         for field in owning_component.fields
     ]
 
@@ -241,7 +241,7 @@ class Field:
         self.target = target
 
         self.input_node = None
-        self.field_mechanism = None
+        self.field_node = None
         self.weight_node = None
         self.weighted_match_node = None
         self.retrieved_node = None
@@ -258,7 +258,7 @@ class Field:
         return [
             node for node in [
                 self.input_node,
-                self.field_mechanism,
+                self.field_node,
                 self.weight_node,
                 self.weighted_match_node,
                 self.retrieved_node,
@@ -286,15 +286,15 @@ class Field:
 
     @property
     def match(self):
-        return self.field_mechanism.output_ports[SCORES].value
+        return self.field_node.output_ports[SCORES].value
 
     @property
     def retrieved_memory(self):
-        return self.field_mechanism.output_ports[RETRIEVED].value
+        return self.field_node.output_ports[RETRIEVED].value
 
     @property
     def memory(self):
-        return self.field_mechanism.memory
+        return self.field_node.memory
 
 
 class EMComposition2(AutodiffComposition):
@@ -319,7 +319,7 @@ class EMComposition2(AutodiffComposition):
       - softmax_node
       - retrieved_nodes
 
-    Internally, field.field_mechanism is now the memory owner for each field.
+    Internally, field.field_node is now the memory owner for each field.
     """
 
     componentCategory = EM_COMPOSITION
@@ -912,18 +912,18 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             self.add_linear_processing_pathway([
                 field.input_node,
-                field.field_mechanism,
+                field.field_node,
             ])
 
         if self.num_keys == 1:
             self.add_linear_processing_pathway([
-                self.key_fields[0].field_mechanism,
+                self.key_fields[0].field_node,
                 self.softmax_node,
             ])
         else:
             for field in self.key_fields:
                 pathway = [
-                    field.field_mechanism,
+                    field.field_node,
                     self.combined_matches_node,
                 ]
                 if field.weighted_match_node:
@@ -938,7 +938,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             self.add_linear_processing_pathway([
                 self.softmax_node,
-                field.field_mechanism,
+                field.field_node,
                 field.retrieved_node,
             ])
 
@@ -978,7 +978,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
-            field.field_mechanism = EpisodicMemoryFieldMechanism(
+            field.field_node = EpisodicMemoryFieldMechanism(
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
                 storage_prob=storage_prob,
@@ -989,7 +989,7 @@ class EMComposition2(AutodiffComposition):
 
             field.query_projection = MappingProjection(
                 sender=field.input_node,
-                receiver=field.field_mechanism.input_ports[QUERY],
+                receiver=field.field_node.input_ports[QUERY],
                 matrix=IDENTITY_MATRIX,
                 name=f"{field.name} QUERY to FIELD MEMORY",
             )
@@ -1011,7 +1011,7 @@ class EMComposition2(AutodiffComposition):
                         VARIABLE: variable,
                         PARAMS: params,
                     },
-                    gate=field.field_mechanism.output_ports[SCORES],
+                    gate=field.field_node.output_ports[SCORES],
                 )
             else:
                 field.weight_node = ProcessingMechanism(
@@ -1038,7 +1038,7 @@ class EMComposition2(AutodiffComposition):
                     {
                         PROJECTIONS: MappingProjection(
                             name=f"{field.name} SCORES to WEIGHTED MATCH",
-                            sender=field.field_mechanism.output_ports[SCORES],
+                            sender=field.field_node.output_ports[SCORES],
                             matrix=IDENTITY_MATRIX,
                         )
                     },
@@ -1061,7 +1061,7 @@ class EMComposition2(AutodiffComposition):
             return
 
         input_source = (
-            [field.field_mechanism.output_ports[SCORES] for field in self.key_fields]
+            [field.field_node.output_ports[SCORES] for field in self.key_fields]
             if use_gating_for_weighting
             else self.weighted_match_nodes
         )
@@ -1088,7 +1088,7 @@ class EMComposition2(AutodiffComposition):
 
     def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice):
         if self.num_keys == 1:
-            input_source = self.key_fields[0].field_mechanism.output_ports[SCORES]
+            input_source = self.key_fields[0].field_node.output_ports[SCORES]
             proj_name = f"{self.key_fields[0].name} SCORES to {SOFTMAX_NODE_NAME}"
         else:
             input_source = self.combined_matches_node
@@ -1120,7 +1120,7 @@ class EMComposition2(AutodiffComposition):
         if softmax_gain == CONTROL:
             node = ControlMechanism(
                 name="SOFTMAX GAIN CONTROL",
-                monitor_for_control=self.combined_matches_node or self.key_fields[0].field_mechanism,
+                monitor_for_control=self.combined_matches_node or self.key_fields[0].field_node,
                 control_signals=[(GAIN, self.softmax_node)],
                 function=get_softmax_gain,
             )
@@ -1130,7 +1130,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             field.combined_scores_projection = MappingProjection(
                 sender=self.softmax_node,
-                receiver=field.field_mechanism.input_ports[COMBINED_SCORES],
+                receiver=field.field_node.input_ports[COMBINED_SCORES],
                 matrix=IDENTITY_MATRIX,
                 name=f"{SOFTMAX_NODE_NAME} to {field.name} COMBINED_SCORES",
             )
@@ -1140,7 +1140,7 @@ class EMComposition2(AutodiffComposition):
                 input_ports={
                     INPUT_SHAPES: len(field.input_node.variable[0]),
                     PROJECTIONS: MappingProjection(
-                        sender=field.field_mechanism.output_ports[RETRIEVED],
+                        sender=field.field_node.output_ports[RETRIEVED],
                         matrix=IDENTITY_MATRIX,
                         name=f"{field.name} RETRIEVED to OUTPUT",
                     ),
@@ -1151,8 +1151,8 @@ class EMComposition2(AutodiffComposition):
     def _set_processing_attributes(self):
 
         # Set conditions
-        for field_mechanism in self.field_mechanisms:
-            self.scheduler.add_condition(field_mechanism, conditions.AfterNodes(self.softmax_node))
+        for field_node in self.field_mechanisms:
+            self.scheduler.add_condition(field_node, conditions.AfterNodes(self.softmax_node))
 
         # BREADCRUMB: ADD CODE FROM AI HERE
 
@@ -1160,12 +1160,14 @@ class EMComposition2(AutodiffComposition):
         for node in self.get_nodes_by_role(NodeRole.INPUT):
             self.scheduler.add_condition(node, Always())
 
-        for node in self.field_mechanisms:
-            # BREADCRUMB: NEED TO IDENTIFY CORRESPONDING KEY_QUERY, VALUE, RETRIEVE AND KEY_RETRIEVED NODES
+        for field in self.fields:
             self.scheduler.add_condition(
-                node, Any(
-                    All(AfterNCalls(key_query, 1), AfterNCalls(value_value, 1), BeforeNCalls(retrieve, 1)),
-                    All(AfterNCalls(retrieve, 1), BeforeNCalls(key_retrieved, 1))))
+                field.field_node,
+                Any(All(AfterNCalls(field.input_node, 1),
+                        BeforeNCalls(self.softmax_node, 1)),
+                    All(AfterNCalls(self.softmax_node, 1),
+                        BeforeNCalls(field.retrieved_node, 1)))
+            )
 
         # Set attributes for show_graph()
         for node in self.value_input_nodes:
@@ -1377,12 +1379,12 @@ class EMComposition2(AutodiffComposition):
 
     @property
     def field_mechanisms(self):
-        return [field.field_mechanism for field in self.fields]
+        return [field.field_node for field in self.fields]
 
     @property
     def match_nodes(self):
         # Compatibility alias: the old "match_nodes" are now the key EpisodicMemoryFieldMechanisms.
-        return [field.field_mechanism for field in self.key_fields]
+        return [field.field_node for field in self.key_fields]
 
     @property
     def field_weight_nodes(self):
