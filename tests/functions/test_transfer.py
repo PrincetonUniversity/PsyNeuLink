@@ -183,7 +183,11 @@ test_data = [
                  id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR", marks=pytest.mark.llvm_not_implemented),
     pytest.param(pnl.SoftMax, test_var,
                  {kw.GAIN: RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE: kw.PROB, kw.PER_ITEM: False},
-                 [0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0],
+                 # PROB sampling returns a single chosen sample. (Earlier
+                 # versions used a cum_sum equality match that incorrectly
+                 # selected every index whose cum_sum tied the chosen value
+                 # -- common when prob_dist contains zeros.)
+                 [0.0, 0.0, 0.0, test_var[3], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                  id="SOFT_MAX MASK_THRESHOLD PROB", marks=pytest.mark.llvm_not_implemented),
     #
     # # SoftMax 2D threshold testing per-item
@@ -209,7 +213,8 @@ test_data = [
                  id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
     pytest.param(pnl.SoftMax, [test_var],
                  {kw.GAIN: RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE: kw.PROB, kw.PER_ITEM: True},
-                 [[0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]],
+                 # See note on SOFT_MAX MASK_THRESHOLD PROB above.
+                 [[0.0, 0.0, 0.0, test_var[3], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
                  id="SOFT_MAX MASK_THRESHOLD PROB 2D", marks=pytest.mark.llvm_not_implemented),
 
     # SoftMax threshold per-item with 2 elements in input
