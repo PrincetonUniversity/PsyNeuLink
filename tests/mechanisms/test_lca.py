@@ -301,41 +301,60 @@ class TestLCA:
         comp = pnl.Composition(lca)
         lca.execute_until_finished = True
 
-        def assert_expected_results(results, expected):
-            index_val, steps_val, time_val = expected
-            if comp_mode is pnl.ExecutionMode.Python:
-                assert lca.output_ports[pnl.DECISION_INDEX].value == index_val
-                assert lca.output_ports[pnl.DECISION_STEPS].value == steps_val
-                assert lca.output_ports[pnl.DECISION_TIME].value == time_val
-            else:
-                assert results[1] == index_val
-                assert results[2] == steps_val
-                assert results[3] == time_val
-
         lca.parameters.time_step_size.set(.01, comp.name)
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
-        expected = (0, 14, .14)
-        assert_expected_results(actual, expected)
+        if comp_mode is pnl.ExecutionMode.Python:
+            assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+            assert lca.output_ports[pnl.DECISION_STEPS].value == 14
+            assert lca.output_ports[pnl.DECISION_TIME].value == .14
+        else:
+            assert actual[1] == 0
+            assert actual[2] == 14
+            assert actual[3] == .14
 
         lca.parameters.time_step_size.set(.001, comp.name)
         actual = comp.run(inputs=[[0, 1]], execution_mode=comp_mode)
-        expected = (1, 56, .056)
-        assert_expected_results(actual, expected)
+        if comp_mode is pnl.ExecutionMode.Python:
+            assert lca.output_ports[pnl.DECISION_INDEX].value == 1
+            assert lca.output_ports[pnl.DECISION_STEPS].value == 56
+            assert lca.output_ports[pnl.DECISION_TIME].value == .056
+        else:
+            assert actual[1] == 1
+            assert actual[2] == 56
+            assert actual[3] == .056
 
         # BREADCRUMB: FAILS BELOW SINCE NOT STARTING FRESH IN LLMRun
         lca.parameters.time_step_size.set(.001, comp.name)
         lca.execute_until_finished = False
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
-        expected = (0, 1, .001)
-        assert_expected_results(actual, expected)
+        if comp_mode is pnl.ExecutionMode.Python:
+            assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+            assert lca.output_ports[pnl.DECISION_STEPS].value == 1
+            assert lca.output_ports[pnl.DECISION_TIME].value == .001
+        else:
+            assert actual[1] == 0
+            assert actual[2] == 1
+            assert actual[3] == .001
 
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
-        expected = (0, 2, .002)
-        assert_expected_results(actual, expected)
+        if comp_mode is pnl.ExecutionMode.Python:
+            assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+            assert lca.output_ports[pnl.DECISION_STEPS].value == 2
+            assert lca.output_ports[pnl.DECISION_TIME].value == .002
+        else:
+            assert actual[1] == 0
+            assert actual[2] == 2
+            assert actual[3] == .002
 
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
-        expected = (0, 3, .003)
-        assert_expected_results(actual, expected)
+        if comp_mode is pnl.ExecutionMode.Python:
+            assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+            assert lca.output_ports[pnl.DECISION_STEPS].value == 3
+            assert lca.output_ports[pnl.DECISION_TIME].value == .003
+        else:
+            assert actual[1] == 0
+            assert actual[2] == 3
+            assert actual[3] == .003
 
 
 class TestLCAReset:
