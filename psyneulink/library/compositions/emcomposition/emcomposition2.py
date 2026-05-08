@@ -1150,7 +1150,8 @@ class EMComposition2(AutodiffComposition):
 
     def _set_processing_attributes(self):
 
-        # Set conditions
+        # Set conditions ------------------------------------------------------------------------
+
         for field_node in self.field_mechanisms:
             self.scheduler.add_condition(field_node, conditions.AfterNodes(self.softmax_node))
 
@@ -1161,24 +1162,41 @@ class EMComposition2(AutodiffComposition):
             self.scheduler.add_condition(node, Always())
 
         for field in self.fields:
+            # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(
                 field.field_node,
                 Any(All(AfterNCalls(field.input_node, 1),
                         BeforeNCalls(self.softmax_node, 1)),
                     All(AfterNCalls(self.softmax_node, 1),
-                        BeforeNCalls(field.retrieved_node, 1)))
-            )
+                        BeforeNCalls(field.retrieved_node, 1))))
+            # Retrieved nodes run only after both field-memory mechanisms have run twice.
+            self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.field_node, 2))
 
-        # Set attributes for show_graph()
-        for node in self.value_input_nodes:
-            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        # RETRIEVE runs only after both field-memory mechanisms have run once.
+        self.scheduler.add_condition(
+            self.softmax_node,
+            All([AfterNCalls(node, 1) for node in self.field_mechanisms]
+                + [BeforeNCalls(node, 2) for node in self.field_mechanisms]))
 
-        # Set NodeRoles
+        # BREADCRUMB: NECESSARY??
+        # End the trial after all retrieved nodes have executed once.
+        self.scheduler.termination_conds[pnl.TimeScale.TRIAL] = (
+            All([AfterNCalls(node, 1) for node in self.retrieved_nodes]))
+
+
+        # Set NodeRoles -------------------------------------------------------------------------
+
         for node in self.field_weight_nodes:
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
+
+
+        # Set attributes for show_graph() -----------------------------------------------------
+
+        for node in self.value_input_nodes:
+            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
     def _set_learning_attributes(self):
         self.execute_in_additional_optimizations = {}
