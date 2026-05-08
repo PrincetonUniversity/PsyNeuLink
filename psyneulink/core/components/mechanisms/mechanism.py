@@ -3370,6 +3370,20 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
 
+        # Check if there are initializers to use. This should generally reflect
+        # the presence of StatefulFunction, but it can be changed explicitly
+        # by the user.
+        # Python checks this as part of reset invocation expression in
+        # Composition.execute, so do not apply modulation.
+        has_reinitializers_ptr = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            "has_initializers",
+                                                            param_struct_ptr=m_base_params)
+        has_initializers = builder.load(has_reinitializers_ptr)
+        not_initializers = builder.fcmp_ordered("==", has_initializers, has_initializers.type(0))
+        with builder.if_then(not_initializers):
+            builder.ret_void()
+
         if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
             reinit_int_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
             reinit_int_in = builder.alloca(reinit_int_func.args[2].type.pointee, name="integrator_reinit_in")
