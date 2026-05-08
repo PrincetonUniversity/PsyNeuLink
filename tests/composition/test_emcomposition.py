@@ -736,9 +736,10 @@ class TestExecution:
                 np.testing.assert_equal(em.memory_template[i][j], memory_template[i][j])
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
-        for retrieved, expected in zip(retrieved, expected_retrieval):
-            np.testing.assert_allclose(retrieved, expected)
+        retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
+        # em._build_pytorch_representation()
+        for retrieved_item, expected_item in zip(retrieved, expected_retrieval):
+            np.testing.assert_allclose(retrieved_item, expected_item)
 
         # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
         np.testing.assert_allclose(np.sum(em.softmax_node.value), 1.0, atol=1e-15)
