@@ -89,11 +89,12 @@ from psyneulink.core.globals.utilities import (
     is_iterable,
     is_numeric_scalar,
 )
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemoryfieldmechanism import (
     EpisodicMemoryFieldMechanism, QUERY, SCORES, COMBINED_SCORES, RETRIEVED)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.core.scheduling.condition import All, Always, Any, BeforeNCalls, AfterNCalls
 
 
 __all__ = [
@@ -527,8 +528,9 @@ class EMComposition2(AutodiffComposition):
         )
 
         self._set_learning_attributes()
-
-        self._set_processing_attributes()
+        self._set_conditions()
+        self._set_node_roles()
+        self._set_attributes_for_show_graph()
 
         memory = self.memory
         if memory is not None and not np.any([
@@ -1148,52 +1150,73 @@ class EMComposition2(AutodiffComposition):
             )
             field.retrieved_projection = field.retrieved_node.path_afferents[0]
 
-    def _set_processing_attributes(self):
+    def _set_conditions(self):
 
-        # Set conditions ------------------------------------------------------------------------
-
-        for field_node in self.field_mechanisms:
-            self.scheduler.add_condition(field_node, conditions.AfterNodes(self.softmax_node))
-
-        # BREADCRUMB: ADD CODE FROM AI HERE
-
-        # The input nodes are origins; they can run at the start of the trial.
+        # BREADCRUMB: NECESSARY?
+        # INPUT Nodes should run first
         for node in self.get_nodes_by_role(NodeRole.INPUT):
             self.scheduler.add_condition(node, Always())
 
         for field in self.fields:
+
+            # # MODIFIED EM2 OLD:
+            # # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
+            # self.scheduler.add_condition(
+            #     field.field_node,
+            #     Any(All(AfterNCalls(field.input_node, 1),
+            #             BeforeNCalls(self.softmax_node, 1)),
+            #         All(AfterNCalls(self.softmax_node, 1),
+            #             BeforeNCalls(field.retrieved_node, 1))))
+            #
+            # # Retrieved nodes run only after both field-memory mechanisms have run twice.
+            # self.scheduler.add_condition(field.field_node, conditions.AfterNodes(self.softmax_node))
+            # MODIFIED EM2 NEW:
             # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(
                 field.field_node,
                 Any(All(AfterNCalls(field.input_node, 1),
                         BeforeNCalls(self.softmax_node, 1)),
                     All(AfterNCalls(self.softmax_node, 1),
-                        BeforeNCalls(field.retrieved_node, 1))))
+                        BeforeNCalls(field.retrieved_node, 1)),
+                    # AfterNodes(self.softmax_node)
+                    )
+            )
+            # MODIFIED EM2 END
+
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
             self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.field_node, 2))
 
+        # for field_node in self.field_mechanisms:
+        #     self.scheduler.add_condition(field_node, conditions.AfterNodes(self.softmax_node))
+
+
         # RETRIEVE runs only after both field-memory mechanisms have run once.
-        self.scheduler.add_condition(
-            self.softmax_node,
-            All([AfterNCalls(node, 1) for node in self.field_mechanisms]
-                + [BeforeNCalls(node, 2) for node in self.field_mechanisms]))
+        args = ([AfterNCalls(node, 1) for node in self.field_mechanisms]
+                + [BeforeNCalls(node, 2) for node in self.field_mechanisms])
+        self.scheduler.add_condition(self.softmax_node, All(*args))
+
+        # Storage should after RETRIEVAL
+        for field_mechanism in self.field_mechanisms:
+            field_mechanism.parameters.storage_condition.set(
+                conditions.AfterNCalls(self.softmax_node, 1),
+                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
+                override=True,
+            )
 
         # BREADCRUMB: NECESSARY??
         # End the trial after all retrieved nodes have executed once.
-        self.scheduler.termination_conds[pnl.TimeScale.TRIAL] = (
-            All([AfterNCalls(node, 1) for node in self.retrieved_nodes]))
+        args = [AfterNCalls(node, 1) for node in self.retrieved_nodes]
+        self.scheduler.termination_conds[TimeScale.TRIAL] = (All(*args))
 
 
-        # Set NodeRoles -------------------------------------------------------------------------
-
+    def _set_node_roles(self):
         for node in self.field_weight_nodes:
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
 
-        # Set attributes for show_graph() -----------------------------------------------------
-
+    def _set_attributes_for_show_graph(self):
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)

@@ -93,6 +93,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         purge_by_field_weight = Parameter(False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies="seed")
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
+        storage_condition = Parameter(None, stateful=False, loggable=False)
 
         def _validate_storage_prob(self, storage_prob):
             if not is_numeric_scalar(storage_prob) or not 0 <= storage_prob <= 1:
@@ -208,7 +209,15 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         scores = self._compute_scores(query, field_memory, context).squeeze()
         retrieved = self._retrieve(combined_scores, field_memory).squeeze()
-        self._store(query, field_memory, context)
+
+        # # MODIFIED EM2 OLD:
+        # self._store(query, field_memory, context)
+        # MODIFIED EM2 NEW:
+        storage_condition = self.parameters.storage_condition._get(context)
+        if storage_condition is None or storage_condition.is_satisfied(scheduler=context.composition.scheduler,
+                                                                       context=context):
+            self._store(query, field_memory, context)
+        # MODIFIED EM2 END
 
         value = convert_all_elements_to_np_array([scores, retrieved])
         self.parameters.value._set(value, context=context)
