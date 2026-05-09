@@ -539,3 +539,54 @@ def test_target_mode_length_mismatch_error():
     wrong = np.zeros(10)
     with pytest.raises(Exception):
         f(variable=wrong)
+
+
+@pytest.mark.parametrize("noise", [0.0, 0.075, 1e-3])
+@pytest.mark.parametrize("dim", [3, 5, 25])
+def test_drift_on_sphere_scalar_noise_in_mechanism_does_not_crash(dim, noise):
+    """Regression test: scalar noise must work when wrapped in a Mechanism.
+
+    Bug (PR fix/drift-on-a-sphere-scalar-noise-mechanism-wrap): the
+    parameter system stores a scalar `noise` as a length-1 ndarray
+    when the function is bound to a Mechanism. The vector-noise branch
+    in ``DriftOnASphereIntegrator._function`` (``np.ndim(noise) == 1``)
+    then runs against that length-1 array as if it were a per-dimension
+    noise vector, and the matmul ``B @ (noise * eps)`` becomes
+    ``(d, d-1) @ (1,)`` — crashing with::
+
+        ValueError: matmul: Input operand 1 has a mismatch in its
+        core dimension 0, with gufunc signature
+        (n?,k),(k,m?)->(n?,m?) (size 1 is different from d-1)
+
+    Standalone calls (``integ.execute(...)``) didn't reproduce because
+    the function-only path keeps the scalar as a Python float; only
+    the Mechanism-wrapped path triggered the array coercion.
+
+    This test covers both the standalone-execute and Composition.run
+    paths against the wrap, verifying the output stays unit-norm and
+    has shape (1, d).
+    """
+    init = np.zeros(dim)
+    init[0] = 1.0  # deterministic non-zero unit vector
+    integ = Functions.DriftOnASphereIntegrator(
+        dimension=dim,
+        noise=noise,
+        initializer=init,
+        default_variable=np.zeros(dim - 1),
+    )
+    pm = pnl.ProcessingMechanism(
+        default_variable=[[0.0] * (dim - 1)],
+        function=integ,
+    )
+
+    # 1. Standalone Mechanism.execute() — was the matmul crash site.
+    out = pm.execute([[0.0] * (dim - 1)])
+    assert np.array(out).shape == (1, dim)
+    assert np.linalg.norm(out) == pytest.approx(1.0, abs=1e-6)
+
+    # 2. Inside a Composition — the path real models actually take.
+    comp = pnl.Composition(name=f"sphere_{dim}_{noise}")
+    comp.add_node(pm)
+    res = comp.run(inputs={pm: [[0.0] * (dim - 1)]})
+    assert np.array(res).shape == (1, dim)
+    assert np.linalg.norm(res) == pytest.approx(1.0, abs=1e-6)
