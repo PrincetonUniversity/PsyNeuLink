@@ -667,34 +667,36 @@ class UserDefinedFunction(Function_Base):
 
         return self.convert_output_type(value)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state,
-                                arg_in, arg_out, *, tags:frozenset):
-
-        # Check for global and nonlocal vars. we can't compile those.
-        closure_vars = getclosurevars(self.custom_function)
-        assert len(closure_vars.nonlocals) == 0, "Compiling functions with non-local variables is not supported!"
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         srcfile = getsourcefile(self.custom_function)
         first_line = getsourcelines(self.custom_function)[1]
 
+        # Check for global and nonlocal vars. We can't compile those.
+        closure_vars = getclosurevars(self.custom_function)
+        assert len(closure_vars.nonlocals) == 0, \
+            "{}:{}: Compiling functions with non-local variables is not supported!".format(srcfile, first_line)
+
+        func_globals = closure_vars.globals
+        assert len(func_globals) == 0 or (len(func_globals) == 1 and np in func_globals.values()), \
+               "{}:{}: Compiling functions with global variables is not supported! ({})".format(srcfile, first_line, closure_vars.globals)
+
         with open(srcfile) as f:
+            func_ast = None
             for node in ast.walk(ast.parse(f.read(), srcfile)):
                 if getattr(node, 'lineno', -1) == first_line and isinstance(node, (ast.FunctionDef, ast.Lambda)):
                     func_ast = node
                     break
-                func_ast = None
 
         assert func_ast is not None, "UDF function source code not found"
 
-        func_globals = closure_vars.globals
-        assert len(func_globals) == 0 or (
-               len(func_globals) == 1 and np in func_globals.values()), \
-               "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
         func_params = {param_id: ctx.get_param_or_state_ptr(builder, self, param_id, param_struct_ptr=params) for param_id in self.llvm_param_ids}
 
         pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 
-        # The generic '_gen_llvm' will append another ret void to this block
+        # The generic '_gen_llvm' will append another ret void to this block.
+        # It doesn't need to be a jump target for any of the UDF blocks as those
+        # are all terminated (by jumps or return statements)
         post_block = builder.append_basic_block(name="post_udf")
         builder.position_at_start(post_block)
         return builder
