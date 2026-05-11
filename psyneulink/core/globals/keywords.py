@@ -39,7 +39,7 @@ __all__ = [
     'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET',
     'COMPOSITION', 'COMPOSITION_FUNCTION_APPROXIMATOR', 'COMPOSITION_INTERFACE_MECHANISM',
     'CONCATENATE', 'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT',
-    'ContentAddressableMemory_FUNCTION', 'CONTEXT',
+    'ContentAddressableMemory_FUNCTION', 'ContentAddressableWeightableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PATHWAY', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS',
     'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
     'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'CPU', 'COSINE', 'COSINE_SIMILARITY',
@@ -783,6 +783,7 @@ ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU IntegratorFunction Function"
 BUFFER_FUNCTION = 'Buffer Function'
 DictionaryMemory_FUNCTION = 'DictionaryMemory Function'
 ContentAddressableMemory_FUNCTION = 'ContentAddressableMemory Function'
+ContentAddressableWeightableMemory_FUNCTION = 'ContentAddressableWeightableMemory Function'
 
 # OptimizationFunctions:
 GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"

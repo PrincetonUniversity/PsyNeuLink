@@ -14,6 +14,7 @@ Functions that store and can retrieve a record of their current input.
 
 * `Buffer`
 * `ContentAddressableMemory`
+• `ContentAddressableWeightableMemory`
 * `DictionaryMemory`
 
 Overview
@@ -49,6 +50,7 @@ from psyneulink.core.globals.keywords import (
     MEMORY_FUNCTION,
     COSINE,
     ContentAddressableMemory_FUNCTION,
+    ContentAddressableWeightableMemory_FUNCTION,
     DictionaryMemory_FUNCTION,
     MIN_INDICATOR,
     MULTIPLICATIVE_PARAM,
@@ -1463,7 +1465,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         ---------
 
         variable : list or 2d array : default class_defaults.variable
-           used to retrieve an entry from `memory <ContentAddressableMemory.memory>`, and then stored there.
+           query, used to retrieve an entry from `memory <ContentAddressableMemory.memory>`, and then stored there.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1925,6 +1927,45 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """Return number of entries in self._memory.
        """
         return len(self._memory)
+
+
+class ContentAddressableWeightableMemory(ContentAddressableMemory): #
+    """Subclass restricted to single field, reports distance vector, and can take external one for use in retrieval
+
+    Override _function to:
+      - take scores/match-weights/distance vector as argument that is used for retrieval
+      - don't call store (must be called explicitly)
+      - return scores/match-weights/distance vector in addition to retrieved item
+
+    Override _get_memory to:
+      - take scores/match-weights as argument that is used for retrieval
+
+    IMPLEMENTATION NOTE:
+      - This is based directly on ContentAddressableMemory, providing more flexible forms of memory than
+        is possible with DifferentiableContentAddressableMemory
+      - scores/match-weights/distance vector is returned so it can be combined with other fields
+      - external scores/match-weights/distance vector is needed to apply one that has been combined with other fields
+      - API is same as ContentAddressableMemory_FUNCTION
+          - use memory as alias for initializer parameter
+          - use store as alias for storage_prob
+      """
+
+    componentName = ContentAddressableWeightableMemory_FUNCTION
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.memory_num_fields != 1:
+            raise FunctionError(f"ContentAddressableWeightableMemory should have only one field, "
+                                f"but was configured to have {self.memory_num_fields} for '{self.owner.name}'.")
+
+    def _function(self,
+                 variable:Optional[Union[list, np.array]]=None,
+                 context=None,
+                 params=None,
+                 ) -> (np.array, np.array):
+        """Override to accept, use and return scores argument, and to not call store()"""
+        # TBI
+        pass
 
 
 KEYS = 0

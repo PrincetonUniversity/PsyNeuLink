@@ -983,7 +983,6 @@ class EMComposition2(AutodiffComposition):
             field.field_node = EpisodicMemoryFieldMechanism(
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
-                storage_prob=storage_prob,
                 decay_rate=memory_decay_rate,
                 normalize_memories=normalize_memories,
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
