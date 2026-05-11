@@ -154,7 +154,7 @@ def _memory_getter(owning_component=None, context=None):
         return None
 
     field_memories = [
-        field.memory_node.parameters.memory.get(context).squeeze()
+        field.memory_node.function.parameters.memory.get(context).squeeze()
         for field in owning_component.fields
     ]
 
@@ -163,7 +163,6 @@ def _memory_getter(owning_component=None, context=None):
         [field_memories[field_idx][entry_idx] for field_idx in range(owning_component.num_fields)]
         for entry_idx in range(memory_capacity)
     ])
-
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     if (
