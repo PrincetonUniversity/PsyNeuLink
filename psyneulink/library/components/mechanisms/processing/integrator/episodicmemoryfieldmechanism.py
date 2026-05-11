@@ -331,6 +331,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                                                           prefs=prefs
                                                           )
 
+        # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
                 {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)}]
 
@@ -340,9 +341,11 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         super().__init__(
             default_variable=default_variable,
+            # EM2 BREADCRUMB: REMOVE THESE ONCE MOVED PER ABOVE:
             input_ports=input_ports,
-            function=function,
             output_ports=output_ports,
+            # EM2 BREADCRUMB END
+            function=function,
             memory=field_memory,
             params=params,
             name=name,
@@ -399,6 +402,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         variable = self._validate_variable(variable, context=context)
+        scores = variable[1]
 
         # EM2 BREADCRUMB: ALTERNATIVE WOULD BE TO ASSIGN store AND memory TO runtime_params; MORE LLVM FRIENDLY?
         storage_condition = self.parameters.storage_condition._get(context)
@@ -406,7 +410,9 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                                                        context=context)
                         if storage_condition is not None else False)
         self.function.parameters.store._set(store, context)
+        self.function.parameters.scores._set(scores, context)
 
+        # return super()._execute(variable, context, runtime_params)
         return super()._execute(variable, context, runtime_params)
 
     # @property
