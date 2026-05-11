@@ -7,8 +7,29 @@
 
 # ****************************************  EpisodicMemoryFieldMechanism ***********************************************
 
+"""
+Subclass of EpisodicMemoryMechanism customized for EMComposition2.
+
+It is a field-local that uses DifferentiableContentAddressableMemory as its function, which supports only
+a single field of memory.
+It has QUERY and COMBINED_SCORES InputPorts
+If it is constructed as FieldType.KEY:
+  - it has both RETRIEVED and SCORES OutputPorts
+  - function computes match scores between query and each entry in memory, reported in its SCORES OutputPort
+If it is constructed as FieldType.VALUE:
+  - it has only a RETRIEVED OutputPorts
+  - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
+
+IMPLEMENTATION NOTE:
+    EMCompositon2 uses one EpisodicMemoryFieldMechanism per memory field
+    instead of using EMStorageMechanism to update MappingProjection matrices.
+
+
+"""
+
 
 import copy
+
 from psyneulink._typing import Callable, List, Literal, Optional, Union
 from beartype import beartype
 import numpy as np
@@ -241,7 +262,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
     """
 
-    componentName = "EM_FIELD_MECHANISM"
+    componentName = "EM_FIELD_MEMORY"
 
     class Parameters(EpisodicMemoryMechanism.Parameters):
 
@@ -263,6 +284,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     @check_user_specified
     def __init__(
         self,
+        field_type,
         field_shape: int,
         field_memory: Union[list, np.ndarray],
 
@@ -285,6 +307,13 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         prefs=None,
         **kwargs,
     ):
+
+        from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
+        assert isinstance(field_type, FieldType), \
+            (f"PROGRAM ERROR: EpisodicMemoryFieldMechanism requires specification of field_type "
+             f"as FieldType.KEY or FieldType.VALUE; got {field_type}.")
+        self.field_type = field_type
+
         self.field_shape = field_shape
         self.memory_capacity = len(field_memory)
 
@@ -302,17 +331,18 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                                                           prefs=prefs
                                                           )
 
+        input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
+                {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)}]
+
+        output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
+        if field_type == FieldType.KEY:
+            output_ports.append({NAME: SCORES, VARIABLE: (OWNER_VALUE, 1)})
+
         super().__init__(
             default_variable=default_variable,
-            input_ports=[
-                {NAME: QUERY, VARIABLE: np.zeros(field_shape)},
-                {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
-            ],
+            input_ports=input_ports,
             function=function,
-            output_ports=[
-                {NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0),
-                 NAME: SCORES, VARIABLE: (OWNER_VALUE, 1)},
-            ],
+            output_ports=output_ports,
             memory=field_memory,
             params=params,
             name=name,
@@ -329,22 +359,22 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         return default_variable
 
     def _instantiate_input_ports(self, context=None):
-        input_ports = [
-            {NAME: QUERY, VARIABLE: np.zeros(self.field_shape)},
-            {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
-        ]
-        super(EpisodicMemoryMechanism, self)._instantiate_input_ports(input_ports=input_ports, context=context)
+        # input_ports = [
+        #     {NAME: QUERY, VARIABLE: np.zeros(self.field_shape)},
+        #     {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
+        # ]
+        super(EpisodicMemoryMechanism, self)._instantiate_input_ports(input_ports=self.input_ports, context=context)
 
-    def _instantiate_output_ports(self, context=None):
-        output_ports = [
-            {NAME: SCORES, VARIABLE: (OWNER_VALUE, 0)},
-            {NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 1)},
-        ]
-        self.parameters.output_ports._set(output_ports, override=True, context=context)
-        super()._instantiate_output_ports(context=context)
-
-        for output_port in self.output_ports:
-            output_port.parameters.require_projection_in_composition._set(False, override=True, context=context)
+    # def _instantiate_output_ports(self, context=None):
+    #     # output_ports = [
+    #     #     {NAME: SCORES, VARIABLE: (OWNER_VALUE, 0)},
+    #     #     {NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 1)},
+    #     # ]
+    #     # self.parameters.output_ports._set(output_ports, override=True, context=context)
+    #     super()._instantiate_output_ports(context=context)
+    #     #
+    #     for output_port in self.output_ports:
+    #         output_port.parameters.require_projection_in_composition._set(False, override=True, context=context)
 
     def _validate_variable(self, variable, context=None):
         variable = np.asarray(variable, dtype=object)

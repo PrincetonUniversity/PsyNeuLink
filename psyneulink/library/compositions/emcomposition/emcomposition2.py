@@ -8,33 +8,26 @@
 
 # ********************************************* EMComposition2 *************************************************
 
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and limitations under the License.
-
-
-# ********************************************* EMComposition2 *************************************************
-
 """
 Refactored EMComposition prototype.
 
 This module introduces EpisodicMemoryFieldMechanism, a field-local episodic memory mechanism
-that owns the memory matrix for a single field.  The refactored EMComposition
-uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
+that owns the memory matrix for a single field. For the moment, EpisodicMemoryFieldMechanism uses
+only DifferentiableContentAddressableMemory as its Function (defined in the EpisodicMemoryFieldMechanism module)
+that is limited to a single field in memory, the use of dot products to compute its weights, and a boolean storage mechanism that stores the query input into memory with a probability specified by
+storage_prob (True or False).
+
+The refactored EMComposition uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
 High-level execution per field:
 
 1. QUERY input is sent to EpisodicMemoryFieldMechanism.input_port[QUERY].
 2. EpisodicMemoryFieldMechanism computes a match-weight vector over its memory rows and emits SCORES.
-3. SCORES from key fields are weighted and combined by COMBINE MATCHES.
-4. The combined match vector is softmax-normalized by RETRIEVE.
-5. The normalized combined scores are sent back to each EpisodicMemoryFieldMechanism.input_port[COMBINED_SCORES].
-6. Each EpisodicMemoryFieldMechanism retrieves its field value and emits RETRIEVED.
-7. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix according to storage_prob.
+3. SCORES from key fields are weighted, combined and softmax-normalized by RETRIEVE.
+4. The normalized combined scores are sent back to each EpisodicMemoryFieldMechanism.input_port[COMBINED_SCORES].
+5. Each EpisodicMemoryFieldMechanism retrieves its field value and emits RETRIEVED.
+6. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix according to storage_prob.
 """
 
 import copy
@@ -101,8 +94,9 @@ __all__ = [
     "EMComposition2",
     "EMComposition2Error",
     "FieldType",
-    "FIELD_WEIGHT",
     "KEY",
+    "FIELD_MEMORY",
+    "FIELD_WEIGHT",
     "LEARN_FIELD_WEIGHT",
     "PROBABILISTIC",
     "TARGET_FIELD",
@@ -160,7 +154,7 @@ def _memory_getter(owning_component=None, context=None):
         return None
 
     field_memories = [
-        field.field_node.parameters.memory.get(context).squeeze()
+        field.memory_node.parameters.memory.get(context).squeeze()
         for field in owning_component.fields
     ]
 
@@ -242,7 +236,7 @@ class Field:
         self.target = target
 
         self.input_node = None
-        self.field_node = None
+        self.memory_node = None
         self.weight_node = None
         self.weighted_match_node = None
         self.retrieved_node = None
@@ -259,7 +253,7 @@ class Field:
         return [
             node for node in [
                 self.input_node,
-                self.field_node,
+                self.memory_node,
                 self.weight_node,
                 self.weighted_match_node,
                 self.retrieved_node,
@@ -287,15 +281,15 @@ class Field:
 
     @property
     def match(self):
-        return self.field_node.output_ports[SCORES].value
+        return self.memory_node.output_ports[SCORES].value
 
     @property
     def retrieved_memory(self):
-        return self.field_node.output_ports[RETRIEVED].value
+        return self.memory_node.output_ports[RETRIEVED].value
 
     @property
     def memory(self):
-        return self.field_node.memory
+        return self.memory_node.memory
 
 
 class EMComposition2(AutodiffComposition):
@@ -320,7 +314,7 @@ class EMComposition2(AutodiffComposition):
       - softmax_node
       - retrieved_nodes
 
-    Internally, field.field_node is now the memory owner for each field.
+    Internally, field.memory_node is now the memory owner for each field.
     """
 
     componentCategory = EM_COMPOSITION
@@ -875,7 +869,7 @@ class EMComposition2(AutodiffComposition):
         context,
     ):
         self._construct_input_nodes()
-        self._construct_field_mechanisms(
+        self._construct_field_memory_nodes(
             memory_template,
             memory_capacity,
             normalize_memories,
@@ -902,7 +896,7 @@ class EMComposition2(AutodiffComposition):
 
         if not self.enable_learning:
             self.add_nodes(self.input_nodes, context=context)
-            self.add_nodes(self.field_mechanisms, context=context)
+            self.add_nodes(self.field_memory_nodes, context=context)
             self.add_nodes(self.field_weight_nodes + self.weighted_match_nodes, context=context)
             if self.combined_matches_node:
                 self.add_node(self.combined_matches_node, context=context)
@@ -914,18 +908,18 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             self.add_linear_processing_pathway([
                 field.input_node,
-                field.field_node,
+                field.memory_node,
             ])
 
         if self.num_keys == 1:
             self.add_linear_processing_pathway([
-                self.key_fields[0].field_node,
+                self.key_fields[0].memory_node,
                 self.softmax_node,
             ])
         else:
             for field in self.key_fields:
                 pathway = [
-                    field.field_node,
+                    field.memory_node,
                     self.combined_matches_node,
                 ]
                 if field.weighted_match_node:
@@ -940,7 +934,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             self.add_linear_processing_pathway([
                 self.softmax_node,
-                field.field_node,
+                field.memory_node,
                 field.retrieved_node,
             ])
 
@@ -969,7 +963,7 @@ class EMComposition2(AutodiffComposition):
             )
             field.type = FieldType.VALUE
 
-    def _construct_field_mechanisms(
+    def _construct_field_memory_nodes(
         self,
         memory_template,
         memory_capacity,
@@ -980,7 +974,8 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
-            field.field_node = EpisodicMemoryFieldMechanism(
+            field.memory_node = EpisodicMemoryFieldMechanism(
+                field_type=field.type,
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
                 decay_rate=memory_decay_rate,
@@ -990,7 +985,7 @@ class EMComposition2(AutodiffComposition):
 
             field.query_projection = MappingProjection(
                 sender=field.input_node,
-                receiver=field.field_node.input_ports[QUERY],
+                receiver=field.memory_node.input_ports[QUERY],
                 matrix=IDENTITY_MATRIX,
                 name=f"{field.name} QUERY to FIELD MEMORY",
             )
@@ -1012,7 +1007,7 @@ class EMComposition2(AutodiffComposition):
                         VARIABLE: variable,
                         PARAMS: params,
                     },
-                    gate=field.field_node.output_ports[SCORES],
+                    gate=field.memory_node.output_ports[SCORES],
                 )
             else:
                 field.weight_node = ProcessingMechanism(
@@ -1039,7 +1034,7 @@ class EMComposition2(AutodiffComposition):
                     {
                         PROJECTIONS: MappingProjection(
                             name=f"{field.name} SCORES to WEIGHTED MATCH",
-                            sender=field.field_node.output_ports[SCORES],
+                            sender=field.memory_node.output_ports[SCORES],
                             matrix=IDENTITY_MATRIX,
                         )
                     },
@@ -1062,7 +1057,7 @@ class EMComposition2(AutodiffComposition):
             return
 
         input_source = (
-            [field.field_node.output_ports[SCORES] for field in self.key_fields]
+            [field.memory_node.output_ports[SCORES] for field in self.key_fields]
             if use_gating_for_weighting
             else self.weighted_match_nodes
         )
@@ -1089,7 +1084,7 @@ class EMComposition2(AutodiffComposition):
 
     def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice):
         if self.num_keys == 1:
-            input_source = self.key_fields[0].field_node.output_ports[SCORES]
+            input_source = self.key_fields[0].memory_node.output_ports[SCORES]
             proj_name = f"{self.key_fields[0].name} SCORES to {SOFTMAX_NODE_NAME}"
         else:
             input_source = self.combined_matches_node
@@ -1121,7 +1116,7 @@ class EMComposition2(AutodiffComposition):
         if softmax_gain == CONTROL:
             node = ControlMechanism(
                 name="SOFTMAX GAIN CONTROL",
-                monitor_for_control=self.combined_matches_node or self.key_fields[0].field_node,
+                monitor_for_control=self.combined_matches_node or self.key_fields[0].memory_node,
                 control_signals=[(GAIN, self.softmax_node)],
                 function=get_softmax_gain,
             )
@@ -1131,7 +1126,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             field.combined_scores_projection = MappingProjection(
                 sender=self.softmax_node,
-                receiver=field.field_node.input_ports[COMBINED_SCORES],
+                receiver=field.memory_node.input_ports[COMBINED_SCORES],
                 matrix=IDENTITY_MATRIX,
                 name=f"{SOFTMAX_NODE_NAME} to {field.name} COMBINED_SCORES",
             )
@@ -1141,7 +1136,7 @@ class EMComposition2(AutodiffComposition):
                 input_ports={
                     INPUT_SHAPES: len(field.input_node.variable[0]),
                     PROJECTIONS: MappingProjection(
-                        sender=field.field_node.output_ports[RETRIEVED],
+                        sender=field.memory_node.output_ports[RETRIEVED],
                         matrix=IDENTITY_MATRIX,
                         name=f"{field.name} RETRIEVED to OUTPUT",
                     ),
@@ -1161,18 +1156,18 @@ class EMComposition2(AutodiffComposition):
             # # MODIFIED EM2 OLD:
             # # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             # self.scheduler.add_condition(
-            #     field.field_node,
+            #     field.memory_node,
             #     Any(All(AfterNCalls(field.input_node, 1),
             #             BeforeNCalls(self.softmax_node, 1)),
             #         All(AfterNCalls(self.softmax_node, 1),
             #             BeforeNCalls(field.retrieved_node, 1))))
             #
             # # Retrieved nodes run only after both field-memory mechanisms have run twice.
-            # self.scheduler.add_condition(field.field_node, conditions.AfterNodes(self.softmax_node))
+            # self.scheduler.add_condition(field.memory_node, conditions.AfterNodes(self.softmax_node))
             # MODIFIED EM2 NEW:
             # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(
-                field.field_node,
+                field.memory_node,
                 Any(All(AfterNCalls(field.input_node, 1),
                         BeforeNCalls(self.softmax_node, 1)),
                     All(AfterNCalls(self.softmax_node, 1),
@@ -1183,20 +1178,20 @@ class EMComposition2(AutodiffComposition):
             # MODIFIED EM2 END
 
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
-            self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.field_node, 2))
+            self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
 
-        # for field_node in self.field_mechanisms:
-        #     self.scheduler.add_condition(field_node, conditions.AfterNodes(self.softmax_node))
+        # for memory_node in self.field_memory_nodes:
+        #     self.scheduler.add_condition(memory_node, conditions.AfterNodes(self.softmax_node))
 
 
         # RETRIEVE runs only after both field-memory mechanisms have run once.
-        args = ([AfterNCalls(node, 1) for node in self.field_mechanisms]
-                + [BeforeNCalls(node, 2) for node in self.field_mechanisms])
+        args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
+                + [BeforeNCalls(node, 2) for node in self.field_memory_nodes])
         self.scheduler.add_condition(self.softmax_node, All(*args))
 
         # Storage should after RETRIEVAL
-        for field_mechanism in self.field_mechanisms:
-            field_mechanism.parameters.storage_condition.set(
+        for field_memory_node in self.field_memory_nodes:
+            field_memory_node.parameters.storage_condition.set(
                 conditions.AfterNCalls(self.softmax_node, 1),
                 context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
                 override=True,
@@ -1418,13 +1413,13 @@ class EMComposition2(AutodiffComposition):
         return [field.input_node for field in self.value_fields]
 
     @property
-    def field_mechanisms(self):
-        return [field.field_node for field in self.fields]
+    def field_memory_nodes(self):
+        return [field.memory_node for field in self.fields]
 
     @property
     def match_nodes(self):
         # Compatibility alias: the old "match_nodes" are now the key EpisodicMemoryFieldMechanisms.
-        return [field.field_node for field in self.key_fields]
+        return [field.memory_node for field in self.key_fields]
 
     @property
     def field_weight_nodes(self):
