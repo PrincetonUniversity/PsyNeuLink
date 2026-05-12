@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0+untagged.111.g748a28b documentation</title>
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.18.0.0+574.g27052d690 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.111.g748a28b
+                  0.18.0.0+574
                 </div>
               
             
@@ -327,7 +327,10 @@ number of <strong>outcome_variables</strong>).  The function should specify how 
 <div class="technical-note docutils container">
 <p>ParameterEstimationComposition uses a <code class="xref any docutils literal notranslate"><span class="pre">PEC_OCM</span></code> as its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> – a specialized
 subclass of <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> that intercepts inputs provided to the <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method of the ParameterEstimationComposition, and assigns them directly
-to the <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a> of the PEC_OCM when it executes.</p>
+to the <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a> of the PEC_OCM when it executes.  By default, PEC_OCM sets
+<code class="xref any docutils literal notranslate"><span class="pre">comp_execution_mode</span></code> to <code class="docutils literal notranslate"><span class="pre">'LLVM'</span></code> for controller
+simulations; this can be overridden by assigning <code class="docutils literal notranslate"><span class="pre">'Python'</span></code> or <code class="docutils literal notranslate"><span class="pre">'PTX'</span></code> to the controller’s
+<code class="xref any docutils literal notranslate"><span class="pre">comp_execution_mode</span></code> parameter.</p>
 </div>
 </section>
 <section id="class-reference">
@@ -779,7 +782,7 @@ have been specified in the <a class="reference internal" href="#psyneulink.core.
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=b4a38556"></script>
+         <script src="_static/documentation_options.js?v=2b1491d6"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0+untagged.111.g748a28b documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.18.0.0+574.g27052d690 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.111.g748a28b
+                  0.18.0.0+574
                 </div>
               
             
@@ -493,8 +493,7 @@ their <a class="reference internal" href="Component.html#psyneulink.core.compone
 </section>
 <section id="standard-outputports">
 <span id="outputport-standard"></span><h4>Standard OutputPorts<a class="headerlink" href="#standard-outputports" title="Link to this heading">¶</a></h4>
-<p># FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
-Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
+<p>Mechanisms have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute, that contains a list of
 <a class="reference internal" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="psyneulink.core.components.ports.outputport.StandardOutputPorts"><code class="xref any py py-class docutils literal notranslate"><span class="pre">StandardOutputPorts</span></code></a>: <a class="reference internal" href="#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionaries</span></a> that can be
 assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>. There is a base set of StandardOutputPorts for all
 Mechanisms. Subclasses of Mechanisms may add ones that are specific to that type of Mechanism (for example, the
@@ -525,16 +524,16 @@ constructor, the corresponding entries (<em>VARIABLE</em> and <em>FUNCTION</em>)
 dictionary</span></a>, or in the variable spec (2nd) item of a <a class="reference internal" href="#outputport-tuple-specification"><span class="std std-ref">3-item tuple</span></a> for the OutputPort.</p>
 <section id="outputport-variable">
 <span id="outputport-custom-variable"></span><h4><em>OutputPort</em> <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a><a class="headerlink" href="#outputport-variable" title="Link to this heading">¶</a></h4>
-<p>By default, an OutputPort uses the first (and often only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, which usuall corresponds to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism’s first (primary) <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">InputPort</span></a>.  However, this can be
+<p>By default, an OutputPort uses the first (and often only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, which usually corresponds to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism’s first (primary) <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">InputPort</span></a>.  However, this can be
 customized by specifying any other item of its <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, the full
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> itself, other attributes of the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>, or any combination of these
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> itself, other Parameters of the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>, or any combination of these
 using the following:</p>
 <blockquote>
 <div><p><em>OWNER_VALUE</em> – keyword specifying the entire <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPort’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>.</p>
 <p><em>(OWNER_VALUE, &lt;int&gt;)</em> – tuple specifying an item of the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>'s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).</p>
-<p><em>&lt;attribute name&gt;</em> – the name of an attribute of the OutputPort’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> (must be one
+<p><em>&lt;attribute name&gt;</em> – the name of an Parameter of the OutputPort’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> (must be one
 in the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>'s <code class="xref any docutils literal notranslate"><span class="pre">Parameters</span></code> class); returns the value
-of the named attribute for use in the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+of the named Parameter for use in the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <p><em>PARAMS_DICT</em> – keyword specifying the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> Mechanism’s
 entire dictionary of Parameters, that contains its own Parameters, its
 <code class="xref any docutils literal notranslate"><span class="pre">function</span> <span class="pre">&lt;Mechanism.function</span></code>'s Parameters, and the current <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
@@ -1092,7 +1091,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=b4a38556"></script>
+         <script src="_static/documentation_options.js?v=2b1491d6"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
