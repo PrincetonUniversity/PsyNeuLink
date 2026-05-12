@@ -214,12 +214,18 @@ class NormalDist(DistributionFunction):
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
 
         ret_val = builder.load(ret_val_ptr)
-        mean = builder.load(mean_ptr)
-        std_dev = builder.load(std_dev_ptr)
+        mean = pnlvm.helpers.load_extract_scalar_array_one(builder, mean_ptr)
+        std_dev = pnlvm.helpers.load_extract_scalar_array_one(builder, std_dev_ptr)
 
         ret_val = builder.fmul(ret_val, std_dev)
         ret_val = builder.fadd(ret_val, mean)
 
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
+        if ret_val.type != arg_out.type.pointee:
+            assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+            assert len(arg_out.type.pointee) == 1
+            assert arg_out.type.pointee.element == ret_val.type
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(ret_val, arg_out)
         return builder
 
@@ -645,8 +651,11 @@ class UniformDist(DistributionFunction):
         ret_val = builder.fmul(ret_val, scale)
         ret_val = builder.fadd(ret_val, low)
 
-        while isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType):
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
+        if ret_val.type != arg_out.type.pointee:
+            assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
             assert len(arg_out.type.pointee) == 1
+            assert arg_out.type.pointee.element == ret_val.type
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(ret_val, arg_out)
         return builder

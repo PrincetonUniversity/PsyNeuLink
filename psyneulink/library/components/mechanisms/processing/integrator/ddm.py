@@ -751,7 +751,7 @@ class DDM(ProcessingMechanism):
             structural=True,
         )
 
-    standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
+    standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analytic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
                             {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                             {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
