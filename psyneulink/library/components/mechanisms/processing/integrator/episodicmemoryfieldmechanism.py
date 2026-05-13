@@ -12,13 +12,13 @@ Subclass of EpisodicMemoryMechanism customized for EMComposition2.
 
 It is a field-local that uses DifferentiableContentAddressableMemory as its function, which supports only
 a single field of memory.
-It has QUERY and COMBINED_SCORES InputPorts
+It has QUERY and COMBINED_MATCH_SCORES InputPorts
 If it is constructed as FieldType.KEY:
   - it has both RETRIEVED and SCORES OutputPorts
   - function computes match scores between query and each entry in memory, reported in its SCORES OutputPort
 If it is constructed as FieldType.VALUE:
   - it has only a RETRIEVED OutputPorts
-  - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
+  - it does not compute match scores, but does report retrieved value based on COMBINED_MATCH_SCORES input
 
 IMPLEMENTATION NOTE:
     EMCompositon2 uses one EpisodicMemoryFieldMechanism per memory field
@@ -26,9 +26,6 @@ IMPLEMENTATION NOTE:
 
 
 """
-
-
-import copy
 
 from psyneulink._typing import Callable, List, Literal, Optional, Union
 from beartype import beartype
@@ -39,7 +36,7 @@ from psyneulink.core.components.functions.nonstateful.objectivefunctions import 
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.globals.keywords import (
-    MULTIPLICATIVE_PARAM, NAME, NEWEST, OLDEST, OVERWRITE, OWNER_VALUE, RANDOM, VARIABLE)
+    COSINE, NAME, NEWEST, OLDEST, OVERWRITE, OWNER_VALUE, RANDOM, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -48,14 +45,14 @@ from psyneulink.library.components.mechanisms.processing.integrator.episodicmemo
 
 __all__ = ['EpisodicMemoryFieldMechanism',
            'EpisodicMemoryFieldMechanismError',
-           'QUERY', 'SCORES', 'COMBINED_SCORES', 'RETRIEVED',
+           'QUERY', 'SCORES', 'COMBINED_MATCH_SCORES', 'RETRIEVED',
            'DifferentiableContentAddressableMemory_FUNCTION']
 
 
 DifferentiableContentAddressableMemory_FUNCTION = 'DifferentiableContentAddressableMemory Function'
 QUERY = "QUERY"
 SCORES = "SCORES"
-COMBINED_SCORES = "COMBINED_SCORES"
+COMBINED_MATCH_SCORES = "COMBINED_MATCH_SCORES"
 RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
@@ -64,21 +61,22 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 
 class DifferentiableContentAddressableMemory(Function_Base): #
     """
-    DifferentiableContentAddressableMemory(  \
-        default_variable=None,               \
-        initializer=None,                    \
-        memory_capacity=None,                \
-        decay_rate=None,                     \
-        params=None,                         \
-        owner=None,                          \
-        prefs=None,                          \
+    DifferentiableContentAddressableMemory(        \
+        default_variable=None,                     \
+        initializer=None,                          \
+        memory_capacity=None,                      \
+        decay_rate=None,                           \
+        distance_function=Distance(metric=COSINE), \
+        params=None,                               \
+        owner=None,                                \
+        prefs=None,                                \
         )
 
     Limited form of ContentAddressableMemory, for specific use by EMComposition2
 
     Use scores Parameter to compute retrieved value, which
-      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
-    Return scores based on current query (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition2)
+      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_MATCH_SCORES in EMComposition2)
+    Return scores based on current query (e.g., so it can be used to calculate COMBINED_MATCH_SCORES in EMComposition2)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields
@@ -94,51 +92,35 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         memory = Parameter(None, pnl_internal=True, stateful=True)
         scores = Parameter([0], stateful=True)
         store = Parameter(False)
+        normalize_memories = Parameter(True)
         decay_rate = Parameter(1.0, modulable=True)
+        distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  memory=None,
+                 normalize_memories: bool = True,
                  decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 distance_function:Optional[Union[Distance, Callable]]=None,
                  params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
                  prefs:Optional[ValidPrefSet] = None):
 
-        # self._memory = []
-        # self.field_width = initializer.shape[1]
-
         super().__init__(
             default_variable=default_variable,
-            # initializer=initializer,
             memory=memory,
+            normalize_memories=normalize_memories,
             decay_rate=decay_rate,
-            # memory_capacity=memory_capacity,
+            distance_function=distance_function,
             params=params,
             owner=owner,
             prefs=prefs,
         )
 
-    # def _initialize_previous_value(self, initializer, context=None):
-    #     """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
-    #     This must be done here rather than in validate_params as it is needed to initialize previous_value
-    #     """
-    #
-    #     if initializer is None or convert_all_elements_to_np_array(initializer).size == 0:
-    #         return None
-    #
-    #     initializer = np.asarray(initializer)
-    #     assert initializer.ndim == 2
-    #     assert initializer.shape[1] == self.memory_capacity
-    #     self.field_width = initializer.shape[1]
-    #
-    #     # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
-    #     self.parameters.previous_value.set(initializer, context, override=True)
-    #
-    #     previous_value = self._memory
-    #     self.parameters.previous_value.set(previous_value, context, override=True)
-    #     return previous_value
+    def _parse_distance_function_variable(self, variable, context=None):
+        return convert_all_elements_to_np_array([variable, variable])
 
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
@@ -148,41 +130,35 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         """Override to accept, use and return scores argument, and to store() when storage_condition is satisfied
         - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
         - Compute dot product of query with entries (rows) -> scores
-        - Call _store() to store query if store == True
+        - Call _store_memory() to store query if store == True
 
         Return retrieved value, scores
 
         """
-        # if self.is_initializing:
-        #     assert len(variable[0]) == self.field_width, \
-        #         (f"PROGRAM ERROR: 1st item of variable (query) for DifferentiableContentAddressableMemory Function of "
-        #          f"'{self.owner.name}' should be len = {self.memory_field_width}; got len = {len(variable[0])}.")
         query = np.asarray(variable, dtype=float)
-        scores = self._get_current_parameter_value('scores', context)
 
-        # If this is an initialization run, just return query
+        # If this is an initialization run, just return query and zeros for score
         if self.is_initializing:
             return query, np.zeros(len(self.memory))
 
-        # MODIFIED EM2 NEW:
-        memory = copy.deepcopy(self.parameters.memory._get(context))
-        if memory is None:
-           memory = np.zeros((self.memory_capacity, self.field_width))
+        memory = self.parameters.memory._get(context)
+        scores_for_retrieval = self.parameters.scores._get(context)
+        # scores_for_retrieval = self._get_current_parameter_value('scores', context)
 
-        memory = np.asarray(memory, dtype=float)
+        # Retrieve
+        # retrieved = (scores_for_retrieval @ memory).squeeze()
+        retrieved = (scores_for_retrieval @ memory).squeeze()
 
-        retrieved = self._retrieve(scores, memory).squeeze()
+        # Compute match scores for query
+        match_scores = self._compute_scores(query, memory, context)
 
+        # Retrieve memory weighted by scores_for_retrieval
         if self.parameters.store._get(context) == True:
-            self._store(query, context)
-        # MODIFIED EM2 END
+            self._store_memory(query, context)
 
-        value = convert_all_elements_to_np_array([scores, retrieved])
-        self.parameters.value._set(value, context=context)
+        return retrieved, match_scores
 
-        return retrieved, scores
-
-    def _compute_scores(self, query, field_memory, context=None):
+    def _compute_scores(self, query, memory, context=None)->np.array:
         normalize_memories = self.parameters.normalize_memories._get(context)
         # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
         #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
@@ -191,25 +167,23 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         if normalize_memories:
             query_norm = np.linalg.norm(query)
             normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
-            normalized_memory = self._normalize_rows(field_memory)
+            normalized_memory = self._normalize_rows(memory)
             return normalized_memory @ normalized_query
 
-        return field_memory @ query
+        return memory @ query
 
-    def _retrieve(self, combined_scores, memory):
-        return combined_scores @ memory
-
-    def _store(self, query, context=None):
+    def _store_memory(self, query, context=None):
         decay_rate = self.parameters.decay_rate._get(context)
-        memory = self.parameters.initializer._get(context)
+        memory = self.parameters.memory._get(context)
 
         if decay_rate <= 1.0:
             memory *= decay_rate
 
+        # EM2 BREADCRUMB: THIS NEEDS TO BE EVALUATED / COORDINATED OVER ALL FIELDS SIMULTANEOUSLY
         idx_of_weakest_memory = int(np.argmin(np.linalg.norm(memory, axis=1)))
         memory[idx_of_weakest_memory] = query
 
-        self.parameters.initializer._set(memory, context, override=True)
+        self.parameters.memory._set(memory, context, override=True)
 
     def _normalize_rows(self, matrix):
         matrix = np.asarray(matrix, dtype=float)
@@ -230,16 +204,16 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
       - uses storage_condition to enforce that storage occurs after retrieval
       - has two InputPorts:
         - QUERY used to compute field-specific SCORES
-        - COMBINED_SCORES used for retrieval from memory
+        - COMBINED_MATCH_SCORES used for retrieval from memory
       - has two OutputPorts:
         - SCORES reports field-specific match weights for QUERY against memory
-        - RETRIEVED used to report COMBINED_SCORES-weighted retrieval from memory
+        - RETRIEVED used to report COMBINED_MATCH_SCORES-weighted retrieval from memory
 
     DifferentiableContentAddressableMemory:
       - supports only a single field
       - is used to store the Mechanisms' memory
       - returns scores for match of query to each entry in memory
-      - takes **scores** argument (received on Mechanism's COMBINED_SCORES InputPort) as argument used for retrieval
+      - takes **scores** argument (received on Mechanism's COMBINED_MATCH_SCORES InputPort) as argument used for retrieval
 
     IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition, in which each field's memory
                           was stored in Projection matrices managed by EMStorageMechanism.
@@ -253,12 +227,12 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         Match-weight vector between QUERY and every row in field_memory,
         passed to `ContentAddressableField` Function for retrieval
 
-    input_port[COMBINED_SCORES]
+    input_port[COMBINED_MATCH_SCORES]
         Combined retrieval weights, usually the softmax-normalized aggregate of
         all key-field SCORES.
 
     output_port[RETRIEVED]
-        Dot product of COMBINED_SCORES with field_memory.
+        Dot product of COMBINED_MATCH_SCORES with field_memory.
 
     """
 
@@ -291,8 +265,8 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         # MODIFIED EM2 NEW:
         # BREADCRUMB: MOVE THESE ALL TO EMComposition2.field AND PASS IN HERE TO **kwargs??
         # These are all used for construction of ContentAddressableMemory, and exposed as properties on Mechanism:
-        normalize_memories: bool = True,
         decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,  # -> rate on ContentAddressableMemory
+        normalize_memories: bool = True,
         noise: Optional[Union[int, float, List, np.ndarray, Callable]]=None,
         distance_function:Optional[Union[Distance, Callable]]=None,
         selection_function:Optional[Union[OneHot, SoftMax, Callable]]=None,
@@ -333,7 +307,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
-                {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)}]
+                {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)}]
 
         output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
         if field_type == FieldType.KEY:
@@ -364,7 +338,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     def _instantiate_input_ports(self, context=None):
         # input_ports = [
         #     {NAME: QUERY, VARIABLE: np.zeros(self.field_shape)},
-        #     {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
+        #     {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
         # ]
         super(EpisodicMemoryMechanism, self)._instantiate_input_ports(input_ports=self.input_ports, context=context)
 
@@ -383,7 +357,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         variable = np.asarray(variable, dtype=object)
         if len(variable) != 2:
             raise EpisodicMemoryFieldMechanismError(
-                f"Variable for {self.name} must contain two items: QUERY and COMBINED_SCORES."
+                f"Variable for {self.name} must contain two items: QUERY and COMBINED_MATCH_SCORES."
             )
         if len(variable[0]) != self.field_shape:
             raise EpisodicMemoryFieldMechanismError(
@@ -391,7 +365,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
             )
         if len(variable[1]) != self.memory_capacity:
             raise EpisodicMemoryFieldMechanismError(
-                f"COMBINED_SCORES input for {self.name} has length {len(variable[1])}; "
+                f"COMBINED_MATCH_SCORES input for {self.name} has length {len(variable[1])}; "
                 f"expected {self.memory_capacity}."
             )
         return variable

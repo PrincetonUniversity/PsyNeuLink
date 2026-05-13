@@ -41,7 +41,7 @@ import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, MatrixTransform
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -59,6 +59,7 @@ from psyneulink.core.globals.keywords import (
     DEFAULT_INPUT,
     DEFAULT_LEARNING_RATE,
     DEFAULT_VARIABLE,
+    DOT_PRODUCT,
     EM_COMPOSITION,
     FIRST,
     FULL_CONNECTIVITY_MATRIX,
@@ -66,8 +67,11 @@ from psyneulink.core.globals.keywords import (
     IDENTITY_MATRIX,
     INPUT_SHAPES,
     LAST,
+    L0,
     MULTIPLICATIVE_PARAM,
     NAME,
+    NORMALIZE,
+    OPERATION,
     PARAMS,
     PROB_INDICATOR,
     PRODUCT,
@@ -127,10 +131,9 @@ MATCH = "MATCH"
 MATCH_AFFIX = f" [{MATCH}]"
 WEIGHT = "WEIGHT"
 WEIGHT_AFFIX = f" [{WEIGHT}]"
-WEIGHTED_MATCH_NODE_NAME = "WEIGHTED MATCH"
-WEIGHTED_MATCH_AFFIX = f" [{WEIGHTED_MATCH_NODE_NAME}]"
-COMBINE_MATCHES_NODE_NAME = "COMBINE MATCHES"
-SOFTMAX_NODE_NAME = "RETRIEVE"
+WEIGHTED_SCORES_NODE_NAME = "WEIGHTED SCORES"
+WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
+COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
 RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
 
@@ -237,7 +240,7 @@ class Field:
         self.input_node = None
         self.memory_node = None
         self.weight_node = None
-        self.weighted_match_node = None
+        self.weighted_scores_node = None
         self.retrieved_node = None
 
         self.query_projection = None
@@ -245,7 +248,7 @@ class Field:
         self.combined_scores_projection = None
         self.retrieved_projection = None
         self.weight_projection = None
-        self.weighted_match_projection = None
+        self.weighted_scores_projection = None
 
     @property
     def nodes(self):
@@ -254,7 +257,7 @@ class Field:
                 self.input_node,
                 self.memory_node,
                 self.weight_node,
-                self.weighted_match_node,
+                self.weighted_scores_node,
                 self.retrieved_node,
             ]
             if node is not None
@@ -269,7 +272,7 @@ class Field:
                 self.combined_scores_projection,
                 self.retrieved_projection,
                 self.weight_projection,
-                self.weighted_match_projection,
+                self.weighted_scores_projection,
             ]
             if proj is not None
         ]
@@ -308,9 +311,9 @@ class EMComposition2(AutodiffComposition):
       - query_input_nodes
       - value_input_nodes
       - field_weight_nodes
-      - weighted_match_nodes
+      - weighted_scores_nodes
       - combined_matches_node
-      - softmax_node
+      - combined_scores_node
       - retrieved_nodes
 
     Internally, field.memory_node is now the memory owner for each field.
@@ -395,6 +398,12 @@ class EMComposition2(AutodiffComposition):
         def _validate_store_on_optimization(self, option):
             if option not in {FIRST, LAST, ALL}:
                 return "must be one of FIRST, LAST, or ALL."
+
+        def _parse_memory_decay_rate(self, memory_decay_rate):
+            if is_numeric_scalar(memory_decay_rate):
+                return np.array(1-memory_decay_rate)
+            else:
+                return memory_decay_rate
 
     @check_user_specified
     def __init__(
@@ -875,10 +884,10 @@ class EMComposition2(AutodiffComposition):
             storage_prob,
             memory_decay_rate,
         )
-        self._construct_field_weight_nodes(use_gating_for_weighting)
-        self._construct_weighted_match_nodes()
-        self._construct_combined_matches_node(memory_capacity, use_gating_for_weighting)
-        self._construct_softmax_node(memory_capacity, softmax_gain, softmax_threshold, softmax_choice)
+        self._construct_field_weight_nodes()
+        self._construct_weighted_scores_nodes()
+        # self._construct_combined_matches_node(memory_capacity, use_gating_for_weighting)
+        self._construct_combined_scores_node(memory_capacity, softmax_gain, softmax_threshold, softmax_choice)
         self._construct_softmax_gain_control_node(softmax_gain)
         self._construct_retrieved_nodes()
 
@@ -896,10 +905,10 @@ class EMComposition2(AutodiffComposition):
         if not self.enable_learning:
             self.add_nodes(self.input_nodes, context=context)
             self.add_nodes(self.field_memory_nodes, context=context)
-            self.add_nodes(self.field_weight_nodes + self.weighted_match_nodes, context=context)
+            self.add_nodes(self.field_weight_nodes + self.weighted_scores_nodes, context=context)
             if self.combined_matches_node:
                 self.add_node(self.combined_matches_node, context=context)
-            self.add_nodes([self.softmax_node] + self.retrieved_nodes, context=context)
+            self.add_nodes([self.combined_scores_node] + self.retrieved_nodes, context=context)
             if self.softmax_gain_control_node:
                 self.add_node(self.softmax_gain_control_node, context=context)
             return
@@ -913,7 +922,7 @@ class EMComposition2(AutodiffComposition):
         if self.num_keys == 1:
             self.add_linear_processing_pathway([
                 self.key_fields[0].memory_node,
-                self.softmax_node,
+                self.combined_scores_node,
             ])
         else:
             for field in self.key_fields:
@@ -921,18 +930,18 @@ class EMComposition2(AutodiffComposition):
                     field.memory_node,
                     self.combined_matches_node,
                 ]
-                if field.weighted_match_node:
-                    pathway.insert(1, field.weighted_match_node)
+                if field.weighted_scores_node:
+                    pathway.insert(1, field.weighted_scores_node)
                 self.add_linear_processing_pathway(pathway)
 
             self.add_linear_processing_pathway([
                 self.combined_matches_node,
-                self.softmax_node,
+                self.combined_scores_node,
             ])
 
         for field in self.fields:
             self.add_linear_processing_pathway([
-                self.softmax_node,
+                self.combined_scores_node,
                 field.memory_node,
                 field.retrieved_node,
             ])
@@ -941,10 +950,10 @@ class EMComposition2(AutodiffComposition):
             self.add_node(self.softmax_gain_control_node, context=context)
 
         for field in self.key_fields:
-            if field.weight_node and field.weighted_match_node:
+            if field.weight_node and field.weighted_scores_node:
                 self.add_linear_processing_pathway([
                     field.weight_node,
-                    field.weighted_match_node,
+                    field.weighted_scores_node,
                 ])
 
     def _construct_input_nodes(self):
@@ -970,7 +979,18 @@ class EMComposition2(AutodiffComposition):
         storage_prob,
         memory_decay_rate,
     ):
+
+        OPERATION = 0
+        NORMALIZE = 1
+
         for field in self.fields:
+
+            # EM2 BREADCRUMB: ADD SUPPORT FOR FIELD-BY-FIELD DISTANCE FUNCTION SPECIFICATION
+            key_len = len(field.query.squeeze())
+            args = [(L0,True) if key_len == 1 else (DOT_PRODUCT, normalize_memories)
+                    for key in memory_template[0]]
+            function=MatrixTransform(operation=args[0][OPERATION],
+                                     normalize=args[0][NORMALIZE])
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
             field.memory_node = EpisodicMemoryFieldMechanism(
@@ -978,7 +998,9 @@ class EMComposition2(AutodiffComposition):
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
                 decay_rate=memory_decay_rate,
+                distance_function=function,
                 normalize_memories=normalize_memories,
+
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
             )
 
@@ -1018,13 +1040,13 @@ class EMComposition2(AutodiffComposition):
                     },
                 )
 
-    def _construct_weighted_match_nodes(self):
+    def _construct_weighted_scores_nodes(self):
         if self.num_keys <= 1:
             return
 
         for field in self.key_fields:
-            field.weighted_match_node = ProcessingMechanism(
-                name=field.name + WEIGHTED_MATCH_AFFIX,
+            field.weighted_scores_node = ProcessingMechanism(
+                name=field.name + WEIGHTED_SCORES_AFFIX,
                 default_variable=[
                     np.zeros(self.memory_capacity),
                     np.zeros(self.memory_capacity),
@@ -1032,14 +1054,14 @@ class EMComposition2(AutodiffComposition):
                 input_ports=[
                     {
                         PROJECTIONS: MappingProjection(
-                            name=f"{field.name} SCORES to WEIGHTED MATCH",
+                            name=f"{field.name} {SCORES} to {WEIGHTED_SCORES_NODE_NAME}",
                             sender=field.memory_node.output_ports[SCORES],
                             matrix=IDENTITY_MATRIX,
                         )
                     },
                     {
                         PROJECTIONS: MappingProjection(
-                            name=f"{field.name} WEIGHT to WEIGHTED MATCH",
+                            name=f"{field.name} {WEIGHT} to {WEIGHTED_SCORES_NODE_NAME}",
                             sender=field.weight_node,
                             matrix=FULL_CONNECTIVITY_MATRIX,
                         )
@@ -1047,22 +1069,30 @@ class EMComposition2(AutodiffComposition):
                 ],
                 function=LinearCombination(operation=PRODUCT),
             )
-            field.scores_projection = field.weighted_match_node.path_afferents[0]
-            field.weight_projection = field.weighted_match_node.path_afferents[1]
+            field.scores_projection = field.weighted_scores_node.path_afferents[0]
+            field.weight_projection = field.weighted_scores_node.path_afferents[1]
 
-    def _construct_combined_matches_node(self, memory_capacity, use_gating_for_weighting):
-        if self.num_keys == 1:
-            self.combined_matches_node = None
-            return
+    def _construct_combined_scores_node(self, memory_capacity, softmax_gain, softmax_threshold,
+                                                 softmax_choice):
+        """Construct combined_scores_node
+        This is constructed even if num_keys == 1, since it computes the softmax over the scores
+        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py 
+        """
 
-        input_source = (
-            [field.memory_node.output_ports[SCORES] for field in self.key_fields]
-            if use_gating_for_weighting
-            else self.weighted_match_nodes
+        field_weighting = self.num_keys > 1
+        assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
+            (f"PROGRAM ERROR: Mismatch between num_keys and presence of weighted_scores_nodes and/or field_weight_nodes")
+
+        input_sources = (
+            self.weighted_scores_nodes if field_weighting
+            else [field.memory_node.output_ports[SCORES] for field in self.key_fields]
         )
 
-        self.combined_matches_node = ProcessingMechanism(
-            name=COMBINE_MATCHES_NODE_NAME,
+        if softmax_choice == ARG_MAX:
+            softmax_choice = ARG_MAX_INDICATOR
+
+        self.combined_scores_node = ProcessingMechanism(
+            name=COMBINED_SCORES_NODE_NAME,
             input_ports=[
                 {
                     INPUT_SHAPES: memory_capacity,
@@ -1070,38 +1100,12 @@ class EMComposition2(AutodiffComposition):
                         MappingProjection(
                             sender=source,
                             matrix=IDENTITY_MATRIX,
-                            name=f"{self.key_fields[i].name} to {COMBINE_MATCHES_NODE_NAME}",
-                        )
-                        for i, source in enumerate(input_source)
+                            name=f"{self.weighted_scores_nodes[i].name if field_weighting else self.key_fields[i].name} "
+                                 f"to {COMBINED_SCORES_NODE_NAME}")
+                        for i, source in enumerate(input_sources)
                     ],
                 }
             ],
-        )
-
-        for i, proj in enumerate(self.combined_matches_node.path_afferents):
-            self.key_fields[i].weighted_match_projection = proj
-
-    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice):
-        if self.num_keys == 1:
-            input_source = self.key_fields[0].memory_node.output_ports[SCORES]
-            proj_name = f"{self.key_fields[0].name} SCORES to {SOFTMAX_NODE_NAME}"
-        else:
-            input_source = self.combined_matches_node
-            proj_name = f"{COMBINE_MATCHES_NODE_NAME} to {SOFTMAX_NODE_NAME}"
-
-        if softmax_choice == ARG_MAX:
-            softmax_choice = ARG_MAX_INDICATOR
-
-        self.softmax_node = ProcessingMechanism(
-            name=SOFTMAX_NODE_NAME,
-            input_ports={
-                INPUT_SHAPES: memory_capacity,
-                PROJECTIONS: MappingProjection(
-                    sender=input_source,
-                    matrix=IDENTITY_MATRIX,
-                    name=proj_name,
-                ),
-            },
             function=SoftMax(
                 gain=softmax_gain,
                 mask_threshold=softmax_threshold,
@@ -1110,24 +1114,75 @@ class EMComposition2(AutodiffComposition):
             ),
         )
 
+        for i, proj in enumerate(self.combined_scores_node.path_afferents):
+            self.key_fields[i].weighted_scores_projection = proj
+
+    def _construct_combined_norms_node(self, memory_capacity, softmax_gain, softmax_threshold,
+                                                 softmax_choice):
+        """Construct combined_norms_node
+        This is constructed even if num_keys == 1, since it computes the softmax over the scores
+        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py
+        """
+
+        field_weighting = self.num_keys > 1
+        assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
+            (f"PROGRAM ERROR: Mismatch between num_keys and presence of weighted_scores_nodes and/or field_weight_nodes")
+
+        input_sources = (
+            self.weighted_scores_nodes if field_weighting
+            else [field.memory_node.output_ports[SCORES] for field in self.key_fields]
+        )
+
+        if softmax_choice == ARG_MAX:
+            softmax_choice = ARG_MAX_INDICATOR
+
+        self.combined_scores_node = ProcessingMechanism(
+            name=COMBINED_SCORES_NODE_NAME,
+            input_ports=[
+                {
+                    INPUT_SHAPES: memory_capacity,
+                    PROJECTIONS: [
+                        MappingProjection(
+                            sender=source,
+                            matrix=IDENTITY_MATRIX,
+                            name=f"{self.weighted_scores_nodes[i].name if field_weighting else self.key_fields[i].name} "
+                                 f"to {COMBINED_SCORES_NODE_NAME}")
+                        for i, source in enumerate(input_sources)
+                    ],
+                }
+            ],
+            function=SoftMax(
+                gain=softmax_gain,
+                mask_threshold=softmax_threshold,
+                output=softmax_choice,
+                adapt_entropy_weighting=.95,
+            ),
+        )
+
+        for i, proj in enumerate(self.combined_scores_node.path_afferents):
+            self.key_fields[i].weighted_scores_projection = proj
+
     def _construct_softmax_gain_control_node(self, softmax_gain):
         node = None
         if softmax_gain == CONTROL:
             node = ControlMechanism(
                 name="SOFTMAX GAIN CONTROL",
                 monitor_for_control=self.combined_matches_node or self.key_fields[0].memory_node,
-                control_signals=[(GAIN, self.softmax_node)],
+                control_signals=[(GAIN, self.combined_scores_node)],
                 function=get_softmax_gain,
             )
         self.softmax_gain_control_node = node
 
     def _construct_retrieved_nodes(self):
         for field in self.fields:
+
+            # This has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_scores_projection = MappingProjection(
-                sender=self.softmax_node,
+                sender=self.combined_scores_node,
+                feedback=True,
                 receiver=field.memory_node.input_ports[COMBINED_SCORES],
                 matrix=IDENTITY_MATRIX,
-                name=f"{SOFTMAX_NODE_NAME} to {field.name} COMBINED_SCORES",
+                name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_SCORES",
             )
 
             field.retrieved_node = ProcessingMechanism(
@@ -1157,21 +1212,21 @@ class EMComposition2(AutodiffComposition):
             # self.scheduler.add_condition(
             #     field.memory_node,
             #     Any(All(AfterNCalls(field.input_node, 1),
-            #             BeforeNCalls(self.softmax_node, 1)),
-            #         All(AfterNCalls(self.softmax_node, 1),
+            #             BeforeNCalls(self.combined_scores_node, 1)),
+            #         All(AfterNCalls(self.combined_scores_node, 1),
             #             BeforeNCalls(field.retrieved_node, 1))))
             #
             # # Retrieved nodes run only after both field-memory mechanisms have run twice.
-            # self.scheduler.add_condition(field.memory_node, conditions.AfterNodes(self.softmax_node))
+            # self.scheduler.add_condition(field.memory_node, conditions.AfterNodes(self.combined_scores_node))
             # MODIFIED EM2 NEW:
             # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(
                 field.memory_node,
                 Any(All(AfterNCalls(field.input_node, 1),
-                        BeforeNCalls(self.softmax_node, 1)),
-                    All(AfterNCalls(self.softmax_node, 1),
+                        BeforeNCalls(self.combined_scores_node, 1)),
+                    All(AfterNCalls(self.combined_scores_node, 1),
                         BeforeNCalls(field.retrieved_node, 1)),
-                    # AfterNodes(self.softmax_node)
+                    # AfterNodes(self.combined_scores_node)
                     )
             )
             # MODIFIED EM2 END
@@ -1180,18 +1235,18 @@ class EMComposition2(AutodiffComposition):
             self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
 
         # for memory_node in self.field_memory_nodes:
-        #     self.scheduler.add_condition(memory_node, conditions.AfterNodes(self.softmax_node))
+        #     self.scheduler.add_condition(memory_node, conditions.AfterNodes(self.combined_scores_node))
 
 
         # RETRIEVE runs only after both field-memory mechanisms have run once.
         args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
                 + [BeforeNCalls(node, 2) for node in self.field_memory_nodes])
-        self.scheduler.add_condition(self.softmax_node, All(*args))
+        self.scheduler.add_condition(self.combined_scores_node, All(*args))
 
         # Storage should after RETRIEVAL
         for field_memory_node in self.field_memory_nodes:
             field_memory_node.parameters.storage_condition.set(
-                conditions.AfterNCalls(self.softmax_node, 1),
+                conditions.AfterNCalls(self.combined_scores_node, 1),
                 context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
                 override=True,
             )
@@ -1207,12 +1262,13 @@ class EMComposition2(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
+        self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
 
 
     def _set_attributes_for_show_graph(self):
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.combined_scores_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
     def _set_learning_attributes(self):
         self.execute_in_additional_optimizations = {}
@@ -1429,11 +1485,11 @@ class EMComposition2(AutodiffComposition):
         ]
 
     @property
-    def weighted_match_nodes(self):
+    def weighted_scores_nodes(self):
         return [
-            field.weighted_match_node
+            field.weighted_scores_node
             for field in self.key_fields
-            if field.weighted_match_node is not None
+            if field.weighted_scores_node is not None
         ]
 
     @property
