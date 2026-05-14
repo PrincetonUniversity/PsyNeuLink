@@ -373,7 +373,8 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                                                       f"expected {self.field_shape}.")
         assert len(variable[1]) == self.memory_capacity,(f"COMBINED_SCORES input for {self.name} has length "
                                                          f"{len(variable[1])}; expected {self.memory_capacity}.")
-        assert len(variable[2]) == 1, f"COMBINED_NORMS input for {self.name} is not length 1"
+        assert len(variable[2]) == self.memory_capacity, (f"COMBINED_NORMS input for {self.name} has length "
+                                                         f"{len(variable[2])}; expected {self.memory_capacity}.")
         return variable
 
     def _parse_function_variable(self, variable, context=None):
