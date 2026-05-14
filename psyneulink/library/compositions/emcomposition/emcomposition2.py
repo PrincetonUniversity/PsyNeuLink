@@ -89,7 +89,7 @@ from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemoryfieldmechanism import (
-    EpisodicMemoryFieldMechanism, NORMS, QUERY, SCORES, RETRIEVED)
+    EpisodicMemoryFieldMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, COMBINED_NORMS)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 
 
@@ -135,10 +135,6 @@ WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
 COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
 RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
-
-# Port Names
-COMBINED_SCORES = "COMBINED SCORES"
-COMBINED_NORMS = "COMBINED NORMS"
 
 
 class EMComposition2Error(CompositionError):

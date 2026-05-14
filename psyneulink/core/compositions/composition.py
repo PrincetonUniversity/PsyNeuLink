@@ -7556,9 +7556,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
         existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
         # Ensure that there is only a *single* existing Projection (if any) in the current Composition
-        assert len(existing_projections_in_composition) <= 1, \
-            f"PROGRAM ERROR: More than one identical projection found " \
-            f"in {self.name}: {existing_projections_in_composition}."
+        # # MODIFIED EM2 OLD:
+        #
+        # assert len(existing_projections_in_composition) <= 1, \
+        #     f"PROGRAM ERROR: More than one identical projection found " \
+        #     f"in {self.name}: {existing_projections_in_composition}."
+        # MODIFIED EM2 NEW:
+        # Ensure that Projections within the same COmpostion to/and from the same Nodes are not identical
+        #    (i.e., to the same InputPorts and OutputPorts)
+        if len(existing_projections_in_composition) > 1:
+            duplicates = False
+            for proj in existing_projections_in_composition:
+                duplicates = next((dup for dup in existing_projections_in_composition
+                                   if dup is not proj and dup.sender is proj.sender and dup.receiver is proj.receiver),
+                                  None)
+                if duplicates:
+                    break
+            assert not duplicates, f"PROGRAM ERROR: More than one identical projection found " \
+                                   f"in {self.name}: {existing_projections_in_composition}."
+
+        # MODIFIED EM2 END
+
+
         # Return existing Projection only if it is in the current Composition and there are no others
         if in_composition is ONLY:
             if existing_projections_in_composition and not existing_projections_not_in_composition:

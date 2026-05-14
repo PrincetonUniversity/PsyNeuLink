@@ -12,13 +12,13 @@ Subclass of EpisodicMemoryMechanism customized for EMComposition2.
 
 It is a field-local that uses DifferentiableContentAddressableMemory as its function, which supports only
 a single field of memory.
-It has QUERY and COMBINED_MATCH_SCORES InputPorts
+It has QUERY and COMBINED_SCORES InputPorts
 If it is constructed as FieldType.KEY:
   - it has both RETRIEVED and SCORES OutputPorts
   - function computes match scores between query and each entry in memory, reported in its SCORES OutputPort
 If it is constructed as FieldType.VALUE:
   - it has only a RETRIEVED OutputPorts
-  - it does not compute match scores, but does report retrieved value based on COMBINED_MATCH_SCORES input
+  - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
 
 IMPLEMENTATION NOTE:
     EMCompositon2 uses one EpisodicMemoryFieldMechanism per memory field
@@ -45,7 +45,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.episodicmemo
 
 __all__ = ['EpisodicMemoryFieldMechanism',
            'EpisodicMemoryFieldMechanismError',
-           'QUERY', 'SCORES', 'COMBINED_MATCH_SCORES', 'RETRIEVED',
+           'QUERY', 'SCORES', 'COMBINED_SCORES', 'COMBINED_NORMS', 'RETRIEVED',
            'DifferentiableContentAddressableMemory_FUNCTION']
 
 
@@ -53,7 +53,7 @@ DifferentiableContentAddressableMemory_FUNCTION = 'DifferentiableContentAddressa
 QUERY = "QUERY"
 SCORES = "SCORES"
 NORMS = "NORMS"
-COMBINED_MATCH_SCORES = "COMBINED MATCH SCORES"
+COMBINED_SCORES = "COMBINED SCORES"
 COMBINED_NORMS = "COMBINED NORMS"
 RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
@@ -77,8 +77,8 @@ class DifferentiableContentAddressableMemory(Function_Base): #
     Limited form of ContentAddressableMemory, for specific use by EMComposition2
 
     Use scores Parameter to compute retrieved value, which
-      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_MATCH_SCORES in EMComposition2)
-    Return scores based on current query (e.g., so it can be used to calculate COMBINED_MATCH_SCORES in EMComposition2)
+      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
+    Return scores based on current query (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition2)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields
@@ -212,16 +212,16 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
       - uses storage_condition to enforce that storage occurs after retrieval
       - has two InputPorts:
         - QUERY used to compute field-specific SCORES
-        - COMBINED_MATCH_SCORES used for retrieval from memory
+        - COMBINED_SCORES used for retrieval from memory
       - has two OutputPorts:
         - SCORES reports field-specific match weights for QUERY against memory
-        - RETRIEVED used to report COMBINED_MATCH_SCORES-weighted retrieval from memory
+        - RETRIEVED used to report COMBINED_SCORES-weighted retrieval from memory
 
     DifferentiableContentAddressableMemory:
       - supports only a single field
       - is used to store the Mechanisms' memory
       - returns scores for match of query to each entry in memory
-      - takes **scores** argument (received on Mechanism's COMBINED_MATCH_SCORES InputPort) as argument used for retrieval
+      - takes **scores** argument (received on Mechanism's COMBINED_SCORES InputPort) as argument used for retrieval
 
     IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition, in which each field's memory
                           was stored in Projection matrices managed by EMStorageMechanism.
@@ -235,12 +235,12 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         Match-weight vector between QUERY and every row in field_memory,
         passed to `ContentAddressableField` Function for retrieval
 
-    input_port[COMBINED_MATCH_SCORES]
+    input_port[COMBINED_SCORES]
         Combined retrieval weights, usually the softmax-normalized aggregate of
         all key-field SCORES.
 
     output_port[RETRIEVED]
-        Dot product of COMBINED_MATCH_SCORES with field_memory.
+        Dot product of COMBINED_SCORES with field_memory.
 
     """
 
@@ -316,7 +316,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
-                       {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
+                       {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
                        {NAME: COMBINED_NORMS, VARIABLE: np.zeros(1)},]
 
         output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
@@ -350,7 +350,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     def _instantiate_input_ports(self, context=None):
         # input_ports = [
         #     {NAME: QUERY, VARIABLE: np.zeros(self.field_shape)},
-        #     {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
+        #     {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
         # ]
         super(EpisodicMemoryMechanism, self)._instantiate_input_ports(input_ports=self.input_ports, context=context)
 
@@ -368,10 +368,10 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     def _validate_variable(self, variable, context=None):
         variable = np.asarray(variable, dtype=object)
         assert len(variable) == 3, (f"Variable for {self.name} must contain three items: "
-                                    f"QUERY, COMBINED_MATCH_SCORES and COMBINED_NORMS.")
+                                    f"QUERY, COMBINED_SCORES and COMBINED_NORMS.")
         assert len(variable[0]) == self.field_shape, (f"QUERY input for {self.name} has length {len(variable[0])}; "
                                                       f"expected {self.field_shape}.")
-        assert len(variable[1]) == self.memory_capacity,(f"COMBINED_MATCH_SCORES input for {self.name} has length "
+        assert len(variable[1]) == self.memory_capacity,(f"COMBINED_SCORES input for {self.name} has length "
                                                          f"{len(variable[1])}; expected {self.memory_capacity}.")
         assert len(variable[2]) == 1, f"COMBINED_NORMS input for {self.name} is not length 1"
         return variable
