@@ -70,8 +70,7 @@ from psyneulink.core.globals.keywords import (
     L0,
     MULTIPLICATIVE_PARAM,
     NAME,
-    NORMALIZE,
-    OPERATION,
+    OWNER_VALUE,
     PARAMS,
     PROB_INDICATOR,
     PRODUCT,
@@ -90,7 +89,7 @@ from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemoryfieldmechanism import (
-    EpisodicMemoryFieldMechanism, QUERY, SCORES, COMBINED_SCORES, RETRIEVED)
+    EpisodicMemoryFieldMechanism, NORMS, QUERY, SCORES, RETRIEVED)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 
 
@@ -136,6 +135,10 @@ WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
 COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
 RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
+
+# Port Names
+COMBINED_SCORES = "COMBINED SCORES"
+COMBINED_NORMS = "COMBINED NORMS"
 
 
 class EMComposition2Error(CompositionError):
@@ -1011,7 +1014,7 @@ class EMComposition2(AutodiffComposition):
                 name=f"{field.name} QUERY to FIELD MEMORY",
             )
 
-    def _construct_field_weight_nodes(self, use_gating_for_weighting):
+    def _construct_field_weight_nodes(self):
         if self.num_keys <= 1:
             return
 
@@ -1020,25 +1023,14 @@ class EMComposition2(AutodiffComposition):
             variable = np.array(field.weight)
             params = {DEFAULT_INPUT: DEFAULT_VARIABLE}
 
-            if use_gating_for_weighting:
-                field.weight_node = GatingMechanism(
-                    name=name,
-                    input_ports={
-                        NAME: "OUTCOME",
-                        VARIABLE: variable,
-                        PARAMS: params,
-                    },
-                    gate=field.memory_node.output_ports[SCORES],
-                )
-            else:
-                field.weight_node = ProcessingMechanism(
-                    name=name,
-                    input_ports={
-                        NAME: "FIELD_WEIGHT",
-                        VARIABLE: variable,
-                        PARAMS: params,
-                    },
-                )
+            field.weight_node = ProcessingMechanism(
+                name=name,
+                input_ports={
+                    NAME: "FIELD_WEIGHT",
+                    VARIABLE: variable,
+                    PARAMS: params,
+                },
+            )
 
     def _construct_weighted_scores_nodes(self):
         if self.num_keys <= 1:
@@ -1079,88 +1071,104 @@ class EMComposition2(AutodiffComposition):
         IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py 
         """
 
-        field_weighting = self.num_keys > 1
-        assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
-            (f"PROGRAM ERROR: Mismatch between num_keys and presence of weighted_scores_nodes and/or field_weight_nodes")
-
-        input_sources = (
-            self.weighted_scores_nodes if field_weighting
-            else [field.memory_node.output_ports[SCORES] for field in self.key_fields]
-        )
-
         if softmax_choice == ARG_MAX:
             softmax_choice = ARG_MAX_INDICATOR
+        softmax_function = SoftMax(gain=softmax_gain,
+                                   mask_threshold=softmax_threshold,
+                                   output=softmax_choice,
+                                   adapt_entropy_weighting=.95)
 
-        self.combined_scores_node = ProcessingMechanism(
-            name=COMBINED_SCORES_NODE_NAME,
-            input_ports=[
-                {
-                    INPUT_SHAPES: memory_capacity,
-                    PROJECTIONS: [
-                        MappingProjection(
-                            sender=source,
-                            matrix=IDENTITY_MATRIX,
-                            name=f"{self.weighted_scores_nodes[i].name if field_weighting else self.key_fields[i].name} "
-                                 f"to {COMBINED_SCORES_NODE_NAME}")
-                        for i, source in enumerate(input_sources)
-                    ],
-                }
-            ],
-            function=SoftMax(
-                gain=softmax_gain,
-                mask_threshold=softmax_threshold,
-                output=softmax_choice,
-                adapt_entropy_weighting=.95,
-            ),
-        )
-
-        for i, proj in enumerate(self.combined_scores_node.path_afferents):
-            self.key_fields[i].weighted_scores_projection = proj
-
-    def _construct_combined_norms_node(self, memory_capacity, softmax_gain, softmax_threshold,
-                                                 softmax_choice):
-        """Construct combined_norms_node
-        This is constructed even if num_keys == 1, since it computes the softmax over the scores
-        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py
-        """
+        def combined_scores_function(variable):
+            assert len(variable) == 2, \
+                (f"PROGRAM ERROR: expected variable with 2 items for combined_scores_function; got {len(variable)}")
+            return softmax_function(variable[0]), int(np.argmin(variable[1]))
 
         field_weighting = self.num_keys > 1
         assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
             (f"PROGRAM ERROR: Mismatch between num_keys and presence of weighted_scores_nodes and/or field_weight_nodes")
 
-        input_sources = (
-            self.weighted_scores_nodes if field_weighting
-            else [field.memory_node.output_ports[SCORES] for field in self.key_fields]
-        )
-
-        if softmax_choice == ARG_MAX:
-            softmax_choice = ARG_MAX_INDICATOR
-
+        # scores_inputs = [node.output_ports[SCORES] for field in self.key_fields
+        #                   for node in {field.weighted_scores_node if field_weighting else field.memory_node}]
+        scores_inputs = [(field.weighted_scores_node if field_weighting else field.memory_node).output_ports[SCORES]
+                         for field in self.key_fields]
+        # EM2 BREADCRUMB: NEED TO MODIFY IF/WHEN NORMS OF VALUE NODES ARE ALSO USED TO DETERMINE WEAKEST MEMORY
+        norms_inputs = [(field.weighted_scores_node if field_weighting else field.memory_node).output_ports[NORMS]
+                        for field in self.key_fields]
         self.combined_scores_node = ProcessingMechanism(
             name=COMBINED_SCORES_NODE_NAME,
             input_ports=[
-                {
-                    INPUT_SHAPES: memory_capacity,
-                    PROJECTIONS: [
-                        MappingProjection(
-                            sender=source,
-                            matrix=IDENTITY_MATRIX,
-                            name=f"{self.weighted_scores_nodes[i].name if field_weighting else self.key_fields[i].name} "
-                                 f"to {COMBINED_SCORES_NODE_NAME}")
-                        for i, source in enumerate(input_sources)
-                    ],
-                }
+                {INPUT_SHAPES: memory_capacity,
+                 PROJECTIONS: [
+                     MappingProjection(
+                         sender=source,
+                         matrix=IDENTITY_MATRIX,
+                         name=f"{'WEIGHTED' if field_weighting else ''} {SCORES} for {self.key_fields[i].name}")
+                              # f" to {COMBINED_SCORES_NODE_NAME}")
+                     for i, source in enumerate(scores_inputs)]},
+                {INPUT_SHAPES: memory_capacity,
+                 PROJECTIONS: [
+                     MappingProjection(
+                         sender=source,
+                         matrix=IDENTITY_MATRIX,
+                         name=f"{'WEIGHTED' if field_weighting else ''} {NORMS} for {self.key_fields[i].name}")
+                              # f" to {COMBINED_SCORES_NODE_NAME}")
+                     for i, source in enumerate(norms_inputs)]},
             ],
-            function=SoftMax(
-                gain=softmax_gain,
-                mask_threshold=softmax_threshold,
-                output=softmax_choice,
-                adapt_entropy_weighting=.95,
-            ),
+            output_ports=[{NAME:'COMBINED_SCORES', VARIABLE: (OWNER_VALUE, 0)},
+                          {NAME:'COMBINED_NORMS', VARIABLE: (OWNER_VALUE, 1)}],
+            function=combined_scores_function
         )
 
-        for i, proj in enumerate(self.combined_scores_node.path_afferents):
-            self.key_fields[i].weighted_scores_projection = proj
+        # EM2 BREADCRUMB: MAKE THIS SPECIFIC TO SCORES, AND ADD SIMILAR LOOP FOR NORMS
+        # for i, proj in enumerate(self.combined_scores_node.path_afferents):
+        #     self.key_fields[i].weighted_scores_projection = proj
+        for field in self.key_fields:
+            scores_proj = next(proj for proj in self.combined_scores_node.path_afferents
+                               if proj.sender is field.memory_node.output_ports[SCORES])
+            field.weighted_scores_projection = scores_proj
+            norms_proj = next(proj for proj in self.combined_scores_node.path_afferents
+                              if proj.sender is field.memory_node.output_ports[SCORES])
+            field.weighted_scores_projection = norms_proj
+
+    # def _construct_combined_norms_node(self, memory_capacity, softmax_gain, softmax_threshold,
+    #                                              softmax_choice):
+    #     """Construct combined_norms_node
+    #     """
+    #
+    #     if self.num_keys <= 1:
+    #         MappingProjection(
+    #             sender=source,
+    #             matrix=IDENTITY_MATRIX,
+    #             name=f"{self.weighted_scores_nodes[i].name} to {COMBINED_NORMS_NODE_NAME}")
+    #         self.key_fields[i].weighted_norms_projection = proj
+    #         return
+    #
+    #     input_sources = self.weighted_norms_nodes
+    #
+    #     if softmax_choice == ARG_MAX:
+    #         softmax_choice = ARG_MAX_INDICATOR
+    #
+    #     self.combined_norms_node = ProcessingMechanism(
+    #         name=COMBINED_SCORES_NODE_NAME,
+    #         input_ports=[
+    #             {
+    #                 INPUT_SHAPES: memory_capacity,
+    #                 PROJECTIONS: [
+    #                     MappingProjection(
+    #                         sender=source,
+    #                         matrix=IDENTITY_MATRIX,
+    #                         name=f"{self.weighted_scores_nodes[i].name} to {COMBINED_NORMS_NODE_NAME}")
+    #                     for i, source in enumerate(input_sources)
+    #                 ],
+    #             }
+    #         ],
+    #         # EM2 BREADCRUMB: NEED TO SPECIFY FUNCTION HERE
+    #         # function= FUNCTION THAT CHOOSES ARG MIN FROM SUMMED WEIGHTED NORMS
+    #         ),
+    #     )
+    #
+    #     for i, proj in enumerate(self.combined_norms_node.path_afferents):
+    #         self.key_fields[i].weighted_norms_projection = proj
 
     def _construct_softmax_gain_control_node(self, softmax_gain):
         node = None

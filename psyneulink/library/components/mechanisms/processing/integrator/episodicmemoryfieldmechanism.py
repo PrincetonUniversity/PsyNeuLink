@@ -52,7 +52,9 @@ __all__ = ['EpisodicMemoryFieldMechanism',
 DifferentiableContentAddressableMemory_FUNCTION = 'DifferentiableContentAddressableMemory Function'
 QUERY = "QUERY"
 SCORES = "SCORES"
-COMBINED_MATCH_SCORES = "COMBINED_MATCH_SCORES"
+NORMS = "NORMS"
+COMBINED_MATCH_SCORES = "COMBINED MATCH SCORES"
+COMBINED_NORMS = "COMBINED NORMS"
 RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
@@ -91,6 +93,7 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
         memory = Parameter(None, pnl_internal=True, stateful=True)
         scores = Parameter([0], stateful=True)
+        weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
         normalize_memories = Parameter(True)
         decay_rate = Parameter(1.0, modulable=True)
@@ -127,9 +130,10 @@ class DifferentiableContentAddressableMemory(Function_Base): #
                  context=None,
                  params=None,
                  ) -> (np.array, np.array):
-        """Override to accept, use and return scores argument, and to store() when storage_condition is satisfied
+        """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
         - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
-        - Compute dot product of query with entries (rows) -> scores
+        - Compute distance (dot product by default) between query each entry (row) -> scores
+        - Compute norm of each entry (row) -> norms
         - Call _store_memory() to store query if store == True
 
         Return retrieved value, scores
@@ -137,26 +141,30 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         """
         query = np.asarray(variable, dtype=float)
 
-        # If this is an initialization run, just return query and zeros for score
+        # If this is an initialization run, just return query and zeros for score and norms
+        scores_template = norms_template = np.zeros(len(self.memory))
         if self.is_initializing:
-            return query, np.zeros(len(self.memory))
+            return query, scores_template, norms_template
 
         memory = self.parameters.memory._get(context)
         scores_for_retrieval = self.parameters.scores._get(context)
         # scores_for_retrieval = self._get_current_parameter_value('scores', context)
 
-        # Retrieve
+        # Retrieve memory weighted by scores_for_retrieval
         # retrieved = (scores_for_retrieval @ memory).squeeze()
         retrieved = (scores_for_retrieval @ memory).squeeze()
 
         # Compute match scores for query
         match_scores = self._compute_scores(query, memory, context)
 
-        # Retrieve memory weighted by scores_for_retrieval
+        # Compute norms for entries in memory (to determine weakest memory for storage)
+        norms = np.linalg.norm(memory, axis=1)
+
+        # Store memory in place of weakest one
         if self.parameters.store._get(context) == True:
             self._store_memory(query, context)
 
-        return retrieved, match_scores
+        return retrieved, match_scores, norms
 
     def _compute_scores(self, query, memory, context=None)->np.array:
         normalize_memories = self.parameters.normalize_memories._get(context)
@@ -179,9 +187,9 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         if decay_rate <= 1.0:
             memory *= decay_rate
 
-        # EM2 BREADCRUMB: THIS NEEDS TO BE EVALUATED / COORDINATED OVER ALL FIELDS SIMULTANEOUSLY
-        idx_of_weakest_memory = int(np.argmin(np.linalg.norm(memory, axis=1)))
-        memory[idx_of_weakest_memory] = query
+        # idx_of_weakest_memory = int(np.argmin(np.linalg.norm(memory, axis=1)))
+        memory[self.parameters.weakest_memory._get(context)] = query
+        # memory[self._get_current_parameter_value('weakest_memory', context)] = query
 
         self.parameters.memory._set(memory, context, override=True)
 
@@ -295,6 +303,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         default_variable = np.array([
             np.zeros(field_shape),
             np.zeros(self.memory_capacity),
+            np.zeros(1),
         ], dtype=object)
 
         function = DifferentiableContentAddressableMemory(default_variable=field_memory[0],
@@ -307,11 +316,14 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
-                {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)}]
+                       {NAME: COMBINED_MATCH_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
+                       {NAME: COMBINED_NORMS, VARIABLE: np.zeros(1)},]
 
         output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
         if field_type == FieldType.KEY:
             output_ports.append({NAME: SCORES, VARIABLE: (OWNER_VALUE, 1)})
+            # EM2 BREADCRUMB: MOVE THIS TO ABOVE IF/WHEN NORMS OF VALUE NODES ARE ALSO USED TO DETERMINE WEAKEST MEMORY
+            output_ports.append({NAME: NORMS, VARIABLE: (OWNER_VALUE, 2)})
 
         super().__init__(
             default_variable=default_variable,
@@ -355,19 +367,13 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
     def _validate_variable(self, variable, context=None):
         variable = np.asarray(variable, dtype=object)
-        if len(variable) != 2:
-            raise EpisodicMemoryFieldMechanismError(
-                f"Variable for {self.name} must contain two items: QUERY and COMBINED_MATCH_SCORES."
-            )
-        if len(variable[0]) != self.field_shape:
-            raise EpisodicMemoryFieldMechanismError(
-                f"QUERY input for {self.name} has length {len(variable[0])}; expected {self.field_shape}."
-            )
-        if len(variable[1]) != self.memory_capacity:
-            raise EpisodicMemoryFieldMechanismError(
-                f"COMBINED_MATCH_SCORES input for {self.name} has length {len(variable[1])}; "
-                f"expected {self.memory_capacity}."
-            )
+        assert len(variable) == 3, (f"Variable for {self.name} must contain three items: "
+                                    f"QUERY, COMBINED_MATCH_SCORES and COMBINED_NORMS.")
+        assert len(variable[0]) == self.field_shape, (f"QUERY input for {self.name} has length {len(variable[0])}; "
+                                                      f"expected {self.field_shape}.")
+        assert len(variable[1]) == self.memory_capacity,(f"COMBINED_MATCH_SCORES input for {self.name} has length "
+                                                         f"{len(variable[1])}; expected {self.memory_capacity}.")
+        assert len(variable[2]) == 1, f"COMBINED_NORMS input for {self.name} is not length 1"
         return variable
 
     def _parse_function_variable(self, variable, context=None):
@@ -377,6 +383,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     def _execute(self, variable=None, context=None, runtime_params=None):
         variable = self._validate_variable(variable, context=context)
         scores = variable[1]
+        weakest_memory = variable[2]
 
         # EM2 BREADCRUMB: ALTERNATIVE WOULD BE TO ASSIGN store AND memory TO runtime_params; MORE LLVM FRIENDLY?
         storage_condition = self.parameters.storage_condition._get(context)
@@ -385,6 +392,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                         if storage_condition is not None else False)
         self.function.parameters.store._set(store, context)
         self.function.parameters.scores._set(scores, context)
+        self.function.parameters.weakest_memory._set(weakest_memory, context)
 
         # return super()._execute(variable, context, runtime_params)
         return super()._execute(variable, context, runtime_params)
