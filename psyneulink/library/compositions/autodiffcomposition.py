@@ -1598,6 +1598,22 @@ class AutodiffComposition(Composition):
                  f"of LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
 
             self._analyze_graph()
+
+            # this is a workaround for the fact that initialization like
+            # creation of CIM ports via _analyze_graph will happen in the None
+            # context (even if context is passed), but there will likely be
+            # initialized variable/value of the wrong shape in this `context`
+            # because infer_backpropagation_learning_pathways happens later
+            # within a call to AutodiffComposition.run. This is a workaround at
+            # the cost of overwriting the values in `context` which potentially
+            # could have been set correctly and intentionally in some unusal
+            # way.
+            if context.execution_id is not None:
+                for cim in [self.input_CIM, self.output_CIM]:
+                    for p in ['variable', 'value']:
+                        param = getattr(cim.parameters, p)
+                        param._initialize_from_context(context, Context(None))
+
             if execution_mode is pnlvm.ExecutionMode.Python:
                 self._update_python_backprop_pathways = False
             else:
@@ -2474,6 +2490,7 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
                                                          context=context,
                                                          base_context=base_context)
+            self._initialize_from_context(context, base_context, override=False)
         else:
             # No learnable pathways
             if self.targets:
