@@ -14,8 +14,9 @@ Refactored EMComposition prototype.
 This module introduces EpisodicMemoryFieldMechanism, a field-local episodic memory mechanism
 that owns the memory matrix for a single field. For the moment, EpisodicMemoryFieldMechanism uses
 only DifferentiableContentAddressableMemory as its Function (defined in the EpisodicMemoryFieldMechanism module)
-that is limited to a single field in memory, the use of dot products to compute its weights, and a boolean storage mechanism that stores the query input into memory with a probability specified by
-storage_prob (True or False).
+that is limited to a single field in memory, that uses its XXX function to determine scores for each entry in memory,
+and a _store_memory method that stores the query input into memory with a probability specified by
+storage_prob (True or False) when storage_condition is satisfied
 
 The refactored EMComposition uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
@@ -27,7 +28,7 @@ High-level execution per field:
 3. SCORES from key fields are weighted, combined and softmax-normalized by RETRIEVE.
 4. The normalized combined scores are sent back to each EpisodicMemoryFieldMechanism.input_port[COMBINED_SCORES].
 5. Each EpisodicMemoryFieldMechanism retrieves its field value and emits RETRIEVED.
-6. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix according to storage_prob.
+6. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix when storage_condition is True
 """
 
 import copy
@@ -304,6 +305,7 @@ class EMComposition2(AutodiffComposition):
 
     with:
       - one EpisodicMemoryFieldMechanism per field, each owning its field memory matrix.
+      - storage occurs in each memory_node based on storage_condition an its storage_prob
 
     The externally visible structure is kept similar to the original EMComposition:
       - input_nodes
@@ -340,7 +342,7 @@ class EMComposition2(AutodiffComposition):
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
-        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        storage_prob = Parameter(1.0, modulable=True)
         store_on_optimization = Parameter(FIRST)
         memory_decay_rate = Parameter(AUTO, modulable=True)
         purge_by_field_weights = Parameter(False, structural=True)
@@ -984,6 +986,7 @@ class EMComposition2(AutodiffComposition):
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
                 decay_rate=memory_decay_rate,
+                storage_prob=storage_prob,
                 distance_function=function,
                 normalize_memories=normalize_memories,
 

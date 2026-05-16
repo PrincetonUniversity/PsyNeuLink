@@ -20,6 +20,8 @@ If it is constructed as FieldType.VALUE:
   - it has only a RETRIEVED OutputPorts
   - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
 
+EM2 BREADCRUMB: GET DOCSTRING FROM COMBINATION OF EpisodicMemoryMechanism and EMStorageMechanism
+
 IMPLEMENTATION NOTE:
     EMCompositon2 uses one EpisodicMemoryFieldMechanism per memory field
     instead of using EMStorageMechanism to update MappingProjection matrices.
@@ -32,13 +34,14 @@ from beartype import beartype
 import numpy as np
 
 from psyneulink.core.components.functions import Function_Base
+from psyneulink.core.components.functions.function import _random_state_getter, _seed_setter, DEFAULT_SEED
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.globals.keywords import (
-    COSINE, NAME, NEWEST, OLDEST, OVERWRITE, OWNER_VALUE, RANDOM, VARIABLE)
+    COSINE, DEFAULT, MULTIPLICATIVE_PARAM, NAME, NEWEST, OLDEST, OVERWRITE, OWNER_VALUE, RANDOM, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar, all_within_range
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import (
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError)
@@ -67,7 +70,8 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         default_variable=None,                     \
         initializer=None,                          \
         memory_capacity=None,                      \
-        decay_rate=None,                           \
+        decay_rate=0,                              \
+        storage_prob=1.0,                          \
         distance_function=Distance(metric=COSINE), \
         params=None,                               \
         owner=None,                                \
@@ -97,7 +101,15 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         store = Parameter(False)
         normalize_memories = Parameter(True)
         decay_rate = Parameter(1.0, modulable=True)
+        storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
+
+        def _validate_storage_prob(self, storage_prob):
+            storage_prob = float(storage_prob)
+            if not all_within_range(storage_prob, 0, 1):
+                return f"must be a float in the interval [0,1]."
 
     @check_user_specified
     @beartype
@@ -106,6 +118,7 @@ class DifferentiableContentAddressableMemory(Function_Base): #
                  memory=None,
                  normalize_memories: bool = True,
                  decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
                  distance_function:Optional[Union[Distance, Callable]]=None,
                  params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
@@ -116,6 +129,7 @@ class DifferentiableContentAddressableMemory(Function_Base): #
             memory=memory,
             normalize_memories=normalize_memories,
             decay_rate=decay_rate,
+            storage_prob=storage_prob,
             distance_function=distance_function,
             params=params,
             owner=owner,
@@ -148,10 +162,10 @@ class DifferentiableContentAddressableMemory(Function_Base): #
 
         memory = self.parameters.memory._get(context)
         scores_for_retrieval = self.parameters.scores._get(context)
-        # scores_for_retrieval = self._get_current_parameter_value('scores', context)
+        storage_prob = self._get_current_parameter_value('storage_prob', context)
+        random_state = self.parameters.random_state._get(context)
 
         # Retrieve memory weighted by scores_for_retrieval
-        # retrieved = (scores_for_retrieval @ memory).squeeze()
         retrieved = (scores_for_retrieval @ memory).squeeze()
 
         # Compute match scores for query
@@ -161,8 +175,9 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         norms = np.linalg.norm(memory, axis=1)
 
         # Store memory in place of weakest one
-        if self.parameters.store._get(context) == True:
-            self._store_memory(query, context)
+        if self.parameters.store._get(context) == True and random_state.uniform(0, 1) < storage_prob:
+            item_to_store = query if np.any(query) else retrieved
+            self._store_memory(item_to_store, context)
 
         return retrieved, match_scores, norms
 
@@ -181,6 +196,8 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         return memory @ query
 
     def _store_memory(self, query, context=None):
+        # storage_prob = self.parameters.storage_prob._get(context)
+        storage_prob = self._get_current_parameter_value('storage_prob', context)
         decay_rate = self.parameters.decay_rate._get(context)
         memory = self.parameters.memory._get(context)
         store_idx = int(self.parameters.weakest_memory._get(context))
@@ -253,6 +270,12 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         function = Parameter(DifferentiableContentAddressableMemory, stateful=False, loggable=False)
         memory = FunctionParameter(None, function_parameter_name='initializer')
         decay_rate = Parameter(0.0, modulable=True, stateful=True)
+        storage_prob = FunctionParameter(1.0,
+                                         function_name='function',
+                                         function_parameter_name='storage_prob',
+                                         primary=True,
+                                         modulable=True,
+                                         stateful=True)
         # Used by Mechanism._execute to ensure that storage occurs after retrieval
         storage_condition = Parameter(None, stateful=False, loggable=False)
 
@@ -273,6 +296,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         # BREADCRUMB: MOVE THESE ALL TO EMComposition2.field AND PASS IN HERE TO **kwargs??
         # These are all used for construction of ContentAddressableMemory, and exposed as properties on Mechanism:
         decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,  # -> rate on ContentAddressableMemory
+        storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
         normalize_memories: bool = True,
         noise: Optional[Union[int, float, List, np.ndarray, Callable]]=None,
         distance_function:Optional[Union[Distance, Callable]]=None,
@@ -308,6 +332,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         function = DifferentiableContentAddressableMemory(default_variable=field_memory[0],
                                                           memory=field_memory,
                                                           decay_rate=decay_rate,
+                                                          storage_prob=storage_prob,
                                                           params=params,
                                                           owner=self,
                                                           prefs=prefs
@@ -386,10 +411,11 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         # EM2 BREADCRUMB: ALTERNATIVE WOULD BE TO ASSIGN store AND memory TO runtime_params; MORE LLVM FRIENDLY?
         storage_condition = self.parameters.storage_condition._get(context)
-        store = (storage_condition.is_satisfied(scheduler=context.composition.scheduler,
-                                                       context=context)
-                        if storage_condition is not None else False)
+        store = (storage_condition.is_satisfied(scheduler=context.composition.scheduler, context=context)
+                 if storage_condition is not None else False)
         self.function.parameters.store._set(store, context)
+
+        # EM2 BREADCRUMB: MAKE THESE FUNCTION PARAMETERS (LIKE storage_prob) ONCE THAT IS SUPPORTED FOR PYTORCH
         self.function.parameters.scores._set(scores, context)
         self.function.parameters.weakest_memory._set(weakest_memory, context)
 

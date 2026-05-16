@@ -36,6 +36,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
+
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
 )
