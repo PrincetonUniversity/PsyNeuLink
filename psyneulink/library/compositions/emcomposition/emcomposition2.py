@@ -449,33 +449,28 @@ class EMComposition2(AutodiffComposition):
         self._enable_learning_warning_flag = False
         self._use_gating_for_weighting = use_gating_for_weighting
 
-        memory_template, memory_capacity = self._parse_memory_template(
-            memory_template,
-            memory_capacity,
-            memory_fill,
-        )
+        memory_template, memory_capacity = self._parse_memory_template(memory_template,
+                                                                       memory_capacity,
+                                                                       memory_fill)
 
         self.fields = ContentAddressableList(component_type=Field)
         self.entry_template = memory_template[0]
 
-        (
-            field_names,
-            field_weights,
-            learn_field_weights,
-            target_fields,
-            concatenate_queries,
-        ) = self._parse_fields(
-            fields,
-            field_names,
-            field_weights,
-            learn_field_weights,
-            learning_rate,
-            normalize_field_weights,
-            concatenate_queries,
-            normalize_memories,
-            target_fields,
-            name,
-        )
+        (field_names,
+         field_weights,
+         learn_field_weights,
+         target_fields,
+         concatenate_queries,
+         ) = self._parse_fields(fields,
+                                field_names,
+                                field_weights,
+                                learn_field_weights,
+                                learning_rate,
+                                normalize_field_weights,
+                                concatenate_queries,
+                                normalize_memories,
+                                target_fields,
+                                name)
 
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
