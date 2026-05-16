@@ -320,10 +320,9 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                        {NAME: COMBINED_NORMS, VARIABLE: np.zeros(1)},]
 
         output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
+        output_ports.append({NAME: NORMS, VARIABLE: (OWNER_VALUE, 2)})
         if field_type == FieldType.KEY:
-            output_ports.append({NAME: SCORES, VARIABLE: (OWNER_VALUE, 1)})
-            # EM2 BREADCRUMB: MOVE THIS TO ABOVE IF/WHEN NORMS OF VALUE NODES ARE ALSO USED TO DETERMINE WEAKEST MEMORY
-            output_ports.append({NAME: NORMS, VARIABLE: (OWNER_VALUE, 2)})
+            output_ports.insert(1, {NAME: SCORES, VARIABLE: (OWNER_VALUE, 1)})
 
         super().__init__(
             default_variable=default_variable,
@@ -373,8 +372,8 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
                                                       f"expected {self.field_shape}.")
         assert len(variable[1]) == self.memory_capacity,(f"COMBINED_SCORES input for {self.name} has length "
                                                          f"{len(variable[1])}; expected {self.memory_capacity}.")
-        assert len(variable[2]) == self.memory_capacity, (f"COMBINED_NORMS input for {self.name} has length "
-                                                         f"{len(variable[2])}; expected {self.memory_capacity}.")
+        assert len(variable[2]) == 1, (f"COMBINED_NORMS input for {self.name} has length "
+                                       f"{len(variable[2])}; expected 1.")
         return variable
 
     def _parse_function_variable(self, variable, context=None):

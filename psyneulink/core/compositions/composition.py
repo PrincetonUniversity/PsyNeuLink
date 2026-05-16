@@ -6881,6 +6881,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
                     # FIX: ??DEAL WITH WHETHER IT IS IN OR OUTSIDE OF COMPOSITION??
+                    # FIX: ALLOW LEGITIMATE MULTIPLE PROJECTIONS
                     projection = existing_projections[-1]
 
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
