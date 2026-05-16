@@ -174,7 +174,7 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         # Compute norms for entries in memory (to determine weakest memory for storage)
         norms = np.linalg.norm(memory, axis=1)
 
-        # Store memory in place of weakest one
+        # Store memory in place of weakest one if condition is met an storage_prob > 0
         if self.parameters.store._get(context) == True and random_state.uniform(0, 1) < storage_prob:
             item_to_store = query if np.any(query) else retrieved
             self._store_memory(item_to_store, context)
@@ -196,8 +196,6 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         return memory @ query
 
     def _store_memory(self, query, context=None):
-        # storage_prob = self.parameters.storage_prob._get(context)
-        storage_prob = self._get_current_parameter_value('storage_prob', context)
         decay_rate = self.parameters.decay_rate._get(context)
         memory = self.parameters.memory._get(context)
         store_idx = int(self.parameters.weakest_memory._get(context))

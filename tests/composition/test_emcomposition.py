@@ -740,7 +740,7 @@ class TestExecution:
 
         # Execute and validate results
         retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
-        # em._build_pytorch_representation()
+
         for retrieved_item, expected_item in zip(retrieved, expected_retrieval):
             np.testing.assert_allclose(retrieved_item, expected_item)
 
