@@ -928,7 +928,8 @@ class EMComposition2(AutodiffComposition):
             self.add_linear_processing_pathway([self.combined_scores_node,
                                                 field.memory_node,
                                                 field.retrieved_node])
-            self.add_projections([self.combined_scores_node.efferents])
+            # EM2 BREADCRUMB:
+            # self.add_projections([self.combined_scores_node.efferents])
 
         if self.softmax_gain_control_node:
             self.add_node(self.softmax_gain_control_node, context=context)
@@ -938,6 +939,12 @@ class EMComposition2(AutodiffComposition):
                 self.add_linear_processing_pathway([
                     field.weight_node,
                     field.weighted_scores_node])
+
+        # EM2 BREADCRUMB:
+        #     HACK TO DEAL WITH FAILURE OF composition.add_projection() to handle multiple projections between mechs
+        for proj in (self.combined_scores_node.path_afferents + self.combined_scores_node.efferents):
+            if proj not in self.projections:
+                self.add_projection(proj, context=context)
 
     def _construct_input_nodes(self):
         for field in self.key_fields:

@@ -183,13 +183,12 @@ class DifferentiableContentAddressableMemory(Function_Base): #
     def _store_memory(self, query, context=None):
         decay_rate = self.parameters.decay_rate._get(context)
         memory = self.parameters.memory._get(context)
+        store_idx = int(self.parameters.weakest_memory._get(context))
 
         if decay_rate <= 1.0:
             memory *= decay_rate
 
-        # idx_of_weakest_memory = int(np.argmin(np.linalg.norm(memory, axis=1)))
-        memory[self.parameters.weakest_memory._get(context)] = query
-        # memory[self._get_current_parameter_value('weakest_memory', context)] = query
+        memory[store_idx] = query
 
         self.parameters.memory._set(memory, context, override=True)
 
