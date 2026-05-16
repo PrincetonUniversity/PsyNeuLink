@@ -194,7 +194,11 @@ class Execution:
                             # Reshape to match numpy 0d arrays and "matrix"
                             # parameters that are flattened in compiled form
                             assert pnl_value.shape == () or pnl_param.name == "matrix", \
-                                "{}: {} vs. {}".format(pnl_param.name, pnl_value.shape, value.shape)
+                                "Unexpected shape of '{}': {}({}) vs. {}({})".format(pnl_param.name,
+                                                                                     pnl_value.shape,
+                                                                                     pnl_value.dtype,
+                                                                                     value.shape,
+                                                                                     value.dtype)
 
                             # Use an assignment instead of reshape().
                             # The latter would silently create a copy if the shape
