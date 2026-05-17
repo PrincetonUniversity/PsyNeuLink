@@ -105,6 +105,7 @@ __all__ = [
     "PROBABILISTIC",
     "TARGET_FIELD",
     "WEIGHTED_AVG",
+    "WEIGHTED_SCORES"
 ]
 
 
@@ -131,6 +132,7 @@ MATCH = "MATCH"
 MATCH_AFFIX = f" [{MATCH}]"
 WEIGHT = "WEIGHT"
 WEIGHT_AFFIX = f" [{WEIGHT}]"
+WEIGHTED_SCORES = "WEIGHTED SCORE"
 WEIGHTED_SCORES_NODE_NAME = "WEIGHTED SCORES"
 WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
 COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
@@ -1038,8 +1040,10 @@ class EMComposition2(AutodiffComposition):
                             sender=field.weight_node,
                             matrix=FULL_CONNECTIVITY_MATRIX,
                         )
-                    },
+                    }
                 ],
+                output_ports={NAME: WEIGHTED_SCORES,
+                              VARIABLE: (OWNER_VALUE,0)},
                 function=LinearCombination(operation=PRODUCT),
             )
             field.scores_projection = field.weighted_scores_node.path_afferents[0]
@@ -1070,11 +1074,14 @@ class EMComposition2(AutodiffComposition):
 
         # scores_inputs = [node.output_ports[SCORES] for field in self.key_fields
         #                   for node in {field.weighted_scores_node if field_weighting else field.memory_node}]
-        scores_inputs = [(field.weighted_scores_node if field_weighting else field.memory_node).output_ports[SCORES]
-                         for field in self.key_fields]
-        norms_inputs = [(field.weighted_scores_node if field.type == FieldType.KEY and field_weighting
-                         else field.memory_node).output_ports[NORMS]
-                        for field in self.fields]
+        scores_inputs = [(field.weighted_scores_node.output_ports[WEIGHTED_SCORES] if field_weighting
+                          else field.memory_node.output_ports[SCORES])
+                          for field in self.key_fields]
+        # EM2 BREADCRUMB: THIS WEIGHTS THE NORMS, WHICH IS PROBABLY NOT CORRECT:
+        # norms_inputs = [(field.weighted_scores_node if field.type == FieldType.KEY and field_weighting
+        #                  else field.memory_node).output_ports[NORMS]
+        #                 for field in self.fields]
+        norms_inputs = [field.memory_node.output_ports[NORMS] for field in self.fields]
         self.combined_scores_node = ProcessingMechanism(
             name=COMBINED_SCORES_NODE_NAME,
             input_ports=[
@@ -1106,8 +1113,10 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             # Assign Projections from memory_nodes to combined_scores nodes to relevant attributes of field
             if field.type == FieldType.KEY:
+                # EM2 BREADCRUMB: NEED TO GET AFFERENT FROM field_weighted_scores NODE IF field_weighting
                 scores_proj = next(proj for proj in self.combined_scores_node.path_afferents
-                                   if proj.sender is field.memory_node.output_ports[SCORES])
+                                   if proj.sender is (field.weighted_scores_node.output_ports[WEIGHTED_SCORES]
+                                                      if field_weighting else field.memory_node.output_ports[SCORES]))
                 field.weighted_scores_projection = scores_proj
             norms_proj = next(proj for proj in self.combined_scores_node.path_afferents
                               if proj.sender is field.memory_node.output_ports[NORMS])
