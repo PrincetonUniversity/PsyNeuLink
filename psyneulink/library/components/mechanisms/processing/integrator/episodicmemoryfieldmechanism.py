@@ -200,8 +200,8 @@ class DifferentiableContentAddressableMemory(Function_Base): #
         memory = self.parameters.memory._get(context)
         store_idx = int(self.parameters.weakest_memory._get(context))
 
-        if decay_rate <= 1.0:
-            memory *= decay_rate
+        if decay_rate >= 0.0:
+            memory *= (1-decay_rate)
 
         memory[store_idx] = query
 

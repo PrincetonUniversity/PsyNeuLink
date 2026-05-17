@@ -401,11 +401,11 @@ class EMComposition2(AutodiffComposition):
             if option not in {FIRST, LAST, ALL}:
                 return "must be one of FIRST, LAST, or ALL."
 
-        def _parse_memory_decay_rate(self, memory_decay_rate):
-            if is_numeric_scalar(memory_decay_rate):
-                return np.array(1-memory_decay_rate)
-            else:
-                return memory_decay_rate
+        # def _parse_memory_decay_rate(self, memory_decay_rate):
+        #     if is_numeric_scalar(memory_decay_rate):
+        #         return np.array(1-memory_decay_rate)
+        #     else:
+        #         return memory_decay_rate
 
     @check_user_specified
     def __init__(

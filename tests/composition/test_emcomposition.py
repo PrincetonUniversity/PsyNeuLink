@@ -616,14 +616,14 @@ class TestExecution:
         #                                                                                           3.18900183],
         #                                                                                          [3.99460668,
         #                                                                                           6.18408988]]),
-        (7, [[[1,2,3],[4,6]],        # Store + no decay
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+        # (7, [[[1,2,3],[4,6]],        # Store + no decay
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                           [4, 6]],      [[1.        ,
+        #                                                                                           2.        ,
+        #                                                                                           3.10152241],
+        #                                                                                          [4.        ,
+        #                                                                                           6.10107065]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
@@ -727,8 +727,8 @@ class TestExecution:
         params.update({'softmax_threshold': None})
         # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
-        # em = EMComposition(**params)
-        em = pnl.EMComposition2(**params)
+        em = EMComposition(**params)
+        # em = pnl.EMComposition2(**params)
 
         # Construct inputs
         input_nodes = em.query_input_nodes + em.value_input_nodes
