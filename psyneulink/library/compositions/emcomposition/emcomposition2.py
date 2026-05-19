@@ -21,6 +21,13 @@ storage_prob (True or False) when storage_condition is satisfied
 The refactored EMComposition uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
+- Does not support concatenate_queries
+- (1-memory_decay_rate) is what is applied (multiplicatively) to decay memory
+- If a value is not provided as input to KEY Field, then the retrieved value is stored;
+   need to deal with nested emcomposition2 in that case:
+   - does it automatically get a default input from the input_CIM?
+   - could it be detected structurally by no afferent input to the relevant input_CIM port?
+
 High-level execution per field:
 
 1. QUERY input is sent to EpisodicMemoryFieldMechanism.input_port[QUERY].
@@ -251,6 +258,9 @@ class Field:
         self.retrieved_projection = None
         self.weight_projection = None
         self.weighted_scores_projection = None
+
+        self.missing_value = False
+
 
     @property
     def nodes(self):
@@ -971,7 +981,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
 
             # EM2 BREADCRUMB: ADD SUPPORT FOR FIELD-BY-FIELD DISTANCE FUNCTION SPECIFICATION
-            key_len = len(field.query.squeeze())
+            key_len = 1 if is_numeric_scalar(field.query.squeeze()) else len(field.query.squeeze())
             args = [(L0,True) if key_len == 1 else (DOT_PRODUCT, normalize_memories)
                     for key in memory_template[0]]
             function=MatrixTransform(operation=args[0][OPERATION],
@@ -1358,6 +1368,42 @@ class EMComposition2(AutodiffComposition):
             skip_initialization=skip_initialization,
             **kwargs,
         )
+
+    def _instantiate_input_dict(self, input_dict):
+        """Override to determine — and respond appropriately -- if any KEY and/or VALUE fields are not specified.
+        - If any KEY fields are missing, raise error
+        - If any VALUE fields are missing, issue warning that the retrieved value will be stored with the specified KEY
+        """
+        if self.is_nested:
+            # EM2 BREADCRUMB: NEED TESTS FOR THIS
+            missing_query_nodes = [f"'{node.name}'" for node in self.query_input_nodes
+                                   if self.input_CIM._get_source_node_for_input_CIM(node.input_port)]
+            missing_value_nodes = [node for node in self.value_input_nodes
+                                   if self.input_CIM._get_source_node_for_input_CIM(node.input_port)]
+        else:
+            missing_query_nodes = [f"'{node.name}'" for node in self.query_input_nodes if node not in input_dict]
+            missing_value_nodes = [node for node in self.value_input_nodes if node not in input_dict]
+
+        if missing_query_nodes:
+            raise EMComposition2Error(
+                f"'inputs' argument of call to learn() method for '{self.name}' is missing entries "
+                f"for the following query_input_nodes: {', '.join(missing_query_nodes)}")
+
+        if missing_value_nodes:
+            for field in [f for f in self.fields if f.input_node in missing_value_nodes]:
+                field.input_node.value_input_specified = False
+            missing_value_nodes_str = [f"'{node.name}'" for node in missing_value_nodes]
+            plural = len(missing_value_nodes) > 1
+            query_str = 'queries' if plural else 'query'
+            key_str = 'keys' if plural else 'key'
+            s = "s" if plural else ""
+            their_its = 'their' if plural else 'its'
+            entries = "entries" if plural else "an entry"
+            warnings.warn(f"'inputs' argument of call to learn() method for '{self.name}' is missing {entries} "
+                          f"for the following value_input_node{s}, so the retrieved value{s} will be stored with "
+                          f"the specified {query_str} as {their_its} {key_str}: {', '.join(missing_value_nodes_str)}.")
+
+        return super()._instantiate_input_dict(input_dict)
 
     def _get_execution_mode(self, execution_mode):
         if execution_mode is None:

@@ -537,6 +537,7 @@ class EMStorageMechanism(LearningMechanism):
                                          function_parameter_name='storage_prob',
                                          primary=True,
                                          modulable=True,
+                                         aliases=[MULTIPLICATIVE_PARAM],
                                          stateful=True)
         decay_rate = Parameter(0.0, modulable=True, stateful=True)
         memory_matrix = Parameter(None, getter=_memory_matrix_getter, read_only=True, structural=True)

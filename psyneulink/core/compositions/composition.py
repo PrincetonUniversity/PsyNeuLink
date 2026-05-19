@@ -11303,7 +11303,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            # f"{', '.join(bad_entry_names)}.")
                            f"{bad_entry_names}.")
 
-    def _instantiate_input_dict(self, inputs):
+    def _instantiate_input_dict(self, inputs:dict)->dict:
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.

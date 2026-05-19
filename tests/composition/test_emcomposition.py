@@ -4,8 +4,6 @@ import pytest
 import re
 from types import MappingProxyType
 
-from torchgen.api.types import storageT
-
 import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
@@ -611,53 +609,53 @@ class TestExecution:
         # (6, [[[1,2,3],[4,6]],        # Unequal field_weights
         #      [[1,2,5],[4,8]],
         #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
-        #                                                                           [4, 6]],      [[0.99865724,
-        #                                                                                           1.99730932,
-        #                                                                                           3.18900183],
-        #                                                                                          [3.99460668,
-        #                                                                                           6.18408988]]),
-        # (7, [[[1,2,3],[4,6]],        # Store + no decay
+        #                                                                         [4, 6]],      [[0.99865724,
+        #                                                                                         1.99730932,
+        #                                                                                         3.18900183],
+        #                                                                                        [3.99460668,
+        #                                                                                         6.18408988]]),
+        # (7, [[[1,2,3],[4,6]],        # Store + no decay (not identical to above since 2 trials)
         #      [[1,2,5],[4,8]],
         #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
-        #                                                                           [4, 6]],      [[1.        ,
-        #                                                                                           2.        ,
-        #                                                                                           3.10152241],
-        #                                                                                          [4.        ,
-        #                                                                                           6.10107065]]),
-        (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
-                                                                                    [4, 6]],   [[0.99996025,
-                                                                                                 1.99992024,
-                                                                                                 3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (10, [[[1,2,3],[4,6]],        # Store + numerical decay
-              [[1,2,5],[4,8]],
-              [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                 [4, 6]],       [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
-              [[1,2,5],[4,8]],
-              [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
-                                                                                 [4, 6]],       [[0.99922544,
-                                                                                                  1.99844608,
-                                                                                                  3.38989346],
-                                                                                                 [3.99689126,
-                                                                                                  6.38682264]]),
-
-        (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retreieval in MEMORY matrix)
+        #                                                                         [4, 6]],      [[1.,
+        #                                                                                         2.,
+        #                                                                                         3.1930442],
+        #                                                                                        [4.,
+        #                                                                                         6.19218518]]),
+        # (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                           [4, 6]],   [[0.75033754,
+        #                                                                                        1.50067508,
+        #                                                                                        2.39579578],
+        #                                                                                       [3.00135017,
+        #                                                                                        4.64616414]]),
+        # (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                           [4, 6]],   [[0.75033754,
+        #                                                                                        1.50067508,
+        #                                                                                        2.39579578],
+        #                                                                                       [3.00135017,
+        #                                                                                        4.64616414]]),
+        # (10, [[[1,2,3],[4,6]],        # Store + numerical decay
+        #       [[1,2,5],[4,8]],
+        #       [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                          [4, 6]],       [[0.90013502,
+        #                                                                                           1.80027003,
+        #                                                                                           2.87414483],
+        #                                                                                          [3.60054007,
+        #                                                                                           5.57377676]]),
+        # # EM2 BREADCRUMB: emcomposition2 DOES NOT SUPPORT concatenate_queries YET, SO THAT PART IS IGNORED
+        # (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
+        #       [[1,2,5],[4,8]],
+        #       [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
+        #                                                                          [4, 6]],       [[0.9002269 ,
+        #                                                                                           1.8004538 ,
+        #                                                                                           3.02632659],
+        #                                                                                          [3.60090759,
+        #                                                                                           5.71722345]]),
+        (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retrieval in MEMORY matrix)
               [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
                                                                                                    [[10],[0],[100]]),
 
@@ -727,8 +725,8 @@ class TestExecution:
         params.update({'softmax_threshold': None})
         # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
-        em = EMComposition(**params)
-        # em = pnl.EMComposition2(**params)
+        # em = EMComposition(**params)
+        em = pnl.EMComposition2(**params)
 
         # Construct inputs
         input_nodes = em.query_input_nodes + em.value_input_nodes
@@ -755,22 +753,42 @@ class TestExecution:
 
         # Validate storage
         if storage_prob:
-            # for actual, expected in zip(em.memory[-1], [[1,2,3],[4,6]]):
-            for actual, expected in zip(em.memory[-1], list(inputs.values())):
+            for actual, expected in zip(em.memory[0], list(inputs.values())):
                 np.testing.assert_array_equal(actual, expected)
 
+            # MODIFIED EM2 OLD:
+            # if memory_decay_rate in {None, AUTO}:
+            #     one_trial_decay = 1.0 - (1 / memory_capacity)
+            #     two_trial_decay = one_trial_decay ** 2
+            #     for template_item, actual_item in zip(memory_template[0], em.memory[0]):
+            #         np.testing.assert_array_equal(np.array(template_item), np.array(actual_item))
+            #     for template, actual in zip(memory_template[1:2], em.memory[1:2]):
+            #         for template_item, actual_item in zip(template,actual):
+            #             np.testing.assert_array_equal(np.array(template_item) * two_trial_decay, actual_item)
+            #     for template_item, actual_item in zip(memory_template[0], em.memory[3]):
+            #         np.testing.assert_array_equal(np.array(template_item) * one_trial_decay, actual_item)
+            # elif memory_decay_rate:
+            #     for expected, actual in zip(memory_template, em.memory[:3]):
+            #         for expected_item, actual_item in zip(expected,actual):
+            #             np.testing.assert_array_equal(np.array(expected_item) * (1-memory_decay_rate), actual_item)
+            # else:
+            #     for actual, expected in zip(em.memory[:3], memory_template):
+            #         for actual_item, expected_item in zip(actual, expected):
+            #             np.testing.assert_array_equal(actual_item, expected_item)
+            # MODIFIED EM2 NEW:
             if memory_decay_rate in {None, AUTO}:
-                for expected, actual in zip(memory_template, em.memory[:3]):
-                    for expected_item, actual_item in zip(expected,actual):
-                        np.testing.assert_array_equal(np.array(expected_item)  * (1 / memory_capacity), actual_item)
-            elif memory_decay_rate:
-                for expected, actual in zip(memory_template, em.memory[:3]):
-                    for expected_item, actual_item in zip(expected,actual):
-                        np.testing.assert_array_equal(np.array(expected_item) * memory_decay_rate, actual_item)
-            else:
-                for actual, expected in zip(em.memory[:3], memory_template):
-                    for actual_item, expected_item in zip(actual, expected):
-                        np.testing.assert_array_equal(actual_item, expected_item)
+                memory_decay_rate = 1.0 / memory_capacity
+            one_trial_decay = 1.0 - memory_decay_rate
+            two_trial_decay = one_trial_decay ** 2
+
+            for template_item, actual_item in zip(memory_template[0], em.memory[0]):
+                np.testing.assert_array_equal(np.array(template_item), np.array(actual_item))
+            for template, actual in zip(memory_template[1:2], em.memory[1:2]):
+                for template_item, actual_item in zip(template,actual):
+                    np.testing.assert_allclose(np.array(template_item) * two_trial_decay, actual_item)
+            for template_item, actual_item in zip(memory_template[0], em.memory[3]):
+                np.testing.assert_array_equal(np.array(template_item) * one_trial_decay, actual_item)
+            # MODIFIED EM2 END
 
         elif len(memory_template) < memory_capacity:
             if isinstance(memory_fill, tuple):

@@ -12,20 +12,32 @@ Subclass of EpisodicMemoryMechanism customized for EMComposition2.
 
 It is a field-local that uses DifferentiableContentAddressableMemory as its function, which supports only
 a single field of memory.
+
 It has QUERY and COMBINED_SCORES InputPorts
-If it is constructed as FieldType.KEY:
-  - it has both RETRIEVED and SCORES OutputPorts
+If it is constructed with FieldType.KEY:
+  - it has RETRIEVED, SCORES and NORMS OutputPorts
+  - SCORES and NORMS are used by combined_scores_node of emcomposition2
+         to combine then for retrieval (SCORES) and storage (NORMS)
   - function computes match scores between query and each entry in memory, reported in its SCORES OutputPort
-If it is constructed as FieldType.VALUE:
-  - it has only a RETRIEVED OutputPorts
+If it is constructed with FieldType.VALUE:
+  - it has only RETRIEVED and NORMS OutputPorts
+    - no SCORES OutputPort, since by definition those are not computed for VALUES
+    - has NORMS, since the value is included in the NORMS calculation jused to determine where to store
   - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
+
+It has a storage_condition, assigned by emcomposition2, that is used to determine when to retrieve and when to store:
+  a) if storage_condition is NOT satisfied:
+     - _execute() is called with runtime_params[OPERATION: RETRIEVE]
+  b) if storage_condition is satisfied:
+     - _execute() is called with runtime_params[OPERATION: STORE]
+     - output_ports are NOT updated; their values remain the ones assigned on the last retrieval
+  - it is assumed that (a) always occurs before (b) in execution of emcompostion2
 
 EM2 BREADCRUMB: GET DOCSTRING FROM COMBINATION OF EpisodicMemoryMechanism and EMStorageMechanism
 
 IMPLEMENTATION NOTE:
-    EMCompositon2 uses one EpisodicMemoryFieldMechanism per memory field
+    emcompositon2 uses one EpisodicMemoryFieldMechanism per memory field
     instead of using EMStorageMechanism to update MappingProjection matrices.
-
 
 """
 
@@ -38,8 +50,9 @@ from psyneulink.core.components.functions.function import _random_state_getter, 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.globals.keywords import (
-    COSINE, DEFAULT, MULTIPLICATIVE_PARAM, NAME, NEWEST, OLDEST, OVERWRITE, OWNER_VALUE, RANDOM, VARIABLE)
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.globals.keywords import (COSINE, DEFAULT, MULTIPLICATIVE_PARAM, NAME, NEWEST, OLDEST, OPERATION,
+                                              OUTPUT_PORT_PARAMS, OVERWRITE, OWNER_VALUE, RANDOM, RETRIEVE, STORE, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar, all_within_range
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -82,7 +95,11 @@ class DifferentiableContentAddressableMemory(Function_Base): #
 
     Use scores Parameter to compute retrieved value, which
       allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
-    Return scores based on current query (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition2)
+    Uses param[OPERATION] passed to _function() to determine whether that calls _retrieve() or _store()
+    Return value (retrieved of stored), scores and norms and  based on current query (e.g., so it can be used to
+    calculate
+    COMBINED_SCORES in
+    EMComposition2)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields
@@ -139,73 +156,137 @@ class DifferentiableContentAddressableMemory(Function_Base): #
     def _parse_distance_function_variable(self, variable, context=None):
         return convert_all_elements_to_np_array([variable, variable])
 
+    # # MODIFIED EM2 OLD:
+    # def _function(self,
+    #              variable:Optional[Union[list, np.array]]=None,
+    #              context=None,
+    #              params=None,
+    #              ) -> (np.array, np.array):
+    #     """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
+    #     Use store
+    #     - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
+    #     - Compute distance (dot product by default) between query each entry (row) -> scores
+    #     - Compute norm of each entry (row) -> norms
+    #     - Call _store_memory() to store query if store == True
+    #
+    #     Return retrieved value, scores
+    #
+    #     """
+    #     query = np.asarray(variable, dtype=float)
+    #
+    #     # If this is an initialization run, just return query and zeros for score and norms
+    #     scores_template = norms_template = np.zeros(len(self.memory))
+    #     if self.is_initializing:
+    #         return query, scores_template, norms_template
+    #
+    #     memory = self.parameters.memory._get(context)
+    #     scores_for_retrieval = self.parameters.scores._get(context)
+    #     storage_prob = self._get_current_parameter_value('storage_prob', context)
+    #     random_state = self.parameters.random_state._get(context)
+    #
+    #     # Retrieve memory weighted by scores_for_retrieval
+    #     retrieved = (scores_for_retrieval @ memory).squeeze()
+    #
+    #     # Compute match scores for query
+    #     match_scores = self._compute_scores(query, memory, context)
+    #
+    #     # Compute norms for entries in memory (to determine weakest memory for storage)
+    #     norms = np.linalg.norm(memory, axis=1)
+    #
+    #     # Store memory in place of weakest one if condition is met an storage_prob > 0
+    #     if self.parameters.store._get(context) == True and random_state.uniform(0, 1) < storage_prob:
+    #         item_to_store = query if np.any(query) else retrieved
+    #         self._store_memory(item_to_store, context)
+    #
+    #     return retrieved, match_scores, norms
+    # MODIFIED EM2 NEW:
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
                  context=None,
                  params=None,
-                 ) -> (np.array, np.array):
+                 ) -> (np.array, np.array, np.array):
         """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
-        - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
-        - Compute distance (dot product by default) between query each entry (row) -> scores
-        - Compute norm of each entry (row) -> norms
-        - Call _store_memory() to store query if store == True
+        Use specification of OPERATION (STORE or RETRIEVE) in params to determine which to do
+        If RETRIEVE:
+            - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
+            - Compute distance (dot product by default) between query each entry (row) -> scores
+            - Compute norm of each entry (row) -> norms
+        If STORE:
+            - Call _store_memory() to store query if store == True
 
         Return retrieved value, scores
 
         """
-        query = np.asarray(variable, dtype=float)
+        variable = np.asarray(variable, dtype=float)
+        operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
+                             f"in call to DifferentiableContentAddressableMemory for '{self.owner.name}'.")
+        try:
+            operation = params[OPERATION]
+            assert operation in {STORE, RETRIEVE}
+        except:
+            if self.is_initializing:
+                operation = RETRIEVE
+            else:
+                raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+
+        if operation == RETRIEVE:
+            retrieved, match_scores, norms = self._retrieve_memory(variable, context)
+            return retrieved, match_scores, norms
+
+        # Store memory in place of weakest one if condition is met and storage_prob > 0
+        elif operation == STORE:
+            self._store_memory(variable, context)
+            filler = np.zeros(len(self.parameters.memory._get(context)))
+            return variable, filler, filler # Return stored item and fillers for scores and norms
+
+        else:
+            raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+
+        return retrieved, match_scores, norms
+
+    # MODIFIED EM2 END
+
+    def _retrieve_memory(self, query, context):
 
         # If this is an initialization run, just return query and zeros for score and norms
-        scores_template = norms_template = np.zeros(len(self.memory))
         if self.is_initializing:
+            scores_template = norms_template = np.zeros(len(self.memory))
             return query, scores_template, norms_template
 
         memory = self.parameters.memory._get(context)
         scores_for_retrieval = self.parameters.scores._get(context)
-        storage_prob = self._get_current_parameter_value('storage_prob', context)
-        random_state = self.parameters.random_state._get(context)
+        normalize_memories = self.parameters.normalize_memories._get(context)
 
         # Retrieve memory weighted by scores_for_retrieval
         retrieved = (scores_for_retrieval @ memory).squeeze()
 
         # Compute match scores for query
-        match_scores = self._compute_scores(query, memory, context)
-
-        # Compute norms for entries in memory (to determine weakest memory for storage)
-        norms = np.linalg.norm(memory, axis=1)
-
-        # Store memory in place of weakest one if condition is met an storage_prob > 0
-        if self.parameters.store._get(context) == True and random_state.uniform(0, 1) < storage_prob:
-            item_to_store = query if np.any(query) else retrieved
-            self._store_memory(item_to_store, context)
-
-        return retrieved, match_scores, norms
-
-    def _compute_scores(self, query, memory, context=None)->np.array:
-        normalize_memories = self.parameters.normalize_memories._get(context)
         # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
         #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
         #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
-
         if normalize_memories:
             query_norm = np.linalg.norm(query)
             normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
             normalized_memory = self._normalize_rows(memory)
-            return normalized_memory @ normalized_query
+            match_scores = normalized_memory @ normalized_query
+        else:
+            match_scores = memory @ query
 
-        return memory @ query
+        # Compute norms for entries in memory (to determine weakest memory for storage)
+        norms = np.linalg.norm(memory, axis=1)
+        return retrieved, match_scores, norms
 
-    def _store_memory(self, query, context=None):
-        decay_rate = self.parameters.decay_rate._get(context)
-        memory = self.parameters.memory._get(context)
-        store_idx = int(self.parameters.weakest_memory._get(context))
-
-        if decay_rate >= 0.0:
-            memory *= (1-decay_rate)
-
-        memory[store_idx] = query
-
-        self.parameters.memory._set(memory, context, override=True)
+    def _store_memory(self, item_to_store, context=None):
+        storage_prob = self._get_current_parameter_value('storage_prob', context)
+        random_state = self.parameters.random_state._get(context)
+        if random_state.uniform(0, 1) < storage_prob:
+            decay_rate = self.parameters.decay_rate._get(context)
+            memory = self.parameters.memory._get(context)
+            store_idx = int(self.parameters.weakest_memory._get(context))
+            if decay_rate >= 0.0:
+                memory *= (1-decay_rate)
+            memory[store_idx] = item_to_store
+            self.parameters.memory._set(memory, context, override=True)
 
     def _normalize_rows(self, matrix):
         matrix = np.asarray(matrix, dtype=float)
@@ -220,6 +301,8 @@ class EpisodicMemoryFieldMechanismError(EpisodicMemoryMechanismError):
 class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
     """
     EpisodicMemoryFieldMechanism
+
+    EM2 BREADCRUMB: REVISE THE FOLLOWING TO BE CONSISTENT WITH UPDATES IN MODULE DOCSTRING
 
     A field-local EpisodicMemoryMechanism used by EMComposition2, that:
       - is restricted to use of DifferentiableContentAddressableMemory as it function
@@ -316,6 +399,8 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
             (f"PROGRAM ERROR: EpisodicMemoryFieldMechanism requires specification of field_type "
              f"as FieldType.KEY or FieldType.VALUE; got {field_type}.")
         self.field_type = field_type
+        if field_type is FieldType.VALUE:
+            self.value_input_specified = True
 
         self.field_shape = field_shape
         self.memory_capacity = len(field_memory)
@@ -407,11 +492,19 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         scores = variable[1]
         weakest_memory = variable[2]
 
-        # EM2 BREADCRUMB: ALTERNATIVE WOULD BE TO ASSIGN store AND memory TO runtime_params; MORE LLVM FRIENDLY?
         storage_condition = self.parameters.storage_condition._get(context)
-        store = (storage_condition.is_satisfied(scheduler=context.composition.scheduler, context=context)
-                 if storage_condition is not None else False)
-        self.function.parameters.store._set(store, context)
+        self.store = (storage_condition.is_satisfied(scheduler=context.composition.scheduler, context=context)
+                      if storage_condition is not None else False)
+        runtime_params = {} if runtime_params is None else runtime_params
+        if self.store:
+            from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
+            if self.field_type == FieldType.VALUE and not self.value_input_specified:
+                # Use last retrieved value as value to store
+                # IMPLEMENTATION NOTE: this assumes that retrieval is always executed before storage
+                variable = self.output_ports[RETRIEVED].parameters.value._get(context)
+            runtime_params.update({OPERATION: STORE})
+        else:
+            runtime_params.update({OPERATION: RETRIEVE})
 
         # EM2 BREADCRUMB: MAKE THESE FUNCTION PARAMETERS (LIKE storage_prob) ONCE THAT IS SUPPORTED FOR PYTORCH
         self.function.parameters.scores._set(scores, context)
@@ -419,6 +512,13 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         # return super()._execute(variable, context, runtime_params)
         return super()._execute(variable, context, runtime_params)
+
+    def _update_output_ports(self, runtime_output_port_params, context):
+        """Override to suppress updating of OutputPorts on STORE; should only ever occur on RETRIEVE."""
+        if self.store:
+            return
+        super()._update_output_ports(runtime_output_port_params, context)
+
 
     # @property
     # def memory(self):
