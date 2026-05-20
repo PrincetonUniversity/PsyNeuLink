@@ -541,7 +541,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         #                                                   prefs=prefs
         #                                                   )
         function = MatrixMemory(default_variable=field_memory[0],
-                                memory=field_memory,
+                                memory=field_memory.T,
                                 normalize_memories=normalize_memories,
                                 scores_operation=scores_operation,
                                 decay_rate=decay_rate,

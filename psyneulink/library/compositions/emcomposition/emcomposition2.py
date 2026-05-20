@@ -96,7 +96,7 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.library.components.mechanisms.processing.integrator.externalMemoryMechanism import (
+from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
     ExternalMemoryMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, COMBINED_NORMS)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 
@@ -994,7 +994,7 @@ class EMComposition2(AutodiffComposition):
                 field_memory=field_memory,
                 decay_rate=memory_decay_rate,
                 storage_prob=storage_prob,
-                scoring_function=function,
+                scores_operation=function,
                 normalize_memories=normalize_memories,
 
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",

@@ -2327,6 +2327,7 @@ class MatrixMemory(MatrixTransform): #
     componentName = MATRIX_MEMORY_FUNCTION
 
     class Parameters(MatrixTransform.Parameters):
+        matrix = Parameter(None, modulable=True, mdf_name='B', aliases=['memory'])
         scores = Parameter([0], stateful=True)
         weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
@@ -2355,7 +2356,7 @@ class MatrixMemory(MatrixTransform): #
 
         super().__init__(
             default_variable=default_variable,
-            matrix=memory,
+            memory=memory,
             operation=scores_operation,
             normalize=normalize_memories,
             decay_rate=decay_rate,
@@ -2411,7 +2412,7 @@ class MatrixMemory(MatrixTransform): #
 
         # If this is an initialization run, just return query and zeros for score and norms
         if self.is_initializing:
-            scores_template = norms_template = np.zeros(len(self.memory))
+            scores_template = norms_template = np.zeros(len(self.matrix))
             return query, scores_template, norms_template
 
 
