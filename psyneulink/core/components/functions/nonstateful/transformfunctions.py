@@ -2293,18 +2293,24 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 #     return False
 
 
+def _memory_getter(owning_component=None, context=None):
+    return owning_component.parameters.matrix._get(context).T
+
+def _memory_setter(value, owning_component=None, context=None):
+    return owning_component.parameters.matrix._set(value, context).T
+
 class MatrixMemory(MatrixTransform): #
     """
-    MatrixMemory(                                \
-        default_variable=None,                     \
-        initializer=None,                          \
-        memory_capacity=None,                      \
-        decay_rate=0,                              \
-        storage_prob=1.0,                          \
-        scores_operation,                          \
-        params=None,                               \
-        owner=None,                                \
-        prefs=None,                                \
+    MatrixMemory(                     \
+        default_variable=None,        \
+        initializer=None,             \
+        memory_capacity=None,         \
+        decay_rate=0,                 \
+        storage_prob=1.0,             \
+        scores_operation=DOT_PRODUCT, \
+        params=None,                  \
+        owner=None,                   \
+        prefs=None,                   \
         )
 
     Limited form of ContentAddressableMemory, for specific use by EMComposition2
@@ -2327,7 +2333,7 @@ class MatrixMemory(MatrixTransform): #
     componentName = MATRIX_MEMORY_FUNCTION
 
     class Parameters(MatrixTransform.Parameters):
-        matrix = Parameter(None, modulable=True, mdf_name='B', aliases=['memory'])
+        memory = Parameter(None, modulable=True, mdf_name='B', getter=_memory_getter, setter=_memory_setter)
         scores = Parameter([0], stateful=True)
         weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
@@ -2356,7 +2362,7 @@ class MatrixMemory(MatrixTransform): #
 
         super().__init__(
             default_variable=default_variable,
-            memory=memory,
+            matrix=memory.T,
             operation=scores_operation,
             normalize=normalize_memories,
             decay_rate=decay_rate,
@@ -2409,17 +2415,17 @@ class MatrixMemory(MatrixTransform): #
             raise FunctionError(operation_err_msg)
 
     def _retrieve_memory(self, query, context):
+        memory = self.parameters.memory._get(context)
 
         # If this is an initialization run, just return query and zeros for score and norms
         if self.is_initializing:
-            scores_template = norms_template = np.zeros(len(self.matrix))
+            scores_template = norms_template = np.zeros(len(memory))
             return query, scores_template, norms_template
 
 
         # EM2 BREADCRUMB: CALL super()._function here to compute retrieved
         #                 the computer and return match_scores and norms as per below
 
-        memory = self.parameters.matrix._get(context)
         scores_for_retrieval = self.parameters.scores._get(context)
         normalize_memories = self.parameters.normalize._get(context)
 
@@ -2457,10 +2463,10 @@ class MatrixMemory(MatrixTransform): #
             memory[store_idx] = item_to_store
             self.parameters.memory._set(memory, context, override=True)
 
-    def _normalize_rows(self, matrix):
-        matrix = np.asarray(matrix, dtype=float)
-        norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-        return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
+    def _normalize_rows(self, memory):
+        memory = np.asarray(memory, dtype=float)
+        norms = np.linalg.norm(memory, axis=1, keepdims=True)
+        return np.divide(memory, norms, out=np.zeros_like(memory), where=norms != 0)
 
 
 class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------

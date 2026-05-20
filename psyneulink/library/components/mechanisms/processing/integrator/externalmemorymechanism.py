@@ -496,10 +496,6 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         field_type,
         field_shape: int,
         field_memory: Union[list, np.ndarray],
-
-        # MODIFIED EM2 NEW:
-        # BREADCRUMB: MOVE THESE ALL TO EMComposition2.field AND PASS IN HERE TO **kwargs??
-        # These are all used for construction of ContentAddressableMemory, and exposed as properties on Mechanism:
         decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,  # -> rate on ContentAddressableMemory
         storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
         normalize_memories: bool = True,
@@ -541,7 +537,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         #                                                   prefs=prefs
         #                                                   )
         function = MatrixMemory(default_variable=field_memory[0],
-                                memory=field_memory.T,
+                                memory=field_memory,
                                 normalize_memories=normalize_memories,
                                 scores_operation=scores_operation,
                                 decay_rate=decay_rate,

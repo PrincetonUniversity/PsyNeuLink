@@ -975,28 +975,18 @@ class EMComposition2(AutodiffComposition):
         memory_decay_rate,
     ):
 
-        OPERATION = 0
-        NORMALIZE = 1
-
         for field in self.fields:
-
-            # EM2 BREADCRUMB: ADD SUPPORT FOR FIELD-BY-FIELD DISTANCE FUNCTION SPECIFICATION
             key_len = 1 if is_numeric_scalar(field.query.squeeze()) else len(field.query.squeeze())
-            args = [(L0,True) if key_len == 1 else (DOT_PRODUCT, normalize_memories)
-                    for key in memory_template[0]]
-            function=MatrixTransform(operation=args[0][OPERATION],
-                                     normalize=args[0][NORMALIZE])
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
             field.memory_node = ExternalMemoryMechanism(
-                field_type=field.type,
-                field_shape=len(self.entry_template[field.index]),
-                field_memory=field_memory,
-                decay_rate=memory_decay_rate,
-                storage_prob=storage_prob,
-                scores_operation=function,
-                normalize_memories=normalize_memories,
-
+                field_type = field.type,
+                field_shape = len(self.entry_template[field.index]),
+                field_memory = field_memory,
+                decay_rate = memory_decay_rate,
+                storage_prob = storage_prob,
+                scores_operation = L0 if key_len == 1 else DOT_PRODUCT,
+                normalize_memories = True if key_len == 1 else normalize_memories,
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
             )
 
