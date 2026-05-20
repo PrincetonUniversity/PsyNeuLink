@@ -2299,6 +2299,7 @@ def _memory_getter(owning_component=None, context=None):
 def _memory_setter(value, owning_component=None, context=None):
     return owning_component.parameters.matrix._set(value, context).T
 
+
 class MatrixMemory(MatrixTransform): #
     """
     MatrixMemory(                     \
@@ -2333,7 +2334,7 @@ class MatrixMemory(MatrixTransform): #
     componentName = MATRIX_MEMORY_FUNCTION
 
     class Parameters(MatrixTransform.Parameters):
-        memory = Parameter(None, modulable=True, mdf_name='B', getter=_memory_getter, setter=_memory_setter)
+        memory = Parameter(None, getter=_memory_getter, setter=_memory_setter, fallback_value=DEFAULT)
         scores = Parameter([0], stateful=True)
         weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
