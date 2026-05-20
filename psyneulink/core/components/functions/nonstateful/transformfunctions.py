@@ -16,6 +16,7 @@
 * `LinearCombination`
 * `CombineMeans`
 * `MatrixTransform`
+* `MatrixMemory`
 * `PredictionErrorDeltaFunction`
 
 Overview
@@ -44,30 +45,31 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal
+from psyneulink._typing import List, Literal, Optional, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions import function
 from psyneulink.core.components.functions.function import (
-    Function_Base, FunctionError, FunctionOutputType, function_keywords, get_matrix)
+    Function_Base, FunctionError, FunctionOutputType, function_keywords,
+    get_matrix, _random_state_getter, _seed_setter, DEFAULT_SEED)
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
-     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
+     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_MEMORY_FUNCTION, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
-     REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
+     REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, RETRIEVE, SCALE, STORE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.utilities import (
-    convert_all_elements_to_np_array, convert_to_np_array, is_numeric, is_matrix_keyword, is_numeric_scalar,
-    np_array_less_than_2d, ValidParamSpecType)
+    all_within_range, convert_all_elements_to_np_array, convert_to_np_array,
+    is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
 __all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
-           'LinearCombination', 'MatrixTransform', 'PredictionErrorDeltaFunction']
+           'LinearCombination', 'MatrixTransform', 'MatrixMemory', 'PredictionErrorDeltaFunction']
 
 class TransformFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
@@ -2288,6 +2290,174 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 #         return True
 #     return False
 
+
+class MatrixMemory(MatrixTransform): #
+    """
+    MatrixMemory(                                \
+        default_variable=None,                     \
+        initializer=None,                          \
+        memory_capacity=None,                      \
+        decay_rate=0,                              \
+        storage_prob=1.0,                          \
+        scores_operation,                          \
+        params=None,                               \
+        owner=None,                                \
+        prefs=None,                                \
+        )
+
+    Limited form of ContentAddressableMemory, for specific use by EMComposition2
+
+    Use scores Parameter to compute retrieved value, which
+      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
+    Uses param[OPERATION] passed to _function() to determine whether that calls _retrieve() or _store()
+    Return value (retrieved of stored), scores and norms and  based on current query (e.g., so it can be used to
+    calculate
+    COMBINED_SCORES in
+    EMComposition2)
+
+    IMPLEMENTATION NOTE:
+      - scores/match-weights/distance vector is returned so it can be combined with other fields
+      - external scores/match-weights/distance vector is needed to apply one that has been combined with other fields
+      - API is same as ContentAddressableMemory_FUNCTION
+          - use memory as alias for initializer parameter
+
+    """
+    componentName = MATRIX_MEMORY_FUNCTION
+
+    class Parameters(MatrixTransform.Parameters):
+        scores = Parameter([0], stateful=True)
+        weakest_memory = Parameter(0, stateful=True)
+        store = Parameter(False)
+        decay_rate = Parameter(1.0, modulable=True)
+        storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
+
+        def _validate_storage_prob(self, storage_prob):
+            storage_prob = float(storage_prob)
+            if not all_within_range(storage_prob, 0, 1):
+                return f"must be a float in the interval [0,1]."
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 memory=None,
+                 normalize_memories: bool = True,
+                 decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 storage_prob: Optional[Union[int, float, np.ndarray]] = None,
+                 scores_operation: Optional[Literal[L0, DOT_PRODUCT]] = None,
+                 params:Optional[Union[List, np.ndarray]]=None,
+                 owner=None,
+                 prefs:Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            matrix=memory,
+            operation=scores_operation,
+            normalize=normalize_memories,
+            decay_rate=decay_rate,
+            storage_prob=storage_prob,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _function(self,
+                 variable:Optional[Union[list, np.array]]=None,
+                 context=None,
+                 params=None,
+                 ) -> (np.array, np.array, np.array):
+        """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
+        Use specification of OPERATION (STORE or RETRIEVE) in params to determine which to do
+        If RETRIEVE:
+            - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
+            - Compute distance (dot product by default) between query each entry (row) -> scores
+            - Compute norm of each entry (row) -> norms
+        If STORE:
+            - Call _store_memory() to store query if store == True
+
+        Return retrieved value, scores
+
+        """
+        variable = np.asarray(variable, dtype=float)
+        operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
+                             f"in call to MatrixMemory for '{self.owner.name}'.")
+        try:
+            operation = params[OPERATION]
+            assert operation in {STORE, RETRIEVE}
+        except:
+            if self.is_initializing:
+                operation = RETRIEVE
+            else:
+                raise FunctionError(operation_err_msg)
+
+        if operation == RETRIEVE:
+            retrieved, match_scores, norms = self._retrieve_memory(variable, context)
+            return retrieved, match_scores, norms
+
+        # Store memory in place of weakest one if condition is met and storage_prob > 0
+        elif operation == STORE:
+            self._store_memory(variable, context)
+            filler = np.zeros(len(self.parameters.memory._get(context)))
+            return variable, filler, filler # Return stored item and fillers for scores and norms
+
+        else:
+            raise FunctionError(operation_err_msg)
+
+    def _retrieve_memory(self, query, context):
+
+        # If this is an initialization run, just return query and zeros for score and norms
+        if self.is_initializing:
+            scores_template = norms_template = np.zeros(len(self.memory))
+            return query, scores_template, norms_template
+
+
+        # EM2 BREADCRUMB: CALL super()._function here to compute retrieved
+        #                 the computer and return match_scores and norms as per below
+
+        memory = self.parameters.matrix._get(context)
+        scores_for_retrieval = self.parameters.scores._get(context)
+        normalize_memories = self.parameters.normalize._get(context)
+
+        # Retrieve memory weighted by scores_for_retrieval
+        retrieved = self._function(query, context)
+
+        # Compute match scores for query
+        # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
+        #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
+        #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
+        if normalize_memories:
+            query_norm = np.linalg.norm(query)
+            normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
+            normalized_memory = self._normalize_rows(memory)
+            # EM2 BREADCRUMB: USE DistanceFunction here:
+            match_scores = normalized_memory @ normalized_query
+        else:
+            # EM2 BREADCRUMB: USE DistanceFunction here:
+            match_scores = memory @ query
+
+        # Compute norms for entries in memory (to determine weakest memory for storage)
+        norms = np.linalg.norm(memory, axis=1)
+
+        return retrieved, match_scores, norms
+
+    def _store_memory(self, item_to_store, context=None):
+        storage_prob = self._get_current_parameter_value('storage_prob', context)
+        random_state = self.parameters.random_state._get(context)
+        if random_state.uniform(0, 1) < storage_prob:
+            decay_rate = self.parameters.decay_rate._get(context)
+            memory = self.parameters.memory._get(context)
+            store_idx = int(self.parameters.weakest_memory._get(context))
+            if decay_rate >= 0.0:
+                memory *= (1-decay_rate)
+            memory[store_idx] = item_to_store
+            self.parameters.memory._set(memory, context, override=True)
+
+    def _normalize_rows(self, matrix):
+        matrix = np.asarray(matrix, dtype=float)
+        norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+        return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
 
 
 class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------

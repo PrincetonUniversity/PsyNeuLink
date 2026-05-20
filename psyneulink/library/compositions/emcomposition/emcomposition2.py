@@ -13,7 +13,7 @@ Refactored EMComposition prototype.
 
 This module introduces EpisodicMemoryFieldMechanism, a field-local episodic memory mechanism
 that owns the memory matrix for a single field. For the moment, EpisodicMemoryFieldMechanism uses
-only DifferentiableContentAddressableMemory as its Function (defined in the EpisodicMemoryFieldMechanism module)
+only Matrix as its Function (defined in the EpisodicMemoryFieldMechanism module)
 that is limited to a single field in memory, that uses its XXX function to determine scores for each entry in memory,
 and a _store_memory method that stores the query input into memory with a probability specified by
 storage_prob (True or False) when storage_condition is satisfied
@@ -994,7 +994,7 @@ class EMComposition2(AutodiffComposition):
                 field_memory=field_memory,
                 decay_rate=memory_decay_rate,
                 storage_prob=storage_prob,
-                distance_function=function,
+                scoring_function=function,
                 normalize_memories=normalize_memories,
 
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
