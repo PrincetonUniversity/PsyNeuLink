@@ -5,7 +5,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# ****************************************  EpisodicMemoryFieldMechanism ***********************************************
+# ****************************************  ExternalMemoryMechanism ***********************************************
 
 """
 Subclass of EpisodicMemoryMechanism customized for EMComposition2.
@@ -35,7 +35,7 @@ It has a storage_condition, assigned by emcomposition2, that is used to determin
 EM2 BREADCRUMB: GET DOCSTRING FROM COMBINATION OF EpisodicMemoryMechanism and EMStorageMechanism
 
 IMPLEMENTATION NOTE:
-    emcompositon2 uses one EpisodicMemoryFieldMechanism per memory field
+    emcompositon2 uses one ExternalMemoryMechanism per memory field
     instead of using EMStorageMechanism to update MappingProjection matrices.
 
 """
@@ -57,7 +57,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import (
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError)
 
-__all__ = ['EpisodicMemoryFieldMechanism', 'EpisodicMemoryFieldMechanismError',
+__all__ = ['ExternalMemoryMechanism', 'ExternalMemoryMechanismError',
            'QUERY', 'SCORES', 'COMBINED_SCORES', 'COMBINED_NORMS', 'RETRIEVED']
 
 
@@ -181,7 +181,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #             if self.is_initializing:
 #                 operation = RETRIEVE
 #             else:
-#                 raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+#                 raise ExternalMemoryMechanismError(operation_err_msg)
 #
 #         if operation == RETRIEVE:
 #             retrieved, match_scores, norms = self._retrieve_memory(variable, context)
@@ -194,7 +194,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #             return variable, filler, filler # Return stored item and fillers for scores and norms
 #
 #         else:
-#             raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+#             raise ExternalMemoryMechanismError(operation_err_msg)
 #
 #     def _retrieve_memory(self, query, context):
 #
@@ -346,7 +346,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #             if self.is_initializing:
 #                 operation = RETRIEVE
 #             else:
-#                 raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+#                 raise ExternalMemoryMechanismError(operation_err_msg)
 #
 #         if operation == RETRIEVE:
 #             retrieved, match_scores, norms = self._retrieve_memory(variable, context)
@@ -359,7 +359,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #             return variable, filler, filler # Return stored item and fillers for scores and norms
 #
 #         else:
-#             raise EpisodicMemoryFieldMechanismError(operation_err_msg)
+#             raise ExternalMemoryMechanismError(operation_err_msg)
 #
 #     def _retrieve_memory(self, query, context):
 #
@@ -416,13 +416,13 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #         return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
 
 
-class EpisodicMemoryFieldMechanismError(EpisodicMemoryMechanismError):
+class ExternalMemoryMechanismError(EpisodicMemoryMechanismError):
     pass
 
 
-class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
+class ExternalMemoryMechanism(EpisodicMemoryMechanism):
     """
-    EpisodicMemoryFieldMechanism
+    ExternalMemoryMechanism
 
     EM2 BREADCRUMB: REVISE THE FOLLOWING TO BE CONSISTENT WITH UPDATES IN MODULE DOCSTRING
 
@@ -503,12 +503,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,  # -> rate on ContentAddressableMemory
         storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
         normalize_memories: bool = True,
-        noise: Optional[Union[int, float, List, np.ndarray, Callable]]=None,
-        scoring_function:Optional[Union[Distance, Callable]]=None,
-        selection_function:Optional[Union[OneHot, SoftMax, Callable]]=None,
-        duplicate_entries_allowed:Optional[Union[str, bool, Literal[OVERWRITE]]]=None,
-        duplicate_threshold:Optional[Union[int,float]]=None,
-        equidistant_entries_select:Optional[Union[str, Literal[RANDOM, OLDEST, NEWEST]]]=None,
+        scores_operation: Optional[Literal[L0, DOT_PRODUCT]]=None,
         seed:Optional[int]=None,
         # MODIFIED EM2 END
 
@@ -520,7 +515,7 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
 
         from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
         assert isinstance(field_type, FieldType), \
-            (f"PROGRAM ERROR: EpisodicMemoryFieldMechanism requires specification of field_type "
+            (f"PROGRAM ERROR: ExternalMemoryMechanism requires specification of field_type "
              f"as FieldType.KEY or FieldType.VALUE; got {field_type}.")
         self.field_type = field_type
         if field_type is FieldType.VALUE:
@@ -547,8 +542,9 @@ class EpisodicMemoryFieldMechanism(EpisodicMemoryMechanism):
         #                                                   )
         function = MatrixMemory(default_variable=field_memory[0],
                                 memory=field_memory,
+                                normalize_memories=normalize_memories,
+                                scores_operation=scores_operation,
                                 decay_rate=decay_rate,
-                                scores_operation=scoring_function,
                                 storage_prob=storage_prob,
                                 params=params,
                                 owner=self,

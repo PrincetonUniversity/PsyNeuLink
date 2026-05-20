@@ -11,14 +11,14 @@
 """
 Refactored EMComposition prototype.
 
-This module introduces EpisodicMemoryFieldMechanism, a field-local episodic memory mechanism
-that owns the memory matrix for a single field. For the moment, EpisodicMemoryFieldMechanism uses
-only Matrix as its Function (defined in the EpisodicMemoryFieldMechanism module)
+This module introduces ExternalMemoryMechanism, a field-local episodic memory mechanism
+that owns the memory matrix for a single field. For the moment, ExternalMemoryMechanism uses
+only Matrix as its Function (defined in the ExternalMemoryMechanism module)
 that is limited to a single field in memory, that uses its XXX function to determine scores for each entry in memory,
 and a _store_memory method that stores the query input into memory with a probability specified by
 storage_prob (True or False) when storage_condition is satisfied
 
-The refactored EMComposition uses one EpisodicMemoryFieldMechanism per memory field instead of using EMStorageMechanism
+The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
 - Does not support concatenate_queries
@@ -30,12 +30,12 @@ to update MappingProjection matrices.
 
 High-level execution per field:
 
-1. QUERY input is sent to EpisodicMemoryFieldMechanism.input_port[QUERY].
-2. EpisodicMemoryFieldMechanism computes a match-weight vector over its memory rows and emits SCORES.
+1. QUERY input is sent to ExternalMemoryMechanism.input_port[QUERY].
+2. ExternalMemoryMechanism computes a match-weight vector over its memory rows and emits SCORES.
 3. SCORES from key fields are weighted, combined and softmax-normalized by RETRIEVE.
-4. The normalized combined scores are sent back to each EpisodicMemoryFieldMechanism.input_port[COMBINED_SCORES].
-5. Each EpisodicMemoryFieldMechanism retrieves its field value and emits RETRIEVED.
-6. Each EpisodicMemoryFieldMechanism stores its QUERY input into its own memory matrix when storage_condition is True
+4. The normalized combined scores are sent back to each ExternalMemoryMechanism.input_port[COMBINED_SCORES].
+5. Each ExternalMemoryMechanism retrieves its field value and emits RETRIEVED.
+6. Each ExternalMemoryMechanism stores its QUERY input into its own memory matrix when storage_condition is True
 """
 
 import copy
@@ -96,8 +96,8 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.library.components.mechanisms.processing.integrator.episodicmemoryfieldmechanism import (
-    EpisodicMemoryFieldMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, COMBINED_NORMS)
+from psyneulink.library.components.mechanisms.processing.integrator.externalMemoryMechanism import (
+    ExternalMemoryMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, COMBINED_NORMS)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 
 
@@ -316,7 +316,7 @@ class EMComposition2(AutodiffComposition):
       - EMStorageMechanism
 
     with:
-      - one EpisodicMemoryFieldMechanism per field, each owning its field memory matrix.
+      - one ExternalMemoryMechanism per field, each owning its field memory matrix.
       - storage occurs in each memory_node based on storage_condition an its storage_prob
 
     The externally visible structure is kept similar to the original EMComposition:
@@ -988,7 +988,7 @@ class EMComposition2(AutodiffComposition):
                                      normalize=args[0][NORMALIZE])
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
 
-            field.memory_node = EpisodicMemoryFieldMechanism(
+            field.memory_node = ExternalMemoryMechanism(
                 field_type=field.type,
                 field_shape=len(self.entry_template[field.index]),
                 field_memory=field_memory,
@@ -1446,9 +1446,9 @@ class EMComposition2(AutodiffComposition):
         return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
-        # EM storage is field-local and executed by EpisodicMemoryFieldMechanism after retrieval.
+        # EM storage is field-local and executed by ExternalMemoryMechanism after retrieval.
         # Field-weight learning can be restored by calling super() once the PyTorch wrapper
-        # supports EpisodicMemoryFieldMechanism as a differentiable memory component.
+        # supports ExternalMemoryMechanism as a differentiable memory component.
         pass
 
     def add_node(self, node, required_roles=None, context=None):
@@ -1491,7 +1491,7 @@ class EMComposition2(AutodiffComposition):
 
     @property
     def match_nodes(self):
-        # Compatibility alias: the old "match_nodes" are now the key EpisodicMemoryFieldMechanisms.
+        # Compatibility alias: the old "match_nodes" are now the key ExternalMemoryMechanisms.
         return [field.memory_node for field in self.key_fields]
 
     @property

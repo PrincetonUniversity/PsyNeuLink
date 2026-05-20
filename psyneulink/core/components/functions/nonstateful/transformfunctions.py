@@ -1834,7 +1834,8 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                  normalize=None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -1847,6 +1848,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
         self.parameters.matrix.set(
@@ -2344,9 +2346,9 @@ class MatrixMemory(MatrixTransform): #
                  default_variable=None,
                  memory=None,
                  normalize_memories: bool = True,
+                 scores_operation: Optional[Literal[L0, DOT_PRODUCT]] = None,
                  decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
                  storage_prob: Optional[Union[int, float, np.ndarray]] = None,
-                 scores_operation: Optional[Literal[L0, DOT_PRODUCT]] = None,
                  params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
                  prefs:Optional[ValidPrefSet] = None):
