@@ -26,9 +26,9 @@ If it is constructed with FieldType.VALUE:
 
 It has a storage_condition, assigned by emcomposition2, that is used to determine when to retrieve and when to store:
   a) if storage_condition is NOT satisfied:
-     - _execute() is called with runtime_params[OPERATION: RETRIEVE]
+     - _execute() is called with runtime_params[STORE_OR_RETRIEVE: RETRIEVE]
   b) if storage_condition is satisfied:
-     - _execute() is called with runtime_params[OPERATION: STORE]
+     - _execute() is called with runtime_params[STORE_OR_RETRIEVE: STORE]
      - output_ports are NOT updated; their values remain the ones assigned on the last retrieval
   - it is assumed that (a) always occurs before (b) in execution of emcompostion2
 
@@ -48,9 +48,7 @@ from psyneulink.core.components.functions.nonstateful.objectivefunctions import 
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixMemory
-from psyneulink.core.globals.keywords import (
-    DEFAULT, DOT_PRODUCT, L0, MULTIPLICATIVE_PARAM, NAME, NEWEST,
-    OLDEST, OPERATION, OVERWRITE, OWNER_VALUE, RANDOM, RETRIEVE, STORE, VARIABLE)
+from psyneulink.core.globals.keywords import DOT_PRODUCT, L0, NAME, OWNER_VALUE, RETRIEVE, STORE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -58,7 +56,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.episodicmemo
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError)
 
 __all__ = ['ExternalMemoryMechanism', 'ExternalMemoryMechanismError',
-           'QUERY', 'SCORES', 'COMBINED_SCORES', 'COMBINED_NORMS', 'RETRIEVED']
+           'QUERY', 'SCORES', 'COMBINED_SCORES', 'COMBINED_NORMS', 'RETRIEVED', 'STORE_OR_RETRIEVE']
 
 
 DifferentiableContentAddressableMemory_FUNCTION = 'DifferentiableContentAddressableMemory Function'
@@ -71,6 +69,7 @@ RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
 DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
+STORE_OR_RETRIEVE = 'STORE_OR_RETRIEVE'
 
 
 # class DifferentiableContentAddressableMemory(Function_Base): #
@@ -91,7 +90,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #
 #     Use scores Parameter to compute retrieved value, which
 #       allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
-#     Uses param[OPERATION] passed to _function() to determine whether that calls _retrieve() or _store()
+#     Uses param[STORE_OR_RETRIEVE] passed to _function() to determine whether that calls _retrieve() or _store()
 #     Return value (retrieved of stored), scores and norms and  based on current query (e.g., so it can be used to
 #     calculate
 #     COMBINED_SCORES in
@@ -175,7 +174,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #         operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
 #                              f"in call to DifferentiableContentAddressableMemory for '{self.owner.name}'.")
 #         try:
-#             operation = params[OPERATION]
+#             operation = params[STORE_OR_RETRIEVE]
 #             assert operation in {STORE, RETRIEVE}
 #         except:
 #             if self.is_initializing:
@@ -265,7 +264,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #
 #     Use scores Parameter to compute retrieved value, which
 #       allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
-#     Uses param[OPERATION] passed to _function() to determine whether that calls _retrieve() or _store()
+#     Uses param[STORE_OR_RETRIEVE] passed to _function() to determine whether that calls _retrieve() or _store()
 #     Return value (retrieved of stored), scores and norms and  based on current query (e.g., so it can be used to
 #     calculate
 #     COMBINED_SCORES in
@@ -325,7 +324,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #                  params=None,
 #                  ) -> (np.array, np.array, np.array):
 #         """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
-#         Use specification of OPERATION (STORE or RETRIEVE) in params to determine which to do
+#         Use specification of STORE_OR_RETRIEVE (STORE or RETRIEVE) in params to determine which to do
 #         If RETRIEVE:
 #             - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
 #             - Compute distance (dot product by default) between query each entry (row) -> scores
@@ -340,7 +339,7 @@ DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 #         operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
 #                              f"in call to MatrixMemory for '{self.owner.name}'.")
 #         try:
-#             operation = params[OPERATION]
+#             operation = params[STORE_OR_RETRIEVE]
 #             assert operation in {STORE, RETRIEVE}
 #         except:
 #             if self.is_initializing:
@@ -629,9 +628,9 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                 # Use last retrieved value as value to store
                 # IMPLEMENTATION NOTE: this assumes that retrieval is always executed before storage
                 variable = self.output_ports[RETRIEVED].parameters.value._get(context)
-            runtime_params.update({OPERATION: STORE})
+            runtime_params.update({STORE_OR_RETRIEVE: STORE})
         else:
-            runtime_params.update({OPERATION: RETRIEVE})
+            runtime_params.update({STORE_OR_RETRIEVE: RETRIEVE})
 
         # EM2 BREADCRUMB: MAKE THESE FUNCTION PARAMETERS (LIKE storage_prob) ONCE THAT IS SUPPORTED FOR PYTORCH
         self.function.parameters.scores._set(scores, context)

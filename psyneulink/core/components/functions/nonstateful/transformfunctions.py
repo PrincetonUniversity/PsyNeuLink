@@ -2334,7 +2334,7 @@ class MatrixMemory(MatrixTransform): #
     componentName = MATRIX_MEMORY_FUNCTION
 
     class Parameters(MatrixTransform.Parameters):
-        memory = Parameter(None, getter=_memory_getter, setter=_memory_setter, fallback_value=DEFAULT)
+        memory = Parameter(None, getter=_memory_getter, setter=_memory_setter, dependencies='matrix')
         scores = Parameter([0], stateful=True)
         weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
@@ -2394,7 +2394,9 @@ class MatrixMemory(MatrixTransform): #
         operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
                              f"in call to MatrixMemory for '{self.owner.name}'.")
         try:
-            operation = params[OPERATION]
+            from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
+                STORE_OR_RETRIEVE)
+            operation = params[STORE_OR_RETRIEVE]
             assert operation in {STORE, RETRIEVE}
         except:
             if self.is_initializing:
@@ -2427,25 +2429,35 @@ class MatrixMemory(MatrixTransform): #
         # EM2 BREADCRUMB: CALL super()._function here to compute retrieved
         #                 the computer and return match_scores and norms as per below
 
-        scores_for_retrieval = self.parameters.scores._get(context)
         normalize_memories = self.parameters.normalize._get(context)
 
-        # Retrieve memory weighted by scores_for_retrieval
-        retrieved = self._function(query, context)
+        # # Retrieve memory weighted by scores_for_retrieval
+        # retrieved = super()._function(query, context)
 
-        # Compute match scores for query
-        # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
-        #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
-        #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
-        if normalize_memories:
-            query_norm = np.linalg.norm(query)
-            normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
-            normalized_memory = self._normalize_rows(memory)
-            # EM2 BREADCRUMB: USE DistanceFunction here:
-            match_scores = normalized_memory @ normalized_query
-        else:
-            # EM2 BREADCRUMB: USE DistanceFunction here:
-            match_scores = memory @ query
+        match_scores = super()._function(query, context)
+
+        query_norm = np.linalg.norm(query)
+        normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
+        normalized_memory = self._normalize_rows(memory)
+        # EM2 BREADCRUMB: USE DistanceFunction here:
+        match_scores = normalized_memory.T @ normalized_query.T
+
+        # retrieved = memory @ match_scores.squeeze().T
+
+        # # Compute match scores for query
+        # # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
+        # #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
+        # #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
+        # if normalize_memories:
+        #     query_norm = np.linalg.norm(query)
+        #     normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
+        #     normalized_memory = self._normalize_rows(memory)
+        #     # EM2 BREADCRUMB: USE DistanceFunction here:
+        #     match_scores = normalized_memory @ normalized_query
+        # else:
+        #     # EM2 BREADCRUMB: USE DistanceFunction here:
+        #     match_scores = memory @ query
+
 
         # Compute norms for entries in memory (to determine weakest memory for storage)
         norms = np.linalg.norm(memory, axis=1)
