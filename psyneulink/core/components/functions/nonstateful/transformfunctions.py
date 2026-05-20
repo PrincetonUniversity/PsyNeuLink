@@ -2360,8 +2360,7 @@ class MatrixMemory(MatrixTransform): #
             storage_prob=storage_prob,
             params=params,
             owner=owner,
-            prefs=prefs,
-        )
+            prefs=prefs)
 
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
