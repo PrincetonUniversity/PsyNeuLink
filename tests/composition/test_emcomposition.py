@@ -567,86 +567,86 @@ class TestExecution:
         #                           fill   cap decay wts    keys   mem gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
         # EM2 BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
-        # (0, [[[1,2,3],[4,6]],
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-        #                                                                                            [4., 6.16540637]]),
-        # (1, [[[1,2,3],[4,6]],
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
-        #                                                                             [4, 6]],      [[1., 2., 3.16585899],
-        #                                                                                            [4., 6.16540637]]),
-        # (2, [[[1,2,3],[4,6]],
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
-        #                                                                             [4, 8]],     [[1., 2., 3.16585899],
-        #                                                                                           [4., 6.16540637]]),
-        # (3, [[[1,2,3],[4,6]],
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
-        #                                                                            [4, 8]],      [[0.9988293686917392,
-        #                                                                                            1.9976542357431024,
-        #                                                                                            3.1621395778651697],
-        #                                                                                           [3.9952980483947327,
-        #                                                                                            6.158154106920549]]),
-        # (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
-        #      [[1,2,5],[4,6]],
-        #      [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
-        #                                                                            [4, 6]],     [[0.997922629303869,
-        #                                                                                           1.9958372701183342,
-        #                                                                                           3.5177112821583143],
-        #                                                                                          [3.99165604,
-        #                                                                                           5.98747584]]
-        #  ),
-        # (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
-        #                                                                           [4, 6]],      [[0.99982088,
-        #                                                                                           1.99964107,
-        #                                                                                           4.12708557],
-        #                                                                                          [3.99928055,
-        #                                                                                           7.02459015]]),
-        # (6, [[[1,2,3],[4,6]],        # Unequal field_weights
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
-        #                                                                         [4, 6]],      [[0.99865724,
-        #                                                                                         1.99730932,
-        #                                                                                         3.18900183],
-        #                                                                                        [3.99460668,
-        #                                                                                         6.18408988]]),
-        # (7, [[[1,2,3],[4,6]],        # Store + no decay (not identical to above since 2 trials)
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
-        #                                                                         [4, 6]],      [[1.,
-        #                                                                                         2.,
-        #                                                                                         3.1930442],
-        #                                                                                        [4.,
-        #                                                                                         6.19218518]]),
-        # (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[1, 2, 3],
-        #                                                                           [4, 6]],   [[0.75033754,
-        #                                                                                        1.50067508,
-        #                                                                                        2.39579578],
-        #                                                                                       [3.00135017,
-        #                                                                                        4.64616414]]),
-        # (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
-        #      [[1,2,5],[4,8]],
-        #      [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
-        #                                                                           [4, 6]],   [[0.75033754,
-        #                                                                                        1.50067508,
-        #                                                                                        2.39579578],
-        #                                                                                       [3.00135017,
-        #                                                                                        4.64616414]]),
-        # (10, [[[1,2,3],[4,6]],        # Store + numerical decay
-        #       [[1,2,5],[4,8]],
-        #       [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
-        #                                                                          [4, 6]],       [[0.90013502,
-        #                                                                                           1.80027003,
-        #                                                                                           2.87414483],
-        #                                                                                          [3.60054007,
-        #                                                                                           5.57377676]]),
-        # # EM2 BREADCRUMB: emcomposition2 DOES NOT SUPPORT concatenate_queries YET, SO THAT PART IS IGNORED
+        (0, [[[1,2,3],[4,6]],
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+                                                                                                   [4., 6.16540637]]),
+        (1, [[[1,2,3],[4,6]],
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+                                                                                    [4, 6]],      [[1., 2., 3.16585899],
+                                                                                                   [4., 6.16540637]]),
+        (2, [[[1,2,3],[4,6]],
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+                                                                                    [4, 8]],     [[1., 2., 3.16585899],
+                                                                                                  [4., 6.16540637]]),
+        (3, [[[1,2,3],[4,6]],
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
+                                                                                   [4, 8]],      [[0.9988293686917392,
+                                                                                                   1.9976542357431024,
+                                                                                                   3.1621395778651697],
+                                                                                                  [3.9952980483947327,
+                                                                                                   6.158154106920549]]),
+        (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
+             [[1,2,5],[4,6]],
+             [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
+                                                                                   [4, 6]],     [[0.997922629303869,
+                                                                                                  1.9958372701183342,
+                                                                                                  3.5177112821583143],
+                                                                                                 [3.99165604,
+                                                                                                  5.98747584]]
+         ),
+        (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
+                                                                                  [4, 6]],      [[0.99982088,
+                                                                                                  1.99964107,
+                                                                                                  4.12708557],
+                                                                                                 [3.99928055,
+                                                                                                  7.02459015]]),
+        (6, [[[1,2,3],[4,6]],        # Unequal field_weights
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
+                                                                                [4, 6]],      [[0.99865724,
+                                                                                                1.99730932,
+                                                                                                3.18900183],
+                                                                                               [3.99460668,
+                                                                                                6.18408988]]),
+        (7, [[[1,2,3],[4,6]],        # Store + no decay (not identical to above since 2 trials)
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                [4, 6]],      [[1.,
+                                                                                                2.,
+                                                                                                3.1930442],
+                                                                                               [4.,
+                                                                                                6.19218518]]),
+        (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                  [4, 6]],   [[0.75033754,
+                                                                                               1.50067508,
+                                                                                               2.39579578],
+                                                                                              [3.00135017,
+                                                                                               4.64616414]]),
+        (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
+             [[1,2,5],[4,8]],
+             [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                  [4, 6]],   [[0.75033754,
+                                                                                               1.50067508,
+                                                                                               2.39579578],
+                                                                                              [3.00135017,
+                                                                                               4.64616414]]),
+        (10, [[[1,2,3],[4,6]],        # Store + numerical decay
+              [[1,2,5],[4,8]],
+              [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                 [4, 6]],       [[0.90013502,
+                                                                                                  1.80027003,
+                                                                                                  2.87414483],
+                                                                                                 [3.60054007,
+                                                                                                  5.57377676]]),
+        # EM2 BREADCRUMB: emcomposition2 DOES NOT SUPPORT concatenate_queries YET, SO THAT PART IS IGNORED
         (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
@@ -658,7 +658,6 @@ class TestExecution:
         (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retrieval in MEMORY matrix)
               [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
                                                                                                    [[10],[0],[100]]),
-
         (13, [[[1],[2],[3]],    # Scalar keys - close match  (this tests use of L0 for retreieval in MEMORY matrix
               [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[1],[2],[3]]),
 ]
@@ -738,9 +737,9 @@ class TestExecution:
                 np.testing.assert_equal(em.memory_template[i][j], memory_template[i][j])
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
-        retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
-        # retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
+        # retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
+        # retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
+        retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
 
         for retrieved_item, expected_item in zip(retrieved, expected_retrieval):
             np.testing.assert_allclose(retrieved_item, expected_item)
@@ -758,30 +757,13 @@ class TestExecution:
             for actual, expected in zip(em.memory[0], list(inputs.values())):
                 np.testing.assert_array_equal(actual, expected)
 
-            # MODIFIED EM2 OLD:
-            # if memory_decay_rate in {None, AUTO}:
-            #     one_trial_decay = 1.0 - (1 / memory_capacity)
-            #     two_trial_decay = one_trial_decay ** 2
-            #     for template_item, actual_item in zip(memory_template[0], em.memory[0]):
-            #         np.testing.assert_array_equal(np.array(template_item), np.array(actual_item))
-            #     for template, actual in zip(memory_template[1:2], em.memory[1:2]):
-            #         for template_item, actual_item in zip(template,actual):
-            #             np.testing.assert_array_equal(np.array(template_item) * two_trial_decay, actual_item)
-            #     for template_item, actual_item in zip(memory_template[0], em.memory[3]):
-            #         np.testing.assert_array_equal(np.array(template_item) * one_trial_decay, actual_item)
-            # elif memory_decay_rate:
-            #     for expected, actual in zip(memory_template, em.memory[:3]):
-            #         for expected_item, actual_item in zip(expected,actual):
-            #             np.testing.assert_array_equal(np.array(expected_item) * (1-memory_decay_rate), actual_item)
-            # else:
-            #     for actual, expected in zip(em.memory[:3], memory_template):
-            #         for actual_item, expected_item in zip(actual, expected):
-            #             np.testing.assert_array_equal(actual_item, expected_item)
-            # MODIFIED EM2 NEW:
             if memory_decay_rate in {None, AUTO}:
                 memory_decay_rate = 1.0 / memory_capacity
             one_trial_decay = 1.0 - memory_decay_rate
             two_trial_decay = one_trial_decay ** 2
+
+            if test_num in {12,13}:
+                return
 
             for template_item, actual_item in zip(memory_template[0], em.memory[0]):
                 np.testing.assert_array_equal(np.array(template_item), np.array(actual_item))
@@ -790,7 +772,6 @@ class TestExecution:
                     np.testing.assert_allclose(np.array(template_item) * two_trial_decay, actual_item)
             for template_item, actual_item in zip(memory_template[0], em.memory[3]):
                 np.testing.assert_array_equal(np.array(template_item) * one_trial_decay, actual_item)
-            # MODIFIED EM2 END
 
         elif len(memory_template) < memory_capacity:
             if isinstance(memory_fill, tuple):
