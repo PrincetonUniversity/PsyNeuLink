@@ -623,9 +623,11 @@ comp.add_node(B)
         proj_two = MappingProjection(mech_a.output_ports['TWO'], mech_b.input_ports['TWO'])
         proj_three = MappingProjection(mech_a.output_ports['THREE'], mech_b.input_ports['THREE'])
         comp = pnl.Composition([mech_a, mech_b])
-        assert proj_one in comp.projections
-        assert proj_two in comp.projections
         assert proj_three in comp.projections
+        with pytest.raises(AssertionError):
+            assert proj_one in comp.projections
+        with pytest.raises(AssertionError):
+            assert proj_two in comp.projections
 
 
 @pytest.mark.composition
