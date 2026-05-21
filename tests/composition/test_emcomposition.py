@@ -647,14 +647,14 @@ class TestExecution:
         #                                                                                          [3.60054007,
         #                                                                                           5.57377676]]),
         # # EM2 BREADCRUMB: emcomposition2 DOES NOT SUPPORT concatenate_queries YET, SO THAT PART IS IGNORED
-        # (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
-        #       [[1,2,5],[4,8]],
-        #       [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
-        #                                                                          [4, 6]],       [[0.9002269 ,
-        #                                                                                           1.8004538 ,
-        #                                                                                           3.02632659],
-        #                                                                                          [3.60090759,
-        #                                                                                           5.71722345]]),
+        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
+              [[1,2,5],[4,8]],
+              [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
+                                                                                 [4, 6]],       [[0.9002269 ,
+                                                                                                  1.8004538 ,
+                                                                                                  3.02632659],
+                                                                                                 [3.60090759,
+                                                                                                  5.71722345]]),
         (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retrieval in MEMORY matrix)
               [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
                                                                                                    [[10],[0],[100]]),
