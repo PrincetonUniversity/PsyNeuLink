@@ -2470,11 +2470,7 @@ class AutodiffComposition(Composition):
         # Construct a new pytorch_representation if none exists or new is specified
 
         from psyneulink.core.llvm import ExecutionMode
-        # # MODIFIED 5/21/26 OLD:
-        # if self._has_learnable_pathways:
-        # MODIFIED 5/21/26 NEW:
-        if self._has_learnable_pathways and base_context.string != 'LLVM':
-        # MODIFIED 5/21/26 END
+        if self._has_learnable_pathways:
             self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
                                                          context=context,
                                                          base_context=base_context)
@@ -3867,12 +3863,7 @@ class AutodiffComposition(Composition):
 
     def _get_state_struct_type(self, ctx):
         # comp_state_type_list = ctx.get_state_struct_type(super())
-        # # MODIFIED 5/21/26 OLD:
-        # pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
-        # MODIFIED 5/21/26 NEW:
-        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch,
-                                                                    base_context=Context(string='LLVM'))
-        # MODIFIED 5/21/26 END
+        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
         comp_state_type_list = ctx.get_state_struct_type(super())
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
