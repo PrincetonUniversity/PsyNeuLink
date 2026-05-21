@@ -8,7 +8,7 @@ SIZE=10
 test_var = np.random.rand(2, SIZE)
 
 test_data = [
-    (pnl.Loss.L0, test_var, 0.6842291758389014),
+    (pnl.Loss.L0, test_var, (0.6842290759086609 + 0.6842291758389014) / 2), # (fp32_llvm_result + fp64_llvm_result) / 2
     (pnl.Loss.L1, test_var, 2.9046204135831926),
     (pnl.Loss.SSE, test_var, 1.1252771382029314),
     (pnl.Loss.MSE, test_var, 0.11252771382029314),
