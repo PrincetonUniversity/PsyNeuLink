@@ -2416,7 +2416,8 @@ class AutodiffComposition(Composition):
                                       optimizer_params=None,
                                       context=None,
                                       new=None,
-                                      base_context=Context(execution_id=None)):
+                                      base_context=Context(execution_id=None),
+                                      skip_backprop_unless_learning=False):
         """Build a Pytorch representation of the AutodiffComposition
         Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
@@ -2470,7 +2471,7 @@ class AutodiffComposition(Composition):
         # Construct a new pytorch_representation if none exists or new is specified
 
         from psyneulink.core.llvm import ExecutionMode
-        if self._has_learnable_pathways:
+        if self._has_learnable_pathways and (not skip_backprop_unless_learning or self._is_learning(context)):
             self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
                                                          context=context,
                                                          base_context=base_context)
@@ -3862,14 +3863,12 @@ class AutodiffComposition(Composition):
         return super()._get_state_ids() + ["optimizer"]
 
     def _get_state_struct_type(self, ctx):
-        # comp_state_type_list = ctx.get_state_struct_type(super())
-        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
+        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch,
+                                                                    skip_backprop_unless_learning=True)
         comp_state_type_list = ctx.get_state_struct_type(super())
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
-        return pnlvm.ir.LiteralStructType((
-            *comp_state_type_list,
-            optimizer_state_type))
+        return pnlvm.ir.LiteralStructType((*comp_state_type_list, optimizer_state_type))
 
     def _get_state_initializer(self, context):
         comp_states = super()._get_state_initializer(context)
