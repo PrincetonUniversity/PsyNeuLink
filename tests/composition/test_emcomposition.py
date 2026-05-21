@@ -566,7 +566,6 @@ class TestExecution:
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys   mem gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        # EM2 BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
         (0, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
