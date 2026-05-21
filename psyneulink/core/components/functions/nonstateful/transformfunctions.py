@@ -2521,7 +2521,7 @@ class MatrixMemory(TransformFunction): #
         match_scores = normalized_memory @ normalized_query
 
         # retrieved = memory @ match_scores.squeeze().T
-        retrieved = match_scores @ memory # <- EM2 BREADCRUMB: THIS NEEDS TO BE NORMALIZED?
+        retrieved = scores @ memory # <- EM2 BREADCRUMB: THIS NEEDS TO BE NORMALIZED?
 
         # # Compute match scores for query
         # # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
