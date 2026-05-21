@@ -26,6 +26,7 @@ import numpy as np
 from beartype import beartype
 
 try:
+    import torch
     torch_available = True
 except ImportError:
     torch_available = False
@@ -1401,10 +1402,8 @@ class LossFunction(ObjectiveFunction):
                 raise err_unequal_length
 
         if LOSS in request_set:
-            import torch
             loss = request_set[LOSS]
-            if not isinstance(loss, (Loss, torch.nn.modules.loss._Loss)):
-            # if not isinstance(loss) or loss not in dir(torch.nn.modules.loss):
+            if not isinstance(loss, Loss) and torch_available and not isinstance(loss, torch.nn.modules.loss._Loss):
                 raise FunctionError(f"Specified loss for {self.name} ({loss}) "
                                     f"must be a member of the Loss enum or a PyTorch loss function.")
 
@@ -1471,10 +1470,11 @@ class LossFunction(ObjectiveFunction):
         else:
             if self.is_initializing:
                 if torch_available:
-                    import torch
                     if isinstance(loss, torch.nn.modules.loss._Loss):
                         return np.array(0)
+
                 return np.array([0])
+
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
 
         if normalize:
@@ -1576,7 +1576,6 @@ class LossFunction(ObjectiveFunction):
 
     def _gen_pytorch_fct(self, device, context=None):
 
-        import torch
         loss = self._get_pytorch_fct_param_value('loss', device, context)
         normalize = self._get_pytorch_fct_param_value('normalize', device, context)
 
