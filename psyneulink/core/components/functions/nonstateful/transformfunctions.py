@@ -2294,24 +2294,24 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
 
 def _memory_getter(owning_component=None, context=None):
-    return owning_component.parameters.matrix._get(context).T
+    return owning_component.scores_function.parameters.matrix._get(context).T
 
 def _memory_setter(value, owning_component=None, context=None):
-    return owning_component.parameters.matrix._set(value, context).T
+    return owning_component.scores_function.parameters.matrix._set(value.T, context)
 
 
-class MatrixMemory(MatrixTransform): #
+class MatrixMemory(TransformFunction): #
     """
-    MatrixMemory(                     \
-        default_variable=None,        \
-        initializer=None,             \
-        memory_capacity=None,         \
-        decay_rate=0,                 \
-        storage_prob=1.0,             \
-        scores_operation=DOT_PRODUCT, \
-        params=None,                  \
-        owner=None,                   \
-        prefs=None,                   \
+    MatrixMemory(                        \
+        default_variable=[[0],[0],[0]],  \
+        memory=None,                     \
+        normalize_memories=True,         \
+        scores_operation=DOT_PRODUCT,    \
+        decay_rate=0,                    \
+        storage_prob=1.0,                \
+        params=None,                     \
+        owner=None,                      \
+        prefs=None,                      \
         )
 
     Limited form of ContentAddressableMemory, for specific use by EMComposition2
@@ -2333,10 +2333,15 @@ class MatrixMemory(MatrixTransform): #
     """
     componentName = MATRIX_MEMORY_FUNCTION
 
-    class Parameters(MatrixTransform.Parameters):
-        memory = Parameter(None, getter=_memory_getter, setter=_memory_setter, dependencies='matrix')
-        scores = Parameter([0], stateful=True)
-        weakest_memory = Parameter(0, stateful=True)
+    class Parameters(TransformFunction.Parameters):
+        variable = Parameter(np.array([[0],[0],[0]]), read_only=True, pnl_internal=True,
+                             constructor_argument='default_variable', mdf_name='A')
+        memory = Parameter(None, mdf_name='B')
+        # scores_function = Parameter(MatrixTransform)
+        scores_operation = Parameter(DOT_PRODUCT, stateful=False)
+        normalize_memories = Parameter(True)
+        # scores = Parameter([0], stateful=True)
+        # weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
         decay_rate = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2361,11 +2366,16 @@ class MatrixMemory(MatrixTransform): #
                  owner=None,
                  prefs:Optional[ValidPrefSet] = None):
 
+        self.scores_function = MatrixTransform(default_variable=default_variable[0], # MatrixTransform only uses query
+                                               operation=scores_operation,
+                                               normalize=normalize_memories,
+                                               matrix=memory.T)
+
         super().__init__(
             default_variable=default_variable,
-            matrix=memory.T,
-            operation=scores_operation,
-            normalize=normalize_memories,
+            memory=memory,
+            # scores_function=scores_function,
+            normalize_memories=normalize_memories,
             decay_rate=decay_rate,
             storage_prob=storage_prob,
             params=params,
@@ -2373,13 +2383,41 @@ class MatrixMemory(MatrixTransform): #
             prefs=prefs,
         )
 
+    # EM2 BREADCRUMB:  ADD VALIDATION METHOD HERE FOR VARIABLE WHICH SHOULD HAVE 3 ELEMENTS: QUERY, SCORES, WEAKEST MEM
+    #                   WITH CORRESPONDING DIMENSIONS
+
+    def _validate_variable(self, variable, context=None):
+        memory_shape = self.parameters.memory._get(context).shape
+        num_entries = memory_shape[0]
+        feature_dim = memory_shape[1]
+
+        if len(variable) != 3:
+            raise FunctionError(f"Variable for '{self.name}'must have 3 elements: query, scores, weakest_memory, "
+                                f"but got {len(variable)}")
+        if len(variable[0]) != feature_dim:
+            raise FunctionError(f"The length of the 1st item of variable for '{self.name}' (query) must be equal to "
+                                f"the width of the memory matrix ({feature_dim}), but got {len(variable[0])}.")
+        if len(variable[1]) != num_entries:
+            raise FunctionError(f"The length of the 2nd item of variable for '{self.name}' (scores) must be equal "
+                                f"to the height of the memory matrix (number of items in memory: {num_entries}), "
+                                f"but got {len(variable[1])}.")
+        if len(variable[2]) != 1:
+            raise FunctionError(f"The length of the 3rd item of variable for '{self.name}' should 1 "
+                                f"(index of weakest entry in memory), but got {len(variable[2])}.")
+        return variable
+
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
                  context=None,
                  params=None,
                  ) -> (np.array, np.array, np.array):
-        """Override to accept, use and return scores and norm arguments, and store() when storage_condition is satisfied
-        Use specification of OPERATION (STORE or RETRIEVE) in params to determine which to do
+        """Override to add processing of scores and norm, and execute store() when storage_condition is satisfied
+
+        query = variable[0] (dim = columns of self.memory / rows of self.matrix)
+        scores = variable[1] (dim = rows of self.memory / cols of self.matrix)
+        weakest_memory = variable[2] (scalar)
+
+        Use specification of STORE_OR_RETRIEVE in params to determine which to do
         If RETRIEVE:
             - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
             - Compute distance (dot product by default) between query each entry (row) -> scores
@@ -2387,10 +2425,11 @@ class MatrixMemory(MatrixTransform): #
         If STORE:
             - Call _store_memory() to store query if store == True
 
-        Return retrieved value, scores
+        Return retrieved memory (row of memory matrix), scores, norms
 
         """
-        variable = np.asarray(variable, dtype=float)
+        variable = np.array(variable)
+
         operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
                              f"in call to MatrixMemory for '{self.owner.name}'.")
         try:
@@ -2405,19 +2444,60 @@ class MatrixMemory(MatrixTransform): #
                 raise FunctionError(operation_err_msg)
 
         if operation == RETRIEVE:
-            retrieved, match_scores, norms = self._retrieve_memory(variable, context)
+            # Note: retrieve only needs query and scores
+            retrieved, match_scores, norms = self._retrieve_memory(variable[0:2], context)
             return retrieved, match_scores, norms
 
         # Store memory in place of weakest one if condition is met and storage_prob > 0
         elif operation == STORE:
-            self._store_memory(variable, context)
+            # Note: store only needs query and weakest_memory
+            self._store_memory(variable[[0,2]], context)
             filler = np.zeros(len(self.parameters.memory._get(context)))
             return variable, filler, filler # Return stored item and fillers for scores and norms
 
         else:
             raise FunctionError(operation_err_msg)
 
-    def _retrieve_memory(self, query, context):
+
+#     EM2 BREADCRUMB:  FROM OLD DifferentiableContentAddressableMemory (AI) IMPLEMENTATION:
+#     def _retrieve_memory(self, query, context):
+#
+#         # If this is an initialization run, just return query and zeros for score and norms
+#         if self.is_initializing:
+#             scores_template = norms_template = np.zeros(len(self.memory))
+#             return query, scores_template, norms_template
+#
+#         memory = self.parameters.memory._get(context)
+#         scores_for_retrieval = self.parameters.scores._get(context)
+#         normalize_memories = self.parameters.normalize_memories._get(context)
+#
+#         # Retrieve memory weighted by scores_for_retrieval
+#         retrieved = (scores_for_retrieval @ memory).squeeze()
+#
+#         # Compute match scores for query
+#         # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
+#         #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
+#         #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
+#         if normalize_memories:
+#             query_norm = np.linalg.norm(query)
+#             normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
+#             normalized_memory = self._normalize_rows(memory)
+#             # EM2 BREADCRUMB: USE DistanceFunction here:
+#             match_scores = normalized_memory @ normalized_query
+#             match_scores = self.distance_function([normalized_memory, normalized_query])
+#         else:
+#             # EM2 BREADCRUMB: USE DistanceFunction here:
+#             match_scores = memory @ query
+#
+#         # Compute norms for entries in memory (to determine weakest memory for storage)
+#         norms = np.linalg.norm(memory, axis=1)
+#         return retrieved, match_scores, norms
+#
+
+    def _retrieve_memory(self, variable, context):
+
+        query = variable[0]
+        scores = variable[1]
         memory = self.parameters.memory._get(context)
 
         # If this is an initialization run, just return query and zeros for score and norms
@@ -2425,24 +2505,23 @@ class MatrixMemory(MatrixTransform): #
             scores_template = norms_template = np.zeros(len(memory))
             return query, scores_template, norms_template
 
-
-        # EM2 BREADCRUMB: CALL super()._function here to compute retrieved
-        #                 the computer and return match_scores and norms as per below
-
-        normalize_memories = self.parameters.normalize._get(context)
+        # EM2 BREADCRUMB: REMOVE THIS ONCE PASSED AS ITEM IN VARIABLE
+        # scores_for_retrieval = self.parameters.scores._get(context)
+        normalize_memories = self.parameters.normalize_memories._get(context)
 
         # # Retrieve memory weighted by scores_for_retrieval
         # retrieved = super()._function(query, context)
 
-        match_scores = super()._function(query, context)
+        # match_scores = super()._function(query, context)
 
         query_norm = np.linalg.norm(query)
         normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
         normalized_memory = self._normalize_rows(memory)
         # EM2 BREADCRUMB: USE DistanceFunction here:
-        match_scores = normalized_memory.T @ normalized_query.T
+        match_scores = normalized_memory @ normalized_query
 
         # retrieved = memory @ match_scores.squeeze().T
+        retrieved = match_scores @ memory # <- EM2 BREADCRUMB: THIS NEEDS TO BE NORMALIZED?
 
         # # Compute match scores for query
         # # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED

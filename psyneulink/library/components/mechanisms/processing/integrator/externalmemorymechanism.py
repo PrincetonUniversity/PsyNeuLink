@@ -535,7 +535,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         #                                                   owner=self,
         #                                                   prefs=prefs
         #                                                   )
-        function = MatrixMemory(default_variable=field_memory[0],
+        function = MatrixMemory(default_variable=default_variable,
                                 memory=field_memory,
                                 normalize_memories=normalize_memories,
                                 scores_operation=scores_operation,
@@ -609,9 +609,9 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                                        f"{len(variable[2])}; expected 1.")
         return variable
 
-    def _parse_function_variable(self, variable, context=None):
-        # Pass only query to function; scores are accessed from Parameter
-        return variable[0]
+    # def _parse_function_variable(self, variable, context=None):
+    #     # Pass only query to function; scores are accessed from Parameter
+    #     return variable[0]
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         variable = self._validate_variable(variable, context=context)
@@ -633,8 +633,8 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
             runtime_params.update({STORE_OR_RETRIEVE: RETRIEVE})
 
         # EM2 BREADCRUMB: MAKE THESE FUNCTION PARAMETERS (LIKE storage_prob) ONCE THAT IS SUPPORTED FOR PYTORCH
-        self.function.parameters.scores._set(scores, context)
-        self.function.parameters.weakest_memory._set(weakest_memory, context)
+        # self.function.parameters.scores._set(scores, context)
+        # self.function.parameters.weakest_memory._set(weakest_memory, context)
 
         # return super()._execute(variable, context, runtime_params)
         return super()._execute(variable, context, runtime_params)
