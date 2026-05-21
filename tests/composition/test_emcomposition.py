@@ -815,14 +815,14 @@ class TestExecution:
         query = test_field_weights_0_vs_None_data[1]
         operation = test_field_weights_0_vs_None_data[2]
 
-        em = pnl.EMComposition(memory_template=memory_template,
-                               memory_capacity=4,
-                               memory_decay_rate=0,
-                               learn_field_weights=False,
-                               softmax_choice=softmax_choice,
-                               field_weights=field_weights,
-                               field_names=['A', 'B', 'C'],
-                               )
+        em = pnl.EMComposition2(memory_template=memory_template,
+                                memory_capacity=4,
+                                memory_decay_rate=0,
+                                learn_field_weights=False,
+                                softmax_choice=softmax_choice,
+                                field_weights=field_weights,
+                                field_names=['A', 'B', 'C'],
+                                )
         # Confirm initial weight assignments (that favor A)
         assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
         assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
@@ -836,10 +836,10 @@ class TestExecution:
             assert 'C [WEIGHT]' not in em.nodes.names
 
         # Confirm use of L0 for retrieval since keys for A and B are scalars
-        assert em.projections['MEMORY for A [KEY]'].function.operation == operation
-        assert em.projections['MEMORY for B [KEY]'].function.operation == operation
+        assert em.nodes['A [FIELD_MEMORY]'].function.scores_function.operation == operation
+        assert em.nodes['B [FIELD_MEMORY]'].function.scores_function.operation == operation
         if field_weights[2] == 0:
-            assert em.projections['MEMORY for C [KEY]'].function.operation == operation
+            assert em.nodes['C [FIELD_MEMORY]'].function.scores_function.operation == operation
 
         A = em.nodes['A [QUERY]']
         B = em.nodes['B [QUERY]']
