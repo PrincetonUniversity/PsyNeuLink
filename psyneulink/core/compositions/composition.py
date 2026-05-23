@@ -7044,9 +7044,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_ports = receiver.input_CIM.input_ports
             except IndexError:
                 base_err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': "
-                if err_msg:
-                    raise CompositionError(base_err_msg + err_msg)
-                assert False, f"PROGRAM ERROR: unspecified reason for following error message: " + base_err_msg
+                assert err_msg, f"PROGRAM ERROR: unspecified reason for following error message: " + base_err_msg
+                raise CompositionError(base_err_msg + err_msg)
 
         # Check for existing Projections from specified sender
         existing_projections = []
