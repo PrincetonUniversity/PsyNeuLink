@@ -7020,6 +7020,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver_ports = [projection.receiver]
         else:
             try:
+                err_msg, f"PROGRAM ERROR: unspecified reason for following error message: "
                 if isinstance(sender, Port):
                     err_msg = f"'{sender.owner.name}' does not have an '{OutputPort.__name__}'."
                     sender_ports = [sender]
@@ -7043,8 +7044,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise IndexError
                     receiver_ports = receiver.input_CIM.input_ports
             except IndexError:
-                base_err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': "
-                assert err_msg, f"PROGRAM ERROR: unspecified reason for following error message: " + base_err_msg
+                err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
+                assert 'PROGRAM ERROR' not in err_msg, err_msg
                 raise CompositionError(base_err_msg + err_msg)
 
         # Check for existing Projections from specified sender
