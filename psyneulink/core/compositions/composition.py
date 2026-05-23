@@ -7020,7 +7020,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver_ports = [projection.receiver]
         else:
             try:
-                err_msg, f"PROGRAM ERROR: unspecified reason for following error message: "
+                err_msg = f"PROGRAM ERROR: unspecified reason for following error message: "
                 if isinstance(sender, Port):
                     err_msg = f"'{sender.owner.name}' does not have an '{OutputPort.__name__}'."
                     sender_ports = [sender]
