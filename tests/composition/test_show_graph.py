@@ -537,6 +537,7 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
 '
 
     expected_output_for_nested_to_nested_pytorch_with_hidden = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"HIDDEN MECH" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "HIDDEN MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("hidden", [True, False])
     def test_projection_from_node_in_one_nested_comp_to_node_in_another(self, hidden):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition

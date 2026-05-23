@@ -7043,8 +7043,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise IndexError
                     receiver_ports = receiver.input_CIM.input_ports
             except IndexError:
-                err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
-                raise CompositionError(err_msg)
+                base_err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': "
+                if err_msg:
+                    raise CompositionError(base_err_msg + err_msg)
+                assert False, f"PROGRAM ERROR: unspecified reason for following error message: " + base_err_msg
 
         # Check for existing Projections from specified sender
         existing_projections = []
@@ -10337,6 +10339,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs = input_spec()
             elif isinstance(input_spec, dict):
                 inputs = input_spec
+            else:
+                assert False, (f"PROGRAM ERROR: block_simulate is True and input_spec is specified, "
+                               f"but it is not a generator, generator function, or a dict: {type(input_spec)}")
         else:
             inputs = predicted_input
 
