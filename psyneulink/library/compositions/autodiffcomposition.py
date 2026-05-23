@@ -522,7 +522,6 @@ BREADCRUMB:
   the corersponding parameters (see `AutodiffComposition_Learning_Rates` for specification of learning rates).
 COMMENT
 
-
 An AutodiffComposition uses a `pytorch_representation <AutodiffComposition.pytorch_representation>` to execute
 learning when its `learn() <Composition.learn>` method is called in `Pytorch mode
 <AutodiffComposition_PyTorch>`.  This is comprised of an outer *PytorchCompositionWrapper* for the AutodiffComposition,
