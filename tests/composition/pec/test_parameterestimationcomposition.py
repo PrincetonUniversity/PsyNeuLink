@@ -13,7 +13,6 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
 
-
 # Set the number of threads to 1 for all tests in this module, tests are often run in parallel
 # and having multiple threads per test can lead to oversubscription of CPU resources.
 pytestmark = pytest.mark.usefixtures("set_threads_to_one")
@@ -63,7 +62,12 @@ input_node_2 = pnl.ProcessingMechanism(input_shapes=3)
 input_node_3 = pnl.ProcessingMechanism(input_shapes=2)
 output_node = pnl.ProcessingMechanism(input_shapes=2)
 model = pnl.Composition(
-    [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
+    pathways=[
+        [input_node_1, output_node],
+        [input_node_2, output_node],
+        [input_node_3, output_node],
+    ],
+    name="model",
 )
 pec = pnl.ParameterEstimationComposition(
     name="pec",
@@ -172,6 +176,24 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         assert error.value.args[0] == error_msg
     else:
         pec.run(inputs=inputs_dict)
+
+
+@pytest.mark.composition
+def test_pec_controller_defaults_to_llvm_execution_mode():
+    input_node = pnl.ProcessingMechanism(input_shapes=1)
+    output_node = pnl.ProcessingMechanism(input_shapes=1)
+    model = pnl.Composition(pathways=[input_node, output_node], name="model")
+
+    pec = pnl.ParameterEstimationComposition(
+        name="pec",
+        model=model,
+        parameters={("slope", output_node): [1.0, 2.0]},
+        outcome_variables=output_node,
+        objective_function=np.sum,
+        optimization_function=PECOptimizationFunction(method="differential_evolution"),
+    )
+
+    assert pec.controller.parameters.comp_execution_mode.get(None) == "LLVM"
 
 
 # SciPy changed their implementation of differential evolution and the way it selects
@@ -559,3 +581,138 @@ def test_pec_controller_specified():
             optimization_function="differential_evolution",
             controller=pnl.ControlMechanism(),
         )
+
+@pytest.mark.composition
+def test_pec_lca(func_mode):
+
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
+
+    # Construct model
+    input_mech = pnl.TransferMechanism(
+        input_shapes=2,
+        integrator_mode=True,
+        integration_rate=1,
+        termination_threshold=1
+    )
+
+    lca_mech = pnl.LCAMechanism(
+        name="LCA",
+        input_shapes=2,
+        function=pnl.Logistic(gain=10, bias=0),
+        threshold=0.6,
+        leak=8,
+        competition=8,
+        self_excitation=0,
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=0.1),
+        time_step_size=0.01,
+        execute_until_finished=True,
+        output_ports=[pnl.DECISION_OUTCOME, pnl.DECISION_INDEX, pnl.DECISION_TIME],
+        reset_stateful_function_when=pnl.AtTrialStart()
+    )
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([input_mech, lca_mech])
+
+    input_dict = {
+        input_mech: np.tile([1,0], (100,1))
+    }
+
+    # Generate data to fit
+    execution_mode_map = {
+        "Python": pnl.ExecutionMode.Python,
+        "LLVM": pnl.ExecutionMode.LLVMRun,
+        "PTX": pnl.ExecutionMode.PTXRun,
+    }
+    comp.run(inputs=input_dict, execution_mode=execution_mode_map[func_mode])
+
+    data_to_fit = pd.DataFrame(
+        {
+            'decision': [v[0] for v in comp.results[:, 1]],
+            'response_time': [v[0] for v in comp.results[:, 2]],
+        }
+    )
+
+    data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+
+    # Construct and run PEC
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("termination_threshold", input_mech): np.linspace(1, 10, 10)},
+        outcome_variables=[
+            lca_mech.output_ports[1],
+            lca_mech.output_ports[2],
+        ],
+        data=data_to_fit,
+        optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.TPESampler, max_iterations=10),
+        num_estimates=10,
+    )
+
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.controller.function.parameters.save_values.set(True)
+    pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
+
+
+@pytest.mark.composition
+def test_pec_lca_num_estimates_llvm_stochasticity(func_mode):
+    """Ensure LLVM PEC estimates vary for LCA when noise is stochastic."""
+
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
+
+    input_mech = pnl.TransferMechanism(
+        input_shapes=2,
+        integrator_mode=True,
+        integration_rate=1,
+        termination_threshold=1,
+    )
+
+    lca_mech = pnl.LCAMechanism(
+        name="LCA",
+        input_shapes=2,
+        function=pnl.Logistic(gain=10, bias=0),
+        threshold=0.6,
+        leak=8,
+        competition=8,
+        self_excitation=0,
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=0.1),
+        time_step_size=0.01,
+        execute_until_finished=True,
+        output_ports=[pnl.DECISION_OUTCOME, pnl.DECISION_INDEX, pnl.DECISION_TIME],
+        reset_stateful_function_when=pnl.AtTrialStart(),
+    )
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([input_mech, lca_mech])
+
+    captured = {}
+
+    def objective(sim_data):
+        # Keep the first simulation batch so we can validate estimate-to-estimate variability.
+        if "sim_data" not in captured:
+            captured["sim_data"] = sim_data.copy()
+        return float(np.mean(np.std(sim_data, axis=1)))
+
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("termination_threshold", input_mech): np.linspace(1, 2, 3)},
+        outcome_variables=[lca_mech.output_ports[pnl.DECISION_TIME]],
+        objective_function=objective,
+        optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=4,
+        num_trials_per_estimate=5,
+        initial_seed=42,
+    )
+
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.run(inputs={input_mech: np.tile([1, 0], (5, 1))})
+
+    assert "sim_data" in captured
+    # sim_data shape: (num_trials, num_estimates, num_outcomes)
+    assert np.mean(np.std(captured["sim_data"], axis=1)) > 0.0

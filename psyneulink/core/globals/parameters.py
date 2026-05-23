@@ -321,6 +321,7 @@ import types
 import typing
 import weakref
 
+import numpy as np
 import toposort
 
 from psyneulink._typing import Iterable, Optional, Set, Union
@@ -1870,8 +1871,15 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         value_updated = False
         if not compilation_sync:
+            value_for_update = value
+
+            # bools are stored as ints in compiled structs; convert here to
+            # avoid incorrectly flagging type change
+            if self._tracking_compiled_struct and isinstance(value, bool):
+                value_for_update = np.asarray(value)
+
             try:
-                update_array_in_place(self.values[execution_id], value)
+                update_array_in_place(self.values[execution_id], value_for_update)
             except (KeyError, TypeError, ValueError):
                 # no self.values for execution_id
                 # failure during attempted update

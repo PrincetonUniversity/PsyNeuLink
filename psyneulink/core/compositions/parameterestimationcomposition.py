@@ -150,7 +150,10 @@ Structure
    ParameterEstimationComposition uses a `PEC_OCM` as its `controller <Composition.controller>` -- a specialized
    subclass of `OptimizationControlMechanism` that intercepts inputs provided to the `run
    <ParameterEstimationComposition.run>` method of the ParameterEstimationComposition, and assigns them directly
-   to the `state_feature_values` of the PEC_OCM when it executes.
+   to the `state_feature_values` of the PEC_OCM when it executes.  By default, PEC_OCM sets
+   `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>` to ``'LLVM'`` for controller
+   simulations; this can be overridden by assigning ``'Python'`` or ``'PTX'`` to the controller's
+   `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>` parameter.
 
 .. _ParameterEstimationComposition_Class_Reference:
 
@@ -576,6 +579,7 @@ class ParameterEstimationComposition(Composition):
 
         self._outcome_variable_indices = []
         in_comp = self.nodes[0]
+        output_port_sizes = [len(port.parameters.value.get(context)) for port in in_comp.output_ports]
         for outcome_var in self.outcome_variables:
             try:
                 if not isinstance(outcome_var, OutputPort):
@@ -585,6 +589,10 @@ class ParameterEstimationComposition(Composition):
                 # we must use the inner composition's portmap to get the CIM output port that corresponds to
                 # the outcome variable
                 index = in_comp.output_ports.index(in_comp.output_CIM.port_map[outcome_var][1])
+
+                # The actual index of the outcome variable in the output of the composition is the sum of the sizes of
+                # all output ports that come before it in the output_ports list
+                index = sum(output_port_sizes[:index])
 
                 self._outcome_variable_indices.append(index)
             except KeyError:
@@ -1088,6 +1096,12 @@ class PEC_OCM(OptimizationControlMechanism):
         """
         Attributes
         ----------
+            comp_execution_mode
+                overrides `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>` to
+                default PEC controller simulations to LLVM execution.
+                :default value: "LLVM"
+                :type: str
+
             state_feature_values
                 overrides `state_feature_values <OptimizationControlMechanism.state_feature_values` to
                 assign inputs provided to run() method of ParameterEstimationComposition, and cached in
@@ -1096,6 +1110,7 @@ class PEC_OCM(OptimizationControlMechanism):
                 :default value: {}
                 :type: dict
         """
+        comp_execution_mode = Parameter('LLVM', stateful=False, loggable=False, pnl_internal=True)
 
         state_feature_values = Parameter(
             None,
