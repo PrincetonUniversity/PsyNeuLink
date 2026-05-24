@@ -536,10 +536,10 @@ class EMComposition2(AutodiffComposition):
             context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2"),
         )
 
-        self._set_learning_attributes()
-        self._set_conditions()
-        self._set_node_roles()
-        self._set_attributes_for_show_graph()
+        self._assign_learning_attributes()
+        self._assign_conditions()
+        self._assign_node_roles()
+        self._assign_attributes_for_show_graph()
 
         memory = self.memory
         if memory is not None and not np.any([
@@ -1053,7 +1053,7 @@ class EMComposition2(AutodiffComposition):
                                                  softmax_choice):
         """Construct combined_scores_node
         This is constructed even if num_keys == 1, since it computes the softmax over the scores
-        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py 
+        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py
         """
 
         if softmax_choice == ARG_MAX:
@@ -1170,66 +1170,55 @@ class EMComposition2(AutodiffComposition):
             )
             field.retrieved_projection = field.retrieved_node.path_afferents[0]
 
-    def _set_conditions(self):
+    def _assign_conditions(self):
 
-        # BREADCRUMB: NECESSARY?
-        # INPUT Nodes should run first
-        for node in self.get_nodes_by_role(NodeRole.INPUT):
-            self.scheduler.add_condition(node, Always())
 
         for field in self.fields:
 
-            # # MODIFIED EM2 OLD:
-            # # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
-            # self.scheduler.add_condition(
-            #     field.memory_node,
-            #     Any(All(AfterNCalls(field.input_node, 1),
-            #             BeforeNCalls(self.combined_scores_node, 1)),
-            #         All(AfterNCalls(self.combined_scores_node, 1),
-            #             BeforeNCalls(field.retrieved_node, 1))))
-            #
-            # # Retrieved nodes run only after both field-memory mechanisms have run twice.
-            # self.scheduler.add_condition(field.memory_node, conditions.AfterNodes(self.combined_scores_node))
-            # MODIFIED EM2 NEW:
+            # Input and weight nodes should run only once, at the beginning of the trial
+            # EM2 BREADCRUMB: DOES THIS CONDITION NEED A TimeScale SPECIFICTION (I.E., TRIAL)?
+            self.scheduler.add_condition(field.input_node, BeforeNCalls(field.input_node, 1))
+            self.scheduler.add_condition(field.weight_node, BeforeNCalls(field.weight_node, 1))
+
             # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(
                 field.memory_node,
                 Any(All(AfterNCalls(field.input_node, 1),
                         BeforeNCalls(self.combined_scores_node, 1)),
                     All(AfterNCalls(self.combined_scores_node, 1),
-                        BeforeNCalls(field.retrieved_node, 1)),
-                    # AfterNodes(self.combined_scores_node)
-                    )
+                        BeforeNCalls(field.retrieved_node, 1)))
             )
-            # MODIFIED EM2 END
+
+            # Storage should be after RETRIEVAL
+            field.memory_node.parameters.storage_condition.set(
+                conditions.AfterNCalls(self.combined_scores_node, 1),
+                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
+                override=True)
+
 
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
             self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
 
-        # for memory_node in self.field_memory_nodes:
-        #     self.scheduler.add_condition(memory_node, conditions.AfterNodes(self.combined_scores_node))
+        # # RETRIEVE runs only after both field-memory mechanisms have run once.
+        # args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
+        #         + [BeforeNCalls(node, 2) for node in self.field_memory_nodes])
+        # self.scheduler.add_condition(self.combined_scores_node, All(*args))
+
+        # # Storage should be after RETRIEVAL
+        # for field_memory_node in self.field_memory_nodes:
+        #     field_memory_node.parameters.storage_condition.set(
+        #         conditions.AfterNCalls(self.combined_scores_node, 1),
+        #         context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
+        #         override=True,
+        #     )
+
+        # # BREADCRUMB: NECESSARY??
+        # # End the trial after all retrieved nodes have executed once.
+        # args = [AfterNCalls(node, 1) for node in self.retrieved_nodes]
+        # self.scheduler.termination_conds[TimeScale.TRIAL] = (All(*args))
 
 
-        # RETRIEVE runs only after both field-memory mechanisms have run once.
-        args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
-                + [BeforeNCalls(node, 2) for node in self.field_memory_nodes])
-        self.scheduler.add_condition(self.combined_scores_node, All(*args))
-
-        # Storage should after RETRIEVAL
-        for field_memory_node in self.field_memory_nodes:
-            field_memory_node.parameters.storage_condition.set(
-                conditions.AfterNCalls(self.combined_scores_node, 1),
-                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
-                override=True,
-            )
-
-        # BREADCRUMB: NECESSARY??
-        # End the trial after all retrieved nodes have executed once.
-        args = [AfterNCalls(node, 1) for node in self.retrieved_nodes]
-        self.scheduler.termination_conds[TimeScale.TRIAL] = (All(*args))
-
-
-    def _set_node_roles(self):
+    def _assign_node_roles(self):
         for node in self.field_weight_nodes:
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
@@ -1237,12 +1226,12 @@ class EMComposition2(AutodiffComposition):
         self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
 
 
-    def _set_attributes_for_show_graph(self):
+    def _assign_attributes_for_show_graph(self):
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.combined_scores_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
-    def _set_learning_attributes(self):
+    def _assign_learning_attributes(self):
         self.execute_in_additional_optimizations = {}
 
         field_weight_projections = []
