@@ -69,7 +69,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
 __all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
-           'LinearCombination', 'MatrixTransform', 'MatrixMemory', 'PredictionErrorDeltaFunction']
+           'LinearCombination', 'MatrixTransform', 'MatrixMemory', 'PredictionErrorDeltaFunction',
+           'ACCESS_MEMORY', 'COMPUTE_SCORES']
 
 class TransformFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
@@ -2299,6 +2300,9 @@ def _memory_getter(owning_component=None, context=None):
 def _memory_setter(value, owning_component=None, context=None):
     return owning_component.scores_function.parameters.matrix._set(value.T, context)
 
+ACCESS_MEMORY = 'ACCESS_MEMORY'
+COMPUTE_SCORES = 'COMPUTE_SCORES'
+
 
 class MatrixMemory(TransformFunction): #
     """
@@ -2306,7 +2310,7 @@ class MatrixMemory(TransformFunction): #
         default_variable=[[0],[0],[0]],  \
         memory=None,                     \
         normalize_memories=True,         \
-        scores_operation=DOT_PRODUCT,    \
+        scores_metric=DOT_PRODUCT,       \
         decay_rate=0,                    \
         storage_prob=1.0,                \
         params=None,                     \
@@ -2337,11 +2341,8 @@ class MatrixMemory(TransformFunction): #
         variable = Parameter(np.array([[0],[0],[0]]), read_only=True, pnl_internal=True,
                              constructor_argument='default_variable', mdf_name='A')
         memory = Parameter(None, mdf_name='B')
-        # scores_function = Parameter(MatrixTransform)
-        scores_operation = Parameter(DOT_PRODUCT, stateful=False)
+        scores_metric = Parameter(DOT_PRODUCT, stateful=False)
         normalize_memories = Parameter(True)
-        # scores = Parameter([0], stateful=True)
-        # weakest_memory = Parameter(0, stateful=True)
         store = Parameter(False)
         decay_rate = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2359,7 +2360,7 @@ class MatrixMemory(TransformFunction): #
                  default_variable=None,
                  memory=None,
                  normalize_memories: bool = True,
-                 scores_operation: Optional[Literal[L0, DOT_PRODUCT]] = None,
+                 scores_metric: Optional[Literal[L0, DOT_PRODUCT]] = None,
                  decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
                  storage_prob: Optional[Union[int, float, np.ndarray]] = None,
                  params:Optional[Union[List, np.ndarray]]=None,
@@ -2367,7 +2368,7 @@ class MatrixMemory(TransformFunction): #
                  prefs:Optional[ValidPrefSet] = None):
 
         self.scores_function = MatrixTransform(default_variable=default_variable[0], # MatrixTransform only uses query
-                                               operation=scores_operation,
+                                               operation=scores_metric,
                                                normalize=normalize_memories,
                                                matrix=memory.T)
 
@@ -2411,20 +2412,19 @@ class MatrixMemory(TransformFunction): #
                  context=None,
                  params=None,
                  ) -> (np.array, np.array, np.array):
-        """Override to add processing of scores and norm, and execute store() when storage_condition is satisfied
+        """Override to add processing of scores and norm, and execute store() when access_condition is satisfied
 
         query = variable[0] (dim = columns of self.memory / rows of self.matrix)
         scores = variable[1] (dim = rows of self.memory / cols of self.matrix)
         weakest_memory = variable[2] (scalar)
 
-        Use specification of STORE_OR_RETRIEVE in params to determine which to do
-        If RETRIEVE:
-            - Use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
-            - Compute distance (dot product by default) between query each entry (row) -> scores
-            - Compute norm of each entry (row) -> norms
-        If STORE:
-            - Call _store_memory() to store query if store == True
-
+        Use specification of OPERATION in params to determine which to do
+        If COMPUTE_SCORES, call _compute_scores() method to:
+            - compute distance (dot product by default) between query each entry (row) -> scores
+            - compute norm of each entry (row) -> norms
+        If ACCESS_MEMORY, call _retrieve() method to retrieve entry from memory and then store query
+            - use scores Parameter (col) to generate weighted avg of entries in memory -> retrieved value
+            - store query if storage_prob > random_state.rand(0,1)
         Return retrieved memory (row of memory matrix), scores, norms
 
         """
@@ -2433,35 +2433,32 @@ class MatrixMemory(TransformFunction): #
         operation_err_msg = (f"PROGRAM ERROR: 'operation'  was not specified in (runtime_)params "
                              f"in call to MatrixMemory for '{self.owner.name}'.")
         try:
-            from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
-                STORE_OR_RETRIEVE)
-            operation = params[STORE_OR_RETRIEVE]
-            assert operation in {STORE, RETRIEVE}
+            operation = params[OPERATION]
+            assert operation in {COMPUTE_SCORES, ACCESS_MEMORY}
         except:
             if self.is_initializing:
-                operation = RETRIEVE
+                operation = COMPUTE_SCORES
             else:
                 raise FunctionError(operation_err_msg)
 
-        if operation == RETRIEVE:
+        if operation == COMPUTE_SCORES:
             # Note: retrieve only needs query and scores
-            retrieved, match_scores, norms = self._retrieve_memory(variable[0:2], context)
+            retrieved, match_scores, norms = self._compute_scores(variable[0], context)
             return retrieved, match_scores, norms
 
         # Store memory in place of weakest one if condition is met and storage_prob > 0
-        elif operation == STORE:
+        elif operation == ACCESS_MEMORY:
             # Note: store only needs query and weakest_memory
-            self._store_memory(variable[[0,2]], context)
+            retrieved_value, combined_scores = self._access_memory(variable, context)
             filler = np.zeros(len(self.parameters.memory._get(context)))
-            return variable, filler, filler # Return stored item and fillers for scores and norms
+            return retrieved_value, combined_scores, filler # Return stored item, combined_scores, and filler for norms
 
         else:
             raise FunctionError(operation_err_msg)
 
-    def _retrieve_memory(self, variable, context):
+    def _compute_scores(self, variable, context):
 
-        query = variable[0]
-        scores = variable[1]
+        query = variable
         memory = self.parameters.memory._get(context)
 
         # If this is an initialization run, just return query and zeros for score and norms
@@ -2470,24 +2467,31 @@ class MatrixMemory(TransformFunction): #
             return query, scores_template, norms_template
 
         match_scores = self.scores_function(query)
-        retrieved = scores @ memory # <- EM2 BREADCRUMB: THIS NEEDS TO BE NORMALIZED?
         norms = np.linalg.norm(memory, axis=1)
 
-        return retrieved, match_scores, norms
+        return query, match_scores, norms
 
-    def _store_memory(self, variable, context=None):
-        item_to_store = variable[0]
-        weakest_memory_idx = int(variable[1].squeeze())
+    def _access_memory(self, variable, context=None):
+
+        query = variable[0]
+        scores = variable[1]
+        weakest_memory_idx = int(variable[2].squeeze())
+        memory = self.parameters.memory._get(context)
+
+        # First retrieve memory
+        retrieved = scores @ memory
+
+        # Then store query
         storage_prob = self._get_current_parameter_value('storage_prob', context)
         random_state = self.parameters.random_state._get(context)
         if random_state.uniform(0, 1) < storage_prob:
             decay_rate = self.parameters.decay_rate._get(context)
-            memory = self.parameters.memory._get(context)
-            # store_idx = int(self.parameters.weakest_memory._get(context))
             if decay_rate >= 0.0:
                 memory *= (1-decay_rate)
-            memory[weakest_memory_idx] = item_to_store
+            memory[weakest_memory_idx] = query
             self.parameters.memory._set(memory, context, override=True)
+
+        return retrieved, scores
 
     def _normalize_rows(self, memory):
         memory = np.asarray(memory, dtype=float)

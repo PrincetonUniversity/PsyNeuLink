@@ -13,10 +13,11 @@ Refactored EMComposition prototype.
 
 This module introduces ExternalMemoryMechanism, a field-local episodic memory mechanism
 that owns the memory matrix for a single field. For the moment, ExternalMemoryMechanism uses
-only Matrix as its Function (defined in the ExternalMemoryMechanism module)
-that is limited to a single field in memory, that uses its XXX function to determine scores for each entry in memory,
-and a _store_memory method that stores the query input into memory with a probability specified by
-storage_prob (True or False) when storage_condition is satisfied
+only Matrix as its Function (defined in the ExternalMemoryMechanism module) that is limited to a single field in
+memory, that uses its _compute_scores() method to determine scores for each
+entry in memory, and an _access_memory method that retrieves the memory based on the combined scores over all fields,
+and then stores the query input into memory with a probability specified by storage_prob (True or False) when
+access_condition is satisfied
 
 The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
@@ -35,7 +36,7 @@ High-level execution per field:
 3. SCORES from key fields are weighted, combined and softmax-normalized by RETRIEVE.
 4. The normalized combined scores are sent back to each ExternalMemoryMechanism.input_port[COMBINED_SCORES].
 5. Each ExternalMemoryMechanism retrieves its field value and emits RETRIEVED.
-6. Each ExternalMemoryMechanism stores its QUERY input into its own memory matrix when storage_condition is True
+6. Each ExternalMemoryMechanism stores its QUERY input into its own memory matrix when access_condition is True
 """
 
 import copy
@@ -317,7 +318,7 @@ class EMComposition2(AutodiffComposition):
 
     with:
       - one ExternalMemoryMechanism per field, each owning its field memory matrix.
-      - storage occurs in each memory_node based on storage_condition an its storage_prob
+      - storage occurs in each memory_node based on access_condition an its storage_prob
 
     The externally visible structure is kept similar to the original EMComposition:
       - input_nodes
@@ -985,7 +986,7 @@ class EMComposition2(AutodiffComposition):
                 field_memory = field_memory,
                 decay_rate = memory_decay_rate,
                 storage_prob = storage_prob,
-                scores_operation = L0 if key_len == 1 else DOT_PRODUCT,
+                scores_metric = L0 if key_len == 1 else DOT_PRODUCT,
                 normalize_memories = True if key_len == 1 else normalize_memories,
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
             )
@@ -1190,7 +1191,7 @@ class EMComposition2(AutodiffComposition):
             )
 
             # Storage should be after RETRIEVAL
-            field.memory_node.parameters.storage_condition.set(
+            field.memory_node.parameters.access_condition.set(
                 conditions.AfterNCalls(self.combined_scores_node, 1),
                 context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
                 override=True)
@@ -1206,7 +1207,7 @@ class EMComposition2(AutodiffComposition):
 
         # # Storage should be after RETRIEVAL
         # for field_memory_node in self.field_memory_nodes:
-        #     field_memory_node.parameters.storage_condition.set(
+        #     field_memory_node.parameters.access_condition.set(
         #         conditions.AfterNCalls(self.combined_scores_node, 1),
         #         context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
         #         override=True,

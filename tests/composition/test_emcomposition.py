@@ -894,6 +894,9 @@ class TestExecution:
 
             #  Change weights back and confirm that it now favors A
             em.field_weights = [0,1,0]
+            assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
+            assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
+            assert em.nodes['C [WEIGHT]'].input_port.defaults.variable == [0]
             result = em.run(test_input, execution_mode=exec_mode)
             if softmax_choice == pnl.MAX_VAL:
                 if operation == pnl.L0:
