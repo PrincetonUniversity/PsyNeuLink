@@ -64,7 +64,8 @@ from psyneulink.core.globals.utilities import (
     all_within_range, convert_all_elements_to_np_array, convert_to_np_array,
     is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter, ParameterNoValueError, check_user_specified, copy_parameter_value)
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
@@ -2341,6 +2342,8 @@ class MatrixMemory(TransformFunction): #
         variable = Parameter(np.array([[0],[0],[0]]), read_only=True, pnl_internal=True,
                              constructor_argument='default_variable', mdf_name='A')
         memory = Parameter(None, mdf_name='B')
+        # memory = FunctionParameter(function_name='scores_function',
+        #                            function_parameter_name=MATRIX,
         scores_metric = Parameter(DOT_PRODUCT, stateful=False)
         normalize_memories = Parameter(True)
         store = Parameter(False)
@@ -2412,7 +2415,7 @@ class MatrixMemory(TransformFunction): #
                  context=None,
                  params=None,
                  ) -> (np.array, np.array, np.array):
-        """Override to add processing of scores and norm, and execute store() when access_condition is satisfied
+        """Override to add processing of scores and norm, and use _compute_scores() and _access_memory() methods
 
         query = variable[0] (dim = columns of self.memory / rows of self.matrix)
         scores = variable[1] (dim = rows of self.memory / cols of self.matrix)
@@ -2436,6 +2439,7 @@ class MatrixMemory(TransformFunction): #
             operation = params[OPERATION]
             assert operation in {COMPUTE_SCORES, ACCESS_MEMORY}
         except:
+            # 'operation' is not specified in call from __init__()
             if self.is_initializing:
                 operation = COMPUTE_SCORES
             else:
@@ -2466,10 +2470,20 @@ class MatrixMemory(TransformFunction): #
             scores_template = norms_template = np.zeros(len(memory))
             return query, scores_template, norms_template
 
-        match_scores = self.scores_function(query)
+        # # MODIFIED EM2 OLD:
+        # scores = self.scores_function(query)
+        # MODIFIED EM2 NEW:
+        try:
+            scores = self.scores_function(query, context)
+        except ParameterNoValueError:
+            self.scores_function.parameters.matrix._set(self.memory.T, context)
+            self.scores_function.parameters.normalize._set(self.normalize_memories, context)
+            scores = self.scores_function(query, context)
+        # MODIFIED EM2 END
+
         norms = np.linalg.norm(memory, axis=1)
 
-        return query, match_scores, norms
+        return query, scores, norms
 
     def _access_memory(self, variable, context=None):
 
@@ -2490,6 +2504,9 @@ class MatrixMemory(TransformFunction): #
                 memory *= (1-decay_rate)
             memory[weakest_memory_idx] = query
             self.parameters.memory._set(memory, context, override=True)
+            # self.scores_function.parameters.matrix._set(memory, context, override=True)
+            self.scores_function.parameters.matrix._set(self.memory.T, context)
+
 
         return retrieved, scores
 
