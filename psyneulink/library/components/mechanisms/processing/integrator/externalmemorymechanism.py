@@ -644,7 +644,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         if self.store:
             return
         super()._update_output_ports(runtime_output_port_params, context)
-
+        assert True
 
     # @property
     # def memory(self):

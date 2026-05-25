@@ -13259,7 +13259,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
-            assert 'DEBUGGING BREAK POINT: BEGINNING OF TRIAL EXECUTION - EXECUTION SETS ASSIGNED'
+            assert 'DEBUGGING BREAK POINT: BEGINNING OF TRIAL EXECUTION - EXECUTION_SETS ASSIGNED'
 
             for next_execution_set in execution_sets:
 

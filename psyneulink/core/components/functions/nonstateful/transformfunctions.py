@@ -2469,46 +2469,8 @@ class MatrixMemory(TransformFunction): #
             scores_template = norms_template = np.zeros(len(memory))
             return query, scores_template, norms_template
 
-        # EM2 BREADCRUMB: REMOVE THIS ONCE PASSED AS ITEM IN VARIABLE
-        # scores_for_retrieval = self.parameters.scores._get(context)
-        normalize_memories = self.parameters.normalize_memories._get(context)
-
-        # # Retrieve memory weighted by scores_for_retrieval
-        # retrieved = super()._function(query, context)
-
-        # match_scores = super()._function(query, context)
-
-        # # MODIFIED EM2 OLD:
-        # # EM2 BREADCRUMB: USE scores_function HERE TO COMPUTE match_scores
-        # #                 (CHECK WHETHER NORMALIZATION IS HANDLED THE SAME WAY)
-        # query_norm = np.linalg.norm(query)
-        # normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
-        # normalized_memory = self._normalize_rows(memory)
-        # # EM2 BREADCRUMB: USE DistanceFunction here:
-        # match_scores = normalized_memory @ normalized_query
-        # MODIFIED EM2 NEW:
         match_scores = self.scores_function(query)
-        # MODIFIED EM2 END
-
-        # retrieved = memory @ match_scores.squeeze().T
         retrieved = scores @ memory # <- EM2 BREADCRUMB: THIS NEEDS TO BE NORMALIZED?
-
-        # # Compute match scores for query
-        # # BREADCRUMB: THIS SHOULD USE EpisodicMemoryMechanism TO DETERMINE THE DISTANCE / SIMILARITY FUNCTION USED
-        # #             AND THAT SHOULD BE SET ON EMComposition2 CONSTRUCTOR, WITH ABILITY TO DO IT FIELD-WISE
-        # #             AND WARNINGS IF IT IS NOT DIFFERENTIABLE (E.G., USING ARGMAX)
-        # if normalize_memories:
-        #     query_norm = np.linalg.norm(query)
-        #     normalized_query = query / query_norm if query_norm != 0 else np.zeros_like(query)
-        #     normalized_memory = self._normalize_rows(memory)
-        #     # EM2 BREADCRUMB: USE DistanceFunction here:
-        #     match_scores = normalized_memory @ normalized_query
-        # else:
-        #     # EM2 BREADCRUMB: USE DistanceFunction here:
-        #     match_scores = memory @ query
-
-
-        # Compute norms for entries in memory (to determine weakest memory for storage)
         norms = np.linalg.norm(memory, axis=1)
 
         return retrieved, match_scores, norms
