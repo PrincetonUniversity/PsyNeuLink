@@ -737,8 +737,6 @@ class TestExecution:
                 np.testing.assert_equal(em.memory_template[i][j], memory_template[i][j])
 
         # Execute and validate results
-        # retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
-        # retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
         retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
 
         for retrieved_item, expected_item in zip(retrieved, expected_retrieval):
