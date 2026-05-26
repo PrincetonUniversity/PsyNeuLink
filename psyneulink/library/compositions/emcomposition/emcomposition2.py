@@ -204,12 +204,12 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         if owning_component.parameters.field_weights.default_value[i] is None:
             if field_weight:
                 raise EMComposition2Error(
-                    f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
-                    f"was originally assigned as a value field; it cannot be changed to a key field "
-                    f"after construction."
-                )
-            continue
+                    f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' was originally assigned "
+                    f"as a value node (i.e., with a field_weight = None); this cannot be changed after construction. "
+                    f"If you want to change it to a key field, you must re-construct the EMComposition2 using a scalar "
+                    f"for its field in the `field_weights` arg (which can be 0).")
 
+            continue
         owning_component.field_weight_nodes[field_wt_node_idx].input_port.defaults.variable = field_weight
         owning_component.fields[i].weight = field_weight
         field_wt_node_idx += 1
