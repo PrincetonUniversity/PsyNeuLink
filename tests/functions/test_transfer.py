@@ -270,6 +270,58 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
         np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
 
+@pytest.mark.pytorch
+@pytest.mark.transfer_function
+# Validate that the PyTorch SoftMax implementation honors the same output_type behaviors
+# as the Python path on a single item (per_item=False).
+@pytest.mark.parametrize(
+    "output_type",
+    [
+        kw.ALL,
+        pnl.ARG_MAX,
+        pnl.ARG_MAX_INDICATOR,
+        kw.MAX_VAL,
+        kw.MAX_INDICATOR,
+    ],
+    ids=[
+        "ALL",
+        "ARG_MAX",
+        "ARG_MAX_INDICATOR",
+        "MAX_VAL",
+        "MAX_INDICATOR",
+    ],
+)
+def test_softmax_pytorch_output_types_1d(output_type):
+    import torch
+
+    f = pnl.SoftMax(default_variable=test_var, **{kw.GAIN: RAND1, kw.OUTPUT_TYPE: output_type, kw.PER_ITEM: False})
+    context = pnl.Context(execution_id=None)
+    # Use the canonical Python implementation as ground truth.
+    expected = f.function(variable=test_var, context=context)
+    torch_f = f._gen_pytorch_fct("cpu", context=context)
+    # Directly invoke the generated torch function (outside a Composition) and compare.
+    torch_out = torch_f(torch.tensor(test_var, dtype=torch.double)).detach().cpu().numpy()
+
+    np.testing.assert_allclose(torch_out, expected)
+
+
+@pytest.mark.pytorch
+@pytest.mark.transfer_function
+def test_softmax_pytorch_output_types_2d_per_item():
+    import torch
+
+    f = pnl.SoftMax(default_variable=[test_var], **{kw.GAIN: RAND1, kw.OUTPUT_TYPE: pnl.ARG_MAX_INDICATOR,
+                                                    kw.PER_ITEM: True})
+    # Two rows to exercise the per_item=True logic (each row handled independently).
+    input_val = np.array([test_var, test_var])
+    context = pnl.Context(execution_id=None)
+    expected = f.function(variable=input_val, context=context)
+    torch_f = f._gen_pytorch_fct("cpu", context=context)
+    torch_out = torch_f(torch.tensor(input_val, dtype=torch.double)).detach().cpu().numpy()
+
+    np.testing.assert_allclose(torch_out, expected)
+
+
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
 tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper) ** 2) * RAND4 * RAND1
 

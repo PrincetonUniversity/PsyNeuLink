@@ -650,7 +650,7 @@ class DefaultsFlexibility(Enum):
 
             ``pnl.TransferMechanism(default_variable=[0, 0], function=pnl.Linear())``
 
-            the Linear function is assigned a default variable ([0]) based on it's ClassDefault,
+            the Linear function is assigned a default variable ([0]) based on its ClassDefault,
             which conflicts with the default variable specified by its future owner ([0, 0]). Since
             the default for Linear was not explicitly stated, we allow the TransferMechanism to
             reassign the Linear's default variable as needed (`FLEXIBLE`)
@@ -844,7 +844,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             - specify a default Function
             - this is checked in Component._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
-            - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
+            - if params[FUNCTION] IS specified, it assigns its value to self.function (superceding existing value):
                 self.function is aliased to it (in Component._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
@@ -876,7 +876,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it is checked for
         compatibility against **input_shapes** (see
-        `input_shapes <Component_Input_Shapes>` for additonal details).
+        `input_shapes <Component_Input_Shapes>` for additional details).
 
     COMMENT:
     param_defaults :   :  default None,
@@ -1424,7 +1424,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
-        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
+        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs", "target", "sample"}
 
         # Mechanisms;
         # * use "value" state
@@ -1434,7 +1434,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
-            # it's DDM with integrator function.
+            # its DDM with integrator function.
             # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
@@ -1595,8 +1595,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
                      "minibatch_size", "optimizations_per_minibatch", "device",
-                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
-                     "torch_trained_outputs", "torch_targets", "torch_losses",
+                     "retain_torch_sample_values", "retain_torch_targets", "retain_torch_losses"
+                     "torch_sample_values", "torch_targets", "torch_losses",
                      "learnable",
                      # "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
                      # "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
@@ -1604,7 +1604,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
-                     "mask"
+                     "mask",
+                     # LossMechanism
+                     "loss", "metric",
                      }
 
         # Mechanism's need few extra entries:
@@ -1616,7 +1618,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
 
             # If both the mechanism and its function use random_state.
-            # it's DDM with integrator function.
+            # its DDM with integrator function.
             # The mechanism's random_state or seed are not used
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 blacklist.add("seed")
@@ -1668,6 +1670,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # Matrices of learnable projections are stateful
             if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
                 blacklist.add('matrix')
+
 
         def _is_compilation_param(p):
             return p.name not in blacklist and self._is_compilable_param(p)
@@ -3856,6 +3859,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             raise ComponentError(f"Name assigned to {self.__class__.__name__} ({value}) must be a string constant.")
 
         self._name = value
+
+    @property
+    def full_name(self):
+        """Stub to allow override by subclasses (such as port)
+        Allows use blind to whether subclass has a full_name attribute or not, providing default if not
+        """
+        return self.name
 
     @property
     def input_shapes(self):

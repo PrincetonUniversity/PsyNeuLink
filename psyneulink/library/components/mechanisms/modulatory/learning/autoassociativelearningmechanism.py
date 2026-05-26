@@ -205,7 +205,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     function : LearningFunction or function : default Hebbian
         the function used to calculate the `learning_signal <AutoAssociativeLearningMechanism.learning_signal>`
         (assigned to the AutoAssociativeLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
-        It's `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
+        its `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
         length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputPort_Primary>`) InputPort.
 
     learning_rate : float, 1d or 2d np.array of numeric values : default None

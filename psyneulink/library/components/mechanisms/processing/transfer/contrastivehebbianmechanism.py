@@ -354,12 +354,14 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN', 'INPUT',
+    'ACTIVITY_DIFFERENCE', 'CURRENT_ACTIVITY', 'SIMPLE_HEBBIAN',
     'MINUS_PHASE_ACTIVITY', 'PLUS_PHASE_ACTIVITY', 'OUTPUT_ACTIVITY',
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism',
 ]
 
+# MODIFIED TEACHER_TARGET OLD:
 INPUT = 'INPUT'
+# MODIFIED TEACHER_TARGET END
 
 INPUT_SIZE = 'input_size'
 HIDDEN_SIZE = 'hidden_size'

@@ -22,7 +22,7 @@ try:
 
     torch_available = True
 
-except (ImportError, RuntimeError):
+except (ImportError, RuntimeError) as error_text:
     torch_available = False
 
 __all__.append('torch_available')

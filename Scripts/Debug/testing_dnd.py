@@ -81,7 +81,7 @@ for node in all_nodes:
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)
-# conneciton, DictionaryMemory
+# connecition, DictionaryMemory
 comp.add_projection(sender=hidden, projection=w_hd, receiver=EM)
 comp.add_projection(sender=EM, projection=w_dh, receiver=hidden)
 

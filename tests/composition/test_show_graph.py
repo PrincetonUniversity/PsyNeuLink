@@ -19,17 +19,16 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.core.compositions.showgraph import (
-    ShowGraphError,
-    _gv_executable_not_found_error_msg,
-)
-from psyneulink.core.globals.keywords import ALL, GAIN, INSET, INTERCEPT, NESTED, NOISE, SLOPE
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.core.compositions.showgraph import ShowGraphError, _gv_executable_not_found_error_msg
+from psyneulink.core.globals.keywords import ALL, GAIN, INSET, INTERCEPT, NESTED, NOISE, SLOPE, TARGET
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism, VALUE_INPUT, VALUE_OUTPUT, KEY_INPUT, KEY_OUTPUT
+from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 graphviz_executables = {
     'dot', 'neato', 'twopi', 'circo', 'fdp', 'sfdp', 'patchwork', 'osage'
@@ -87,6 +86,49 @@ class TestSimpleCompositions:
 
 
 class TestNested:
+
+    expected_solo_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=brown\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_solo_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n}\n'
+    expected_input_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_input_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"SOLO NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT NODE" -> "OUTPUT NODE" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_middle_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_middle_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"SOLO NODE" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT NODE" -> "OUTPUT NODE" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_output_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for SOLO NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for SOLO NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for SOLO NODE" -> "SOLO NODE" [color=brown penwidth=1 style=dotted]\n\t"SOLO NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    solo_nested_data = [
+        ('solo',  expected_solo_python, expected_solo_pytorch),
+        ('input', expected_input_python, expected_input_pytorch),
+        ('middle', expected_middle_python, expected_middle_pytorch),
+        ('output', expected_output_python, expected_output_pytorch)
+    ]
+    @pytest.mark.parametrize("position, expected_python, expected_pytorch",
+                             solo_nested_data, ids=[f"{x[0]}-{x[1]}" for x in solo_nested_data])
+    @pytest.mark.pytorch
+    def test_solo_nested(self, position, expected_python, expected_pytorch):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        input_mech = ProcessingMechanism(name='INPUT NODE')
+        solo_mech = ProcessingMechanism(name='SOLO NODE')
+        output_mech = ProcessingMechanism(name='OUTPUT NODE')
+        nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+        if position == 'solo':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[nested_comp])
+        elif position == 'input':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[nested_comp, output_mech])
+        elif position == 'middle':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[input_mech, nested_comp, output_mech])
+        elif position == 'output':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[input_mech, nested_comp])
+        else:
+            assert False, "TEST ERROR: position not recognized"
+        gv_python = autodiff_comp.show_graph(output_fmt='source')
+        gv_pytorch = autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        assert gv_python == expected_python
+        assert gv_pytorch == expected_pytorch
+
     def test_multiple_projections_to_node_of_nested_composition(self):
         '''This is based on the nback script'''
 
@@ -167,16 +209,15 @@ class TestNested:
 \tgraph [label="Outer Comp" overlap=False rankdir=BT]\n\
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
-\t"Outer Mech 1" [color=green penwidth=3 rank=source shape=oval]\n\
+\t"TARGET for Outer Mech 2" [color=orange penwidth=3 rank=source shape=oval]\n\t"Outer Mech 1" [color=green penwidth=3 rank=source shape=oval]\n\
 \t"Inner Mech 1" [color=black penwidth=1 rank=same shape=oval]\n\
 \t"Outer Mech 1" -> "Inner Mech 1" [label="" arrowhead=normal color=orange penwidth=1]\n\
 \t"Inner Mech 2" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"Inner Mech 1" -> "Inner Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"Inner Mech 2" -> "Outer Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"Inner Mech 1" -> "Inner Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for Outer Mech 2" [color=orange penwidth=1 rank=same shape=oval]\n\t"Outer Mech 2" -> "LOSS for Outer Mech 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for Outer Mech 2" -> "LOSS for Outer Mech 2" [label="" arrowhead=normal color=black penwidth=1]\n\
+\t"Inner Mech 2" -> "Outer Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for Outer Mech 2" -> "Outer Mech 2" [color=brown penwidth=1 style=dotted]\n\
 \t"Outer Mech 2" [color=red penwidth=3 rank=max shape=oval]\n\
 }\n\
 '
-
     @pytest.mark.pytorch
     def test_nested_autodiff_pytorch_rep(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -196,14 +237,13 @@ class TestNested:
 \tedge [fontname=arial fontsize=10]\n\
 \t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\
 \t"autodiff HIDDEN 1" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\
+\t"TARGET for autodiff OUTPUT" [color=orange penwidth=3 rank=source shape=oval]\n\t"LOSS for autodiff OUTPUT" [color=orange penwidth=1 rank=same shape=oval]\n\t"TARGET for autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\
 \t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\
 \t"autodiff HIDDEN 1" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for autodiff OUTPUT" -> "autodiff OUTPUT" [color=brown penwidth=1 style=dotted]\n\
 \t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n\
 }\n\
 '
-
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_input_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -226,15 +266,14 @@ class TestNested:
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
 \t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"autodiff HIDDEN 1" [color=red penwidth=3 rank=same shape=oval]\n\
-\t"autodiff INPUT" -> "autodiff HIDDEN 1" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"TARGET for autodiff OUTPUT" [color=orange penwidth=3 rank=source shape=oval]\n\t"TARGET for autodiff HIDDEN 1" [color=orange penwidth=3 rank=source shape=oval]\n\t"LOSS for autodiff HIDDEN 1" [color=orange penwidth=1 rank=same shape=oval]\n\
+\t"TARGET for autodiff HIDDEN 1" -> "LOSS for autodiff HIDDEN 1" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff HIDDEN 1" -> "LOSS for autodiff HIDDEN 1" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for autodiff OUTPUT" [color=orange penwidth=1 rank=same shape=oval]\n\t"TARGET for autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff INPUT" -> "autodiff HIDDEN 1" [label="" arrowhead=normal color=orange penwidth=1]\n\
 \t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\
 \t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for autodiff HIDDEN 1" -> "autodiff HIDDEN 1" [color=brown penwidth=1 style=dotted]\n\t"LOSS for autodiff OUTPUT" -> "autodiff OUTPUT" [color=brown penwidth=1 style=dotted]\n\t"autodiff HIDDEN 1" [color=red penwidth=3 rank=max shape=oval]\n\
 \t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n\
 }\n\
 '
-
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_output_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -257,14 +296,13 @@ class TestNested:
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
 \t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\
+\t"TARGET for autodiff OUTPUT" [color=orange penwidth=3 rank=source shape=oval]\n\t"LOSS for autodiff OUTPUT" [color=orange penwidth=1 rank=same shape=oval]\n\t"TARGET for autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff OUTPUT" -> "LOSS for autodiff OUTPUT" [label="" arrowhead=normal color=black penwidth=1]\n\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\
 \t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for autodiff OUTPUT" -> "autodiff OUTPUT" [color=brown penwidth=1 style=dotted]\n\
 \t"autodiff HIDDEN 1" [color=brown penwidth=3 rank=same shape=oval]\n\
 \t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n\
 }\n\
 '
-
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_singleton_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -366,7 +404,7 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
 \tgraph [label="GRU COMP" overlap=False rankdir=BT]\n\
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
-\t"PYTORCH GRU NODE" [color=red penwidth=3 rank=same shape=oval]\n\
+\t"PYTORCH GRU NODE" [color=brown penwidth=3 rank=same shape=oval]\n\
 }\n\
 '
     expected_output_for_nested_pytorch_gru = \
@@ -374,14 +412,13 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
 \tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
-\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"PYTORCH GRU NODE" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\
+\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"PYTORCH GRU NODE" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\
 \t"PYTORCH GRU NODE" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"INPUT MECH" -> "PYTORCH GRU NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\
+\t"INPUT MECH" -> "PYTORCH GRU NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\
 \t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\
 }\n\
 '
-
 
     test_gru_data = [
         #   nesting       mode                expected
@@ -396,7 +433,7 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         from psyneulink.library.compositions.grucomposition import GRUComposition
         gru_comp = GRUComposition(name='GRU COMP',
-                             input_size=3, hidden_size=5, bias=False)
+                                  input_size=3, hidden_size=5, bias=False)
         if nesting == 'unnested':
             outer_comp = gru_comp
         else:
@@ -407,117 +444,27 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
         gv = outer_comp.show_graph(show_pytorch=True if mode == 'PyTorch' else False, output_fmt='source')
         assert gv == expected
 
-    expected_output_for_unnested_python_em = \
-'digraph "EM COMP" {\n\
-\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\
-\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
-\tedge [fontname=arial fontsize=10]\n\
-\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\
-\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-}\n\
-'
-    expected_output_for_nested_python_em = \
-'digraph "OUTER COMP" {\n\
-\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\
-\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
-\tedge [fontname=arial fontsize=10]\n\
-\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\
-\tsubgraph "cluster_EM COMP" {\n\
-\t\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\
-\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
-\t\tedge [fontname=arial fontsize=10]\n\
-\t\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\
-\t\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\
-\t\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-\t\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-\t\tlabel="EM COMP"\n\
-\t}\n\
-}\n\
-'
-    expected_output_for_unnested_pytorch_em = \
-'digraph "EM COMP" {\n\
-\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\
-\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
-\tedge [fontname=arial fontsize=10]\n\
-\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\
-\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\
-\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\
-}\n\
-'
-    expected_output_for_nested_pytorch_em = \
-'digraph "OUTER COMP" {\n\
-\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\
-\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
-\tedge [fontname=arial fontsize=10]\n\
-\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\
-\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\
-\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\
-\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\
-\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\
-\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\
-\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\
-\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\
-\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\
-\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\
-\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\
-}\n\
-'
-
+    expected_output_for_unnested_python_em = 'digraph "EM COMP" {\n\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_python_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_EM COMP" {\n\t\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t\tlabel="EM COMP"\n\t}\n}\n'
+    expected_output_for_unnested_pytorch_em = 'digraph "EM COMP" {\n\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\tSTORE [color=brown penwidth=3 rank=max shape=oval style=dotted]\n\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_pytorch_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\tSTORE [color=brown penwidth=3 rank=max shape=oval style=dotted]\n}\n'
+    expected_output_for_unnested_pytorch_learning_em = 'digraph "EM COMP" {\n\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\tSTORE [color=brown penwidth=3 rank=max shape=oval style=dotted]\n\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_pytorch_learning_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\tSTORE [color=brown penwidth=3 rank=max shape=oval style=dotted]\n}\n'
     test_em_data = [
         #   nesting       mode                expected
         (  'unnested',  'Python',   expected_output_for_unnested_python_em),
         (  'nested',    'Python',   expected_output_for_nested_python_em),
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
-        (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em)
+        (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em),
+        (  'unnested',  'PyTorch with learning',  expected_output_for_unnested_pytorch_learning_em),
+        (  'nested',    'PyTorch with learning',  expected_output_for_nested_pytorch_learning_em)
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_em_data, ids=[f"{x[0]}-{x[1]}" for x in test_em_data])
     @pytest.mark.pytorch
     def test_show_graph_for_em_composition(self, nesting, mode, expected):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         from psyneulink.library.compositions.emcomposition import EMComposition
+
         em_comp = EMComposition(name='EM COMP', memory_capacity=3)
         if nesting == 'unnested':
             outer_comp = em_comp
@@ -526,23 +473,57 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
             output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
             outer_comp = AutodiffComposition(name='OUTER COMP',
                                              pathways=[input_mech, em_comp, output_mech])
-        gv = outer_comp.show_graph(show_pytorch=True if mode == 'PyTorch' else False, output_fmt='source')
+        show_pytorch = True if 'PyTorch' in mode else False
+        show_learning = True if 'learning' in mode else False
+
+        if nesting == 'nested' and show_learning and not show_pytorch:
+            with pytest.raises(AutodiffCompositionError) as error:
+                gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
+            assert (f"'EM COMP' has a nested Composition, so PyTorch mode must be used for learning; "
+                    f"use 'show_pytorch=True' in the call to show_graph().") in str(error.value)
+        elif nesting == 'unnested' and (show_learning or show_pytorch):
+            with pytest.warns(UserWarning) as warning:
+                gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
+            if show_learning:
+                assert (("The 'show_learning' argument in the call to show_graph() for 'EM COMP' is unnecessary since "
+                        "learning components are shown for an AutodiffComposition only when 'show_pytorch' is used.")
+                        in str(warning[0].message))
+            # assert (f"A pathway of 'EM COMP' terminating in 'KEY [RETRIEVED]' cannot be trained "
+            #         f"since it has no learnable Projections; this may be because the learning_rate for "
+            #         f"the corresponding field_weight is set to False.") in str(warning[1].message)
+            # assert (f"A pathway of 'EM COMP' terminating in 'VALUE [RETRIEVED]' cannot be trained "
+            #         f"since it has no learnable Projections; this may be because the learning_rate for "
+            #         f"the corresponding field_weight is set to False.") in str(warning[2].message)
+            n = 1 if show_learning else 0
+            assert (f"No learnable pathways were found in '{outer_comp.name}'; therefore, no pytorch_representation "
+                    f"will be constructed, and learning will not be possible." in str(warning[n].message))
+        elif show_pytorch and show_learning:
+            with pytest.warns(UserWarning) as warning:
+                gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
+            comp_name = 'OUTER COMP' if nesting == 'nested' else 'EM COMP'
+            assert (f"The 'show_learning' argument in the call to show_graph() for '{comp_name}' is unnecessary since "
+                    f"learning components are shown for an AutodiffComposition only when 'show_pytorch' is used."
+                    in str(warning[0].message))
+        else:
+            gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
         assert gv == expected
 
-    expected_output_for_nested_to_nested = \
+    expected_output_for_nested_to_nested_direct = \
 'digraph "OUTER COMP" {\n\
 \tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\
 \tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \tedge [fontname=arial fontsize=10]\n\
 \t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\
 \t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\
-\tsubgraph "cluster_NESTED COMP 1`" {\n\
-\t\tgraph [label="NESTED COMP 1`" overlap=False rankdir=BT]\n\
+\tsubgraph "cluster_NESTED COMP 1" {\n\
+\t\tgraph [label="NESTED COMP 1" overlap=False rankdir=BT]\n\
 \t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\
 \t\tedge [fontname=arial fontsize=10]\n\
 \t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\
-\t\tcolor=brown\n\
-\t\tlabel="NESTED COMP 1`"\n\
+\t\tcolor=green\n\t\tlabel="NESTED COMP 1"\n\t}\n\tsubgraph "cluster_NESTED COMP 2" {\n\t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"OUTPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP 2"\n\t}\n}\n'
+    expected_output_for_nested_to_nested_pytorch_direct = ('digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n')
+    expected_output_for_nested_to_nested_with_hidden = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "HIDDEN MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP 1" {\n\t\tgraph [label="NESTED COMP 1" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\
+\t\tlabel="NESTED COMP 1"\n\
 \t}\n\
 \tsubgraph "cluster_NESTED COMP 2" {\n\
 \t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\
@@ -555,15 +536,70 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
 }\n\
 '
 
-    def test_projection_from_node_in_one_nested_comp_to_node_in_another(self):
+    expected_output_for_nested_to_nested_pytorch_with_hidden = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"HIDDEN MECH" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "HIDDEN MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("hidden", [True, False])
+    def test_projection_from_node_in_one_nested_comp_to_node_in_another(self, hidden):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-        nested_comp_1 = Composition(name='NESTED COMP 1`', nodes = input_mech)
-        nested_comp_2 = Composition(name='NESTED COMP 2',nodes=[output_mech])
-        outer_comp = Composition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
-        outer_comp.add_projection(sender=input_mech, receiver=output_mech)
+        hidden_mech = ProcessingMechanism(name='HIDDEN MECH', input_shapes=2)
+        nested_comp_1 = AutodiffComposition(name='NESTED COMP 1', nodes = input_mech)
+        nested_comp_2 = AutodiffComposition(name='NESTED COMP 2',nodes=[output_mech])
+        if hidden:
+            outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, hidden_mech, nested_comp_2])
+            outer_comp.add_projection(sender=input_mech, receiver=hidden_mech)
+            outer_comp.add_projection(sender=hidden_mech, receiver=output_mech)
+        else:
+            outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
+            outer_comp.add_projection(sender=input_mech, receiver=output_mech)
+
         gv = outer_comp.show_graph(output_fmt='source')
-        assert gv == self.expected_output_for_nested_to_nested
+        if hidden:
+            assert gv == self.expected_output_for_nested_to_nested_with_hidden
+            gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
+            assert gv == self.expected_output_for_nested_to_nested_pytorch_with_hidden
+        else:
+            assert gv == self.expected_output_for_nested_to_nested_direct
+            gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
+            assert gv == self.expected_output_for_nested_to_nested_pytorch_direct
+
+    @pytest.mark.pytorch
+    def test_filtering_out_of_projections_from_other_compositions(self):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+
+        input_mech = ProcessingMechanism(name="INPUT")
+        hidden_mech_1 = ProcessingMechanism(name="HIDDEN 1")
+        hidden_mech_2 = ProcessingMechanism(name="HIDDEN 2")
+        output_mech = ProcessingMechanism(name="OUTPUT")
+        solo_mech = ProcessingMechanism(name="SOLO")
+        nested_comp = AutodiffComposition([hidden_mech_1, hidden_mech_2])
+
+        # Test without **targets** specification
+        pathway_1 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                     hidden_mech_1,
+                     MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                     output_mech]
+        pathway_2 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+                                            pathways=[nested_comp],
+                                            targets={output_mech: solo_mech})
+
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_9",
+                                            pathways=[input_mech, nested_comp])
+
+        expected_gv_python = 'digraph "AUTODIFF COMP_9" {\n\tgraph [label="AUTODIFF COMP_9" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tINPUT [color=green penwidth=3 rank=source shape=oval]\n\tINPUT -> "HIDDEN 1" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph cluster_autodiff_composition {\n\t\tgraph [label=autodiff_composition overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"HIDDEN 1" [color=green penwidth=3 rank=source shape=oval]\n\t\t"HIDDEN 1" -> "HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"HIDDEN 2" [color=red penwidth=3 rank=max shape=oval]\n\t\tcolor=red\n\t\tlabel=autodiff_composition\n\t}\n}\n'
+        expected_gv_pytorch = 'digraph "AUTODIFF COMP_9" {\n\tgraph [label="AUTODIFF COMP_9" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for HIDDEN 2" [color=orange penwidth=3 rank=source shape=oval]\n\tINPUT [color=green penwidth=3 rank=source shape=oval]\n\t"HIDDEN 1" [color=black penwidth=1 rank=same shape=oval]\n\tINPUT -> "HIDDEN 1" [label="" arrowhead=normal color=orange penwidth=1]\n\t"HIDDEN 1" -> "HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\tINPUT -> "HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for HIDDEN 2" [color=orange penwidth=1 rank=same shape=oval]\n\t"HIDDEN 2" -> "LOSS for HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for HIDDEN 2" -> "LOSS for HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for HIDDEN 2" -> "HIDDEN 2" [color=brown penwidth=1 style=dotted]\n\t"HIDDEN 2" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+        gv_python = autodiff_comp.show_graph(output_fmt='source')
+        gv_pytorch = autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        assert gv_python == expected_gv_python
+        assert gv_pytorch == expected_gv_pytorch
 
 
 class TestLearning:
@@ -1555,7 +1591,7 @@ class TestControl:
         input_mech = ProcessingMechanism(name='OUTER INPUT')
         internal_mech = ProcessingMechanism(name='INTERNAL')
         output_mech = ProcessingMechanism(name='OUTER OUTPUT')
-        target = ProcessingMechanism(name='TARGET')
+        target = ProcessingMechanism(name=TARGET)
         icomp = Composition(name="NESTED COMPOSITION")
         p = icomp.add_backpropagation_learning_pathway(pathway=[ia, ib])
         ocomp = Composition(name='COMPOSITION',
@@ -1760,9 +1796,9 @@ class TestControl:
 \t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -1800,9 +1836,9 @@ class TestControl:
 \t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -1939,10 +1975,10 @@ class TestControl:
 \t\tedge [fontname=arial fontsize=10]\n\
 \t\t"icomp INPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Input_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Input_CIM</font></b></td></tr></table>> color=green penwidth=1 rank=same shape=plaintext]\n\
 \t\t"icomp INPUT_CIM":"OutputPort-INPUT_CIM_ia_InputPort-0" -> ia:"InputPort-InputPort-0" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td port="icomp Output_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Output_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr></table></td></tr></table>> color=red penwidth=1 rank=same shape=plaintext]\n\
 \t\tia:"OutputPort-RESULT" -> "icomp OUTPUT_CIM":"InputPort-OUTPUT_CIM_ia_RESULT" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [label=<<table border=\'3\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-RESULT"><b>RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="ia" colspan="1"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >ia</font></b></td><td> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td rowspan="1" valign="middle"><b><i>ParameterPorts</i></b></td> <td> <table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="ParameterPort-intercept"><b>intercept</b></td></tr><tr><td port="ParameterPort-noise"><b>noise</b></td></tr><tr><td port="ParameterPort-offset-function"><b>offset-function</b></td></tr><tr><td port="ParameterPort-offset-integrator_function"><b>offset-integrator_function</b></td></tr><tr><td port="ParameterPort-rate"><b>rate</b></td></tr><tr><td port="ParameterPort-scale"><b>scale</b></td></tr><tr><td port="ParameterPort-slope"><b>slope</b></td></tr></table></td></tr></table></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-InputPort-0"><b>InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=brown penwidth=3 rank=same shape=plaintext]\n\
@@ -1979,10 +2015,10 @@ class TestControl:
 \t\tedge [fontname=arial fontsize=10]\n\
 \t\t"icomp INPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Input_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Input_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=green penwidth=1 rank=same shape=plaintext]\n\
 \t\t"icomp INPUT_CIM":"OutputPort-INPUT_CIM_ia_InputPort-0" -> ia:"InputPort-InputPort-0" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="InputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="InputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr></table></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="InputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="InputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td></tr></table></td></tr></table></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Output_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Output_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr></table></td></tr></table>> color=red penwidth=1 rank=same shape=plaintext]\n\
 \t\tia:"OutputPort-RESULT" -> "icomp OUTPUT_CIM":"InputPort-OUTPUT_CIM_ia_RESULT" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [label=<<table border=\'3\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-RESULT"><b>RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="ia" colspan="1"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >ia</font></b></td><td> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td rowspan="1" valign="middle"><b><i>ParameterPorts</i></b></td> <td> <table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="ParameterPort-intercept"><b>intercept</b></td></tr><tr><td port="ParameterPort-noise"><b>noise</b></td></tr><tr><td port="ParameterPort-offset-function"><b>offset-function</b></td></tr><tr><td port="ParameterPort-offset-integrator_function"><b>offset-integrator_function</b></td></tr><tr><td port="ParameterPort-rate"><b>rate</b></td></tr><tr><td port="ParameterPort-scale"><b>scale</b></td></tr><tr><td port="ParameterPort-slope"><b>slope</b></td></tr></table></td></tr></table></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-InputPort-0"><b>InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=brown penwidth=3 rank=same shape=plaintext]\n\
@@ -2193,9 +2229,9 @@ class TestControl:
 \t\t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -2250,9 +2286,9 @@ class TestControl:
 \t\t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -2425,10 +2461,10 @@ class TestControl:
 \t\t\tedge [fontname=arial fontsize=10]\n\
 \t\t\t"icomp INPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Input_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Input_CIM</font></b></td></tr></table>> color=green penwidth=1 rank=same shape=plaintext]\n\
 \t\t\t"icomp INPUT_CIM":"OutputPort-INPUT_CIM_ia_InputPort-0" -> ia:"InputPort-InputPort-0" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
-\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
 \t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp OUTPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td port="icomp Output_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Output_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr></table></td></tr></table>> color=red penwidth=1 rank=same shape=plaintext]\n\
 \t\t\tia:"OutputPort-RESULT" -> "icomp OUTPUT_CIM":"InputPort-OUTPUT_CIM_ia_RESULT" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\tia [label=<<table border=\'3\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-RESULT"><b>RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="ia" colspan="1"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >ia</font></b></td><td> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td rowspan="1" valign="middle"><b><i>ParameterPorts</i></b></td> <td> <table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="ParameterPort-intercept"><b>intercept</b></td></tr><tr><td port="ParameterPort-noise"><b>noise</b></td></tr><tr><td port="ParameterPort-offset-function"><b>offset-function</b></td></tr><tr><td port="ParameterPort-offset-integrator_function"><b>offset-integrator_function</b></td></tr><tr><td port="ParameterPort-rate"><b>rate</b></td></tr><tr><td port="ParameterPort-scale"><b>scale</b></td></tr><tr><td port="ParameterPort-slope"><b>slope</b></td></tr></table></td></tr></table></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-InputPort-0"><b>InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=brown penwidth=3 rank=same shape=plaintext]\n\
@@ -2482,10 +2518,10 @@ class TestControl:
 \t\t\tedge [fontname=arial fontsize=10]\n\
 \t\t\t"icomp INPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Input_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Input_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=green penwidth=1 rank=same shape=plaintext]\n\
 \t\t\t"icomp INPUT_CIM":"OutputPort-INPUT_CIM_ia_InputPort-0" -> ia:"InputPort-InputPort-0" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="InputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="InputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr></table></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
-\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="InputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="InputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td></tr></table></td></tr></table></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
 \t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t\t"icomp OUTPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Output_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Output_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr></table></td></tr></table>> color=red penwidth=1 rank=same shape=plaintext]\n\
 \t\t\tia:"OutputPort-RESULT" -> "icomp OUTPUT_CIM":"InputPort-OUTPUT_CIM_ia_RESULT" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t\tia [label=<<table border=\'3\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-RESULT"><b>RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="ia" colspan="1"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >ia</font></b></td><td> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td rowspan="1" valign="middle"><b><i>ParameterPorts</i></b></td> <td> <table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="ParameterPort-intercept"><b>intercept</b></td></tr><tr><td port="ParameterPort-noise"><b>noise</b></td></tr><tr><td port="ParameterPort-offset-function"><b>offset-function</b></td></tr><tr><td port="ParameterPort-offset-integrator_function"><b>offset-integrator_function</b></td></tr><tr><td port="ParameterPort-rate"><b>rate</b></td></tr><tr><td port="ParameterPort-scale"><b>scale</b></td></tr><tr><td port="ParameterPort-slope"><b>slope</b></td></tr></table></td></tr></table></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-InputPort-0"><b>InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=brown penwidth=3 rank=same shape=plaintext]\n\
@@ -2671,9 +2707,9 @@ class TestControl:
 \t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -2711,9 +2747,9 @@ class TestControl:
 \t\t"icomp INPUT_CIM" [color=green penwidth=1 rank=same shape=rectangle]\n\
 \t\t"icomp INPUT_CIM" -> ia [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" [color=purple penwidth=1 rank=same shape=rectangle]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
+\t\t"icomp PARAMETER_CIM" -> ia [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [color=red penwidth=1 rank=same shape=rectangle]\n\
 \t\tia -> "icomp OUTPUT_CIM" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [color=brown penwidth=3 rank=same shape=oval]\n\
@@ -2850,10 +2886,10 @@ class TestControl:
 \t\tedge [fontname=arial fontsize=10]\n\
 \t\t"icomp INPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-INPUT_CIM_ia_InputPort-0"><b>INPUT_CIM_ia_InputPort-0</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Input_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Input_CIM</font></b></td></tr></table>> color=green penwidth=1 rank=same shape=plaintext]\n\
 \t\t"icomp INPUT_CIM":"OutputPort-INPUT_CIM_ia_InputPort-0" -> ia:"InputPort-InputPort-0" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-PARAMETER_CIM_ia_slope"><b>PARAMETER_CIM_ia_slope</b></td><td port="OutputPort-PARAMETER_CIM_ia_intercept"><b>PARAMETER_CIM_ia_intercept</b></td><td port="OutputPort-PARAMETER_CIM_ia_noise"><b>PARAMETER_CIM_ia_noise</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="icomp Parameter_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Parameter_CIM</font></b></td></tr></table>> color=purple penwidth=1 rank=same shape=plaintext]\n\
+\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_intercept" -> ia:"ParameterPort-intercept" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
 \t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_noise" -> ia:"ParameterPort-noise" [label="" arrowhead=box color=purple penwidth=1 style=solid]\n\
-\t\t"icomp PARAMETER_CIM":"OutputPort-PARAMETER_CIM_ia_slope" -> ia:"ParameterPort-slope" [label="" arrowhead=box color=blue penwidth=1 style=solid]\n\
 \t\t"icomp OUTPUT_CIM" [label=<<table border=\'1\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td port="icomp Output_CIM" colspan="2"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >icomp Output_CIM</font></b></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-OUTPUT_CIM_ia_RESULT"><b>OUTPUT_CIM_ia_RESULT</b></td></tr></table></td></tr></table></td></tr></table>> color=red penwidth=1 rank=same shape=plaintext]\n\
 \t\tia:"OutputPort-RESULT" -> "icomp OUTPUT_CIM":"InputPort-OUTPUT_CIM_ia_RESULT" [label="" arrowhead=normal color=black penwidth=1 style=solid]\n\
 \t\tia [label=<<table border=\'3\' cellborder="0" cellspacing="1" bgcolor="#FFFFF0"><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="OutputPort-RESULT"><b>RESULT</b></td></tr></table></td></tr> <tr><td colspan="1" valign="middle"><b><i>OutputPorts</i></b></td></tr> </table></td></tr><tr><td port="ia" colspan="1"><b><b><i>Mechanism</i></b>:<br/><font point-size="16" >ia</font></b></td><td> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td rowspan="1" valign="middle"><b><i>ParameterPorts</i></b></td> <td> <table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="ParameterPort-intercept"><b>intercept</b></td></tr><tr><td port="ParameterPort-noise"><b>noise</b></td></tr><tr><td port="ParameterPort-offset-function"><b>offset-function</b></td></tr><tr><td port="ParameterPort-offset-integrator_function"><b>offset-integrator_function</b></td></tr><tr><td port="ParameterPort-rate"><b>rate</b></td></tr><tr><td port="ParameterPort-scale"><b>scale</b></td></tr><tr><td port="ParameterPort-slope"><b>slope</b></td></tr></table></td></tr></table></td></tr><tr><td colspan="2"> <table border="0" cellborder="0" bgcolor="#FAFAD0"> <tr><td colspan="1" valign="middle"><b><i>InputPorts</i></b></td></tr><tr><td><table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD"><tr><td port="InputPort-InputPort-0"><b>InputPort-0</b></td></tr></table></td></tr></table></td></tr></table>> color=brown penwidth=3 rank=same shape=plaintext]\n\

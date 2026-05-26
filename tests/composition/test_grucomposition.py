@@ -113,16 +113,27 @@ if torch_available:
             with pytest.raises(pnl.CompositionError) as error_text:
                 gru.add_projection(pnl.MappingProjection())
             assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
-
         @pytest.mark.parametrize('execution_type', [
-            # 'run',
+            'run',
             'learn'
         ])
-        @pytest.mark.parametrize('outer_enable_learning', [False, True])
-        @pytest.mark.parametrize('gru_enable_learning', [False, True])
-        @pytest.mark.parametrize('pathway_type', ['solo', 'gru_as_input', 'gru_as_hidden', 'gru_as_output'])
+        @pytest.mark.parametrize('outer_enable_learning', [
+            False,
+            True
+        ])
+        @pytest.mark.parametrize('gru_enable_learning', [
+            False,
+            True
+        ])
+        @pytest.mark.parametrize('pathway_type', [
+            'solo',
+            'gru_as_input',
+            'gru_as_hidden',
+            'gru_as_output'
+        ])
         def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type,
                                                                 outer_enable_learning, gru_enable_learning):
+
             # Test nested GRUComposition in different positions within outer and with different enable_learning settings
             input_mech = pnl.ProcessingMechanism(input_shapes=3)
             output_mech = pnl.ProcessingMechanism(input_shapes=5)
@@ -169,6 +180,7 @@ if torch_available:
                                  f"method for autodiff_composition.") in str(error_text.value))
                 else:
                     outer_comp.learn(inputs=inputs, targets=targets)
+                    assert True
 
     @pytest.mark.pytorch
     @pytest.mark.composition
@@ -324,10 +336,12 @@ if torch_available:
             autodiff_comp.set_weights( autodiff_comp.projections[0], torch_input_initial_weights)
             autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
             autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
-            target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+            learning_components = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
             # Execute autodiff with learning (but not weight updates yet)
-            autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
+            autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs,
+                                                                          learning_components[1]:
+                targets},
                                                                   execution_mode=pnl.ExecutionMode.PyTorch)
             # Get results after learning (with weight updates)
             autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
@@ -338,7 +352,7 @@ if torch_available:
                                        autodiff_result_before_learning, atol=1e-8)
 
             # Test of execution after backward pass (learning):
-            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses)
             np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                        autodiff_result_after_learning, atol=1e-8)
 
@@ -367,7 +381,7 @@ if torch_available:
                 np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
                                            np.array([[-0.43922832, -0.50410907, -0.83792679, 0.45777554, -0.34143725]]),
                                            atol=1e-8)
-                torch_gru = autodiff_comp.pytorch_representation.node_wrappers[2].node_wrappers[0]
+                torch_gru = autodiff_comp.pytorch_representation.node_wrappers[4].node_wrappers[0]
                 np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
                                            GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'))
 
@@ -476,10 +490,11 @@ if torch_available:
             autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
             autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
             autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
-            target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+            learning_components = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
             # Construct the inputs as a list of dictionaries (one entry per sequence) -- sequences can be different lengths
-            inputs = [{input_mech: seq, target_mechs[0]: torch.atleast_2d(target)} for seq, target in zip(train_sequences, train_labels)]
+            inputs = [{input_mech: seq, learning_components[1]: torch.atleast_2d(target)}
+                      for seq, target in zip(train_sequences, train_labels)]
 
             # Train the PNL model using minibatches (AutodiffComposition should handle variable-length sequences internally)
             autodiff_comp.learn(inputs=inputs,
@@ -490,7 +505,7 @@ if torch_available:
             results = autodiff_comp.results
 
             # Compare recorded losses: lengths/order of minibatches should match between torch training loop above and PNL
-            np.testing.assert_allclose(torch_losses, autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_losses, np.array(autodiff_comp.torch_losses).squeeze())
 
 
         constructor_expected = [[ 0.23619161, 0.18558876, 0.16821693, 0.27253839, -0.18351431]]
@@ -792,10 +807,11 @@ if torch_available:
             autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
             autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
             autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
-            target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+            learning_components = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
             # Execute autodiff with learning (but not weight updates yet)
-            autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
+            autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs,
+                                                                          learning_components[1]: targets},
                                                                   execution_mode=pnl.ExecutionMode.PyTorch)
             # Get results after learning (with weight updates)
             autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
@@ -808,7 +824,7 @@ if torch_available:
                                        autodiff_result_before_learning, atol=1e-8)
 
             # Test of execution after backward pass (learning):
-            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses)
             np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                        autodiff_result_after_learning, atol=1e-8)
 

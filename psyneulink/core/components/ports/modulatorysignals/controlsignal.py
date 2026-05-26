@@ -227,7 +227,7 @@ modulated by another `ControlMechanism` (see `example <ControlSignal_Example_Mod
     *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the `combine_costs_function`) can
     be enabled or disabled using the `toggle_cost` method to turn it `ON` or `OFF`. If it is disabled, that
     component of the cost is not included in the ControlSignal's `cost` attribute.  A cost function  can  also be
-    permanently disabled for the ControlSignal by assigning it's attribute `None`.  If a cost function is permanently
+    permanently disabled for the ControlSignal by assigning its attribute `None`.  If a cost function is permanently
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost`.
     COMMENT
 

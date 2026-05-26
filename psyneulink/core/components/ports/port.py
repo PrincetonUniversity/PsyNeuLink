@@ -3066,6 +3066,7 @@ def _parse_port_spec(port_type=None,
         # Re-process with Projection specified
         port_dict = _parse_port_spec(port_type=port_type,
                                        owner=owner,
+                                       name=name,
                                        variable=variable,
                                        value=value,
                                        reference_value=reference_value,

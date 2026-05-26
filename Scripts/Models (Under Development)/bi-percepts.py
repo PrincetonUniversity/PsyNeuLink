@@ -70,8 +70,8 @@ for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
 reportOutputPref = False
 for node in bp_comp.nodes:
     # # MODIFIED 4/25/20 OLD:
-    # bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-    # bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+    # bp_comp._add_required_node_role(node, pnl.NodeRole.INPUT)
+    # bp_comp._add_required_node_role(node, pnl.NodeRole.OUTPUT)
     # MODIFIED 4/25/20 NEW:
     bp_comp.require_node_roles(node, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
     # MODIFIED 4/25/20 END
