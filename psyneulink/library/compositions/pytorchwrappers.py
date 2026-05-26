@@ -387,7 +387,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         )
 
         self._regenerate_torch_parameter_list()
-        assert 'DEBUGGING BREAKPOINT' # END OF __init__()
+        assert 'DEBUGGING BREAK POINT' # END OF __init__()
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
@@ -1772,7 +1772,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
-                    assert 'DEBUGGING BREAKPOINT' # INPUTS TO NODE
+                    assert 'DEBUGGING BREAK POINT' # INPUTS TO NODE
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
@@ -1797,7 +1797,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                  synch_with_pnl_options=synch_with_pnl_options,
                                  sequence_lengths=sequence_lengths,
                                  context=context)
-                    assert 'DEBUGGING BREAKPOINT' # NODE EXECUTED
+                    assert 'DEBUGGING BREAK POINT' # NODE EXECUTED
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
