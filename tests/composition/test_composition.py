@@ -616,6 +616,29 @@ comp.add_node(B)
             comp2.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             ocomp.run()
 
+    def test_multiple_projections_between_mechs(self):
+        """Tests the addining of multiple legal Projections between two Mechanisms to Composition."""
+        mech_a = ProcessingMechanism(input_ports=['ONE', 'TWO', 'THREE'])
+        mech_b = ProcessingMechanism(input_ports=['ONE', 'TWO', 'THREE'])
+        proj_one = MappingProjection(mech_a.output_ports['ONE'], mech_b.input_ports['ONE'])
+        proj_two = MappingProjection(mech_a.output_ports['TWO'], mech_b.input_ports['TWO'])
+        proj_three = MappingProjection(mech_a.output_ports['THREE'], mech_b.input_ports['THREE'])
+        comp = pnl.Composition([mech_a, mech_b])
+        # CURRENTLY, ONLY THE LAST (proj_three) OF A SET OF PARALLEL PROJECTIONS BETWEEN TWO MECHANISMS
+        #    IS AUTOMATICALLY ADDED TO THE COMPOSITION
+        assert proj_three in comp.projections
+        # BREADCRUMB: THESE ERROR TESTS WILL FAIL AND SHOULD BE REMOVED ONCE THE PROBLEM IS CORRECTED
+        # THE OTHER TWO ARE NOT AUTOMATICALLY ADDED:
+        with pytest.raises(AssertionError):
+            assert proj_one in comp.projections
+        with pytest.raises(AssertionError):
+            assert proj_two in comp.projections
+        # THEY CAN (AND MUST) BE ADDED "MANUALLY:"
+        comp.add_projection(proj_one)
+        comp.add_projection(proj_two)
+        assert proj_one in comp.projections
+        assert proj_two in comp.projections
+
 
 @pytest.mark.composition
 @pytest.mark.pathways

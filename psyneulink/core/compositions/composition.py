@@ -6759,7 +6759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           of **projection**.
 
         • if **sender** and **receiver** are specified and one or more Projections already exists between them:
-          - if it is in the Composition:
+          - if they is in the Composition:
             - if there is only one, the request is ignored and the existing Projection is returned
             - if there is more than one, an exception is raised as this should never be the case
           - if it is NOT in the Composition:
