@@ -1831,7 +1831,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             compilation_sync=compilation_sync,
         )
 
-        assert 'DEBUGGING BREAKPOINT: PARAMETER SETTING'
+        assert 'DEBUGGING BREAK POINT: PARAMETER SETTING'
 
         return value
 

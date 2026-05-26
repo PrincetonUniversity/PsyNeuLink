@@ -13408,7 +13408,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # have to run call_after_pass before the next PASS (here) or after this code block (see call to
                 # call_after_pass below)
 
-                assert 'DEBUGGING BREAK POINT: EXECUTION_SET EXECUTION'
+                assert 'DEBUGGING BREAK POINT: BEGINNING OF NODE / EXECUTION_SET EXECUTION'
 
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
@@ -13565,7 +13565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert 'DEBUGGING BREAK POINT: NODE EXECUTION'
+                                assert 'DEBUGGING BREAK POINT: AFTER NODE EXECUTION'
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
