@@ -1642,7 +1642,7 @@ class StandardOutputPorts():
                 del port[INDEX]
             setattr(self.owner.__class__, port[NAME], make_readonly_property(port[NAME]))
 
-        # For each OutputPort dict with a VARIABLE entry that references it's owner's value (by index)
+        # For each OutputPort dict with a VARIABLE entry that references its owner's value (by index)
         # add <NAME_INDEX> as property of the OutputPort owner's class that returns its index.
         for port in dict_list:
             if isinstance(port[VARIABLE], tuple):

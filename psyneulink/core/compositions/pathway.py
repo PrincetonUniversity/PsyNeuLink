@@ -39,10 +39,11 @@ Contents
 Overview
 --------
 
-A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are assigned
-to a `Compositions`, but a Pathway object can also be created on its and used as a template for specifying a Pathway for
-a Composition, as described below (see `Pathways  <Composition_Pathways>` for additional information about Pathways in
-Compositions).
+A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are
+created automatically when a sequence of Nodes and Projections is specified in the **pathways** argument of the
+constructor for a `Composition`.  However, a Pathway object can also be created on its own, and used as a template
+for specifying a Pathway for a Composition, as described below (see `Pathways  <Composition_Pathways>` for additional
+information about Pathways in Compositions).
 
 .. _Pathway_Creation:
 
@@ -522,7 +523,7 @@ class Pathway(object, metaclass=UsesParametersMeta):
         `OUTPUT` node if Pathway contains one.
 
     target : `Mechanism <Mechanism>` or None
-        `TARGET` node if if Pathway contains one; same as `learning_components
+        `TARGET_MECHANISM` if if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
     learning_objective : `Mechanism <Mechanism>` or None
@@ -564,6 +565,7 @@ class Pathway(object, metaclass=UsesParametersMeta):
             self,
             pathway:list,
             # default_projection_matrix=None,
+            learning_rate: float = None,
             name=None,
             **kwargs
     ):
@@ -579,7 +581,6 @@ class Pathway(object, metaclass=UsesParametersMeta):
                 raise CompositionError(
                     f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
                 )
-
         self._initialize_parameters()
 
         # There should be no other arguments in constructor
@@ -600,6 +601,8 @@ class Pathway(object, metaclass=UsesParametersMeta):
                 registry=PathwayRegistry,
                 name=name
             )
+
+        self.learning_rate = learning_rate
 
         # Initialize attributes
         self.pathway = pathway

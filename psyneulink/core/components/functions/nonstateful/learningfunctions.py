@@ -559,7 +559,7 @@ class BayesGLM(LearningFunction):
     `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
 
     .. hint::
-       The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
+       The **mu_0** or **sigma_0** arguments of the constructor can be used in place of **default_variable** to define
        the size of the predictors array and, correspondingly, the weights array returned by the function (see
        **Parameters** below).
 

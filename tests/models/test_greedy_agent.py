@@ -11,7 +11,8 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 #from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism

@@ -215,7 +215,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 * **state_features** -- specifies the sources of input to the OptimizationControlMechanism's `agent_rep
   <OptimizationControlMechanism.agent_rep>` which, together with a selected `control_allocation
-  <ControlMechanism.control_allocation>`, are provided as input to it's `evaluate <Composition.evaluate>` method
+  <ControlMechanism.control_allocation>`, are provided as input to its `evaluate <Composition.evaluate>` method
   when that is executed to estimate or predict the Composition's `net_outcome <ControlMechanism.net_outcome>`.
   Those sources of input are used to construct the OptimizationControlMechanism's `state_input_ports
   <OptimizationControlMechanism.state_input_ports>`, one for each `external InputPort
@@ -922,7 +922,7 @@ randomization (see `OptimizationControlMechanism_Estimation_Randomization` for a
 Execution
 ---------
 
-When an OptimizationControlMechanism is executed, the `OptimizationFunction` assigned as it's `function
+When an OptimizationControlMechanism is executed, the `OptimizationFunction` assigned as its `function
 <OptimizationControlMechanism.function>` is used evaluate the effects of different `control_allocations
 <ControlMechanism.control_allocation>` to find one that optimizes the `net_outcome <ControlMechanism.net_outcome>`;
 that `control_allocation <ControlMechanism.control_allocation>` is then used when the Composition controlled by the
@@ -1866,7 +1866,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # If agent_rep is a Composition, but there are more state_features than INPUT Nodes,
         #     defer initialization until they are added
         elif agent_rep.componentCategory=='Composition':
-            from psyneulink.core.compositions.composition import NodeRole
+            from psyneulink.core.compositions.noderoles import NodeRole
             if (state_features
                     and len(convert_to_list(state_features)) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT))):
                 # Temporarily name InputPort
@@ -2031,7 +2031,7 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import Composition
         agent_rep_input_nodes = self._get_agent_rep_input_receivers(type=NODE,comp_as_node=ALL)
         agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
-        agent_rep_all_nodes = self.agent_rep._get_all_nodes()
+        agent_rep_all_nodes = self.agent_rep._get_all_nodes(include_compositions=True)
         non_input_node_specs = [node for node in nodes
                                 if ((isinstance(node, (Mechanism, Composition)) and node not in agent_rep_input_nodes)
                                     or (isinstance(node, Port) and (not isinstance(node, InputPort)
@@ -2149,7 +2149,8 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries for state_input_ports
         """
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         # Agent rep's input Nodes and their names
         agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
         self._specified_INPUT_Node_InputPorts_in_order = []
@@ -2300,7 +2301,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 # FIX: CONSOLIDATE THIS WITH PARSING OF SPEC BELOW
                 # AGENT_REP INPUT NODE InputPort
-                #    Assign it's name to be used in state_features
+                #    Assign its name to be used in state_features
                 # (and specs for CFA and any Nodes not yet in agent_rep)
                 if self.agent_rep_type == COMPOSITION:
                     if i < num_agent_rep_input_ports:
@@ -2743,7 +2744,7 @@ class OptimizationControlMechanism(ControlMechanism):
             - corresponding agent_rep INPUT Node InputPort is in Composition
             - state_input_port either has path_afferents or it is for a numeric spec
 
-        If it's instantiation HAS been DEFERRED, for any newly added agent_rep INPUT Node InputPorts:
+        If its instantiation HAS been DEFERRED, for any newly added agent_rep INPUT Node InputPorts:
             - add agent_rep INPUT Node InputPort to _specified_INPUT_Node_InputPorts_in_order
             - if state_input_port:
                 - HAS path_afferents, get source and generate new name

@@ -30,14 +30,16 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.noderoles import NodeRoleError
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DEFAULT_INPUT, DEFAULT_VARIABLE, DISABLE,
      INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL,
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE,
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, SAMPLE_MECHANISM, OVERRIDE,
      PARAMS, SLOPE, TARGET_MECHANISM,
     VARIABLE, VARIANCE)
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval, graph_structure_conditions_available, gsc_unavailable_message
@@ -402,8 +404,8 @@ class TestAddProjection:
         np.testing.assert_allclose(proj.matrix.base, weights)
 
     test_args = [(None, ([1],[1],[1],[1]), 3.0),
-        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
-        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612)]
+                 ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
+                 ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612)]
     @pytest.mark.parametrize('projs, expected_matrices, expected_result', test_args, ids=[x[0] for x in test_args])
     def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices, expected_result):
         """Test both automatic creation as well as explicit specification of Projections from outer Composition to
@@ -1667,8 +1669,8 @@ class TestCompositionPathwaysArg:
         c = Composition(pathways=[(P1, BackPropagation), (P2, BackPropagation)])
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
-        assert c.pathways['P1'].learning_components[OUTPUT_MECHANISM] is C
-        assert c.pathways['P2'].learning_components[OUTPUT_MECHANISM] is E
+        assert c.pathways['P1'].learning_components[SAMPLE_MECHANISM] is C
+        assert c.pathways['P2'].learning_components[SAMPLE_MECHANISM] is E
 
     def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
         A = ProcessingMechanism(name='A')
@@ -2971,25 +2973,34 @@ class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
 
-        comp = Composition()
         mechs = [TransferMechanism() for x in range(4)]
+        comp = Composition([mechs])
 
-        for mech in mechs:
-            comp.add_node(mech)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[0], NodeRole.ORIGIN)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-0' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'ORIGIN'."
+                in str(error_text.value))
 
-        comp._add_node_role(mechs[0], NodeRole.ORIGIN)
-        comp._add_node_role(mechs[1], NodeRole.INTERNAL)
-        comp._add_node_role(mechs[2], NodeRole.INTERNAL)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[1], NodeRole.INTERNAL)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-1' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'INTERNAL'."
+                in str(error_text.value))
 
-        for role in list(NodeRole):
-            if role is NodeRole.ORIGIN:
-                assert comp.get_nodes_by_role(role) == [mechs[0]]
-            elif role is NodeRole.INTERNAL:
-                assert comp.get_nodes_by_role(role) == [mechs[1], mechs[2]]
-            else:
-                assert comp.get_nodes_by_role(role) == []
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.TERMINAL)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'TERMINAL'."
+                in str(error_text.value))
 
-    @pytest.mark.xfail(raises=CompositionError)
+        comp.require_node_roles(mechs[1], NodeRole.INPUT)
+        assert NodeRole.INPUT in comp.get_roles_by_node(mechs[1])
+
+        comp.require_node_roles(mechs[2], NodeRole.OUTPUT)
+        assert NodeRole.OUTPUT in comp.get_roles_by_node(mechs[2])
+
+    @pytest.mark.xfail(raises=NodeRoleError)
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)
@@ -3214,17 +3225,15 @@ class TestRunInputSpecifications:
         ('input_port_and_mech',
          '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
          'the following InputPorts *and* the Mechanisms to which they belong; '
-         'only one or the other can be specified as inputs to run():  OA[InputPort-0]."'
+         'only one or the other can be specified as inputs to run():  \'OA[InputPort-0]\'."'
          ),
         ('nested_input_port_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA[InputPort-0]\', \'Composition-0\')]."'
+        "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or Mechanisms "
+        "nested in the following Compositions: 'Composition-0': 'IA[InputPort-0]'"
          ),
         ('nested_mech_and_comp',
-         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
-         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
-         '[(\'IA\', \'Composition-0\')]."'
+         "The 'inputs' arg of the run() method for 'Composition-1' includes specifications for InputPorts or "
+         "Mechanisms nested in the following Compositions: 'Composition-0': 'IA'"
          ),
         ('run_nested_with_inputs', None)
     ]
@@ -6422,7 +6431,8 @@ class TestInputSpecifications:
             }
 
         xor_comp.learn(inputs=test_function,
-              num_trials=4)
+                       targets=xor_targets,
+                       num_trials=4)
 
     @pytest.mark.control
     @pytest.mark.parametrize(
@@ -7502,14 +7512,14 @@ class TestNodeRoles:
                     f"and therefore cannot accept any input.") in str(error_text.value)
 
             # Error assigning NodeRole.BIAS to Node that already has an afferent Projection.
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 MappingProjection(sender=nodes('INPUT'), receiver=nodes('DOUBLE BIAS').input_ports['second'])
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('DOUBLE BIAS'), NodeRole.BIAS)}])
             assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
                     f"that already has input(s) assigned.") in str(error_text.value)
 
             # Error when assigning Node both NodeRole.BIAS and NodeRole.INPUT
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 Composition(pathways=[[nodes('INPUT'), nodes('OUTPUT')],
                                       (nodes('SINGLE BIAS'), [NodeRole.BIAS, NodeRole.INPUT])])
             assert (f"A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "

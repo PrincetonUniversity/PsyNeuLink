@@ -2,9 +2,11 @@ from . import composition
 from . import compositionfunctionapproximator
 from . import parameterestimationcomposition
 from . import showgraph
+from . import noderoles
 
 
 from .composition import *
+from .noderoles import *
 from .pathway import *
 from .compositionfunctionapproximator import *
 from .parameterestimationcomposition import *
@@ -12,6 +14,7 @@ from .showgraph import *
 from .report import *
 
 __all__ = list(composition.__all__)
+__all__.extend(noderoles.__all__)
 __all__.extend(pathway.__all__)
 __all__.extend(compositionfunctionapproximator.__all__)
 __all__.extend(parameterestimationcomposition.__all__)

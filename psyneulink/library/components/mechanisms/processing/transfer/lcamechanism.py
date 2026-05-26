@@ -584,7 +584,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         and termination_comparison_op for TransferMechanism.
 
         Note:  specifying (threshold and termination_threshold) and/or (threshold and
-        threshold_criterion and termination_measure) causes an error.
+        threshold_criterion and termination_measure) raises an error.
         """
         termination_threshold = kwargs.pop(TERMINATION_THRESHOLD, None)
         threshold = kwargs.pop('threshold', None)
