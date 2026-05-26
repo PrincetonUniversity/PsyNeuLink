@@ -1654,7 +1654,15 @@ class AutodiffComposition(Composition):
             return [e if isinstance(e, MappingProjection) else e[0].owner for e in pathway]
 
         # breadth-first search starting with input node
+        _num_iter = 0
+        _max_iter = 1000
         while len(queue) > 0:
+            _num_iter += 1
+            if _num_iter >= _max_iter:
+                raise AutodiffCompositionError(f"There appears to be a cycle in the graph for '{self.name}'"
+                                               f"(maximum iterations exceeded in _get_pytorch_backprop_pathway());"
+                                               f"to break a cycle, specify `feedback=True` in the constructor for "
+                                               f"one the MappingProjections that form the cycle.")
             node, afferent_proj, current_comp = queue.popleft()
 
             # node is nested Composition that is an INPUT node of the immediate outer Composition,

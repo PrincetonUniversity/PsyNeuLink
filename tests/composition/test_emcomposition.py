@@ -911,7 +911,7 @@ class TestExecution:
         external_input = pnl.ProcessingMechanism(name='EXTERNAL INPUT',
                                                  default_variable=[[0], [0]])
 
-        em = pnl.EMComposition(name="em",
+        em = pnl.EMComposition2(name="em",
                                memory_template=[[0], [0]],
                                memory_capacity=5,
                                fields={"FIELD 1": {pnl.FIELD_WEIGHT: 1,

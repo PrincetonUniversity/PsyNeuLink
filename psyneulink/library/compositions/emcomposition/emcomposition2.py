@@ -1129,7 +1129,7 @@ class EMComposition2(AutodiffComposition):
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_scores_projection = MappingProjection(
                 sender=self.combined_scores_node.output_ports[COMBINED_SCORES],
-                feedback=True,
+                # feedback=True,
                 receiver=field.memory_node.input_ports[COMBINED_SCORES],
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_SCORES",
@@ -1138,7 +1138,7 @@ class EMComposition2(AutodiffComposition):
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_norms_projection = MappingProjection(
                 sender=self.combined_scores_node.output_ports[COMBINED_NORMS],
-                feedback=True,
+                # feedback=True,
                 receiver=field.memory_node.input_ports[COMBINED_NORMS],
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_NORMS",
@@ -1224,7 +1224,8 @@ class EMComposition2(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
-        self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
+        # self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
+        self.require_node_roles(self.combined_scores_node, [NodeRole.OUTPUT,NodeRole.FEEDBACK_SENDER])
 
 
     def _assign_attributes_for_show_graph(self):
