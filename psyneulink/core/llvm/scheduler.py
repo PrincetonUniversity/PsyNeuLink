@@ -231,7 +231,7 @@ class ConditionGenerator:
             return builder.icmp_unsigned('>=', num_execs, num_execs.type(count))
 
         elif isinstance(condition, WhenFinished):
-            # The first argument is the target node
+            # The first argument is the TARGET_MECHANISM
             assert len(condition.args) == 1
             target = is_finished_callbacks[condition.args[0]]
             is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))

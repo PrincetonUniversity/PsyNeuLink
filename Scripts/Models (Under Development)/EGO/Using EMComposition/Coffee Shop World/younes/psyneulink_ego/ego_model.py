@@ -28,9 +28,8 @@ def construct_model(
     retrieval_softmax_gain = 1 / softmax_temperature
 
     enable_learning = learning_rate > 0
-    if loss_spec_name == 'BinaryCrossEntropy':
-        loss_spec = Loss.BINARY_CROSS_ENTROPY
-    else:
+    loss_spec = Loss(loss_spec_name)  # allow ValueError to raise if invalid
+    if loss_spec is not Loss.BINARY_CROSS_ENTROPY:
         raise ValueError(loss_spec_name)
 
     # ----------------------------------------------------------------------------------------------------------------
@@ -180,3 +179,35 @@ def run_model(model, input_layer, states, num_optimization_steps, **kwargs):
     )
 
     return model.results[::num_optimization_steps][:, 2]
+
+if __name__ == '__main__':
+    trials = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]
+    # model, _, _, _ = construct_model(memory_capacity=5, state_size=5, context_size=5)
+    config = {'name' : 'EGO_Model',
+              'em_name': 'EM',
+              'concatenate_queries': False,
+              'enable_learning': True,
+              'softmax_temperature': 0.1,
+              'softmax_threshold': 1e-5,
+              'normalize_memories': False,
+              'num_optimization_steps': 5,
+              'learning_rate': 0.01,
+              'state_input_layer_name': 'STATE',
+              'previous_state_layer_name': 'PREVIOUS_STATE',
+              'context_layer_name': 'CONTEXT',
+              'prediction_layer_name': 'PREDICTION',
+              'state_size': 5,
+              'context_d': 5,
+              'memory_fill': 0.001,
+              'state_retrieval_weight': 1.,
+              'previous_state_retrieval_weight': 1.,
+              'context_retrieval_weight': 1.,
+              'normalize_field_weights': False,
+              'device': 'cpu',
+              'loss_spec_name': Loss.BINARY_CROSS_ENTROPY,
+              'execution_mode': ExecutionMode.PyTorch,
+              'integration_rate': 0.5,
+              }
+    model, _, _, _ = construct_model(memory_capacity=5, **config)
+    results = run_model(model, trials)
+    print(results)

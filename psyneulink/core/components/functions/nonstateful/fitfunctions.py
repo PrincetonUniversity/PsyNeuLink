@@ -275,7 +275,7 @@ class PECOptimizationFunction(OptimizationFunction):
             - optuna.samplers: Pass any instance of an optuna sampler to use optuna for optimization.
             - Type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
             for optimization. In this case, the random seed used for the sampler will be the same as the seed used
-            as the intial_seed passed to PEC at contruction. Additonal desired keyword arguments can be passed to the
+            as the intial_seed passed to PEC at contruction. Additional desired keyword arguments can be passed to the
             sampler via the optuna_kwargs argument.
 
     optuna_kwargs :

@@ -12,12 +12,15 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
 
-from psyneulink.core.compositions import NodeRole
+from psyneulink.core.compositions import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
+from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SHOW_PYTORCH, PNL
+from psyneulink.core.globals.keywords import ALL, SAMPLE, SHOW_PYTORCH, TARGET, PNL
 
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
@@ -38,7 +41,6 @@ class PytorchShowGraph(ShowGraph):
 
     show_pytorch : keyword : default 'PYTORCH'
         specifies that the PyTorch version of the graph should be shown.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -56,49 +58,75 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
+        elif SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING]:
+            # Remove SHOW_LEARNING spec from kwargs to prevent double-handling in super().show_graph
+            kwargs.pop(SHOW_LEARNING, None)
+            if self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph is False:
+                import warnings
+                warnings.warn(f"The '{SHOW_LEARNING}' argument in the call to show_graph() for "
+                              f"'{self.composition.name}' is unnecessary since learning components "
+                              f"are shown for an AutodiffComposition only when '{SHOW_PYTORCH}' is used.")
+                self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph = True
         self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
-            self.composition.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
             self.pytorch_rep = (
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
                     new=False))
+            self.pytorch_rep.node_roles_mgr._determine_node_roles()
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
 
+    def _make_additional_assignments(self,
+                                     g, processing_graph,
+                                     composition, enclosing_comp, comp_hierarchy, nesting_level, active_items,
+                                     show_nested, show_cim, show_learning, show_types, show_dimensions,
+                                     show_node_structure, node_structure_args,
+                                     show_projection_labels, show_projections_not_in_composition,
+                                     context):
+        """Override to add Loss components to graph
+        Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE_MECHANISM)
+        """
+        if not self.show_pytorch:
+            return super()._make_additional_assignments(
+                g, processing_graph,
+                composition, enclosing_comp, comp_hierarchy, nesting_level, active_items,
+                show_nested, show_cim, show_learning, show_types, show_dimensions,
+                show_node_structure, node_structure_args,
+                show_projection_labels, show_projections_not_in_composition,
+                context)
+
+        # If a node projects to a LossMechanism as its SAMPLE_MECHANISM, add LossMechanism as dependency
+        #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
+        loss_mechs = [n for n in composition.nodes if isinstance(n, LossMechanism)]
+        if loss_mechs:
+            for node in [n for n in processing_graph if n not in composition.target_mechanisms]:
+                for loss_mech in loss_mechs:
+                    if node is loss_mech.sample.owner:
+                        processing_graph[node].add(loss_mech)
+                        self._implement_graph_edge(g,
+                                                   loss_mech.loss_projection,
+                                                   context,
+                                                   loss_mech.name,
+                                                   loss_mech.sample.owner.name,
+                                                   color=self.exclude_from_gradient_calc_color,
+                                                   penwidth=self.default_width,
+                                                   style=self.exclude_from_gradient_calc_line_style)
+
     def _get_processing_graph(self, composition, context):
-        """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode"""
+        """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode
+        IMPLEMENTATION NOTE:
+            learning_components (LossMechanism(s) and TARGET_MECHANISMs) are included
+            since these are always part of the graph in PyTorch mode
+        """
         if self.show_pytorch:
-            processing_graph = {}
-            projections = self._get_projections(composition, context)
-            nodes = self._get_nodes(composition, context)
-            for node in nodes:
-                dependencies = set()
-                for projection in projections:
-                    sender = projection.sender.owner
-                    receiver = projection.receiver.owner
-                    if node is receiver:
-                        dependencies.add(sender)
-                    # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-                    elif (isinstance(receiver, CompositionInterfaceMechanism) and
-                          receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
-                        dependencies.add(sender)
-                    else:
-                        for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
-                            dependencies.add(proj.sender.owner)
-                processing_graph[node] = dependencies
-
-            # Add TARGET nodes
-            for node in self.composition.learning_components:
-                processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
-            return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-
+            return self.composition.pytorch_representation.node_roles_mgr.graph
         else:
             return super()._get_processing_graph(composition, context)
 
-    def _get_nodes(self, composition, context):
+    def _get_nodes(self, composition, context=None):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
             nodes = sorted([node for node in self.pytorch_rep.nodes_map
@@ -107,11 +135,11 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_nodes(composition, context)
 
-    def _get_projections(self, composition, context):
-        """Override to return nodes of Pytorch graph"""
+    def _get_projections(self, composition, context=None):
+        """Override to return nodes of PyTorch graph"""
         if self.show_pytorch:
             projections = self.pytorch_rep.composition._pytorch_projections
-            # Add any Projections to TARGET nodes
+            # Add any Projections to TARGET_MECHANISMs
             projections += [afferent
                             for node in self.composition.learning_components
                             for afferent in node.path_afferents
@@ -121,7 +149,7 @@ class PytorchShowGraph(ShowGraph):
             return super()._get_projections(composition, context)
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
-        """Override to include direct Projections from outer to nested comps in Pytorch mode"""
+        """Override to include direct Projections from outer to nested comps in PyTorch mode"""
         sndr = proj.sender.owner
         rcvr = proj.receiver.owner
         if self.show_pytorch:
@@ -136,22 +164,18 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._proj_in_composition(proj, composition_projections, context)
 
-    def _get_roles_by_node(self, composition, node, context):
-        """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
+    def _get_roles_by_node(self, node):
+        """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
         if self.show_pytorch:
-            try:
-                return composition.get_roles_by_node(node)
-            except:
-                return [NodeRole.INTERNAL]
-        if self.show_pytorch and node not in self.composition.nodes:
-            return [NodeRole.INTERNAL]
+            # allow PytorchCompositionWrapper to identify roles for nodes
+            return self.pytorch_rep._get_roles_by_node(node)
         else:
-            return super()._get_roles_by_node(composition, node, context)
+            return super()._get_roles_by_node(node)
 
     def _get_nodes_by_role(self, composition, role, context):
-        """Override in Pytorch mode to return all nodes in nested compositions as INTERNAL"""
-        if self.show_pytorch and composition is not self.composition:
-            return None
+        """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
+        if self.show_pytorch:
+            return composition.get_nodes_by_role(role, scope=ALL)
         else:
             return super()._get_nodes_by_role(composition, role, context)
 
@@ -162,29 +186,52 @@ class PytorchShowGraph(ShowGraph):
                 # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
                 return
             if rcvr in self.pytorch_rep.nodes_map and self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
-                kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
+                kwargs['style'] = self.exclude_from_gradient_calc_line_style
+            elif rcvr in self.composition.learning_components:
+                kwargs['color'] = self.learning_color
+                if rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET_INPUT):
+                    kwargs['penwidth'] = str(self.bold_width)
+
             elif rcvr not in self.composition.nodes:
                 #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph
                 #  (since they are not in the outermost Composition and are therefore ignored when it is flattened)
                 dependencies = self._get_processing_graph(self.composition, context)
                 receivers = dependencies.keys()
                 senders = [sender for sender_list in dependencies.values() for sender in sender_list]
-                if rcvr in receivers and rcvr not in senders:
-                    kwargs['color'] = self.output_color
+                roles = self.pytorch_rep.node_roles_mgr.get_roles_by_node(rcvr)
+                INPUT = roles and NodeRole.INPUT in roles
+                OUTPUT = roles and NodeRole.OUTPUT in roles
+                if INPUT and OUTPUT:
+                    kwargs['color'] = self.input_and_output_color
                     kwargs['penwidth'] = str(self.bold_width)
-                elif rcvr in senders and rcvr not in receivers:
+                elif INPUT:
                     kwargs['color'] = self.input_color
                     kwargs['penwidth'] = str(self.bold_width)
+                elif OUTPUT:
+                    kwargs['color'] = self.output_color
+                    kwargs['penwidth'] = str(self.bold_width)
+
             g.node(*args, **kwargs)
         else:
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)
 
     def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
-        """Override to assign custom attributes to edges"""
+        """Override to assign PyTorch-specific custom attributes to edges"""
 
         if self.show_pytorch:
             kwargs['color'] = self.default_node_color
+
+            if isinstance(proj, LossProjection):
+                kwargs['color'] = self.exclude_from_gradient_calc_color
+                kwargs['style'] = self.exclude_from_gradient_calc_line_style
+                kwargs['penwidth'] = str(self.default_width)
+                graph.edge(*args, **kwargs)
+                return
+
+            elif isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                # Exclude any edges from CompositionInterfaceMechanism since those are never relevant in Pytorch graph
+                return
 
             modulatory_node = None
 

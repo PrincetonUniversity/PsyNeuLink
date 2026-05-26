@@ -8,7 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
-from h5py.h5f import namedtuple
+from collections import namedtuple, OrderedDict
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
 
@@ -24,17 +24,27 @@ else:
     import torch.nn as nn
     from torch.optim import Optimizer
 
+import warnings
+
 from enum import Enum, auto
 from typing import TYPE_CHECKING
+from collections import defaultdict
 
+import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.stateful import StatefulFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.core.compositions.composition import (Composition, CompositionError, CompositionInterfaceMechanism,
+                                                      LearningScale, get_composition_for_node)
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
@@ -53,22 +63,25 @@ from psyneulink.core.globals.keywords import (
     NODE_VALUES,
     NODE_VARIABLES,
     RESULTS,
+    SAMPLE,
     SHOW_PYTORCH,
     SYNCH,
+    TARGET,
+    TARGETS,
     TARGET_MECHANISM,
+    SAMPLE_VALUES,
     Loss,
 )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_iterable,
 )
+from psyneulink.core.globals.parameters import ParameterNoValueError
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
-
 if TYPE_CHECKING:
-    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg
-
+    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg, AutodiffCompositionError
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
            'ENTER_NESTED', 'EXIT_NESTED', 'ParamNameCompositionTuple']
@@ -90,10 +103,9 @@ ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
 
 class DataTypeEnum(Enum):
 
-    TRAINED_OUTPUTS = 0
+    SAMPLE_VALUES = 0
     TARGETS = auto()
     LOSSES = auto()
-
 
 def _get_pytorch_function(obj, device, context):
     pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
@@ -177,20 +189,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
             (TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES), that are copied to PsyNeuLink
             at the end of a call to learn(); these are specified by the user in the following arguments
             to learn():
-                retain_torch_trained_outputs=MINIBATCH,
+                retain_torch_sample_values=MINIBATCH,
                 retain_torch_targets=MINIBATCH,
                 retain_torch_losses=MINIBATCH,
             and consolidated in the retain_in_pnl_options dict used by retain_for_psyneulink
 
         - Note: RESULTS is handled in an idiosyncratic way: it is specified along with the synchronization
                 parameters, since it is a value ordinarily generated in the execution of a Composition;
-                however it's helper parallels the retain_for_psyneulink helper methods, and it is called
+                however its helper parallels the retain_for_psyneulink helper methods, and it is called
                 from _update_results if TRIAL is specified, in order to integrate with the standard execution
                 of a Composition.
 
+    COMMENT:
     Arguments
     ---------
-
+    COMMENT
 
     Attributes
     ----------
@@ -240,15 +253,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     retained_results : List[ndarray]
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
-        in a call to `run <AutoDiffComposition.run>` or `learn <AutoDiffComposition.learn>`.
+        in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
-    retained_trained_outputs : List[ndarray]
-        values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET`
-        Node) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
+    retained_sample_values : List[ndarray]
+        values of the `SAMPLE_MECHANIMs <NodeRole.SAMPLE>` Nodes, that were used as the
+        `sample <LossMechanism.sample>` for the `LossMechanism` to compute the loss for
+        each trial executed in a call to `learn<AutoDiffComposition.learn>`.
 
     retained_targets : List[ndarray]
-        values of the `TARGET <NodeRole.TARGET` Nodes for each trial executed in a call to `learn
-        <AutoDiffComposition.learn>`.
+        values of the `TARGET_MECHANISMs <NodeRole.TARGET_INPUT>`, that were used as the `target <LossMechanism.sample>`
+        for the `LossMechanism` to compute the loss for each trial executed in a call to
+        `learn<AutoDiffComposition.learn>`.
 
     retained_losses : List[ndarray]
         losses per batch, epoch or run accumulated over a call to learn()
@@ -256,6 +271,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     torch_dtype = torch.float64
     composition: Composition
+
+    def _pytorch_mechanism_wrapper_type(self, mech):
+        # TEACHER_TARGET BREADCRUMB:  TEST THIS IN SCRATCH PAD FOR CONTROL NODE
+        # Warn about and skip ModulatoryProjections
+        if isinstance(mech, ModulatoryMechanism_Base):
+            #                OR PUT BURDEN ON _pytorch_mechanism_wrapper_type TO RECUSE ITSELF??
+            if not self.composition._warned_about_modulatory_components:
+                warnings.warn(f"'{self.composition.name}' has Modulatory components that will not execute "
+                              f"when its learn() method is called in PyTorch mode.")
+                self.composition._warned_about_modulatory_components = True
+            return None
+
+        return defaultdict(lambda: PytorchMechanismWrapper,
+                           {LossMechanism: PytorchLossMechanismWrapper}
+                           )[mech.__class__]
 
     def __init__(self,
                  composition: Composition,
@@ -267,12 +297,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  base_context=Context(execution_id=None),
                  ):
 
+
         super(PytorchCompositionWrapper, self).__init__()
+
+        self.outer_creator = outer_creator # AutodiffComposition for which executable pytorch_rep is being constructed
+        self.additional_pytorch_relevant_projections = [] # Needed for cases in which creation of pytorch_representation
+                                                          # fails to include all relevant projections
+        self.nodes_map = {} # { Node <mech or nested Comp> : <PytorchMechanismWrapper or PytorchCompositionWrapper> }
+        self.node_wrappers = [] # [ <PytorchMechanismWrapper or PytorchCompositionWrapper>,... ]
 
         if subclass_components is None:
             self._early_init(composition, device)
             # Instantiate standard PytorchWrappers for Mechanisms and Projections, and execution_sets used in forward()
-            _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context)
+            _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context, base_context)
             self._construct_node_wrapper_maps(_node_wrapper_pairs)
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context, base_context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
@@ -291,6 +328,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   so if any nested Compositions are INPUT Nodes of the outermost Composition,
             #   *their* INPUT Nodes are assigned as INPUT Nodes of the outermost Composition
         if not composition.is_nested:
+
+            # TEACHER_TARGET BREADCRUMB: REFACTOR ALL OF THE FOLLOWING INTO METHODS, INCLUDING flatten_maps
+            # Recursively search for and assign _is_input to all INPUT Nodes in nested Compositions
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
@@ -298,6 +338,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     else:
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
+
+            # Ensure that all PytorchLossMechanismWrappers have at least
+            #   one SAMPLE_MECHANISM and one TARGET_MECHANISM afferent
+            def _validate_loss_nodes():
+                for loss_node in [node for node in self.node_wrappers
+                                  if (isinstance(node, PytorchLossMechanismWrapper)
+                                      and len(node.afferents) < 2)]:
+                    if not loss_node.afferents:
+                        sample_or_target_msg = "any SAMPLE_MECHANISM or TARGET_MECHANISM afferents"
+                    sender = loss_node.afferents[0].sender_wrapper
+                    sample_or_target_msg = (
+                        "a SAMPLE_MECHANISM afferent" if sender.mechanism is not loss_node.mechanism.sample.owner
+                        else "a TARGET_MECHANISM afferent")
+                    assert False, (f"PROGRAM ERROR: the Loss Node of the pytorch wrapper for '{composition.name}' "
+                                   f"has not been assigned {sample_or_target_msg}.")
+            _validate_loss_nodes()
 
         # Flatten maps
         for node_wrapper in self.node_wrappers:
@@ -308,15 +364,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     self._add_node_to_nodes_map(k, v)
                 self._pnl_refs_to_torch_param_names.update(node_wrapper._pnl_refs_to_torch_param_names)
 
-        # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
-        nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
-        for node in nodes_to_remove:
-            self._remove_node_from_nodes_map(node)
-
-        self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
+        # # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
+        nested_comps = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
+        for comp in nested_comps:
+            self._remove_node_from_nodes_map(comp)
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
+
+        # Set up NodeRolesManager if PytorchCompositionWrapper is for outermost Composition
+        if not self.composition.is_nested:
+            self._assign_node_roles_manager()
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
@@ -324,12 +382,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._validate_and_parse_additional_optimizations(
                 self.composition.execute_in_additional_optimizations,
                 self.composition.optimizations_per_minibatch,
-                source=CONSTRUCTOR,
+                source=CONSTRUCTOR
             )
         )
 
         self._regenerate_torch_parameter_list()
-        assert 'DEBUGGING BREAKPOINT'
+        assert 'DEBUGGING BREAKPOINT' # END OF __init__()
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
@@ -352,7 +410,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Data retained by the wrapper during execution and copied to pnl as specified by retain_for_psyneulink
         self.retained_results = []          # Values of all output NODES
-        self.retained_trained_outputs = []  # Values of trained output NODES (i.e. associated with TARGETS)
+        self.retained_sample_values = []  # Values of trained output NODES (i.e. associated with TARGETS)
         self.retained_targets = []  #       # Values of targets for all trials
         self.retained_losses = []           # Losses per trial or batch accumulated over a run
 
@@ -360,7 +418,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # (this is constructed as a form of hash table for efficiency since that method can be called alot;
         #  it is constructed here to avoid doing so in the retain_for_psyneulink method itself)
         self.retain_method = [None] * len(DataTypeEnum)
-        self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
+        self.retain_method[DataTypeEnum.SAMPLE_VALUES.value] = self.retain_sample_values
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
         self._store_learn_params = None
@@ -387,9 +445,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     (f"PROGRAM ERROR: {self}.execution_sets contains a set with non-PytorchMechanismWrapper "
                      f"or PytorchCompositionWrapper object).")
 
+    def _assign_node_roles_manager(self):
+        self.node_roles_mgr = NodeRolesManager(self)
+        self.node_roles_mgr.required_node_roles = \
+            [(node, role) for node, role in self.composition.node_roles_mgr.required_node_roles
+             if node in self.node_roles_mgr.nodes]
+        self.node_roles_mgr.excluded_node_roles = \
+            [(node, role) for node, role in self.composition.node_roles_mgr.excluded_node_roles
+             if node in self.node_roles_mgr.nodes]
+
     def _construct_node_wrapper_maps(self, _node_wrapper_pairs):
-        self.nodes_map = {} # maps Node(Mech | nested Comp) -> PytorchMechanismWrapper | PytorchCompositionWrapper
-        self.node_wrappers = []
         self._modules_dict = torch.nn.ModuleDict()
         for node, pytorch_node_wrapper in _node_wrapper_pairs:
             self._add_node_to_nodes_map(node, pytorch_node_wrapper)
@@ -411,12 +476,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.node_wrappers.remove(node)
         self._modules_dict.pop(node.name)
 
-    def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context)->list:
+    def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context, base_context)->list:
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
-        # Remove all learning-specific nodes
-        nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
+        # Remove all PNL learning-specific components
+        nodes = set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING))
+        # Remove LossMechanisms and any TARGET_MECHANISMs if this is for a nested Composition
+        #   (those are constructed for the outermost Composition and only those are used)
+        if self.is_nested:
+            nodes = nodes - set(node for node in nodes
+                                if (isinstance(node, LossMechanism)
+                                    or node in composition.get_nodes_by_role(NodeRole.TARGET_INPUT)))
 
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
         #   so that they don't interfere with construction of execution_sets by scheduler
@@ -438,17 +509,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism
             else:
-                pytorch_node_wrapper = \
-                    self.composition.pytorch_mechanism_wrapper_type(
-                        mechanism=node,
-                        composition=composition,
-                        component_idx=self.composition._get_node_index(node),
-                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
-                        dtype=self.torch_dtype,
-                        device=device,
-                        context=context)
-                # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
-                #                             for input_port in node.input_ports)
+                mech_wrapper_type = self._pytorch_mechanism_wrapper_type(node)
+                if mech_wrapper_type:
+                    pytorch_node_wrapper = mech_wrapper_type(mechanism=node,
+                                                             composition=composition,
+                                                             outer_creator=self.outer_creator,
+                                                             component_idx=self.composition._get_node_index(node),
+                                                             use=[LEARNING, SYNCH, SHOW_PYTORCH],
+                                                             dtype=self.torch_dtype,
+                                                             device=device,
+                                                             context=context,
+                                                             base_context=base_context)
+                else:
+                    continue
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
             _node_wrapper_pairs.append((node, pytorch_node_wrapper))
 
@@ -460,11 +533,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
         so if any nested Compositions have Projections to/from them, they are assigned to the outermost Composition
         See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.
+        TEACHER_TARGET BREADCRUMB:  ADD NOTE ABOUT FILTERING FOR ILLEGAL NODES FOR PYTORCH, SUCH AS MODULATORY ONES
         """
 
         proj_wrappers_pairs = []
-        # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
-        for projection in composition._inner_projections:
+        # Instantiate PyTorch ProjectionWrappers, ignoring any from/to CIMs in the same composition)
+        for projection in self._get_composition_projections(composition):
+
+            # Warn about and skip ModulatoryProjections
+            if isinstance(projection, ModulatoryProjection_Base):
+                if not composition._warned_about_modulatory_components:
+                    warnings.warn(f"'{composition.name}' has Modulatory components that will not execute when its "
+                                  f"learn() method is called in PyTorch mode.")
+                    composition._warned_about_modulatory_components = True
+                continue
+
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
 
@@ -473,6 +556,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert not hasattr(self, '_parameter_CIM'),\
                 (f"PROGRAM ERROR: {self} has a parameter_CIM which is not should not currently be the case "
                  f"and is not handled by flatterning in {self.__class__.__name__}.")
+
+            # Ensure that Projections to any LossMechanism used to compute loss for learning
+            #    are not themselves learnable
+            if (isinstance(rcvr_mech, LossMechanism)
+                  and rcvr_mech in composition.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)):
+                projection.learnable = False
 
             # Ignore input_CIM and output_CIM within the same Composition (they are not learnable)
             if sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
@@ -497,7 +586,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            component_idx = list(self.composition._inner_projections).index(projection)
+            # component_idx is used by compilation to index into a loss structure
+            # that is constructed from the 'proj_wrappers_pairs' so teh indexing
+            # needs to match
+            component_idx = len(proj_wrappers_pairs)
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
@@ -527,6 +619,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return proj_wrappers_pairs
 
+    def _get_composition_projections(self, composition):
+        projections = list(composition._inner_projections)
+        return projections + self.additional_pytorch_relevant_projections
+
     def _handle_nested_comp(
         self,
         projection: MappingProjection,
@@ -553,6 +649,30 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nested_rcvr_port, nested_rcvr_mech, _ = \
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
             nested_pytorch_comp_wrapper = self.nodes_map[rcvr_mech.composition]
+
+            # MODIFIED TEACHER_TARGET NEW:
+            # If sender is from an output_CIM,
+            # then replace sndr_mech with the node in the nested Composition that sends the projection
+            if isinstance(sndr_mech, CompositionInterfaceMechanism):
+                assert sndr_mech is sndr_mech.composition.output_CIM, \
+                    (f"PROGRAM ERROR: Projection {projection} is from a CIM of a nested Composition "
+                     f"('{sndr_mech.composition.name}') that not its output_CIM: '{sndr_mech.name}'.")
+                assert sndr_mech.composition in self.nodes,\
+                    (f"PROGRAM ERROR: Projection '{projection}' is from a CIM of a nested Composition "
+                     f"'{sndr_mech.composition.name}' that not in '{self.name}'.")
+                sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
+            # If rcvr is an input_CIM,
+            # then replace rcvr_mech with the node in the nested Composition that receives the projection
+            # if isinstance(rcvr_mech, CompositionInterfaceMechanism):
+            #     assert rcvr_mech is rcvr_mech.composition.input_CIM, \
+            #         (f"PROGRAM ERROR: Projection {projection} is to a CIM of a nested Composition "
+            #          f"('{rcvr_mech.composition.name}') that not its input_CIM: '{rcvr_mech.name}'.")
+            #     assert rcvr_mech.composition in self.nodes,\
+            #         (f"PROGRAM ERROR: Projection '{projection}' is to a CIM of a nested Composition "
+            #          f"'{rcvr_mech.composition.name}' that not in '{self.name}'.")
+            #     rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
+            # MODIFIED TEACHER_TARGET END
+
             proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
                 nested_pytorch_comp_wrapper._flatten_for_pytorch(projection,
                                                                  sndr_mech, rcvr_mech,
@@ -562,8 +682,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                  self,
                                                                  ENTER_NESTED,
                                                                  context,
-                                                                 base_context,
-                                                                 )
+                                                                 base_context)
             )
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
@@ -629,6 +748,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if access == ENTER_NESTED:
             proj_rcvr_wrapper = self.nodes_map[nested_mech]
+            sndr_mech, proj_sndr_wrapper = self._get_sndr_mech_wrapper(sndr_mech, projection)
+
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
             nested_comp = projection.receiver.owner.composition
             incoming_projections = [proj for proj in nested_comp.input_CIM.port_map[nested_port][1].efferents
@@ -638,13 +759,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"from its input_CIM to '{nested_port.owner.name}'.")
             nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
             pnl_proj = incoming_projections[0]
-            if pnl_proj != nested_port.path_afferents[0]:
+            if pnl_proj != nested_port_afferents[0]:
                 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
                 raise AutodiffCompositionError(
                     f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
                     f"'{nested_port.path_afferents[0].sender.owner.name}') is not the same as its "
                     f"Projection from the input_CIM of '{projection.receiver.owner.composition.name}'. "
-                    f"One for this reason may be that these Components belong to different Compositions.")
+                    f"One reason for this may be that these Components belong to different Compositions.")
 
             # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
             #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_PYTORCH,
@@ -654,7 +775,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
                                                      f"to {destination_rcvr_mech.name}",
-                                                sender=projection.sender,
+                                                sender=sndr_mech,
                                                 receiver=destination_rcvr_port,
                                                 learnable=projection.learnable,
                                                 learning_rate=projection.parameters.learning_rate.get(context))
@@ -683,9 +804,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         elif access == EXIT_NESTED:
             proj_sndr_wrapper = self.nodes_map[nested_mech]
+            nested_port_efferents = [proj for proj in nested_port.efferents if proj in self.composition.projections]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-            assert nested_port.efferents[0] == projection.sender.owner.port_map[nested_port][0].path_afferents[0], \
+            if nested_port_efferents[0] != projection.sender.owner.port_map[nested_port][0].path_afferents[0]:
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
@@ -732,6 +854,27 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
+
+    # TEACHER_TARGET BREADCRUMB: DO THE SAME FOR rcvr_mech_wrapper
+    #                            TO DEAL WITH PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
+    def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection):
+        """Get wrapper for sndr_mech
+        If sndr_mech is a Mechanism in the outer Composition, get wrapper for sndr_mech directly from its nodes_map;
+        If sndr_mech is an output_CIM, then get node in nested Composition that is its source
+           and add it to the nodes_map for the outer Composition;
+         """
+        if sndr_mech in self.outer_creator.nodes_map:
+            sndr_mech_wrapper = self.outer_creator.nodes_map[sndr_mech]
+            sender = pnl_proj.sender
+        else:
+            from psyneulink.core.compositions.composition import Composition
+            for nested_comp in [node for node in self.outer_creator.nodes_map if isinstance(node, Composition)]:
+                if sndr_mech in nested_comp.pytorch_representation.nodes_map:
+                    sender = sndr_mech
+                    sndr_mech_wrapper = nested_comp.pytorch_representation.nodes_map[sndr_mech]
+                    self.outer_creator.nodes_map[sndr_mech] = sndr_mech_wrapper
+                    break
+        return sender, sndr_mech_wrapper
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
@@ -785,7 +928,103 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         nodes_left = True
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
+
         return flattened_execution_sets, execution_context
+
+    def _get_all_nodes(self):
+        return self.nodes
+
+    @property
+    def processing_graph(self)->dict:
+        """Creates graph (dependencies) for nodes of AutodiffComposition in PyTorch mode
+        IMPLEMENTATION NOTE:
+            learning_components (LossMechanism(s) and TARGET_MECHANISMs) are included
+            since these are always part of the graph in PyTorch mode
+        """
+        # TEACHER_TARGET BREADCRUMB:
+        #                   - USE dependency_dict OF pytorchwrappers IF THERE IS ONE
+        #                   - CHECK AGAINST Composition.scheduler execution sets? (USE TESTS TO EVALUATE NEED)
+        #                   - CHECK THAT SINGETONS DON'T HAVE afferents OR efferents IN _determine_node_roles
+        show_graph = self.composition._show_graph
+        nodes = self.nodes
+        processing_graph = {k:set() for k in nodes}
+        for node in nodes:
+            for proj in node.afferents:
+                sender = proj.sender.owner
+                if sender in nodes:
+                    processing_graph[node].add(sender)
+        # Sort for consistency of reporting and display
+        processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+        # self._processing_graph = processing_graph
+        return processing_graph
+
+    # TEACHER_TARGET BREADCRUMB: MOVE THE FOLLOWING TO PytorchCompositionWrapper.node_role_mgr:
+    def _add_node_role(self, node, role):
+        self.node_roles_mgr._add_node_role(node, role)
+
+    def _remove_node_role(self, node, role):
+        self.node_roles_mgr._remove_node_role(node, role)
+
+    def _add_required_node_role(self, node, role, context=None):
+        self.node_roles_mgr._add_required_node_role(node, role, context)
+
+    def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
+        self.node_roles_mgr.exclude_node_roles(node, role, context)
+
+    def _get_roles_by_node(self, node):
+        """Override to allow subclasses to handle different nodes for pytorch_representation"""
+        return self.node_roles_mgr.get_roles_by_node(node)
+
+    @property
+    def nodes(self):
+        return list(self.nodes_map.keys())
+
+    @property
+    def nodes_to_roles(self):
+        return self.node_roles_mgr._get_nodes_to_roles()
+
+    @property
+    def all_nodes_to_roles(self):
+        assert False, (f"PROGRAM ERROR: PytorchCompositionWrapper doesn't support 'all_nodes_to_roles; "
+                       f"not needed since pytorch_representation is flattened.")
+
+    @property
+    def is_nested(self):
+        return self.outer_creator
+
+    @property
+    def output_nodes(self):
+        return self.composition.get_nested_output_nodes_at_all_levels()
+
+    @property
+    def loss_mech_wrappers(self):
+        assert self.node_wrappers, \
+            (f"PROGRAM ERROR: no node_wrappers available when loss_mech_wrappers was called "
+             f"in 'target_wrappers' property of pytorch_representation for '{self.name}.")
+        return [node_wrapper for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+
+    @property
+    def sample_wrappers(self):
+        assert self.loss_mech_wrappers, \
+            (f"PROGRAM ERROR: no loss_mech_wrappers available when sample_wrappers property of pytorch_representation "
+             f"for '{self.name} was called.")
+        sample_wrappers = []
+        for loss_mech_wrapper in self.loss_mech_wrappers:
+            sample_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
+                                    if afferent.sender_wrapper.mechanism is loss_mech_wrapper.mechanism.sample.owner])
+        return sample_wrappers
+
+    @property
+    def target_wrappers(self):
+        assert self.loss_mech_wrappers, \
+            (f"PROGRAM ERROR: no loss_mech_wrappers available when target_wrappers property of pytorch_representation "
+             f"for '{self.name} was called.")
+        target_wrappers = []
+        for loss_mech_wrapper in self.loss_mech_wrappers:
+            target_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
+                                    if afferent.sender_wrapper.mechanism is loss_mech_wrapper.mechanism.target.owner])
+        return target_wrappers
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
@@ -1180,7 +1419,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
-                if NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism):
+                if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
+                        and NodeRole.TARGET_INPUT not in self.composition.get_roles_by_node(component.mechanism)):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                     input_id = component._idx
@@ -1370,8 +1610,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
-    # def forward(self, inputs, optimization_rep, context=None) -> dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
+                full_sequence_mode, sequence_lengths, context=None)->dict:
+        # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
         """
@@ -1379,13 +1620,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         def get_nodes_to_execute_for_optimization(opt_num: int, exec_set: set) -> set:
             # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
             addition_opts_dict = self._execute_in_additional_optimizations
-            # nodes_to_execute = {node for node in addition_opts_dict
-            #                     # BREADCRUMB:
-            #                     # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}
-            #                     if (isinstance(addition_opts_dict[node],list) and opt_num in addition_opts_dict[node])}
-            # for node in exec_set:
-            #     if (node in nodes_to_execute):
-            #         exec_set -= {torch_node}
             nodes_to_exclude = {
                 node
                 for node in addition_opts_dict
@@ -1442,6 +1676,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # If _execute_in_additional_optimizations is specified,
                     #   only execute nodes specified for curent optmization_num
                     current_exec_set = get_nodes_to_execute_for_optimization(optimization_num, current_exec_set.copy())
+
+                # Sort for consistency of reporting in tests
+                current_exec_set = sorted(
+                    current_exec_set,
+                    key=lambda n: getattr(n, "name", getattr(getattr(n, "mechanism", None), "name", "")))
 
                 for node in current_exec_set:
 
@@ -1533,6 +1772,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
+                    assert 'DEBUGGING BREAKPOINT' # INPUTS TO NODE
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
@@ -1557,6 +1797,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                  synch_with_pnl_options=synch_with_pnl_options,
                                  sequence_lengths=sequence_lengths,
                                  context=context)
+                    assert 'DEBUGGING BREAKPOINT' # NODE EXECUTED
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
@@ -1571,8 +1812,71 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.log_weights()
         context.source = old_source
 
-        # Return outputs of the outermost Composition
-        return outputs
+        # TEACHER_TARGET BREADCRUMB:  MAKE ALL OF THE BELOW A METHOD,
+        #                             THAT CAN ALSO BE CALLED FROM SUBCLASSES (E.G., pytorchGRUwrappers)
+        # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
+        output_cim = self.composition.output_CIM
+        source_infos = (output_cim._get_source_info_from_output_CIM(port) for port in output_cim.input_ports)
+        outputs_idx_port_node_comp = [
+            (info[1].output_ports.index(info[0]), *info)
+            for info in source_infos
+        ]
+
+
+        # Assign values to all_output_values
+        output_values = []
+        for idx, port, node, comp in outputs_idx_port_node_comp:
+
+            if comp._trained_comp_nodes_to_pytorch_nodes_map:
+                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
+
+            outputs = self.nodes_map[node].output
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, :, idx, ...]
+            else:
+                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+
+            # If the sequence dimension is singleton, squeeze it away
+            if output.shape[1] == 1:
+                output = output.squeeze(1)
+            else:
+                raise ValueError("Currently, outputs with sequence length > 1 are not supported.")
+
+            output = output.detach().cpu().tolist()
+
+            output_values += [output]
+
+        # # TEACHER_TARGET BREADCRUMB:  MAKE THESE A METHOD, THAT CAN ALSO BE CALLED FROM pytorchGRUwrappers.py
+        # self._format_output_values(output_values)
+        # Turn into a numpy array, possibly ragged
+        output_values = convert_to_np_array(output_values)
+
+        # Swap the first two dimensions (output_port, batch) to (batch, output_port)
+        output_values = output_values.swapaxes(0, 1)
+
+        self.all_output_values = output_values
+
+        # Get value of all SAMPLE_MECHANISM (student) Nodes:
+        sample_values = [node.output for node in self.sample_wrappers]
+        self.sample_values = sample_values
+
+        # Get values of TARGET (teacher) nodes
+        target_values = [node.output for node in self.target_wrappers]
+        self.target_values = target_values
+
+        # Synchronize outcomes after every trial if specified
+        # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in call to autodiff._update_results()
+        self.synch_with_psyneulink(synch_with_pnl_options,
+                                          [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
+                                          context,
+                                          [NODE_VARIABLES, NODE_VALUES])
+
+        self.retain_for_psyneulink({SAMPLE_VALUES: sample_values,
+                                    TARGETS: target_values},
+                                   retain_in_pnl_options,
+                                   context)
+
+        return output_values
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
@@ -1697,9 +2001,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if len(results):
             self.retained_results.append(results)
 
-    def retain_trained_outputs(self, trained_outputs:list):
+    def retain_sample_values(self, sample_values:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
-        self.retained_trained_outputs.append(trained_outputs)
+        self.retained_sample_values.append(sample_values)
 
     def retain_targets(self, targets:list):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
@@ -1760,7 +2064,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         * *AFTER*: the node is executed on every optimization step, after all gradient updates have been done;
 
-        * *LAST*: if `Compositon.optimizations_per_minibatch` is greater than 1, the node is executed only
+        * *LAST*: if `Composition.optimizations_per_minibatch` is greater than 1, the node is executed only
           after the last optimization step
 
         * *BEFORE*: not currently supported
@@ -1787,12 +2091,14 @@ class PytorchMechanismWrapper(torch.nn.Module):
     def __init__(self,
                  mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
                  composition,                                   # one to which mech belongs (for nested executions)
+                 outer_creator:Composition,
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
                  dtype:torch.dtype,                             # needed for Pytorch
                  device:str,                                    # needed for Pytorch
                  subclass_specifies_function:bool=False,        # used to determine whether to assign function here
-                 context=None):
+                 context=None,
+                 base_context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
         # MODIFIED 7/10/24 END
@@ -1827,6 +2133,23 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         if subclass_specifies_function is False:
             self._assign_pytorch_function(mechanism, device, context)
+
+        if self.composition.is_nested:
+            # Ensure wrapper for LossMechanism gets afferent from 'PYTORCH GRU NODE'
+            # IMPLEMENTATION NOTE:
+            #   Do this by adding PytorchProjectionWrapper for nested SAMPLE_MECHANISM->LossMechanism.sample.owner
+            #   This is needed because the LossMechanism is constructed after _get_pytorch_backprop_pathways
+            #   so that the dependency on the nested SAMPLE_MECHANISM is not seen.  This ensures that it *is* seen
+            #   in _instantiate_pytorch_projection_wrappers() in the call to _get_composition_projections()
+            outer_comp = context.composition
+            outer_comp_pytorch_rep = outer_creator
+            for loss_mech in [mech for mech in outer_comp.nodes if isinstance(mech, LossMechanism)]:
+                sample_mech = loss_mech.sample.owner
+                if sample_mech is mechanism:
+                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
+                    outer_comp._pytorch_projections.append(proj)
+                    outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
+                    outer_comp_pytorch_rep.nodes_map[mechanism] = self
 
     def _assign_pytorch_function(self, mechanism, device, context):
         self.function = PytorchFunctionWrapper(mechanism.function, device, context)
@@ -1868,6 +2191,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
             f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
         for proj_wrapper in self.afferents:
+            # TEACHER_TARGET BREADCRUMB:  AUGMENT TO SUPPORT LossMechanism FOR WHICH AFFERENTS SHOULD BE DETACHED
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
@@ -1971,13 +2295,16 @@ class PytorchMechanismWrapper(torch.nn.Module):
         Enforce result to be 2d, and assign to self.output
         """
         def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
             If False, compute function for each item in variable and return results in a list
             """
             from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+            # items of variable should be treated as separate arguments
             if fct_has_mult_args:
                 res = function(*variable)
+
             # variable is ragged
             elif isinstance(variable, list):
                 res = []
@@ -1996,8 +2323,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 # function with the variable and get back a tensor.
                 res = function(variable)
 
-            # TransformFunction can reduce output to single item from
-            # multi-item input
+            # TransformFunction can reduce output to single item from multi-item input
             if isinstance(function._pnl_function, TransformFunction):
                 res = res.unsqueeze(2)
 
@@ -2165,13 +2491,35 @@ class PytorchMechanismWrapper(torch.nn.Module):
         return "PytorchWrapper for: " +self.mechanism.__repr__()
 
 
+class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
+    """Subclass that override self.function.execute to detach() tensor from TARGET input"""
+    def __init__(self, *args, **kwargs):
+        super(PytorchLossMechanismWrapper, self).__init__(*args, **kwargs)
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
+        self.input = variable
+
+        sample = variable[:,:,0,...]
+        # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
+        # sample = sample.requires_grad_()
+        assert sample.requires_grad is True, \
+            (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}' "
+             f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")
+        # Prevent propagation of error along projection from TARGET
+        #  (since it might be from an internal Node that receives other projections)
+        target = variable[:,:,1,...].detach()
+        self.output = self.function(sample, target)
+
+        return self.output
+
+
 class PytorchProjectionWrapper():
     """Wrapper for Projection in a PytorchCompositionWrapper
 
     The matrix of the wrapped `projection <PytorchProjectionWrapper.projection>` is assigned as a parameter of
     (set of connection weights in ) the PyTorch Module that, coupled with a corresponding input and `torch.matmul
     <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, provide the input to the Pytorch
-    function associated with the `Node <Composition_Node>` of the AutdiffComposition that is the `receiver
+    function associated with the `Node <Composition_Nodes>` of the AutdiffComposition that is the `receiver
     <Projection_Base.receiver>` of the wrapped Projection.
 
     .. note::

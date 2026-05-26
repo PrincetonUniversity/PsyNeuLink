@@ -13,11 +13,15 @@ import weakref
 import numpy as np
 import torch
 
+
 from typing import Union, Literal, Tuple
 
 from torch import nn
 
+import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.compositions.composition import LearningScale
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, ProjectionRegistry
 from psyneulink.core.globals.registry import register_category
@@ -32,8 +36,9 @@ from psyneulink.library.compositions.grucomposition.grucomposition import (
 )
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
     ANY, INPUT, LEARNING, NODE_VALUES, SHOW_PYTORCH, SYNCH,
@@ -53,6 +58,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
     and the Pytorch GRU Module's parameters, and return its output value.
     """
+
+    def _pytorch_mechanism_wrapper_type(self, mech):
+        return defaultdict(lambda: PytorchMechanismWrapper,
+                           {LossMechanism: PytorchLossMechanismWrapper,
+                            ProcessingMechanism: PytorchGRUMechanismWrapper}
+                           )[mech.__class__]
+
     def __init__(self,
                  composition,
                  device,
@@ -65,7 +77,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self._early_init(composition, device)
 
-        _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
+        _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, outer_creator,
+                                                                               device, context)
         gru_pytorch_node = _node_wrapper_pairs[0][1]
         torch_gru = gru_pytorch_node.function.function
         _projection_wrapper_pairs = self._instantiate_GRU_pytorch_projection_wrappers(torch_gru, device, context)
@@ -107,12 +120,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         for dummy_proj, _ in _projection_wrapper_pairs:
             dummy_proj._initialize_from_context(context, base_context)
 
-    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
+    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, outer_creator, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
         gru_mech = gru_comp.gru_mech
         pytorch_node = PytorchGRUMechanismWrapper(mechanism=gru_mech,
-                                                  composition=gru_comp,
+                                                  gru_composition=gru_comp,
                                                   component_idx=0,
+                                                  outer_creator=outer_creator,
                                                   use=[LEARNING, SHOW_PYTORCH],
                                                   dtype=self.torch_dtype,
                                                   device=device,
@@ -246,12 +260,14 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         Replace GRUComposition's nodes with gru_mech and projections to and from it.
         """
 
-        def _get_direct_proj(pnl_proj, direction:Literal['to', 'from'])-> Union[Projection, bool]:
+        def _get_direct_proj(pnl_proj, node:Mechanism_Base, direction:Literal['to', 'from'])->Union[Projection,bool]:
             """Get direct Projection to/from GRUComposition's gru_mech
             Checks for existing Projection and returns that if found; otherwise, constructs it.
             """
-            sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
-            receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
+
+            sender = node if direction == 'to' else self.composition.gru_mech
+            receiver = self.composition.gru_mech if direction == 'to' else node
+
             dir_proj = outer_comp._check_for_existing_projections(sender=sender,
                                                                   receiver=receiver,
                                                                   in_composition=ANY)
@@ -261,7 +277,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                     f"{pnl_proj.sender.name} to {self.composition.gru_mech.name} in {outer_comp.name}. ")
                 dir_proj = dir_proj[0]
             else:
-                dir_proj = MappingProjection(name="Projection to GRU COMP",
+                dir_proj = MappingProjection(name=f"Projection {direction} PYTORCH GRU NODE",
                                              sender=sender,
                                              receiver=receiver,
                                              learnable=pnl_proj.learnable,
@@ -273,23 +289,26 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
-            sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
+            sndr_mech, sndr_mech_wrapper = self._get_sndr_mech_wrapper(sndr_mech, pnl_proj)
             rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
-            direct_proj = _get_direct_proj(pnl_proj, 'to')
+            direct_proj = _get_direct_proj(pnl_proj, sndr_mech,'to')
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
-            direct_proj = _get_direct_proj(pnl_proj, 'from')
+            # TEACHER_TARGET BREADCRUMB: NEED TO GET PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
+            direct_proj = _get_direct_proj(pnl_proj, pnl_proj.receiver, 'from')
             sender_port_idx = 0
 
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         if direct_proj:
-            component_idx = list(outer_comp._inner_projections).index(pnl_proj)
+            # component_idx = list(outer_comp._inner_projections).index(pnl_proj)
+            component_idx = outer_comp_pytorch_rep._get_composition_projections(outer_comp).index(pnl_proj)
+
             proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                     pnl_proj=pnl_proj,
                                                     component_idx=component_idx,
@@ -305,8 +324,46 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
+    def _get_processing_graph(self, context):
+        """Override to use 'PYTORCH GRU NODE' instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
+        processing_graph = {self.composition.gru_mech:set()}
+        return processing_graph
+
+    def _get_roles_by_node(self, node)->list:
+        """Override to return NodeRole for 'PYTORCH GRU NODE'"""
+        if self.outer_creator:
+            outer_comp = self.outer_creator.composition
+            processing_graph = self.outer_creator._processing_graph
+        else:
+            outer_comp = procesing_graph = None
+        gru_comp = self.composition
+        PYTORCH_GRU_NODE = self.composition.gru_mech
+        if outer_comp:
+            # GRU-related nodes are LossMechanism and TARGET_MECHANISM for PYTORCH GRU NODE.
+            non_GRU_related_nodes = [n for n in outer_comp.nodes if n is not gru_comp
+                                     and NodeRole.TARGET_INPUT not in outer_comp.get_roles_by_node(n)
+                                     and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(n)]
+            if non_GRU_related_nodes:
+            # If GRUComposition is nested and there are any other Nodes in the OUTER Compostion,
+            #    determine whether GRU is an INPUT, OUTPUT or INTERNAL Node;
+            #    otherwise, drop down to return as SINGTEON
+                # PYTORCH_GRU_NODE is not an INPUT Node if it depends on any others
+                preceding_inputs = any(n for n in non_GRU_related_nodes if n in processing_graph[PYTORCH_GRU_NODE])
+                # PYTORCH_GRU_NODE is not an OUTPUT Node if any others depend on it
+                succeding_outputs = any(PYTORCH_GRU_NODE in v for k,v in processing_graph.items()
+                                        if k in non_GRU_related_nodes)
+                if preceding_inputs and succeding_outputs:
+                    return [NodeRole.INTERNAL]
+                elif preceding_inputs:
+                    return [NodeRole.OUTPUT]
+                elif succeding_outputs:
+                    return [NodeRole.INPUT]
+        # If GRUComposition is standalone, treat PYTORCH_GRU_NODE as SINGLETON
+        return [NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.TERMINAL, NodeRole.SINGLETON]
+
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
+                full_sequence_mode, sequence_lengths, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
@@ -331,7 +388,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self.composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
-        return {self.composition.gru_mech: output}
+        # TEACHER_TARGET BREADCRUMB: MAKE THIS A METHOD ON pytorchwrappers (AND DO SAME FOR pytorchwrappers.py)
+        output = output.detach().cpu().numpy()
+        output_values = convert_to_np_array(output)
+        output_values = output_values.swapaxes(0, 1)
+        self.all_output_values = output_values
+        return output[0]
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
@@ -344,7 +406,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper._copy_pnl_proj_to_torch_gru_parameter(context, self.torch_dtype)
 
-    def get_parameters_from_torch_gru(torch_gru)->Tuple[torch.Tensor]:
+    def get_parameters_from_torch_gru(torch_gru) -> Tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;
@@ -418,16 +480,18 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self,
                  mechanism,
-                 composition,
+                 gru_composition,
                  component_idx,
-                 use,
-                 dtype,
-                 device,
-                 context):
+                 outer_creator=None,
+                 use=None,
+                 dtype=None,
+                 device=None,
+                 context=None):
 
         super().__init__(mechanism=mechanism,
-                         composition=composition,
+                         composition=gru_composition,
                          component_idx=component_idx,
+                         outer_creator=outer_creator,
                          use=use,
                          dtype=dtype,
                          device=device,
@@ -435,6 +499,19 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          context=context)
 
         self._assign_GRU_pytorch_function(mechanism, device, context)
+
+        if self.composition.is_nested:
+            # Ensure that LossMechanism executes after 'PYTORCH GRU NODE'
+            # IMPLEMENTATION NOTE:
+            #     this is required because _get_execution_sets() calls Composition.scheduler to generate
+            #     the order of execution of Pytorch nodes which uses the order the Composition's graph,
+            #     and there LossMechanism is depdendent on the nested GRUComposition, and not 'PYTORCH GRU NODE'
+            #     which is only used when executing the PyTorch graph
+            outer_comp = context.composition
+            for loss_mech in [mech for mech in outer_comp.nodes if isinstance(mech, LossMechanism)]:
+                sample_mech = loss_mech.sample.owner
+                if sample_mech is mechanism:
+                    outer_comp.scheduler.add_condition(loss_mech, conditions.AfterNode(gru_composition))
 
         self.synch_with_pnl = False
 
@@ -499,12 +576,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Restore the input port dimension (flattened above) and the sequence dimension to the output
         self.output = output_hidden_state[-1][:, None, None, :]
-
-        # # Restore the input port dimension (a singleton now) to the output
-        # self.output = self.output.unsqueeze(2)
-        #
-        # # Take the final output but keep the sequence dimension intact
-        # self.output = self.output[:, -1, ...].unsqueeze(1)
 
         self.hidden_state = output_hidden_state
 
@@ -630,7 +701,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                                     # set_output_values:bool=None,
                                     # execute_mech:bool=True,
                                     context=None):
-
         if set_variable:
             assert False, \
                 f"PROGRAM ERROR: copying variables to GRUComposition from pytorch execution is not currently supported."

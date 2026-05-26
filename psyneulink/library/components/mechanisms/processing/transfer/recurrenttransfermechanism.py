@@ -1117,7 +1117,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Add autoassociative learning mechanism + related projections to composition as processing components
         # (via aux_components attr)
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
 
         learning_mechanism.condition = learning_condition
         # # MODIFIED 10/23/19 OLD:

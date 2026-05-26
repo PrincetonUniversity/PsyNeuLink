@@ -8,7 +8,7 @@ output_mech = ProcessingMechanism(name='OUTER OUTPUT')
 ctl_mech = ControlMechanism(name='CONTROL',
                             control=[(SLOPE, input_mech),
                                      (SLOPE, output_mech)])
-target = ProcessingMechanism(name='TARGET')
+target = ProcessingMechanism(name=TARGET)
 icomp = Composition(name="NESTED COMPOSITION")
 p = icomp.add_backpropagation_learning_pathway(pathway=[ia, ib])
 ocomp = Composition(name='COMPOSITION',

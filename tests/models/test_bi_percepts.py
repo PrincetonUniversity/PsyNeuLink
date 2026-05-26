@@ -87,8 +87,8 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     # make sure all nodes are both input and outputs
     # # MODIFIED 4/25/20 OLD:
     # for node in bp_comp.nodes:
-    #     bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-    #     bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+    #     bp_comp._add_required_node_role(node, pnl.NodeRole.INPUT)
+    #     bp_comp._add_required_node_role(node, pnl.NodeRole.OUTPUT)
     # MODIFIED 4/25/20 NEW:
     for node in bp_comp.nodes:
         bp_comp.require_node_roles(node, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])

@@ -87,7 +87,7 @@ The DDM Mechanism implements a general form of the decision process.
 The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
 <DDM_Modes>` that is used.  Accordingly, the default `InputPort` for a DDM takes a single scalar value as its input,
 that represents the stimulus for the decision process.  However, this can be configured using the **input_format**
-argument of the DDM's consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
+argument of the DDM's constructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
 (e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
 *SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputPort is configured to accept a 1d 2-item vector,
 and to use `Reduce` as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
@@ -335,7 +335,7 @@ The returned values are determined entirely by the set of parameters passed to i
 When the `path integration <DDM_Integration_Mode>`, function is selected, a single step of integration is conducted each
 time the Mechanism is executed. The returned values accumulate on every execution.
 
-The analytic functions return a final positon and time of the model, along with other statistics, where as the path
+The analytic functions return a final position and time of the model, along with other statistics, where as the path
 integration function returns intermediate position and time values. The two types of functions can be thought of as
 happening on different time scales: trial (analytic) and time step (path integration).
 
