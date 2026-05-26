@@ -523,6 +523,7 @@ import graph_scheduler
 import numpy as np
 
 from psyneulink._typing import Iterable, Union
+from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
@@ -1348,6 +1349,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Delete the _user_specified_args attribute, we don't need it anymore
         del self._user_specified_args
+
+        _debugger.step(
+            _debugger.BreakpointCategory.END_OF_INIT,
+            lambda: {"component": self})
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)

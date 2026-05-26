@@ -11,6 +11,7 @@
 from collections import namedtuple, OrderedDict
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
+from psyneulink import _debugger
 
 import graph_scheduler
 import numpy as np
@@ -388,7 +389,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         )
 
         self._regenerate_torch_parameter_list()
-        assert 'DEBUGGING BREAK POINT' # END OF __init__()
+        _debugger.step(
+            _debugger.BreakpointCategory.PYTORCH_STEP,
+            lambda: {"wrapper": self,
+                     "composition": self.composition})
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""

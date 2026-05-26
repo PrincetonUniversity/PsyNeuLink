@@ -325,6 +325,7 @@ import numpy as np
 import toposort
 
 from psyneulink._typing import Iterable, Optional, Set, Union
+from psyneulink import _debugger
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
@@ -1831,7 +1832,12 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             compilation_sync=compilation_sync,
         )
 
-        assert 'DEBUGGING BREAK POINT: PARAMETER SETTING'
+        _debugger.step(
+            _debugger.BreakpointCategory.PARAMETER_SETTING,
+            lambda: {"parameter": self,
+                     "owner": getattr(self, '_owner', None),
+                     "value": value,
+                     "context": context})
 
         return value
 
