@@ -65,7 +65,7 @@ from psyneulink.core.globals.utilities import (
     is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import (
-    Parameter, ParameterNoValueError, check_user_specified, copy_parameter_value)
+    Parameter, ParameterNoValueError, FunctionParameter, check_user_specified, copy_parameter_value)
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
@@ -2295,11 +2295,20 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 #     return False
 
 
-def _memory_getter(owning_component=None, context=None):
-    return owning_component.scores_function.parameters.matrix._get(context).T
+# def _memory_getter(owning_component=None, context=None):
+#     return owning_component.scores_function.parameters.matrix._get(context).T
 
-def _memory_setter(value, owning_component=None, context=None):
-    return owning_component.scores_function.parameters.matrix._set(value.T, context)
+# def _memory_setter(value, owning_component=None, context=None):
+#     owning_component.scores_function.parameters.matrix._set(value.T, context)
+#     return value
+
+# def _normalize_memories_getter(owning_component=None, context=None):
+#     return owning_component.parameters.normalize._get(context)
+
+# def _normalize_memories_setter(value, owning_component=None, context=None):
+#     owning_component.scores_function.parameters.normalize._set(value, context)
+#     return value
+
 
 ACCESS_MEMORY = 'ACCESS_MEMORY'
 COMPUTE_SCORES = 'COMPUTE_SCORES'
@@ -2341,11 +2350,23 @@ class MatrixMemory(TransformFunction): #
     class Parameters(TransformFunction.Parameters):
         variable = Parameter(np.array([[0],[0],[0]]), read_only=True, pnl_internal=True,
                              constructor_argument='default_variable', mdf_name='A')
-        memory = Parameter(None, mdf_name='B')
+        memory = Parameter(None, mdf_name='B',
+                           # setter = _memory_setter
+                           )
         # memory = FunctionParameter(function_name='scores_function',
         #                            function_parameter_name=MATRIX,
+        # EM2 BREADCRUMB: MAKE THIS FunctionParameter??
         scores_metric = Parameter(DOT_PRODUCT, stateful=False)
-        normalize_memories = Parameter(True)
+        normalize_memories = Parameter(True,
+                                       # getter = _normalize_memories_getter,
+                                       # setter = _normalize_memories_setter
+                                       )
+        # EM2 BREADCRUMB: MAKE THIS FunctionParameter??
+        # normalize_memories = FunctionParameter(True,
+        #                                        function_name='scores_function',
+        #                                        function_parameter_name='normalize',
+        #                                        primary=True,
+        #                                        stateful=True)
         store = Parameter(False)
         decay_rate = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2470,16 +2491,21 @@ class MatrixMemory(TransformFunction): #
             scores_template = norms_template = np.zeros(len(memory))
             return query, scores_template, norms_template
 
-        # # MODIFIED EM2 OLD:
-        # scores = self.scores_function(query)
-        # MODIFIED EM2 NEW:
         try:
             scores = self.scores_function(query, context)
         except ParameterNoValueError:
+            # IMPLEMENTATION NOTE:
+            #   This is needed since _comput_scores() is called before _access_memory(),
+            #   so there are not yet entries in self.scores_function for matrix or normalize in the execution context;
+            #   therefore, call to self.scores_function() above raises the ParameterNoValueError.
             self.scores_function.parameters.matrix._set(self.memory.T, context)
             self.scores_function.parameters.normalize._set(self.normalize_memories, context)
+            # # For assignment to score_function (by way of setters)
+            # # EM2 BREADCRUMB: NOT CLEAR WHY, GIVEN SETTERS IT IS NOT ALREADY BEING SET
+            # #                 (ARE THEY GETTING ASSIGNED IN CALL TO EXECUTE?
+            # self.parameters.memory._set(memory, context)
+            # self.parameters.normalize_memories._set(self.normalize_memories, context)
             scores = self.scores_function(query, context)
-        # MODIFIED EM2 END
 
         norms = np.linalg.norm(memory, axis=1)
 
@@ -2503,10 +2529,8 @@ class MatrixMemory(TransformFunction): #
             if decay_rate >= 0.0:
                 memory *= (1-decay_rate)
             memory[weakest_memory_idx] = query
-            self.parameters.memory._set(memory, context, override=True)
-            # self.scores_function.parameters.matrix._set(memory, context, override=True)
+            # self.parameters.memory._set(memory, context, override=True)
             self.scores_function.parameters.matrix._set(self.memory.T, context)
-
 
         return retrieved, scores
 

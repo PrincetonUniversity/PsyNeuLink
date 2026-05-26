@@ -65,6 +65,12 @@ DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
 DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 
+# # def _normalize_memories_getter(owning_component=None, context=None):
+# #     return owning_component.parameters.normalize._get(context)
+#
+# def _normalize_memories_setter(value, owning_component=None, context=None):
+#     return owning_component.parameters.normalize_memories._set(value, context)
+
 
 class ExternalMemoryMechanismError(EpisodicMemoryMechanismError):
     pass
@@ -115,21 +121,40 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
 
     componentName = "EM_FIELD_MEMORY"
 
+
     class Parameters(EpisodicMemoryMechanism.Parameters):
 
         variable = Parameter([[0,0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(MatrixMemory, stateful=False, loggable=False)
         # EM2 BREADCRUMB: MAKE THESE SHARED PARAMETERS WITH function
         # memory = FunctionParameter(None, function_parameter_name='initializer')
-        # scores_metric=scores_metric,
-        # normalize_memories: bool = True,
+        scores_metric = FunctionParameter(DOT_PRODUCT,
+                                          function_name='function',
+                                          function_parameter_name='scores_metric',
+                                          primary=True,
+                                          stateful=False)
+        normalize_memories = Parameter(True, stateful=True, loggable=True)
+        # normalize_memories = FunctionParameter(True,
+        #                                        # getter = _normalize_memories_getter,
+        #                                        # setter = _normalize_memories_setter,
+        #                                        function_name='function',
+        #                                        function_parameter_name='normalize_memories',
+        #                                        primary=True,
+        #                                        # modulable=True,
+        #                                        stateful=True)
+        # decay_rate = Parameter(0.0, modulable=True, stateful=True)
+        decay_rate = FunctionParameter(0.0,
+                                       function_name='function',
+                                       function_parameter_name='decay_rate',
+                                       primary=True,
+                                       modulable=True,
+                                       stateful=True)
         storage_prob = FunctionParameter(1.0,
                                          function_name='function',
                                          function_parameter_name='storage_prob',
                                          primary=True,
                                          modulable=True,
                                          stateful=True)
-        decay_rate = Parameter(0.0, modulable=True, stateful=True)
         # Used by Mechanism._execute to ensure that storage occurs after retrieval
         access_condition = Parameter(None, stateful=False, loggable=False)
 
