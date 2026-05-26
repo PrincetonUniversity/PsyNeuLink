@@ -3180,6 +3180,7 @@ from beartype import beartype
 
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
+from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
@@ -12663,7 +12664,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
-            assert 'DEBUGGING BREAK POINT: BEGINNING OF TRIAL EXECUTION'
+            _debugger.step(
+                _debugger.BreakpointCategory.BEGINNING_OF_TRIAL,
+                lambda: {"trial_num": execution_scheduler.get_clock(context).time.trial,
+                         "scheduler": execution_scheduler,
+                         "context": context})
 
             for next_execution_set in execution_sets:
 
@@ -12676,7 +12681,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # have to run call_after_pass before the next PASS (here) or after this code block (see call to
                 # call_after_pass below)
 
-                assert 'DEBUGGING BREAK POINT: EXECUTION_SET EXECUTION'
+                _debugger.step(
+                    _debugger.BreakpointCategory.EXECUTION_SET,
+                    lambda: {"execution_set": next_execution_set,
+                             "scheduler": execution_scheduler,
+                             "context": context})
 
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
@@ -12832,11 +12841,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if self.is_nested and node in input_nodes:
                                     for port in node.input_ports:
                                         port._update(context=context)
+                                _debugger.step(
+                                    _debugger.BreakpointCategory.INPUTS_TO_NODE,
+                                    lambda node=node, execution_set=next_execution_set, mech_context=mech_context:
+                                        {"node": node,
+                                         "execution_set": execution_set,
+                                         "scheduler": execution_scheduler,
+                                         "context": mech_context})
                                 node.execute(context=mech_context,
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert 'DEBUGGING BREAK POINT: NODE EXECUTION'
+                                _debugger.step(
+                                    _debugger.BreakpointCategory.NODE_EXECUTION,
+                                    lambda node=node, execution_set=next_execution_set, mech_context=mech_context:
+                                        {"node": node,
+                                         "execution_set": execution_set,
+                                         "scheduler": execution_scheduler,
+                                         "context": mech_context})
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
@@ -13050,6 +13072,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        context=context)
 
             # UPDATE TIME and RETURN ***********************************************************************************
+
+            _debugger.step(
+                _debugger.BreakpointCategory.END_OF_TRIAL,
+                lambda: {"trial_num": execution_scheduler.get_clock(context).time.trial,
+                         "scheduler": execution_scheduler,
+                         "context": context,
+                         "outputs": self.get_output_values(context)})
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 

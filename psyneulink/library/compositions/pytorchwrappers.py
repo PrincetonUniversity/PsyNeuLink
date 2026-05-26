@@ -11,6 +11,7 @@
 from h5py.h5f import namedtuple
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
+from psyneulink import _debugger
 
 import graph_scheduler
 import numpy as np
@@ -335,7 +336,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         )
 
         self._regenerate_torch_parameter_list()
-        assert 'DEBUGGING BREAKPOINT'
+        _debugger.step(
+            _debugger.BreakpointCategory.PYTORCH_STEP,
+            lambda: {"wrapper": self,
+                     "composition": self.composition})
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
