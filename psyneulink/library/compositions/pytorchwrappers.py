@@ -2717,7 +2717,7 @@ class PytorchFunctionWrapper(torch.nn.Module):
     def __init__(self, pnl_function, device, context=None):
         super().__init__()
         self.name = f"PytorchFunctionWrapper[{pnl_function.name}]"
-        self._context = context
+        self._context = contextY
         self.function = _get_pytorch_function(pnl_function, device, context)
         if pnl_function is not self.function:
             self._pnl_function = pnl_function

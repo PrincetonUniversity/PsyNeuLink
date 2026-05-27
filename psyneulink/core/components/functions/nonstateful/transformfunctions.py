@@ -2491,9 +2491,8 @@ class MatrixMemory(TransformFunction): #
 
         return memory, scores, norms
 
-    def _compute_scores(self, variable, context):
+    def _compute_scores(self, query, context):
 
-        query = variable
         memory = self.parameters.memory._get(context)
 
         # If this is an initialization run, just return query and zeros for score and norms
@@ -2556,6 +2555,20 @@ class MatrixMemory(TransformFunction): #
                 filler = np.zeros(len(self.parameters.memory._get(context)))
                 return retrieved_value, combined_scores, filler # Return stored item, combined_scores, and filler for norms
         return func
+
+    def _compute_scores_pytorch_fct(self, query, context=None):
+        memory = self.parameters.memory._get(context)
+        # EM2 BREADCRUMB: MORE HERE
+        return scores, norms
+
+    def _retrieve_memory_pytorch_fct(self, query, scores, context=None):
+        memory = self.parameters.memory._get(context)
+        retrieved = torch.matmul(scores, memory)
+        return retrieved
+
+    def _store_memory_pytorch_fct(self, item_to_store, weakest_memory_idx, context=None):
+        # EM2 BREADCRUMB: MORE HERE
+        pass
 
 
 class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------

@@ -54,21 +54,22 @@ class PytorchEMCompositionWrapper2(PytorchCompositionWrapper):
         # num_fields = len(pnl_storage_mech.input_ports)
         # num_learning_signals = len(pnl_storage_mech.learning_signals)
         # num_match_fields = num_learning_signals - num_fields
+        #
+        # # ProjectionWrappers for match nodes
+        # learning_signals_for_match_nodes = pnl_storage_mech.learning_signals[:num_match_fields]
+        # pnl_match_projs = [match_node_learning_signal.efferents[0].receiver.owner
+        #                    for match_node_learning_signal in learning_signals_for_match_nodes]
+        # self.match_projection_wrappers = [self.projections_map[pnl_match_proj]
+        #                                   for pnl_match_proj in pnl_match_projs]
+        #
+        # # ProjectionWrappers for retrieve nodes
+        # learning_signals_for_retrieve_nodes = pnl_storage_mech.learning_signals[num_match_fields:]
+        # pnl_retrieve_projs = [retrieve_node_learning_signal.efferents[0].receiver.owner
+        #                       for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
+        # self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
+        #                                      for pnl_retrieve_proj in pnl_retrieve_projs]
+        #
         # MODIFIED EM2 END
-
-        # ProjectionWrappers for match nodes
-        learning_signals_for_match_nodes = pnl_storage_mech.learning_signals[:num_match_fields]
-        pnl_match_projs = [match_node_learning_signal.efferents[0].receiver.owner
-                           for match_node_learning_signal in learning_signals_for_match_nodes]
-        self.match_projection_wrappers = [self.projections_map[pnl_match_proj]
-                                          for pnl_match_proj in pnl_match_projs]
-
-        # ProjectionWrappers for retrieve nodes
-        learning_signals_for_retrieve_nodes = pnl_storage_mech.learning_signals[num_match_fields:]
-        pnl_retrieve_projs = [retrieve_node_learning_signal.efferents[0].receiver.owner
-                              for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
-        self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
-                                             for pnl_retrieve_proj in pnl_retrieve_projs]
 
         # IMPLEMENTATION NOTE:
         #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition is nested,

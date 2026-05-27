@@ -150,21 +150,10 @@ RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
 
 
-class EMComposition2Error(CompositionError):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
-
-
-class FieldType(Enum):
-    KEY = 0
-    VALUE = 1
-
-
 def _memory_getter(owning_component=None, context=None):
-    """Return EMComposition memory as a 3d object array: entries x fields x field_values."""
+    """Return EMComposition memory as a 3d object array: entries x fields x field_values.
+    These are derived from the memory attribute of the field_memory_node of each field.
+    """
     if owning_component is None or owning_component.is_initializing:
         return None
 
@@ -221,13 +210,26 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1) -> float:
     v = np.squeeze(v)
+    # # MODIFIED EM2 OLD:
+    # gain = scale * (base +
+    #                 (entropy_weighting *
+    #                  np.log(
+    #                      -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
+    # return gain
+    # MODIFIED EM2 NEW:
     logistic = 1 / (1 + np.exp(-1 * v))
     entropy = -1 * np.sum(logistic * np.log(logistic))
     return scale * (base + entropy_weighting * np.log(entropy))
+    # MODIFIED EM2 END
+
+
+class FieldType(Enum):
+    KEY = 0
+    VALUE = 1
 
 
 class Field:
-    """Object that contains information about a field in an EMComposition's memory."""
+    """Object that contains information about a field in an EMComposition2's memory."""
 
     name = None
 
@@ -309,8 +311,38 @@ class Field:
         return self.memory_node.memory
 
 
+class EMComposition2Error(CompositionError):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
 class EMComposition2(AutodiffComposition):
     """
+        EMComposition(                      \
+        memory_template=[[0],[0]],      \
+        memory_fill=0,                  \
+        memory_capacity=None,           \
+        fields=None,                    \
+        field_names=None,               \
+        field_weights=None,             \
+        learn_field_weights=False,      \
+        learning_rate=True,             \
+        normalize_field_weights=True,   \
+        concatenate_queries=False,      \
+        normalize_memories=True,        \
+        softmax_gain=THRESHOLD,         \
+        storage_prob=1.0,               \
+        store_on_optimization=FIRST,    \
+        memory_decay_rate=AUTO,         \
+        enable_learning=True,           \
+        target_fields=None,             \
+        use_gating_for_weighting=False, \
+        name="EM_Composition"           \
+        )
+
     Refactored EMComposition.
 
     This version replaces:
@@ -337,14 +369,123 @@ class EMComposition2(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers import (
-            PytorchEMCompositionWrapper,
+        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers2 import (
+            PytorchEMCompositionWrapper2,
             PytorchEMMechanismWrapper,
         )
-        pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+        pytorch_composition_wrapper_type = PytorchEMCompositionWrapper2
         pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper
 
     class Parameters(AutodiffComposition.Parameters):
+        """
+            Attributes
+            ----------
+
+                concatenate_queries
+                    see `concatenate_queries <EMComposition.concatenate_queries>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                field_names
+                    see `field_names <EMComposition.field_names>`
+
+                    :default value: None
+                    :type: ``list``
+
+                field_weights
+                    see `field_weights <EMComposition.field_weights>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
+                learn_field_weights
+                    see `learn_field_weights <EMComposition.learn_field_weights>`
+
+                    :default value: True
+                    :type: ``numpy.ndarray``
+
+                learning_rate
+                    see `learning_results <EMComposition.learning_rate>`
+
+                    :default value: []
+                    :type: ``list``
+
+                memory
+                    see `memory <EMComposition.memory>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
+                memory_capacity
+                    see `memory_capacity <EMComposition.memory_capacity>`
+
+                    :default value: 1000
+                    :type: ``int``
+
+                memory_decay_rate
+                    see `memory_decay_rate <EMComposition.memory_decay_rate>`
+
+                    :default value: 0.001
+                    :type: ``float``
+
+                memory_template
+                    see `memory_template <EMComposition.memory_template>`
+
+                    :default value: np.array([[0],[0]])
+                    :type: ``np.ndarray``
+
+                normalize_field_weights
+                    see `normalize_field_weights <EMComposition.normalize_field_weights>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                normalize_memories
+                    see `normalize_memories <EMComposition.normalize_memories>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                purge_by_field_weights
+                    see `purge_by_field_weights <EMComposition.purge_by_field_weights>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                random_state
+                    see `random_state <NormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+                softmax_gain
+                    see `softmax_gain <EMComposition.softmax_gain>`
+                    :default value: 1.0
+                    :type: ``float, ADAPTIVE or CONTROL``
+
+                softmax_choice
+                    see `softmax_choice <EMComposition.softmax_choice>`
+                    :default value: WEIGHTED_AVG
+                    :type: ``keyword``
+
+                softmax_threshold
+                    see `softmax_threshold <EMComposition.softmax_threshold>`
+                    :default value: .001
+                    :type: ``float``
+
+                storage_prob
+                    see `storage_prob <EMComposition.storage_prob>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                store_on_optimization
+                    see `store_on_optimization <EMComposition.store_on_optimization>`
+
+                    :default value: FIRST
+                    :type: ``str``
+        """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0], [0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
