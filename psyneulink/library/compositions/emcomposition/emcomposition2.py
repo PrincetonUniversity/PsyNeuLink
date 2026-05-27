@@ -1061,11 +1061,10 @@ class EMComposition2(AutodiffComposition):
 
         if softmax_choice == ARG_MAX:
             softmax_choice = ARG_MAX_INDICATOR
-        adapt_entropy_weighting = .95
         softmax_function = SoftMax(gain=softmax_gain,
                                    mask_threshold=softmax_threshold,
                                    output=softmax_choice,
-                                   adapt_entropy_weighting=adapt_entropy_weighting)
+                                   adapt_entropy_weighting=.95)
 
         # Construct combined_scores_function
         def function(variable):
@@ -1079,14 +1078,16 @@ class EMComposition2(AutodiffComposition):
 
         def _gen_pytorch_fct(device, context):
             """Return pytorch version of function"""
-            # EM2 BREADCRUMB: Need to set these values in context since init in PytorchWrappers is called in context
-            softmax_function.parameters.gain._set(np.array(np.array(softmax_gain)), context)
-            softmax_function.parameters.mask_threshold._set(np.array(np.array(softmax_threshold)), context)
-            softmax_function.parameters.output._set(np.array(softmax_choice), context)
-            # BREADCRUMB: THIS PARAM HAS A STRING VALUE:  TRYING TO SET IT CAUSES NP.ARRAY ERROR
-            #             BUT NOT SETTING IT CAUSES CONTEXT ERROR
-            softmax_function.parameters.adapt_entropy_weighting._set(np.array(adapt_entropy_weighting), context)
-            softmax_func = softmax_function._gen_pytorch_fct(device, context)
+            local_context = context
+            # EM2 BREADCRUMB: CONTEXT execution_id NEEDS TO BE SET TO None,
+            #                 SINCE _gen_pytorch_fct IS CALLED IN execution context
+            #                 BUT SoftMax Function WAS CONSTRUCTED DURING __init__
+            #                 AND SO ITS PARAMETERS HAVE NO VALUES FOR execution_id
+            #                 ?? COULD BE DUE TO ORDER OF CALLS TO _gen_pytorch_fct IN PytorchFunctionWrapper??
+            #                 POTENTIAL PROBLEM: WHEN FUNCTION IS CALLED IN EXECUTION CONTEXT,
+            #                    WILL SOFTMAX FUNCTION PARAMS HAVE VALUES FOR CURRENT CONTEXT OR JUST USE None?
+            local_context.execution_id = None
+            softmax_func = softmax_function._gen_pytorch_fct(device, local_context)
             def func(variable):
                 return softmax_func(variable[0]), int(torch.argmin(variable[1]))
             return func
