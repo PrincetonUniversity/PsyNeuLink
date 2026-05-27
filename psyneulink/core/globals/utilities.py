@@ -143,7 +143,7 @@ from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_MET
 
 
 
-__all__ = ([
+__all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'counts',
     'get_class_attributes', 'extended_array_equal',
@@ -163,8 +163,10 @@ __all__ = ([
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
     'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
-    'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes', 'PNLStrEnum'
-])
+    'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
+    'PNLStrEnum',
+]
+
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
