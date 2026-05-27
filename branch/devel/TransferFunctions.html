@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.18.0.0+577.gdfcc15ea7 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.18.0.0+580.g7567e9ee8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+577
+                  0.18.0.0+580
                 </div>
               
             
@@ -1877,6 +1877,9 @@ this only applies if <a class="reference internal" href="#psyneulink.core.compon
 (see method for details).</p></li>
 <li><p><strong>output</strong> (<em>ALL</em><em>, </em><em>ARG_MAX</em><em>, </em><em>ARG_MAX_INDICATOR</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> for details).</p></li>
+<li><p><strong>note::</strong> (<em>..</em>) – When executing in PyTorch mode (e.g., an AutodiffComposition or a Composition run with
+<code class="docutils literal notranslate"><span class="pre">execution_mode=ExecutionMode.PyTorch</span></code>), the SoftMax <code class="docutils literal notranslate"><span class="pre">output</span></code> options are honored with parity to the
+Python path, including <em>ARG_MAX</em>, <em>ARG_MAX_INDICATOR</em>, <em>MAX_VAL</em>, <em>MAX_INDICATOR</em>, and <em>PROB</em>/<em>PROB_INDICATOR</em>.</p></li>
 <li><p><strong>per_item</strong> (<em>boolean : default True</em>) – for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -3603,7 +3606,7 @@ Use <code class="xref any docutils literal notranslate"><span class="pre">Hypers
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=02ff3102"></script>
+         <script src="_static/documentation_options.js?v=91c73018"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

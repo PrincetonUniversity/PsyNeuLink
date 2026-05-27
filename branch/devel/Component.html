@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.18.0.0+577.gdfcc15ea7 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.18.0.0+580.g7567e9ee8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+577
+                  0.18.0.0+580
                 </div>
               
             
@@ -580,7 +580,7 @@ input to the Component if none is provided on execution (see <code class="xref a
 <li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable</em><em> of </em><em>tuple</em><em> or </em><em>int : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it is checked for
 compatibility against <strong>input_shapes</strong> (see
-<a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a> for additonal details).</p></li>
+<a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a> for additional details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</p></li>
@@ -1294,6 +1294,13 @@ this Component</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.full_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">full_name</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.full_name" title="Link to this definition">¶</a></dt>
+<dd><p>Stub to allow override by subclasses (such as port)
+Allows use blind to whether subclass has a full_name attribute or not, providing default if not</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.loggable_items">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.loggable_items" title="Link to this definition">¶</a></dt>
 <dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContextFlags</span></code></a>.
@@ -1510,6 +1517,7 @@ constructor string</p>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component._receiver_ports"><code class="docutils literal notranslate"><span class="pre">Component._receiver_ports</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.get_afferents"><code class="docutils literal notranslate"><span class="pre">Component.get_afferents()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.get_efferents"><code class="docutils literal notranslate"><span class="pre">Component.get_efferents()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.full_name"><code class="docutils literal notranslate"><span class="pre">Component.full_name</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items"><code class="docutils literal notranslate"><span class="pre">Component.loggable_items</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.set_log_conditions"><code class="docutils literal notranslate"><span class="pre">Component.set_log_conditions()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.set_delivery_conditions"><code class="docutils literal notranslate"><span class="pre">Component.set_delivery_conditions()</span></code></a></li>
@@ -1543,7 +1551,7 @@ constructor string</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=02ff3102"></script>
+         <script src="_static/documentation_options.js?v=91c73018"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

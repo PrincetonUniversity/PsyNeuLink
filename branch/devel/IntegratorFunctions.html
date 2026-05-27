@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.18.0.0+577.gdfcc15ea7 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.18.0.0+580.g7567e9ee8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+577
+                  0.18.0.0+580
                 </div>
               
             
@@ -605,7 +605,7 @@ for details).</p></li>
 <li><p><strong>noise</strong> (<em>float : default 0.0</em>) – specifies a value by which to scale the normally distributed random value added to the integral in each call to
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).</p></li>
 <li><p><strong>offset</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies constant value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
-if it’s absolute value is below <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>;
+if its absolute value is below <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.offset" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> for details).</p></li>
 <li><p><strong>starting_value</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array:  default 0.0</em>) – specifies the starting value for the integration process; if it is a list or array, it must be the
@@ -678,7 +678,7 @@ corresponding elements of <a class="reference internal" href="#psyneulink.core.c
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.offset">
 <span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.offset" title="Link to this definition">¶</a></dt>
 <dd><p>constant value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
-if it’s absolute value is below <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>.
+if its absolute value is below <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>.
 If <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is an array and offset is a float, offset is applied
 to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
 the corresponding elements of the integral (i.e., Hadamard addition). Serves as <em>ADDITIVE_PARAM</em> for
@@ -2359,7 +2359,7 @@ If it is a list or array, it must be the same length as <a class="reference inte
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.leak" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.leak"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">leak</span></code></a> for details).</p></li>
 <li><p><strong>noise</strong> (<em>float</em><em>, </em><em>function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
-(see <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> for additonal details).</p></li>
+(see <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> for additional details).</p></li>
 <li><p><strong>offset</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies a constant value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.offset" title="psyneulink.core.components.functions.stateful.integratorfunctions.LeakyCompetingIntegrator.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> for details).</p></li>
@@ -3520,7 +3520,7 @@ _instantiate_attributes_before_function below</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=02ff3102"></script>
+         <script src="_static/documentation_options.js?v=91c73018"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

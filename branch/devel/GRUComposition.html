@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GRUComposition &mdash; PsyNeuLink 0.18.0.0+577.gdfcc15ea7 documentation</title>
+  <title>GRUComposition &mdash; PsyNeuLink 0.18.0.0+580.g7567e9ee8 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+577
+                  0.18.0.0+580
                 </div>
               
             
@@ -245,15 +245,13 @@
 which uses a set of <a class="reference internal" href="GatingMechanism.html"><span class="doc">GatingMechanisms</span></a> to implement gates that  modulate the flow of information
 through its <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">hidden_layer_node</span></code></a>. This implements the exact same computations as
 a PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, which is used to implement
-it when its <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code> method is called.  When it is executed in Python model, it functions
-in the same way as a <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html">GRUCell</a> module, processing
-its input one stimulus at a time.  However, when used for <a class="reference internal" href="#grucomposition-learning"><span class="std std-ref">learning</span></a>, it is executed as
-a PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, so that it can used to
-process an entire sequence of stimuli at once, and learn to predict the next stimulus in the sequence.</p>
+it when its <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code> method is called. When it is executed in <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-python"><span class="std std-ref">Python mode</span></a>, it functions in the same way as a <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html">GRUCell</a> module, processing its input one stimulus
+at a time.  However, when used for <a class="reference internal" href="#grucomposition-learning"><span class="std std-ref">learning</span></a>, it is executed as a PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, so that it can used to process an entire
+sequence of stimuli at once, and learn to predict the next stimulus in the sequence.</p>
 </section>
 <section id="creation">
 <span id="grucomposition-creation"></span><h2>Creation<a class="headerlink" href="#creation" title="Link to this heading">¶</a></h2>
-<p>An GRUComposition is created by calling its constructor.  When it’s <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code>
+<p>An GRUComposition is created by calling its constructor.  When its <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code>
 method is called, it automatically creates a PytorchGRUCompositionWrapper that implements the GRUComposition
 using the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, that is trained
 using PyTorch. Its constructor takes the following arguments that are in addition to or handled differently
@@ -276,7 +274,7 @@ are specified.</p>
 <strong>learning_rate</strong> argument of a call to the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the GRUComposition or the
 AutodiffComposition within which the GRUComposition is nested (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates</span></a> for details
 of specification).  It can be assigned any of the following values (see <code class="xref any docutils literal notranslate"><span class="pre">eeComposition_Learning_Rate_Specification</span></code>
-for additonal details of specification):</p>
+for additional details of specification):</p>
 <blockquote id="grucomposition-learning-rate-specification">
 <div><ul class="simple">
 <li><p><em>int or float</em>: the value is used as the default learning_rate for the GRUComposition, which is assigned to any
@@ -291,7 +289,7 @@ or the AutodiffComposition within which it is nested.</p></li>
 </ul>
 <ul id="grucomposition-individual-learning-rates">
 <li><p><em>dict</em>: {Projection or Projection name: learning_rate}; used to specify parameter-specific learning rates,
-which supercede the value of the GRUCompositon’s <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>. Keys of the
+which supercede the value of the GRUComposition’s <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>. Keys of the
 dict must be one of the keys below that reference parameters of the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module; values specify their learning_rates
 (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates</span></a> for additional information):</p>
 <ul class="simple">
@@ -991,6 +989,12 @@ bias parameter of the PyTorch <a class="reference external" href="https://pytorc
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._node_roles_manager_type">
+<span class="sig-name descname"><span class="pre">_node_roles_manager_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._node_roles_manager_type" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">GRUNodeRolesManager</span></code></p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchGRUCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_components=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper" title="Link to this definition">¶</a></dt>
@@ -1010,8 +1014,25 @@ Replace GRUComposition’s nodes with gru_mech and projections to and from it.</
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_processing_graph">
+<span class="sig-name descname"><span class="pre">_get_processing_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_processing_graph" title="Link to this definition">¶</a></dt>
+<dd><p>Override to use ‘PYTORCH GRU NODE’ instead of PNL nodes for PytorchShowGraph of standalone GRUComposition</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_roles_by_node">
+<span class="sig-name descname"><span class="pre">_get_roles_by_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_roles_by_node" title="Link to this definition">¶</a></dt>
+<dd><p>Override to return NodeRole for ‘PYTORCH GRU NODE’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers">
-<span class="sig-name descname"><span class="pre">_instantiate_GRU_pytorch_mechanism_wrappers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gru_comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_GRU_pytorch_mechanism_wrappers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gru_comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers" title="Link to this definition">¶</a></dt>
 <dd><p>Instantiate PytorchMechanismWrapper for GRU Node</p>
 </dd></dl>
 
@@ -1036,7 +1057,7 @@ to the corresponding part of the tensor in the parameter of the Pytorch GRU modu
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_sequence_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_in_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_sequence_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Forward method of the model for PyTorch modes</p>
 <p>This is called only when GRUComposition is run as a standalone Composition.
 Otherwise, the node.execute() method is called directly (i.e., it is treated as a single node).
@@ -1078,7 +1099,7 @@ Format tensors:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchGRUMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchGRUMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gru_composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper" title="Link to this definition">¶</a></dt>
 <dd><p>Wrapper for Pytorch GRU Node
 Handling of hidden_state: uses GRUComposition’s HIDDEN_NODE.value to cache state of hidden layer:
 - gets input to function for hidden state from GRUComposition’s HIDDEN_NODE.value
@@ -1139,6 +1160,13 @@ Note: if execute_mech=True requires that variable=True</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._is_in_composition">
+<span class="sig-name descname"><span class="pre">_is_in_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._is_in_composition" title="Link to this definition">¶</a></dt>
+<dd><p>Return True if component is in Composition, including any nested Compositions if <strong>nested</strong> is True
+Include input_CIM and output_CIM for self and all nested Compositions</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights">
 <span class="sig-name descname"><span class="pre">set_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights" title="Link to this definition">¶</a></dt>
 <dd><p>Set weights for Projections to input_node and hidden_layer_node.</p>
@@ -1146,33 +1174,9 @@ Note: if execute_mech=True requires that variable=True</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways">
-<span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
-</dd>
-</dl>
-<p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
-Flattens nested compositions:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>only includes the Projections in outer Composition to/from the CIMs of the nested Composition
-(i.e., to input_CIMs and from output_CIMs) – the ones that should be learned;</p></li>
-<li><p>excludes Projections from/to CIMs in the nested Composition
-(from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
-</ul>
-<p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
-</div></blockquote>
-<p>Returns list of target nodes for each pathway</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway">
-<span class="sig-name descname"><span class="pre">_get_pytorch_backprop_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway" title="Link to this definition">¶</a></dt>
-<dd><p>Breadth-first search from input_node to find all input -&gt; output pathways
-Uses queue(node, composition) to traverse all nodes in the graph
-IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
-Return a list of all pathways from input_node -&gt; output node</p>
+<span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
+<dd><p>Override to construct only TARGET_MECHANISM and LossMechanism for GRUComposition.
+Return a list containing TARGET_MECHANISM, that needs to be referenced in inputs argument of learn()</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
@@ -1181,23 +1185,17 @@ Return a list of all pathways from input_node -&gt; output node</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode">
-<span class="sig-name descname"><span class="pre">_get_execution_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode" title="Link to this definition">¶</a></dt>
-<dd><p>Parse execution_mode argument and return a valid execution mode for the learn() method</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency">
-<span class="sig-name descname"><span class="pre">_add_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency" title="Link to this definition">¶</a></dt>
-<dd><p>Override to implement direct pathway through gru_mech for pytorch backprop pathway.
-Add direct_proj_in and direct_proj_out to self._pytorch_projections
-Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()._get_pytorch_backprop_pathway()</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_target_nodes">
-<span class="sig-name descname"><span class="pre">_identify_target_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_target_nodes" title="Link to this definition">¶</a></dt>
-<dd><p>Recursively call all nested AutodiffCompositions to assign TARGET nodes for learning</p>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway">
+<span class="sig-name descname"><span class="pre">_get_pytorch_backprop_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway" title="Link to this definition">¶</a></dt>
+<dd><p>Breadth-first search from input_node to find all input -&gt; &lt;any OUTPUT Node&gt; pathways
+Uses queue((node, afferent Projection, composition) to traverse all nodes in the graph
+IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
+Return a list of all pathways from input_node -&gt; any OUTPUT Node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1210,6 +1208,55 @@ Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.add_projection">
 <span class="sig-name descname"><span class="pre">add_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.add_projection" title="Link to this definition">¶</a></dt>
 <dd><p>Override if called from command line to disallow modification of GRUComposition</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency">
+<span class="sig-name descname"><span class="pre">_add_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">afferent_proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency" title="Link to this definition">¶</a></dt>
+<dd><p>Override to implement direct pathway through gru_mech for pytorch backprop pathway.
+Add direct_proj_in and direct_proj_out to self._pytorch_projections
+Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()._get_pytorch_backprop_pathway()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode">
+<span class="sig-name descname"><span class="pre">_get_execution_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode" title="Link to this definition">¶</a></dt>
+<dd><p>Parse execution_mode argument and return a valid execution mode for the learn() method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_output_nodes">
+<span class="sig-name descname"><span class="pre">_identify_output_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_output_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>Recursively call all nested AutodiffCompositions to assign TARGET_MECHANISMs for learning</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._handle_illegal_sample_target_specs_from_learn">
+<span class="sig-name descname"><span class="pre">_handle_illegal_sample_target_specs_from_learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._handle_illegal_sample_target_specs_from_learn" title="Link to this definition">¶</a></dt>
+<dd><p>Override to remove</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.compute_loss">
+<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pytorch_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.compute_loss" title="Link to this definition">¶</a></dt>
+<dd><p>Override to directly compute loss
+Invoked when GRUComposition is run as a standalone Composition, in which case:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>TARGET_MECHANISM <em>is</em> constructed (and included in GRUComposition) to accept targets specified in learn()</p></li>
+<li><p>LossMechanism is <em>not</em> constructed</p></li>
+<li><p>loss is computed directly using torch loss function specified by self.loss_spec</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.num_learnable_pathways">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_learnable_pathways</span></span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.num_learnable_pathways" title="Link to this definition">¶</a></dt>
+<dd><p>Override to return just 1,
+Since there is only one pathway through which learning can occur in GRUComposition:
+the direct pathway through the GRU mechanism (i.e., self.gru_mech), and no explicilty learnable Projections
+(since that occurs within the Pytorch module itself</p>
 </dd></dl>
 
 </dd></dl>
@@ -1317,8 +1364,11 @@ Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hr"><code class="docutils literal notranslate"><span class="pre">GRUComposition.bias_hr</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hu"><code class="docutils literal notranslate"><span class="pre">GRUComposition.bias_hu</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hn"><code class="docutils literal notranslate"><span class="pre">GRUComposition.bias_hn</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._node_roles_manager_type"><code class="docutils literal notranslate"><span class="pre">GRUComposition._node_roles_manager_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper</span></code></a><ul>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_processing_graph"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._get_processing_graph()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._get_roles_by_node"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._get_roles_by_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_projection_wrappers"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_projection_wrappers()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections()</span></code></a></li>
@@ -1335,14 +1385,18 @@ Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_composition_wrapper_type"><code class="docutils literal notranslate"><span class="pre">GRUComposition.pytorch_composition_wrapper_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_mechanism_wrapper_type"><code class="docutils literal notranslate"><span class="pre">GRUComposition.pytorch_mechanism_wrapper_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_pnl_composition"><code class="docutils literal notranslate"><span class="pre">GRUComposition._construct_pnl_composition()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._is_in_composition"><code class="docutils literal notranslate"><span class="pre">GRUComposition._is_in_composition()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights"><code class="docutils literal notranslate"><span class="pre">GRUComposition.set_weights()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways"><code class="docutils literal notranslate"><span class="pre">GRUComposition.infer_backpropagation_learning_pathways()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway"><code class="docutils literal notranslate"><span class="pre">GRUComposition._get_pytorch_backprop_pathway()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode"><code class="docutils literal notranslate"><span class="pre">GRUComposition._get_execution_mode()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency"><code class="docutils literal notranslate"><span class="pre">GRUComposition._add_dependency()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_target_nodes"><code class="docutils literal notranslate"><span class="pre">GRUComposition._identify_target_nodes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.add_node"><code class="docutils literal notranslate"><span class="pre">GRUComposition.add_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.add_projection"><code class="docutils literal notranslate"><span class="pre">GRUComposition.add_projection()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency"><code class="docutils literal notranslate"><span class="pre">GRUComposition._add_dependency()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_execution_mode"><code class="docutils literal notranslate"><span class="pre">GRUComposition._get_execution_mode()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._identify_output_nodes"><code class="docutils literal notranslate"><span class="pre">GRUComposition._identify_output_nodes()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._handle_illegal_sample_target_specs_from_learn"><code class="docutils literal notranslate"><span class="pre">GRUComposition._handle_illegal_sample_target_specs_from_learn()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.compute_loss"><code class="docutils literal notranslate"><span class="pre">GRUComposition.compute_loss()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.num_learnable_pathways"><code class="docutils literal notranslate"><span class="pre">GRUComposition.num_learnable_pathways</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUCompositionError"><code class="docutils literal notranslate"><span class="pre">GRUCompositionError</span></code></a></li>
@@ -1365,7 +1419,7 @@ Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=02ff3102"></script>
+         <script src="_static/documentation_options.js?v=91c73018"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
