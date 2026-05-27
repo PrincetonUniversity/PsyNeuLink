@@ -2328,18 +2328,17 @@ class MatrixMemory(TransformFunction): #
         prefs=None,                      \
         )
 
-    Limited form of ContentAddressableMemory, for specific use by EMComposition2
+    Limited form of ContentAddressableMemory, based on MatrixTransform, for specific use by EMComposition2
 
     Use scores Parameter to compute retrieved value, which
-      allows pre-assigned scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
+      allows passed-in scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
     Uses param[OPERATION] passed to _function() to determine whether to call _retrieve(), _store() or both:
-    COMPUTE_SCORES: compute scores for each entry in memory based on query
-    ACCESS_MEMORY: fits call _retrieve_memory() and then _store_memory()
-    RETRIEVE: only call _retrieve_memory() (return entry based on query and scores; don't call store)
-    STORE: only call _store_memory() (store query in place of entry in memory with lowest norm; don't call retrieve)
-
-    Return value (retrieved of stored), scores and norms and  based on current query (e.g., so it can be used to
-    calculate COMBINED_SCORES in EMComposition2)
+        COMPUTE_SCORES: compute scores for each entry in memory based on query
+        ACCESS_MEMORY: fits call _retrieve_memory() and then _store_memory()
+        RETRIEVE: only call _retrieve_memory() (return entry based on query and scores; don't call store)
+        STORE: only call _store_memory() (store query in place of entry in memory with lowest norm; don't call retrieve)
+    Return memory (retrieved of stored), scores and norms and  based on current query
+        (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition2)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields
@@ -2553,7 +2552,6 @@ class MatrixMemory(TransformFunction): #
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == ACCESS_MEMORY:
-                # Note: store only needs query and weakest_memory
                 retrieved_value, combined_scores = self._access_memory_pytorch(variable, context)
                 filler = np.zeros(len(self.parameters.memory._get(context)))
                 return retrieved_value, combined_scores, filler # Return stored item, combined_scores, and filler for norms
