@@ -1660,7 +1660,7 @@ class AutodiffComposition(Composition):
             _num_iter += 1
             if _num_iter >= _max_iter:
                 raise AutodiffCompositionError(f"There appears to be a cycle in the graph for '{self.name}'"
-                                               f"(maximum iterations exceeded in _get_pytorch_backprop_pathway());"
+                                               f"(maximum iterations exceeded in _get_pytorch_backprop_pathway()); "
                                                f"to break a cycle, specify `feedback=True` in the constructor for "
                                                f"one the MappingProjections that form the cycle.")
             node, afferent_proj, current_comp = queue.popleft()
@@ -1700,6 +1700,10 @@ class AutodiffComposition(Composition):
                 #   or are ModulatoryProjections (i.e., including LearningProjections)
                 # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
                 if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
+                    continue
+
+                # EM2 BREADCRUMB: NEED TO DEAL WITH THIS
+                if efferent_proj.feedback:
                     continue
 
                 # Deal with Projections to/from CIMs since nested comps can be learned in PyTorch mode

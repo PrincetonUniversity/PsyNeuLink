@@ -466,6 +466,7 @@ class UserDefinedFunction(Function_Base):
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  stateful_parameter=None,
+                 pytorch_function_generator=None,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):
@@ -560,7 +561,7 @@ class UserDefinedFunction(Function_Base):
             custom_function = params[CUSTOM_FUNCTION]
 
         if custom_function is None:
-            raise FunctionError('custom_function cannot be None')
+            raise FunctionError('custom_function cannot be None for a UserDefinedFunction')
 
         cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
 
@@ -585,6 +586,9 @@ class UserDefinedFunction(Function_Base):
                     f'{stateful_parameter} specified as integration parameter is not a parameter of {custom_function}'
                 )
         self.stateful_parameter = stateful_parameter
+
+        if pytorch_function_generator is not None:
+            self._gen_pytorch_fct = pytorch_function_generator
 
         # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:

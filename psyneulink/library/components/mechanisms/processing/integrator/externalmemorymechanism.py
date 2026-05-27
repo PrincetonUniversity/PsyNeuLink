@@ -111,8 +111,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         passed to `ContentAddressableField` Function for retrieval
 
     input_port[COMBINED_SCORES]
-        Combined retrieval weights, usually the softmax-normalized aggregate of
-        all key-field SCORES.
+        Combined retrieval weights, usually the softmax-normalized aggregate of all key-field SCORES.
 
     output_port[RETRIEVED]
         Dot product of COMBINED_SCORES with field_memory.

@@ -2539,6 +2539,20 @@ class MatrixMemory(TransformFunction): #
         norms = np.linalg.norm(memory, axis=1, keepdims=True)
         return np.divide(memory, norms, out=np.zeros_like(memory), where=norms != 0)
 
+    def _gen_pytorch_fct(self, device, context=None):
+        def func(variable, operation):
+            # EM2 BREADCRUMB:  IMPLEMENT THIS USING _compute_scores() and _access_memory() METHODS
+            if operation == COMPUTE_SCORES:
+                return self._compute_scores_pytorch(variable[0], context)
+
+            # Store memory in place of weakest one if condition is met and storage_prob > 0
+            elif operation == ACCESS_MEMORY:
+                # Note: store only needs query and weakest_memory
+                retrieved_value, combined_scores = self._access_memory_pytorch(variable, context)
+                filler = np.zeros(len(self.parameters.memory._get(context)))
+                return retrieved_value, combined_scores, filler # Return stored item, combined_scores, and filler for norms
+        return func
+
 
 class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE

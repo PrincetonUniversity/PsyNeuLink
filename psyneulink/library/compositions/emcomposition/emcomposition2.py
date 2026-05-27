@@ -45,12 +45,14 @@ from enum import Enum
 from typing import Optional, Union
 
 import numpy as np
+import torch
 
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, MatrixTransform
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1054,20 +1056,47 @@ class EMComposition2(AutodiffComposition):
                                                  softmax_choice):
         """Construct combined_scores_node
         This is constructed even if num_keys == 1, since it computes the softmax over the scores
-        IMPLEMENTATION NOTE:  This is plays the same role as the softmax_node in emcomposition.py
+        IMPLEMENTATION NOTE:  This plays the same role as the softmax_node in emcomposition.py
         """
 
         if softmax_choice == ARG_MAX:
             softmax_choice = ARG_MAX_INDICATOR
+        adapt_entropy_weighting = .95
         softmax_function = SoftMax(gain=softmax_gain,
                                    mask_threshold=softmax_threshold,
                                    output=softmax_choice,
-                                   adapt_entropy_weighting=.95)
+                                   adapt_entropy_weighting=adapt_entropy_weighting)
 
-        def combined_scores_function(variable):
+        # Construct combined_scores_function
+        def function(variable):
+            """Return softmax over combined scores, and index of minimum norm over combined norms
+            variable[0] = scores of memory Nodes combined by hadamard addition in the COMBINED_SCORES input_port
+            variable[1] = norms of memory Nodes combined by hadamard addition in the COMBINED_NORMS input_port
+            """
             assert len(variable) == 2, \
                 (f"PROGRAM ERROR: expected variable with 2 items for combined_scores_function; got {len(variable)}")
             return softmax_function(variable[0]), int(np.argmin(variable[1]))
+
+        def _gen_pytorch_fct(device, context):
+            """Return pytorch version of function"""
+            # EM2 BREADCRUMB: Need to set these values in context since init in PytorchWrappers is called in context
+            softmax_function.parameters.gain._set(np.array(np.array(softmax_gain)), context)
+            softmax_function.parameters.mask_threshold._set(np.array(np.array(softmax_threshold)), context)
+            softmax_function.parameters.output._set(np.array(softmax_choice), context)
+            # BREADCRUMB: THIS PARAM HAS A STRING VALUE:  TRYING TO SET IT CAUSES NP.ARRAY ERROR
+            #             BUT NOT SETTING IT CAUSES CONTEXT ERROR
+            softmax_function.parameters.adapt_entropy_weighting._set(np.array(adapt_entropy_weighting), context)
+            softmax_func = softmax_function._gen_pytorch_fct(device, context)
+            def func(variable):
+                return softmax_func(variable[0]), int(torch.argmin(variable[1]))
+            return func
+
+        combined_scores_function = UserDefinedFunction(function,
+                                                       default_variable=[np.zeros(memory_capacity),
+                                                                         np.zeros(memory_capacity)],
+                                                       pytorch_function_generator =_gen_pytorch_fct
+                                                       )
+        # combined_scores_function._gen_pytorch_fct = _gen_pytorch_fct
 
         field_weighting = self.num_keys > 1
         assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
@@ -1129,7 +1158,7 @@ class EMComposition2(AutodiffComposition):
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_scores_projection = MappingProjection(
                 sender=self.combined_scores_node.output_ports[COMBINED_SCORES],
-                # feedback=True,
+                feedback=True,
                 receiver=field.memory_node.input_ports[COMBINED_SCORES],
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_SCORES",
@@ -1138,7 +1167,7 @@ class EMComposition2(AutodiffComposition):
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_norms_projection = MappingProjection(
                 sender=self.combined_scores_node.output_ports[COMBINED_NORMS],
-                # feedback=True,
+                feedback=True,
                 receiver=field.memory_node.input_ports[COMBINED_NORMS],
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_NORMS",
@@ -1224,8 +1253,7 @@ class EMComposition2(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
-        # self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
-        self.require_node_roles(self.combined_scores_node, [NodeRole.OUTPUT,NodeRole.FEEDBACK_SENDER])
+        self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
 
 
     def _assign_attributes_for_show_graph(self):
