@@ -32,6 +32,7 @@ from collections import defaultdict
 
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.stateful import StatefulFunction
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, MatrixMemory
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -2246,7 +2247,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         return res
 
     def execute_input_ports(self, variable):
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 
         if not isinstance(variable, torch.Tensor):
             try:
@@ -2317,7 +2317,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         If fct_has_mult_args is True, treat each item in variable as an arg to the function
         If False, compute function for each item in variable and return results in a list
         """
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 
         # items of variable should be treated as separate arguments
         if fct_has_mult_args:
@@ -2342,7 +2341,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
             res = function(variable)
 
         # TransformFunction can reduce output to single item from multi-item input
-        if isinstance(function._pnl_function, TransformFunction):
+        if (isinstance(function._pnl_function, TransformFunction)
+                and not isinstance(function._pnl_function, MatrixMemory)):
             res = res.unsqueeze(2)
 
         return res

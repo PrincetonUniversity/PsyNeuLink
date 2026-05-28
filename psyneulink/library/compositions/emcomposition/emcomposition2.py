@@ -1207,7 +1207,7 @@ class EMComposition2(AutodiffComposition):
                                    adapt_entropy_weighting=.95)
 
         # Construct combined_scores_function
-        def function(variable):
+        def _combined_scores_function(variable):
             """Return softmax over combined scores, and index of minimum norm over combined norms
             variable[0] = scores of memory Nodes combined by hadamard addition in the COMBINED_SCORES input_port
             variable[1] = norms of memory Nodes combined by hadamard addition in the COMBINED_NORMS input_port
@@ -1229,10 +1229,11 @@ class EMComposition2(AutodiffComposition):
             local_context.execution_id = None
             softmax_func = softmax_function._gen_pytorch_fct(device, local_context)
             def func(variable):
-                return softmax_func(variable[0]), int(torch.argmin(variable[1]))
+                variable = variable.squeeze()
+                return softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]))
             return func
 
-        combined_scores_function = UserDefinedFunction(function,
+        combined_scores_function = UserDefinedFunction(_combined_scores_function,
                                                        default_variable=[np.zeros(memory_capacity),
                                                                          np.zeros(memory_capacity)],
                                                        pytorch_function_generator =_gen_pytorch_fct
