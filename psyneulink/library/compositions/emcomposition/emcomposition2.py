@@ -370,11 +370,10 @@ class EMComposition2(AutodiffComposition):
 
     if torch_available:
         from psyneulink.library.compositions.emcomposition.pytorchEMwrappers2 import (
-            PytorchEMCompositionWrapper2,
-            PytorchEMMechanismWrapper,
+            PytorchEMCompositionWrapper2, PytorchExternalMemoryMechanismWrapper,
         )
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper2
-        pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper
+        pytorch_mechanism_wrapper_type = PytorchExternalMemoryMechanismWrapper
 
     class Parameters(AutodiffComposition.Parameters):
         """

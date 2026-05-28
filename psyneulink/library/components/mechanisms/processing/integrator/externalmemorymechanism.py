@@ -277,10 +277,10 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         # weakest_memory = variable[2]
 
         access_condition = self.parameters.access_condition._get(context)
-        self.access = (access_condition.is_satisfied(scheduler=context.composition.scheduler, context=context)
-                      if access_condition is not None else False)
+        access_vs_scores = (access_condition.is_satisfied(scheduler=context.composition.scheduler, context=context)
+                            if access_condition is not None else False)
         runtime_params = {} if runtime_params is None else runtime_params
-        if self.access:
+        if access_vs_scores:
             from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
             runtime_params.update({OPERATION: ACCESS_MEMORY})
         else:

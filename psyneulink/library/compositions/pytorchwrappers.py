@@ -1612,7 +1612,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
                 full_sequence_mode, sequence_lengths, context=None)->dict:
-        # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
         """
@@ -1669,6 +1668,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 inputs_to_run = inputs
 
             # Execute nodes
+            self.execution_set_num = 0
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
 
@@ -1803,6 +1803,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+                self.execution_set_num += 1
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -2294,56 +2295,57 @@ class PytorchMechanismWrapper(torch.nn.Module):
         """Execute Mechanism's _gen_pytorch version of function on variable.
         Enforce result to be 2d, and assign to self.output
         """
-        def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
-            If fct_has_mult_args is True, treat each item in variable as an arg to the function
-            If False, compute function for each item in variable and return results in a list
-            """
-            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-
-            # items of variable should be treated as separate arguments
-            if fct_has_mult_args:
-                res = function(*variable)
-
-            # variable is ragged
-            elif isinstance(variable, list):
-                res = []
-                for inp_i in range(len(variable[0][0])):
-                    inp_t = torch.stack([torch.stack([s[inp_i] for s in b]) for b in variable])
-                    inp_res = function(inp_t)
-                    res.append(inp_res)
-
-                # Reshape to batch dimension first
-                batch_size = res[0].shape[0]
-                seq_size = res[0].shape[1]
-                res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
-
-            else:
-                # Functions handle batch dimensions, just run the
-                # function with the variable and get back a tensor.
-                res = function(variable)
-
-            # TransformFunction can reduce output to single item from multi-item input
-            if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(2)
-
-            return res
 
         # If mechanism has an integrator_function and integrator_mode is True,
         #   execute it first and use result as input to the main function;
         #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
         if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function,
-                                        [self.integrator_previous_value, variable],
-                                        fct_has_mult_args=True)
+            variable = self.execute_function(self.integrator_function,
+                                             [self.integrator_previous_value, variable],
+                                             fct_has_mult_args=True)
             # Keep track of previous value in Pytorch node for use in next forward pass
             self.integrator_previous_value = variable
 
         self.input = variable
 
         # Compute main function of mechanism and return result
-        self.output = execute_function(self.function, variable)
+        self.output = self.execute_function(self.function, variable)
         return self.output
+
+    def execute_function(self, function, variable, fct_has_mult_args=False):
+        """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+        If fct_has_mult_args is True, treat each item in variable as an arg to the function
+        If False, compute function for each item in variable and return results in a list
+        """
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+        # items of variable should be treated as separate arguments
+        if fct_has_mult_args:
+            res = function(*variable)
+
+        # variable is ragged
+        elif isinstance(variable, list):
+            res = []
+            for inp_i in range(len(variable[0][0])):
+                inp_t = torch.stack([torch.stack([s[inp_i] for s in b]) for b in variable])
+                inp_res = function(inp_t)
+                res.append(inp_res)
+
+            # Reshape to batch dimension first
+            batch_size = res[0].shape[0]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
+
+        else:
+            # Functions handle batch dimensions, just run the
+            # function with the variable and get back a tensor.
+            res = function(variable)
+
+        # TransformFunction can reduce output to single item from multi-item input
+        if isinstance(function._pnl_function, TransformFunction):
+            res = res.unsqueeze(2)
+
+        return res
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -2717,7 +2719,7 @@ class PytorchFunctionWrapper(torch.nn.Module):
     def __init__(self, pnl_function, device, context=None):
         super().__init__()
         self.name = f"PytorchFunctionWrapper[{pnl_function.name}]"
-        self._context = contextY
+        self._context = context
         self.function = _get_pytorch_function(pnl_function, device, context)
         if pnl_function is not self.function:
             self._pnl_function = pnl_function

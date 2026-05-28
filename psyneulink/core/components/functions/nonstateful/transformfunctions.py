@@ -2474,12 +2474,12 @@ class MatrixMemory(TransformFunction): #
 
         if operation == COMPUTE_SCORES:
             scores, norms = self._compute_scores(query, context)
-            memory = query
+            entry = query
 
         # Note: ACCESS_MEMORY invokes both RETRIEVE and STORE; otherwise invoke only the one called
         elif operation in {ACCESS_MEMORY, RETRIEVE, STORE}:
             if operation in{ACCESS_MEMORY, RETRIEVE}:
-                memory = self._retrieve_memory(query, combined_scores, context=context)
+                entry = self._retrieve_memory(query, combined_scores, context=context)
             if operation in{ACCESS_MEMORY, STORE}:
                 # # Store memory in place of weakest one if storage_prob > 0
                 self._store_memory(query, weakest_memory_idx, context=context)
@@ -2489,7 +2489,7 @@ class MatrixMemory(TransformFunction): #
         else:
             raise FunctionError(operation_err_msg)
 
-        return memory, scores, norms
+        return entry, scores, norms
 
     def _compute_scores(self, query, context):
 
@@ -2526,7 +2526,6 @@ class MatrixMemory(TransformFunction): #
         return retrieved
 
     def _store_memory(self, item_to_store, weakest_memory_idx, context=None):
-        item_to_store = item_to_store
         memory = self.parameters.memory._get(context)
         storage_prob = self._get_current_parameter_value('storage_prob', context)
         random_state = self.parameters.random_state._get(context)
@@ -2544,37 +2543,62 @@ class MatrixMemory(TransformFunction): #
         return np.divide(memory, norms, out=np.zeros_like(memory), where=norms != 0)
 
     def _gen_pytorch_fct(self, device, context=None):
+        scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, context)
+
+        def _compute_scores_pytorch_fct(self, query, context=None):
+            memory = self.parameters.memory._get(context)
+            norms = torch.linalg.norm(memory, dim=1)
+            scores = scores_function_pytorch(query)
+            return scores_function_pytorch(scores, norms)
+
+        def _retrieve_memory_pytorch_fct(self, query, scores, context=None):
+            memory = self.parameters.memory._get(context)
+            retrieved = torch.matmul(scores, memory)
+            return retrieved
+
+        def _store_memory_pytorch_fct(self, item_to_store, weakest_memory_idx):
+            memory = self.parameters.memory._get(context)
+            storage_prob = self._get_current_parameter_value('storage_prob', context)
+            random_state = self.parameters.random_state._get(context)
+            if random_state.uniform(0, 1) < storage_prob:
+                decay_rate = self.parameters.decay_rate._get(context)
+                if decay_rate >= 0.0:
+                    memory *= (1-decay_rate)
+                memory[weakest_memory_idx] = item_to_store
+                # self.parameters.memory._set(memory, context, override=True)
+                self.scores_function.parameters.matrix._set(self.memory.T, context)
+
         def func(variable, operation):
-            # EM2 BREADCRUMB:  IMPLEMENT THIS USING _compute_scores() and _access_memory() METHODS
+            query = variable[0][0]
+            combined_scores = variable[0][1]
+            weakest_memory_idx = int(variable[0][2].squeeze())
+
             if operation == COMPUTE_SCORES:
-                return self._compute_scores_pytorch(variable[0], context)
+                scores, norms = _compute_scores_pytorch_fct(query, context)
+                entry = query
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
-            elif operation == ACCESS_MEMORY:
-                retrieved_value, combined_scores = self._access_memory_pytorch(variable, context)
-                filler = np.zeros(len(self.parameters.memory._get(context)))
-                return retrieved_value, combined_scores, filler # Return stored item, combined_scores, and filler for norms
+            elif operation == RETRIEVE:
+                entry, combined_scores = self._retrieve_memory_pytorch(query, combined_scores, context)
+                norms = torch.zeros(len(self.parameters.memory._get(context)))
+
+            elif operation == STORE:
+                self._store_memory_pytorch(query, weakest_memory_idx, context)
+                entry = query
+                combined_scores = norms = np.zeros(len(self.parameters.memory._get(context)))
+
+            else:
+                raise FunctionError(f"Invalid operation '{operation}' for PyTorch implementation of"
+                              f" {self.__class__.__name__}")
+
+            return entry, combined_scores, norms
+
         return func
 
-    def _compute_scores_pytorch_fct(self, query, context=None):
-        memory = self.parameters.memory._get(context)
-        # EM2 BREADCRUMB: MORE HERE
-        return scores, norms
-
-    def _retrieve_memory_pytorch_fct(self, query, scores, context=None):
-        memory = self.parameters.memory._get(context)
-        retrieved = torch.matmul(scores, memory)
-        return retrieved
-
-    def _store_memory_pytorch_fct(self, item_to_store, weakest_memory_idx, context=None):
-        # EM2 BREADCRUMB: MORE HERE
-        pass
-
-
 class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------
-    # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
+    # FIX: CONFIRM THAT 1D WEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     CombineMeans(            \
          default_variable, \
