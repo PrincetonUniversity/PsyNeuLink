@@ -2543,21 +2543,25 @@ class MatrixMemory(TransformFunction): #
         return np.divide(memory, norms, out=np.zeros_like(memory), where=norms != 0)
 
     def _gen_pytorch_fct(self, device, context=None):
-        scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, context)
+        # EM2 BREADCRUMB:  SEE local_context under _construct_combined_scores_node() in emcomposition2.py
+        local_context = context
+        local_context.execution_id = None
+        scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, local_context)
+        memory = torch.tensor(self.parameters.memory._get(context))
 
         def _compute_scores_pytorch_fct(self, query, context=None):
-            memory = self.parameters.memory._get(context)
+            # memory = self.parameters.memory._get(context)
             norms = torch.linalg.norm(memory, dim=1)
-            scores = scores_function_pytorch(query)
+            scores = scores_function_pytorch(query, memory)
             return scores_function_pytorch(scores, norms)
 
         def _retrieve_memory_pytorch_fct(self, query, scores, context=None):
-            memory = self.parameters.memory._get(context)
+            # memory = self.parameters.memory._get(context)
             retrieved = torch.matmul(scores, memory)
             return retrieved
 
         def _store_memory_pytorch_fct(self, item_to_store, weakest_memory_idx):
-            memory = self.parameters.memory._get(context)
+            # memory = self.parameters.memory._get(context)
             storage_prob = self._get_current_parameter_value('storage_prob', context)
             random_state = self.parameters.random_state._get(context)
             if random_state.uniform(0, 1) < storage_prob:

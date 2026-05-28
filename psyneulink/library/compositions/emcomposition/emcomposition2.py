@@ -1218,7 +1218,6 @@ class EMComposition2(AutodiffComposition):
 
         def _gen_pytorch_fct(device, context):
             """Return pytorch version of function"""
-            local_context = context
             # EM2 BREADCRUMB: CONTEXT execution_id NEEDS TO BE SET TO None,
             #                 SINCE _gen_pytorch_fct IS CALLED IN execution context
             #                 BUT SoftMax Function WAS CONSTRUCTED DURING __init__
@@ -1226,6 +1225,7 @@ class EMComposition2(AutodiffComposition):
             #                 ?? COULD BE DUE TO ORDER OF CALLS TO _gen_pytorch_fct IN PytorchFunctionWrapper??
             #                 POTENTIAL PROBLEM: WHEN FUNCTION IS CALLED IN EXECUTION CONTEXT,
             #                    WILL SOFTMAX FUNCTION PARAMS HAVE VALUES FOR CURRENT CONTEXT OR JUST USE None?
+            local_context = context
             local_context.execution_id = None
             softmax_func = softmax_function._gen_pytorch_fct(device, local_context)
             def func(variable):
