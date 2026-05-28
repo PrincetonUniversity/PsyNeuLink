@@ -47,14 +47,18 @@ Usage from a consumer (e.g. PsyNeuView's stepping worker)
 
 Locals schema per category (informal — listeners key-check what they need)
 --------------------------------------------------------------------------
-BEGINNING_OF_TRIAL   trial_num, scheduler, context
-END_OF_TRIAL         trial_num, scheduler, context, outputs
-EXECUTION_SET        execution_set, scheduler, context
-INPUTS_TO_NODE       node, execution_set, scheduler, context
-NODE_EXECUTION       node, execution_set, scheduler, context  (fires post-execute)
-PARAMETER_SETTING    parameter, owner, value, context
-END_OF_INIT          component
-PYTORCH_STEP         wrapper, composition
+BEGINNING_OF_RUN        scheduler, context, num_trials
+END_OF_RUN              scheduler, context, results
+BEGINNING_OF_TRIAL      trial_num, scheduler, context
+END_OF_TRIAL            trial_num, scheduler, context, outputs
+EXECUTION_SET           execution_set, scheduler, context
+END_OF_EXECUTION_SET    execution_set, scheduler, context, outputs
+INPUTS_TO_NODE          node, execution_set, scheduler, context
+NODE_EXECUTION          node, execution_set, scheduler, context  (fires post-execute)
+PARAMETER_SETTING       parameter, owner, value, context
+EXCEPTION               exception, scheduler, context, trial_num
+END_OF_INIT             component
+PYTORCH_STEP            wrapper, composition
 
 Categories may grow new keys over time without breaking existing listeners.
 """
@@ -65,14 +69,18 @@ from typing import Callable, Optional
 
 class BreakpointCategory(Enum):
     """Identifier for a breakpoint emission site."""
-    BEGINNING_OF_TRIAL = "beginning_of_trial"
-    END_OF_TRIAL       = "end_of_trial"
-    EXECUTION_SET      = "execution_set"
-    INPUTS_TO_NODE     = "inputs_to_node"
-    NODE_EXECUTION     = "node_execution"
-    PARAMETER_SETTING  = "parameter_setting"
-    END_OF_INIT        = "end_of_init"
-    PYTORCH_STEP       = "pytorch_step"
+    BEGINNING_OF_RUN     = "beginning_of_run"
+    END_OF_RUN           = "end_of_run"
+    BEGINNING_OF_TRIAL   = "beginning_of_trial"
+    END_OF_TRIAL         = "end_of_trial"
+    EXECUTION_SET        = "execution_set"
+    END_OF_EXECUTION_SET = "end_of_execution_set"
+    INPUTS_TO_NODE       = "inputs_to_node"
+    NODE_EXECUTION       = "node_execution"
+    PARAMETER_SETTING    = "parameter_setting"
+    EXCEPTION            = "exception"
+    END_OF_INIT          = "end_of_init"
+    PYTORCH_STEP         = "pytorch_step"
 
 
 Listener = Callable[["BreakpointCategory", Callable[[], dict]], None]
