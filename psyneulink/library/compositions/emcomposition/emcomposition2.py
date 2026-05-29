@@ -1225,14 +1225,17 @@ class EMComposition2(AutodiffComposition):
             #                 ?? COULD BE DUE TO ORDER OF CALLS TO _gen_pytorch_fct IN PytorchFunctionWrapper??
             #                 POTENTIAL PROBLEM: WHEN FUNCTION IS CALLED IN EXECUTION CONTEXT,
             #                    WILL SOFTMAX FUNCTION PARAMS HAVE VALUES FOR CURRENT CONTEXT OR JUST USE None?
-            local_context = context
+            local_context = copy.copy(context)
             local_context.execution_id = None
             softmax_func = softmax_function._gen_pytorch_fct(device, local_context)
             def func(variable):
-                variable = variable.squeeze()
-                # EM2 BREADCRUMB: SHOULD REPLACE CASTING TO DOUBLE BELOW WITH CASTING TO DEFAULT PRECISION
-                return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
-                # return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
+                scores = variable[:, :, 0, ...]
+                norms = variable[:, :, 1, ...]
+                softmax_scores = softmax_func(scores)
+                weakest_memory_idx = torch.argmin(norms, dim=-1, keepdim=True).to(dtype=softmax_scores.dtype)
+                return [[[softmax_scores[b, s, ...], weakest_memory_idx[b, s, ...]]
+                         for s in range(softmax_scores.shape[1])]
+                        for b in range(softmax_scores.shape[0])]
             return func
 
         combined_scores_function = UserDefinedFunction(_combined_scores_function,

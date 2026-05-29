@@ -106,4 +106,4 @@ class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
             operation = pytorch_rep.field_memory_operations[execution_set_num]
             variable.append(operation)
             fct_has_mult_args = True
-        super().execute_function(function, variable, fct_has_mult_args)
+        return super().execute_function(function, variable, fct_has_mult_args)

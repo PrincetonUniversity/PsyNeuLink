@@ -33,6 +33,7 @@ when the TransformFunction is used as the function of an InputPort or OutputPort
 
 """
 
+import copy
 import numbers
 import types
 import warnings
@@ -2544,20 +2545,21 @@ class MatrixMemory(TransformFunction): #
 
     def _gen_pytorch_fct(self, device, context=None):
         # EM2 BREADCRUMB:  SEE local_context under _construct_combined_scores_node() in emcomposition2.py
-        local_context = context
+        local_context = copy.copy(context)
         local_context.execution_id = None
         scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, local_context)
         memory = torch.tensor(self.parameters.memory._get(context))
 
         def _compute_scores_pytorch_fct(query, context=None):
             # memory = self.parameters.memory._get(context)
-            norms = torch.linalg.norm(memory, dim=1)
-            scores = scores_function_pytorch(query, memory)
+            memory_for_read = memory.clone()
+            norms = torch.linalg.norm(memory_for_read, dim=1)
+            scores = scores_function_pytorch(query, memory_for_read)
             return scores, norms
 
         def _retrieve_memory_pytorch_fct(query, scores, context=None):
             # memory = self.parameters.memory._get(context)
-            retrieved = torch.matmul(scores, memory)
+            retrieved = torch.matmul(scores, memory.clone())
             return retrieved
 
         def _store_memory_pytorch_fct(item_to_store, weakest_memory_idx):
@@ -2567,7 +2569,7 @@ class MatrixMemory(TransformFunction): #
             if random_state.uniform(0, 1) < storage_prob:
                 decay_rate = self.parameters.decay_rate._get(context)
                 if decay_rate >= 0.0:
-                    memory *= (1-decay_rate)
+                    memory.mul_(1-decay_rate)
                 memory[weakest_memory_idx] = item_to_store
                 # self.parameters.memory._set(memory, context, override=True)
                 self.scores_function.parameters.matrix._set(self.memory.T, context)
@@ -2583,19 +2585,23 @@ class MatrixMemory(TransformFunction): #
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == RETRIEVE:
-                entry, combined_scores = self._retrieve_memory_pytorch(query, combined_scores, context)
-                norms = torch.zeros(len(self.parameters.memory._get(context)))
+                entry = _retrieve_memory_pytorch_fct(query, combined_scores, context)
+                norms = torch.zeros(len(self.parameters.memory._get(context)),
+                                    device=entry.device,
+                                    dtype=entry.dtype)
 
             elif operation == STORE:
-                self._store_memory_pytorch(query, weakest_memory_idx, context)
+                _store_memory_pytorch_fct(query, weakest_memory_idx)
                 entry = query
-                combined_scores = norms = np.zeros(len(self.parameters.memory._get(context)))
+                combined_scores = norms = torch.zeros(len(self.parameters.memory._get(context)),
+                                                     device=query.device,
+                                                     dtype=query.dtype)
 
             else:
                 raise FunctionError(f"Invalid operation '{operation}' for PyTorch implementation of"
                               f" {self.__class__.__name__}")
 
-            return entry, combined_scores, norms
+            return [[[entry, combined_scores, norms]]]
 
         return func
 
