@@ -77,8 +77,13 @@ class PytorchEMCompositionWrapper2(PytorchCompositionWrapper):
 
 
 class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
-    """Wrapper for EMStorageMechanism as a Pytorch Module"""
+    """Wrapper for ExternalMemoryMechanism as a Pytorch Module"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.memory = torch.tensor(self.mechanism.memory)
+
+    # EM2 BREADCRUMB: REFACTOR TO HANDLE COMPUTATIONS ON SPECIFIC OPTIMIZATIONS
     # def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None):
     #     """Override to handle storage of entry to memory_matrix by EMStorage Function"""
     #     if self.mechanism is self.composition.storage_node:

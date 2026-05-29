@@ -1231,8 +1231,8 @@ class EMComposition2(AutodiffComposition):
             def func(variable):
                 variable = variable.squeeze()
                 # EM2 BREADCRUMB: SHOULD REPLACE CASTING TO DOUBLE BELOW WITH CASTING TO DEFAULT PRECISION
-                return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
-                # return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
+                # return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
+                return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
             return func
 
         combined_scores_function = UserDefinedFunction(_combined_scores_function,
@@ -1275,7 +1275,6 @@ class EMComposition2(AutodiffComposition):
                          sender=source,
                          matrix=IDENTITY_MATRIX,
                          name=f"{'WEIGHTED' if field_weighting else ''} {NORMS} for {self.fields[i].name}")
-                              # f" to {COMBINED_SCORES_NODE_NAME}")
                      for i, source in enumerate(norms_inputs)]},
             ],
             output_ports=[{NAME:COMBINED_SCORES, VARIABLE: (OWNER_VALUE, 0)},
@@ -1372,24 +1371,6 @@ class EMComposition2(AutodiffComposition):
 
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
             self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
-
-        # # RETRIEVE runs only after both field-memory mechanisms have run once.
-        # args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
-        #         + [BeforeNCalls(node, 2) for node in self.field_memory_nodes])
-        # self.scheduler.add_condition(self.combined_scores_node, All(*args))
-
-        # # Storage should be after RETRIEVAL
-        # for field_memory_node in self.field_memory_nodes:
-        #     field_memory_node.parameters.access_condition.set(
-        #         conditions.AfterNCalls(self.combined_scores_node, 1),
-        #         context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
-        #         override=True,
-        #     )
-
-        # # BREADCRUMB: NECESSARY??
-        # # End the trial after all retrieved nodes have executed once.
-        # args = [AfterNCalls(node, 1) for node in self.retrieved_nodes]
-        # self.scheduler.termination_conds[TimeScale.TRIAL] = (All(*args))
 
 
     def _assign_node_roles(self):

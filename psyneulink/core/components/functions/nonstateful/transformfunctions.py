@@ -2562,6 +2562,7 @@ class MatrixMemory(TransformFunction): #
 
         def _store_memory_pytorch_fct(item_to_store, weakest_memory_idx):
             # memory = self.parameters.memory._get(context)
+            memory = torch.tensor(self.parameters.memory._get(context))
             storage_prob = self._get_current_parameter_value('storage_prob', context)
             random_state = self.parameters.random_state._get(context)
             if random_state.uniform(0, 1) < storage_prob:
@@ -2583,11 +2584,11 @@ class MatrixMemory(TransformFunction): #
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == RETRIEVE:
-                entry, combined_scores = self._retrieve_memory_pytorch(query, combined_scores, context)
+                entry = _retrieve_memory_pytorch_fct(query, combined_scores, context)
                 norms = torch.zeros(len(self.parameters.memory._get(context)))
 
             elif operation == STORE:
-                self._store_memory_pytorch(query, weakest_memory_idx, context)
+                _store_memory_pytorch_fct(query, weakest_memory_idx)
                 entry = query
                 combined_scores = norms = np.zeros(len(self.parameters.memory._get(context)))
 
