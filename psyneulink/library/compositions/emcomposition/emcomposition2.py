@@ -1231,8 +1231,8 @@ class EMComposition2(AutodiffComposition):
             def func(variable):
                 variable = variable.squeeze()
                 # EM2 BREADCRUMB: SHOULD REPLACE CASTING TO DOUBLE BELOW WITH CASTING TO DEFAULT PRECISION
-                # return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
-                return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
+                return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
+                # return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
             return func
 
         combined_scores_function = UserDefinedFunction(_combined_scores_function,
