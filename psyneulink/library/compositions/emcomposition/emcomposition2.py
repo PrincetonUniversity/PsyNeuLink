@@ -22,7 +22,6 @@ access_condition is satisfied
 The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
-- Does not support concatenate_queries
 - memory_decay_rate is applied as the public EMComposition retention multiplier
 - If a value is not provided as input to KEY Field, then the retrieved value is stored;
    need to deal with nested emcomposition2 in that case:
@@ -41,7 +40,6 @@ High-level execution per field:
 
 import copy
 import warnings
-from enum import Enum
 from typing import Optional, Union
 
 import numpy as np
@@ -51,7 +49,7 @@ import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, MatrixTransform
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate, LinearCombination, MatrixTransform
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -145,6 +143,7 @@ WEIGHT_AFFIX = f" [{WEIGHT}]"
 WEIGHTED_SCORES = "WEIGHTED SCORE"
 WEIGHTED_SCORES_NODE_NAME = "WEIGHTED SCORES"
 WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
+CONCATENATE_QUERIES_NAME = "CONCATENATE QUERIES"
 COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
 RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
@@ -158,7 +157,7 @@ def _memory_getter(owning_component=None, context=None):
         return None
 
     field_memories = [
-        field.memory_node.function.parameters.memory.get(context).squeeze()
+        np.asarray(field.memory_node.function.parameters.memory.get(context))
         for field in owning_component.fields
     ]
 
@@ -223,9 +222,7 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1) -> float:
     # MODIFIED EM2 END
 
 
-class FieldType(Enum):
-    KEY = 0
-    VALUE = 1
+from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
 
 
 class Field:
@@ -258,11 +255,15 @@ class Field:
         self.retrieved_node = None
 
         self.query_projection = None
+        self.concatenation_projection = None
         self.scores_projection = None
+        self.norms_projection = None
         self.combined_scores_projection = None
+        self.combined_norms_projection = None
         self.retrieved_projection = None
         self.weight_projection = None
         self.weighted_scores_projection = None
+        self.weighted_norms_projection = None
 
         self.missing_value = False
 
@@ -285,11 +286,15 @@ class Field:
         return [
             proj for proj in [
                 self.query_projection,
+                self.concatenation_projection,
                 self.scores_projection,
+                self.norms_projection,
                 self.combined_scores_projection,
+                self.combined_norms_projection,
                 self.retrieved_projection,
                 self.weight_projection,
                 self.weighted_scores_projection,
+                self.weighted_norms_projection,
             ]
             if proj is not None
         ]
@@ -309,6 +314,10 @@ class Field:
     @property
     def memory(self):
         return self.memory_node.memory
+
+    @property
+    def memories(self):
+        return self.memory_node.function.parameters.memory.get(None)
 
 
 class EMComposition2Error(CompositionError):
@@ -759,7 +768,20 @@ class EMComposition2(AutodiffComposition):
                 )
             if all([fw is None for fw in field_weights]):
                 raise EMComposition2Error(
-                    f"The entries in 'field_weights' arg for {name} can't all be None."
+                    f"The entries in 'field_weights' arg for {name} can't all be 'None' "
+                    f"since that will preclude the construction of any keys."
+                )
+            if not any(field_weights):
+                warnings.warn(
+                    f"All of the entries in the 'field_weights' arg for {name} "
+                    f"are either None or set to 0; this will result in no retrievals "
+                    f"unless/until one or more of them are changed to a positive value."
+                )
+            elif any([fw == 0 for fw in field_weights if fw is not None]):
+                warnings.warn(
+                    f"Some of the entries in the 'field_weights' arg for {name} "
+                    f"are set to 0; those fields will be ignored during retrieval "
+                    f"unless/until they are changed to a positive value."
                 )
 
         if field_names and len(field_names) != num_fields:
@@ -847,8 +869,8 @@ class EMComposition2(AutodiffComposition):
         def _parse_fields_dict(fields_dict, num_fields):
             if len(fields_dict) != num_fields:
                 raise EMComposition2Error(
-                    f"The number of entries ({len(fields_dict)}) in 'fields' for '{name}' "
-                    f"does not match the number of fields ({num_fields})."
+                    f"The number of entries ({len(fields_dict)}) in the dict specified in the 'fields' arg "
+                    f"of '{name}' does not match the number of fields in its memory ({num_fields})."
                 )
 
             parsed_names = [None] * num_fields
@@ -876,15 +898,17 @@ class EMComposition2(AutodiffComposition):
 
         if isinstance(learning_rate, dict):
             raise EMComposition2Error(
-                f"The 'learning_rate' arg for '{name}' cannot be a dict; use 'fields' or "
-                f"'learn_field_weights' instead."
+                f"The 'learning_rate' arg for '{name}' is specified as a dict, "
+                f"which is not supported for an EMComposition2;  "
+                f"use either its 'fields' arg or its 'learn_field_weights' arg instead."
             )
 
         if fields:
             if any([field_names, field_weights, learn_field_weights, target_fields]):
                 warnings.warn(
-                    f"The 'fields' arg for '{name}' was specified, so 'field_names', "
-                    f"'field_weights', 'learn_field_weights', and 'target_fields' will be ignored."
+                    f"The 'fields' arg for '{name}' was specified, so any of the "
+                    f"'field_names', 'field_weights',  'learn_field_weights' or "
+                    f"'target_fields' args will be ignored."
                 )
             field_names, field_weights, learn_field_weights, target_fields = _parse_fields_dict(
                 fields,
@@ -924,8 +948,9 @@ class EMComposition2(AutodiffComposition):
                 if fw is None:
                     if lfw and individually_specified:
                         warnings.warn(
-                            f"A learning_rate was specified for value field '{field_names[i] if field_names else i}' "
-                            f"in '{name}', but value fields do not have learnable field weights; ignored."
+                            f"A learning_rate was specified for field '{field_names[i] if field_names else i}' "
+                            f"in the 'learn_field_weights' arg for '{name}', "
+                            f"but it is not allowed for value fields; it will be ignored."
                         )
                     learn_field_weights[i] = False
                 elif lfw in {None, True}:
@@ -954,12 +979,31 @@ class EMComposition2(AutodiffComposition):
             )
             parsed_field_names = self.key_names + self.value_names
 
-        if concatenate_queries:
+        user_specified_concatenate_queries = concatenate_queries or False
+        key_weights = [weight for weight in parsed_field_weights if weight is not None]
+        concatenate_queries = (
+            user_specified_concatenate_queries
+            and self.num_keys > 1
+            and all(np.all(key_weight == key_weights[0]) for key_weight in key_weights)
+            and normalize_memories
+        )
+        if user_specified_concatenate_queries and not concatenate_queries:
+            if self.num_keys == 1:
+                error_msg = "there is only one key"
+                correction_msg = ""
+            elif not all(np.all(key_weight == key_weights[0]) for key_weight in key_weights):
+                error_msg = f"field weights ({field_weights}) are not all equal"
+                correction_msg = " To use concatenation, remove `field_weights` specification or make them all the same."
+            elif not normalize_memories:
+                error_msg = "normalize_memories is False"
+                correction_msg = " To use concatenation, set normalize_memories to True."
+            else:
+                error_msg = "it is not supported"
+                correction_msg = ""
             warnings.warn(
-                f"The refactored EMComposition prototype does not yet support 'concatenate_queries=True'; "
-                f"it will be ignored."
+                f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
+                f"concatenation will be ignored.{correction_msg}"
             )
-            concatenate_queries = False
 
         if target_fields is None:
             target_fields = [True] * self.num_fields
@@ -1028,9 +1072,16 @@ class EMComposition2(AutodiffComposition):
         context,
     ):
         self._construct_input_nodes()
+        self._construct_concatenate_queries_node()
         self._construct_field_memory_nodes(
             memory_template,
             memory_capacity,
+            normalize_memories,
+            storage_prob,
+            memory_decay_rate,
+        )
+        self._construct_concatenated_memory_node(
+            memory_template,
             normalize_memories,
             storage_prob,
             memory_decay_rate,
@@ -1055,18 +1106,31 @@ class EMComposition2(AutodiffComposition):
         # EM2 BREADCRUMB: THIS NEED TO DEAL WITH MULTIPLE PROJECTIONS BETWEEN MEMORY NODES AND COMBINED_SCORES NODE
         if not self.enable_learning:
             self.add_nodes(self.input_nodes, context=context)
+            if self.concatenate_queries_node:
+                self.add_node(self.concatenate_queries_node, context=context)
             self.add_nodes(self.field_memory_nodes, context=context)
+            if self.concatenated_memory_node:
+                self.add_node(self.concatenated_memory_node, context=context)
             self.add_nodes(self.field_weight_nodes + self.weighted_scores_nodes, context=context)
             self.add_nodes([self.combined_scores_node] + self.retrieved_nodes, context=context)
             if self.softmax_gain_control_node:
                 self.add_node(self.softmax_gain_control_node, context=context)
+            self._add_pathway_projections(context)
             return
 
         for field in self.fields:
             self.add_linear_processing_pathway([field.input_node,
                                                 field.memory_node])
 
-        if self.num_keys == 1:
+        if self.concatenate_queries:
+            for field in self.key_fields:
+                self.add_linear_processing_pathway([field.input_node,
+                                                    self.concatenate_queries_node])
+            self.add_linear_processing_pathway([self.concatenate_queries_node,
+                                                self.concatenated_memory_node,
+                                                self.combined_scores_node])
+
+        elif self.num_keys == 1:
             self.add_linear_processing_pathway([self.key_fields[0].memory_node,
                                                 self.combined_scores_node])
         else:
@@ -1098,6 +1162,7 @@ class EMComposition2(AutodiffComposition):
         for proj in (self.combined_scores_node.path_afferents + self.combined_scores_node.efferents):
             if proj not in self.projections:
                 self.add_projection(proj, context=context)
+        self._add_pathway_projections(context)
 
     def _construct_input_nodes(self):
         for field in self.key_fields:
@@ -1109,6 +1174,31 @@ class EMComposition2(AutodiffComposition):
             field.input_node = ProcessingMechanism(name=f"{field.name} [VALUE]",
                                                    input_shapes=len(self.entry_template[field.index]))
             field.type = FieldType.VALUE
+
+    def _construct_concatenate_queries_node(self):
+        if not self.concatenate_queries:
+            self.concatenate_queries_node = None
+            self.concatenated_memory_node = None
+            return
+
+        self.concatenate_queries_node = ProcessingMechanism(
+            name=CONCATENATE_QUERIES_NAME,
+            function=Concatenate,
+            input_ports=[
+                {
+                    NAME: "CONCATENATE",
+                    INPUT_SHAPES: len(field.input_node.output_port.value),
+                    PROJECTIONS: MappingProjection(
+                        name=f"{field.name} to CONCATENATE",
+                        sender=field.input_node.output_port,
+                        matrix=IDENTITY_MATRIX,
+                    ),
+                }
+                for field in self.key_fields
+            ],
+        )
+        for field, proj in zip(self.key_fields, self.concatenate_queries_node.path_afferents):
+            field.concatenation_projection = proj
 
     def _construct_field_memory_nodes(
         self,
@@ -1144,8 +1234,43 @@ class EMComposition2(AutodiffComposition):
                 name=f"{field.name} QUERY to FIELD MEMORY",
             )
 
+    def _construct_concatenated_memory_node(
+        self,
+        memory_template,
+        normalize_memories,
+        storage_prob,
+        memory_decay_rate,
+    ):
+        if not self.concatenate_queries:
+            self.concatenated_memory_node = None
+            return
+
+        concatenated_memory = np.array([
+            np.concatenate([entry[field.index] for field in self.key_fields])
+            for entry in memory_template
+        ]).astype(float)
+        key_len = len(self.entry_template[self.key_fields[0].index])
+        matrix_memory_decay_rate = 0 if not memory_decay_rate else 1 - memory_decay_rate
+
+        self.concatenated_memory_node = ExternalMemoryMechanism(
+            field_type=FieldType.KEY,
+            field_shape=concatenated_memory.shape[1],
+            field_memory=concatenated_memory,
+            decay_rate=matrix_memory_decay_rate,
+            storage_prob=storage_prob,
+            scores_metric=L0 if key_len == 1 else DOT_PRODUCT,
+            normalize_memories=True if key_len == 1 else normalize_memories,
+            name=f"{MATCH}{FIELD_MEMORY_AFFIX}",
+        )
+        self.concatenated_query_projection = MappingProjection(
+            sender=self.concatenate_queries_node,
+            receiver=self.concatenated_memory_node.input_ports[QUERY],
+            matrix=IDENTITY_MATRIX,
+            name=f"{CONCATENATE_QUERIES_NAME} to {MATCH}{FIELD_MEMORY_AFFIX}",
+        )
+
     def _construct_field_weight_nodes(self):
-        if self.num_keys <= 1:
+        if self.num_keys <= 1 or self.concatenate_queries:
             return
 
         for field in self.key_fields:
@@ -1163,7 +1288,7 @@ class EMComposition2(AutodiffComposition):
             )
 
     def _construct_weighted_scores_nodes(self):
-        if self.num_keys <= 1:
+        if self.num_keys <= 1 or self.concatenate_queries:
             return
 
         for field in self.key_fields:
@@ -1205,20 +1330,21 @@ class EMComposition2(AutodiffComposition):
 
         if softmax_choice == ARG_MAX:
             softmax_choice = ARG_MAX_INDICATOR
-        softmax_function = SoftMax(gain=softmax_gain,
+        initial_softmax_gain = 1.0 if softmax_gain == CONTROL else softmax_gain
+        softmax_function = SoftMax(gain=initial_softmax_gain,
                                    mask_threshold=softmax_threshold,
                                    output=softmax_choice,
                                    adapt_entropy_weighting=.95)
 
         # Construct combined_scores_function
-        def _combined_scores_function(variable):
+        def _combined_scores_function(variable, gain=initial_softmax_gain):
             """Return softmax over combined scores, and index of minimum norm over combined norms
             variable[0] = scores of memory Nodes combined by hadamard addition in the COMBINED_SCORES input_port
             variable[1] = norms of memory Nodes combined by hadamard addition in the COMBINED_NORMS input_port
             """
             assert len(variable) == 2, \
                 (f"PROGRAM ERROR: expected variable with 2 items for combined_scores_function; got {len(variable)}")
-            return softmax_function(variable[0]), int(np.argmin(variable[1]))
+            return softmax_function(variable[0], params={GAIN: gain}), int(np.argmin(variable[1]))
 
         def _gen_pytorch_fct(device, context):
             """Return pytorch version of function"""
@@ -1249,15 +1375,18 @@ class EMComposition2(AutodiffComposition):
                                                        )
         # combined_scores_function._gen_pytorch_fct = _gen_pytorch_fct
 
-        field_weighting = self.num_keys > 1
+        field_weighting = self.num_keys > 1 and not self.concatenate_queries
         assert (self.weighted_scores_nodes and self.field_weight_nodes) if field_weighting else not field_weighting, \
             (f"PROGRAM ERROR: Mismatch between num_keys and presence of weighted_scores_nodes and/or field_weight_nodes")
 
-        # scores_inputs = [node.output_ports[SCORES] for field in self.key_fields
-        #                   for node in {field.weighted_scores_node if field_weighting else field.memory_node}]
-        scores_inputs = [(field.weighted_scores_node.output_ports[WEIGHTED_SCORES] if field_weighting
-                          else field.memory_node.output_ports[SCORES])
-                          for field in self.key_fields]
+        if self.concatenate_queries:
+            scores_inputs = [self.concatenated_memory_node.output_ports[SCORES]]
+            scores_input_names = [CONCATENATE_QUERIES_NAME]
+        else:
+            scores_inputs = [(field.weighted_scores_node.output_ports[WEIGHTED_SCORES] if field_weighting
+                              else field.memory_node.output_ports[SCORES])
+                              for field in self.key_fields]
+            scores_input_names = [field.name for field in self.key_fields]
         # EM2 BREADCRUMB: THIS WEIGHTS THE NORMS, WHICH IS PROBABLY NOT CORRECT:
         # norms_inputs = [(field.weighted_scores_node if field.type == FieldType.KEY and field_weighting
         #                  else field.memory_node).output_ports[NORMS]
@@ -1272,7 +1401,7 @@ class EMComposition2(AutodiffComposition):
                      MappingProjection(
                          sender=source,
                          matrix=IDENTITY_MATRIX,
-                         name=f"{'WEIGHTED' if field_weighting else ''} {SCORES} for {self.key_fields[i].name}")
+                         name=f"{'WEIGHTED' if field_weighting else ''} {SCORES} for {scores_input_names[i]}")
                               # f" to {COMBINED_SCORES_NODE_NAME}")
                      for i, source in enumerate(scores_inputs)]},
                 {NAME:NORMS,
@@ -1291,9 +1420,14 @@ class EMComposition2(AutodiffComposition):
         )
 
         # EM2 BREADCRUMB: MAKE THIS SPECIFIC TO SCORES, AND ADD SIMILAR LOOP FOR NORMS
+        if self.concatenate_queries:
+            self.concatenated_scores_projection = next(
+                proj for proj in self.combined_scores_node.path_afferents
+                if proj.sender is self.concatenated_memory_node.output_ports[SCORES]
+            )
         for field in self.fields:
             # Assign Projections from memory_nodes to combined_scores nodes to relevant attributes of field
-            if field.type == FieldType.KEY:
+            if field.type == FieldType.KEY and not self.concatenate_queries:
                 # EM2 BREADCRUMB: NEED TO GET AFFERENT FROM field_weighted_scores NODE IF field_weighting
                 scores_proj = next(proj for proj in self.combined_scores_node.path_afferents
                                    if proj.sender is (field.weighted_scores_node.output_ports[WEIGHTED_SCORES]
@@ -1322,6 +1456,22 @@ class EMComposition2(AutodiffComposition):
                 receiver=field.memory_node.input_ports[COMBINED_NORMS],
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_NORMS",
+            )
+
+        if self.concatenate_queries:
+            self.concatenated_combined_scores_projection = MappingProjection(
+                sender=self.combined_scores_node.output_ports[COMBINED_SCORES],
+                feedback=True,
+                receiver=self.concatenated_memory_node.input_ports[COMBINED_SCORES],
+                matrix=IDENTITY_MATRIX,
+                name=f"{COMBINED_SCORES_NODE_NAME} to {CONCATENATE_QUERIES_NAME} COMBINED_SCORES",
+            )
+            self.concatenated_combined_norms_projection = MappingProjection(
+                sender=self.combined_scores_node.output_ports[COMBINED_NORMS],
+                feedback=True,
+                receiver=self.concatenated_memory_node.input_ports[COMBINED_NORMS],
+                matrix=IDENTITY_MATRIX,
+                name=f"{COMBINED_SCORES_NODE_NAME} to {CONCATENATE_QUERIES_NAME} COMBINED_NORMS",
             )
 
 
@@ -1379,7 +1529,27 @@ class EMComposition2(AutodiffComposition):
 
 
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
-            self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
+            if self.concatenated_memory_node:
+                self.scheduler.add_condition(
+                    field.retrieved_node,
+                    All(AfterNCalls(field.memory_node, 2),
+                        AfterNCalls(self.concatenated_memory_node, 2))
+                )
+            else:
+                self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
+
+        if self.concatenated_memory_node:
+            self.scheduler.add_condition(
+                self.concatenated_memory_node,
+                Any(All(AfterNCalls(self.concatenate_queries_node, 1),
+                        BeforeNCalls(self.combined_scores_node, 1)),
+                    All(AfterNCalls(self.combined_scores_node, 1),
+                        BeforeNCalls(self.retrieved_nodes[0], 1)))
+            )
+            self.concatenated_memory_node.parameters.access_condition.set(
+                conditions.AfterNCalls(self.combined_scores_node, 1),
+                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition2 storage conditions"),
+                override=True)
 
         # # RETRIEVE runs only after both field-memory mechanisms have run once.
         # args = ([AfterNCalls(node, 1) for node in self.field_memory_nodes]
@@ -1405,13 +1575,42 @@ class EMComposition2(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
+        if self.concatenate_queries_node:
+            self.exclude_node_roles(self.concatenate_queries_node, NodeRole.OUTPUT)
+        if self.concatenated_memory_node:
+            self.exclude_node_roles(self.concatenated_memory_node, NodeRole.OUTPUT)
         self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
 
 
     def _assign_attributes_for_show_graph(self):
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        if self.concatenate_queries_node:
+            self.concatenate_queries_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        if self.concatenated_memory_node:
+            for output_port in self.concatenated_memory_node.output_ports:
+                output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.combined_scores_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+
+    def _add_pathway_projections(self, context):
+        projections = []
+        for field in self.fields:
+            projections.extend(field.projections)
+
+        if self.concatenate_queries:
+            projections.extend([
+                self.concatenated_query_projection,
+                self.concatenated_scores_projection,
+                self.concatenated_combined_scores_projection,
+                self.concatenated_combined_norms_projection,
+            ])
+
+        projections.extend(self.combined_scores_node.path_afferents)
+        projections.extend(self.combined_scores_node.efferents)
+
+        for proj in [proj for proj in projections if proj is not None]:
+            if proj not in self.projections:
+                self.add_projection(proj, context=context)
 
     def _assign_learning_attributes(self):
         self.execute_in_additional_optimizations = {}
@@ -1474,7 +1673,8 @@ class EMComposition2(AutodiffComposition):
         if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
             warnings.warn(
                 f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
-                f"'enable_learning=True'; use WEIGHTED_AVG during learning."
+                f"'enable_learning' set to True; this will generate an error if its "
+                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning."
             )
 
     # *****************************************************************************************************************
@@ -1509,9 +1709,14 @@ class EMComposition2(AutodiffComposition):
                 f"construct '{self.name}' with 'enable_learning=False'."
             )
 
+        if self.concatenate_queries:
+            raise EMComposition2Error(
+                "EMComposition2 does not support learning with 'concatenate_queries'='True'."
+            )
+
         if softmax_choice in {ARG_MAX, PROBABILISTIC}:
             raise EMComposition2Error(
-                f"The ARG_MAX and PROBABILISTIC options for 'softmax_choice' of '{self.name}' "
+                f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of '{self.name}' "
                 f"cannot be used during learning; change to WEIGHTED_AVG."
             )
 
@@ -1577,7 +1782,7 @@ class EMComposition2(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _identify_target_nodes(self, context) -> list:
+    def _identify_output_nodes(self, context) -> list:
         target_fields = self.target_fields
 
         if target_fields is False:
@@ -1589,7 +1794,7 @@ class EMComposition2(AutodiffComposition):
             target_nodes = []
         elif target_fields is True:
             target_nodes = [node for node in self.retrieved_nodes]
-        elif isinstance(target_fields, list):
+        elif isinstance(target_fields, (list, tuple, np.ndarray)):
             target_nodes = [
                 node for node in self.retrieved_nodes
                 if target_fields[self.retrieved_nodes.index(node)]
@@ -1600,11 +1805,15 @@ class EMComposition2(AutodiffComposition):
                 f"is neither True, False, nor a list of bools."
             )
 
-        super()._identify_target_nodes(context)
+        super()._identify_output_nodes(context)
         return target_nodes
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
-        return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None):
+        return super().infer_backpropagation_learning_pathways(
+            execution_mode,
+            context=context,
+            base_context=base_context,
+        )
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # EM storage is field-local and executed by ExternalMemoryMechanism after retrieval.
@@ -1651,8 +1860,17 @@ class EMComposition2(AutodiffComposition):
         return [field.memory_node for field in self.fields]
 
     @property
+    def memory_cycle_nodes(self):
+        nodes = list(self.field_memory_nodes)
+        if getattr(self, "concatenated_memory_node", None) is not None:
+            nodes.append(self.concatenated_memory_node)
+        return nodes
+
+    @property
     def match_nodes(self):
         # Compatibility alias: the old "match_nodes" are now the key ExternalMemoryMechanisms.
+        if self.concatenate_queries and getattr(self, "concatenated_memory_node", None) is not None:
+            return [self.concatenated_memory_node]
         return [field.memory_node for field in self.key_fields]
 
     @property

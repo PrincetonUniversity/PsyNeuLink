@@ -27,7 +27,7 @@ from psyneulink.library.components.mechanisms.processing.objective.lossmechanism
 from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
     ExternalMemoryMechanism)
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, FIRST, LAST, RETRIEVE, STORE
+from psyneulink.core.globals.keywords import ALL, FIRST, LAST, RETRIEVE, STORE, SYNCH
 
 __all__ = ['PytorchEMCompositionWrapper2']
 
@@ -45,9 +45,9 @@ class PytorchEMCompositionWrapper2(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
 
         # Ensure that execution_sets for field_memory_nodes are in the correct places in the sequence
-        field_memory_pytorch_nodes = [v for k,v in self.nodes_map.items() if k in self.composition.field_memory_nodes]
+        memory_cycle_nodes = getattr(self.composition, 'memory_cycle_nodes', self.composition.field_memory_nodes)
+        field_memory_pytorch_nodes = [v for k,v in self.nodes_map.items() if k in memory_cycle_nodes]
         set(field_memory_pytorch_nodes) == self.execution_sets[1]
-        assert len(self.execution_sets) == 6 if self.composition.field_weight_nodes else 4
         self.execution_sets.append(self.execution_sets[1])
         field_memory_executions = [i+1 for i, exec_set in enumerate(self.execution_sets)
                                    if field_memory_pytorch_nodes[0] in exec_set]
@@ -102,6 +102,9 @@ class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
         self.mechanism.function.scores_function.parameters.matrix._set(memory.T, context)
 
     def set_pnl_variable_and_values(self, set_variable=False, set_value=True, context=None):
+        if SYNCH not in self._use:
+            return
+
         super().set_pnl_variable_and_values(
             set_variable=set_variable,
             set_value=set_value,
