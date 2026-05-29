@@ -3689,6 +3689,17 @@ class AutodiffComposition(Composition):
                                                context=context,
                                                base_context=Context(execution_id=None))
 
+        elif execution_mode.is_compiled():
+            # Compiled mode shares binary structures between forward execution and learning.
+            # Thus we need to build the Pytorch representation even without learning mode.
+            # TODO: This can be removed after structural tracking of Parameters is implemented
+            self._assign_execution_ids(context)
+            context.composition = self
+            context.source = ContextFlags.COMPOSITION
+            self._analyze_graph(context=context)
+            self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
+            self._build_pytorch_representation(context=context, skip_backprop_unless_learning=True)
+
         # Run AutodiffComposition
         results = super(AutodiffComposition, self).run(*args, execution_mode=execution_mode, context=context, **kwargs)
 
@@ -3862,8 +3873,7 @@ class AutodiffComposition(Composition):
         return super()._get_state_ids() + ["optimizer"]
 
     def _get_state_struct_type(self, ctx):
-        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch,
-                                                                    skip_backprop_unless_learning=True)
+        pytorch_representation = self.parameters.pytorch_representation.get(self._context_for_pytorch)
         comp_state_type_list = ctx.get_state_struct_type(super())
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
