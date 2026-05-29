@@ -1795,8 +1795,14 @@ class AutodiffComposition(Composition):
     def _has_learnable_pathways(self):
         return any(self._mech_is_receiver_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
 
-    def _mech_is_receiver_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
+    def _mech_is_receiver_in_learnable_pathway(self, mech_output_port: OutputPort, visited=None) -> bool:
         """Return True if `mech` receives a Projection from any pathway that has at least one learnable Projection"""
+        if visited is None:
+            visited = set()
+        if mech_output_port in visited:
+            return False
+        visited.add(mech_output_port)
+
         mech = mech_output_port.owner
         if isinstance(mech, CompositionInterfaceMechanism):
             # Restrict search to afferent of input_port paired with mech_output_port
@@ -1806,7 +1812,7 @@ class AutodiffComposition(Composition):
         for afferent in afferents:
             if afferent.learnable:
                 return True
-            check_afferent_pathway = self._mech_is_receiver_in_learnable_pathway(afferent.sender)
+            check_afferent_pathway = self._mech_is_receiver_in_learnable_pathway(afferent.sender, visited)
             if check_afferent_pathway:
                 return True
         return False

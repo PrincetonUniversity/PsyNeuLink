@@ -23,7 +23,7 @@ The refactored EMComposition uses one ExternalMemoryMechanism per memory field i
 to update MappingProjection matrices.
 
 - Does not support concatenate_queries
-- (1-memory_decay_rate) is what is applied (multiplicatively) to decay memory
+- memory_decay_rate is applied as the public EMComposition retention multiplier
 - If a value is not provided as input to KEY Field, then the retrieved value is stored;
    need to deal with nested emcomposition2 in that case:
    - does it automatically get a default input from the input_CIM?
@@ -610,6 +610,7 @@ class EMComposition2(AutodiffComposition):
 
         self.fields = ContentAddressableList(component_type=Field)
         self.entry_template = memory_template[0]
+        self.concatenate_queries_node = None
 
         (field_names,
          field_weights,
@@ -774,7 +775,7 @@ class EMComposition2(AutodiffComposition):
                     [
                         np.full(
                             len(field),
-                            np.random.uniform(memory_fill[0], memory_fill[1], len(field)),
+                            np.random.uniform(memory_fill[1], memory_fill[0], len(field)),
                         ).tolist()
                         for field in entry_template
                     ]
@@ -1121,12 +1122,15 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             key_len = 1 if is_numeric_scalar(field.query.squeeze()) else len(field.query.squeeze())
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
+            # MatrixMemory uses decay_rate as the amount removed from memory, while EMComposition's
+            # public memory_decay_rate is the retention multiplier and treats 0/None/False as no decay.
+            matrix_memory_decay_rate = 0 if not memory_decay_rate else 1 - memory_decay_rate
 
             field.memory_node = ExternalMemoryMechanism(
                 field_type = field.type,
                 field_shape = len(self.entry_template[field.index]),
                 field_memory = field_memory,
-                decay_rate = memory_decay_rate,
+                decay_rate = matrix_memory_decay_rate,
                 storage_prob = storage_prob,
                 scores_metric = L0 if key_len == 1 else DOT_PRODUCT,
                 normalize_memories = True if key_len == 1 else normalize_memories,
@@ -1355,7 +1359,8 @@ class EMComposition2(AutodiffComposition):
             # Input and weight nodes should run only once, at the beginning of the trial
             # EM2 BREADCRUMB: DOES THIS CONDITION NEED A TimeScale SPECIFICTION (I.E., TRIAL)?
             self.scheduler.add_condition(field.input_node, BeforeNCalls(field.input_node, 1))
-            self.scheduler.add_condition(field.weight_node, BeforeNCalls(field.weight_node, 1))
+            if field.weight_node is not None:
+                self.scheduler.add_condition(field.weight_node, BeforeNCalls(field.weight_node, 1))
 
             # Field-memory mechanisms must run once after inputs, then again after RETRIEVE.
             self.scheduler.add_condition(

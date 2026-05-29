@@ -2122,6 +2122,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
         self.composition = composition
         self.torch_dtype = dtype
+        self.device = device
 
         self.input = None
         self.output = None
@@ -2342,7 +2343,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         # TransformFunction can reduce output to single item from multi-item input
         if (isinstance(function._pnl_function, TransformFunction)
-                and not isinstance(function._pnl_function, MatrixMemory)):
+                and not isinstance(function._pnl_function, MatrixMemory)
+                and isinstance(res, torch.Tensor)):
             res = res.unsqueeze(2)
 
         return res
@@ -2628,7 +2630,12 @@ class PytorchProjectionWrapper():
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
                 for p in output_port.efferents:
                     if p is self._pnl_proj and p in context.composition._get_all_projections():
-                        self._value_idx = i
+                        owner_value_index = output_port.owner_value_index
+                        self._value_idx = (
+                            owner_value_index
+                            if isinstance(owner_value_index, (int, np.integer))
+                            else i
+                        )
                         break
                 i += 1
         # MODIFIED EM2 END

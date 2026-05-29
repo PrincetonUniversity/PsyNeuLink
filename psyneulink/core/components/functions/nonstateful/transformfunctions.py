@@ -2548,18 +2548,30 @@ class MatrixMemory(TransformFunction): #
         local_context = copy.copy(context)
         local_context.execution_id = None
         scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, local_context)
-        memory = torch.tensor(self.parameters.memory._get(context))
+        memory_holder = {
+            'memory': torch.tensor(
+                self.parameters.memory._get(context),
+                device=device,
+                dtype=torch.double,
+            )
+        }
+
+        def _get_memory():
+            return memory_holder['memory']
+
+        def _set_memory(memory):
+            memory_holder['memory'] = memory
 
         def _compute_scores_pytorch_fct(query, context=None):
             # memory = self.parameters.memory._get(context)
-            memory_for_read = memory.clone()
+            memory_for_read = _get_memory().clone()
             norms = torch.linalg.norm(memory_for_read, dim=1)
-            scores = scores_function_pytorch(query, memory_for_read)
+            scores = scores_function_pytorch(query, memory_for_read.T)
             return scores, norms
 
         def _retrieve_memory_pytorch_fct(query, scores, context=None):
             # memory = self.parameters.memory._get(context)
-            retrieved = torch.matmul(scores, memory.clone())
+            retrieved = torch.matmul(scores, _get_memory().clone())
             return retrieved
 
         def _store_memory_pytorch_fct(item_to_store, weakest_memory_idx):
@@ -2568,11 +2580,12 @@ class MatrixMemory(TransformFunction): #
             random_state = self.parameters.random_state._get(context)
             if random_state.uniform(0, 1) < storage_prob:
                 decay_rate = self.parameters.decay_rate._get(context)
+                memory = _get_memory()
                 if decay_rate >= 0.0:
                     memory.mul_(1-decay_rate)
                 memory[weakest_memory_idx] = item_to_store
                 # self.parameters.memory._set(memory, context, override=True)
-                self.scores_function.parameters.matrix._set(self.memory.T, context)
+                self.scores_function.parameters.matrix._set(memory.detach().cpu().numpy().T, context)
 
         def func(variable, operation):
             query = variable[0][0]
@@ -2582,6 +2595,7 @@ class MatrixMemory(TransformFunction): #
             if operation == COMPUTE_SCORES:
                 scores, norms = _compute_scores_pytorch_fct(query, context)
                 entry = query
+                combined_scores = scores
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == RETRIEVE:
@@ -2602,6 +2616,9 @@ class MatrixMemory(TransformFunction): #
                               f" {self.__class__.__name__}")
 
             return [[[entry, combined_scores, norms]]]
+
+        func.get_memory = _get_memory
+        func.set_memory = _set_memory
 
         return func
 
