@@ -71,7 +71,7 @@ from psyneulink.core.globals.keywords import (
     TARGETS,
     TARGET_MECHANISM,
     SAMPLE_VALUES,
-    Loss,
+    Loss, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION,
 )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
@@ -2612,9 +2612,10 @@ class PytorchProjectionWrapper():
         else:
             self.default_value = projection.defaults.value
 
-        # Get item of value corresponding to OutputPort that is Projection's sender
+        # Get index of item in value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
+        # MODIFIED EM2 OLD:
         if context.composition and LEARNING in self._use:
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
                 if all(p in context.composition.projections for p in output_port.efferents):
@@ -2622,6 +2623,15 @@ class PytorchProjectionWrapper():
                         self._value_idx = i
                         break
                     i += 1
+        # # MODIFIED EM2 NEW:
+        # if context.composition and LEARNING in self._use:
+        #     for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
+        #         for p in output_port.efferents:
+        #             if p is self._pnl_proj and p in context.composition._get_all_projections():
+        #                 self._value_idx = i
+        #                 break
+        #             i += 1
+        # MODIFIED EM2 END
 
         # Create a Pytorch Parameter for the matrix
         matrix = projection.parameters.matrix.get(context=context)

@@ -1230,7 +1230,7 @@ class EMComposition2(AutodiffComposition):
             softmax_func = softmax_function._gen_pytorch_fct(device, local_context)
             def func(variable):
                 variable = variable.squeeze()
-                return softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]))
+                return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]))]
             return func
 
         combined_scores_function = UserDefinedFunction(_combined_scores_function,
