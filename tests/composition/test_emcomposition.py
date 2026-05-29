@@ -8,13 +8,14 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
+# from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.emcomposition.emcomposition2 import EMComposition2, EMComposition2Error
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
 
-# Unit tests for functions of EMComposition class that are new (not in Composition or AutodiffComposition)
+# Unit tests for functions of EMComposition2 class that are new (not in Composition or AutodiffComposition)
 # or override functions in those classes
 #
 # TODO: EM BREADCRUMB:
@@ -29,17 +30,17 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 class TestConstruction:
 
     def test_two_calls_no_args(self):
-        comp = EMComposition()
-        comp_2 = EMComposition()
-        assert isinstance(comp, EMComposition)
-        assert isinstance(comp_2, EMComposition)
+        comp = EMComposition2()
+        comp_2 = EMComposition2()
+        assert isinstance(comp, EMComposition2)
+        assert isinstance(comp_2, EMComposition2)
 
     # def test_pytorch_representation(self):
-    #     comp = EMComposition()
+    #     comp = EMComposition2()
     #     assert comp.pytorch_representation is None
 
     # def test_report_prefs(self):
-    #     comp = EMComposition()
+    #     comp = EMComposition2()
     #     assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
     #     assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
 
@@ -148,7 +149,7 @@ class TestConstruction:
         if softmax_gain is not None:
             params.update({'softmax_gain': softmax_gain})
 
-        em = EMComposition(**params)
+        em = EMComposition2(**params)
         assert np.hstack(np.array(em.memory, dtype=object).flatten()).size < 30
 
         # Validate basic structure
@@ -228,15 +229,15 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
     def test_disallow_modification(self):
-        em = EMComposition()
-        with pytest.raises(EMCompositionError) as error_text:
+        em = EMComposition2()
+        with pytest.raises(EMComposition2Error) as error_text:
             em.add_node(pnl.ProcessingMechanism())
 
-        assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
-        with pytest.raises(EMCompositionError) as error_text:
+        assert "Nodes cannot be added to an EMComposition2: ('EM_Composition2')." in str(error_text.value)
+        with pytest.raises(EMComposition2Error) as error_text:
             em.add_projection(pnl.MappingProjection())
 
-        assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+        assert "Projections cannot be added to an EMComposition2: ('EM_Composition2')." in str(error_text.value)
 
     @pytest.mark.parametrize("softmax_choice, expected",
                              [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),
@@ -244,23 +245,23 @@ class TestConstruction:
                               (pnl.PROBABILISTIC, [[1, .1, .1]]), # NOTE: actual stochasticity not tested here
                              ])
     def test_softmax_choice(self, softmax_choice, expected):
-        em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
-                           softmax_choice=softmax_choice,
-                           enable_learning=False,
-                           softmax_threshold=None,
-                           memory_decay_rate=0,
-                           normalize_memories=False)
+        em = EMComposition2(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
+                            softmax_choice=softmax_choice,
+                            enable_learning=False,
+                            softmax_threshold=None,
+                            memory_decay_rate=0,
+                            normalize_memories=False)
         result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
 
         np.testing.assert_allclose(result, expected)
 
     @pytest.mark.parametrize("softmax_choice", [pnl.ARG_MAX, pnl.PROBABILISTIC])
     def test_softmax_choice_error(self, softmax_choice):
-        em = EMComposition(memory_template=[[[1, .1, .1]], [[.1, 1, .1]], [[.1, .1, 1]]])
+        em = EMComposition2(memory_template=[[[1, .1, .1]], [[.1, 1, .1]], [[.1, .1, 1]]])
         msg = (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                f"of '{em.name}' cannot be used during learning; change to WEIGHTED_AVG.")
 
-        with pytest.raises(EMCompositionError, match=msg):
+        with pytest.raises(EMComposition2Error, match=msg):
             em.parameters.softmax_choice.set(softmax_choice)
             em.learn()
 
@@ -268,18 +269,18 @@ class TestConstruction:
                        "'enable_learning' set to True; this will generate an error if its "
                        "'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
         with pytest.warns(UserWarning, match=re.escape(warning_msg)):
-            EMComposition(softmax_choice=softmax_choice, enable_learning=True)
+            EMComposition2(softmax_choice=softmax_choice, enable_learning=True)
 
     def test_fields_arg_and_associated_errors(self):
 
-        em = EMComposition(memory_template=(5,1),
-                           memory_capacity=1,
-                           normalize_field_weights=False,
-                           fields={'A': (1.2, 3.4, True),
-                                   'B': (None, False, True),
-                                   'C': (0, True, True),
-                                   'D': (7.8, False, True),
-                                   'E': (5.6, True, True)})
+        em = EMComposition2(memory_template=(5,1),
+                            memory_capacity=1,
+                            normalize_field_weights=False,
+                            fields={'A': (1.2, 3.4, True),
+                                    'B': (None, False, True),
+                                    'C': (0, True, True),
+                                    'D': (7.8, False, True),
+                                    'E': (5.6, True, True)})
         assert em.num_fields == 5
         assert em.num_keys == 4
         assert (em.field_weights == [1.2, None, 0, 7.8, 5.6]).all()
@@ -287,8 +288,8 @@ class TestConstruction:
         np.testing.assert_allclose(em.target_fields, [True, True, True, True, True])
 
         # # Test error for wrong number of entries
-        with pytest.raises(EMCompositionError) as error_text:
-            EMComposition(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
+        with pytest.raises(EMComposition2Error) as error_text:
+            EMComposition2(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
         assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
                                                 f"of 'EM_Composition' does not match the number of fields in its "
                                                 f"memory (3).")
@@ -304,24 +305,24 @@ class TestConstruction:
                             "'field_names', 'field_weights',  'learn_field_weights' or "
                             "'target_fields' args will be ignored.")
             with pytest.warns(UserWarning, match=re.escape(warning_msg)):
-                EMComposition(name=cn,
-                              memory_template=(2,1),
-                              memory_capacity=1,
-                              fields={'A': (1.2, 3.4, True),
-                                      'B': (None, True, True)},
-                              field_names=fn,
-                              field_weights=fw,
-                              learn_field_weights=lfw,
-                              target_fields=tf)
+                EMComposition2(name=cn,
+                               memory_template=(2,1),
+                               memory_capacity=1,
+                               fields={'A': (1.2, 3.4, True),
+                                       'B': (None, True, True)},
+                               field_names=fn,
+                               field_weights=fw,
+                               learn_field_weights=lfw,
+                               target_fields=tf)
 
         warning_msg = ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
                        "but it is not allowed for value fields; it will be ignored.")
         # Test error on specification of learning for value field
         with pytest.warns(UserWarning, match=re.escape(warning_msg)):
-            EMComposition(memory_template=(2,1),
-                          memory_capacity=1,
-                          fields={'A': (1.2, 3.4, True),
-                                  'B': (None, True, True)})
+            EMComposition2(memory_template=(2,1),
+                           memory_capacity=1,
+                           fields={'A': (1.2, 3.4, True),
+                                   'B': (None, True, True)})
         # MODIFIED 6/19/25 OLD:  WARNING NO LONGER OCCURS ON CONSTRUCTION, BUT IT SHOULD BE RAISED ON LEARN
         # assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
         #         "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
@@ -356,14 +357,14 @@ class TestConstruction:
                                             learn_field_weights,
                                             target_fields):
         # individual args
-        em = EMComposition(memory_template=(5,2),
-                           memory_capacity=2,
-                           fields=fields,
-                           field_names=field_names,
-                           field_weights=field_weights,
-                           learn_field_weights=learn_field_weights,
-                           target_fields=target_fields,
-                           learning_rate=0.5)
+        em = EMComposition2(memory_template=(5,2),
+                            memory_capacity=2,
+                            fields=fields,
+                            field_names=field_names,
+                            field_weights=field_weights,
+                            learn_field_weights=learn_field_weights,
+                            target_fields=target_fields,
+                            learning_rate=0.5)
 
         assert em.num_fields == 5
         assert em.num_keys == 3
@@ -497,16 +498,16 @@ class TestConstruction:
         # pytest.skip(<UNECESSARY TESTS>>)
 
         def construct_em(field_weights):
-            return pnl.EMComposition(memory_template=[[[5, 0], [5], [5, 0, 3]], [[20, 0], [20], [20, 1, 199]]],
-                                     memory_capacity=4,
-                                     field_weights=field_weights)
+            return pnl.EMComposition2(memory_template=[[[5, 0], [5], [5, 0, 3]], [[20, 0], [20], [20, 1, 199]]],
+                                      memory_capacity=4,
+                                      field_weights=field_weights)
 
         field_weights = field_weight_1 + field_weight_2 + field_weight_3
 
         if all(fw is None for fw in field_weights):
             error_msg = ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
                          "since that will preclude the construction of any keys.")
-            with pytest.raises(EMCompositionError, match=re.escape(error_msg)):
+            with pytest.raises(EMComposition2Error, match=re.escape(error_msg)):
                 construct_em(field_weights)
 
             return
@@ -543,7 +544,7 @@ class TestConstruction:
          {'A': (1.2, 3.4, True), 'B': (None, False, True), 'C': (0, True, True),
           'D': (7.8, False, True), 'E': (5.6, True, True)
           },
-         "The 'learning_rate' arg for 'EM COMP' is specified as a dict, which is not supported for an EMComposition;  "
+         "The 'learning_rate' arg for 'EM COMP' is specified as a dict, which is not supported for an EMComposition2;  "
          "use either its 'fields' arg or its 'learn_field_weights' arg instead."),
     ]
     @pytest.mark.parametrize('_condition, learning_rate, fields, error_message', test_args_for_learning_rate_errors,
@@ -552,12 +553,12 @@ class TestConstruction:
         learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
         fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
 
-        with pytest.raises(EMCompositionError) as error_text:
-            em = EMComposition(name= "EM COMP",
-                               memory_template=(5,1),
-                               memory_capacity=1,
-                               learning_rate=learning_rate,
-                               fields=fields)
+        with pytest.raises(EMComposition2Error) as error_text:
+            em = EMComposition2(name= "EM COMP",
+                                memory_template=(5,1),
+                                memory_capacity=1,
+                                learning_rate=learning_rate,
+                                fields=fields)
         assert error_message in error_text.value.error_value
 
 @pytest.mark.pytorch
@@ -687,7 +688,7 @@ class TestExecution:
                                                expected_retrieval):
 
         # # if comp_mode not in {pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch}:
-        # #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
+        # #     pytest.skip('Execution of EMComposition2 not yet supported for LLVM Mode.')
 
         # Restrict testing of learning configurations (which are much larger) to select tests
         if learn_field_weights and test_num not in {10}:
@@ -723,7 +724,6 @@ class TestExecution:
         params.update({'softmax_threshold': None})
         # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
-        # em = EMComposition(**params)
         em = pnl.EMComposition2(**params)
 
         # Construct inputs
@@ -976,15 +976,15 @@ class TestExecution:
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
-        em = EMComposition(memory_template=(2,3),
-                           field_weights=[1,1],
-                           memory_capacity=4,
-                           softmax_gain=100,
-                           memory_fill=(0,.001),
-                           concatenate_queries=concatenate,
-                           learn_field_weights=learning,
-                           enable_learning=True,
-                           use_storage_node=use_storage_node)
+        em = EMComposition2(memory_template=(2,3),
+                            field_weights=[1,1],
+                            memory_capacity=4,
+                            softmax_gain=100,
+                            memory_fill=(0,.001),
+                            concatenate_queries=concatenate,
+                            learn_field_weights=learning,
+                            enable_learning=True,
+                            use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
                   [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
@@ -1003,9 +1003,9 @@ class TestExecution:
         if use_storage_node:
             # Only test learning if using storage_node, as this is required for learning
             if concatenate:
-                with pytest.raises(EMCompositionError) as error:
+                with pytest.raises(EMComposition2Error) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
+                assert "EMComposition2 does not support learning with 'concatenate_queries'='True'." in str(error.value)
 
             elif not learning:
                 with pytest.raises(AutodiffCompositionError) as error:
@@ -1037,29 +1037,29 @@ class TestExecution:
                                               integrator_mode=True,
                                               integration_rate=.69)
 
-        em = EMComposition(name='EM',
-                           memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
-                           memory_fill=(0,.0001),
-                           memory_capacity=50,
-                           memory_decay_rate=0,
-                           softmax_gain=10,
-                           softmax_threshold=0.001,
-                           fields = {'STATE': {pnl.FIELD_WEIGHT: None,
-                                               pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                               pnl.TARGET_FIELD: True},
-                                     'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
-                                                        pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                                        pnl.TARGET_FIELD: False},
-                                     'CONTEXT': {pnl.FIELD_WEIGHT:.5,
-                                                 pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                                 pnl.TARGET_FIELD: False}},
-                           normalize_field_weights=True,
-                           normalize_memories=False,
-                           concatenate_queries=False,
-                           enable_learning=True,
-                           learning_rate=.5,
-                           device=pnl.CPU
-                           )
+        em = EMComposition2(name='EM',
+                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
+                            memory_fill=(0,.0001),
+                            memory_capacity=50,
+                            memory_decay_rate=0,
+                            softmax_gain=10,
+                            softmax_threshold=0.001,
+                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
+                                                pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                pnl.TARGET_FIELD: True},
+                                      'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
+                                                         pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                         pnl.TARGET_FIELD: False},
+                                      'CONTEXT': {pnl.FIELD_WEIGHT:.5,
+                                                  pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                  pnl.TARGET_FIELD: False}},
+                            normalize_field_weights=True,
+                            normalize_memories=False,
+                            concatenate_queries=False,
+                            enable_learning=True,
+                            learning_rate=.5,
+                            device=pnl.CPU
+                            )
         prediction_layer = pnl.ProcessingMechanism(name='PREDICTION',
                                                    function=pnl.Logistic,
                                                    input_shapes=11)
@@ -1240,7 +1240,7 @@ class TestExecution:
             },
         }
 
-        em = pnl.EMComposition(
+        em = pnl.EMComposition2(
             name="EM",
             memory_template=memory_template,
             memory_capacity=10,
@@ -1280,7 +1280,7 @@ class TestExecution:
         }
 
         # Regression test:
-        # field order should not determine whether EMComposition can run when one field
+        # field order should not determine whether EMComposition2 can run when one field
         # is a value field (FIELD_WEIGHT=None) and the other is a query field.
         result = em.run(
             inputs=inputs,
