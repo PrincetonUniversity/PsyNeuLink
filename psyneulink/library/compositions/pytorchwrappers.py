@@ -2615,22 +2615,22 @@ class PytorchProjectionWrapper():
         # Get index of item in value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
-        # MODIFIED EM2 OLD:
-        if context.composition and LEARNING in self._use:
-            for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
-                if all(p in context.composition.projections for p in output_port.efferents):
-                    if self._pnl_proj in output_port.efferents:
-                        self._value_idx = i
-                        break
-                    i += 1
-        # # MODIFIED EM2 NEW:
+        # # MODIFIED EM2 OLD:
         # if context.composition and LEARNING in self._use:
         #     for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
-        #         for p in output_port.efferents:
-        #             if p is self._pnl_proj and p in context.composition._get_all_projections():
+        #         if all(p in context.composition.projections for p in output_port.efferents):
+        #             if self._pnl_proj in output_port.efferents:
         #                 self._value_idx = i
         #                 break
         #             i += 1
+        # MODIFIED EM2 NEW:
+        if context.composition and LEARNING in self._use:
+            for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
+                for p in output_port.efferents:
+                    if p is self._pnl_proj and p in context.composition._get_all_projections():
+                        self._value_idx = i
+                        break
+                i += 1
         # MODIFIED EM2 END
 
         # Create a Pytorch Parameter for the matrix
