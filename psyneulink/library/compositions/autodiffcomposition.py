@@ -2428,7 +2428,7 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       new=None,
                                       base_context=Context(execution_id=None),
-                                      skip_backprop_unless_learning=False):
+                                      skip_backprop_unless_learning=False)->PytorchCompositionWrapper:
         """Build a Pytorch representation of the AutodiffComposition
         Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
@@ -3419,6 +3419,8 @@ class AutodiffComposition(Composition):
                                            f"but Pytorch module ('torch') is not installed. "
                                            f"Please install it with `pip install torch` or `pip3 install torch`")
 
+        assert 'DEBUGGING BREAK POINT' # BEFORE AUTODIFF LEARN
+
         return super().learn(*args,
                              synch_with_pnl_options=synch_with_pnl_options,
                              retain_in_pnl_options=retain_in_pnl_options,
@@ -3581,6 +3583,8 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
+                assert 'DEBUGGING BREAK POINT' # BEFORE AUTODIFF FORWARD
+
                 output_values = self.autodiff_forward(inputs=autodiff_inputs,
                                                       targets=autodiff_targets,
                                                       optimization_num=optimization_num,
@@ -3592,6 +3596,9 @@ class AutodiffComposition(Composition):
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase
+
+                assert 'DEBUGGING BREAK POINT: AFTER AUTODIFF FORWARD'
+
 
                 # Complete TRIAL Panel for output report, and report progress
                 report(self,
@@ -3702,7 +3709,9 @@ class AutodiffComposition(Composition):
                                                base_context=Context(execution_id=None))
 
         # Run AutodiffComposition
+        assert 'DEBUGGING BREAK POINT: BEFORE AUTODIFF RUN'
         results = super(AutodiffComposition, self).run(*args, execution_mode=execution_mode, context=context, **kwargs)
+        assert 'DEBUGGING BREAK POINT: AFTER AUTODIFF RUN'
 
         if execution_mode == pnlvm.ExecutionMode.PyTorch:
             # Synchronize specified outcomes at end of run

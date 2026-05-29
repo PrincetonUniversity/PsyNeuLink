@@ -945,7 +945,7 @@ class TestExecution:
         inputs = {external_input: input_array,
                   targets[0]: [1],
                   targets[1]: [1]}
-        outer_comp.learn(inputs=inputs, epochs=1)
+        outer_comp.learn(inputs=inputs, epochs=2)
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [

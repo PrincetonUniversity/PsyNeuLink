@@ -586,7 +586,7 @@ class EMComposition2(AutodiffComposition):
         use_gating_for_weighting: bool = False,
         random_state=None,
         seed=None,
-        name="EM_Composition",
+        name="EM_Composition2",
         **kwargs,
     ):
         memory_fill = memory_fill or 0
@@ -1231,8 +1231,8 @@ class EMComposition2(AutodiffComposition):
             def func(variable):
                 variable = variable.squeeze()
                 # EM2 BREADCRUMB: SHOULD REPLACE CASTING TO DOUBLE BELOW WITH CASTING TO DEFAULT PRECISION
-                return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
-                # return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
+                # return [softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]
+                return [[[softmax_func(variable[0]), torch.atleast_1d(torch.argmin(variable[1]).double())]]]
             return func
 
         combined_scores_function = UserDefinedFunction(_combined_scores_function,
@@ -1316,7 +1316,6 @@ class EMComposition2(AutodiffComposition):
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_NORMS",
             )
 
-
     def _construct_softmax_gain_control_node(self, softmax_gain):
         node = None
         if softmax_gain == CONTROL:
@@ -1372,14 +1371,12 @@ class EMComposition2(AutodiffComposition):
             # Retrieved nodes run only after both field-memory mechanisms have run twice.
             self.scheduler.add_condition(field.retrieved_node, AfterNCalls(field.memory_node, 2))
 
-
     def _assign_node_roles(self):
         for node in self.field_weight_nodes:
             self.exclude_node_roles(node, NodeRole.INPUT)
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
         self.exclude_node_roles(self.combined_scores_node, NodeRole.OUTPUT)
-
 
     def _assign_attributes_for_show_graph(self):
         for node in self.value_input_nodes:
@@ -1453,6 +1450,13 @@ class EMComposition2(AutodiffComposition):
     # *****************************************************************************************************************
     # ***************************************** Execution Methods ******************************************************
     # *****************************************************************************************************************
+
+    def _build_pytorch_representation(self, *args, **kwargs):
+        pytorch_rep = super()._build_pytorch_representation( *args, **kwargs)
+        # EM2 BREADCRUMB: COPY MEMORY FROM FIELD NODES HERE
+        for node, wrapper in pytorch_rep.nodes_map:
+            wrapper.memory = torch.tensor(node.parameters.memory._get(kwargs[CONTEXT]))
+        return pytorch_rep
 
     @handle_external_context(fallback_default=True)
     def learn(
@@ -1575,15 +1579,6 @@ class EMComposition2(AutodiffComposition):
 
         super()._identify_target_nodes(context)
         return target_nodes
-
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
-        return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
-
-    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
-        # EM storage is field-local and executed by ExternalMemoryMechanism after retrieval.
-        # Field-weight learning can be restored by calling super() once the PyTorch wrapper
-        # supports ExternalMemoryMechanism as a differentiable memory component.
-        pass
 
     def add_node(self, node, required_roles=None, context=None):
         if context is None:

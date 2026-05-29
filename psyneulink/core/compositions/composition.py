@@ -802,11 +802,11 @@ that compares their advantages and disadvantages.
 When learning is implemented using standard PsyNeuLink Components, each calculation and/or operation involved in
 learning -- including those responsible for computing errors, and for using those errors to modify the Projections
 between Mechanisms, is assigned to a different PsyNeuLink `learning-related Component
-<Composition_Learning_Components>`.  These can be used to implement all types of learning.  Learning is generally
+<Composition_Learning_Components>`. These can be used to implement all types of learning.  Learning is generally
 considered to fall into two broad classes:  *unsupervised*, in which connections weights are modified
-by mere exposure to the inputs in order to capture structure and/or relationships among them;  and *supervised*,
-which in which the connection weights are modified so that each input generates a desired output (see
-`<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both types of
+by mere exposure to the inputs in order to capture structure and/or relationships among them;  and *supervised*, also
+referred to as "training," in which the connection weights are modified so that each input generates a desired output
+(see `<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both types of
 learning can be implemented in a Composition, using `LearningMechanisms <LearningMechanism>` that compute the
 changes to make to the `matrix <MappingProjection.matrix>` parameter of `MappingProjections <MappingProjection>`
 being learned, and `LearningProjections <LearningProjection>` that apply those changes to those MappingProjections.
@@ -12518,6 +12518,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     execution_stimuli = None
 
+                assert 'DEBUGGING BREAK POINT' # BEFORE COMPOSITION EXECUTE
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
@@ -12539,6 +12540,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             report_num=report_num,
                                             **kwargs
                                             )
+                assert 'DEBUGGING BREAK POINT' # AFTER COMPOSITION EXECUTE
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
@@ -13395,7 +13397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
-            assert 'DEBUGGING BREAK POINT: BEGINNING OF TRIAL EXECUTION - EXECUTION_SETS ASSIGNED'
+            assert 'DEBUGGING BREAK POINT' # BEGINNING OF TRIAL EXECUTION - EXECUTION_SETS ASSIGNED
 
             for next_execution_set in execution_sets:
 

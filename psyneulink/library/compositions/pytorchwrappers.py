@@ -388,7 +388,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         )
 
         self._regenerate_torch_parameter_list()
-        assert 'DEBUGGING BREAK POINT' # END OF __init__()
+        assert 'DEBUGGING BREAK POINT' # END OF __init__()'
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
