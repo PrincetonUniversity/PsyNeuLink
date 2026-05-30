@@ -160,7 +160,6 @@ Dependencies that are automatically installed (except those noted as optional) i
    * matplotlib
    * toposort
    * beartype
-   * pillow
    * llvmlite
    * mpi4py (optional)
 
