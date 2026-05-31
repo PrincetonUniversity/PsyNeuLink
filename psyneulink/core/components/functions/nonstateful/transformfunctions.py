@@ -2322,7 +2322,7 @@ class MatrixMemory(TransformFunction): #
         memory=None,                     \
         normalize_memories=True,         \
         scores_metric=DOT_PRODUCT,       \
-        decay_rate=0,                    \
+        decay_rate=1.0,                  \
         storage_prob=1.0,                \
         params=None,                     \
         owner=None,                      \
@@ -2593,9 +2593,8 @@ class MatrixMemory(TransformFunction): #
             weakest_memory_idx = int(variable[0][2].squeeze())
 
             if operation == COMPUTE_SCORES:
-                scores, norms = _compute_scores_pytorch_fct(query, context)
+                combined_scores, norms = _compute_scores_pytorch_fct(query, context)
                 entry = query
-                combined_scores = scores
 
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == RETRIEVE:

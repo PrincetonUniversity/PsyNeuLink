@@ -141,7 +141,6 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         #                                        primary=True,
         #                                        # modulable=True,
         #                                        stateful=True)
-        # decay_rate = Parameter(0.0, modulable=True, stateful=True)
         decay_rate = FunctionParameter(0.0,
                                        function_name='function',
                                        function_parameter_name='decay_rate',
