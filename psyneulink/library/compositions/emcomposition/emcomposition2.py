@@ -632,11 +632,6 @@ class EMComposition2(AutodiffComposition):
                                 target_fields,
                                 name)
 
-        # # MODIFIED EM2 OLD:
-        # if memory_decay_rate is AUTO:
-        #     memory_decay_rate = 1 - (1 / memory_capacity)
-        # # MODIFIED EM2 END
-
         if softmax_gain == CONTROL:
             self.parameters.softmax_gain.modulable = False
 
@@ -1209,11 +1204,6 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             key_len = 1 if is_numeric_scalar(field.query.squeeze()) else len(field.query.squeeze())
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
-            # # MODIFIED EM2 OLD:
-            # # MatrixMemory uses decay_rate as the amount removed from memory, while EMComposition's
-            # # public memory_decay_rate is the retention multiplier and treats 0/None/False as no decay.
-            # decay_rate = 0 if not memory_decay_rate else memory_decay_rate
-            # MODIFIED EM2 END
 
             field.memory_node = ExternalMemoryMechanism(
                 field_type = field.type,
@@ -1505,7 +1495,7 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
 
             # Input and weight nodes should run only once, at the beginning of the trial
-            # EM2 BREADCRUMB: DOES THIS CONDITION NEED A TimeScale SPECIFICTION (I.E., TRIAL)?
+            # EM2 BREADCRUMB: DOES THIS CONDITION NEED A TimeScale SPECIFICATION (I.E., TRIAL)?
             self.scheduler.add_condition(field.input_node, BeforeNCalls(field.input_node, 1))
             if field.weight_node is not None:
                 self.scheduler.add_condition(field.weight_node, BeforeNCalls(field.weight_node, 1))
