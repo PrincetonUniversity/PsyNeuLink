@@ -44,7 +44,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transformfunctions import (
     MatrixMemory, ACCESS_MEMORY, COMPUTE_SCORES)
-from psyneulink.core.globals.keywords import DOT_PRODUCT, L0, NAME, OPERATION, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import AUTO, DOT_PRODUCT, L0, NAME, OPERATION, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import (
@@ -157,7 +157,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         access_condition = Parameter(None, stateful=False, loggable=False)
 
         def _validate_decay_rate(self, decay_rate):
-            if decay_rate is None:
+            if decay_rate is None or decay_rate == AUTO:
                 return None
             if not is_numeric_scalar(decay_rate) or not 0 <= decay_rate <= 1:
                 return "must be a float in the interval [0, 1]."
@@ -168,7 +168,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         field_type,
         field_shape: int,
         field_memory: Union[list, np.ndarray],
-        decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,  # -> rate on ContentAddressableMemory
+        decay_rate: Optional[Union[int, float, List, np.ndarray, AUTO]]=None,
         storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
         normalize_memories: bool = True,
         scores_metric: Optional[Literal[L0, DOT_PRODUCT]]=None,

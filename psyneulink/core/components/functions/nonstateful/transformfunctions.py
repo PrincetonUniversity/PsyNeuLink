@@ -55,7 +55,7 @@ from psyneulink.core.components.functions.function import (
     get_matrix, _random_state_getter, _seed_setter, DEFAULT_SEED)
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
-    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
+    ADDITIVE_PARAM, ARRANGEMENT, AUTO, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_MEMORY_FUNCTION, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
@@ -2322,7 +2322,7 @@ class MatrixMemory(TransformFunction): #
         memory=None,                     \
         normalize_memories=True,         \
         scores_metric=DOT_PRODUCT,       \
-        decay_rate=1.0,                  \
+        decay_rate=0.0,                  \
         storage_prob=1.0,                \
         params=None,                     \
         owner=None,                      \
@@ -2371,7 +2371,7 @@ class MatrixMemory(TransformFunction): #
         #                                        primary=True,
         #                                        stateful=True)
         store = Parameter(False)
-        decay_rate = Parameter(1.0, modulable=True)
+        decay_rate = Parameter(0.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, stateful=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
@@ -2381,6 +2381,13 @@ class MatrixMemory(TransformFunction): #
             if not all_within_range(storage_prob, 0, 1):
                 return f"must be a float in the interval [0,1]."
 
+        def _validate_decay_rate(self, decay_rate):
+            if decay_rate is None or decay_rate == AUTO:
+                return None
+            if not is_numeric_scalar(decay_rate) or not 0 <= decay_rate <= 1:
+                return "must be a float in the interval [0, 1]."
+
+
     @check_user_specified
     @beartype
     def __init__(self,
@@ -2388,7 +2395,7 @@ class MatrixMemory(TransformFunction): #
                  memory=None,
                  normalize_memories: bool = True,
                  scores_metric: Optional[Literal[L0, DOT_PRODUCT]] = None,
-                 decay_rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 decay_rate: Optional[Union[int, float, List, np.ndarray, Literal[AUTO]]]=None,
                  storage_prob: Optional[Union[int, float, np.ndarray]] = None,
                  params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
@@ -2398,6 +2405,10 @@ class MatrixMemory(TransformFunction): #
                                                operation=scores_metric,
                                                normalize=normalize_memories,
                                                matrix=memory.T)
+
+        decay_rate = decay_rate or 0.0
+        if decay_rate == AUTO:
+            decay_rate = 1/len(memory)
 
         super().__init__(
             default_variable=default_variable,

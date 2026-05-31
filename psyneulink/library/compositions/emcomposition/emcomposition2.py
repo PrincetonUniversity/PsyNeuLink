@@ -22,7 +22,7 @@ access_condition is satisfied
 The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
-- memory_decay_rate is applied as the public EMComposition retention multiplier
+- memory_decay_rate is applied as 1-memory_decay_rate multiplier to memory
 - If a value is not provided as input to KEY Field, then the retrieved value is stored;
    need to deal with nested emcomposition2 in that case:
    - does it automatically get a default input from the input_CIM?
@@ -564,12 +564,6 @@ class EMComposition2(AutodiffComposition):
             if option not in {FIRST, LAST, ALL}:
                 return "must be one of FIRST, LAST, or ALL."
 
-        # def _parse_memory_decay_rate(self, memory_decay_rate):
-        #     if is_numeric_scalar(memory_decay_rate):
-        #         return np.array(1-memory_decay_rate)
-        #     else:
-        #         return memory_decay_rate
-
     @check_user_specified
     def __init__(
         self,
@@ -638,8 +632,10 @@ class EMComposition2(AutodiffComposition):
                                 target_fields,
                                 name)
 
-        if memory_decay_rate is AUTO:
-            memory_decay_rate = 1 / memory_capacity
+        # # MODIFIED EM2 OLD:
+        # if memory_decay_rate is AUTO:
+        #     memory_decay_rate = 1 - (1 / memory_capacity)
+        # # MODIFIED EM2 END
 
         if softmax_gain == CONTROL:
             self.parameters.softmax_gain.modulable = False
@@ -1213,15 +1209,17 @@ class EMComposition2(AutodiffComposition):
         for field in self.fields:
             key_len = 1 if is_numeric_scalar(field.query.squeeze()) else len(field.query.squeeze())
             field_memory = np.array(memory_template[:, field.index].tolist()).astype(float)
-            # MatrixMemory uses decay_rate as the amount removed from memory, while EMComposition's
-            # public memory_decay_rate is the retention multiplier and treats 0/None/False as no decay.
-            matrix_memory_decay_rate = 0 if not memory_decay_rate else 1 - memory_decay_rate
+            # # MODIFIED EM2 OLD:
+            # # MatrixMemory uses decay_rate as the amount removed from memory, while EMComposition's
+            # # public memory_decay_rate is the retention multiplier and treats 0/None/False as no decay.
+            # decay_rate = 0 if not memory_decay_rate else memory_decay_rate
+            # MODIFIED EM2 END
 
             field.memory_node = ExternalMemoryMechanism(
                 field_type = field.type,
                 field_shape = len(self.entry_template[field.index]),
                 field_memory = field_memory,
-                decay_rate = matrix_memory_decay_rate,
+                decay_rate = memory_decay_rate,
                 storage_prob = storage_prob,
                 scores_metric = L0 if key_len == 1 else DOT_PRODUCT,
                 normalize_memories = True if key_len == 1 else normalize_memories,
@@ -1251,13 +1249,12 @@ class EMComposition2(AutodiffComposition):
             for entry in memory_template
         ]).astype(float)
         key_len = len(self.entry_template[self.key_fields[0].index])
-        matrix_memory_decay_rate = 0 if not memory_decay_rate else 1 - memory_decay_rate
 
         self.concatenated_memory_node = ExternalMemoryMechanism(
             field_type=FieldType.KEY,
             field_shape=concatenated_memory.shape[1],
             field_memory=concatenated_memory,
-            decay_rate=matrix_memory_decay_rate,
+            decay_rate=memory_decay_rate,
             storage_prob=storage_prob,
             scores_metric=L0 if key_len == 1 else DOT_PRODUCT,
             normalize_memories=True if key_len == 1 else normalize_memories,
