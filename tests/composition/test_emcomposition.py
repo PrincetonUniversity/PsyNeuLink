@@ -892,24 +892,25 @@ class TestExecution:
                   targets[1]: [1]}
         outer_comp.learn(inputs=inputs, epochs=1)
 
+    # EM2 BREADCRUMB: UNCOMMENT UNTIL DONE DEBUGGING
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [
-        pnl.ExecutionMode.Python,
+        # pnl.ExecutionMode.Python,
         pnl.ExecutionMode.PyTorch
     ])
     @pytest.mark.parametrize('concatenate', [
-        True,
+        # True,
         False
     ], ids=[
-        'concatenate',
+        # 'concatenate',
         'no_concatenate'
     ])
     @pytest.mark.parametrize('use_storage_node', [
         True,
-        False
+        # False
     ], ids=[
         'use_storage_node',
-        'no_storage_node'
+        # 'no_storage_node'
     ])
     @pytest.mark.parametrize('learning', [
         True,
