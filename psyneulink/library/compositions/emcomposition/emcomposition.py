@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Emcomposition *************************************************
+# ********************************************* EMComposition *************************************************
 
 """
 Refactored Emcomposition_Proj prototype.
@@ -103,7 +103,7 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 
 
 __all__ = [
-    "Emcomposition",
+    "EMComposition",
     "EmcompositionError",
     "FieldType",
     "KEY",
@@ -151,7 +151,7 @@ RETRIEVED_AFFIX = " [RETRIEVED]"
 
 
 def _memory_getter(owning_component=None, context=None):
-    """Return Emcomposition memory as a 3d object array: entries x fields x field_values.
+    """Return EMComposition memory as a 3d object array: entries x fields x field_values.
     These are derived from the memory attribute of the field_memory_node of each field.
     """
     if owning_component is None or owning_component.is_initializing:
@@ -197,7 +197,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
                 raise EmcompositionError(
                     f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' was originally assigned "
                     f"as a value node (i.e., with a field_weight = None); this cannot be changed after construction. "
-                    f"If you want to change it to a key field, you must re-construct the Emcomposition using a scalar "
+                    f"If you want to change it to a key field, you must re-construct the EMComposition using a scalar "
                     f"for its field in the `field_weights` arg (which can be 0).")
 
             continue
@@ -227,7 +227,7 @@ from psyneulink.library.compositions.emcomposition.emcomposition import FieldTyp
 
 
 class Field:
-    """Object that contains information about a field in an Emcomposition's memory."""
+    """Object that contains information about a field in an EMComposition's memory."""
 
     name = None
 
@@ -329,7 +329,7 @@ class EmcompositionError(CompositionError):
         return repr(self.error_value)
 
 
-class Emcomposition(AutodiffComposition):
+class EMComposition(AutodiffComposition):
     """
         Emcomposition_Proj(                      \
         memory_template=[[0],[0]],      \
@@ -678,7 +678,7 @@ class Emcomposition(AutodiffComposition):
             learn_field_weights=self.learn_field_weights,
             enable_learning=self.enable_learning,
             use_gating_for_weighting=self._use_gating_for_weighting,
-            context=Context(source=ContextFlags.COMMAND_LINE, string="FROM Emcomposition"),
+            context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition"),
         )
 
         self._assign_learning_attributes()
@@ -891,7 +891,7 @@ class Emcomposition(AutodiffComposition):
         if isinstance(learning_rate, dict):
             raise EmcompositionError(
                 f"The 'learning_rate' arg for '{name}' is specified as a dict, "
-                f"which is not supported for an Emcomposition;  "
+                f"which is not supported for an EMComposition;  "
                 f"use either its 'fields' arg or its 'learn_field_weights' arg instead."
             )
 
@@ -1512,7 +1512,7 @@ class Emcomposition(AutodiffComposition):
             # Storage should be after RETRIEVAL
             field.memory_node.parameters.access_condition.set(
                 conditions.AfterNCalls(self.combined_scores_node, 1),
-                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM Emcomposition storage conditions"),
+                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition storage conditions"),
                 override=True)
 
 
@@ -1536,7 +1536,7 @@ class Emcomposition(AutodiffComposition):
             )
             self.concatenated_memory_node.parameters.access_condition.set(
                 conditions.AfterNCalls(self.combined_scores_node, 1),
-                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM Emcomposition storage conditions"),
+                context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition storage conditions"),
                 override=True)
 
         # # RETRIEVE runs only after both field-memory mechanisms have run once.
@@ -1548,7 +1548,7 @@ class Emcomposition(AutodiffComposition):
         # for field_memory_node in self.field_memory_nodes:
         #     field_memory_node.parameters.access_condition.set(
         #         conditions.AfterNCalls(self.combined_scores_node, 1),
-        #         context=Context(source=ContextFlags.COMMAND_LINE, string="FROM Emcomposition storage conditions"),
+        #         context=Context(source=ContextFlags.COMMAND_LINE, string="FROM EMComposition storage conditions"),
         #         override=True,
         #     )
 
@@ -1699,7 +1699,7 @@ class Emcomposition(AutodiffComposition):
 
         if self.concatenate_queries:
             raise EmcompositionError(
-                "Emcomposition does not support learning with 'concatenate_queries'='True'."
+                "EMComposition does not support learning with 'concatenate_queries'='True'."
             )
 
         if softmax_choice in {ARG_MAX, PROBABILISTIC}:

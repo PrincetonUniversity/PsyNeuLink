@@ -466,7 +466,7 @@ _test_as_mdf_model_defaults_excluded_classes = {
     pnl.Rearrange: _reason_no_default,
     pnl.UserDefinedFunction: _reason_no_default,
     pnl.Emcomposition_Proj: 'needs GraphStructureCondition by default (not implemented for MDF)',
-    pnl.Emcomposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
+    pnl.EMComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
     pnl.LossMechanism: _reason_no_default
 }
 
@@ -475,7 +475,7 @@ try:
     _test_as_mdf_model_defaults_excluded_classes.update(
         {pnl.GRUComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
          pnl.Emcomposition_Proj: 'needs GraphStructureCondition by default (not implemented for MDF)',
-         pnl.Emcomposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
+         pnl.EMComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
 })
 except ImportError:
     pass

@@ -2329,17 +2329,17 @@ class MatrixMemory(TransformFunction): #
         prefs=None,                      \
         )
 
-    Limited form of ContentAddressableMemory, based on MatrixTransform, for specific use by Emcomposition
+    Limited form of ContentAddressableMemory, based on MatrixTransform, for specific use by EMComposition
 
     Use scores Parameter to compute retrieved value, which
-      allows passed-in scores to be used for retrieval (e.g., to use COMBINED_SCORES in Emcomposition)
+      allows passed-in scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition)
     Uses param[OPERATION] passed to _function() to determine whether to call _retrieve(), _store() or both:
         COMPUTE_SCORES: compute scores for each entry in memory based on query
         ACCESS_MEMORY: fits call _retrieve_memory() and then _store_memory()
         RETRIEVE: only call _retrieve_memory() (return entry based on query and scores; don't call store)
         STORE: only call _store_memory() (store query in place of entry in memory with lowest norm; don't call retrieve)
     Return memory (retrieved of stored), scores and norms and  based on current query
-        (e.g., so it can be used to calculate COMBINED_SCORES in Emcomposition)
+        (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields

@@ -65,7 +65,7 @@ executed in the same way as a standard Composition, though it provides additiona
   - use of `internal target signals <AutodiffComposition_Target>` for training;
   - training of `nested Compositions <AutodiffComposition_Nesting>`.
   - training of recurrent neural networks (RNNs, e.g., `GRUComposition`);
-  - training of external (episodic) memory structures (e.g., `Emcomposition`);
+  - training of external (episodic) memory structures (e.g., `EMComposition`);
 
 In addition to supporting `supervised learning <Composition_Learning_Supervised>` using the `backpropagation learning
 algorithm <https://en.wikipedia.org/wiki/Backpropagation>`_, it also supports some forms of `unsupervised learning
@@ -798,7 +798,7 @@ This is specified by setting **execution_mode** = `ExecutionMode.LLVMRun` in the
 method of an AutodiffComposition. This provides the fastest performance, but is limited to `supervised learning
 <Composition_Learning_Supervised>` using the `BackPropagation` algorithm, and does not support learning of `nested
  Compositions <Composition_Nested>` nor subclasses of AutodiffComposition that rely on PyTorch (e.g.,
- `GRUComposition` and `Emcomposition`) -- `PyTorch mode <AutodiffComposition_PyTorch>` should be used for these.
+ `GRUComposition` and `EMComposition`) -- `PyTorch mode <AutodiffComposition_PyTorch>` should be used for these.
 LLVMRun can be used with standard forms of loss, including mean squared error (MSE) and cross entropy, by specifying
 this in the **loss_spec** argument of the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
 for additional details, and `Compilation Modes <Composition_Compiled_Modes>` for more information about executing a

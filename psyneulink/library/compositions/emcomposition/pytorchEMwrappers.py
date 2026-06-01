@@ -7,7 +7,7 @@
 
 # ********************************************* PytorchComponent *************************************************
 
-"""PyTorch wrapper for Emcomposition"""
+"""PyTorch wrapper for EMComposition"""
 
 # import torch
 try:
@@ -32,7 +32,7 @@ from psyneulink.core.globals.keywords import ALL, FIRST, LAST, RETRIEVE, STORE, 
 __all__ = ['PytorchEMCompositionWrapper']
 
 class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
-    """Wrapper for Emcomposition as a Pytorch Module"""
+    """Wrapper for EMComposition as a Pytorch Module"""
 
     def _pytorch_mechanism_wrapper_type(self, mech):
         return defaultdict(lambda: PytorchMechanismWrapper,
@@ -55,9 +55,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.field_memory_operations = {k:v for k,v in zip(field_memory_executions, [COMPUTE_SCORES, RETRIEVE, STORE])}
 
         # IMPLEMENTATION NOTE:
-        #    This is needed for access by subcomponents to PytorchEMCompositionWrapper when Emcomposition is nested,
-        #    and so _build_pytorch_representation is called on the outer Composition but not Emcomposition itself;
-        #    access must be provided via Emcomposition's pytorch_representation, rather than directly assigning
+        #    This is needed for access by subcomponents to PytorchEMCompositionWrapper when EMComposition is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itself;
+        #    access must be provided via EMComposition's pytorch_representation, rather than directly assigning
         #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
         #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hierarchy.
         if self.composition.pytorch_representation is None:

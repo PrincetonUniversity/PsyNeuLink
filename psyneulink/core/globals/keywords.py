@@ -556,7 +556,7 @@ AUTODIFF_COMPOSITION = 'AutodiffComposition'
 AUTODIFF_RESULTS = 'AutodiffResults'
 COMPOSITION_FUNCTION_APPROXIMATOR = 'CompositionFunctionApproximator'
 EM_COMPOSITION = 'Emcomposition_Proj'
-EM_COMPOSITION2 = 'Emcomposition'
+EM_COMPOSITION2 = 'EMComposition'
 GRU_COMPOSITION = 'GRUComposition'
 
 INPUT_CIM_NAME = 'INPUT_CIM'

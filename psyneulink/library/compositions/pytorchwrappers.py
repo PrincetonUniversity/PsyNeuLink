@@ -1791,7 +1791,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
-                    # PytorchCompositionWrapper (such as Emcomposition and GRUComposition).
+                    # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable=variable,
                                  optimization_num=optimization_num,

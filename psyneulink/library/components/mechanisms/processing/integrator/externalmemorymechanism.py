@@ -8,7 +8,7 @@
 # ****************************************  ExternalMemoryMechanism ***********************************************
 
 """
-Subclass of EpisodicMemoryMechanism customized for Emcomposition.
+Subclass of EpisodicMemoryMechanism customized for EMComposition.
 
 It is a field-local that uses MatrixMemory as its function, which supports only a single field of memory.
 
@@ -82,7 +82,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
 
     EM2 BREADCRUMB: REVISE THE FOLLOWING TO BE CONSISTENT WITH UPDATES IN MODULE DOCSTRING
 
-    A field-local EpisodicMemoryMechanism used by Emcomposition, that:
+    A field-local EpisodicMemoryMechanism used by EMComposition, that:
       - is restricted to use of MatrixMemory as it function
       - uses access_condition to enforce that storage occurs after retrieval
       - has two InputPorts:

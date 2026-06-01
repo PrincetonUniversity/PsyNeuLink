@@ -52,7 +52,7 @@ from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolme
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 from psyneulink.library.compositions.emcomposition.emcomposition_proj import Emcomposition_Proj
-from psyneulink.library.compositions.emcomposition.emcomposition import Emcomposition
+from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
 

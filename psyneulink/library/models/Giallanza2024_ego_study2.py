@@ -110,7 +110,7 @@ def construct_model(
     # Stores (state, previous_state, context) triplets and retrieves the successor
     # state based on similarity across these fields. Field weights control how much
     # each field contributes to retrieval.
-    em = pnl.Emcomposition(
+    em = pnl.EMComposition(
         name=EM,
         memory_template=[[0] * state_size,  # state
                          [0] * state_size,  # previous state
