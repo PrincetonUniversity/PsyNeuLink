@@ -1007,7 +1007,7 @@ from psyneulink.core.globals.keywords import (
     DEFAULT_LEARNING_RATE,
     DEFAULT_VARIABLE,
     DOT_PRODUCT,
-    EM_COMPOSITION,
+    EM_COMPOSITION_PROJ,
     FIRST,
     FULL_CONNECTIVITY_MATRIX,
     GAIN,
@@ -1547,7 +1547,7 @@ class Emcomposition_Proj(AutodiffComposition):
         followed by value_input_nodes; used primarily for internal computations.
     """
 
-    componentCategory = EM_COMPOSITION
+    componentCategory = EM_COMPOSITION_PROJ
 
     if torch_available:
         from psyneulink.library.compositions.emcomposition.pytorchEMwrappersProj import \
