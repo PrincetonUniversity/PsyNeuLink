@@ -151,7 +151,7 @@ RETRIEVED_AFFIX = " [RETRIEVED]"
 
 
 def _memory_getter(owning_component=None, context=None):
-    """Return EMComposition memory as a 3d object array: entries x fields x field_values.
+    """Return EMComposition2 memory as a 3d object array: entries x fields x field_values.
     These are derived from the memory attribute of the field_memory_node of each field.
     """
     if owning_component is None or owning_component.is_initializing:
@@ -223,7 +223,7 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1) -> float:
     # MODIFIED EM2 END
 
 
-from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
+from psyneulink.library.compositions.emcomposition2.emcomposition2 import FieldType
 
 
 class Field:
@@ -379,7 +379,7 @@ class EMComposition2(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers2 import (
+        from psyneulink.library.compositions.emcomposition2.pytorchEMwrappers2 import (
             PytorchEMCompositionWrapper2, PytorchExternalMemoryMechanismWrapper,
         )
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper2

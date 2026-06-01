@@ -463,7 +463,7 @@ LAYER" [label="" arrowhead=box color=blue penwidth=1]\n\
     @pytest.mark.pytorch
     def test_show_graph_for_em_composition(self, nesting, mode, expected):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        from psyneulink.library.compositions.emcomposition import EMComposition2
+        from psyneulink.library.compositions.emcomposition2 import EMComposition2
 
         em_comp = EMComposition2(name='EM COMP', memory_capacity=3)
         if nesting == 'unnested':

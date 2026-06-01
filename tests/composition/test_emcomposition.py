@@ -9,7 +9,7 @@ import psyneulink as pnl
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 # from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
-from psyneulink.library.compositions.emcomposition.emcomposition2 import (
+from psyneulink.library.compositions.emcomposition2.emcomposition2 import (
     EMComposition2, EMComposition2Error, CONCATENATE_QUERIES_NAME)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
@@ -238,11 +238,11 @@ class TestConstruction:
         with pytest.raises(EMComposition2Error) as error_text:
             em.add_node(pnl.ProcessingMechanism())
 
-        assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+        assert "Nodes cannot be added to an EMComposition2: ('EM_Composition')." in str(error_text.value)
         with pytest.raises(EMComposition2Error) as error_text:
             em.add_projection(pnl.MappingProjection())
 
-        assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+        assert "Projections cannot be added to an EMComposition2: ('EM_Composition')." in str(error_text.value)
 
     @pytest.mark.parametrize("softmax_choice, expected",
                              [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),

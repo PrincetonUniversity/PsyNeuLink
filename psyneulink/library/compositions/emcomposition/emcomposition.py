@@ -1555,7 +1555,7 @@ class EMComposition(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers import \
+        from psyneulink.library.compositions.emcomposition2.pytorchEMwrappers import \
             PytorchEMCompositionWrapper, PytorchEMMechanismWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
         pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper

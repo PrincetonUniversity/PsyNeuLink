@@ -51,7 +51,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
-from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition
+from psyneulink.library.compositions.emcomposition2.emcomposition import EMComposition
+from psyneulink.library.compositions.emcomposition2.emcomposition2 import EMComposition2
 
 logger = logging.getLogger(__name__)
 

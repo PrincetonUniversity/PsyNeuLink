@@ -178,7 +178,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         **kwargs,
     ):
 
-        from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
+        from psyneulink.library.compositions.emcomposition2.emcomposition2 import FieldType
         assert isinstance(field_type, FieldType), \
             (f"PROGRAM ERROR: ExternalMemoryMechanism requires specification of field_type "
              f"as FieldType.KEY or FieldType.VALUE; got {field_type}.")
@@ -280,7 +280,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                             if access_condition is not None else False)
         runtime_params = {} if runtime_params is None else runtime_params
         if access_vs_scores:
-            from psyneulink.library.compositions.emcomposition.emcomposition2 import FieldType
+            from psyneulink.library.compositions.emcomposition2.emcomposition2 import FieldType
             runtime_params.update({OPERATION: ACCESS_MEMORY})
         else:
             runtime_params.update({OPERATION: COMPUTE_SCORES})
