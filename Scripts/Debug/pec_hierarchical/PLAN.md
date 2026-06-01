@@ -78,6 +78,20 @@ The model is:
   - prints EM history, group variance, subject MAPs, and posterior SDs.
 - Keep the existing `log_likelihood_smoke.py` as the lower-level likelihood diagnostic.
 
+## Reference Points
+- Julia EM implementation: https://github.com/ndawlab/em
+  - README describes the target family: hierarchical decision-making model fits using EM, with group-level distributions, optional group covariates, and per-subject parameters.
+  - `example.jl` is the closest API reference: `X` is a subject-level design matrix, `betas` has shape predictors x parameters, `sigma` is a group variance/covariance, and subject parameters follow `x_ij ~ Normal(X beta_j, Sigma)`.
+  - `src/emcore.jl` is the algorithm reference: E-step optimizes each subject with a Gaussian group prior, computes per-subject inverse Hessians, and M-step updates `betas` and `sigma`; it supports diagonal vs full covariance and uses threaded per-subject E-steps.
+  - PEC adaptation: keep the design-matrix and EM result shape, but replace the analytic likelihood callback with LLVM-backed simulated `log_likelihood`; use finite-difference Hessians because the simulated likelihood is not analytically differentiable.
+- HDDM classic hierarchical model: https://hddm.readthedocs.io/en/latest/
+  - Use as the cognitive-modeling API reference for subject/group hierarchical DDM estimates and the user-facing vocabulary around subject parameters, group distributions, posterior predictives, and convergence diagnostics.
+  - HDDM's `depends_on` interface supports condition-specific parameters; PEC should preserve its existing `depends_on` semantics while adding a separate subject/group hierarchy above the expanded parameters.
+  - HDDMRegression/Patsy-style formulas are useful prior art for covariates, but PEC v1 should use explicit `group_covariates=[...]` rather than adding a formula parser.
+- HDDM LAN extension: https://hddm.readthedocs.io/en/latest/lan_tutorial.html and https://hddm.readthedocs.io/en/latest/lan_to_hddm_end_to_end.html
+  - Use as contrast, not v1 implementation: HDDMnn/LAN trains neural likelihood approximators from simulator-generated data, while PEC v1 should keep a complete simulation-backed likelihood evaluated directly through LLVM.
+  - Revisit LAN/MNLE only after the EM/MAP path is stable and performance bottlenecks are measured.
+
 ## Assumptions And Defaults
 - First implementation is empirical Bayes, not full Bayesian sampling.
 - First covariance structure is only `"diagonal"`; `"full"` should raise a clear not-implemented error.
