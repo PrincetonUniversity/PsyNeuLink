@@ -930,7 +930,7 @@ class NodeRolesManager(object):
             s = 's' if plural else ''
             are_is = 'are' if plural else 'is'
             err_msg = (f"Attempt to {modification} the following NodeRole{s} for '{node.name}' (in "
-                       f"'{self.name}') that cannot be modified by user: {', '.join(prohibited_roles)})")
+                       f"'{self.name}') that cannot be modified by user: {', '.join(prohibited_roles)}")
 
             # Customize error message for common / non-intuitive cases
             if modification == 'require':
@@ -943,7 +943,7 @@ class NodeRolesManager(object):
                     send_receive = 'receives' if origin_or_terminal == "'ORIGIN'" else 'sends'
                     to_from = 'from' if origin_or_terminal == "'ORIGIN'" else 'to'
                     node_role = "NodeRole." + terminus_type.replace("'",'')
-                    err_msg += (f"; {origin_or_terminal} is reserved for the scheduler; however, a Node can be "
+                    err_msg += (f"; {origin_or_terminal} is reserved for the scheduler, however a Node can be "
                                 f"coerced to be an {terminus_type} Node (that {send_receive} {terminus_type.lower()} "
                                 f"{to_from} outside the Composition) by assigning it {node_role}")
 
@@ -961,13 +961,13 @@ class NodeRolesManager(object):
                 # CYCLE
                 if "'CYCLE'" in prohibited_roles:
                     err_msg += (f"; to make '{node.name}' a CYCLE, add one or more MappingProjections "
-                                f" that place it in a cycle with other Nodes in the Composition")
+                                f"that place it in a cycle with other Nodes in the Composition")
 
                 # LEARNING
                 # Customize error message for attempts to specify CYCLE NodeRole
                 if "'LEARNING'" in prohibited_roles:
                     err_msg += (f"; learning_components can only be constructed using add_linear_learning_pathway() "
-                                f"or one of its related methods, or by using a AutodiffComposition")
+                                f"or one of its related methods, or by using an AutodiffComposition")
 
             raise NodeRoleError(err_msg+'.')
 

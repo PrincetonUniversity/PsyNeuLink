@@ -904,13 +904,6 @@ class TestExecution:
         'concatenate',
         'no_concatenate'
     ])
-    @pytest.mark.parametrize('use_storage_node', [
-        True,
-        False
-    ], ids=[
-        'use_storage_node',
-        'no_storage_node'
-    ])
     @pytest.mark.parametrize('learning', [
         True,
         False
@@ -918,7 +911,7 @@ class TestExecution:
         'learning',
         'no_learning'
     ])
-    def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
+    def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
         em = EMComposition2(memory_template=(2,3),
@@ -928,8 +921,7 @@ class TestExecution:
                             memory_fill=(0,.001),
                             concatenate_queries=concatenate,
                             learn_field_weights=learning,
-                            enable_learning=True,
-                            use_storage_node=use_storage_node)
+                            enable_learning=True)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
                   [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
@@ -945,31 +937,29 @@ class TestExecution:
         em.run(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_equal(em.memory, expected_memory)
 
-        if use_storage_node:
-            # Only test learning if using storage_node, as this is required for learning
-            if concatenate:
-                with pytest.raises(EMComposition2Error) as error:
-                    em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition2 does not support learning with 'concatenate_queries'='True'." in str(error.value)
+        if concatenate:
+            with pytest.raises(EMComposition2Error) as error:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+            assert "EMComposition2 does not support learning with 'concatenate_queries'='True'." in str(error.value)
 
-            elif not learning:
-                with pytest.raises(AutodiffCompositionError) as error:
-                    em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert ("'EM_Composition' does not have any learnable pathways, "
-                        "therefore its learn() method cannot be executed." in str(error.value))
+        elif not learning:
+            with pytest.raises(AutodiffCompositionError) as error:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+            assert ("'EM_Composition' does not have any learnable pathways, "
+                    "therefore its learn() method cannot be executed." in str(error.value))
 
-            else:
-                #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
-                if exec_mode is pnl.ExecutionMode.Python:
-                    pytest.skip("EMComposition2 learning through field memory nodes requires PyTorch execution.")
-                expected_memory = [[[ 75., 150., 225.], [ 83.25, 166.5, 249.75]],
-                                    [[71.19140625, 88.98925781, 106.78710938],[79.02246094, 98.77807617, 118.53369141]],
-                                    [[400., 500., 600.], [444., 555., 666.]],
-                                   [[13.34838867, 26.69677734, 40.04516602], [14.81671143, 29.63342285, 44.45013428]]]
+        else:
+            #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
+            if exec_mode is pnl.ExecutionMode.Python:
+                pytest.skip("EMComposition2 learning through field memory nodes requires PyTorch execution.")
+            expected_memory = [[[ 75., 150., 225.], [ 83.25, 166.5, 249.75]],
+                                [[71.19140625, 88.98925781, 106.78710938],[79.02246094, 98.77807617, 118.53369141]],
+                                [[400., 500., 600.], [444., 555., 666.]],
+                               [[13.34838867, 26.69677734, 40.04516602], [14.81671143, 29.63342285, 44.45013428]]]
 
-                targets = {target:target.value for target in em.target_input_mechanisms}
-                em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
-                np.testing.assert_allclose(em.memory, expected_memory)
+            targets = {target:target.value for target in em.target_input_mechanisms}
+            em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
+            np.testing.assert_allclose(em.memory, expected_memory)
 
     @pytest.mark.composition
     def test_pytorch_field_memory_sync_obeys_node_value_sync(self):

@@ -2978,8 +2978,10 @@ class TestGetMechanismsByRole:
 
         with pytest.raises(NodeRoleError) as error_text:
             comp.require_node_roles(mechs[0], NodeRole.ORIGIN)
-        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-0' (in 'NodeRolesManager for "
-                f"Composition-0') that cannot be modified by user: 'ORIGIN'."
+        assert ("Attempt to require the following NodeRole for 'TransferMechanism-0' (in 'NodeRolesManager for "
+                "Composition-0') that cannot be modified by user: 'ORIGIN'; 'ORIGIN' is reserved for the scheduler, "
+                "however a Node can be coerced to be an INPUT Node (that receives input from outside the Composition) "
+                "by assigning it NodeRole.INPUT."
                 in str(error_text.value))
 
         with pytest.raises(NodeRoleError) as error_text:
@@ -2991,7 +2993,38 @@ class TestGetMechanismsByRole:
         with pytest.raises(NodeRoleError) as error_text:
             comp.require_node_roles(mechs[2], NodeRole.TERMINAL)
         assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
-                f"Composition-0') that cannot be modified by user: 'TERMINAL'."
+                f"Composition-0') that cannot be modified by user: 'TERMINAL'; 'TERMINAL' is reserved for the "
+                f"scheduler, however a Node can be coerced to be an OUTPUT Node (that sends output to outside the "
+                f"Composition) by assigning it NodeRole.OUTPUT."
+                in str(error_text.value))
+
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.FEEDBACK_SENDER)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'FEEDBACK_SENDER'; to make 'TransferMechanism-2' a "
+                f"'FEEDBACK_SENDER', specify 'feedback=True' in the constructor for its efferent MappingProjection."
+                in str(error_text.value))
+
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.FEEDBACK_RECEIVER)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'FEEDBACK_RECEIVER'; to make 'TransferMechanism-2' "
+                f"a 'FEEDBACK_RECEIVER', specify 'feedback=True' in the constructor for its afferent MappingProjection."
+                in str(error_text.value))
+
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.CYCLE)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'CYCLE'; to make 'TransferMechanism-2' a CYCLE, "
+                f"add one or more MappingProjections that place it in a cycle with other Nodes in the Composition."
+                in str(error_text.value))
+
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.LEARNING)
+        assert (f"Attempt to require the following NodeRole for 'TransferMechanism-2' (in 'NodeRolesManager for "
+                f"Composition-0') that cannot be modified by user: 'LEARNING'; learning_components can only be "
+                f"constructed using add_linear_learning_pathway() or one of its related methods, or by using an "
+                f"AutodiffComposition."
                 in str(error_text.value))
 
         comp.require_node_roles(mechs[1], NodeRole.INPUT)

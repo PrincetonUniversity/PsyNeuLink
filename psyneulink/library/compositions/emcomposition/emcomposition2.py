@@ -22,7 +22,7 @@ access_condition is satisfied
 The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
-- memory_decay_rate is applied as 1-memory_decay_rate multiplier to memory
+- memory_decay_rate is applied as 1-memory_decay_rate multiplier (retention factor) to memory
 - If a value is not provided as input to KEY Field, then the retrieved value is stored;
    need to deal with nested emcomposition2 in that case:
    - does it automatically get a default input from the input_CIM?
