@@ -2350,6 +2350,8 @@ class MatrixMemory(TransformFunction): #
     """
     componentName = MATRIX_MEMORY_FUNCTION
 
+    # _model_spec_generic_type_name = 'matrix_memory'
+
     class Parameters(TransformFunction.Parameters):
         variable = Parameter(np.array([[0],[0],[0]]), read_only=True, pnl_internal=True,
                              constructor_argument='default_variable', mdf_name='A')
