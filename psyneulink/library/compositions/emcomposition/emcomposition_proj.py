@@ -1029,7 +1029,7 @@ from psyneulink.core.globals.utilities import \
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition_Proj', 'EMCompositionError', 'FieldType', 'FIELD_WEIGHT',
+__all__ = ['EMComposition_Proj', 'EMCompositionProjError', 'FieldType', 'FIELD_WEIGHT',
            'KEY', 'LEARN_FIELD_WEIGHT', 'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
 
 KEY = 'key'
@@ -1096,7 +1096,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
     ):
         return field_weights
     elif len(field_weights) != len(owning_component.field_weights):
-        raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
+        raise EMCompositionProjError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     for i, fw in enumerate(field_weights.copy()):
         field_weights[i] = None if fw is None else fw
@@ -1111,7 +1111,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         # Check if original value was None (i.e., a value node), in which case disallow change
         if owning_component.parameters.field_weights.default_value[i] is None:
             if field_weight:
-                raise EMCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
+                raise EMCompositionProjError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
                                          f"was originally assigned as a value node (i.e., with a field_weight = None); "
                                          f"this cannot be changed after construction. If you want to change it to a "
                                          f"key field, you must re-construct the EMComposition_Proj using a scalar "
@@ -1134,7 +1134,7 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     return gain
 
 
-class EMCompositionError(CompositionError):
+class EMCompositionProjError(CompositionError):
     def __init__(self, error_value):
         self.error_value = error_value
     def __str__(self):
@@ -1712,7 +1712,7 @@ class EMComposition_Proj(AutodiffComposition):
                 if not np.atleast_1d(field_weights).ndim == 1:
                     return f"must be a scalar, list of scalars, or 1d array."
                 if len(field_weights) == 1 and field_weights[0] is None:
-                    raise EMCompositionError(f"must be a scalar, since there is only one field specified.")
+                    raise EMCompositionProjError(f"must be a scalar, since there is only one field specified.")
                 if any([field_weight < 0 for field_weight in field_weights if field_weight is not None]):
                     return f"must be all be positive values."
 
@@ -1911,7 +1911,7 @@ class EMComposition_Proj(AutodiffComposition):
         # memory_template must specify a 2D array:
         if isinstance(memory_template, tuple):
         #     if len(memory_template) != 2 or not all(isinstance(item, int) for item in memory_template):
-        #         raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) uses a tuple to "
+        #         raise EMCompositionProjError(f"The 'memory_template' arg for {name} ({memory_template}) uses a tuple to "
         #                                  f"shape requires but does not have exactly two integers.")
             num_fields = memory_template[0]
             if len(memory_template) == 3:
@@ -1921,7 +1921,7 @@ class EMComposition_Proj(AutodiffComposition):
         elif isinstance(memory_template, (list, np.ndarray)):
             num_entries, num_fields = self._parse_memory_shape(memory_template)
         else:
-            raise EMCompositionError(f"Unrecognized specification for "
+            raise EMCompositionProjError(f"Unrecognized specification for "
                                      f"the 'memory_template' arg ({memory_template}) of {name}.")
 
         # If a 3d array is specified (i.e., template has multiple entries), ensure all have the same shape
@@ -1929,19 +1929,19 @@ class EMComposition_Proj(AutodiffComposition):
             for entry in memory_template:
                 if not (len(entry) == num_fields
                         and np.all([len(entry[i]) == len(memory_template[0][i]) for i in range(num_fields)])):
-                    raise EMCompositionError(f"The 'memory_template' arg for {name} must specify a list "
+                    raise EMCompositionProjError(f"The 'memory_template' arg for {name} must specify a list "
                                              f"or 2d array that has the same shape for all entries.")
 
         # Validate memory_fill specification (int, float, or tuple with two scalars)
         if not (isinstance(memory_fill, (int, float)) or
                 (isinstance(memory_fill, tuple) and len(memory_fill)==2) and
                 all(isinstance(item, (int, float)) for item in memory_fill)):
-            raise EMCompositionError(f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
+            raise EMCompositionProjError(f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
                                      f"must be a float, int or len tuple of ints and/or floats.")
 
         # If learn_field_weights is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
         if isinstance(learn_field_weights, list) and len(learn_field_weights) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(learn_field_weights)}) in the "
+            raise EMCompositionProjError(f"The number of items ({len(learn_field_weights)}) in the "
                                      f"'learn_field_weights' arg for {name} must match the number of "
                                      f"fields in memory ({num_fields}).")
 
@@ -1951,12 +1951,12 @@ class EMComposition_Proj(AutodiffComposition):
         # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
         if field_weights is not None:
             if (_field_wts_len > 1 and _field_wts_len != num_fields):
-                raise EMCompositionError(f"The number of items ({_field_wts_len}) in the 'field_weights' arg "
+                raise EMCompositionProjError(f"The number of items ({_field_wts_len}) in the 'field_weights' arg "
                                          f"for {name} must match the number of items in an entry of memory "
                                          f"({num_fields}).")
             # Deal with this here instead of Parameter._validate_field_weights since this is called before super()
             if all([fw is None for fw in _field_wts]):
-                raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
+                raise EMCompositionProjError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                                          f"since that will preclude the construction of any keys.")
 
             if not any(_field_wts):
@@ -1971,7 +1971,7 @@ class EMComposition_Proj(AutodiffComposition):
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(field_names)}) "
+            raise EMCompositionProjError(f"The number of items ({len(field_names)}) "
                                      f"in the 'field_names' arg for {name} must match "
                                      f"the number of fields ({_field_wts_len}).")
 
@@ -2008,7 +2008,7 @@ class EMComposition_Proj(AutodiffComposition):
                 memory = _construct_entries(np.full(memory_template, 0), memory_capacity, memory_fill)
             else:
                 if memory_capacity and memory_template[0] != memory_capacity:
-                    raise EMCompositionError(
+                    raise EMCompositionProjError(
                         f"The first item ({memory_template[0]}) of the tuple in the 'memory_template' arg "
                         f"for {self.name} does not match the specification of the 'memory_capacity' arg "
                         f"({memory_capacity}); should remove the latter or use a 2-item tuple, list or array in "
@@ -2039,7 +2039,7 @@ class EMComposition_Proj(AutodiffComposition):
                 else:
                     memory_capacity = memory_capacity or num_entries
                     if num_entries > memory_capacity:
-                        raise EMCompositionError(
+                        raise EMCompositionProjError(
                             f"The number of entries ({num_entries}) specified in "
                             f"the 'memory_template' arg of  {self.name} exceeds the number of entries specified in "
                             f"its 'memory_capacity' arg ({memory_capacity}); remove the latter or reduce the number"
@@ -2076,7 +2076,7 @@ class EMComposition_Proj(AutodiffComposition):
         def _parse_fields_dict(name, fields, num_fields)->(list,list,list,list):
             """Parse fields dict into field_names, field_weights, learn_field_weights, and target_fields"""
             if len(fields) != num_fields:
-                raise EMCompositionError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
+                raise EMCompositionProjError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
                                          f"arg of '{name}' does not match the number of fields in its memory "
                                          f"({self.num_fields}).")
             field_names = [None] * num_fields
@@ -2096,7 +2096,7 @@ class EMComposition_Proj(AutodiffComposition):
                     learn_field_weights[i] = fields[field_name][LEARN_FIELD_WEIGHT]
                     target_fields[i] = fields[field_name][TARGET_FIELD]
                 else:
-                    raise EMCompositionError(f"Unrecognized specification for field '{field_name}' in the 'fields' "
+                    raise EMCompositionProjError(f"Unrecognized specification for field '{field_name}' in the 'fields' "
                                              f"arg of '{name}'; it must be a tuple, list or dict.")
             return field_names, field_weights, learn_field_weights, target_fields
 
@@ -2104,7 +2104,7 @@ class EMComposition_Proj(AutodiffComposition):
 
         # Handle dict specification for self.learning_rate (not allowed for EMComposition_Proj)
         if isinstance(learning_rate, dict):
-            raise EMCompositionError(f"The 'learning_rate' arg for '{name}' is specified as a dict, "
+            raise EMCompositionProjError(f"The 'learning_rate' arg for '{name}' is specified as a dict, "
                                      f"which is not supported for an EMComposition_Proj;  "
                                      f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
 
@@ -2742,7 +2742,7 @@ class EMComposition_Proj(AutodiffComposition):
                     elif learn_field_weights[i] is None:
                         continue
                     else:
-                        raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
+                        raise EMCompositionProjError(f"PROGRAM ERROR: learning_rate for {field.name} "
                                                  f"({learn_field_weights[i]}) is not a valid value.")
 
         self.parameters.learning_rate._set(lr_dict, context=Context(execution_id=None))
@@ -2882,11 +2882,11 @@ class EMComposition_Proj(AutodiffComposition):
         enable_learning = self.parameters.enable_learning.get(context)
 
         if use_gating_for_weighting and enable_learning:
-            raise EMCompositionError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
+            raise EMCompositionProjError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
                                      f"Construct '{self.name}' with the 'enable_learning' arg set to False.")
 
         if softmax_choice in {ARG_MAX, PROBABILISTIC}:
-            raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
+            raise EMCompositionProjError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                                      f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
 
         if self._enable_learning_warning_flag and not self.is_nested:
@@ -2908,7 +2908,7 @@ class EMComposition_Proj(AutodiffComposition):
                 warnings.warn(warning)
 
         if self.concatenate_queries:
-            raise EMCompositionError(f"EMComposition_Proj does not support learning with 'concatenate_queries'='True'.")
+            raise EMCompositionProjError(f"EMComposition_Proj does not support learning with 'concatenate_queries'='True'.")
 
         return super().learn(
             *args,
@@ -2961,7 +2961,7 @@ class EMComposition_Proj(AutodiffComposition):
 
     # def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
     #     if self.concatenate_queries:
-    #         raise EMCompositionError(f"EMComposition_Proj does not support learning with 'concatenate_queries'='True'.")
+    #         raise EMCompositionProjError(f"EMComposition_Proj does not support learning with 'concatenate_queries'='True'.")
     #     return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
@@ -2973,13 +2973,13 @@ class EMComposition_Proj(AutodiffComposition):
     def add_node(self, node, required_roles=None, context=None):
         """Override if called from command line to disallow modification of EMComposition_Proj"""
         if context is None:
-            raise EMCompositionError(f"Nodes cannot be added to an {self.componentCategory}: ('{self.name}').")
+            raise EMCompositionProjError(f"Nodes cannot be added to an {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
     def add_projection(self, *args, **kwargs):
         """Override if called from command line to disallow modification of EMComposition_Proj"""
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
-            raise EMCompositionError(f"Projections cannot be added to an {self.componentCategory}: ('{self.name}').")
+            raise EMCompositionProjError(f"Projections cannot be added to an {self.componentCategory}: ('{self.name}').")
         return super().add_projection(*args, **kwargs)
 
     # *****************************************************************************************************************
