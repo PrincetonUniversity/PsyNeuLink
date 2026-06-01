@@ -26,9 +26,9 @@ state_input = ProcessingMechanism(
     default_variable=[[0], [0], [0] * num_doors, [0] * num_keys, [0], [0]]
 )
 
-# Create the Emcomposition_Proj with a memory template of 10 elements:
+# Create the EMComposition_Proj with a memory template of 10 elements:
 # The first 6 fields (query) will be set from state. the last 4 (actions) are computed by the EM.
-instruct_em = Emcomposition_Proj(
+instruct_em = EMComposition_Proj(
     name="instruct_em",
     memory_template=[[0], [0], [0] * num_doors, [0] * num_keys, [0], [0],
                      [0], [0], [0], [0]],

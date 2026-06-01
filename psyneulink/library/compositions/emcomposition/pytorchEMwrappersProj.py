@@ -7,7 +7,7 @@
 
 # ********************************************* PytorchComponent *************************************************
 
-"""PyTorch wrapper for Emcomposition_Proj"""
+"""PyTorch wrapper for EMComposition_Proj"""
 
 # import torch
 try:
@@ -27,19 +27,19 @@ from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST
 __all__ = ['PytorchEMCompositionProjWrapper']
 
 class PytorchEMCompositionProjWrapper(PytorchCompositionWrapper):
-    """Wrapper for Emcomposition_Proj as a Pytorch Module"""
+    """Wrapper for EMComposition_Proj as a Pytorch Module"""
 
     def _pytorch_mechanism_wrapper_type(self, mech):
         return defaultdict(lambda: PytorchMechanismWrapper,
                            # return defaultdict(lambda: super(PytorchCompositionWrapper)._pytorch_mechanism_wrapper_type(mech),
                            {LossMechanism: PytorchLossMechanismWrapper,
-                            EMStorageMechanism: PytorchEMMechanismWrapper}
+                            EMStorageMechanism: PytorchEMMechanismProjWrapper}
                            )[mech.__class__]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Assign storage_node (Emcomposition_Proj's EMStorageMechanism) (assumes there is only one)
+        # Assign storage_node (EMComposition_Proj's EMStorageMechanism) (assumes there is only one)
         self.storage_node = self.nodes_map[self.composition.storage_node]
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
@@ -69,9 +69,9 @@ class PytorchEMCompositionProjWrapper(PytorchCompositionWrapper):
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
         # IMPLEMENTATION NOTE:
-        #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when Emcomposition_Proj is nested,
-        #    and so _build_pytorch_representation is called on the outer Composition but not Emcomposition_Proj itself;
-        #    access must be provided via Emcomposition_Proj's pytorch_representation, rather than directly assigning
+        #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition_Proj is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition_Proj itself;
+        #    access must be provided via EMComposition_Proj's pytorch_representation, rather than directly assigning
         #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
         #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.
         if self.composition.pytorch_representation is None:
@@ -142,7 +142,7 @@ class PytorchEMMechanismProjWrapper(PytorchMechanismWrapper):
         memory = pytorch_rep.memory
         assert memory is not None, f"PROGRAM ERROR: '{pytorch_rep.name}'.memory is None"
 
-        # Get current parameter values from Emcomposition_Proj's EMStorageMechanism
+        # Get current parameter values from EMComposition_Proj's EMStorageMechanism
         mech = self.mechanism
         random_state = mech.function.parameters.random_state._get(context)
         decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter

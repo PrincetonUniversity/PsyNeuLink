@@ -8,9 +8,9 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-# from psyneulink.library.compositions.emcomposition_proj.emcomposition_proj import Emcomposition_Proj, EMCompositionError
+# from psyneulink.library.compositions.emcomposition_proj.emcomposition_proj import EMComposition_Proj, EMCompositionError
 from psyneulink.library.compositions.emcomposition.emcomposition import (
-    EMComposition, EmcompositionError, CONCATENATE_QUERIES_NAME)
+    EMComposition, EMCompositionError, CONCATENATE_QUERIES_NAME)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
@@ -235,11 +235,11 @@ class TestConstruction:
 
     def test_disallow_modification(self):
         em = EMComposition()
-        with pytest.raises(EmcompositionError) as error_text:
+        with pytest.raises(EMCompositionError) as error_text:
             em.add_node(pnl.ProcessingMechanism())
 
         assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
-        with pytest.raises(EmcompositionError) as error_text:
+        with pytest.raises(EMCompositionError) as error_text:
             em.add_projection(pnl.MappingProjection())
 
         assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
@@ -270,7 +270,7 @@ class TestConstruction:
         msg = (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                f"of '{em.name}' cannot be used during learning; change to WEIGHTED_AVG.")
 
-        with pytest.raises(EmcompositionError, match=msg):
+        with pytest.raises(EMCompositionError, match=msg):
             em.parameters.softmax_choice.set(softmax_choice)
             em.learn()
 
@@ -297,7 +297,7 @@ class TestConstruction:
         np.testing.assert_allclose(em.target_fields, [True, True, True, True, True])
 
         # # Test error for wrong number of entries
-        with pytest.raises(EmcompositionError) as error_text:
+        with pytest.raises(EMCompositionError) as error_text:
             EMComposition(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
         assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
                                                 f"of 'EM_Composition' does not match the number of fields in its "
@@ -453,7 +453,7 @@ class TestConstruction:
         if all(fw is None for fw in field_weights):
             error_msg = ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
                          "since that will preclude the construction of any keys.")
-            with pytest.raises(EmcompositionError, match=re.escape(error_msg)):
+            with pytest.raises(EMCompositionError, match=re.escape(error_msg)):
                 construct_em(field_weights)
 
             return
@@ -499,7 +499,7 @@ class TestConstruction:
         learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
         fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
 
-        with pytest.raises(EmcompositionError) as error_text:
+        with pytest.raises(EMCompositionError) as error_text:
             em = EMComposition(name= "EM COMP",
                                 memory_template=(5,1),
                                 memory_capacity=1,
@@ -806,7 +806,7 @@ class TestExecution:
         # Change fields weights to favor C
         if field_weights[2] is None:
             # with pytest.raises(EMCompositionError) as error_text:
-            with pytest.raises(pnl.EmcompositionError) as error_text:
+            with pytest.raises(pnl.EMCompositionError) as error_text:
                 em.field_weights = np.array([0,0,1])
             assert error_text.value.error_value == (f"Field 'C' of 'EM_Composition' was originally assigned "
                                                     f"as a value node (i.e., with a field_weight = None); "
@@ -938,7 +938,7 @@ class TestExecution:
         np.testing.assert_equal(em.memory, expected_memory)
 
         if concatenate:
-            with pytest.raises(EmcompositionError) as error:
+            with pytest.raises(EMCompositionError) as error:
                 em.learn(inputs=inputs, execution_mode=exec_mode)
             assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
 

@@ -51,7 +51,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
-from psyneulink.library.compositions.emcomposition.emcomposition_proj import Emcomposition_Proj
+from psyneulink.library.compositions.emcomposition.emcomposition_proj import EMComposition_Proj
 from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
@@ -5645,7 +5645,7 @@ class TestImportComposition:
     @pytest.mark.llvm_not_implemented
     def test_import_composition(self, comp_mode):
 
-        em = Emcomposition_Proj(memory_template=(2,5), memory_capacity=4)
+        em = EMComposition_Proj(memory_template=(2,5), memory_capacity=4)
 
         i1 = ProcessingMechanism()
         i2 = ProcessingMechanism()

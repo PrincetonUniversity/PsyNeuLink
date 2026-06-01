@@ -21,7 +21,7 @@ ISSUES:
     -> input is always just linearly integrated, and the integral is tanh'd
        (not sure tanh is even necessary, since integral is always between 0 and 1)
     -> how is recurrence implemented in PyTorch?
-  * ??Possible bug:  for nodes in nested composition (such as Emcomposition_Proj):  calling of execute_node on the
+  * ??Possible bug:  for nodes in nested composition (such as EMComposition_Proj):  calling of execute_node on the
                      nested Composition rather than the outer one to which they now belong in
                      PytorchCompositionWrapper
 
@@ -244,7 +244,7 @@ def construct_model(model_name:str=model_params['name'],
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
 
-    em = Emcomposition_Proj(name=em_name,
+    em = EMComposition_Proj(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context

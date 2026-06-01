@@ -482,7 +482,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                                input_shapes=state_size,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
-    em = Emcomposition_Proj(name=em_name,
+    em = EMComposition_Proj(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * time_size,    # time
                                         [0] * state_size,   # context

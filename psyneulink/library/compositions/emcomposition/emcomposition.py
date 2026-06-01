@@ -9,7 +9,7 @@
 # ********************************************* EMComposition *************************************************
 
 """
-Refactored Emcomposition_Proj prototype.
+Refactored EMComposition_Proj prototype.
 
 This module introduces ExternalMemoryMechanism, a field-local episodic memory mechanism
 that owns the memory matrix for a single field. For the moment, ExternalMemoryMechanism uses
@@ -19,7 +19,7 @@ entry in memory, and an _access_memory method that retrieves the memory based on
 and then stores the query input into memory with a probability specified by storage_prob (True or False) when
 access_condition is satisfied
 
-The refactored Emcomposition_Proj uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
+The refactored EMComposition_Proj uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
 to update MappingProjection matrices.
 
 - memory_decay_rate is applied as 1-memory_decay_rate multiplier (retention factor) to memory
@@ -105,7 +105,7 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 
 __all__ = [
     "EMComposition",
-    "EmcompositionError",
+    "EMCompositionError",
     "FieldType",
     "KEY",
     "FIELD_MEMORY",
@@ -183,7 +183,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         return field_weights
 
     if len(field_weights) != len(owning_component.field_weights):
-        raise EmcompositionError(
+        raise EMCompositionError(
             f"The number of field_weights ({len(field_weights)}) must match "
             f"the number of fields ({len(owning_component.field_weights)})."
         )
@@ -200,7 +200,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
     for i, field_weight in enumerate(field_weights):
         if owning_component.parameters.field_weights.default_value[i] is None:
             if field_weight:
-                raise EmcompositionError(
+                raise EMCompositionError(
                     f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' was originally assigned "
                     f"as a value node (i.e., with a field_weight = None); this cannot be changed after construction. "
                     f"If you want to change it to a key field, you must re-construct the EMComposition using a scalar "
@@ -324,7 +324,7 @@ class Field:
         return self.memory_node.function.parameters.memory.get(None)
 
 
-class EmcompositionError(CompositionError):
+class EMCompositionError(CompositionError):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -334,7 +334,7 @@ class EmcompositionError(CompositionError):
 
 class EMComposition(AutodiffComposition):
     """
-        Emcomposition_Proj(                      \
+        EMComposition_Proj(                      \
         memory_template=[[0],[0]],      \
         memory_fill=0,                  \
         memory_capacity=None,           \
@@ -356,7 +356,7 @@ class EMComposition(AutodiffComposition):
         name="EM_Composition"           \
         )
 
-    Refactored Emcomposition_Proj.
+    Refactored EMComposition_Proj.
 
     This version replaces:
       - match_nodes backed by memory Projection matrices
@@ -367,7 +367,7 @@ class EMComposition(AutodiffComposition):
       - one ExternalMemoryMechanism per field, each owning its field memory matrix.
       - storage occurs in each memory_node based on access_condition an its storage_prob
 
-    The externally visible structure is kept similar to the original Emcomposition_Proj:
+    The externally visible structure is kept similar to the original EMComposition_Proj:
       - input_nodes
       - query_input_nodes
       - value_input_nodes
@@ -394,73 +394,73 @@ class EMComposition(AutodiffComposition):
             ----------
 
                 concatenate_queries
-                    see `concatenate_queries <Emcomposition_Proj.concatenate_queries>`
+                    see `concatenate_queries <EMComposition_Proj.concatenate_queries>`
 
                     :default value: False
                     :type: ``bool``
 
                 field_names
-                    see `field_names <Emcomposition_Proj.field_names>`
+                    see `field_names <EMComposition_Proj.field_names>`
 
                     :default value: None
                     :type: ``list``
 
                 field_weights
-                    see `field_weights <Emcomposition_Proj.field_weights>`
+                    see `field_weights <EMComposition_Proj.field_weights>`
 
                     :default value: None
                     :type: ``numpy.ndarray``
 
                 learn_field_weights
-                    see `learn_field_weights <Emcomposition_Proj.learn_field_weights>`
+                    see `learn_field_weights <EMComposition_Proj.learn_field_weights>`
 
                     :default value: True
                     :type: ``numpy.ndarray``
 
                 learning_rate
-                    see `learning_results <Emcomposition_Proj.learning_rate>`
+                    see `learning_results <EMComposition_Proj.learning_rate>`
 
                     :default value: []
                     :type: ``list``
 
                 memory
-                    see `memory <Emcomposition_Proj.memory>`
+                    see `memory <EMComposition_Proj.memory>`
 
                     :default value: None
                     :type: ``numpy.ndarray``
 
                 memory_capacity
-                    see `memory_capacity <Emcomposition_Proj.memory_capacity>`
+                    see `memory_capacity <EMComposition_Proj.memory_capacity>`
 
                     :default value: 1000
                     :type: ``int``
 
                 memory_decay_rate
-                    see `memory_decay_rate <Emcomposition_Proj.memory_decay_rate>`
+                    see `memory_decay_rate <EMComposition_Proj.memory_decay_rate>`
 
                     :default value: 0.001
                     :type: ``float``
 
                 memory_template
-                    see `memory_template <Emcomposition_Proj.memory_template>`
+                    see `memory_template <EMComposition_Proj.memory_template>`
 
                     :default value: np.array([[0],[0]])
                     :type: ``np.ndarray``
 
                 normalize_field_weights
-                    see `normalize_field_weights <Emcomposition_Proj.normalize_field_weights>`
+                    see `normalize_field_weights <EMComposition_Proj.normalize_field_weights>`
 
                     :default value: True
                     :type: ``bool``
 
                 normalize_memories
-                    see `normalize_memories <Emcomposition_Proj.normalize_memories>`
+                    see `normalize_memories <EMComposition_Proj.normalize_memories>`
 
                     :default value: True
                     :type: ``bool``
 
                 purge_by_field_weights
-                    see `purge_by_field_weights <Emcomposition_Proj.purge_by_field_weights>`
+                    see `purge_by_field_weights <EMComposition_Proj.purge_by_field_weights>`
 
                     :default value: False
                     :type: ``bool``
@@ -472,28 +472,28 @@ class EMComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
                 softmax_gain
-                    see `softmax_gain <Emcomposition_Proj.softmax_gain>`
+                    see `softmax_gain <EMComposition_Proj.softmax_gain>`
                     :default value: 1.0
                     :type: ``float, ADAPTIVE or CONTROL``
 
                 softmax_choice
-                    see `softmax_choice <Emcomposition_Proj.softmax_choice>`
+                    see `softmax_choice <EMComposition_Proj.softmax_choice>`
                     :default value: WEIGHTED_AVG
                     :type: ``keyword``
 
                 softmax_threshold
-                    see `softmax_threshold <Emcomposition_Proj.softmax_threshold>`
+                    see `softmax_threshold <EMComposition_Proj.softmax_threshold>`
                     :default value: .001
                     :type: ``float``
 
                 storage_prob
-                    see `storage_prob <Emcomposition_Proj.storage_prob>`
+                    see `storage_prob <EMComposition_Proj.storage_prob>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 store_on_optimization
-                    see `store_on_optimization <Emcomposition_Proj.store_on_optimization>`
+                    see `store_on_optimization <EMComposition_Proj.store_on_optimization>`
 
                     :default value: FIRST
                     :type: ``str``
@@ -720,7 +720,7 @@ class EMComposition(AutodiffComposition):
         elif isinstance(memory_template, (list, np.ndarray)):
             num_entries, num_fields = self._parse_memory_shape(memory_template)
         else:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"Unrecognized specification for the 'memory_template' arg ({memory_template}) of {name}."
             )
 
@@ -730,7 +730,7 @@ class EMComposition(AutodiffComposition):
                     len(entry) == num_fields
                     and np.all([len(entry[i]) == len(memory_template[0][i]) for i in range(num_fields)])
                 ):
-                    raise EmcompositionError(
+                    raise EMCompositionError(
                         f"The 'memory_template' arg for {name} must have the same shape for all entries."
                     )
 
@@ -742,13 +742,13 @@ class EMComposition(AutodiffComposition):
                 and all(isinstance(item, (int, float)) for item in memory_fill)
             )
         ):
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
                 f"must be a float, int, or length-2 tuple of numbers."
             )
 
         if isinstance(learn_field_weights, list) and len(learn_field_weights) != num_fields:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"The number of items ({len(learn_field_weights)}) in the "
                 f"'learn_field_weights' arg for {name} must match the number "
                 f"of fields in memory ({num_fields})."
@@ -757,12 +757,12 @@ class EMComposition(AutodiffComposition):
         if field_weights is not None:
             field_weights = np.atleast_1d(field_weights)
             if len(field_weights) > 1 and len(field_weights) != num_fields:
-                raise EmcompositionError(
+                raise EMCompositionError(
                     f"The number of items ({len(field_weights)}) in the 'field_weights' arg "
                     f"for {name} must match the number of fields in memory ({num_fields})."
                 )
             if all([fw is None for fw in field_weights]):
-                raise EmcompositionError(
+                raise EMCompositionError(
                     f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                     f"since that will preclude the construction of any keys."
                 )
@@ -780,7 +780,7 @@ class EMComposition(AutodiffComposition):
                 )
 
         if field_names and len(field_names) != num_fields:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"The number of items ({len(field_names)}) in the 'field_names' arg for {name} "
                 f"must match the number of fields ({num_fields})."
             )
@@ -813,7 +813,7 @@ class EMComposition(AutodiffComposition):
                 memory = _construct_entries(np.full(memory_template, 0), memory_capacity, memory_fill)
             else:
                 if memory_capacity and memory_template[0] != memory_capacity:
-                    raise EmcompositionError(
+                    raise EMCompositionError(
                         f"The first item ({memory_template[0]}) of 'memory_template' does not match "
                         f"'memory_capacity' ({memory_capacity})."
                     )
@@ -833,7 +833,7 @@ class EMComposition(AutodiffComposition):
                 else:
                     memory_capacity = memory_capacity or num_entries
                     if num_entries > memory_capacity:
-                        raise EmcompositionError(
+                        raise EMCompositionError(
                             f"The number of entries ({num_entries}) specified in 'memory_template' exceeds "
                             f"'memory_capacity' ({memory_capacity})."
                         )
@@ -863,7 +863,7 @@ class EMComposition(AutodiffComposition):
     ):
         def _parse_fields_dict(fields_dict, num_fields):
             if len(fields_dict) != num_fields:
-                raise EmcompositionError(
+                raise EMCompositionError(
                     f"The number of entries ({len(fields_dict)}) in the dict specified in the 'fields' arg "
                     f"of '{name}' does not match the number of fields in its memory ({num_fields})."
                 )
@@ -883,7 +883,7 @@ class EMComposition(AutodiffComposition):
                     parsed_learn[i] = spec[LEARN_FIELD_WEIGHT]
                     parsed_targets[i] = spec[TARGET_FIELD]
                 else:
-                    raise EmcompositionError(
+                    raise EMCompositionError(
                         f"Unrecognized specification for field '{field_name}' in 'fields' for '{name}'."
                     )
 
@@ -892,7 +892,7 @@ class EMComposition(AutodiffComposition):
         self.num_fields = len(self.entry_template)
 
         if isinstance(learning_rate, dict):
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"The 'learning_rate' arg for '{name}' is specified as a dict, "
                 f"which is not supported for an EMComposition;  "
                 f"use either its 'fields' arg or its 'learn_field_weights' arg instead."
@@ -951,7 +951,7 @@ class EMComposition(AutodiffComposition):
                 elif lfw in {None, True}:
                     learn_field_weights[i] = learning_rate or lfw
         else:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a valid specification."
             )
 
@@ -1647,7 +1647,7 @@ class EMComposition(AutodiffComposition):
                     elif learn_field_weights[i] is None:
                         continue
                     else:
-                        raise EmcompositionError(
+                        raise EMCompositionError(
                             f"PROGRAM ERROR: learning_rate for {field.name} "
                             f"({learn_field_weights[i]}) is not valid."
                         )
@@ -1695,18 +1695,18 @@ class EMComposition(AutodiffComposition):
         enable_learning = self.parameters.enable_learning.get(context)
 
         if use_gating_for_weighting and enable_learning:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
                 f"construct '{self.name}' with 'enable_learning=False'."
             )
 
         if self.concatenate_queries:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 "EMComposition does not support learning with 'concatenate_queries'='True'."
             )
 
         if softmax_choice in {ARG_MAX, PROBABILISTIC}:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of '{self.name}' "
                 f"cannot be used during learning; change to WEIGHTED_AVG."
             )
@@ -1742,7 +1742,7 @@ class EMComposition(AutodiffComposition):
             missing_value_nodes = [node for node in self.value_input_nodes if node not in input_dict]
 
         if missing_query_nodes:
-            raise EmcompositionError(
+            raise EMCompositionError(
                 f"'inputs' argument of call to learn() method for '{self.name}' is missing entries "
                 f"for the following query_input_nodes: {', '.join(missing_query_nodes)}")
 
@@ -1814,12 +1814,12 @@ class EMComposition(AutodiffComposition):
 
     def add_node(self, node, required_roles=None, context=None):
         if context is None:
-            raise EmcompositionError(f"Nodes cannot be added to an {self.componentCategory}: ('{self.name}').")
+            raise EMCompositionError(f"Nodes cannot be added to an {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
     def add_projection(self, *args, **kwargs):
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
-            raise EmcompositionError(f"Projections cannot be added to an {self.componentCategory}: ('{self.name}').")
+            raise EMCompositionError(f"Projections cannot be added to an {self.componentCategory}: ('{self.name}').")
         return super().add_projection(*args, **kwargs)
 
     # *****************************************************************************************************************

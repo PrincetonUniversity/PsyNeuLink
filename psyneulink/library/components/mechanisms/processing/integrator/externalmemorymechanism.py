@@ -98,7 +98,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
       - returns scores for match of query to each entry in memory
       - takes **scores** argument (received on Mechanism's COMBINED_SCORES InputPort) as argument used for retrieval
 
-    IMPLEMENTATION NOTE:  This is in distinction to the original Emcomposition_Proj, in which each field's memory
+    IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition_Proj, in which each field's memory
                           was stored in Projection matrices managed by EMStorageMechanism.
 
     Ports

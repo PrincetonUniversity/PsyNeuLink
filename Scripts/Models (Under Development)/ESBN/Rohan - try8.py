@@ -66,7 +66,7 @@ z_embedding_mech = pnl.TransferMechanism(
     default_variable=np.zeros(VALUE_DIMENSION)
 )
 
-em_memory = pnl.Emcomposition_Proj(
+em_memory = pnl.EMComposition_Proj(
     name='External Memory (Mk & Mv)',
     # Memory Structure: [Field 0: Zt_Value (64), Field 1: Kw_Key (64)]
     memory_template=[np.zeros(VALUE_DIMENSION), np.zeros(KEY_DIMENSION)], 
