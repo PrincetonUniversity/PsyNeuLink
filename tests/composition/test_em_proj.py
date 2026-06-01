@@ -231,7 +231,7 @@ class TestConstruction:
         em = EMComposition_Proj()
         with pytest.raises(EMCompositionProjError) as error_text:
             em.add_node(pnl.ProcessingMechanism())
-        assert "xon_Proj: ('EM_Composition')." in str(error_text.value)
+        assert "Nodes cannot be added to an EMComposition_Proj: ('EM_Composition')." in str(error_text.value)
 
         with pytest.raises(EMCompositionProjError) as error_text:
             em.add_projection(pnl.MappingProjection())
