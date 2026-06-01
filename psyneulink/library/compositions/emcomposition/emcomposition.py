@@ -41,6 +41,7 @@ High-level execution per field:
 import copy
 import warnings
 from typing import Optional, Union
+from enum import Enum
 
 import numpy as np
 import torch
@@ -150,6 +151,11 @@ RETRIEVED_NODE_NAME = "RETRIEVED"
 RETRIEVED_AFFIX = " [RETRIEVED]"
 
 
+class FieldType(Enum):
+    KEY = 0
+    VALUE = 1
+
+
 def _memory_getter(owning_component=None, context=None):
     """Return EMComposition memory as a 3d object array: entries x fields x field_values.
     These are derived from the memory attribute of the field_memory_node of each field.
@@ -221,9 +227,6 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1) -> float:
     entropy = -1 * np.sum(logistic * np.log(logistic))
     return scale * (base + entropy_weighting * np.log(entropy))
     # MODIFIED EM2 END
-
-
-from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
 
 
 class Field:

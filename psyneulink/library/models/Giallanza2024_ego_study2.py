@@ -221,6 +221,7 @@ def construct_model(
                   context_learning_pathway],
         learning_rate=learning_rate,
         loss_spec=loss_spec,
+        targets=(prediction_layer, state_input_layer),
         execute_in_additional_optimizations={
             context_layer: pnl.LAST,
             previous_state_layer: pnl.LAST
@@ -243,10 +244,7 @@ def construct_model(
     )
 
     # add a learning projection
-    learning_components = EGO_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-    EGO_comp.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                  receiver=learning_components[0],
-                                                  learnable=False))
+    EGO_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
     # here we add the scheduling:
     # Each trial, we follow this sequence of operations:

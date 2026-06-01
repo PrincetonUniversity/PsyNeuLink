@@ -976,7 +976,6 @@ Class Reference
 """
 import numpy as np
 import warnings
-from enum import Enum
 
 import psyneulink.core.scheduling.condition as conditions
 
@@ -988,6 +987,7 @@ from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import (AutodiffComposition, torch_available)
+from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -1139,11 +1139,6 @@ class EMCompositionError(CompositionError):
         self.error_value = error_value
     def __str__(self):
         return repr(self.error_value)
-
-
-class FieldType(Enum):
-    KEY = 0
-    VALUE = 1
 
 
 class Field():
