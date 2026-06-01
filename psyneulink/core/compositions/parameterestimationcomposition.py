@@ -914,59 +914,13 @@ class ParameterEstimationComposition(Composition):
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
 
-        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
-        if inputs:
-
-            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
-            # cached on the PEC controller.
-            if ContextFlags.PROCESSING not in context.flags:
-                self.controller.check_pec_inputs(inputs)
-
-            # Copy the inputs so we don't modify the original dict, note, we can't copy the keys because they
-            # are object\mechanisms that are in the underlying composition.
-            inputs = {k: v.copy() for k, v in inputs.items()}
-
-            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
-            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
-            # have been added by the PEC for the fitting parameters.
-            if self.model in inputs and len(inputs) == 1:
-                full_inputs = inputs
-            else:
-                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
-
-            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
-            # we just use a dummy value here for now (the first value in the range of the parameter)
-            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
-            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
-
-        self.controller.set_pec_inputs_cache(full_inputs)
-
-        # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
-        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
-        # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
-        # dict has the inputs specified in the same order as the state features (i.e., as specified by
-        # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
-        inputs_dict = self.controller.parameters.state_feature_values._get(context)
-
-        if len(inputs_dict) == 0:
-            raise ValueError("No inputs were specified for the PEC.")
-
-        for state_input_port, value in zip(
-            self.controller.state_input_ports, inputs_dict.values()
-        ):
-            value = convert_all_elements_to_np_array(value)
-            state_input_port.parameters.value._set(value, context)
+        inputs_dict = self._prepare_pec_inputs_for_simulation(inputs, context)
 
         kwargs.pop("inputs", None)
 
         # Turn off warnings about no inputs the PEC. This is because the PEC doesn't have any inputs itself, it
         # caches the inputs passed to it and passes them along to the inner composition during simulation.
         self.warned_about_run_with_no_inputs = True
-
-        num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
-        self.controller.parameters.num_trials_per_estimate.set(
-            num_trials_per_estimate, context=context
-        )
 
         # Run the composition as normal, if we are in Python execution mode
         if self.controller.parameters.comp_execution_mode.get(context) == 'Python':
@@ -978,9 +932,12 @@ class ParameterEstimationComposition(Composition):
         # run() method is executed in Python mode, unecessarily slowing down the overall execution since the
         # controller has already done all the work in LLVM mode.
         else:
+            execution_phase_at_entry = context.execution_phase
             context.execution_phase = ContextFlags.PROCESSING
-            self.controller.execute(context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            try:
+                self.controller.execute(context=context)
+            finally:
+                context.execution_phase = execution_phase_at_entry
 
             results = self.parameters.results._get(context)
 
@@ -996,7 +953,7 @@ class ParameterEstimationComposition(Composition):
         return results
 
     @handle_external_context()
-    def log_likelihood(self, *args, inputs=None, context=None) -> float:
+    def log_likelihood(self, *args, inputs=None, return_sim_data=False, context=None) -> Union[float, tuple]:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
 
@@ -1006,9 +963,13 @@ class ParameterEstimationComposition(Composition):
             Positional args, one for each paramter of the model. These must correspond directly to the parameters that
             have been specified in the `parameters` argument of the constructor.
 
+        return_sim_data : bool
+            If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
+
         Returns
         -------
-        The sum of the log-likelihoods of the data given the specified parameters of the model.
+        The sum of the log-likelihoods of the data given the specified parameters of the model, or
+        `(log_likelihood, sim_data)` when `return_sim_data` is True.
 
         """
 
@@ -1031,11 +992,12 @@ class ParameterEstimationComposition(Composition):
                 f"has not been defined. Cannot compute log-likelihood."
             )
 
-        if len(args) != len(self.fit_parameters):
+        fit_param_names = self.controller.function.fit_param_names
+        if len(args) != len(fit_param_names):
             raise ParameterEstimationCompositionError(
-                f"The number of parameters specified in the call to "
-                f"log_likelihood does not match the number of parameters "
-                f"specified in the constructor of ParameterEstimationComposition."
+                f"The number of parameters specified in the call to log_likelihood ({len(args)}) "
+                f"does not match the number of parameters being fit ({len(fit_param_names)}): "
+                f"{fit_param_names}."
             )
 
         if not hasattr(self.controller.function, "log_likelihood"):
@@ -1046,15 +1008,80 @@ class ParameterEstimationComposition(Composition):
                 f"have a log_likelihood function."
             )
 
+        comp_execution_mode = self.controller.parameters.comp_execution_mode.get(context)
+        if comp_execution_mode is None:
+            self.controller.parameters.comp_execution_mode.set("LLVM", context=context)
+        elif comp_execution_mode != "LLVM":
+            raise ParameterEstimationCompositionError(
+                f"Cannot compute log_likelihood for ParameterEstimationComposition {self.name} "
+                f"unless its controller comp_execution_mode is 'LLVM'; got {comp_execution_mode!r}."
+            )
+
+        pnllvm.cleanup()
         context.composition = self
 
-        # Capture the inputs and pass it on to the OCM
         assert self.controller is not None
-        self.controller.set_pec_inputs_cache(inputs)
+        self._prepare_pec_inputs_for_simulation(inputs, context)
 
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
-        return self.controller.function.log_likelihood(*args, context=context)
+        return self.controller.function.log_likelihood(
+            *args,
+            return_sim_data=return_sim_data,
+            context=context
+        )
+
+    def _prepare_pec_inputs_for_simulation(self, inputs, context):
+        """Normalize, cache, and assign inputs used by PEC optimization and likelihood simulations."""
+        if inputs is None:
+            self.controller.set_pec_inputs_cache(inputs)
+        else:
+            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
+            # cached on the PEC controller.
+            if ContextFlags.PROCESSING not in context.flags:
+                self.controller.check_pec_inputs(inputs)
+
+            # Copy the inputs so we don't modify the original dict, note, we can't copy the keys because they
+            # are object\mechanisms that are in the underlying composition.
+            inputs = {k: v.copy() for k, v in inputs.items()}
+
+            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
+            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
+            # have been added by the PEC for the fitting parameters.
+            if self.model in inputs and len(inputs) == 1:
+                full_inputs = inputs
+            else:
+                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
+
+            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
+            # we just use a dummy value here for now (the first value in the range of the parameter)
+            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
+            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
+
+            self.controller.set_pec_inputs_cache(full_inputs)
+
+        # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
+        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
+        # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
+        # dict has the inputs specified in the same order as the state features (i.e., as specified by
+        # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
+        inputs_dict = self.controller.parameters.state_feature_values._get(context)
+
+        if len(inputs_dict) == 0:
+            raise ValueError("No inputs were specified for the PEC.")
+
+        for state_input_port, value in zip(
+            self.controller.state_input_ports, inputs_dict.values()
+        ):
+            value = convert_all_elements_to_np_array(value)
+            state_input_port.parameters.value._set(value, context)
+
+        num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
+        self.controller.parameters.num_trials_per_estimate.set(
+            num_trials_per_estimate, context=context
+        )
+
+        return inputs_dict
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass
