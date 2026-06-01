@@ -107,7 +107,7 @@ em_init_entries = [
     ([0], [1], [-1], [-1], [false], [none], [none], [certain],
      [0], [0], [1], [0], [false], [false], [false]),
 ]
-instruct_em = EMComposition(name="instruct_em", memory_template=em_init_entries, memory_capacity=500,
+instruct_em = Emcomposition_Proj(name="instruct_em", memory_template=em_init_entries, memory_capacity=500,
                             memory_decay_rate=0, memory_fill=0.001,
                             fields={"AGENT X": {FIELD_WEIGHT: 1,
                                                 LEARN_FIELD_WEIGHT: False,

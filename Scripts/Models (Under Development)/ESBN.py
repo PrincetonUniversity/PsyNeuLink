@@ -3,12 +3,12 @@ import psyneulink as pnl
 
 
 # -------------------------------------------------------------------------
-# Construct a minimal two-field EMComposition2:
+# Construct a minimal two-field Emcomposition:
 #   - KEY is a query/key field
 #   - VALUE is a value field
 # -------------------------------------------------------------------------
 
-em = pnl.EMComposition2(
+em = pnl.Emcomposition(
     name="EM2",
     memory_template=[
         [[1.0, 0.0], [10.0, 0.0]],
@@ -39,7 +39,7 @@ def get_node(*candidate_names):
 # -------------------------------------------------------------------------
 # Get nodes by name.
 #
-# Depending on the current local spelling in EMComposition2, field memory
+# Depending on the current local spelling in Emcomposition, field memory
 # nodes may be named either "[FIELD_MEMORY]" or "[FIELD MEMORY]".
 # -------------------------------------------------------------------------
 

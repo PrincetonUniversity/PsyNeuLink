@@ -1,13 +1,13 @@
 from .regressioncfa import *
 from .compositionrunner import *
 from .autodiffcomposition import *
-from .emcomposition2 import *
-from psyneulink.library.compositions.emcomposition2.emcomposition import *
-from psyneulink.library.compositions.emcomposition2.emcomposition2 import *
+from .emcomposition import *
+from psyneulink.library.compositions.emcomposition.emcomposition_proj import *
+from psyneulink.library.compositions.emcomposition.emcomposition import *
 __all__ = list(regressioncfa.__all__)
 __all__.extend(compositionrunner.__all__)
 __all__.extend(autodiffcomposition.__all__)
-__all__.extend(emcomposition.__all__)
+__all__.extend(emcomposition_proj.__all__)
 
 try:
     import torch

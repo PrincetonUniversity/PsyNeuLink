@@ -6958,7 +6958,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Mechanism):
                 for proj in [p for p in node.projections if p not in self.projections]:
                     # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
-                    #     (e.g., EMComposition.storage_node)
+                    #     (e.g., Emcomposition_Proj.storage_node)
                     if (isinstance(proj, LearningProjection)
                             and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                             and proj.receiver.owner in self.projections):
@@ -8669,7 +8669,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
         # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
-        #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+        #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR Emcomposition_Proj)
         if isinstance(input_source, Composition):
             _, input_source, _ = \
                 input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
@@ -8822,7 +8822,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Learning in Python mode does not currently support nested Compositions;  "
                                        f"try using an AutodiffComposition with ExecutionMode.PyTorch.")
             # FIX: NOTE: THIS ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
-            #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+            #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR Emcomposition_Proj)
             if isinstance(input_source, Composition):
                 _, input_source, _ = \
                     input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
@@ -9956,7 +9956,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"This projection will be deactivated until '{errant_node_name}' is added to '{self.name}' "
                         f"or a composition nested within it.")
                 # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
-                #     (e.g., EMComposition.storage_node)
+                #     (e.g., Emcomposition_Proj.storage_node)
                 elif not (isinstance(proj, LearningProjection)
                         and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                         and receiver in self.projections):
@@ -10529,7 +10529,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get all TARGET_MECHANISMs and OUTPUT Nodes from input dicts (they are allowed as target specifications),
         #   excluding any SINGLETONs and Compositions or RecurrentTransferMechanisms as OUTPUT Nodes:
         #   - exclude Compositions and RecurrentTransferMechanisms as OUTPUTs because, although they may be learnable
-        #       (e.g., Autoassociative Mechanism, GRUComposition or EMComposition), they are not allowed as TARGETs
+        #       (e.g., Autoassociative Mechanism, GRUComposition or Emcomposition_Proj), they are not allowed as TARGETs
         #   - exclude Mechanisms that are SINGLETONs because they are not trainable (no learnable Projections)
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET_INPUT))
         # non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)

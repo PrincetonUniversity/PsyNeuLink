@@ -81,7 +81,7 @@ em_init_entries.append(([2], [0], [empty], [empty], [false], [none],
                         [-1], [0], [false], [false]))
 em_init_entries.append(([3], [0], [empty], [empty], [false], [none],
                         [-1], [0], [false], [false]))
-instruct_em = EMComposition(memory_template=em_init_entries, memory_capacity=15,
+instruct_em = Emcomposition_Proj(memory_template=em_init_entries, memory_capacity=15,
                             memory_fill=0.001, memory_decay_rate=0,
                             softmax_choice=ARG_MAX,
                             field_weights=(

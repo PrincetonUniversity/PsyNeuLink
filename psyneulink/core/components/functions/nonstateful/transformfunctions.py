@@ -2329,17 +2329,17 @@ class MatrixMemory(TransformFunction): #
         prefs=None,                      \
         )
 
-    Limited form of ContentAddressableMemory, based on MatrixTransform, for specific use by EMComposition2
+    Limited form of ContentAddressableMemory, based on MatrixTransform, for specific use by Emcomposition
 
     Use scores Parameter to compute retrieved value, which
-      allows passed-in scores to be used for retrieval (e.g., to use COMBINED_SCORES in EMComposition2)
+      allows passed-in scores to be used for retrieval (e.g., to use COMBINED_SCORES in Emcomposition)
     Uses param[OPERATION] passed to _function() to determine whether to call _retrieve(), _store() or both:
         COMPUTE_SCORES: compute scores for each entry in memory based on query
         ACCESS_MEMORY: fits call _retrieve_memory() and then _store_memory()
         RETRIEVE: only call _retrieve_memory() (return entry based on query and scores; don't call store)
         STORE: only call _store_memory() (store query in place of entry in memory with lowest norm; don't call retrieve)
     Return memory (retrieved of stored), scores and norms and  based on current query
-        (e.g., so it can be used to calculate COMBINED_SCORES in EMComposition2)
+        (e.g., so it can be used to calculate COMBINED_SCORES in Emcomposition)
 
     IMPLEMENTATION NOTE:
       - scores/match-weights/distance vector is returned so it can be combined with other fields
@@ -2557,7 +2557,7 @@ class MatrixMemory(TransformFunction): #
         return np.divide(memory, norms, out=np.zeros_like(memory), where=norms != 0)
 
     def _gen_pytorch_fct(self, device, context=None):
-        # EM2 BREADCRUMB:  SEE local_context under _construct_combined_scores_node() in emcomposition2.py
+        # EM2 BREADCRUMB:  SEE local_context under _construct_combined_scores_node() in emcomposition.py
         local_context = copy.copy(context)
         local_context.execution_id = None
         scores_function_pytorch = self.scores_function._gen_pytorch_fct(device, local_context)

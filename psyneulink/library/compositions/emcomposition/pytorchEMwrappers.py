@@ -7,7 +7,7 @@
 
 # ********************************************* PytorchComponent *************************************************
 
-"""PyTorch wrapper for EMComposition"""
+"""PyTorch wrapper for Emcomposition"""
 
 # import torch
 try:
@@ -18,62 +18,48 @@ except (ImportError, ModuleNotFoundError):
 from typing import Optional
 from collections import defaultdict
 
+import numpy as np
+
+from psyneulink.core.components.functions.nonstateful.transformfunctions import COMPUTE_SCORES
 from psyneulink.library.compositions.pytorchwrappers import (
     PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchLossMechanismWrapper)
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
-from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
-from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST
+from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
+    ExternalMemoryMechanism)
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import ALL, FIRST, LAST, RETRIEVE, STORE, SYNCH
 
 __all__ = ['PytorchEMCompositionWrapper']
 
 class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
-    """Wrapper for EMComposition as a Pytorch Module"""
+    """Wrapper for Emcomposition as a Pytorch Module"""
 
     def _pytorch_mechanism_wrapper_type(self, mech):
         return defaultdict(lambda: PytorchMechanismWrapper,
                            # return defaultdict(lambda: super(PytorchCompositionWrapper)._pytorch_mechanism_wrapper_type(mech),
                            {LossMechanism: PytorchLossMechanismWrapper,
-                            EMStorageMechanism: PytorchEMMechanismWrapper}
-                           )[mech.__class__]
+                            ExternalMemoryMechanism: PytorchExternalMemoryMechanismWrapper
+                            })[mech.__class__]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
-        self.storage_node = self.nodes_map[self.composition.storage_node]
-        # Execute storage_node after gradient calculation,
-        #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
-        # BREADCRUMB: 8/21/25: REFACTOR ONCE HANDLED BY DICT ON COMP
-        self.storage_node.exclude_from_gradient_calc = AFTER
-
-        # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
-        #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
-        pnl_storage_mech = self.storage_node.mechanism
-
-        num_fields = len(pnl_storage_mech.input_ports)
-        num_learning_signals = len(pnl_storage_mech.learning_signals)
-        num_match_fields = num_learning_signals - num_fields
-
-        # ProjectionWrappers for match nodes
-        learning_signals_for_match_nodes = pnl_storage_mech.learning_signals[:num_match_fields]
-        pnl_match_projs = [match_node_learning_signal.efferents[0].receiver.owner
-                           for match_node_learning_signal in learning_signals_for_match_nodes]
-        self.match_projection_wrappers = [self.projections_map[pnl_match_proj]
-                                          for pnl_match_proj in pnl_match_projs]
-
-        # ProjectionWrappers for retrieve nodes
-        learning_signals_for_retrieve_nodes = pnl_storage_mech.learning_signals[num_match_fields:]
-        pnl_retrieve_projs = [retrieve_node_learning_signal.efferents[0].receiver.owner
-                              for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
-        self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
-                                             for pnl_retrieve_proj in pnl_retrieve_projs]
+        # Ensure that execution_sets for field_memory_nodes are in the correct places in the sequence
+        memory_cycle_nodes = getattr(self.composition, 'memory_cycle_nodes', self.composition.field_memory_nodes)
+        field_memory_pytorch_nodes = [v for k,v in self.nodes_map.items() if k in memory_cycle_nodes]
+        set(field_memory_pytorch_nodes) == self.execution_sets[1]
+        self.execution_sets.append(self.execution_sets[1])
+        field_memory_executions = [i+1 for i, exec_set in enumerate(self.execution_sets)
+                                   if field_memory_pytorch_nodes[0] in exec_set]
+        assert len(field_memory_executions) == 3
+        self.field_memory_operations = {k:v for k,v in zip(field_memory_executions, [COMPUTE_SCORES, RETRIEVE, STORE])}
 
         # IMPLEMENTATION NOTE:
-        #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition is nested,
-        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itself;
-        #    access must be provided via EMComposition's pytorch_representation, rather than directly assigning
+        #    This is needed for access by subcomponents to PytorchEMCompositionWrapper when Emcomposition is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not Emcomposition itself;
+        #    access must be provided via Emcomposition's pytorch_representation, rather than directly assigning
         #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
-        #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.
+        #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hierarchy.
         if self.composition.pytorch_representation is None:
             self.composition.pytorch_representation = self
 
@@ -91,118 +77,118 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                   for i in range(memory_capacity)]))
 
 
-class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
+class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
     """Wrapper for EMStorageMechanism as a Pytorch Module"""
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None):
-        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-        if self.mechanism is self.composition.storage_node:
-            # 8/20/25 BREADCRUMB: REFACTOR TO USE execution_in_additional_optimizations
-            num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
-            store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
-            if optimization_num == 0 and store_on_optimization == FIRST:
-                store = True
-            elif ((optimization_num + 1) == num_optimizations) and store_on_optimization == LAST:
-                store = True
-            elif store_on_optimization == ALL:
-                store = True
-            else:
-                store = False
-            if store:
-                self.store_memory(variable, context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.memory = None
+        self._forced_operation = None
+        self._deferred_store_pending = False
+        self._refresh_memory_reference()
 
-        else:
-            super().execute(variable, optimization_num, synch_with_pnl_options, context)
+    def _refresh_memory_reference(self):
+        pytorch_function = getattr(self.function, 'function', None)
+        if hasattr(pytorch_function, 'get_memory'):
+            self.memory = pytorch_function.get_memory()
 
-    # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
-    # @torch.jit.script_method
-    # MODIFIED 7/29/24 END
-    def store_memory(self, memory_to_store, context):
-        """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
+    def _copy_pytorch_memory_to_pnl(self, context=None):
+        self._refresh_memory_reference()
+        if self.memory is None:
+            return
 
-        For each node in query_input_nodes and value_input_nodes,
-        assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
-        - memory = matrix of entries made up of vectors for each field in each entry (row)
-        - entry_to_store = query_input or value_input to store
-        - field_projections = Projections the matrices of which comprise memory
+        memory = self.memory.detach().cpu().numpy().copy()
+        self.mechanism.function.parameters.memory._set(memory, context)
+        self.mechanism.function.scores_function.parameters.matrix._set(memory.T, context)
 
-        DIVISION OF LABOR between this method and function called by it
-        store_memory (corresponds to EMStorageMechanism._execute)
-         - compute norms to find weakest entry in memory
-         - compute storage_prob to determine whether to store current entry in memory
-         - call function with memory matrix for each field, to decay existing memory and assign input to weakest entry
-        storage_node.function (corresponds to EMStorage._function):
-         - decay existing memories
-         - assign input to weakest entry (given index for passed from EMStorageMechanism)
+    def set_pnl_variable_and_values(self, set_variable=False, set_value=True, context=None):
+        if SYNCH not in self._use:
+            return
 
-        :return: List[2d tensor] updated memories
-        """
+        super().set_pnl_variable_and_values(
+            set_variable=set_variable,
+            set_value=set_value,
+            context=context,
+        )
+        if set_value:
+            self._copy_pytorch_memory_to_pnl(context)
+
+    # def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None):
+    #     """Override to handle storage of entry to memory_matrix by EMStorage Function"""
+    #     if self.mechanism is self.composition.storage_node:
+    #         # 8/20/25 BREADCRUMB: REFACTOR TO USE execution_in_additional_optimizations
+    #         num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
+    #         store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
+    #         if optimization_num == 0 and store_on_optimization == FIRST:
+    #             store = True
+    #         elif ((optimization_num + 1) == num_optimizations) and store_on_optimization == LAST:
+    #             store = True
+    #         elif store_on_optimization == ALL:
+    #             store = True
+    #         else:
+    #             store = False
+    #         if store:
+    #             self.store_memory(variable, context)
+    #
+    #     else:
+    #         super().execute(variable, optimization_num, synch_with_pnl_options, context)
+
+    def _get_field_memory_operation(self):
+        if self._forced_operation is not None:
+            return self._forced_operation
+
         pytorch_rep = self.composition.pytorch_representation
+        outer_creator = pytorch_rep.outer_creator or pytorch_rep
+        execution_set_num = outer_creator.execution_set_num
+        field_memory_executions = [
+            i for i, exec_set in enumerate(outer_creator.execution_sets)
+            if self in exec_set
+        ]
 
-        memory = pytorch_rep.memory
-        assert memory is not None, f"PROGRAM ERROR: '{pytorch_rep.name}'.memory is None"
+        if execution_set_num in field_memory_executions:
+            operation_idx = field_memory_executions.index(execution_set_num)
+            return [COMPUTE_SCORES, RETRIEVE, STORE][operation_idx]
 
-        # Get current parameter values from EMComposition's EMStorageMechanism
-        mech = self.mechanism
-        random_state = mech.function.parameters.random_state._get(context)
-        decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter
-        storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
-        field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
-        concatenation_node = mech.concatenation_node
-        # MODIFIED 7/29/24 OLD:
-        num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
-        # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
-        # if concatenation_node:
-        #     num_match_fields = 1
-        # else:
-        #     num_match_fields = 0
-        #     for i in mech.field_types:
-        #         if i==1:
-        #             num_match_fields += 1
-        # MODIFIED 7/29/24 END
+    def _should_defer_store(self, context):
+        return context is not None and ContextFlags.LEARNING_MODE in context.runmode
 
-        # Find weakest memory (i.e., with lowest norm)
-        field_norms = torch.linalg.norm(memory, dim=2)
-        if field_weights is not None:
-            field_norms *= field_weights
-        row_norms = torch.sum(field_norms, axis=1)
-        idx_of_weakest_memory = torch.argmin(row_norms)
+    def _should_store_on_optimization(self, optimization_num, context):
+        num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
+        store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
+        if optimization_num == 0 and store_on_optimization == FIRST:
+            return True
+        if ((optimization_num + 1) == num_optimizations) and store_on_optimization == LAST:
+            return True
+        if store_on_optimization == ALL:
+            return True
+        return False
 
-        values = []
-        for field_projection in pytorch_rep.match_projection_wrappers + pytorch_rep.retrieve_projection_wrappers:
-            field_idx = pytorch_rep.composition._field_index_map[field_projection._pnl_proj]
-            if field_projection in pytorch_rep.match_projection_wrappers:
-                # For match projections:
-                # - get entry to store from value of Projection's sender (to accommodate concatenation_node)
-                entry_to_store = field_projection.sender_wrapper.output
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None):
+        pytorch_rep = self.composition.pytorch_representation
+        outer_creator = pytorch_rep.outer_creator or pytorch_rep
+        deferred_variable = outer_creator._nodes_to_execute_after_gradient_calc.get(self)
 
-                # Retrieve the correct field (for each batch, batch is first dimension)
-                memory_to_store_indexed = memory_to_store[:, :, field_idx, :]
+        if self._deferred_store_pending and deferred_variable is variable:
+            if not self._should_store_on_optimization(optimization_num, context):
+                self._deferred_store_pending = False
+                return self.output
+            self._forced_operation = STORE
+            try:
+                return super().execute(variable, optimization_num, synch_with_pnl_options, sequence_lengths, context)
+            finally:
+                self._forced_operation = None
+                self._deferred_store_pending = False
 
-                # - store in row
-                axis = 0
-                if concatenation_node is None:
-                    # Double check that the memory passed in is the output of the projection for the correct field
-                    assert (memory_to_store_indexed == entry_to_store).all(), \
-                        (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
-                         f"and value of projection to corresponding field.")
-            else:
-                # For retrieve projections:
-                # - get entry to store from memory_to_store (which has inputs to all fields)
-                entry_to_store = memory_to_store[:, :, field_idx, :]
-                # - store in column
-                axis = 1
-            # Get matrix containing memories for the field from the Projection
-            field_memory_matrix = field_projection.matrix
+        if self._get_field_memory_operation() == STORE and self._should_defer_store(context):
+            outer_creator._nodes_to_execute_after_gradient_calc[self] = variable
+            self._deferred_store_pending = True
+            return self.output
 
-            field_projection.matrix = self.function(entry_to_store,
-                                                    memory_matrix=field_memory_matrix,
-                                                    axis=axis,
-                                                    storage_location=idx_of_weakest_memory,
-                                                    storage_prob=storage_prob,
-                                                    decay_rate=decay_rate,
-                                                    random_state=random_state)
-            values.append(field_projection.matrix)
+        return super().execute(variable, optimization_num, synch_with_pnl_options, sequence_lengths, context)
 
-            self.value = values
-        return values
+    def execute_function(self, function, variable, fct_has_mult_args=False):
+        operation = self._get_field_memory_operation()
+        if operation is not None:
+            variable.append(operation)
+            fct_has_mult_args = True
+        return super().execute_function(function, variable, fct_has_mult_args)

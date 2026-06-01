@@ -197,7 +197,7 @@ class EMStorage(LearningFunction):
         prefs=None)
 
     Assign an entry to a matrix with a specified probability specified by `storage_prob <EMStorage.storage_prob>.
-    Used by `EMStorageMechanism` in an `EMComposition` to
+    Used by `EMStorageMechanism` in an `Emcomposition_Proj` to
     COMMENT:
     FROM CoPilot:
     implement the `Ebbinghaus illusion <https://en.wikipedia.org/wiki/Ebbinghaus_illusion>`_.

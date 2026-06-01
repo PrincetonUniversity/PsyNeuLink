@@ -465,8 +465,8 @@ _test_as_mdf_model_defaults_excluded_classes = {
     pnl.OutputPort: _reason_no_default,
     pnl.Rearrange: _reason_no_default,
     pnl.UserDefinedFunction: _reason_no_default,
-    pnl.EMComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
-    pnl.EMComposition2: 'needs GraphStructureCondition by default (not implemented for MDF)',
+    pnl.Emcomposition_Proj: 'needs GraphStructureCondition by default (not implemented for MDF)',
+    pnl.Emcomposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
     pnl.LossMechanism: _reason_no_default
 }
 
@@ -474,8 +474,8 @@ try:
     import torch
     _test_as_mdf_model_defaults_excluded_classes.update(
         {pnl.GRUComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
-         pnl.EMComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
-         pnl.EMComposition2: 'needs GraphStructureCondition by default (not implemented for MDF)',
+         pnl.Emcomposition_Proj: 'needs GraphStructureCondition by default (not implemented for MDF)',
+         pnl.Emcomposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
 })
 except ImportError:
     pass

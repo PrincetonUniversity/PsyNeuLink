@@ -8,14 +8,14 @@
 # ****************************************  ExternalMemoryMechanism ***********************************************
 
 """
-Subclass of EpisodicMemoryMechanism customized for EMComposition2.
+Subclass of EpisodicMemoryMechanism customized for Emcomposition.
 
 It is a field-local that uses MatrixMemory as its function, which supports only a single field of memory.
 
 It has QUERY and COMBINED_SCORES InputPorts
 If it is constructed with FieldType.KEY:
   - it has RETRIEVED, SCORES and NORMS OutputPorts
-  - SCORES and NORMS are used by combined_scores_node of emcomposition2
+  - SCORES and NORMS are used by combined_scores_node of emcomposition
          to combine then for retrieval (SCORES) and storage (NORMS)
   - function computes match scores between query and each entry in memory, reported in its SCORES OutputPort
 If it is constructed with FieldType.VALUE:
@@ -24,7 +24,7 @@ If it is constructed with FieldType.VALUE:
     - has NORMS, since the value is included in the NORMS calculation jused to determine where to store
   - it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input
 
-It has an access_condition, assigned by emcomposition2, that is used to determine when to retrieve and when to store:
+It has an access_condition, assigned by emcomposition, that is used to determine when to retrieve and when to store:
   a) if access_condition is NOT satisfied:
      - _execute() is called with runtime_params[OPERATION: COMPUTE_SCORES]
   b) if access_condition is satisfied:
@@ -82,7 +82,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
 
     EM2 BREADCRUMB: REVISE THE FOLLOWING TO BE CONSISTENT WITH UPDATES IN MODULE DOCSTRING
 
-    A field-local EpisodicMemoryMechanism used by EMComposition2, that:
+    A field-local EpisodicMemoryMechanism used by Emcomposition, that:
       - is restricted to use of MatrixMemory as it function
       - uses access_condition to enforce that storage occurs after retrieval
       - has two InputPorts:
@@ -98,7 +98,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
       - returns scores for match of query to each entry in memory
       - takes **scores** argument (received on Mechanism's COMBINED_SCORES InputPort) as argument used for retrieval
 
-    IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition, in which each field's memory
+    IMPLEMENTATION NOTE:  This is in distinction to the original Emcomposition_Proj, in which each field's memory
                           was stored in Projection matrices managed by EMStorageMechanism.
 
     Ports
@@ -178,7 +178,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         **kwargs,
     ):
 
-        from psyneulink.library.compositions.emcomposition2.emcomposition2 import FieldType
+        from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
         assert isinstance(field_type, FieldType), \
             (f"PROGRAM ERROR: ExternalMemoryMechanism requires specification of field_type "
              f"as FieldType.KEY or FieldType.VALUE; got {field_type}.")
@@ -280,7 +280,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                             if access_condition is not None else False)
         runtime_params = {} if runtime_params is None else runtime_params
         if access_vs_scores:
-            from psyneulink.library.compositions.emcomposition2.emcomposition2 import FieldType
+            from psyneulink.library.compositions.emcomposition.emcomposition import FieldType
             runtime_params.update({OPERATION: ACCESS_MEMORY})
         else:
             runtime_params.update({OPERATION: COMPUTE_SCORES})
