@@ -2545,7 +2545,6 @@ class MatrixMemory(TransformFunction): #
             decay_rate = self.parameters.decay_rate._get(context)
             if decay_rate >= 0.0:
                 memory *= (1-decay_rate)
-                # memory *= (decay_rate)
             memory[weakest_memory_idx] = item_to_store
             # self.parameters.memory._set(memory, context, override=True)
             self.scores_function.parameters.matrix._set(self.memory.T, context)
@@ -2567,6 +2566,7 @@ class MatrixMemory(TransformFunction): #
                 dtype=torch.double,
             )
         }
+        decay_rate = self.parameters.decay_rate._get(context)
 
         def _get_memory():
             return memory_holder['memory']
@@ -2582,7 +2582,6 @@ class MatrixMemory(TransformFunction): #
             return scores, norms
 
         def _retrieve_memory_pytorch_fct(query, scores, context=None):
-            # memory = self.parameters.memory._get(context)
             retrieved = torch.matmul(scores, _get_memory().clone())
             return retrieved
 
@@ -2591,11 +2590,9 @@ class MatrixMemory(TransformFunction): #
             storage_prob = self._get_current_parameter_value('storage_prob', context)
             random_state = self.parameters.random_state._get(context)
             if random_state.uniform(0, 1) < storage_prob:
-                decay_rate = torch.tensor(self.parameters.decay_rate._get(context))
                 memory = _get_memory()
                 if decay_rate >= 0.0:
                     memory.mul_(1-decay_rate)
-                    # memory.mul_(decay_rate)
                 memory[weakest_memory_idx] = item_to_store
                 # self.parameters.memory._set(memory, context, override=True)
                 self.scores_function.parameters.matrix._set(memory.detach().cpu().numpy().T, context)

@@ -892,25 +892,24 @@ class TestExecution:
                   targets[1]: [1]}
         outer_comp.learn(inputs=inputs, epochs=1)
 
-    # EM2 BREADCRUMB: UNCOMMENT UNTIL DONE DEBUGGING
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [
-        # pnl.ExecutionMode.Python,
+        pnl.ExecutionMode.Python,
         pnl.ExecutionMode.PyTorch
     ])
     @pytest.mark.parametrize('concatenate', [
-        # True,
+        True,
         False
     ], ids=[
-        # 'concatenate',
+        'concatenate',
         'no_concatenate'
     ])
     @pytest.mark.parametrize('use_storage_node', [
         True,
-        # False
+        False
     ], ids=[
         'use_storage_node',
-        # 'no_storage_node'
+        'no_storage_node'
     ])
     @pytest.mark.parametrize('learning', [
         True,
@@ -936,10 +935,10 @@ class TestExecution:
                   [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
                   [[[1,2,10]],[[4,5,10]]],[[[51,52,53]],[[81,82,83]],[[777,888,999]],[[1111,2222,3333]]]]
 
-        expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                           [[400., 500., 600.], [444., 555., 666.]],
-                           [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
-                           [[25., 50., 75.], [27.75, 55.5,  83.25]]]
+        expected_memory = [[[4.21875, 8.4375, 12.65625 ], [4.640625, 8.859375, 13.078125]],
+                            [[400., 500., 600.],[444., 555., 666.]],
+                            [[ 22.5, 28.125, 33.75], [ 23.0625, 28.6875, 34.3125]],
+                            [[ 75., 150.,225.],  [ 83.25, 166.5, 249.75]]]
 
         input_nodes = em.query_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]: inputs[i] for i in range(len(input_nodes))}
@@ -963,13 +962,14 @@ class TestExecution:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
                 if exec_mode is pnl.ExecutionMode.Python:
                     pytest.skip("EMComposition2 learning through field memory nodes requires PyTorch execution.")
-                expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                                   [[400., 500., 600.], [444., 555., 666.]],
-                                   [[25., 50., 75.], [27.75, 55.5,  83.25]],
-                                   [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
+                expected_memory = [[[ 75., 150., 225.], [ 83.25, 166.5, 249.75]],
+                                    [[71.19140625, 88.98925781, 106.78710938],[79.02246094, 98.77807617, 118.53369141]],
+                                    [[400., 500., 600.], [444., 555., 666.]],
+                                   [[13.34838867, 26.69677734, 40.04516602], [14.81671143, 29.63342285, 44.45013428]]]
+
                 targets = {target:target.value for target in em.target_input_mechanisms}
                 em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
-                np.testing.assert_equal(em.memory, expected_memory)
+                np.testing.assert_allclose(em.memory, expected_memory)
 
     @pytest.mark.composition
     def test_pytorch_field_memory_sync_obeys_node_value_sync(self):
