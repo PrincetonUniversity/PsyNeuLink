@@ -480,14 +480,21 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         def objfunc(*args):
-            sim_data = self._run_simulations(*args, context=context)
-
-            # The composition might have more outputs than outcome variables, we need to subset the ones we need.
-            sim_data = sim_data[:, :, self.outcome_variable_indices]
-
-            return self._pec_objective_function(sim_data)
+            obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
+            return obj_val
 
         return objfunc
+
+    def _evaluate_objective_and_sim_data(self, *args, context=None):
+        """
+        Run simulations for a parameter setting and return both the PEC objective value and the simulated data.
+        """
+        sim_data = self._run_simulations(*args, context=context)
+
+        # The composition might have more outputs than outcome variables, we need to subset the ones we need.
+        sim_data = sim_data[:, :, self.outcome_variable_indices]
+
+        return self._pec_objective_function(sim_data), sim_data
 
     def _function(self, variable=None, context=None, params=None, **kwargs):
         """
@@ -925,7 +932,7 @@ class PECOptimizationFunction(OptimizationFunction):
             return None
 
     @handle_external_context(fallback_most_recent=True)
-    def log_likelihood(self, *args, context=None):
+    def log_likelihood(self, *args, return_sim_data=False, context=None):
         """
         Compute the log-likelihood of the data given the specified parameters of the model. This function will raise
         aa exception if the function has not been assigned as the function of and OptimizationControlMechanism. An
@@ -940,9 +947,13 @@ class PECOptimizationFunction(OptimizationFunction):
         context: Context
             The context in which the log-likelihood is to be evaluated.
 
+        return_sim_data : bool
+            If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
+
         Returns
         -------
-        The sum of the log-likelihoods of the data given the specified parameters of the model.
+        The sum of the log-likelihoods of the data given the specified parameters of the model, or
+        `(log_likelihood, sim_data)` when `return_sim_data` is True.
         """
 
         if self.owner is None:
@@ -952,12 +963,14 @@ class PECOptimizationFunction(OptimizationFunction):
                 "ParameterEstimationControlMechanism for more information."
             )
 
-        # Make sure we have instantiated the log-likelihood function.
-        if self._ll_func is None:
-            self._ll_func = self._make_objective_func(context=context)
-
+        execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING
-        ll, sim_data = self._ll_func(*args)
-        context.remove_flag(ContextFlags.PROCESSING)
+        try:
+            ll, sim_data = self._evaluate_objective_and_sim_data(*args, context=context)
+        finally:
+            context.execution_phase = execution_phase_at_entry
 
-        return ll, sim_data
+        ll = float(ll)
+        if return_sim_data:
+            return ll, sim_data
+        return ll
