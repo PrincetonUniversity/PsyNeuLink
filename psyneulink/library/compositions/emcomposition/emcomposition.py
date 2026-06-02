@@ -49,13 +49,15 @@ Contents
 Overview
 --------
 
-EMComposition implements a configurable, content-addressable form of episodic (or external) memory, that supports
-one or more memory fields that can be any combinations of keys and values. The function used for evaluating ("scoring")
-the match of queries to keys can be configured, and the weighting of each key used for retrieval can be learned.
-Other configurable factors are the gain of the `SoftMax` function used to normalize the scores for each memory field,
-whether these are normalie
-
-
+EMComposition implements a configurable, content-addressable form of episodic (or external) memory. It is a subclass
+of `AutodiffComposition`, which allows it to backpropagate error signals and learn how to differentially weight cues
+(queries) used for retrieval. It uses `ExternalMemoryMechanism` to manage field-specific memory matrices.
+EMComposition supports one or more memory fields, which can be configured as keys or values. Keys are used to match
+queries against stored entries, while values are retrieved but not used for matching.  It also also several other
+factors to be configured, including the function used for evaluating ("scoring") the match of queries to keys, the gain
+of the `SoftMax` function used to normalize the scores for each memory field, whether the gain is adapted to the
+number of entries in memory, and whether the `memory <EMComposition.memory>` is decayed by a specified amount after
+each storage.
 
 COMMENT:
 
