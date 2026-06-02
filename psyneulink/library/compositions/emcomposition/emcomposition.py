@@ -9,36 +9,6 @@
 # ********************************************* EMComposition *************************************************
 
 """
-COMMENT:
-Refactored EMComposition prototype.
-
-This module introduces ExternalMemoryMechanism, a field-local episodic memory mechanism
-that owns the memory matrix for a single field. For the moment, ExternalMemoryMechanism uses
-only Matrix as its Function (defined in the ExternalMemoryMechanism module) that is limited to a single field in
-memory, that uses its _compute_scores() method to determine scores for each
-entry in memory, and an _access_memory method that retrieves the memory based on the combined scores over all fields,
-and then stores the query input into memory with a probability specified by storage_prob (True or False) when
-access_condition is satisfied
-
-The refactored EMComposition uses one ExternalMemoryMechanism per memory field instead of using EMStorageMechanism
-to update MappingProjection matrices.
-
-- memory_decay_rate is applied as 1-memory_decay_rate multiplier (retention factor) to memory
-- If a value is not provided as input to KEY Field, then the retrieved value is stored;
-   need to deal with nested emcomposition in that case:
-   - does it automatically get a default input from the input_CIM?
-   - could it be detected structurally by no afferent input to the relevant input_CIM port?
-
-High-level execution per field:
-
-1. QUERY input is sent to ExternalMemoryMechanism.input_port[QUERY].
-2. ExternalMemoryMechanism computes a match-weight vector over its memory rows and emits SCORES.
-3. SCORES from key fields are weighted, combined and softmax-normalized by RETRIEVE.
-4. The normalized combined scores are sent back to each ExternalMemoryMechanism.input_port[COMBINED_SCORES].
-5. Each ExternalMemoryMechanism retrieves its field value and emits RETRIEVED.
-6. Each ExternalMemoryMechanism stores its QUERY input into its own memory matrix when access_condition is True
-COMMENT
-
 Contents
 --------
 
@@ -46,10 +16,22 @@ Contents
      - `Organization <EMComposition_Organization>`
      - `Operation <EMComposition_Operation>`
   * `EMComposition_Creation`
-     - `Memory <EMComposition_Memory_Specification>`
-     - `Capacity <EMComposition_Memory_Capacity>`
+     - `Memory Specification <EMComposition_Memory_Specification>`
+        • `Memory Template <EMComposition_Memory_Template>`
+        • `Memory Fill <EMComposition_Memory_Fill>`
+        • `Memory Capacity <EMComposition_Memory_Capacity>`
      - `Fields <EMComposition_Fields>`
-     - `Storage and Retrieval <EMComposition_Retrieval_Storage>`
+        • `Field Specification Dict <EMComposition_Field_Specification_Dict>`
+        • `Field Names <EMComposition_Field_Names>`
+        • `Field Weights <EMComposition_Field_Weights>`
+        • `Normalize Field Weights <EMComposition_Normalize_Field_Weights>`
+        • `Concatenate Queries <EMComposition_Concatenate_Queries>`
+     - `Retrieval and Storage <EMComposition_Retrieval_Storage>`
+        • `Softmax Gain <EMComposition_Softmax_Gain>`
+        • `Softmax Threshold <EMComposition_Softmax_Threshold>`
+        • `Softmax Choice <EMComposition_Softmax_Choice>`
+        • `Memory Decay Rate <EMComposition_Memory_Decay_Rate>`
+        • `Purge by Weight <EMComposition_Purge_by_Weight>`
      - `Learning <EMComposition_Learning_Creation>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
@@ -59,8 +41,7 @@ Contents
      - `Processing <EMComposition_Processing>`
      - `Learning <EMComposition_Learning_Execution>`
   * `EMComposition_Examples`
-     - `Memory Template and Fill <EMComposition_Example_Memory_Template>`
-     - `Field Weights <EMComposition_Example_Field_Weights>`
+     - `Example Case <EMComposition_Example_Case>`
   * `EMComposition_Class_Reference`
 
 .. _EMComposition_Overview:
@@ -68,24 +49,35 @@ Contents
 Overview
 --------
 
-The EMComposition implements a configurable, content-addressable form of episodic (or external) memory. It emulates
+EMComposition implements a configurable, content-addressable form of episodic (or external) memory, that supports
+one or more memory fields that can be any combinations of keys and values. The function used for evaluating ("scoring")
+the match of queries to keys can be configured, and the weighting of each key used for retrieval can be learned.
+Other configurable factors are the gain of the `SoftMax` function used to normalize the scores for each memory field,
+whether these are normalie
+
+
+
+COMMENT:
+
+It emulates
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
 in the form of an `AutodiffComposition`. This allows it to backpropagate error signals based on retrieved values to
 it inputs, and learn how to differentially weight cues (queries) used for retrieval. It also adds the capability for
 `memory_decay <EMComposition.memory_decay_rate>`. In these respects, it implements a variant of a `Modern Hopfield
 Network <https://en.wikipedia.org/wiki/Modern_Hopfield_network>`_, as well as some of the features of a `Transformer
 <https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)>`_
+COMMENT
 
 The `memory <EMComposition.memory>` of an EMComposition is configured using two arguments of its constructor:
 the **memory_template** argument, that defines the overall structure of its `memory <EMComposition.memory>` (the
 number of fields in each entry, the length of each field, and the number of entries); and **fields** argument, that
 defines which fields are used as cues for retrieval (i.e., as "keys"), including whether and how they are weighted in
 the match process used for retrieval, and which fields (if any) are treated as "values" that are stored retrieved but
-not used by the match process, as well as which are involved in learning. The inputs to an EMComposition, corresponding
-to its queriess and values, are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`:
-queires (i.e., to be matched to its keys) are assigned to its `query_input_nodes  <EMComposition.query_input_nodes>`;
-and the remaining inputs assigned to it `value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition
-is executed, the retrieved values for all fields are returned as the result, and recorded in its `results
+not used by the match process, as well as which are involved in learning. The inputs to an EMComposition, comprised of
+its queriess and values, are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`:
+queries (i.e., that are matched to its keys) are assigned to its `query_input_nodes  <EMComposition.query_input_nodes>`;
+and the remaining inputs are assigned to it `value_input_nodes <EMComposition.value_input_nodes>`. When the
+EMComposition is executed, the retrieved values for all fields are returned as the result, and recorded in its `results
 <Composition.result>` attribute. The value for each field is assigned as the `value <OutputPort.value>` of its
 `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`. The input is then stored in its `memory <EMComposition.memory>`,
 with a probability determined by its `storage_prob <EMComposition.storage_prob>` `Parameter`, and all previous memories
@@ -93,12 +85,12 @@ decayed by its `memory_decay_rate <EMComposition.memory_decay_rate>`. The `memor
 accessed using its `memory <EMComposition.memory>` Parameter.
 
     .. technical_note::
-       The memories of an EMComposition are stored in the `memory <ExternalMemory.memory>` `Parameter`
-       of the `ExternalMechansim` for each `field <EMComposition_Fields>` in its `memory <EMComposition.memory>`.
-       (see `note below <EMComposition_Memory_Storage>`). The `memory <EMComposition.memory>` Parameter compiles and
-       formats these as a single 3d array, the rows of which (axis 0) are each entry, the columns of which (axis 1)
-       are the fields of each entry, and the items of which (axis 2)  are the values of each field (see
-       `EMComposition_Memory_Configuration` for additional details).
+       The memories of an EMComposition are stored in the `memory <ExternalMemory.memory>` `Parameter` of the
+       `ExternalMechansim` for each `field <EMComposition_Fields>` (see `note below <EMComposition_Memory_Storage>`);
+       these are referenced and aggregated by the EMComposition's `memory <EMComposition.memory>` Parameter, which
+       compiles and formats these as a single 3d array, the rows of which (axis 0) are each entry, the columns of
+       which (axis 1) are the fields of each entry, and the items of which (axis 2)  are the values of each field
+       (see `EMComposition_Memory_Configuration` for additional details).
 
 .. _EMComposition_Organization:
 
@@ -122,7 +114,18 @@ the **field_weights** argument of the EMComposition's constructor (see `field_we
 
 **Operations**
 
-*Scoring.* BREADCRUMB
+When an EMComposition is executed, the following operations are carried out:
+
+*Scoring.* The query for each field is compared against the keys in the memory for that field, and a match score is
+generated based on the similarity of the query to the keys for that field. By default, for queries and keys that are
+vectors, normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query
+to each key in memory; and if they are scalars the L0 norm is used.
+COMMENT: EM2 BREADCRUMB -- ADD WHEN IMPLEMENTED
+Optionally, COSINE SIMILARITY...
+COMMENT
+The scores are assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
+<EMCompositon.field_memory_nodes>`, which is passed to the `combined_scores_node <EMComposition.combined_scores_node>`
+to generated a *COMBINED_SCORES* that is used for retrieval (see below).
 
 *Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
 on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
@@ -169,10 +172,8 @@ These arguments are used to specify the shape and number of memory entries.
 
 .. _EMComposition_Memory_Template:
 
-* **memory_template**: This specifies the shape of the entries to be stored in the EMComposition's `memory
-  <EMComposition.memory>`, and can be used to initialize `memory <EMComposition.memory>` with pre-specified entries.
-  The **memory_template** argument can be specified in one of three ways (see `EMComposition_Examples` for
-  representative use cases):
+Memory Template
+~~~~~~~~~~~~~~~
 
   * **tuple**: interpreted as an np.array shape specification, that must be of length 2 or 3.  If it is a 3-item tuple,
     then the first item specifies the number of entries in memory, the 2nd the number of fields in each entry, and the
@@ -212,11 +213,8 @@ These arguments are used to specify the shape and number of memory entries.
 
 .. _EMComposition_Memory_Fill:
 
-* **memory_fill**: specifies the value used to fill the `memory <EMComposition.memory>`, based on the shape specified
-  in the **memory_template** (see above).  The value can be a scalar, or a tuple to specify an interval over which
-  to draw random values to fill `memory <EMComposition.memory>` --- both should be scalars, with the first specifying
-  the lower bound and the second the upper bound.  If **memory_fill** is not specified, and no entries are specified
-  in **memory_template**, then `memory <EMComposition.memory>` is filled with zeros.
+Memory Fill
+~~~~~~~~~~~
 
   .. hint::
      If memory is initialized with all zeros and **normalize_memories** set to ``True`` (see `below
@@ -226,13 +224,8 @@ These arguments are used to specify the shape and number of memory entries.
 
 .. _EMComposition_Memory_Capacity:
 
-* **memory_capacity**: specifies the number of items that can be stored in the EMComposition's memory; when
-  `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
-  one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.  If `memory_template
-  <EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is used
-  to determine `memory_capacity <EMComposition.memory_capacity>` (if it is specified and conflicts with either of those
-  an error is generated).  Otherwise, it can be specified using a numerical value, with a default of 1000.  The
-  `memory_capacity <EMComposition.memory_capacity>` cannot be modified once the EMComposition has been constructed.
+Memory Capacity
+~~~~~~~~~~~~~~~
 
 .. _EMComposition_Fields:
 
@@ -245,8 +238,8 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Field_Specification_Dict:
 
-* **fields**: a dict that specifies the names of the fields and their attributes. There must be an entry for each
-  field specified in the **memory_template**, and each must have the following format:
+Field Specification Dict
+~~~~~~~~~~~~~~~~~~~~~~~~
 
   * *key*:  a string that specifies the name of the field.
 
@@ -282,20 +275,13 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Field_Names:
 
-* **field_names**: a list specifies names that can be assigned to the fields. The number of names specified must match
-  the number of fields specified in the memory_template.  If specified, the names are used to label the nodes of the
-  EMComposition; otherwise, the fields are labeled generically as "Key 0", "Key 1", and "Value 1", "Value 2", etc..
+Field Names
+~~~~~~~~~~~
 
 .. _EMComposition_Field_Weights:
 
-* **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. Fields
-  designated as keys are used to match inputs (queries) against entries in memory for retrieval (see `Match memories
-  by field <EMComposition_Processing>`); entries designated as *values* are ignored during the matching process, but
-  their values in memory are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding
-  `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
-  to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
-  in an EMComposition there can be one or more keys and any number of values; if all fields are keys, this implements a
-  full form of content-addressable memory. The following options can be used to specify **field_weights**:
+Field Weights
+~~~~~~~~~~~~~
 
     * *None* (the default): all fields except the last are treated as keys, and are assigned a weight of 1,
       while the last field is treated as a value field (same as assiging it ``None`` in a list or tuple (see below).
@@ -354,26 +340,13 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Normalize_Field_Weights:
 
-* **normalize_field_weights**: specifies whether the `field_weights <EMComposition.field_weights>` are normalized or
-  their raw values are used.  If ``True``, the value of all non-None and non-False `field_weights
-  <EMComposition.field_weights>` are normalized so that they sum to 1.0, and the normalized values are used to weight
-  (i.e., multiply) the corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`). If
-  `normalize_field_weights <EMComposition_Processing.normalize_field_weights>` is ``False``, the raw values of the
-  `field_weights <EMComposition.field_weights>` are used to weight the retrieved value of each field. This setting
-  is ignored if **field_weights** is ``None`` or `concatenate_queries <EMComposition_Concatenate_Queries>` is ``True``.
+Normalize Field Weights
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _EMComposition_Concatenate_Queries:
 
-* **concatenate_queries**: specifies whether keys are concatenated before a match is made to items in memory.
-  This is ``False`` by default. It is also ignored if the `field_weights <EMComposition.field_weights>` for
-  all keys are not all equal (i.e., all non-zero weights are not equal -- see `field_weights
-  <EMComposition_Field_Weights>`) and/or `normalize_memories <EMComposition.normalize_memories>` is set to ``False``.
-  Setting concatenate_queries to ``True`` in either of those cases issues a warning, and the setting is ignored.
-  If the key `field_weights <EMComposition.field_weights>` (i.e., all non-None and non-False values) are all equal
-  *and* **normalize_memories** is set to ``True``, then setting **concatenate_queries** causes a
-  `concatenate_queries_node <EMComposition.concatenate_queries_node>` to be created that receives input from all of
-  the `query_input_nodes <EMComposition.query_input_nodes>` and passes them as a single vector to the `mactch_node
-  <EMComposition.match_nodes>`.
+Concatenate Queries
+~~~~~~~~~~~~~~~~~~~
 
       .. note::
          While this is computationally more efficient, it can affect the outcome of the `matching process
@@ -398,8 +371,8 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Softmax_Gain:
 
-* **softmax_gain**: specifies the gain (inverse temperature) used for softmax normalizing the combined distances
-  used for retrieval (see `EMComposition_Execution` below).  The following options can be used:
+Softmax Gain
+~~~~~~~~~~~~
 
   * numeric value: the value is used as the gain of the `SoftMax` Function for the EMComposition's
     `softmax_node <EMComposition.softmax_node>`.
@@ -417,15 +390,13 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Softmax_Threshold:
 
-* **softmax_threshold**: if this is specified, and **softmax_gain** is specified with a numeric value,
-  then any values below the specified threshold are set to 0 before the distances are softmaxed
-  (see *mask_threhold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
+Softmax Threshold
+~~~~~~~~~~~~~~~~~
 
 .. _EMComposition_Softmax_Choice:
 
-* **softmax_choice**: specifies how the `SoftMax` Function of the EMComposition's `softmax_node
-  <EMComposition.softmax_node>` is used, with the combined distances, to generate a retrieved item;
-  the following are the options that can be used and the retrieved value they produce:
+Softmax Choice
+~~~~~~~~~~~~~~
 
   * *WEIGHTED_AVG* (default): softmax-weighted average based on combined distances of queries and keys in memory.
 
@@ -449,18 +420,13 @@ that is propagated through the EMComposition.
 
 .. _EMComposition_Memory_Decay_Rate:
 
-* **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate
-  is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories
-  are the most likely to be replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.  If
-  **memory_decay_rate** is set to 0 ``None`` or ``False``, then memories do not decay and, when `memory_capacity
-  <EMComposition.memory_capacity>` is reached, the weakest memories are replaced, irrespective of order of entry.
+Memory Decay Rate
+~~~~~~~~~~~~~~~~~
 
 .. _EMComposition_Purge_by_Weight:
 
-* **purge_by_field_weight**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
-  which memory entry is replaced when a new memory is `stored <EMComposition_Storage>`.  If ``True``, the norm of each
-  entry is multiplied by its `field_weight <EMComposition_Field_Weighting>` to determine which entry is the weakest and
-  will be replaced.
+Purge by Weight
+~~~~~~~~~~~~~~~
 
 .. _EMComposition_Learning_Creation:
 
@@ -807,6 +773,8 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
 
 Examples
 --------
+
+.. _EMComposition_Example_Case:
 
 The following are examples of how to configure and initialize the EMComposition's `memory <EMComposition.memory>`:
 
