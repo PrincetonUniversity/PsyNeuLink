@@ -284,15 +284,15 @@ that is propagated through the EMComposition_Proj.
       while the last field is treated as a value field (same as assiging it ``None`` in a list or tuple (see below).
 
     * *scalar*: all fields are treated as keys (i.e., used for retrieval) and weighted equally for retrieval.  If
-      `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``True``, the value is divided by the number
-      of keys, whereas if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``False``, then the value
+      `normalize_field_weights <EMComposition_Proj_Normalize_Field_Weights>` is ``True``, the value is divided by the number
+      of keys, whereas if `normalize_field_weights <EMComposition_Proj_Normalize_Field_Weights>` is ``False``, then the value
       specified is used to weight the retrieval of all keys with that value.
 
       .. note::
          At present these have the same result, since the `SoftMax` function is used to normalize the match between
          queries and keys.  However, other retrieval functions could be used in the future that would be affected by
          the value of the `field_weights <EMComposition_Proj.field_weights>`.  Therefore, it is recommended to leave
-         `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to ``True`` (the default) to ensure that
+         `normalize_field_weights <EMComposition_Proj_Normalize_Field_Weights>` set to ``True`` (the default) to ensure that
          the `field_weights <EMComposition_Proj.field_weights>` are normalized to sum to 1.0.
 
     * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**, and all
@@ -301,8 +301,8 @@ that is propagated through the EMComposition_Proj.
       are not ``None`` or ``False`` are used to weight the corresponding fields during retrieval (see `Weight fields
       <EMComposition_Proj_Processing>`), including those that are 0 (though these will not be used in the retrieval
       process unless/until they are changed to a positive value). If `normalize_field_weights
-      <EMComposition_Normalize_Field_Weights>` is ``True``, all non-None/non-False field_weight entries are normalized
-      so that they sum to 1.0; if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``False``, the
+      <EMComposition_Proj_Normalize_Field_Weights>` is ``True``, all non-None/non-False field_weight entries are normalized
+      so that they sum to 1.0; if `normalize_field_weights <EMComposition_Proj_Normalize_Field_Weights>` is ``False``, the
       raw values are used to weight the retrieval of the corresponding fields. All entries of ``None`` or ``False`` are
       treated as value fields, are not assigned a `field_weight_node <EMComposition_Proj.field_weight_nodes>`, and are
       ignored during retrieval. These *cannot be modified after the EMComposition_Proj has been constructed (see note below).
@@ -335,7 +335,7 @@ that is propagated through the EMComposition_Proj.
   is only a single key (see `note <EMComposition_No_Field_Weights_For_Single_Key_Note>` above), and a warning is issued
   if it is specified.
 
-.. _EMComposition_Normalize_Field_Weights:
+.. _EMComposition_Proj_Normalize_Field_Weights:
 
 * **normalize_field_weights**: specifies whether the `field_weights <EMComposition_Proj.field_weights>` are normalized or
   their raw values are used.  If ``True``, the value of all non-None and non-False `field_weights
@@ -1310,7 +1310,7 @@ class EMComposition_Proj(AutodiffComposition):
     normalize_field_weights : bool : default True
         specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
         weighting values when retrieving an item from memory (see `normalize_field weights
-        <EMComposition_Normalize_Field_Weights>` for additional details).
+        <EMComposition_Proj_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool : default False
         specifies whether to concatenate the keys into a single field before matching them to items in
@@ -1423,7 +1423,7 @@ class EMComposition_Proj(AutodiffComposition):
     normalize_field_weights : bool
         determines whether `fields_weights <EMComposition_Proj.field_weights>` are normalized over the number of keys, or
         used as absolute weighting values when retrieving an item from memory (see `normalize_field weights
-        <EMComposition_Normalize_Field_Weights>` for additional details).
+        <EMComposition_Proj_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool
         determines whether keys are concatenated into a single field before matching them to items in `memory

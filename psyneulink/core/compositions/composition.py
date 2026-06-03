@@ -2396,7 +2396,7 @@ setting the ``PNL_LLVM_DEBUG`` environment variable to ``nocuda``.
 
 *Results*
 
-Executing a Composition returns the results of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
+Executing a Composition returns the result of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
 <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` executed
 are available in the Composition's `results <Composition.results>` attribute.  More specifically, at the end of a
 `TRIAL <TimeScale, a Composition's `output_values <Composition.output_values>` (a list of the `output_values
