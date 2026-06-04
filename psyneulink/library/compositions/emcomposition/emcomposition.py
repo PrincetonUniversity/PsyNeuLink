@@ -633,7 +633,7 @@ accessed using its `memory <EMComposition.memory>` Parameter.
 
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
-     from the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
+     from the `combined_scores_node <EMComposition.combined_scores_node>` to each of the `retrieved_nodes
      <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
      `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>` from the
      `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
@@ -641,7 +641,7 @@ accessed using its `memory <EMComposition.memory>` Parameter.
      corresponding field can be computed simply by passing the input for each query through the Projection (which
      computes the distance of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to the
      corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions for
-     each field computed in the `combined_matches_node <EMComposition.combined_matches_node>` through its Projection
+     each field computed in the `combined_scores_node <EMComposition.combined_scores_node>` through its Projection
      to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
      `MappingProjections <MappingProjection>` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
      of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the distance of the weighted
@@ -726,61 +726,79 @@ COMMENT
   `field_memory_node <EMComposition.field_memory_nodes>` for use in retrieval (see below).
 
   Note, however, that if `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, the inputs and scoring
-  are handled differently: In this case, the inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
-  are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`,
-  which is passed to the `concatenated_memory_node <EMComposition.concatenated_memory_node>` that is used to compute
-  the similarity of that concatenated vector to the concatenated keys (over fields) for each entry in `memory
+  are handled differently. In that case, the inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
+  are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`.
+  That is passed to the `concatenated_memory_node <EMComposition.concatenated_memory_node>` which is used to compute
+  the similarity of the concatenated query vector to the concatenated keys (over fields) for each entry in `memory
   <EMComposition.memory>`. Those scores are then passed back to the individual `field_memory_nodes
   <EMComposition.field_memory_nodes>` as the *COMBINED_SCORES* they use for retrieval. Note that for this to work,
   all query fields must have the same `field_weight <EMComposition_Field_Weights>`) and that `normalize_memories
-  <EMComposition.normalize_memories>` is set to ``True``, and that this will not necessarily produce the same results
-  as treating each query inddependent  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional
-  information).
-
-
+  <EMComposition.normalize_memories>` must be set to ``True``, and that this will not necessarily produce the same
+  results as treating each query independently  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for
+  additional information).
 
 .. _EMComposition_Field_Weighting:
 
-* **Weight distances**. If `field weights <EMComposition_Field_Weights>` are specified, then the distance computed
-  by the `MappingProjection` to each `match_node <EMComposition.match_nodes>` is multiplied by the corresponding
-  `field_weight <EMComposition.field_weights>` using the `field_weight_node <EMComposition.field_weight_nodes>`.
-  By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this is done using
-  the `weighted_match_nodes <EMComposition.weighted_match_nodes>`, each of which receives a Projection from a
-  `match_node <EMComposition.match_nodes>` and the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
-  and multiplies them to produce the weighted distance for that field as its output.  However, if
-  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``True``, the `field_weight_nodes` are
-  implemented as `GatingMechanisms <GatingMechanism>`, each of which uses its `field weight
-  <EMComposition.field_weights>` as a `GatingSignal <GatingSignal>` to output gate (i.e., multiplicatively modulate
-  the output of) the corresponding `match_node <EMComposition.match_nodes>`. In this case, the `weighted_match_nodes
-  are not implemented, and the output of the `match_node <EMComposition.match_nodes>` is passed directly to the
-  `combined_matches_node <EMComposition.combined_matches_node>`.
-
+* **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the similarity score computed
+  for each field is multiplied by the corresponding `field_weight <EMComposition.field_weights>` provided by the
+  `field_weight_node <EMComposition.field_weight_nodes>`. 
+  COMMENT: 
+  BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED  
+  By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this
+  is done using the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives
+  a Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding
+  `field_weight_node <EMComposition.field_weight_nodes>` and multiplies them to produce the weighted distance
+  for that field as its  output.  However, if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>`
+  is ``True``, the `field_weight_nodes` are implemented as `GatingMechanisms <GatingMechanism>`, each of which
+  uses its `field weight <EMComposition.field_weights>` as a `GatingSignal <GatingSignal>` to output gate (i.e.,
+  multiplicatively modulate the output of) the corresponding `field_memory_node <EMComposition.field_memory_nodes>`. 
+  In this case, the `weighted_scores_nodes are not implemented, and the output of the `field_memory_node
+  <EMComposition.field_memory_nodes>` is passed directly to the `combined_scores_node
+  <EMComposition.combined_scores_node>`.
 
   .. _EMComposition_Gating_For_Weighting:
   .. note::
      Setting `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` to ``True`` reduces the size and
-     complexity of the EMComposition, by eliminating the `weighted_match_nodes <EMComposition.weighted_match_nodes>`.
+     complexity of the EMComposition, by eliminating the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`.
      However, doing to precludes the ability to learn the `field_weights <EMComposition.field_weights>`,
      since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
-     then `use_gating_for_weighting` should be set to ``False``.
+     then `use_gating_for_weighting` should be set to ``False``.  
+  COMMENT
+  This is done using the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives a 
+  Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node 
+  <EMComposition.field_weight_nodes>` and multiplies them to produce the weighted scores for that field as its 
+  output.  The `values <OutputPort.value>` of the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>` are
+  then passed to the `combined_scores_node <EMComposition.combined_scores_node>`, which sums them across fields to 
+  produce the *COMBINED_SCORES* for retrieval.  The `values <OutputPort.value>` of the `weighted_scores_nodes` are
+  then passed to the `combined_scores_node <EMComposition.combined_scores_node>`.
 
-* **Combine distances**.  If `field weights <EMComposition_Field_Weights>` are used to specify more than one `key field
-  <EMComposition_Fields>`, then the (weighted) distances computed for each field (see above) are summed across fields
-  by the `combined_matches_node <EMComposition.combined_matches_node>`, before being passed to the `softmax_node
-  <EMComposition.softmax_node>`. If only one key field is specified, then the output of the `match_node
-  <EMComposition.match_nodes>` is passed directly to the `softmax_node <EMComposition.softmax_node>`.
+* **Combine scores**.  If `field weights <EMComposition_Field_Weights>` are used to specify more than one `key field
+  <EMComposition_Fields>`, then the (weighted) similarity scores computed for each field (see above) are summed across
+  fields by the `combined_scores_node <EMComposition.combined_scores_node>`, to which it applies softmax normalization
+  (see below). Note that even if the EMComposition is specified to have only a single key field, the
+  `combined_scores_node <EMComposition.combined_scores_node>` is still constructed, and used to pass the similarity
+  scores (in this case, determined entirely by the single key field, and unaffected by the softmax normalization) to
+  the `field_memory_node(s) <EMComposition.field_memory_nodes>` for any value field(s), as well as the one for the key
+  field, for use in retrieval (see below).
 
-* **Softmax normalize distances**. The distances, passed either from the `combined_matches_node
-  <EMComposition.combined_matches_node>`, or directly from the `match_node <EMComposition.match_nodes>` if there is
+* **Softmax normalize combined scores**. The `combined_scores_node <EMComposition.combined_scores_node>` applies
+  softmax normalization to the combined similarity scores XXX
+
+  , passed either from the `combined_scores_node
+  <EMComposition.combined_scores_node>`, or directly from the `match_node <EMComposition.match_nodes>` if there is
   only one key field, are passed to the `softmax_node <EMComposition.softmax_node>`, which applies the `SoftMax`
   Function, which generates the softmax distribution used to retrieve entries from `memory <EMComposition.memory>`.
   If a numerical value is specified for `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse
   temperature) for the SoftMax Function; if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used
-  to adaptively set the gain based on the summed distance (i.e., the output of the `combined_matches_node
-  <EMComposition.combined_matches_node>`;  if *CONTROL* is specified, then the summed distance is monitored by a
+  to adaptively set the gain based on the summed distance (i.e., the output of the `combined_scores_node
+  <EMComposition.combined_scores_node>`;  if *CONTROL* is specified, then the summed distance is monitored by a
   `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the `SoftMax` Function to modulate its
   `gain <Softmax.gain>` parameter; if ``None`` is specified, the default value of the `Softmax` Function is used as
   the `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+
+
+  and assigns the resut as the `value <OutputPort.value>` of its *COMBINED_SCORES* OutputPort.
+
 
 .. _EMComposition_Retreived_Values:
 
@@ -794,7 +812,7 @@ COMMENT
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
-       the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
+       the `combined_scores_node <EMComposition.combined_scores_node>` to each of the `retrieved_nodes
        <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
        `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the corresponding
        `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
@@ -810,8 +828,8 @@ COMMENT
 
     .. technical_note::
        The norm of each entry is calculated by adding the input vectors to the the corresponding rows of
-       the `matrix <MappingProjection.matrix>` of the `MappingProjection` from the `combined_matches_node
-       <EMComposition.combined_matches_node>` to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`,
+       the `matrix <MappingProjection.matrix>` of the `MappingProjection` from the `combined_scores_node
+       <EMComposition.combined_scores_node>` to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`,
        as well as the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from each
        `query_input_node <EMComposition.query_input_nodes>` to the corresponding `match_node
        <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for additional details).
@@ -819,17 +837,6 @@ COMMENT
   .. note::
      During training, storage occurs after the weights have been updated for a given input (see `note
      <EMComposition_Storage_Learning>` below).
-
-COMMENT:
-FROM CodePilot: (OF HISTORICAL INTEREST?)
-inputs to its `query_input_nodes <EMComposition.query_input_nodes>` and
-`value_input_nodes <EMComposition.value_input_nodes>` are assigned the values of the corresponding items in the
-`input <Composition.input>` argument.  The `combined_softmax_node <EMComposition.field_weight_node>`
-computes the dot product of each query with each key in memory, and then applies a softmax function to each row of the
-resulting matrix.  The `retrieved_nodes <EMComposition.retrieved_nodes>` then compute the dot product of the
-softmaxed values for each memory with the corresponding value for each memory, and the result is assigned to the
-corresponding `output <Composition.output>` item.
-COMMENT
 
 .. _EMComposition_Learning_Execution:
 
@@ -1700,7 +1707,7 @@ class EMComposition(AutodiffComposition):
         (see `Weight distances <EMComposition_Proj_Field_Weighting>` for implementation). These are named the same
         as the corresponding `query_input_nodes <EMComposition_Proj.query_input_nodes>`.
 
-    weighted_match_nodes : list[ProcessingMechanism]
+    weighted_scores_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that combine the `field weight <EMComposition_Proj.field_weights>`
         for each `key field <EMComposition_Proj_Fields>` with the dot product computed by the corresponding the
         `match_node <EMComposition_Proj.match_nodes>`. These are only implemented if `use_gating_for_weighting
@@ -1709,9 +1716,9 @@ class EMComposition(AutodiffComposition):
         appended with the suffix *[WEIGHTED MATCH]*.
 
     BREADCRUMB: COMBINE THESE INTO combined_scores_node:
-    combined_matches_node : ProcessingMechanism
-        `ProcessingMechanism` that receives the weighted distances from the `weighted_match_nodes
-        <EMComposition_Proj.weighted_match_nodes>` if more than one `key field <EMComposition_Proj_Fields>` is specified
+    combined_scores_node : ProcessingMechanism
+        `ProcessingMechanism` that receives the weighted distances from the `weighted_scores_nodes
+        <EMComposition_Proj.weighted_scores_nodes>` if more than one `key field <EMComposition_Proj_Fields>` is specified
         (or directly from `match_nodes <EMComposition_Proj.match_nodes>` if `use_gating_for_weighting
         <EMComposition_Proj.use_gating_for_weighting>` is ``True``), and combines them into a single vector that is passed
         to the `softmax_node <EMComposition_Proj.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
