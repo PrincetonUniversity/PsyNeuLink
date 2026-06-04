@@ -348,11 +348,8 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 .. _EMComposition_Concatenate_Queries:
 
-COMMENT:
-BREADCRUMB: EXPLAIN HERE WHAT HAPPENS RE: field_memory_nodes
-COMMENT
 * **concatenate_queries**: specifies whether queries are concatenated before they are matched to keys in memory.
-  This is ``False`` by default. Setting it to ``True`` causes all the fields to be treated, in effect, as a single
+  This is ``False`` by default; setting it to ``True`` causes all the fields to be treated, in effect, as a single
   field for scoring, retrieval and norming, while preserving the ability to provide separate inputs for each field,
   inspect them individually, and keep their retrieved values separate (in the EMComposition's `retrieved_nodes
   <EMComposition.retrieved_nodes>`). This requires that all non-zero `field_weights <EMComposition.field_weights>`
@@ -712,7 +709,7 @@ COMMENT
 (also see `figure <EMComposition_Example_Fig>`):
 
 * **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
-  and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the match scores
+  and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the similarity scores
   for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
 
 .. _EMComposition_Compute_Similarity_Scores:
@@ -728,14 +725,14 @@ COMMENT
   <EMComposition.scores_metric>` in the **scores_metric** argument of the EMComposition's constructor. The vector of
   similarity scores for each field is assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for its
   `field_memory_node <EMComposition.field_memory_nodes>`. If no `field_weights <EMComposition.field_weights>`
-  are specified, then the scores of each field are passed to the *SCORES* InputPort of the `combined_scores_node
+  are specified, then the scores vector for each field are passed to the *SCORES* InputPort of the `combined_scores_node
   <EMComposition.combined_scores_node>`; if `field_weights <EMComposition.field_weights>` are specified,
   then the similarity scores are passed to the `weighted_scores_node <EMComposition.weighted_scores_node>` for each
-  field, which weights the fields' scores and passes them to the *SCORES* InputPort of the `combined_scores_node
+  field, which weights the field scores and passes them to the *SCORES* InputPort of the `combined_scores_node
   <EMComposition.combined_scores_node>` (see `Weight field scores <EMComposition_Weight_Fields>` below).
   The `field_memory_nodes <EMComposition.field_memory_nodes>` also calculate the norm of each entry in
-  memory for their fields, which are assigned as the `value <OutputPort.value>` of the *NORMs* OutputPort and passed
-  to the *NORMS* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
+  memory for their fields, assigns the norms vector as the `value <OutputPort.value>` of the *NORMS* OutputPort,
+  and passes that to the *NORMS* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
 
 .. _EMComposition_Concatenate_Queries:
   
@@ -745,18 +742,16 @@ COMMENT
   are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`.
   That is passed to the `concatenated_memory_node <EMComposition.concatenated_memory_node>` which is used to compute
   the similarity of the concatenated query vector to the concatenated keys (over fields) for each entry in `memory
-  <EMComposition.memory>`. Those scores are then passed back to the individual `field_memory_nodes
-  <EMComposition.field_memory_nodes>` as the *COMBINED_SCORES* they use for retrieval. Note that for this to work,
-  all query fields must have the same `field_weight <EMComposition_Field_Weights>`) and that `normalize_memories
-  <EMComposition.normalize_memories>` must be set to ``True``, and that this will not necessarily produce the same
-  results as treating each query independently  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for
-  additional information).
+  <EMComposition.memory>`. Note that for this to work, all query fields must have the same `field_weight
+  <EMComposition_Field_Weights>`, and `normalize_memories <EMComposition.normalize_memories>` must be set to
+  ``True``.  Note also that this will not necessarily produce the same results as treating each query independently
+  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional information).
 
 .. _EMComposition_Weight_Fields:
 
 * **Weight field scores**. If `field weights <EMComposition_Field_Weights>` are specified, then the similarity score
-  computed for each field is multiplied by the corresponding `field_weight <EMComposition.field_weights>` provided by
-  the `field_weight_node <EMComposition.field_weight_nodes>`.
+  vector computed for each field is multiplied by the corresponding `field_weight <EMComposition.field_weights>`
+  provided by the `field_weight_node <EMComposition.field_weight_nodes>`.
   COMMENT: 
   BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED  
   By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this
@@ -783,15 +778,16 @@ COMMENT
   Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node 
   <EMComposition.field_weight_nodes>`, and multiplies them to produce the weighted scores for that field as its
   output.  The `values <OutputPort.value>` of the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>` are
-  then passed to the `combined_scores_node <EMComposition.combined_scores_node>`.
+  passed to the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
 
 .. _EMComposition_Combine_Scores:
 
-* **Combine scores**.  The similarity scores received from each `field_memory_node <EMComposition.field_memory_nodes>`,
-  possibly weighted by the corresponding `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, are summed
-  by `combined_scores_node <EMComposition.combined_scores_node>`.  Note that even if the EMComposition is specified to
+* **Combine scores**.  The vectors of similarity scores received from each `field_memory_node
+  <EMComposition.field_memory_nodes>`, possibly weighted by the corresponding `weighted_scores_nodes
+  <EMComposition.weighted_scores_nodes>`, are Hadamard summed by the `combined_scores_node
+  <EMComposition.combined_scores_node>`.  Note that even if the EMComposition is specified to
   have only a single key field, the `combined_scores_node <EMComposition.combined_scores_node>` is still constructed,
-  and used to pass the similarity scores (in this case, determined entirely by the single key field) to the
+  and used to pass the similarity score vector (in this case, determined entirely by the single key field) to the
   `field_memory_node(s) <EMComposition.field_memory_nodes>` for any value field(s), as well as the one for the key
   field, for use in retrieval (see `retrieve values by field <EMComposition_Retrieve_Values>`below).
 
@@ -800,15 +796,17 @@ COMMENT
 * **Softmax normalize combined scores**. The `combined_scores_node <EMComposition.combined_scores_node>` applies
   the `SoftMax` function to the vector of combined scores, using the `softmax_choice <_EMComposition_Softmax_Choice>`,
   `softmax_gain <EMComposition_Softmax_Gain>` and `softmax_threshold <EMComposition_Softmax_Threshold>` options
-  specified in the constructor for the EMComposition (see `softmax_choice <EMComposition_Softmax_Choice>`).  The
-  result is assigned as the `value <OutputPort.value>` of the *COMBINED_SCORES* OutputPort. Notat that if the
-  EMComposition has only a single key field, this has no effect on the scores used for retrieval.
-
+  specified in the constructor for the EMComposition.  The result is assigned as the `value <OutputPort.value>` of
+  the *COMBINED_SCORES* OutputPort. Note that if the EMComposition has only a single key field, this has no effect
+  on the scores used for retrieval.
 
 .. _EMComposition_Retrieve_Values:
 
-* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `softmax_node
-  <EMComposition.softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
+* **Retrieve values by field**. The vector of softmax-normalized combined scores is passed back to each
+`field_memory_node <EMComposition.field_memory_nodes>` of the EMCompositon, for use in generated the retrieved
+value for each field.  XXX
+
+  `retrieved_nodes
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field, which is assigned as the value
   of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`.
 
