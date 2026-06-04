@@ -27,7 +27,7 @@
 Contents
 --------
 
-  * `EMCompositionProj_Overview`
+  * `EMComposition_Proj_Overview`
      - `Organization <EMComposition_Proj_Organization>`
      - `Operation <EMComposition_Proj_Operation>`
   * `EMComposition_Proj_Creation`
@@ -48,7 +48,7 @@ Contents
      - `Field Weights <EMComposition_Proj_Example_Field_Weights>`
   * `EMComposition_Proj_Class_Reference`
 
-.. _EMCompositionProj_Overview:
+.. _EMComposition_Proj_Overview:
 
 Overview
 --------
@@ -117,7 +117,7 @@ to produce a softmax distribution over the entries in memory. That is then used 
 of the retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition_Proj's
 `execution <Composition_Execution>` (an EMComposition_Proj can also be configured to return the exact entry with the lowest
 distance (weighted by field), however then it is not compatible with learning; see `softmax_choice
-<EMComposition_Softmax_Choice>`).
+<EMComposition_Proj_Softmax_Choice>`).
 
   COMMENT:
   TBD DISTANCE ATTRIBUTES:
@@ -343,9 +343,9 @@ that is propagated through the EMComposition_Proj.
   (i.e., multiply) the corresponding fields during retrieval (see `Weight fields <EMComposition_Proj_Processing>`). If
   `normalize_field_weights <EMComposition_Proj_Processing.normalize_field_weights>` is ``False``, the raw values of the
   `field_weights <EMComposition_Proj.field_weights>` are used to weight the retrieved value of each field. This setting
-  is ignored if **field_weights** is ``None`` or `concatenate_queries <EMComposition_Concatenate_Queries>` is ``True``.
+  is ignored if **field_weights** is ``None`` or `concatenate_queries <EMComposition_Proj_Concatenate_Queries>` is ``True``.
 
-.. _EMComposition_Concatenate_Queries:
+.. _EMComposition_Proj_Concatenate_Queries:
 
 * **concatenate_queries**: specifies whether keys are concatenated before a match is made to items in memory.
   This is ``False`` by default. It is also ignored if the `field_weights <EMComposition_Proj.field_weights>` for
@@ -379,7 +379,7 @@ that is propagated through the EMComposition_Proj.
 * **normalize_memories**: specifies whether queries and keys in memory are normalized before computing their dot
   products.
 
-.. _EMComposition_Softmax_Gain:
+.. _EMComposition_Proj_Softmax_Gain:
 
 * **softmax_gain**: specifies the gain (inverse temperature) used for softmax normalizing the combined distances
   used for retrieval (see `EMComposition_Proj_Execution` below).  The following options can be used:
@@ -398,13 +398,13 @@ that is propagated through the EMComposition_Proj.
 
   If ``None`` is specified, the default value for the `SoftMax` function is used.
 
-.. _EMComposition_Softmax_Threshold:
+.. _EMComposition_Proj_Softmax_Threshold:
 
 * **softmax_threshold**: if this is specified, and **softmax_gain** is specified with a numeric value,
   then any values below the specified threshold are set to 0 before the distances are softmaxed
   (see *mask_threhold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
-.. _EMComposition_Softmax_Choice:
+.. _EMComposition_Proj_Softmax_Choice:
 
 * **softmax_choice**: specifies how the `SoftMax` Function of the EMComposition_Proj's `softmax_node
   <EMComposition_Proj.softmax_node>` is used, with the combined distances, to generate a retrieved item;
@@ -441,7 +441,7 @@ that is propagated through the EMComposition_Proj.
 .. _EMComposition_Purge_by_Weight:
 
 * **purge_by_field_weight**: specifies whether `field_weights <EMComposition_Proj.field_weights>` are used in determining
-  which memory entry is replaced when a new memory is `stored <EMComposition_Storage>`.  If ``True``, the norm of each
+  which memory entry is replaced when a new memory is `stored <EMComposition_Proj_Storage>`.  If ``True``, the norm of each
   entry is multiplied by its `field_weight <EMComposition_Proj_Field_Weighting>` to determine which entry is the weakest and
   will be replaced.
 
@@ -616,7 +616,7 @@ When the EMComposition_Proj is executed, the following sequence of operations oc
 
 * **Match memories by field**. The values of each `query_input_node <EMComposition_Proj.query_input_nodes>`
   (or the `concatenate_queries_node <EMComposition_Proj.concatenate_queries_node>` if `concatenate_queries
-  <EMComposition_Concatenate_Queries>` attribute is True) are passed through a `MappingProjection` that
+  <EMComposition_Proj_Concatenate_Queries>` attribute is True) are passed through a `MappingProjection` that
   computes the distance between the corresponding input (query) and each memory (key) for the corresponding field,
   the result of which is possed to the corresponding `match_node <EMComposition_Proj.match_nodes>`. By default, the distance
   is computed as the normalized dot product (i.e., between the normalized query vector and the normalized key for the
@@ -667,7 +667,7 @@ When the EMComposition_Proj is executed, the following sequence of operations oc
   <EMComposition_Proj.combined_matches_node>`;  if *CONTROL* is specified, then the summed distance is monitored by a
   `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the `SoftMax` Function to modulate its
   `gain <Softmax.gain>` parameter; if ``None`` is specified, the default value of the `Softmax` Function is used as
-  the `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+  the `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Proj_Softmax_Gain>` for additional  details).
 
 .. _EMComposition_Proj_Retreived_Values:
 
@@ -687,7 +687,7 @@ When the EMComposition_Proj is executed, the following sequence of operations oc
        `match_node <EMComposition_Proj.match_nodes>` by `memory_decay <EMComposition_Proj.memory_decay_rate>`,
         by 1 - `memory_decay <EMComposition_Proj.memory_decay_rate>`.
 
-.. _EMComposition_Storage:
+.. _EMComposition_Proj_Storage:
 
 * **Store memories**. After the values have been retrieved, the `storage_node <EMComposition_Proj.storage_node>`
   adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition_Proj.query_input_nodes>` and
@@ -705,7 +705,7 @@ When the EMComposition_Proj is executed, the following sequence of operations oc
 
   .. note::
      During training, storage occurs after the weights have been updated for a given input (see `note
-     <EMComposition_Storage_Learning>` below).
+     <EMComposition_Proj_Storage_Learning>` below).
 
 COMMENT:
 FROM CodePilot: (OF HISTORICAL INTEREST?)
@@ -757,7 +757,7 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
      is executed after the forward() and backward() passes are complete, and is not considered as part of the
      gradient calculations.
 
-  .. _EMComposition_Storage_Learning:
+  .. _EMComposition_Proj_Storage_Learning:
 
   .. note:
      Storage always occurs *after* the learning (gradient calculation and weight updates) has occured for an input;
@@ -982,7 +982,7 @@ a pair of `weighted_match_node <EMComposition_Proj.weighted_match_node>`, one fo
 the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
 and `normalize_memories <EMComposition_Proj.normalize_memories>` is ``True``, then the keys are concatenated and are
 concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as ``False``
-(see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional details).
+(see `concatenate_queries <EMComposition_Proj_Concatenate_Queries>` for additional details).
 COMMENT
 
 .. _EMComposition_Proj_Class_Reference:
@@ -1314,7 +1314,7 @@ class EMComposition_Proj(AutodiffComposition):
 
     concatenate_queries : bool : default False
         specifies whether to concatenate the keys into a single field before matching them to items in
-        the corresponding fields in memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for details).
+        the corresponding fields in memory (see `concatenate keys <EMComposition_Proj_Concatenate_Queries>` for details).
 
     normalize_memories : bool : default True
         specifies whether keys and memories are normalized before computing their dot product (similarity)
@@ -1330,16 +1330,16 @@ class EMComposition_Proj(AutodiffComposition):
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
         specifies how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
+        (see `softmax_choice <EMComposition_Proj_Softmax_Choice>` for a description of each option).
 
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition_Proj.memory>`
-        when the EMComposition_Proj is executed (see `Retrieval and Storage <EMComposition_Storage>` for
+        when the EMComposition_Proj is executed (see `Retrieval and Storage <EMComposition_Proj_Storage>` for
         additional details).
 
     store_on_optimization : FIRST, LAST, ALL : default FIRST
         specifies the optimization step(s) on which items are stored in `memory <EMComposition_Proj.memory>` during
-        learning (see `EMComposition_Storage_Learning` for details).
+        learning (see `EMComposition_Proj_Storage_Learning` for details).
 
     memory_decay_rate : float : AUTO
         specifies the rate at which items in the EMComposition_Proj's memory decay
@@ -1427,7 +1427,7 @@ class EMComposition_Proj(AutodiffComposition):
 
     concatenate_queries : bool
         determines whether keys are concatenated into a single field before matching them to items in `memory
-        <EMComposition_Proj.memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for additional details).
+        <EMComposition_Proj.memory (see `concatenate keys <EMComposition_Proj_Concatenate_Queries>` for additional details).
 
     normalize_memories : bool
         determines whether keys and memories are normalized before computing their dot product (similarity)
@@ -1444,16 +1444,16 @@ class EMComposition_Proj(AutodiffComposition):
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
         determines how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
+        (see `softmax_choice <EMComposition_Proj_Softmax_Choice>` for a description of each option).
 
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition_Proj.memory>`
-        when the EMComposition_Proj is executed (see `Retrieval and Storage <EMComposition_Storage>` for
+        when the EMComposition_Proj is executed (see `Retrieval and Storage <EMComposition_Proj_Storage>` for
         additional details).
 
     store_on_optimization : str
         determines the optimization step(s) on which items are stored in `memory <EMComposition_Proj.memory>` during
-        learning (see `EMComposition_Storage_Learning` for details).
+        learning (see `EMComposition_Proj_Storage_Learning` for details).
 
     memory_decay_rate : float
         determines the rate at which items in the EMComposition_Proj's memory decay
@@ -1492,7 +1492,7 @@ class EMComposition_Proj(AutodiffComposition):
         `ProcessingMechanism` that concatenates the inputs to `query_input_nodes <EMComposition_Proj.query_input_nodes>`
         into a single vector used for the matching processing if `concatenate keys <EMComposition_Proj.concatenate_queries>`
         is ``True``. This is not created if the **concatenate_queries** argument to the EMComposition_Proj's constructor is
-        ``False`` or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only
+        ``False`` or is overridden (see `concatenate_queries <EMComposition_Proj_Concatenate_Queries>`), or there is only
         one query_input_node. This node is named *CONCATENATE_QUERIES*
 
     match_nodes : list[ProcessingMechanism]
@@ -1532,7 +1532,7 @@ class EMComposition_Proj(AutodiffComposition):
     softmax_gain_control_node : list[ControlMechanism]
         `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition_Proj.softmax_gain>`
         of the `softmax_node <EMComposition_Proj.softmax_node>`. This is implemented only if `softmax_gain
-        <EMComposition_Proj.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
+        <EMComposition_Proj.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Proj_Softmax_Gain>` for
         details).
 
     retrieved_nodes : list[ProcessingMechanism]
@@ -1547,7 +1547,7 @@ class EMComposition_Proj(AutodiffComposition):
         `EMStorageMechanism` that receives inputs from the `query_input_nodes <EMComposition_Proj.query_input_nodes>` and
         `value_input_nodes <EMComposition_Proj.value_input_nodes>`, and stores these in the corresponding field of`memory
         <EMComposition_Proj.memory>` with probability `storage_prob <EMComposition_Proj.storage_prob>` after a retrieval has been
-        made (see `Retrieval and Storage <EMComposition_Storage>` for additional details). This node is named *STORE*.
+        made (see `Retrieval and Storage <EMComposition_Proj_Storage>` for additional details). This node is named *STORE*.
 
         .. technical_note::
            The `storage_node <EMComposition_Proj.storage_node>` is assigned a Condition to execute after the `retrieved_nodes
