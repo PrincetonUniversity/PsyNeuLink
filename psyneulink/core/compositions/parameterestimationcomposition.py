@@ -1056,6 +1056,19 @@ class ParameterEstimationComposition(Composition):
         # then it will raise an error.
         return self.controller.function.log_likelihood(*args, context=context)
 
+    def can_compile_batched(self, inputs=None, backend="triton"):
+        """
+        Return an opt-in diagnostic report for the experimental batched simulator.
+
+        This does not change ParameterEstimationComposition execution. It only
+        inspects the model composition and reports whether the current batched
+        prototype recognizes its mechanisms, topology, and scheduler
+        conditions.
+        """
+        from psyneulink.core.batched import BatchedCompositionCompiler
+
+        return BatchedCompositionCompiler.diagnose(self.model, backend=backend)
+
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass
 

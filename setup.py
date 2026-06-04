@@ -83,6 +83,7 @@ setup(
         'cuda': get_requirements('cuda'),
         'dev': get_requirements('dev'),
         'doc': get_requirements('doc'),
+        'triton': get_requirements('triton'),
         'tutorial': get_requirements('tutorial'),
     }
 )
