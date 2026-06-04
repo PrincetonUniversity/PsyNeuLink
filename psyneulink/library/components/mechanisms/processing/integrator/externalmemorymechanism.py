@@ -134,6 +134,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                                           stateful=False)
         normalize_memories = Parameter(True, stateful=True, loggable=True)
         # normalize_memories = FunctionParameter(True,
+        #                                        BREADCRUMB:  THESE getter/setter MIGHT BE THE PROBLEM:
         #                                        # getter = _normalize_memories_getter,
         #                                        # setter = _normalize_memories_setter,
         #                                        function_name='function',

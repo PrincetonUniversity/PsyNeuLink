@@ -2359,8 +2359,13 @@ class MatrixMemory(TransformFunction): #
                            # setter = _memory_setter
                            )
         # memory = FunctionParameter(function_name='scores_function',
-        #                            function_parameter_name=MATRIX,
+        #                            function_parameter_name=MATRIX)
         # EM2 BREADCRUMB: MAKE THIS FunctionParameter??
+        # scores_metric = FunctionParameter(DOT_PRODUCT, stateful=False,
+        #                                   function_name='scores_function',
+        #                                   function_parameter_name='operation',
+        #                                   primary=True,
+        #                                   stateful=True)
         scores_metric = Parameter(DOT_PRODUCT, stateful=False)
         normalize_memories = Parameter(True,
                                        # getter = _normalize_memories_getter,
