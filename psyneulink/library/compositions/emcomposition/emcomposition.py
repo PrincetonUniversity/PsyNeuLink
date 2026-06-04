@@ -576,24 +576,37 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 
 .. _EMComposition_Memory_Structure:
 
+*Memory*
+~~~~~~~~
+
+The EMComposition's `memory <EMComposition.memory>` is stored in the `memory <ExternalMemory.memory>` `Parameter`
+of the `ExternalMechansim` for each `field <EMComposition_Fields>`. Each field is treated as a separate "channel"
+for storage and retrieval, and is associated with its own corresponding input (query or value) and output (retrieved
+value) `Node <Composition_Nodes>`. These are coordinated for retrieval and storage by the `combined_scores_node
+<EMComposition.combined_scores_node>`. The structure of the memory is configured as descrbied in
+`EMComposition_Memory_Specification`. The full contents of the EMComposition's memory can be accessed from its
+`memory <EMComposition.memory>` Parameter, which aggregates and formats the `memory <ExternalMemory.memory>` of each
+field into a single 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
+the values for each field of a given entry.  Note that, since fields can have different "widths" (i.e., their values
+can different in length), the full memory array can be "ragged." Information about each field can be accessed in the
+`fields <EMComposition.fields>` attribute, which is a list of `Field` objects containing information about the nodes
+adn values associated with each field.
+
+.. _EMComposition_Output:
+
+*Output*
+~~~~~~~~
+
+The `retrieved_nodes <EMComposition.retrieved_nodes>` of the EMComposition are assigned as its `OUTPUT
+<NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`, and their `values <OutputPort.value>` as the `output_values
+<Composition.output_values>` of the EMComposition as well as to its `results <Composition.results>` attribute
+when it executes.
+
+.. _EMComposition_Execution:
+
+Execution
 ----------------
-BREADCRUMB: INTEGRATE WITH BELOW
-
-The EMComposition's `memory <EMComposition.memory>` is stored in the
-`memory <ExternalMemory.memory>` `Parameter` of the `ExternalMechansim` for each `field <EMComposition_Fields>` (see
-`note below <EMComposition_Memory_Storage>`).  These are referenced and aggregated by the EMComposition's
-`memory <EMComposition.memory>` Parameter, which compiles and formats these as a single 3d array, the rows of which
-
-
-The EMComposition's `memory <EMComposition.memory>` is a 3d array, the rows of
-which (axis 0) are each entry, the columns of which (axis 1) are the fields of each entry, and the items of which
-(axis 2) are the values of each field.
-
-Each field is treated as a separate "channel" for storage and retrieval, and is associated with
-its own corresponding input (key or value) and output (retrieved value) `Node <Composition_Nodes>`, some or all of
-which can be used to compute the similarity of the input (key) to entries in memory, that is used for retreieval.
-Fields can be differentially weighted to determine the influence they have on retrieval, using the `field_weights
-<EMComposition.field_weights>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below).
+BREADCRUMB: INTEGRATE WITH BELOW:
 
 The inputs to an EMComposition, comprised of
 its queriess and values, are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`:
@@ -606,28 +619,6 @@ with a probability determined by its `storage_prob <EMComposition.storage_prob>`
 decayed by its `memory_decay_rate <EMComposition.memory_decay_rate>`. The `memory <EMComposition.memory>` can be
 accessed using its `memory <EMComposition.memory>` Parameter.
 
-    .. technical_note::
-       The memories of an EMComposition are stored in the `memory <ExternalMemory.memory>` `Parameter` of the
-       `ExternalMechansim` for each `field <EMComposition_Fields>` (see `note below <EMComposition_Memory_Storage>`);
-       these are referenced and aggregated by the EMComposition's `memory <EMComposition.memory>` Parameter, which
-       compiles and formats these as a single 3d array, the rows of which (axis 0) are each entry, the columns of
-       which (axis 1) are the fields of each entry, and the items of which (axis 2)  are the values of each field
-       (see `EMComposition_Memory_Configuration` for additional details).
-
-------------------------
-
-*Memory*
-~~~~~~~~
-
-The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This
-is in the form of a 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
-the values of an entry in a given field.  The number of fields is determined by the `memory_template
-<EMComposition_Memory_Template>` argument of the EMComposition's constructor, and the number of entries is determined
-by the `memory_capacity <EMComposition_Memory_Capacity>` argument.  Information about the fields is stored in the
-`fields <EMComposition.fields>` attribute, which is a list of `Field` objects containing information about the nodes
-and values associated with each field.
-
-  .. _EMComposition_Memory_Storage:
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
      from the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
@@ -643,19 +634,8 @@ and values associated with each field.
      `MappingProjections <MappingProjection>` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
      of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the distance of the weighted
      softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
+------------------
 
-.. _EMComposition_Output:
-
-*Output*
-~~~~~~~~
-
-The outputs corresponding to retrieved value for each field are represented as `OUTPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>` of the EMComposition, listed in its `retrieved_nodes <EMComposition.retrieved_nodes>` attribute.
-
-.. _EMComposition_Execution:
-
-Execution
----------
 
 COMMENT:
 **Operations**
