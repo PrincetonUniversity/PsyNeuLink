@@ -5,6 +5,7 @@ import statistics
 import sys
 import time
 import warnings
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -28,11 +29,23 @@ _PEC_GRID_MODES = {
     "llvm": "LLVM",
     "ptx": "PTX",
 }
+_MONOLITHIC_SF_FUSION = "stability_flexibility"
 
 
 class _BatchedResultAdapter:
     def __init__(self, values):
         self.values = values
+
+
+def _with_graph_fusion_kind(plan, fusion_kind: str):
+    graph = replace(plan.ir.graph, fusion_kind=fusion_kind)
+    metadata = dict(plan.ir.metadata)
+    metadata["fusion_kind"] = fusion_kind
+    ir = replace(plan.ir, graph=graph, metadata=metadata)
+    report_metadata = dict(plan.capability_report.metadata)
+    report_metadata["fusion_kind"] = fusion_kind
+    report = replace(plan.capability_report, metadata=report_metadata)
+    return replace(plan, ir=ir, capability_report=report)
 
 
 class _PECGridDDMPlan:
@@ -80,6 +93,68 @@ class _PECGridDDMPlan:
     ):
         if subject_slices is not None:
             raise ValueError("PEC grid DDM benchmark currently supports one unsliced subject.")
+
+        stimulus = np.asarray(next(iter(inputs.values())), dtype=float).reshape(-1, 1)
+        pec_inputs = {self.comp: stimulus}
+        parameter_values = []
+
+        for param in parameter_sets:
+            self.pec.controller.function._ll_func = None
+            _, sim_data = self.pec.log_likelihood(
+                param["rate"],
+                param["threshold"],
+                inputs=pec_inputs,
+            )
+            parameter_values.append(np.asarray(sim_data, dtype=np.float32))
+
+        return _BatchedResultAdapter(np.asarray(parameter_values, dtype=np.float32)[:, None, :, :, :])
+
+
+class _PECGridDDMGraphPlan:
+    def __init__(self, execution_mode, num_trials, num_estimates):
+        self.comp, self.source, self.decision = _make_ddm_graph_comp()
+        self.execution_mode = execution_mode
+        data = pd.DataFrame(
+            {
+                "decision": np.ones(num_trials, dtype=np.float32),
+                "response_time": np.full(num_trials, 0.06, dtype=np.float32),
+            }
+        )
+        data["decision"] = data["decision"].astype("category")
+        self.pec = pnl.ParameterEstimationComposition(
+            name="pec_grid_ddm_graph_benchmark",
+            nodes=[self.comp],
+            parameters={
+                ("rate", self.decision): np.array([0.1, 2.0]),
+                ("threshold", self.decision): np.array([0.01, 0.1]),
+            },
+            outcome_variables=[
+                self.decision.output_ports[pnl.DECISION_OUTCOME],
+                self.decision.output_ports[pnl.RESPONSE_TIME],
+            ],
+            data=data,
+            optimization_function=pnl.PECOptimizationFunction(
+                method="differential_evolution",
+                max_iterations=1,
+            ),
+            num_estimates=num_estimates,
+            initial_seed=42,
+        )
+        self.pec.controller.parameters.comp_execution_mode.set(execution_mode)
+        self.pec.controller.function.set_pec_objective_function(
+            lambda sim_data: (float(np.sum(sim_data)), sim_data)
+        )
+
+    def run(
+        self,
+        inputs,
+        parameter_sets,
+        num_estimates,
+        subject_slices=None,
+        seed=None,
+    ):
+        if subject_slices is not None:
+            raise ValueError("PEC grid DDM graph benchmark currently supports one unsliced subject.")
 
         stimulus = np.asarray(next(iter(inputs.values())), dtype=float).reshape(-1, 1)
         pec_inputs = {self.comp: stimulus}
@@ -173,6 +248,27 @@ def _make_ddm_comp():
         name="DDM",
     )
     return pnl.Composition(pathways=decision), decision
+
+
+def _make_ddm_graph_comp():
+    source = pnl.TransferMechanism(
+        input_shapes=1,
+        function=pnl.Linear(slope=1.0, intercept=0.0),
+        name="DRIFT_PREP",
+    )
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0,
+            rate=1.0,
+            noise=0.2,
+            threshold=0.05,
+            non_decision_time=0.0,
+            time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    return pnl.Composition(pathways=[[source, decision]]), source, decision
 
 
 def _ddm_inputs(decision, trials):
@@ -312,6 +408,9 @@ def _run_ddm(args):
         inputs = _ddm_inputs(decision, trials)
         params = _ddm_parameter_sets(params_count)
         for backend in args.backends:
+            if backend == "triton_fused":
+                print("ddm,triton_fused,SKIP,monolithic SF fusion is only available for stability-flexibility")
+                continue
             if backend in _PEC_GRID_MODES:
                 plan = _PECGridDDMPlan(_PEC_GRID_MODES[backend], trials, estimates)
                 compiled_inputs = _ddm_inputs(plan.comp, trials)
@@ -331,6 +430,40 @@ def _run_ddm(args):
             _print_row("ddm", backend, params_count, 1, trials, estimates, args.ddm_max_steps, metrics)
 
 
+def _run_ddm_graph(args):
+    comp, source, _ = _make_ddm_graph_comp()
+    for params_count, trials, estimates in args.ddm_graph_cases:
+        inputs = _ddm_inputs(source, trials)
+        params = _ddm_parameter_sets(params_count)
+        for backend in args.backends:
+            if backend == "triton_fused":
+                print("ddm_graph,triton_fused,SKIP,monolithic SF fusion is only available for stability-flexibility")
+                continue
+            if backend in _PEC_GRID_MODES:
+                plan = _PECGridDDMGraphPlan(_PEC_GRID_MODES[backend], trials, estimates)
+                compiled_inputs = _ddm_inputs(plan.comp, trials)
+            else:
+                report = BatchedCompositionCompiler.diagnose(comp, backend=backend, max_steps=args.ddm_max_steps)
+                if not report.is_supported or not report.backend_available:
+                    print(f"ddm_graph,{backend},SKIP,{'; '.join(report.unsupported_reasons)}")
+                    continue
+                if backend == "triton" and report.metadata.get("fusion_kind") != "ddm_graph":
+                    print(
+                        "ddm_graph,triton,SKIP,"
+                        f"expected fusion_kind ddm_graph, got {report.metadata.get('fusion_kind')}"
+                    )
+                    continue
+                plan = BatchedCompositionCompiler.compile(comp, backend=backend, max_steps=args.ddm_max_steps)
+                compiled_inputs = inputs
+
+            try:
+                metrics = _time_run(plan, compiled_inputs, params, estimates, args.seed, args.repeats, args.warmups)
+            except Exception as error:
+                print(f"ddm_graph,{backend},SKIP,{type(error).__name__}: {error}")
+                continue
+            _print_row("ddm_graph", backend, params_count, 1, trials, estimates, args.ddm_max_steps, metrics)
+
+
 def _run_stability_flexibility(args):
     for params_count, trials, estimates in args.sf_cases:
         for backend in args.backends:
@@ -340,11 +473,14 @@ def _run_stability_flexibility(args):
             else:
                 comp = _make_stability_flexibility_comp()
                 inputs = _stability_flexibility_inputs(comp, trials)
-                report = BatchedCompositionCompiler.diagnose(comp, backend=backend, max_steps=args.sf_max_steps)
+                diagnose_backend = "triton" if backend == "triton_fused" else backend
+                report = BatchedCompositionCompiler.diagnose(comp, backend=diagnose_backend, max_steps=args.sf_max_steps)
                 if not report.is_supported or not report.backend_available:
                     print(f"stability_flexibility,{backend},SKIP,{'; '.join(report.unsupported_reasons)}")
                     continue
-                plan = BatchedCompositionCompiler.compile(comp, backend=backend, max_steps=args.sf_max_steps)
+                plan = BatchedCompositionCompiler.compile(comp, backend=diagnose_backend, max_steps=args.sf_max_steps)
+                if backend == "triton_fused":
+                    plan = _with_graph_fusion_kind(plan, _MONOLITHIC_SF_FUSION)
 
             params = _stability_flexibility_parameter_sets(params_count)
             try:
@@ -381,11 +517,12 @@ def _parse_args():
     parser.add_argument(
         "--backend",
         action="append",
-        choices=("reference", "triton", "llvm", "ptx"),
+        choices=("reference", "triton", "triton_fused", "llvm", "ptx"),
         dest="backends",
         help="'llvm' and 'ptx' run current PEC grid_evaluate; 'triton' runs the batched simulator.",
     )
     parser.add_argument("--ddm-case", action="append", type=_case, dest="ddm_cases")
+    parser.add_argument("--ddm-graph-case", action="append", type=_case, dest="ddm_graph_cases")
     parser.add_argument("--sf-case", action="append", type=_case, dest="sf_cases")
     parser.add_argument("--ddm-max-steps", type=int, default=64)
     parser.add_argument("--sf-max-steps", type=int, default=256)
@@ -393,10 +530,12 @@ def _parse_args():
     parser.add_argument("--warmups", type=int, default=2)
     parser.add_argument("--seed", type=int, default=11)
     parser.add_argument("--skip-ddm", action="store_true")
+    parser.add_argument("--skip-ddm-graph", action="store_true")
     parser.add_argument("--skip-sf", action="store_true")
     args = parser.parse_args()
     args.backends = args.backends or ["triton"]
     args.ddm_cases = args.ddm_cases or [(1, 128, 1024), (8, 128, 1024), (16, 128, 4096)]
+    args.ddm_graph_cases = args.ddm_graph_cases or [(1, 128, 1024), (8, 128, 1024), (16, 128, 4096)]
     args.sf_cases = args.sf_cases or [(1, 1, 1024), (8, 1, 1024)]
     return args
 
@@ -406,6 +545,8 @@ def main():
     _print_header()
     if not args.skip_ddm:
         _run_ddm(args)
+    if not args.skip_ddm_graph:
+        _run_ddm_graph(args)
     if not args.skip_sf:
         _run_stability_flexibility(args)
 

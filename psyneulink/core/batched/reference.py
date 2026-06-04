@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
-from psyneulink.core.batched.registry import DDM_MODEL, STABILITY_FLEXIBILITY_MODEL
+from psyneulink.core.batched.graph import DDM_MODEL, STABILITY_FLEXIBILITY_MODEL, projection_inputs
 
 
 def run_reference(
@@ -21,19 +21,7 @@ def run_reference(
     params = normalize_parameter_sets(parameter_sets, ir)
     prepared_inputs = prepare_inputs(ir, inputs, subject_slices)
 
-    if ir.model_kind == DDM_MODEL:
-        values = _run_ddm(ir, prepared_inputs, params, num_estimates, seed, common_random_numbers)
-    elif ir.model_kind == STABILITY_FLEXIBILITY_MODEL:
-        values = _run_stability_flexibility(
-            ir,
-            prepared_inputs,
-            params,
-            num_estimates,
-            seed,
-            common_random_numbers,
-        )
-    else:
-        raise ValueError(f"Unknown batched model kind '{ir.model_kind}'.")
+    values = _run_graph(ir, prepared_inputs, params, num_estimates, seed, common_random_numbers)
 
     return BatchedSimulationResult(
         values=values,
@@ -85,31 +73,28 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
 
 
 def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dict[str, np.ndarray]:
-    if ir.model_kind == DDM_MODEL:
-        stimulus = _extract_named_input(inputs, ("DDM",), fallback_first=True)
-        stimulus = _coerce_trials(stimulus, width=1)[:, 0]
-        return _split_subject_trials({"stimulus": stimulus}, subject_slices)
+    if ir.graph is None:
+        raise ValueError("Batched reference execution requires a graph IR.")
 
-    task = _coerce_trials(_extract_named_input(inputs, ("Task Input [I1, I2]",)), width=2)
-    stimulus = _coerce_trials(_extract_named_input(inputs, ("Stimulus Input [S1, S2]",)), width=2)
-    cue = _coerce_trials(_extract_named_input(inputs, ("Cue-Stimulus Interval",)), width=1)[:, 0]
-    try:
-        correct = _coerce_trials(_extract_named_input(inputs, ("Correct Response Info",)), width=1)[:, 0]
-    except KeyError:
-        correct = np.sum(task * stimulus, axis=1)
+    values = {}
+    for input_spec in ir.graph.inputs:
+        raw_value = _extract_named_input(inputs, (input_spec.node,), fallback_first=len(ir.graph.inputs) == 1)
+        coerced = _coerce_trials(raw_value, width=input_spec.width)
+        values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
-    return _split_subject_trials(
-        {
-            "task": task,
-            "stimulus": stimulus,
-            "cue": cue,
-            "correct": correct,
-        },
-        subject_slices,
-    )
+    prepared = _split_subject_trials(values, subject_slices)
+    roles = ir.graph.metadata.get("stability_flexibility_roles", {})
+    if ir.graph.fusion_kind == DDM_MODEL and ir.graph.inputs:
+        prepared["stimulus"] = prepared[ir.graph.inputs[0].node]
+    elif ir.graph.fusion_kind == STABILITY_FLEXIBILITY_MODEL and roles:
+        prepared["task"] = prepared[roles["task_node"]]
+        prepared["stimulus"] = prepared[roles["stimulus_node"]]
+        prepared["cue"] = prepared[roles["cue_node"]]
+        prepared["correct"] = prepared[roles["correct_node"]]
+    return prepared
 
 
-def _run_ddm(
+def _run_graph(
     ir: BatchedCompositionIR,
     inputs: dict[str, np.ndarray],
     params: list[dict[str, float]],
@@ -117,94 +102,158 @@ def _run_ddm(
     seed,
     common_random_numbers: bool,
 ) -> np.ndarray:
-    stimulus = inputs["stimulus"]
+    graph = ir.graph
+    if graph is None:
+        raise ValueError("Batched reference execution requires a graph IR.")
+
+    first_input = inputs[graph.inputs[0].node]
+    num_subjects, num_trials = first_input.shape[:2]
     num_params = len(params)
-    num_subjects, num_trials = stimulus.shape
-    values = np.zeros((num_params, num_subjects, num_trials, num_estimates, 2), dtype=np.float32)
-
-    for p_idx, param in enumerate(params):
-        for s_idx in range(num_subjects):
-            for t_idx in range(num_trials):
-                drift_input = stimulus[s_idx, t_idx]
-                for e_idx in range(num_estimates):
-                    rng = _rng_for(seed, p_idx, s_idx, t_idx, e_idx, common_random_numbers)
-                    decision, response_time = _simulate_ddm_trial(
-                        drift_input=drift_input,
-                        rate=param["rate"],
-                        noise=param["noise"],
-                        threshold=param["threshold"],
-                        non_decision_time=param["non_decision_time"],
-                        time_step_size=param["time_step_size"],
-                        starting_value=param["starting_value"],
-                        offset=param["offset"],
-                        max_steps=ir.max_steps,
-                        rng=rng,
-                    )
-                    values[p_idx, s_idx, t_idx, e_idx, 0] = decision
-                    values[p_idx, s_idx, t_idx, e_idx, 1] = response_time
-
-    return values
-
-
-def _run_stability_flexibility(
-    ir: BatchedCompositionIR,
-    inputs: dict[str, np.ndarray],
-    params: list[dict[str, float]],
-    num_estimates: int,
-    seed,
-    common_random_numbers: bool,
-) -> np.ndarray:
-    task = inputs["task"]
-    stimulus = inputs["stimulus"]
-    cue = inputs["cue"]
-    correct = inputs["correct"]
-    num_params = len(params)
-    num_subjects, num_trials, _ = task.shape
-    lca_max_steps = _stability_flexibility_lca_max_steps(ir, inputs)
-    values = np.zeros((num_params, num_subjects, num_trials, num_estimates, 2), dtype=np.float32)
+    outcome_width = sum(output.width for output in graph.outputs)
+    result = np.zeros((num_params, num_subjects, num_trials, num_estimates, outcome_width), dtype=np.float32)
 
     for p_idx, param in enumerate(params):
         for s_idx in range(num_subjects):
             for e_idx in range(num_estimates):
-                lca_pre = np.zeros(2, dtype=float)
-                lca_activity = np.zeros(2, dtype=float)
+                state = _initial_state(graph)
                 for t_idx in range(num_trials):
+                    node_outputs = {}
                     rng = _rng_for(seed, p_idx, s_idx, t_idx, e_idx, common_random_numbers)
-                    lca_pre, lca_activity = _simulate_lca_cue_period(
-                        task=task[s_idx, t_idx],
-                        pre_activity=lca_pre,
-                        activity=lca_activity,
-                        cue=cue[s_idx, t_idx],
-                        gain=param["gain"],
-                        leak=param["leak"],
-                        competition=param["competition"],
-                        self_excitation=param["self_excitation"],
-                        noise=param["lca_noise"],
-                        time_step_size=param["lca_time_step_size"],
-                        max_steps=lca_max_steps,
-                        rng=rng,
-                    )
-                    drift = (
-                        np.sum(stimulus[s_idx, t_idx] * lca_activity)
-                        + param["automaticity"] * np.sum(stimulus[s_idx, t_idx])
-                    )
-                    drift *= param["scale"] * correct[s_idx, t_idx]
-                    decision, response_time = _simulate_ddm_trial(
-                        drift_input=drift,
-                        rate=1.0,
-                        noise=param["ddm_noise"],
-                        threshold=param["threshold"],
-                        non_decision_time=param["non_decision_time"],
-                        time_step_size=param["ddm_time_step_size"],
-                        starting_value=param["starting_value"],
-                        offset=param["ddm_offset"],
-                        max_steps=ir.max_steps,
-                        rng=rng,
-                    )
-                    values[p_idx, s_idx, t_idx, e_idx, 0] = decision
-                    values[p_idx, s_idx, t_idx, e_idx, 1] = response_time
+                    for node_name in graph.execution_order:
+                        node = graph.node(node_name)
+                        node_outputs[node_name] = _execute_node(
+                            graph,
+                            node,
+                            inputs,
+                            node_outputs,
+                            state,
+                            param,
+                            s_idx,
+                            t_idx,
+                            rng,
+                            ir.max_steps,
+                        )
+                    cursor = 0
+                    for output in graph.outputs:
+                        value = node_outputs[output.node][output.port].reshape(-1)
+                        result[p_idx, s_idx, t_idx, e_idx, cursor: cursor + output.width] = value
+                        cursor += output.width
+    return result
 
-    return values
+
+def _execute_node(
+    graph,
+    node,
+    inputs: dict[str, np.ndarray],
+    node_outputs: dict[str, dict[str, np.ndarray]],
+    state: dict[str, np.ndarray],
+    params: dict[str, float],
+    subject_idx: int,
+    trial_idx: int,
+    rng: np.random.Generator,
+    max_steps: int,
+) -> dict[str, np.ndarray]:
+    if node.component_type in {"TransferMechanism", "ProcessingMechanism"}:
+        input_value = _node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx)
+        if node.function_type == "Linear":
+            value = _param(params, node, "slope") * input_value + _param(params, node, "intercept")
+        elif node.function_type == "Logistic":
+            value = 1.0 / (1.0 + np.exp(-_param(params, node, "gain") * input_value))
+        else:
+            raise ValueError(f"Unsupported stateless function '{node.function_type}'.")
+        return {_primary_output_port(node): np.asarray(value, dtype=np.float32).reshape(-1)}
+
+    if node.component_type == "LCAMechanism":
+        task = _node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx)
+        termination_input_node = node.attrs.get("termination_input_node")
+        if termination_input_node is not None and termination_input_node in inputs:
+            cue = float(np.asarray(inputs[termination_input_node][subject_idx, trial_idx]).reshape(-1)[0])
+        else:
+            cue = float(node.attrs.get("termination_threshold", 1.0))
+        pre_key = f"{node.name}.pre"
+        act_key = f"{node.name}.act"
+        pre, act = _simulate_lca_cue_period(
+            task=task,
+            pre_activity=state[pre_key],
+            activity=state[act_key],
+            cue=cue,
+            gain=_param(params, node, "gain"),
+            leak=_param(params, node, "leak"),
+            competition=_param(params, node, "competition"),
+            self_excitation=_param(params, node, "self_excitation"),
+            noise=_param(params, node, "noise"),
+            time_step_size=_param(params, node, "time_step_size"),
+            max_steps=max(int(np.ceil(cue)), 1),
+            rng=rng,
+        )
+        state[pre_key] = pre
+        state[act_key] = act
+        return {_primary_output_port(node): act.astype(np.float32)}
+
+    if node.component_type == "DDM":
+        drift_input = float(_node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx).reshape(-1)[0])
+        decision, response_time = _simulate_ddm_trial(
+            drift_input=drift_input,
+            rate=_param(params, node, "rate"),
+            noise=_param(params, node, "noise"),
+            threshold=_param(params, node, "threshold"),
+            non_decision_time=_param(params, node, "non_decision_time"),
+            time_step_size=_param(params, node, "time_step_size"),
+            starting_value=_param(params, node, "starting_value"),
+            offset=_param(params, node, "offset"),
+            max_steps=max_steps,
+            rng=rng,
+        )
+        return {
+            "DECISION_OUTCOME": np.asarray([decision], dtype=np.float32),
+            "RESPONSE_TIME": np.asarray([response_time], dtype=np.float32),
+        }
+
+    raise ValueError(f"Unsupported batched graph node '{node.name}' ({node.component_type}).")
+
+
+def _node_input(graph, node, inputs, node_outputs, subject_idx: int, trial_idx: int) -> np.ndarray:
+    projections = projection_inputs(graph, node.name)
+    if not projections:
+        return np.asarray(inputs[node.name][subject_idx, trial_idx], dtype=np.float32).reshape(-1)
+
+    contributions = []
+    for projection in projections:
+        sender_outputs = node_outputs.get(projection.sender)
+        if sender_outputs is None:
+            continue
+        sender_value = sender_outputs[projection.sender_port].reshape(-1)
+        contributions.append(np.asarray(sender_value @ projection.matrix, dtype=np.float32).reshape(-1))
+
+    if not contributions:
+        return np.zeros(node.input_width, dtype=np.float32)
+    if node.combine == "product":
+        value = np.ones_like(contributions[0], dtype=np.float32)
+        for contribution in contributions:
+            value = value * contribution
+        return value
+    value = np.zeros_like(contributions[0], dtype=np.float32)
+    for contribution in contributions:
+        value = value + contribution
+    return value
+
+
+def _initial_state(graph) -> dict[str, np.ndarray]:
+    return {
+        state.name: np.asarray(state.initial_value, dtype=np.float32)
+        for state in graph.states
+    }
+
+
+def _primary_output_port(node) -> str:
+    output_ports = tuple(node.attrs.get("output_ports", ()))
+    if output_ports:
+        return output_ports[0]
+    return "RESULT"
+
+
+def _param(params: dict[str, float], node, local_name: str) -> float:
+    return float(params[node.params[local_name]])
 
 
 def _simulate_ddm_trial(
@@ -273,6 +322,13 @@ def _stability_flexibility_lca_max_steps(ir: BatchedCompositionIR, inputs: dict[
     input_limit = 0
     if "cue" in inputs and np.size(inputs["cue"]):
         input_limit = int(np.ceil(np.max(inputs["cue"])))
+    elif ir.graph is not None:
+        for node in ir.graph.nodes:
+            if node.component_type != "LCAMechanism":
+                continue
+            termination_input_node = node.attrs.get("termination_input_node")
+            if termination_input_node in inputs and np.size(inputs[termination_input_node]):
+                input_limit = max(input_limit, int(np.ceil(np.max(inputs[termination_input_node]))))
     return max(1, metadata_limit, input_limit)
 
 

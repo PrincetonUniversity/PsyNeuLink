@@ -11,8 +11,16 @@ from psyneulink.core.batched.diagnostics import (
 )
 from psyneulink.core.batched.ir import (
     BatchedCompositionIR,
+    BatchedGraphIR,
+    BatchedInputSpec,
+    BatchedNodeSpec,
+    BatchedOp,
+    BatchedOutputSpec,
     BatchedParamSpec,
+    BatchedProjectionSpec,
+    BatchedSchedulerSpec,
     BatchedSimulationResult,
+    BatchedStateSpec,
 )
 
 __all__ = [
@@ -21,7 +29,15 @@ __all__ = [
     "BatchedCompositionCompiler",
     "BatchedCompositionIR",
     "BatchedDiagnostic",
+    "BatchedGraphIR",
+    "BatchedInputSpec",
+    "BatchedNodeSpec",
+    "BatchedOp",
+    "BatchedOutputSpec",
     "BatchedParamSpec",
+    "BatchedProjectionSpec",
+    "BatchedSchedulerSpec",
     "BatchedSimulationPlan",
     "BatchedSimulationResult",
+    "BatchedStateSpec",
 ]
