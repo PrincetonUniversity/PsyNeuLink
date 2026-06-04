@@ -40,6 +40,9 @@ Contents
      - `Output <EMComposition_Output>`
   * `EMComposition_Execution`
      - `Processing <EMComposition_Processing>`
+        • `Similarity Computation <EMComposition_Similarity_Computation>`
+        • `Similarity Computation <EMComposition_Similarity_Computation>`
+
      - `Learning <EMComposition_Learning_Execution>`
   * `EMComposition_Examples`
      - `Example Case <EMComposition_Example_Case>`
@@ -706,54 +709,35 @@ COMMENT
   and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the match scores
   for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
 
+.. _EMComposition_Similarity_Computation:
+
 * **Compute similarity scores**. By default, the input to every `query_input_node <EMComposition.query_input_nodes>`
   is passed to the corresponding `field_memory_node <EMComposition.field_memory_nodes>`, that scores the similarity
-  of the query to each key (i.e., the value of each entry) in memory for that field). The similarity scores for each
-  field are assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
+  of the query to each key (i.e., the value of each entry) in memory for that field) using its `scores_metric
+  <EMComposition.scores_metric>`. By default, the similarity scores are computed as the normalized dot product (i.e.,
+  between the normalized query vector and the normalized key for the corresponding `field
+  <EMComposition_Fields_and_Entries>`, that is comparable to using COSINE similarity). However, if `normalize_memories
+  <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product is computed.
+  The method of scoring can also be customized by specifying a different `scores_metric <EMComposition.scores_metric>`
+  in the **scores_metric** argument of the EMComposition's constructor. The similarity scores for each field are
+  assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
   <EMComposition.field_memory_nodes>`, which is passed to the `combined_scores_node
-  <EMComposition.combined_scores_node>` to generated a *COMBINED_SCORES* that is used for retrieval (see below).
+  <EMComposition.combined_scores_node>` to generate a *COMBINED_SCORES*. That is passed back to each
+  `field_memory_node <EMComposition.field_memory_nodes>` for use in retrieval (see below).
 
-  However, if `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, the inputs and scoring are handled
-  differently:  In this case, the inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>` are
-  concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`,
-  which is passed to the `concatenated_memory_node` that is used to compute the similarity of the concatenated query
-  against a concatenated version of the keys in memory for each field.
+  Note, however, that if `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, the inputs and scoring
+  are handled differently: In this case, the inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
+  are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`,
+  which is passed to the `concatenated_memory_node <EMComposition.concatenated_memory_node>` that is used to compute
+  the similarity of that concatenated vector to the concatenated keys (over fields) for each entry in `memory
+  <EMComposition.memory>`. Those scores are then passed back to the individual `field_memory_nodes
+  <EMComposition.field_memory_nodes>` as the *COMBINED_SCORES* they use for retrieval. Note that for this to work,
+  all query fields must have the same `field_weight <EMComposition_Field_Weights>`) and that `normalize_memories
+  <EMComposition.normalize_memories>` is set to ``True``, and that this will not necessarily produce the same results
+  as treating each query inddependent  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional
+  information).
 
 
-
-  XXX
-
---------------
-  .  In this way, each
-  match is normalized so that, absent `field_weighting <EMComposition_Field_Weights>`, all keys contribute equally to
-  retrieval irrespective of relative differences in the norms of the queries or the keys in memory. However, if the
-  `field_weights <EMComposition.field_weights>` are the same for all `keys <EMComposition_Field_Weights>` and
-  `normalize_memories <EMComposition.normalize_memories>` is True, then the inputs provided to the `query_input_nodes
-  <EMComposition.query_input_nodes>` are concatenated into a single vector (in the
-  `concatenate_queries_node <EMComposition.concatenate_queries_node>`), which is passed to a single `match_node
-  <EMComposition.match_nodes>`.  This may be more computationally efficient than passing each query through its own
-  `match_node <EMComposition.match_nodes>`,
-  COMMENT:
-  FROM CodePilot: (OF HISTORICAL INTEREST?)
-  and may also be more effective if the keys are highly correlated (e.g., if they are different representations of
-  the same stimulus).
-  COMMENT
-  however it will not necessarily produce the same results as passing each query through its own `match_node
-  <EMComposition.match_nodes>` (see `concatenate keys <`concatenate_queries_node>` for additional information).
-
-.. _EMComposition_Distance_Computation:
-
-* **Match memories by field**. The values of each `query_input_node <EMComposition.query_input_nodes>`
-  (or the `concatenate_queries_node <EMComposition.concatenate_queries_node>` if `concatenate_queries
-  <EMComposition_Concatenate_Queries>` attribute is True) are passed through a `MappingProjection` that
-  computes the distance between the corresponding input (query) and each memory (key) for the corresponding field,
-  the result of which is possed to the corresponding `match_node <EMComposition.match_nodes>`. By default, the distance
-  is computed as the normalized dot product (i.e., between the normalized query vector and the normalized key for the
-  corresponding `field <EMComposition_Fields_and_Entries>`, that is comparable to using cosine similarity). However,
-  if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product is computed.
-  The distance can also be customized by specifying a different `function <MappingProjection.function>` for the
-  `MappingProjection` to the `match_node <EMComposition.match_nodes>`. The result is assigned as the `value
-  <Mechanism_Base.value>` of the corresponding `match_node <EMComposition.match_nodes>`.
 
 .. _EMComposition_Field_Weighting:
 
