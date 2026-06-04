@@ -339,18 +339,24 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 .. _EMComposition_Concatenate_Queries:
 
+COMMENT:
+BREADCRUMB: EXPLAIN HERE WHAT HAPPENS RE: field_memory_nodes
+COMMENT
 * **concatenate_queries**: specifies whether queries are concatenated before they are matched to keys in memory.
-  This is ``False`` by default. Setting it to ``True`` requires that all non-zero `field_weights
-  <EMComposition.field_weights>` have the same value (see `field_weights <EMComposition_Field_Weights>`) and that
-  `normalize_memories <EMComposition.normalize_memories>` is set to ``True``;  otherwise, setting concatenate_queries
-  to ``True`` issues a warning, and the setting is ignored. Setting **concatenate_queries** causes a
-  `concatenate_queries_node <EMComposition.concatenate_queries_node>` to be created that receives input from
-  all of the `query_input_nodes <EMComposition.query_input_nodes>`, and passes them as a single vector to the
-  `combined_scores_node <EMComposition.combined_scores_node>`.
+  This is ``False`` by default. Setting it to ``True`` causes all the fields to be treated, in effect, as a single
+  field for scoring, retrieval and norming, while preserving the ability to provide separate inputs for each field,
+  inspect them individually, and keep their retrieved values separate (in the EMComposition's `retrieved_nodes
+  <EMComposition.retrieved_nodes>`). This requires that all non-zero `field_weights <EMComposition.field_weights>`
+  have the same value (see `field_weights <EMComposition_Field_Weights>`) and that `normalize_memories
+  <EMComposition.normalize_memories>` is set to ``True``; otherwise, setting concatenate_queries to ``True`` issues
+  a warning, and the setting is ignored. Setting **concatenate_queries** causes a `concatenate_queries_node
+  <EMComposition.concatenate_queries_node>` to be created that receives input from all of the `query_input_nodes
+  <EMComposition.query_input_nodes>`, and passes them as a single vector to the `combined_scores_node
+  <EMComposition.combined_scores_node>`.
 
       .. note::
          While this is computationally more efficient, it can affect the outcome of the `scoring process
-         <EMComposition_Processing>`, since computing the similarity of a single vector comprised of the concatentated
+         <EMComposition_Processing>`, since computing the similarity of a single vector comprised of the concatenated
          inputs is not identical to computing the similairty of each field independently and then combining the results.
 
       .. note::
@@ -605,7 +611,10 @@ when it executes.
 .. _EMComposition_Execution:
 
 Execution
-----------------
+---------
+
+COMMENT:
+
 BREADCRUMB: INTEGRATE WITH BELOW:
 
 The inputs to an EMComposition, comprised of
@@ -636,8 +645,6 @@ accessed using its `memory <EMComposition.memory>` Parameter.
      softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
 ------------------
 
-
-COMMENT:
 **Operations**
 
 When an EMComposition is executed, the following operations are carried out:
@@ -680,9 +687,9 @@ the `memory <EMComposition.memory>` is decayed by that amount after each executi
 (i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 COMMENT
 
-The arguments of the `run <Composition.run>` , `learn <Composition.learn>` and `Composition.execute`
-methods are the same as those of a `Composition`, and they can be passed any of the arguments valid for
-an `AutodiffComposition`.  The details of how the EMComposition executes are described below.
+The arguments of the `run() <Composition.run>` , `learn() <Composition.learn>` and `execute() <Composition.execute>`
+methods of an EMComposition are the same as those of a `Composition`, and they can be passed any of the arguments
+valid for an `AutodiffComposition`. The details of how the EMComposition executes are described below.
 
 .. _EMComposition_Processing:
 
@@ -690,16 +697,34 @@ an `AutodiffComposition`.  The details of how the EMComposition executes are des
 ~~~~~~~~~~~~
 
 When the EMComposition is executed, the following sequence of operations occur
+COMMENT:
+BREADCRUMB: CHECK FIGURE
+COMMENT
 (also see `figure <EMComposition_Example_Fig>`):
 
 * **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
-  and `value_input_nodes <EMComposition.value_input_nodes>`.  The former are used for matching to the corresponding
-  `fields <EMComposition_Fields_and_Entries>` of the `memory <EMComposition.memory>`, while the latter are retrieved
-  but not used for matching.
+  and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the match scores
+  for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
 
-* **Concatenation**. By default, the input to every `query_input_node <EMComposition.query_input_nodes>` is passed to a
-  to its own `match_node <EMComposition.match_nodes>` through a `MappingProjection` that computes its
-  distance with the corresponding field of each entry in `memory <EMComposition.memory>`.  In this way, each
+* **Compute similarity scores**. By default, the input to every `query_input_node <EMComposition.query_input_nodes>`
+  is passed to the corresponding `field_memory_node <EMComposition.field_memory_nodes>`, that scores the similarity
+  of the query to each key (i.e., the value of each entry) in memory for that field). The similarity scores for each
+  field are assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
+  <EMComposition.field_memory_nodes>`, which is passed to the `combined_scores_node
+  <EMComposition.combined_scores_node>` to generated a *COMBINED_SCORES* that is used for retrieval (see below).
+
+  However, if `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, the inputs and scoring are handled
+  differently:  In this case, the inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>` are
+  concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`,
+  which is passed to the `concatenated_memory_node` that is used to compute the similarity of the concatenated query
+  against a concatenated version of the keys in memory for each field.
+
+
+
+  XXX
+
+--------------
+  .  In this way, each
   match is normalized so that, absent `field_weighting <EMComposition_Field_Weights>`, all keys contribute equally to
   retrieval irrespective of relative differences in the norms of the queries or the keys in memory. However, if the
   `field_weights <EMComposition.field_weights>` are the same for all `keys <EMComposition_Field_Weights>` and
@@ -914,7 +939,7 @@ implements a simple dictionary, with one key field and one value field, each of 
 .. _EMComposition_Example_fig:
 
 .. figure:: _static/EMComposition_Example_fig.svg
-   :alt: Exxample of an EMComposition
+   :alt: Example of an EMComposition
    :align: left
 
        **Example of an EMComposition**
@@ -1198,13 +1223,13 @@ VALUE_NODE_NAME = "VALUE"
 VALUE_AFFIX = f" [{VALUE_NODE_NAME}]"
 FIELD_MEMORY = "FIELD_MEMORY"
 FIELD_MEMORY_AFFIX = f" [{FIELD_MEMORY}]"
-MATCH = "MATCH"
-MATCH_AFFIX = f" [{MATCH}]"
 WEIGHT = "WEIGHT"
 WEIGHT_AFFIX = f" [{WEIGHT}]"
 WEIGHTED_SCORES = "WEIGHTED SCORE"
 WEIGHTED_SCORES_NODE_NAME = "WEIGHTED SCORES"
 WEIGHTED_SCORES_AFFIX = f" [{WEIGHTED_SCORES_NODE_NAME}]"
+CONCATENATED = "CONCATENATED"
+CONCATENATED_AFFIX = f" [{CONCATENATED}]"
 CONCATENATE_QUERIES_NAME = "CONCATENATE QUERIES"
 COMBINED_SCORES_NODE_NAME = "COMBINED SCORES"
 RETRIEVED_NODE_NAME = "RETRIEVED"
@@ -1679,7 +1704,7 @@ class EMComposition(AutodiffComposition):
         ``False`` or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only
         one query_input_node. This node is named *CONCATENATE_QUERIES*
 
-    match_nodes : list[ProcessingMechanism]
+    field_memory_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
         the corresponding field of `memory <EMComposition_Proj.memory>` (see `Match memories by field
         <EMComposition_Proj_Processing>` for additional details). These are named the same as the corresponding
@@ -1699,6 +1724,7 @@ class EMComposition(AutodiffComposition):
         for details), and are named the same as the corresponding `query_input_nodes <EMComposition_Proj.query_input_nodes>`
         appended with the suffix *[WEIGHTED MATCH]*.
 
+    BREADCRUMB: COMBINE THESE INTO combined_scores_node:
     combined_matches_node : ProcessingMechanism
         `ProcessingMechanism` that receives the weighted distances from the `weighted_match_nodes
         <EMComposition_Proj.weighted_match_nodes>` if more than one `key field <EMComposition_Proj_Fields>` is specified
@@ -2619,13 +2645,13 @@ class EMComposition(AutodiffComposition):
             storage_prob=storage_prob,
             scores_metric=L0 if key_len == 1 else DOT_PRODUCT,
             normalize_memories=True if key_len == 1 else normalize_memories,
-            name=f"{MATCH}{FIELD_MEMORY_AFFIX}",
+            name=f"{CONCATENATED}{FIELD_MEMORY_AFFIX}",
         )
         self.concatenated_query_projection = MappingProjection(
             sender=self.concatenate_queries_node,
             receiver=self.concatenated_memory_node.input_ports[QUERY],
             matrix=IDENTITY_MATRIX,
-            name=f"{CONCATENATE_QUERIES_NAME} to {MATCH}{FIELD_MEMORY_AFFIX}",
+            name=f"{CONCATENATE_QUERIES_NAME} to {CONCATENATED}{FIELD_MEMORY_AFFIX}",
         )
 
     def _construct_field_weight_nodes(self):
