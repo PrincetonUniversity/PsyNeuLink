@@ -1,6 +1,6 @@
 """Dask-distributed PEC maximum-likelihood fitting (ask/tell backend, prototype).
 
-Architecture (see ../PLAN_DASK.md and ../CONCEPTS.md):
+Architecture (see ../PLAN_DASK.md):
 
   * The DRIVER owns one Optuna study (CMA-ES). Each round it asks a batch of
     candidate parameter sets, submits them to Dask as log-likelihood

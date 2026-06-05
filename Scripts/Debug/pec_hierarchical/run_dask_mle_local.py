@@ -1,6 +1,6 @@
 """Local entrypoint: run the Dask PEC MLE fit on a single-node LocalCluster.
 
-Run on a COMPUTE node, e.g. via salloc:
+Run via salloc:
 
     salloc --nodes=1 --ntasks=1 --cpus-per-task=16 --mem=8G --time=00:30:00 --partition=cpu
     .venv/bin/python3 Scripts/Debug/pec_hierarchical/run_dask_mle_local.py
