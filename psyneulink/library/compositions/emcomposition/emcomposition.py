@@ -783,8 +783,8 @@ memory is decayed by the amount specified; if it is specified as ``AUTO``, memor
 <EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
 COMMENT:
 BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
-the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, and the `store_at
-<EMComposition.store_at>` Parameter.
+the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, `purge_by_field_weight
+<EMComposition.purge_by_field_weight>`, and the `store_at <EMComposition.store_at>` Parameter.
 COMMENT
 and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores (see `Store memories
 <EMComposition_Store_Values>` below).
@@ -807,42 +807,26 @@ and the `scores_metric <EMComposition.scores_metric>` used to compute similarity
   <EMComposition.store_at>` Parameter.
   COMMENT
   and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores.
-  If memories not normalized <EMComposition.normalize_memories>`, the `scores_metric <EMComposition.scores_metric>`
+  If memories are not normalized <EMComposition.normalize_memories>`, the `scores_metric <EMComposition.scores_metric>`
   is *not* *COSINE*,
   COMMENT:
   BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
   and `store_at <EMComposition.store_at>` is set to *WEAKEST*,
   COMMENT
   then the current inputs (queries and values) are stored in the entry of `memory <EMComposition.memory>` that has
-  the lowest norm across fields (see `compute norms <EMComposition_Compute_Norms>`).
-
-XXX
-
-  THIS ENSURES THAT, IN GENERAL, OLDEST ONES ARE REPLACED, BUT ALSO POSSIBLE THAT MORE SALIENT ONES (IE WITH
-  LARGET NORMS) SURVIVE LONGER THAN LESS SALIENT ONES (IE WITH SMALLER NORMS).
-
-
-(i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
-  and `value nodes <EMComposition.value_input_nodes>` are stored in `memory <EMComposition.memory>` after each execution,
-  with a probability determined by `storage_prob <EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>`
-  is specified, then the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If
-  `memory_capacity <EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
-  (i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.  If `normalize_memories
-  <EMComposition.normalize_memories>` is ``False``, then the `scores_metric <EMComposition.scores_metric>` is *not* *COSINE*,
-  and `store_at <EMComposition.store_at>` is set to *WEAKEST*, then the current inputs (queries and values) are stored in the>`
-
-  adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition.query_input_nodes>` and
-  `value_input_nodes <EMComposition.value_input_nodes>`) as a new entry in `memory <EMComposition.memory>`,
-  replacing the weakest one. The weakest memory is the one with the lowest norm, multipled  by its `field_weight
-  <EMComposition.field_weights>` if `purge_by_field_weight <EMComposition.purge_by_field_weight>` is ``True``.
-
-    .. technical_note::
-       The norm of each entry is calculated by adding the input vectors to the the corresponding rows of
-       the `matrix <MappingProjection.matrix>` of the `MappingProjection` from the `combined_scores_node
-       <EMComposition.combined_scores_node>` to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`,
-       as well as the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from each
-       `query_input_node <EMComposition.query_input_nodes>` to the corresponding `match_node
-       <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for additional details).
+  the lowest norm across fields (see `compute norms <EMComposition_Compute_Norms>`). This means that, in general,
+  new memories replace the the oldest ones (i.e., that have the greatest opportunity to decay), althoug it is possibe
+  that more "salient" ones (i.e., with larger norms) will survive longer than less salient ones (i.e., with smaller
+  norms). If all memories have the same norm (e.g., `normalize_memories <EMComposition.normalize_memories>` is
+  set to ``True`` and/or `scores_metric <EMComposition.scores_metric>` is *COSINE*, the new memories will be stored
+  COMMENT:
+  BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
+  in the location determined by `store_at <EMComposition.store_at>`.
+  COMMENT
+  COMMENT:
+  BREADCRUMB: I BELIEVE THE FOLLOWING IS THE CURRENT -- ALBEIT UNDESIRABLE -- BEHAVIOR:
+  COMMENT
+  the first entry in `memory <EMComposition.memory>`.
 
   .. note::
      During training, storage occurs after the weights have been updated for a given input (see `note
