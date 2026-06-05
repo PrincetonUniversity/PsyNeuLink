@@ -32,7 +32,10 @@ Contents
         - `Softmax Threshold <EMComposition_Softmax_Threshold>`
         - `Storage Probability <EMComposition_Storage_Prob>`
         - `Memory Decay Rate <EMComposition_Memory_Decay_Rate>`
-        - `Purge by Weight <EMComposition_Purge_by_Weight>`
+        COMMENT:
+        - `Store At <EMComposition_Store_At>` <- REPLACES purge_by_field_weights
+        COMMENT
+        - `Purge by Weight <EMComposition_purge_by_field_weight>`
      - `Learning <EMComposition_Learning_Creation>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
@@ -378,6 +381,8 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 The following arguments can be used to configure how retrieval and storage operate:
 
+.. _EMComposition_Normalize_Memories:
+
 * **normalize_memories**: specifies whether query inputs and keys in memory are normalized before computing their
 similarity.  If this is set to ``True`` and `scores_metric <EMComposition.scores_metric>` is set to *DOT_PRODUCT*,
 then the scores correspond to the cosine similarity of the queries and keys.
@@ -386,12 +391,6 @@ BREADCRUMB FROM AI: ADD WHEN THESE METRICS ARE SUPPORTED
 If `scores_metric <EMComposition.scores_metric>` is set to *EUCLIDEAN* or *MANHATTAN*, then the scores correspond
 to the negative of the euclidean or manhattan distance, respectively
 COMMENT
-
-.. _EMComposition_Storage_Prob:
-
-* **storage_prob**: specifies the probability that the inputs to the EMComposition (queries and values) will be stored
-  as an entry in `memory <EMComposition.memory>` on each execution.
-
 
 .. _EMComposition_Softmax_Choice:
 
@@ -447,11 +446,12 @@ COMMENT
   then any values below the specified threshold are set to 0 before the combined scores are softmaxed
   (see *mask_threhold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
-.. _EMComposition_Memory_Decay_Rate:
+.. _EMComposition_Storage_Prob:
 
-COMMENT:
-BREADCRUMB ADD **forgee** HERE
-COMMENT
+* **storage_prob**: specifies the probability that the inputs to the EMComposition (queries and values) will be stored
+  as an entry in `memory <EMComposition.memory>` on each execution.
+
+.. _EMComposition_Memory_Decay_Rate:
 
 * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay each time a new entry
   is stored; the default rate is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`,
@@ -473,18 +473,30 @@ COMMENT
      then memory_decay_rate has no effect, since all memories have the same norm.
      COMMENT: BREADCRUMB TBD
      In that case, a warning is issued, and memories are randomly replace ?? replaced with incrementing index?
-     BREADCRUMB: MENTION purge_by_field_weight PER BELOW AND/OR REVISE THE ABOVE WHEN **store_at** IS IMPLEMENTED
+     BREADCRUMB: MENTION purge_by_field_weights PER BELOW AND/OR REVISE THE ABOVE WHEN **store_at** IS IMPLEMENTED
      COMMENT
 
 COMMENT:
 BREADCRUMB: REMOVE OR REVISE WHEN **store_at** IS IMPLEMENTED
 COMMENT
-.. _EMComposition_Purge_by_Weight:
+.. _EMComposition_purge_by_field_weight:
 
-* **purge_by_field_weight**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
+* **purge_by_field_weights**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
   which memory entry is replaced when a new memory is `stored <EMComposition_Store_Values>`.  If ``True``, the norm of
   each entry is multiplied by its `field_weight <EMComposition.field_weights>` to determine which entry is the
   weakest and will be replaced.
+
+COMMENT:
+BREADCRUMB ADD **store_at** HERE
+.. _EMComposition_Store_At:
+
+* **store_at**: specifies which entry in `memory <EMComposition.memory>` is replaced when a new memory is `stored
+  <EMComposition_Store_Values>`.
+    - WEAKEST
+    - RANDOM
+    - CYCLE
+    - BY WEIGHT <- REPLACES purge_by_field_weights
+COMMENT
 
 .. _EMComposition_Learning_Creation:
 
@@ -783,8 +795,8 @@ memory is decayed by the amount specified; if it is specified as ``AUTO``, memor
 <EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
 COMMENT:
 BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
-the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, `purge_by_field_weight
-<EMComposition.purge_by_field_weight>`, and the `store_at <EMComposition.store_at>` Parameter.
+the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, `purge_by_field_weights
+<EMComposition.purge_by_field_weights>`, and the `store_at <EMComposition.store_at>` Parameter.
 COMMENT
 and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores (see `Store memories
 <EMComposition_Store_Values>` below).
@@ -1540,7 +1552,7 @@ class EMComposition(AutodiffComposition):
 
     purge_by_field_weights : bool : False
         specifies whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to
-        replace when a new one is stored (see `purge_by_field_weight <EMComposition_Purge_by_Weight>` for details).
+        replace when a new one is stored (see `purge_by_field_weights <EMComposition_purge_by_field_weight>` for details).
 
     enable_learning : bool : default True
         specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning_Creation>`
@@ -1652,8 +1664,8 @@ class EMComposition(AutodiffComposition):
         (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
 
     purge_by_field_weights : bool
-        determines whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to
-        replace when a new one is stored (see `purge_by_field_weight <EMComposition_Purge_by_Weight>` for details).
+        determines whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to replace
+        when a new one is stored (see `purge_by_field_weights <EMComposition_purge_by_field_weight>` for details).
 
     enable_learning : bool
         determines whether learning is enabled for the EMCComposition
