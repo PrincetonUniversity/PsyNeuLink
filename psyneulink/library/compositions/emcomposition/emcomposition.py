@@ -34,8 +34,8 @@ Contents
         - `Memory Decay Rate <EMComposition_Memory_Decay_Rate>`
         COMMENT:
         - `Store At <EMComposition_Store_At>` <- REPLACES purge_by_field_weights
-        COMMENT
         - `Purge by Weight <EMComposition_purge_by_field_weight>`
+        COMMENT
      - `Learning <EMComposition_Learning_Creation>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
@@ -48,7 +48,7 @@ Contents
         - `Concatenate Queries <EMComposition_Concatenate_Queries>`
         - `Weight Fields <EMComposition_Weight_Fields>`
         - `Combine Scores <EMComposition_Combine_Scores>`
-        - `Softmax Normalie Scores <EMComposition_Softmax_Normalize_Scores>`
+        - `Softmax Normalize Scores <EMComposition_Softmax_Normalize_Scores>`
         - `Retrieve Values <EMComposition_Retrieve_Values>`
         - `Decay Memories <EMComposition_Decay_Memories>`
         - `Store Values <EMComposition_Store_Values>`
@@ -96,8 +96,21 @@ the softmax-weight simiarly based retrieval process implements a form of attenti
 retrieved together as an entry in the EMComposition's memory. Each field receives its own input (`query
 <EMComposition.query_input_nodes>` or `value <EMComposition.value_input_nodes>`), generates its own output
 (`retrieved value <EMComposition.retrieved_value>`), and its `memory <ExternalMemory.memory>` is managed by
-its own `ExternalMemoryMechanism`. The EMComposition coordinates the storage and retrieval of entries across
-fields. The contribution of each field to retrieval can be weighted by asisgning `field_weights
+its own `ExternalMemoryMechanism`. Fields are divided into two types:
+
+.. _EMComposition_Keys:
+
+* **key fields**: receive a query vector as input on each trial, the similarity of which is computed against each entry
+  in `memory <EMComposition.memory>` that is used to determine retrieval; an EMCcomposition must have at least
+  one key field, and can have as many as desired.
+
+.. _EMComposition_Values:
+
+**value fields**: recieve a value vector as input on each trial, that is stored and retrieved from memory, but not used
+  to determine retrieval; an EMComposition does not require an value fields, but can have as many as desired.
+
+The EMComposition coordinates the storage and retrieval of entries across fields. The contribution of each key
+field to retrieval can be weighted by asisgning `field_weights
 <EMComposition.field_weights>`. The EMComposition's full memory can be accessed using its `memory
 <EMComposition.memory>` attribute, which returns a 3d array, the rows of which (axis 0) are each entry,
 the columns of which (axis 1) are the fields of each entry, and the items of which (axis 2) are the values
@@ -108,17 +121,19 @@ attribute, and its The memory for a given field can be accessed via the `em.fiel
 **Operation**
 
 When an EMComposition is executed, each key field computes the similarity of its input (query) to all of the
-values for each entry in its memory, and the set of similarity "scores" are combined across all fields to
-generate a set of "combined scores" for each entry in memory, which is then used by each field to generate the
-retrieved value for that field. The input to each field is then stored in the memory for that field. By default,
-this occurs by replacing the value in each field that belongs to the entry with the weakest value across all fields.
-However, this behavior can be modified using the `memory_decay_rate <EMComposition.memory_decay_rate>` and
-`scores_metric <EMComposition.scores_metric>` Parameters. The retrieved values for each field are returned as the
-`result <Composition_Execution_Results_and_Reporting>` of the EMComposition's `execution <Composition_Execution>`,
+values for each entry in its memory, and the set of similarity scores are combined across all key fields to
+generate a set of "combined scores" over all entries in memory, which is then used by each field to generate a
+retrieved vector for each field (for both key and value fields). The input to each field is then stored in the
+memory for that field (again, for both key and value fields). By default, this occurs by replacing the value in each
+field that belongs to the entry with the weakest value across all fields. However, this behavior can be modified
+using the `memory_decay_rate <EMComposition.memory_decay_rate>` and `scores_metric <EMComposition.scores_metric>`
+Parameters. The retrieved values for each field are returned as the `result
+<Composition_Execution_Results_and_Reporting>` of the EMComposition's `execution <Composition_Execution>`,
 and can be accessed using its `results <Composition.results>` or its `output_values <Composition.output_values>`
 attributes. During learning, the EMComposition can adjust the `field_weights <EMComposition.field_weights>` to
 optimize performance, and the error gradient can be passed through the composition to adjust the weights of the
-fields that contribute to retrieval, as well as to any input nodes that project to the EMComposition.
+fields that contribute to retrieval, as well as to any input nodes that project to the EMComposition. The full
+sequence of operations carried out is describe in detail under `EMComposition_Execution`.
 
 
 .. _EMComposition_Creation:
@@ -394,9 +409,9 @@ COMMENT
 .. _EMComposition_Softmax_Choice:
 
 * **softmax_choice**: specifies how the `SoftMax` Function of the EMComposition's `combined_scores_node
-  <EMComposition.combined_scores_node>` to weight entries for retrieval based on the combined_scores, which is
-  the sum of the match scores between queries and keys generated by each field (see `EMComposition_Combined_Scores`);
-  the following are the options that can be used, and the type of retrieved value they produce:
+  <EMComposition.combined_scores_node>` is applied to similarity scores between queries and keys summed
+  across fields (`combined_scores <EMComposition_Combined_Scores>`); the following are the options that can be
+  used, and the type of retrieved value they produce:
 
   * *WEIGHTED_AVG* (default): softmax-normalized transform of combined_scores, that is used to produce a
     softmax-weighted average over entries as the retrieved value;
@@ -421,7 +436,7 @@ COMMENT
 
 .. _EMComposition_Softmax_Gain:
 
-* **softmax_gain**: specifies the gain (inverse temperature) used for softmax normalizing the combined distances
+* **softmax_gain**: specifies the gain (inverse temperature) used for softmax-normalizing the combined distances
   used for retrieval when **softamx_choice is *WEIGHTED_AVG* (see `EMComposition_Execution` below); otherwise it is
   ignored.  The following options can be used:
 
@@ -477,7 +492,6 @@ COMMENT
 
 COMMENT:
 BREADCRUMB: REMOVE OR REVISE WHEN **store_at** IS IMPLEMENTED
-COMMENT
 .. _EMComposition_purge_by_field_weight:
 
 * **purge_by_field_weights**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
@@ -485,7 +499,6 @@ COMMENT
   each entry is multiplied by its `field_weight <EMComposition.field_weights>` to determine which entry is the
   weakest and will be replaced.
 
-COMMENT:
 BREADCRUMB ADD **store_at** HERE
 .. _EMComposition_Store_At:
 
@@ -545,8 +558,11 @@ The following arguments of the EMComposition's constructor can be used to config
 
 * **enable_learning**: specifies whether any learning is enabled for the EMComposition.  If ``False``,
   no learning occurs; if ``True``, then both error backpropagation and learning of `field_weights
-  <EMComposition.field_weights>` can occur. If **enable_learning** is ``True``, **use_gating_for_weighting**
+  <EMComposition.field_weights>` can occur.
+  COMMENT:
+  If **enable_learning** is ``True``, **use_gating_for_weighting**
   must be ``False`` (see `note <EMComposition_Gating_For_Weighting>`).
+  COMMENT
 
 .. _EMComposition_Target_Fields:
 
@@ -594,7 +610,7 @@ Structure
 *Input*
 ~~~~~~~
 
-The inputs corresponding to each query and value field are assigned as `INPUT <NodeRole.INPUT>` `Nodes
+The inputs corresponding to each key and value field are assigned as `INPUT <NodeRole.INPUT>` `Nodes
 <Composition_Nodes>` of the EMComposition, are listed in its `query_input_nodes <EMComposition.query_input_nodes>`
 and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respectively, and project to the *QUERY* and
 *VALUE* InputPorts of the corresponing `field_memory_nodes <EMComposition.field_memory_nodes>`.
@@ -659,7 +675,7 @@ valid for an `AutodiffComposition`.
 
 **Summary**. The inputs to an EMComposition, comprised of its queriess and values, are assigned to each of its
 `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`: queries (i.e., that are matched to its keys) are assigned
-ot its `query_input_nodes  <EMComposition.query_input_nodes>`; and the remaining inputs are assigned to its
+to its `query_input_nodes  <EMComposition.query_input_nodes>`; and the remaining inputs are assigned to its
 `value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition is executed, the retrieved values for
 all fields are returned as the result, and recorded in its `results <Composition.result>` attribute. The value for
 each field is assigned as the `value <OutputPort.value>` of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`.
@@ -676,22 +692,22 @@ The following is a more detailed description of the operations carried out when 
 
 * **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
   and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the similarity scores
-  for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
+  for each `key field <EMComposition_Keys>`, while the latter are stored but not used for matching.
 
 .. _EMComposition_Compute_Similarity_Scores:
 
-* **Compute similarity scores**.  The  `field_memory_node <EMComposition.field_memory_nodes>` for each query field
+* **Compute similarity scores**.  The  `field_memory_node <EMComposition.field_memory_nodes>` for each key field
   receives its input from the corresponding `query_input_node <EMComposition.query_input_nodes>` compares this to
   each key in the memory for that field, to generate a vector of similarity scores. The similarity scores are computed
   by applying the `scores_metric <EMComposition.scores_metric>`. If the values in the field are vectors, the default
   metric is the normalized dot product between them (i.e., between the normalized query vector and the normalized
-  key for the corresponding `field <EMComposition_Fields_and_Entries>`, that is comparable to using COSINE similarity);
-  however, if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product
-  is computed. For scalar values, the default is the L0 norm (difference) between them. The method of scoring can also
-  be customized by specifying a different `scores_metric <EMComposition.scores_metric>` in the **scores_metric**
-  argument of the EMComposition's constructor. The vector of similarity scores is assigned as the `value
-  <OutputPort.value>` of the `field_memory_node <EMComposition.field_memory_nodes>`\'s *SCORES* OutputPort. If no
-  `field_weights <EMComposition.field_weights>` are specified, then the scores vector for each field is passed to
+  key vectors for the corresponding `field <EMComposition_Fields_and_Entries>`, that is comparable to using COSINE
+  similarity); however, if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw
+  dot product is computed. For scalar values, the default is the L0 norm (difference) between them. The method of
+  scoring can also be customized by specifying a different `scores_metric <EMComposition.scores_metric>` in the
+  **scores_metric** argument of the EMComposition's constructor. The vector of similarity scores is assigned as the
+  `value <OutputPort.value>` of the `field_memory_node <EMComposition.field_memory_nodes>`\'s *SCORES* OutputPort. If
+  no `field_weights <EMComposition.field_weights>` are specified, then the scores vector for each field is passed to
   the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`; if `field_weights
   <EMComposition.field_weights>` are specified, then the scores vector is passed to the `weighted_scores_node
   <EMComposition.weighted_scores_node>` for the field, which multiples the scores vector by the weight and passes
@@ -714,7 +730,7 @@ The following is a more detailed description of the operations carried out when 
   are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`.
   That is passed to the `concatenated_memory_node <EMComposition.concatenated_memory_node>` which is used to compute
   the similarity of the concatenated query vector to the concatenated keys (over fields) for each entry in `memory
-  <EMComposition.memory>`. Note that for this to work, all query fields must have the same `field_weight
+  <EMComposition.memory>`. Note that for this to work, all key fields must have the same `field_weight
   <EMComposition_Field_Weights>`, and `normalize_memories <EMComposition.normalize_memories>` must be set to
   ``True``.  Note also that this will not necessarily produce the same results as treating each query independently
   (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional information).
@@ -756,7 +772,7 @@ The following is a more detailed description of the operations carried out when 
 * **Combine scores**. The vectors of similarity scores received from each `field_memory_node
   <EMComposition.field_memory_nodes>`, possibly weighted by the corresponding `weighted_scores_nodes
   <EMComposition.weighted_scores_nodes>`, are Hadamard summed by the `combined_scores_node
-  <EMComposition.combined_scores_node>` and then softmax normalized (see `below
+  <EMComposition.combined_scores_node>` and then softmax-normalized (see `below
   <EMComposition_Softmax_Normalize_Scores>` before being assigned as the `value <OutputPort.value>`
   of its *COMBINED_SCORES* OutputPort. The vectors of norms received from each `field_memory_node
   <EMComposition.field_memory_nodes>` are also Hadamard summed by the `combined_scores_node
@@ -789,16 +805,16 @@ The following is a more detailed description of the operations carried out when 
 .. _EMComposition_Decay_Memories:
 
 * **Decay memories**.  If `memory_decay_rate <EMComposition.memory_decay>` is assigned a value, then each entry in
-memory is decayed by the amount specified; if it is specified as ``AUTO``, memories are decayed by 1/`memory_capacity
-<EMComposition.memory_capacity>`. How this impacts `retrieval <EMComposition_Retrieve_Values>` and `storage
-<EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
-COMMENT:
-BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
-the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, `purge_by_field_weights
-<EMComposition.purge_by_field_weights>`, and the `store_at <EMComposition.store_at>` Parameter.
-COMMENT
-and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores (see `Store memories
-<EMComposition_Store_Values>` below).
+  memory is decayed by the amount specified; if it is specified as ``AUTO``, memories are decayed by 1/`memory_capacity
+  <EMComposition.memory_capacity>`. How this impacts `retrieval <EMComposition_Retrieve_Values>` and `storage
+  <EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
+  COMMENT:
+  BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
+  the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, `purge_by_field_weights
+  <EMComposition.purge_by_field_weights>`, and the `store_at <EMComposition.store_at>` Parameter.
+  COMMENT
+  and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores (see `Store memories
+  <EMComposition_Store_Values>` below).
 
     .. technical_note::
        Memory decay is applied by multiplying all values for all entries across fields in `memory
@@ -1431,7 +1447,9 @@ class EMComposition(AutodiffComposition):
         COMMENT
         enable_learning=True,           \
         target_fields=None,             \
+        COMMENT:
         use_gating_for_weighting=False, \
+        COMMENT
         name="EM_Composition"           \
         )
 
@@ -1445,7 +1463,7 @@ class EMComposition(AutodiffComposition):
 
     with:
       - one ExternalMemoryMechanism per field, each owning its field memory matrix.
-      - storage occurs in each memory_node based on access_condition an its storage_prob
+      - storage occurs in each memory_node based on access_condition and its storage_prob
 
     The externally visible structure is kept similar to the original EMComposition:
       - input_nodes
@@ -1463,45 +1481,50 @@ class EMComposition(AutodiffComposition):
     differentiable form, in which its `field_weights <EMComposition.field_weights>` parameter can be learned,
     and that supports `memory_decay <EMComposition_Memory_Decay_Rate>`.
 
-    Takes only the following arguments, all of which are optional
+    Takes the following arguments, all of which are optional
 
     Arguments
     ---------
 
     memory_template : tuple, list, 2d or 3d array : default [[0],[0]]
-        specifies the shape of an item to be stored in the EMComposition's memory
+        specifies the shape of entries in the EMComposition's `memory <EMComposition.memory>`
         (see `memory_template <EMComposition_Memory_Template>` for details).
 
     memory_fill : scalar or tuple : default 0
-        specifies the value used to fill the memory when it is initialized
+        specifies the value used to fill `memory <EMComposition.memory>` when it is initialized
         (see `memory_fill <EMComposition_Memory_Fill>` for details).
 
     memory_capacity : int : default None
-        specifies the number of items that can be stored in the EMComposition's memory;
-        (see `memory_capacity <EMComposition_Memory_Capacity>` for details).
+        specifies the number of entries that can be stored in `memory <EMComposition.memory>`
+        (see `memory_capacity <EMComposition_Memory_Capacity>` for additional details).
 
     fields : dict[tuple[field weight, learning specification]] : default None
-        each key must a string that is the name of a field, and its value a dict or tuple that specifies that field's
-        `field_weight <EMComposition.field_weights>`, `learn_field_weights <EMComposition.learn_field_weights>`, and
-        `target_fields <EMComposition.target_fields>` specifications (see `fields <EMComposition_Fields>` for details
-        of specificaton format). The **fields** arg replaces the **field_names**, **field_weights**
-        **learn_field_weights**, and **target_fields** arguments, and specifying any of these raises an error.
+        the key for each entry of the dict must be a string that is the name of a field, and its value a dict or tuple
+        that specifies that field's `field_weight <EMComposition.field_weights>`, `learn_field_weights
+        <EMComposition.learn_field_weights>`, and `target_fields <EMComposition.target_fields>` specifications (see
+        `fields <EMComposition_Fields>` for details of specification format). The **fields** argument replaces the
+        **field_names**, **field_weights** **learn_field_weights**, and **target_fields** arguments, and specifying
+        any of these raises an error as well as **fields** raises an error.
 
     field_names : list or tuple : default None
-        specifies the names assigned to each field in the memory_template (see `field names <EMComposition_Field_Names>`
-        for details). If the **fields** argument is specified, specifying **field_names** is not necessary and
-        doing so raises a warning.
+        specifies the names assigned to each field in the memory_template (see `field names
+        <EMComposition_Field_Names>` for details). If the **fields** argument is specified, specifying
+        **field_names** is not necessary and doing so issues a warning.
 
     field_weights : list or tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory (see `field weights
-        <EMComposition_Field_Weights>` for additional details). If the **fields** argument is specified, specifying
-        **field_weights** is not necessary and doing so raises a warning.
+        specifies which fields of the EMComposition should be configured as `key fields <EMComposition_Keys>` and
+        which should be configured as `value fields <EMComposition_Values>`: keys are specified by non-zero entries
+        in the list or tuple, and values by  are a zero. Non-zero entries used to specify keys can also be used to
+        specify the relative weight assigned to each key field when computing the similarity of a query to the entries
+        in the key field's `memory <ExternalMemoryMechanism.memory>` (see `field weights <EMComposition_Field_Weights>`
+        for additional details). If the **fields** argument is specified, specifying **field_weights** is not necessary
+        and doing so issues a warning.
 
     learn_field_weights : bool or list[bool, int, float]: default False
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
         the learning_rate is for each field (see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
         specifications). If the **fields** argument is specified, specifying **learn_field_weights** is not necessary,
-        and doing so raises a warning.
+        and doing so issues a warning.
 
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
@@ -1509,29 +1532,31 @@ class EMComposition(AutodiffComposition):
         (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool : default True
-        specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
-        weighting values when retrieving an item from memory (see `normalize_field weights
+        specifies whether the `field_weights <EMComposition.field_weights>` are normalized over the number of key
+        fields, or used as absolute weighting values during retrieval (see `normalize_field weights
         <EMComposition_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool : default False
-        specifies whether to concatenate the keys into a single field before matching them to items in
-        the corresponding fields in memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for details).
+        specifies whether queries are concatenated into a single vector before computing similarity to entries in
+        `memory <EMComposition.memory (see `Concatenate queries <EMComposition_Concatenate_Queries>` for additional
+        details).
 
     normalize_memories : bool : default True
-        specifies whether keys and memories are normalized before computing their dot product (similarity)
-        (see `Match memories by field <EMComposition_Processing>` for additional details).
+        specifies whether queries and keys are normalized before computing their similarity
+        (see `normalize_memories <EMComposition_Normalize_Memories>` for additional details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
-        specifies how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
+        specifies how softmax-normalization over summed similarity scores of queries and keys in memory is used for
+        retrieval (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of options).
 
     softmax_gain : float, ADAPTIVE or CONTROL : default 1.0
-        specifies the temperature used for softmax normalizing the distance of queries and keys in memory
-        (see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details).
+        specifies gain (inverse temperature) used for softmax-normalizing the summed similarity scores of queries
+        and keys in memory by the `SoftMax` Function of the `combined_scores_node <EMComposition.combined_scores_node>`
+        (see `softmax_gain <EMComposition_Softmax_Gain>` for additional details).
 
     softmax_threshold : float : default .001
         specifies the threshold used to mask out small values in the softmax calculation
-        see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+        (see `softmax_threshold <EMComposition_Softmax_Threshold>` for details).
 
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>` when the
@@ -1541,42 +1566,40 @@ class EMComposition(AutodiffComposition):
         specifies the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
 
+    memory_decay_rate : float : AUTO
+        specifies the rate at which entries in `memory <EMComposition.memory>` decay
+        (see `decay memories <EMComposition_Decay_Memories>` for details).
+
     COMMENT:
     store_at : str : WEAKEST
         specifies which entry in `memory <EMComposition.memory>` is replaced when a new one is stored
         (see `store_at <EMComposition_Store_At>` for details).
-    COMMENT
-
-    memory_decay_rate : float : AUTO
-        specifies the rate at which items in the EMComposition's memory decay
-        (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
 
     purge_by_field_weights : bool : False
         specifies whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to
         replace when a new one is stored (see `purge_by_field_weights <EMComposition_purge_by_field_weight>` for details).
+    COMMENT
 
     enable_learning : bool : default True
-        specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning_Creation>`
-        for additional details); **use_gating_for_weighting** must be ``False``.
+        specifies whether learning is enabled for the EMCComposition
+        (see `Learning <EMComposition_Learning_Creation>` for additional details).
+        COMMENT:
+        ; **use_gating_for_weighting** must be ``False``.
+        COMMENT
+        .
 
     target_fields : list[bool]: default None
-        specifies whether a learning pathway is constructed for each `field <EMComposition_Entries_and_Fields>`
+        specifies whether a learning pathway is constructed for each `field <EMComposition_Fields_and_Entries>`
         of the EMComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
         must be equal to the number of `fields <EMComposition_Fields> specified (see `Target Fields
-         <EMComposition_Target_Fields>` for additional details). If the **fields** argument is specified,
-         specifying **target_fields** is not necessary and doing so raises a warning.
+        <EMComposition_Target_Fields>` for additional details). If the **fields** argument is specified,
+        specifying **target_fields** is not necessary and doing so issues a warning.
 
-    # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
-    .. technical_note::
-        use_storage_node : bool : default True
-            specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
-            If False, a method on EMComposition is used rather than a LearningMechanism. This is meant for
-            debugging, and precludes use of `import_composition <Composition.import_composition>` to integrate
-            the EMComposition into another Composition;  to do so, use_storage_node must be ``True`` (default).
-
+    COMMENT:
     use_gating_for_weighting : bool : default False
         specifies whether to use output gating to weight the `match_nodes <EMComposition.match_node>` instead of
         a standard input (see `Weight distances <EMComposition_Field_Weighting>` for additional details).
+    COMMENT
 
     Attributes
     ----------
@@ -1587,34 +1610,34 @@ class EMComposition(AutodiffComposition):
         additional details).
 
         .. note::
-           This is a read-only attribute;  memories can be added to the EMComposition's memory either by
+           This is a read-only attribute;  memories can be added to the EMComposition's memory by
            COMMENT:
-           using its `add_to_memory <EMComposition.add_to_memory>` method, or
+           either by using its `add_to_memory <EMComposition.add_to_memory>` method, or
            COMMENT
            executing its `run <Composition.run>` or learn methods with the entry as the ``inputs`` argument.
 
     fields : ContentAddressableList[Field]
-        list of `Field` objects, each of which contains information about the nodes and values of a field in the
-        EMComposition's memory (see `Field`).
+        list of `Field` objects, each of which contains information about the characteristics of a field in the
+        EMComposition's `memory <EMComposition.memory>`.
 
     .. _EMComposition_Parameters:
 
     memory_capacity : int
-        determines the number of items that can be stored in `memory <EMComposition.memory>`
+        determines the number of entries that can be stored in `memory <EMComposition.memory>`
         (see `memory_capacity <EMComposition_Memory_Capacity>` for additional details).
 
     field_names : list[str]
-        determines which names that can be used to label fields in `memory <EMComposition.memory>`
+        list of the names used to label fields in `memory <EMComposition.memory>`
         (see `field_names <EMComposition_Field_Names>` for additional details).
 
     field_weights : tuple[float]
-        determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
-        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
-        and retrieved from memory but not used in the match process (see `Match memories by field
-        <EMComposition_Processing>`; also determines the relative contribution of each key field to the match process;
-        see `field_weights <EMComposition_Field_Weights>` additional details. The field_weights can be changed by
-        assigning a new list of weights to the `field_weights <EMComposition.field_weights>` attribute, however only
-        the weights for fields used as `keys <EMComposition_Entries_and_Fields>` can be changed (see
+        determines which fields are configured as `key fields <EMComposition_Keys>` and which are configured as
+        `value fields <EMComposition_Values>`: keys are designated by non-zero entries and values by a zero. The
+        non-zero entries for keys specify the relative weight assigned to each key field when computing the similarity
+        of a query to the entries in the key field's `memory <ExternalMemoryMechanism.memory>` (see `field weights
+        <EMComposition_Field_Weights>` for additional details). The field_weights can be changed by assigning a new
+        list of weights to the `field_weights <EMComposition.field_weights>` attribute, however only the weights for
+        fields used as `keys <EMComposition_Fields_and_Entries>` can be changed (see
         `EMComposition_Field_Weights_Change_Note` for additional details).
 
     learn_field_weights : bool or list[bool, int, float]
@@ -1622,35 +1645,36 @@ class EMComposition(AutodiffComposition):
         is learnable (see `learn_field_weights <EMComposition_Learning_Creation>` for additional details).
 
     learning_rate : float
-        determines the default learning_rate for `field_weights <EMComposition.field_weights>`
-        not specified in `learn_field_weights <EMComposition.learn_field_weights>`
+        determines the default learning_rate for `field_weights <EMComposition.field_weights>` not
+        specified in `fields <EMComposition.fields>` or `learn_field_weights <EMComposition.learn_field_weights>`
         (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool
-        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
-        used as absolute weighting values when retrieving an item from memory (see `normalize_field weights
+        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of key 
+        fields, or used as absolute weighting values, during retrieval (see `normalize_field weights
         <EMComposition_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool
-        determines whether keys are concatenated into a single field before matching them to items in `memory
-        <EMComposition.memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for additional details).
+        determines whether queries are concatenated into a single vector before computing similarity to entries in
+        `memory <EMComposition.memory (see `Concatenate queries <EMComposition_Concatenate_Queries>` for additional
+        details).
 
     normalize_memories : bool
-        determines whether keys and memories are normalized before computing their dot product (similarity)
-        (see `Match memories by field <EMComposition_Processing>` for additional details).
+        determines whether queries and keys are normalized before computing their similarity
+        (see `normalize_memories <EMComposition_Normalize_Memories>` for additional details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
-        determines how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
+        determines how softmax-normalization over summed similarity scores of queries and keys in memory is used for
+        retrieval (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of options).
 
     softmax_gain : float, ADAPTIVE or CONTROL
-        determines gain (inverse temperature) used for softmax normalizing the summed distances of queries
-        and keys in memory by the `SoftMax` Function of the `softmax_node <EMComposition.softmax_node>`
-        (see `Softmax normalize distances <EMComposition_Processing>` for additional details).
+        determines gain (inverse temperature) used for softmax-normalizing the summed similarity scores of queries
+        and keys in memory by the `SoftMax` Function of the `combined_scores_node <EMComposition.combined_scores_node>`
+        (see `softmax_gain <EMComposition_Softmax_Gain>` for additional details).
 
     softmax_threshold : float
         determines the threshold used to mask out small values in the softmax calculation
-        (see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+        (see `softmax_threshold <EMComposition_Softmax_Threshold>` for details).
 
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>` when the
@@ -1661,18 +1685,18 @@ class EMComposition(AutodiffComposition):
         learning (see `EMComposition_Storage_Learning` for details).
 
     memory_decay_rate : float
-        determines the rate at which items in the EMComposition's memory decay
-        (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
+        determines the rate at which entries in `memory <EMComposition.memory>` decay
+        (see `decay memories <EMComposition_Decay_Memories>` for details).
 
     COMMENT:
     store_at : str
         determines which entry in `memory <EMComposition.memory>` is replaced when a new one is stored
         (see `store_at <EMComposition_Store_At>` for details).
-    COMMENT
 
     purge_by_field_weights : bool
         determines whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to replace
         when a new one is stored (see `purge_by_field_weights <EMComposition_purge_by_field_weight>` for details).
+    COMMENT
 
     enable_learning : bool
         determines whether learning is enabled for the EMCComposition
@@ -1685,86 +1709,74 @@ class EMComposition(AutodiffComposition):
     .. _EMComposition_Nodes:
 
     query_input_nodes : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive keys used to determine the item
-        to be retrieved from `memory <EMComposition.memory>`, and then themselves stored in `memory
-        <EMComposition.memory>` (see `Match memories by field <EMComposition_Processing>` for additional details).
-        By default these are assigned the name *KEY_n_INPUT* where n is the field number (starting from 0);
-        however, if `field_names <EMComposition.field_names>` is specified, then the name of each query_input_node
-        is assigned the corresponding field name appended with * [QUERY]*.
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive queries that are `scored for their 
+        similarity <EMComposition_Compute_Similarity_Scores>` with keys in the corresponding field of `memory
+        <EMComposition.memory>` to determine the retrieved value, and then are themsleves `stored in memory
+        <EMComposition_Store_Values>`. By default these are assigned the name *QUERY_n_INPUT* where n is the field
+        number (starting from 0); however, if `field_names <EMComposition.field_names>` is specified, then the name 
+        of each query_input_node is assigned the corresponding field name appended with *[QUERY]*.
 
     value_input_nodes : list[ProcessingMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
-        <EMComposition.memory>`; these are not used in the matching process used for retrieval.  By default these
-        are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);  however, if
-        `field_names <EMComposition.field_names>` is specified, then the name of each value_input_node is assigned
-        the corresponding field name appended with * [VALUE]*.
+        <EMComposition.memory>`; these are not used in `computing similarity scores for retrieval
+        <EMComposition_Compute_Similarity_Scores>`, but their input is `stored in memory <EMComposition_Store_Values>`.
+        By default these are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);
+        however, if `field_names <EMComposition.field_names>` is specified, then the name of each value_input_node
+        is assigned the corresponding field name appended with *[VALUE]*.
 
     concatenate_queries_node : ProcessingMechanism
         `ProcessingMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>`
-        into a single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_queries>`
-        is ``True``. This is not created if the **concatenate_queries** argument to the EMComposition's constructor is
-        ``False`` or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only
-        one query_input_node. This node is named *CONCATENATE_QUERIES*
+        into a single vector used for computing similarity scores if `concatenate_queries
+        <EMComposition.concatenate_queries>` is ``True``. This node is not created if the **concatenate_queries**
+        is ``False``, or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is
+        only one query_input_node. This node is named *CONCATENATE QUERIES*
 
     field_memory_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
-        the corresponding field of `memory <EMComposition.memory>` (see `Match memories by field
-        <EMComposition_Processing>` for additional details). These are named the same as the corresponding
-        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
+        `ProcessingMechanisms <ProcessingMechanism>` that compute the similarity scores between the query
+        and each key stored in that field of `memory <EMComposition.memory>` (see `Computer similarity scores
+        <EMComposition_Compute_Similarity_Scores>` for additional details). These are named the same as the
+        corresponding `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[FIELD MEMORY]*.
 
     field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
-        Nodes used to weight the distances computed by the `match_nodes <EMComposition.match_nodes>` with the
-        `field weight <EMComposition.field_weights>` for the corresponding `key field <EMComposition_Fields>`
-        (see `Weight distances <EMComposition_Field_Weighting>` for implementation). These are named the same
-        as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`.
+        Nodes used to weight the similarity scores computed by the `field_memory_nodes 
+        <EMComposition.field_memory_nodes>` with the `field weight <EMComposition.field_weights>` for the 
+        corresponding `key field <EMComposition_Fields>` (see `Weight field scores <EMComposition_Weight_Fields>` 
+        for implementation). These are named the same as the corresponding `query_input_nodes
+        <EMComposition.query_input_nodes>`.
 
     weighted_scores_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that combine the `field weight <EMComposition.field_weights>`
         for each `key field <EMComposition_Fields>` with the dot product computed by the corresponding the
-        `match_node <EMComposition.match_nodes>`. These are only implemented if `use_gating_for_weighting
+        `match_node <EMComposition.match_nodes>`.
+        COMMENT:
+        These are only implemented if `use_gating_for_weighting
         <EMComposition.use_gating_for_weighting>` is ``False`` (see `Weight distances <EMComposition_Field_Weighting>`
         for details), and are named the same as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`
         appended with the suffix *[WEIGHTED MATCH]*.
+        COMMENT
 
-    BREADCRUMB: COMBINE THESE INTO combined_scores_node:
     combined_scores_node : ProcessingMechanism
-        `ProcessingMechanism` that receives the weighted distances from the `weighted_scores_nodes
-        <EMComposition.weighted_scores_nodes>` if more than one `key field <EMComposition_Fields>` is specified
-        (or directly from `match_nodes <EMComposition.match_nodes>` if `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is ``True``), and combines them into a single vector that is passed
-        to the `softmax_node <EMComposition.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
-
-    softmax_node : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that computes the softmax over the summed distances of keys
-        and memories (output of the `combined_match_node <EMComposition.combined_match_node>`)
-        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax over summed distances
-        <EMComposition_Processing>` for additional details).  This is named *RETRIEVE* (as it yields the
-        softmax-weighted average over the keys in `memory <EMComposition.memory>`).
+        `ProcessingMechanism` that receives the similarity scores vectors from the `field_memory_nodes
+        <EMComposition.field_memory_nodes>` if `field_weights <EMComposition.field_weights>` are not specified,
+        or the weighted scores vectors from the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>` if
+        `field_weights <EMComposition.field_weights>` are specified, `sums the vectors across fields
+        <EMComposition_Combine_Scores>`, and `applies softmax-normalization <EMComposition_Softmax_Normalize_Scores>`
+        to the result; also `sums the norm vectors across fields <EMComposition_Compute_Norms>` received from the
+        field_memory_nodes. This node is named *COMBINED SCORES*.
 
     softmax_gain_control_node : list[ControlMechanism]
-        `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
-        of the `softmax_node <EMComposition.softmax_node>`. This is implemented only if `softmax_gain
-        <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
-        details).
+        `ControlMechanism <ControlMechanism>` that adaptively controls the `softmax_gain <EMComposition.softmax_gain>`
+        of the `SoftMax` function used by the `combined_scores_node <EMComposition.softmax_node>`. This is implemented
+        only if `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
+        <EMComposition_Softmax_Gain>` for details).
 
     retrieved_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that receive the vector retrieved for each field in `memory
-        <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details).
-        These are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>` and
-        `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
-        * [RETRIEVED]*, and are in the same order as  `input_nodes <EMComposition.input_nodes>`
-        to which to which they correspond.
-
-    storage_node : EMStorageMechanism
-        `EMStorageMechanism` that receives inputs from the `query_input_nodes <EMComposition.query_input_nodes>` and
-        `value_input_nodes <EMComposition.value_input_nodes>`, and stores these in the corresponding field of`memory
-        <EMComposition.memory>` with probability `storage_prob <EMComposition.storage_prob>` after a retrieval has been
-        made (see `Retrieval and Storage <EMComposition_Storage>` for additional details). This node is named *STORE*.
-
-        .. technical_note::
-           The `storage_node <EMComposition.storage_node>` is assigned a Condition to execute after the `retrieved_nodes
-           <EMComposition.retrieved_nodes>` have executed, to ensure that storage occurs after retrieval, but before
-           any subequent processing is done (i.e., in a composition in which the EMComposition may be embededded.
+        <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Retrieve_Values>` for additional
+        details). These are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>`
+        and `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
+        * [RETRIEVED]*, and are in the same order as  `input_nodes <EMComposition.input_nodes>` to which to which
+        they correspond.
 
     input_nodes : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
@@ -1831,14 +1843,6 @@ class EMComposition(AutodiffComposition):
                     :default value: 1000
                     :type: ``int``
 
-                COMMENT:
-                store_at
-                    see `store_at <EMComposition.store_at>`
-
-                    :default value: WEAKEST
-                    :type: ``str``
-                COMMENT
-
                 memory_decay_rate
                     see `memory_decay_rate <EMComposition.memory_decay_rate>`
 
@@ -1863,11 +1867,13 @@ class EMComposition(AutodiffComposition):
                     :default value: True
                     :type: ``bool``
 
+                COMMENT
                 purge_by_field_weights
                     see `purge_by_field_weights <EMComposition.purge_by_field_weights>`
 
                     :default value: False
                     :type: ``bool``
+                COMMENT
 
                 random_state
                     see `random_state <NormalDist.random_state>`
@@ -1889,6 +1895,14 @@ class EMComposition(AutodiffComposition):
                     see `softmax_threshold <EMComposition.softmax_threshold>`
                     :default value: .001
                     :type: ``float``
+
+                COMMENT:
+                store_at
+                    see `store_at <EMComposition.store_at>`
+
+                    :default value: WEAKEST
+                    :type: ``str``
+                COMMENT
 
                 storage_prob
                     see `storage_prob <EMComposition.storage_prob>`
@@ -1918,7 +1932,7 @@ class EMComposition(AutodiffComposition):
         storage_prob = Parameter(1.0, modulable=True)
         store_on_optimization = Parameter(FIRST)
         memory_decay_rate = Parameter(AUTO, modulable=True)
-        purge_by_field_weights = Parameter(False, structural=True)
+        # purge_by_field_weights = Parameter(False, structural=True)
         target_fields = Parameter(None, read_only=True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies="seed")
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
@@ -1997,7 +2011,7 @@ class EMComposition(AutodiffComposition):
         # store_at: Union[WEAKEST, RANDOM, CYCLE, BY_WEIGHT] = WEAKEST,
         store_on_optimization: Union[FIRST, LAST, ALL] = FIRST,
         memory_decay_rate: Union[float, AUTO] = AUTO,
-        purge_by_field_weights: bool = False,
+        # purge_by_field_weights: bool = False,
         enable_learning: bool = True,
         target_fields: Optional[Union[list, tuple, np.ndarray]] = None,
         use_gating_for_weighting: bool = False,
@@ -2066,7 +2080,7 @@ class EMComposition(AutodiffComposition):
             # store_at=store_at,
             store_on_optimization=store_on_optimization,
             memory_decay_rate=memory_decay_rate,
-            purge_by_field_weights=purge_by_field_weights,
+            # purge_by_field_weights=purge_by_field_weights,
             enable_learning=enable_learning,
             target_fields=target_fields,
             random_state=random_state,
