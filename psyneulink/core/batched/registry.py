@@ -17,6 +17,15 @@ def analyze_composition(composition, backend: str = "ir_debug", outputs=None, ma
     backend_available, backend_messages = _backend_availability(backend, lowering.model_kind, lowering.graph)
 
     rejected_nodes = list(lowering.rejected_nodes)
+    if backend == "triton" and lowering.graph is not None and not rejected_nodes:
+        from psyneulink.core.batched.backend.triton.component_hooks import (
+            triton_hook_diagnostics,
+        )
+
+        rejected_nodes.extend(
+            triton_hook_diagnostics(lowering.graph, lowering.bindings)
+        )
+
     if lowering.graph is None and not rejected_nodes:
         rejected_nodes.append(
             BatchedDiagnostic(
@@ -58,7 +67,7 @@ def analyze_composition(composition, backend: str = "ir_debug", outputs=None, ma
             },
         )
 
-    return report, ir
+    return report, ir, lowering.bindings
 
 
 def _backend_availability(backend: str, model_kind: str | None, graph) -> tuple[bool, list[str]]:

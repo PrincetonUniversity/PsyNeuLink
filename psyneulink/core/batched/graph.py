@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 
+from psyneulink.core.batched.bindings import BatchedComponentBindings, projection_binding_key
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import (
     BatchedGraphIR,
@@ -42,6 +43,7 @@ _STATELESS_FUNCTIONS = {"Linear", "Logistic"}
 class LoweringResult:
     graph: BatchedGraphIR | None
     params: tuple[BatchedParamSpec, ...]
+    bindings: BatchedComponentBindings
     model_kind: str | None
     supported_nodes: tuple[str, ...]
     rejected_nodes: tuple[BatchedDiagnostic, ...]
@@ -58,6 +60,16 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
 
     roles = _infer_stability_flexibility_roles(composition, nodes)
     model_kind = _classify_model(nodes, roles)
+    node_bindings = {
+        _node_name(node): node
+        for node in nodes
+        if type(node).__name__ != "ControlMechanism"
+    }
+    function_bindings = {
+        _node_name(node): getattr(node, "function", None)
+        for node in nodes
+        if type(node).__name__ != "ControlMechanism"
+    }
     node_specs = []
     state_specs = []
 
@@ -87,7 +99,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         elif component_type == "DDM":
             state_specs.append(BatchedStateSpec(f"{node_name}.value", node_name, 1, (0.0,)))
 
-    projections, projection_rejections = _projection_specs(composition, node_names)
+    projections, projection_rejections, projection_bindings = _projection_specs(composition, node_names)
     rejected_nodes.extend(projection_rejections)
     supported_conditions, rejected_conditions = _analyze_scheduler_conditions(composition)
 
@@ -134,6 +146,11 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     return LoweringResult(
         graph=graph,
         params=tuple(params.specs),
+        bindings=BatchedComponentBindings(
+            nodes=node_bindings,
+            functions=function_bindings,
+            projections=projection_bindings,
+        ),
         model_kind=model_kind,
         supported_nodes=tuple(supported_nodes),
         rejected_nodes=tuple(rejected_nodes),
@@ -322,9 +339,13 @@ def _node_support_diagnostic(node) -> BatchedDiagnostic | None:
     return BatchedDiagnostic(node_name, "unsupported node for batched v2", component_type)
 
 
-def _projection_specs(composition, node_names: set[str]) -> tuple[list[BatchedProjectionSpec], list[BatchedDiagnostic]]:
+def _projection_specs(
+    composition,
+    node_names: set[str],
+) -> tuple[list[BatchedProjectionSpec], list[BatchedDiagnostic], dict[str, object]]:
     projections: list[BatchedProjectionSpec] = []
     rejected: list[BatchedDiagnostic] = []
+    bindings: dict[str, object] = {}
     for node in _composition_nodes(composition):
         for input_port in getattr(node, "input_ports", []):
             for projection in getattr(input_port, "path_afferents", []):
@@ -348,16 +369,21 @@ def _projection_specs(composition, node_names: set[str]) -> tuple[list[BatchedPr
                         )
                     )
                     continue
+                sender_port = getattr(getattr(projection, "sender", None), "name", "RESULT")
+                receiver_port = getattr(getattr(projection, "receiver", None), "name", "InputPort-0")
                 projections.append(
                     BatchedProjectionSpec(
                         sender=sender_name,
-                        sender_port=getattr(getattr(projection, "sender", None), "name", "RESULT"),
+                        sender_port=sender_port,
                         receiver=receiver_name,
-                        receiver_port=getattr(getattr(projection, "receiver", None), "name", "InputPort-0"),
+                        receiver_port=receiver_port,
                         matrix=np.asarray(_get_matrix(projection), dtype=np.float32),
                     )
                 )
-    return projections, rejected
+                bindings[
+                    projection_binding_key(sender_name, sender_port, receiver_name, receiver_port)
+                ] = projection
+    return projections, rejected, bindings
 
 
 def _input_specs(nodes, projections: list[BatchedProjectionSpec], roles: dict[str, str]) -> list[BatchedInputSpec]:

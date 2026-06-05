@@ -14,6 +14,13 @@ from psyneulink.core.batched import (
     BatchedCompileError,
     BatchedCompositionCompiler,
 )
+from psyneulink.core.batched.backend.triton.api import (
+    TritonOpError,
+    pnl_triton_op,
+)
+from psyneulink.core.batched.backend.triton.component_hooks import (
+    ensure_triton_hooks_installed,
+)
 from psyneulink.core.batched.kernel_ir import (
     STATEFUL_LANE_LAYOUT,
     TRIAL_LANE_LAYOUT,
@@ -25,6 +32,18 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOpt
 
 
 pytestmark = pytest.mark.usefixtures("set_threads_to_one")
+
+
+_TRITON_TEST_GLOBAL = 2.0
+
+
+@pnl_triton_op(constexpr=("limit",))
+def _test_pnl_triton_add(x, limit):
+    return x + limit
+
+
+def _test_pnl_triton_uses_global(x):
+    return x + _TRITON_TEST_GLOBAL
 
 
 def _make_ddm_comp(noise=0.0):
@@ -66,6 +85,28 @@ def test_batched_compiler_rejects_reference_backend_name():
 
     with pytest.raises(BatchedCompileError, match="Unknown batched backend 'reference'"):
         BatchedCompositionCompiler.compile(comp, backend="reference")
+
+
+@pytest.mark.composition
+def test_pnl_triton_op_extracts_inspectable_helper_source_without_triton_import():
+    assert _test_pnl_triton_add.name == "_test_pnl_triton_add"
+    assert "@triton.jit" in _test_pnl_triton_add.source
+    assert "limit: tl.constexpr" in _test_pnl_triton_add.source
+    assert "pnl_triton_op" not in _test_pnl_triton_add.source
+
+
+@pytest.mark.composition
+def test_pnl_triton_op_rejects_closures_and_globals():
+    scale = 2.0
+
+    def uses_closure(x):
+        return x + scale
+
+    with pytest.raises(TritonOpError, match="cannot close over values"):
+        pnl_triton_op(uses_closure)
+
+    with pytest.raises(TritonOpError, match="unsupported free variables"):
+        pnl_triton_op(_test_pnl_triton_uses_global)
 
 
 @pytest.mark.composition
@@ -153,7 +194,7 @@ def test_kernel_ir_transfer_only_structure():
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
     assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
-    assert op_kinds == ["LoadInput", "ElementwiseLinear", "StoreOutput"]
+    assert op_kinds == ["LoadInput", "CallFunction", "StoreOutput"]
 
 
 @pytest.mark.composition
@@ -170,6 +211,28 @@ def test_batched_ir_debug_mapping_projection_generic_graph():
 
 
 @pytest.mark.composition
+def test_triton_hook_diagnostics_accept_supported_components():
+    comp, _, _ = _make_linear_projection_comp()
+    report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
+
+    assert report.is_supported
+    assert not any("missing Triton" in reason for reason in report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_triton_hook_diagnostics_report_missing_function_hook(monkeypatch):
+    from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+
+    ensure_triton_hooks_installed()
+    monkeypatch.delattr(Linear, "_gen_triton_function", raising=False)
+    comp, _, _ = _make_linear_projection_comp()
+    report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
+
+    assert not report.is_supported
+    assert "missing Triton function hook" in "; ".join(report.unsupported_reasons)
+
+
+@pytest.mark.composition
 def test_kernel_ir_dense_projection_structure():
     comp, source, _ = _make_linear_projection_comp()
     plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
@@ -177,7 +240,7 @@ def test_kernel_ir_dense_projection_structure():
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
     assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
-    assert "DenseMatVec" in op_kinds
+    assert "CallProjection" in op_kinds
     assert "CombineSum" in op_kinds
 
 
@@ -282,7 +345,7 @@ def test_kernel_ir_ddm_graph_structure():
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
     assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
-    assert "DDMIntegrateUntilFinished" in op_kinds
+    assert "CallMechanism" in op_kinds
     assert kernel.rng_streams[0].name == "DDM.ddm"
 
 
@@ -406,8 +469,12 @@ def test_kernel_ir_stability_flexibility_stateful_structure():
     assert kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
     assert op_kinds[0] == "InitializeState"
     assert "ForTrials" in op_kinds
-    assert "LCAIntegrateUntilFinished" in op_kinds
-    assert "DDMIntegrateUntilFinished" in op_kinds
+    mechanism_types = {
+        op.attrs["component_type"]
+        for op in iter_kernel_ops(kernel)
+        if op.kind == "CallMechanism"
+    }
+    assert mechanism_types == {"LCAMechanism", "DDM"}
     assert {stream.step_extent for stream in kernel.rng_streams} == {"LCA_MAX_STEPS", "MAX_STEPS"}
 
 

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from psyneulink.core.batched.bindings import (
+    EMPTY_COMPONENT_BINDINGS,
+    BatchedComponentBindings,
+)
 from psyneulink.core.batched.graph import (
     DDM_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
@@ -27,6 +31,7 @@ def run_triton(
     subject_slices=None,
     seed=None,
     common_random_numbers: bool = True,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
 ) -> BatchedSimulationResult:
     torch, triton = _import_torch_triton()
     if not torch.cuda.is_available():
@@ -34,7 +39,7 @@ def run_triton(
 
     params = normalize_parameter_sets(parameter_sets, ir)
     prepared_inputs = prepare_inputs(ir, inputs, subject_slices)
-    module = _load_kernel_module(ir)
+    module = _load_kernel_module(ir, component_bindings)
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
 
     if fusion_kind == DDM_MODEL:
@@ -380,19 +385,25 @@ def _import_torch_triton():
     return torch, triton
 
 
-def _load_kernel_module(ir: BatchedCompositionIR):
-    source = _kernel_source(ir)
+def _load_kernel_module(
+    ir: BatchedCompositionIR,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+):
+    source = _kernel_source(ir, component_bindings)
     module_kind = None if ir.graph is None else ir.graph.fusion_kind
     return load_triton_kernel_module(source, module_kind, ir.model_kind)
 
 
-def _kernel_source(ir: BatchedCompositionIR) -> str:
+def _kernel_source(
+    ir: BatchedCompositionIR,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+) -> str:
     if ir.graph is not None and ir.graph.fusion_kind == STATELESS_GRAPH_FUSION:
-        return triton_graph_kernel_source(lower_to_kernel_ir(ir))
+        return triton_graph_kernel_source(lower_to_kernel_ir(ir), component_bindings)
     if ir.graph is not None and ir.graph.fusion_kind == DDM_GRAPH_FUSION:
-        return triton_graph_kernel_source(lower_to_kernel_ir(ir))
+        return triton_graph_kernel_source(lower_to_kernel_ir(ir), component_bindings)
     if ir.graph is not None and ir.graph.fusion_kind == STATEFUL_GRAPH_FUSION:
-        return triton_graph_kernel_source(lower_to_kernel_ir(ir))
+        return triton_graph_kernel_source(lower_to_kernel_ir(ir), component_bindings)
 
     return r'''
 import triton

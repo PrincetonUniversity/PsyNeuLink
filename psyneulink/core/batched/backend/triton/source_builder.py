@@ -43,13 +43,20 @@ class SourceBuilder:
         return "\n".join(self._lines)
 
 
-def emit_triton_header(builder: SourceBuilder, function_name: str, signature_args: Iterable[str]) -> None:
+def emit_triton_imports(builder: SourceBuilder) -> None:
     builder.lines(
         [
             "import triton",
             "import triton.language as tl",
             "",
             "",
+        ]
+    )
+
+
+def emit_triton_function_header(builder: SourceBuilder, function_name: str, signature_args: Iterable[str]) -> None:
+    builder.lines(
+        [
             "@triton.jit",
             f"def {function_name}(",
         ]
@@ -59,3 +66,8 @@ def emit_triton_header(builder: SourceBuilder, function_name: str, signature_arg
         suffix = "," if idx < len(args) - 1 else ""
         builder.line(f"    {arg}{suffix}")
     builder.line("):")
+
+
+def emit_triton_header(builder: SourceBuilder, function_name: str, signature_args: Iterable[str]) -> None:
+    emit_triton_imports(builder)
+    emit_triton_function_header(builder, function_name, signature_args)

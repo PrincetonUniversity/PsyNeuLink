@@ -218,7 +218,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                 projected_values.append(projected)
                 ops.append(
                     KernelOp(
-                        kind="DenseMatVec",
+                        kind="CallProjection",
                         target=projection.receiver,
                         inputs=(
                             KernelValue(
@@ -233,6 +233,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                             "receiver": projection.receiver,
                             "receiver_port": projection.receiver_port,
                             "matrix": projection.matrix,
+                            "projection_type": "MappingProjection",
                         },
                     )
                 )
@@ -257,19 +258,15 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
         if node.component_type in {"TransferMechanism", "ProcessingMechanism"}:
             output_port = _primary_output_port_name(node)
             output_value = KernelValue(f"{node.name}:{output_port}", node.output_width)
-            kind = {
-                "Linear": "ElementwiseLinear",
-                "Logistic": "ElementwiseLogistic",
-            }.get(node.function_type)
-            if kind is None:
-                kind = f"UnsupportedFunction:{node.function_type}"
             ops.append(
                 KernelOp(
-                    kind=kind,
+                    kind="CallFunction",
                     target=node.name,
                     inputs=(node_input,),
                     outputs=(output_value,),
                     attrs={
+                        "component_type": node.component_type,
+                        "function_type": node.function_type,
                         "params": dict(node.params),
                         "output_port": output_port,
                     },
@@ -279,11 +276,13 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             output_port = _primary_output_port_name(node)
             ops.append(
                 KernelOp(
-                    kind="LCAIntegrateUntilFinished",
+                    kind="CallMechanism",
                     target=node.name,
                     inputs=(node_input,),
                     outputs=(KernelValue(f"{node.name}:{output_port}", node.output_width),),
                     attrs={
+                        "component_type": node.component_type,
+                        "function_type": node.function_type,
                         "params": dict(node.params),
                         "output_port": output_port,
                         "pre_state": f"{node.name}.pre",
@@ -296,7 +295,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
         elif node.component_type == "DDM":
             ops.append(
                 KernelOp(
-                    kind="DDMIntegrateUntilFinished",
+                    kind="CallMechanism",
                     target=node.name,
                     inputs=(node_input,),
                     outputs=(
@@ -304,6 +303,8 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                         KernelValue(f"{node.name}:RESPONSE_TIME", 1),
                     ),
                     attrs={
+                        "component_type": node.component_type,
+                        "function_type": node.function_type,
                         "params": dict(node.params),
                         "step_extent": "MAX_STEPS",
                     },

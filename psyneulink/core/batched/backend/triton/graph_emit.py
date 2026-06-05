@@ -5,8 +5,23 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
 )
+from psyneulink.core.batched.bindings import (
+    EMPTY_COMPONENT_BINDINGS,
+    BatchedComponentBindings,
+)
 from psyneulink.core.batched.kernel_ir import KernelIR, KernelOp
-from psyneulink.core.batched.backend.triton.source_builder import SourceBuilder, emit_triton_header
+from psyneulink.core.batched.backend.triton.api import (
+    TritonEmitContext,
+    TritonOpTemplate,
+)
+from psyneulink.core.batched.backend.triton.component_hooks import (
+    ensure_triton_hooks_installed,
+)
+from psyneulink.core.batched.backend.triton.source_builder import (
+    SourceBuilder,
+    emit_triton_function_header,
+    emit_triton_imports,
+)
 
 
 _KERNEL_NAMES = {
@@ -16,10 +31,13 @@ _KERNEL_NAMES = {
 }
 
 
-def triton_graph_kernel_source(kernel: KernelIR) -> str:
+def triton_graph_kernel_source(
+    kernel: KernelIR,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+) -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel).emit()
+    return TritonGraphEmitter(kernel, component_bindings).emit()
 
 
 class TritonGraphEmitter:
@@ -30,10 +48,16 @@ class TritonGraphEmitter:
     execution ops independently.
     """
 
-    def __init__(self, kernel: KernelIR):
+    def __init__(
+        self,
+        kernel: KernelIR,
+        component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+    ):
         self.kernel = kernel
         self.graph = kernel.graph
+        self.component_bindings = component_bindings
         self.builder = SourceBuilder()
+        self.templates: dict[str, TritonOpTemplate] = {}
         self.input_index = {
             input_spec.node: idx
             for idx, input_spec in enumerate(kernel.inputs)
@@ -49,17 +73,34 @@ class TritonGraphEmitter:
         self.lane_out_emitted = False
 
     def emit(self) -> str:
+        ensure_triton_hooks_installed()
         self._index_rng_streams()
-        emit_triton_header(
-            self.builder,
-            self._kernel_name(),
-            self._signature_args(),
-        )
         with self.builder.indent():
             self._emit_lane_decode()
             self._emit_params()
             self._emit_top_level_ops()
-        return self.builder.render()
+        body_source = self.builder.render()
+
+        module_builder = SourceBuilder()
+        emit_triton_imports(module_builder)
+        for template in self.templates.values():
+            module_builder.lines(template.source.splitlines())
+            module_builder.line()
+            module_builder.line()
+        emit_triton_function_header(
+            module_builder,
+            self._kernel_name(),
+            self._signature_args(),
+        )
+        module_builder.lines(body_source.splitlines())
+        return module_builder.render()
+
+    def register_template(self, template: TritonOpTemplate) -> str:
+        existing = self.templates.get(template.name)
+        if existing is not None and existing.source != template.source:
+            raise ValueError(f"Conflicting Triton helper template '{template.name}'.")
+        self.templates[template.name] = template
+        return template.name
 
     def _kernel_name(self) -> str:
         try:
@@ -203,16 +244,14 @@ class TritonGraphEmitter:
     def _emit_op(self, op: KernelOp) -> None:
         if op.kind == "LoadInput":
             self._emit_load_input(op)
-        elif op.kind == "DenseMatVec":
-            self._emit_dense_matvec(op)
+        elif op.kind == "CallProjection":
+            self._emit_projection_call(op)
         elif op.kind in {"CombineSum", "CombineProduct"}:
             self._emit_combine(op)
-        elif op.kind in {"ElementwiseLinear", "ElementwiseLogistic"}:
-            self._emit_stateless_function(op)
-        elif op.kind == "LCAIntegrateUntilFinished":
-            self._emit_lca(op)
-        elif op.kind == "DDMIntegrateUntilFinished":
-            self._emit_ddm(op)
+        elif op.kind == "CallFunction":
+            self._emit_function_call(op)
+        elif op.kind == "CallMechanism":
+            self._emit_mechanism_call(op)
         elif op.kind == "StoreOutput":
             self._emit_store_output(op)
         else:
@@ -227,19 +266,30 @@ class TritonGraphEmitter:
         ]
         self._set_value(op.outputs[0].name, values)
 
-    def _emit_dense_matvec(self, op: KernelOp) -> None:
+    def _emit_projection_call(self, op: KernelOp) -> None:
+        projection_spec = self._projection_spec_for_op(op)
+        projection = self.component_bindings.projection(
+            projection_spec.sender,
+            projection_spec.sender_port,
+            projection_spec.receiver,
+            projection_spec.receiver_port,
+        )
+        hook = getattr(projection, "_gen_triton_projection", None)
+        if hook is None:
+            raise ValueError(
+                "Triton graph emitter has no projection hook for "
+                f"{type(projection).__name__} "
+                f"'{projection_spec.sender}->{projection_spec.receiver}'."
+            )
         sender_values = self._get_value(op.inputs[0].name)
-        matrix = op.attrs["matrix"]
-        output_vars = self._component_vars(op.outputs[0].name, matrix.shape[1])
-        for col_idx, var in enumerate(output_vars):
-            terms = []
-            for row_idx, sender_var in enumerate(sender_values):
-                coeff = float(matrix[row_idx, col_idx])
-                if coeff:
-                    terms.append(f"({sender_var}) * {_float_literal(coeff)}")
-            expr = " + ".join(terms) if terms else _zero_vector()
-            self.builder.line(f"{var} = {expr}")
-        self._set_value(op.outputs[0].name, output_vars)
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        values = hook(
+            TritonEmitContext(self),
+            projection_spec,
+            sender_values,
+            output_vars,
+        )
+        self._set_value(op.outputs[0].name, list(values))
         self.builder.line()
 
     def _emit_combine(self, op: KernelOp) -> None:
@@ -254,137 +304,59 @@ class TritonGraphEmitter:
         self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 
-    def _emit_stateless_function(self, op: KernelOp) -> None:
+    def _emit_function_call(self, op: KernelOp) -> None:
+        node = self.graph.node(op.target)
+        function = self.component_bindings.function(node.name)
+        hook = getattr(function, "_gen_triton_function", None)
+        if hook is None:
+            raise ValueError(
+                "Triton graph emitter has no function hook for "
+                f"{node.function_type} on '{node.name}'."
+            )
         input_values = self._get_value(op.inputs[0].name)
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
-        params = op.attrs["params"]
-        if op.kind == "ElementwiseLinear":
-            slope = self.param_vars[params["slope"]]
-            intercept = self.param_vars[params["intercept"]]
-            output_values = [
-                f"({slope}) * ({input_value}) + ({intercept})"
-                for input_value in input_values
-            ]
-        else:
-            gain = self.param_vars[params["gain"]]
-            output_values = [
-                f"1.0 / (1.0 + tl.exp(-({gain}) * ({input_value})))"
-                for input_value in input_values
-            ]
-
-        for var, expr in zip(output_vars, output_values):
-            self.builder.line(f"{var} = {expr}")
-        self._set_value(op.outputs[0].name, output_vars)
+        values = hook(
+            TritonEmitContext(self),
+            node,
+            input_values,
+            output_vars,
+        )
+        self._set_value(op.outputs[0].name, list(values))
         self.builder.line()
 
-    def _emit_lca(self, op: KernelOp) -> None:
+    def _emit_mechanism_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
-        if node.output_width != 2:
+        mechanism = self.component_bindings.node(node.name)
+        hook = getattr(mechanism, "_gen_triton_mechanism", None)
+        if hook is None:
             raise ValueError(
-                f"Stateful Triton graph supports LCAMechanism width 2, got {node.output_width}."
+                "Triton graph emitter has no mechanism hook for "
+                f"{node.component_type} '{node.name}'."
             )
-
         input_values = self._get_value(op.inputs[0].name)
-        params = op.attrs["params"]
-        pre0 = self.state_vars[(op.attrs["pre_state"], 0)]
-        pre1 = self.state_vars[(op.attrs["pre_state"], 1)]
-        act0 = self.state_vars[(op.attrs["act_state"], 0)]
-        act1 = self.state_vars[(op.attrs["act_state"], 1)]
-        gain = self.param_vars[params["gain"]]
-        leak = self.param_vars[params["leak"]]
-        competition = self.param_vars[params["competition"]]
-        self_excitation = self.param_vars[params["self_excitation"]]
-        noise = self.param_vars[params["noise"]]
-        dt = self.param_vars[params["time_step_size"]]
-        safe_name = _safe_ident(node.name)
-        termination_node = op.attrs.get("termination_input_node")
-        if termination_node:
-            cue_value = self._raw_input_value(termination_node)
-        else:
-            cue_value = _float_literal(node.attrs.get("termination_threshold", 1.0))
-        stream0 = self.lca_stream_index[node.name]
-        stream1 = stream0 + 1
-
-        self.builder.line(
-            f"{safe_name}_lca_steps = tl.minimum(tl.maximum(tl.ceil({cue_value}), 0.0), "
-            "LCA_MAX_STEPS)"
+        output_vars = []
+        for output in op.outputs:
+            output_vars.extend(self._component_vars(output.name, output.width))
+        values = list(
+            hook(
+                TritonEmitContext(self),
+                node,
+                input_values,
+                output_vars,
+            )
         )
-        self.builder.line(f"{safe_name}_sqrt_dt = tl.sqrt({dt})")
-        with self.builder.block("for step in tl.range(0, LCA_MAX_STEPS, 1, loop_unroll_factor=1)"):
-            self.builder.line(f"active_lca = step < {safe_name}_lca_steps")
-            self.builder.line(f"rec0 = ({self_excitation}) * {act0} - ({competition}) * {act1}")
-            self.builder.line(f"rec1 = -({competition}) * {act0} + ({self_excitation}) * {act1}")
-            self.builder.line(f"n0 = tl.randn(SEED, random_base + ({stream0}) * LCA_MAX_STEPS + step)")
-            self.builder.line(f"n1 = tl.randn(SEED, random_base + ({stream1}) * LCA_MAX_STEPS + step)")
-            self.builder.line(
-                f"upd0 = (({input_values[0]}) + rec0 - ({leak}) * {pre0}) * ({dt}) "
-                f"+ ({noise}) * {safe_name}_sqrt_dt * n0"
+        expected_width = sum(output.width for output in op.outputs)
+        if len(values) != expected_width:
+            raise ValueError(
+                f"Triton hook for '{node.name}' returned {len(values)} values, "
+                f"expected {expected_width}."
             )
-            self.builder.line(
-                f"upd1 = (({input_values[1]}) + rec1 - ({leak}) * {pre1}) * ({dt}) "
-                f"+ ({noise}) * {safe_name}_sqrt_dt * n1"
-            )
-            self.builder.line(f"{pre0} = tl.where(active_lca, {pre0} + upd0, {pre0})")
-            self.builder.line(f"{pre1} = tl.where(active_lca, {pre1} + upd1, {pre1})")
-            self.builder.line(
-                f"{act0} = tl.where(active_lca, 1.0 / (1.0 + tl.exp(-({gain}) * {pre0})), {act0})"
-            )
-            self.builder.line(
-                f"{act1} = tl.where(active_lca, 1.0 / (1.0 + tl.exp(-({gain}) * {pre1})), {act1})"
-            )
-        self._set_value(op.outputs[0].name, [act0, act1])
-        self.builder.line()
-
-    def _emit_ddm(self, op: KernelOp) -> None:
-        node = self.graph.node(op.target)
-        input_values = self._get_value(op.inputs[0].name)
-        params = op.attrs["params"]
-        rate = self.param_vars[params["rate"]]
-        noise = self.param_vars[params["noise"]]
-        threshold = self.param_vars[params["threshold"]]
-        non_decision_time = self.param_vars[params["non_decision_time"]]
-        dt = self.param_vars[params["time_step_size"]]
-        starting_value = self.param_vars[params["starting_value"]]
-        step_offset = self.param_vars[params["offset"]]
-        safe_name = _safe_ident(node.name)
-        decision_var = f"{safe_name}_decision"
-        response_time_var = f"{safe_name}_response_time"
-        random_base = self._ddm_random_base(node.name)
-
-        self.builder.line(f"{safe_name}_value = {starting_value}")
-        self.builder.line(f"{safe_name}_steps = tl.zeros((BLOCK,), dtype=tl.float32)")
-        self.builder.line(f"{safe_name}_sqrt_dt = tl.sqrt({dt})")
-        self.builder.line(
-            f"{safe_name}_boundary_tolerance = tl.maximum(1.0e-7, {threshold} * 1.0e-6)"
-        )
-        self._emit_trial_random_base_if_needed()
-        with self.builder.block("for step in tl.range(0, MAX_STEPS, 1, loop_unroll_factor=1)"):
-            self.builder.line(
-                f"{safe_name}_active = tl.abs({safe_name}_value) "
-                f"+ {safe_name}_boundary_tolerance < {threshold}"
-            )
-            self.builder.line(f"random_draw = tl.randn(SEED, {random_base} + step)")
-            self.builder.line(
-                f"{safe_name}_updated = {safe_name}_value + ({rate}) "
-                f"* ({input_values[0]}) * ({dt}) "
-                f"+ ({noise}) * {safe_name}_sqrt_dt * random_draw"
-            )
-            self.builder.line(
-                f"{safe_name}_updated = tl.minimum(tl.maximum({safe_name}_updated "
-                f"+ ({step_offset}), -({threshold})), {threshold})"
-            )
-            self.builder.line(
-                f"{safe_name}_value = tl.where({safe_name}_active, "
-                f"{safe_name}_updated, {safe_name}_value)"
-            )
-            self.builder.line(
-                f"{safe_name}_steps += tl.where({safe_name}_active, 1.0, 0.0)"
-            )
-        self.builder.line(f"{decision_var} = tl.where({safe_name}_value > 0.0, 1.0, 0.0)")
-        self.builder.line(f"{response_time_var} = ({non_decision_time}) + {safe_name}_steps * ({dt})")
-        self._set_value(op.outputs[0].name, [decision_var])
-        self._set_value(op.outputs[1].name, [response_time_var])
-        self._set_primary_alias(node.name, [decision_var])
+        cursor = 0
+        for output in op.outputs:
+            self._set_value(output.name, values[cursor:cursor + output.width])
+            cursor += output.width
+        if node.component_type == "DDM":
+            self._set_primary_alias(node.name, self._get_value(op.outputs[0].name))
         self.builder.line()
 
     def _emit_trial_random_base_if_needed(self) -> None:
@@ -401,6 +373,9 @@ class TritonGraphEmitter:
                 "* num_estimates + estimate_idx) * num_trials + trial_idx) "
                 "* MAX_STEPS"
             )
+
+    def emit_trial_random_base_if_needed(self) -> None:
+        self._emit_trial_random_base_if_needed()
 
     def _emit_store_output(self, op: KernelOp) -> None:
         if not self.lane_out_emitted:
@@ -433,6 +408,9 @@ class TritonGraphEmitter:
         node = self.graph.node(node_name)
         return self._get_value(f"{node_name}:{_primary_output_port_name(node)}")[component_idx]
 
+    def raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
+        return self._raw_input_value(node_name, component_idx)
+
     def _ddm_random_base(self, node_name: str) -> str:
         if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
             return (
@@ -440,6 +418,9 @@ class TritonGraphEmitter:
                 f"+ ({self.ddm_stream_index[node_name]}) * MAX_STEPS"
             )
         return "random_base"
+
+    def ddm_random_base(self, node_name: str) -> str:
+        return self._ddm_random_base(node_name)
 
     def _index_rng_streams(self) -> None:
         for stream in self.kernel.rng_streams:
@@ -466,6 +447,21 @@ class TritonGraphEmitter:
             return self.value_vars[name]
         except KeyError as error:
             raise ValueError(f"Triton graph emitter has no value for '{name}'.") from error
+
+    def _projection_spec_for_op(self, op: KernelOp):
+        for projection in self.graph.projections:
+            if (
+                projection.sender == op.attrs["sender"]
+                and projection.sender_port == op.attrs["sender_port"]
+                and projection.receiver == op.attrs["receiver"]
+                and projection.receiver_port == op.attrs["receiver_port"]
+            ):
+                return projection
+        raise ValueError(
+            "Triton graph emitter could not resolve projection "
+            f"{op.attrs['sender']}.{op.attrs['sender_port']}->"
+            f"{op.attrs['receiver']}.{op.attrs['receiver_port']}."
+        )
 
 
 def _primary_output_port_name(node) -> str:
