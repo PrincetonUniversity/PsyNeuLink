@@ -848,39 +848,30 @@ and the `scores_metric <EMComposition.scores_metric>` used to compute similarity
 *Learning*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is ``True``, then errors
-will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified for learning
-(see `Learning <EMComposition_Learning_Creation>` for details about specification). These errors are derived either
-from any errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`,
-or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>` and the `target_nodes
-<EMComposition.target_nodes>` that are created for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
-that do not project to an outer Composition. These errors are then backpropagated through the EMComposition to the
-`query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`,
-and on to any nodes that project to it from a composition in which the EMComposition is `nested <Composition_Nested>`.
+If `learn <Composition.learn>` is called, and `enable_learning <EMComposition.enable_learning>` is ``True``, then
+errors (loss) will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified
+for learning (see `Learning <EMComposition_Learning_Creation>` for details about specification). These errors are
+derived either from any errors backprpated to the EMComposition from an outer Composition in which it is `nested
+<Composition_Nested>`, or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>`
+and the `target_nodes <EMComposition.target_nodes>` that are created for each of the `retrieved_nodes
+<EMComposition.retrieved_nodes>` that do not project to an outer Composition. These errors are then backpropagated
+through the EMComposition to the `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
+<EMComposition.value_input_nodes>`, and on to any nodes that project to it from a composition in which the
+EMComposition is `nested <Composition_Nested>`.
 
-If `learn_field_weights` is also specified, then the corresponding `field_weights <EMComposition.field_weights>` are
-modified to minimize the error passed to the EMComposition retrieved nodes that have been specified for learning,
-using the `learning_rate <EMComposition.learning_rate>` for them in `learn_field_weights
-<EMComposition.learn_field_weights>` or the default `learning rate <EMComposition.learning_rate>` for the EMComposition.
-If `enable_learning <EMComposition.enable_learning>` is ``False`` (or `run <Composition.run>` is called rather than
-`learn <Composition.learn>`, then the `field_weights <EMComposition.field_weights>` are not modified, and no error
-signals are passed to the nodes that project to  its `query_input_nodes <EMComposition.query_input_nodes>` and
-`value_input_nodes <EMComposition.value_input_nodes>`.
+If `learn_field_weights` is also specified, then the corresponding `field_weights <EMComposition.field_weights>`
+are modified during learning to minimize the error passed to the EMComposition retrieved nodes that have
+been specified for learning, using the `learning_rate <EMComposition.learning_rate>` specified for them in
+`learn_field_weights <EMComposition.learn_field_weights>`, or the default `learning rate <EMComposition.learning_rate>`
+for the EMComposition. If `enable_learning <EMComposition.enable_learning>` is ``False`` (or `run <Composition.run>`
+is called rather than `learn <Composition.learn>`, then the `field_weights <EMComposition.field_weights>` are not
+modified, and no error signals are passed to the nodes that project to  its `query_input_nodes
+<EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`.
 
   .. note::
      The only parameters modifable by learning in the EMComposition are its `field_weights
      <EMComposition.field_weights>`; all other parameters (including all other Projection `matrices
      <MappingProjection.matrix>`) are fixed, and used only to compute gradients and backpropagate errors.
-
-  .. technical_note::
-     Although memory storage is implemented as a form of learning (though modification of MappingProjection
-     `matrix <MappingProjection.matrix>` parameters; see `memory storage <EMComposition_Memory_Storage>`),
-     this occurs irrespective of how EMComposition is run (i.e., whether `learn <Composition.learn>` or `run
-     <Composition.run>` is called), and is not affected by the `enable_learning <EMComposition.enable_learning>`
-     or `learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
-     <EMComposition.field_weights>` are modified during learning.  Furthermore, when run in PyTorch mode, storage
-     is executed after the forward() and backward() passes are complete, and is not considered as part of the
-     gradient calculations.
 
   .. _EMComposition_Storage_Learning:
 
@@ -904,7 +895,9 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
         optimzation steps will impact subsequent optimization steps for the same input (i.e., `TRIAL <TimeScale.TRIAL>`'
 
       .. technical_note::
-         Execution of storage during the first optimization step is implemented in `PytorchEMMechanismWrapper.execute`;
+         Storage always occurs after the `forward() <AutodiffComposition.autodiff_forward>` and
+         `backward()  <AutodiffComposition.autodiff_backward>` methods are called for a trial.  Furthermore,
+         execution of storage during the first optimization step is implemented in `PytorchEMMechanismWrapper.execute`;
          by default, this is for optimization_num==0, to ensure that the current values of any input nodes
          (reflecting the *previous input*) are stored before their values are updated to the current inputs
          (at the end of a full  execution of `Composition.execute` in the first optimization step), to deal
