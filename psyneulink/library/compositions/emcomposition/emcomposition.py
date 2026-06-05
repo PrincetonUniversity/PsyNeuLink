@@ -583,78 +583,93 @@ Structure
 ~~~~~~~
 
 The inputs corresponding to each query and value field are assigned as `INPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>` of the EMComposition, and listed in its `query_input_nodes <EMComposition.query_input_nodes>`
-and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respectively.
+<Composition_Nodes>` of the EMComposition, are listed in its `query_input_nodes <EMComposition.query_input_nodes>`
+and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respectively, and project to the *QUERY* and
+*VALUE* InputPorts of the corresponing `field_memory_nodes <EMComposition.field_memory_nodes>`.
 
 .. _EMComposition_Memory_Structure:
 
 *Memory*
 ~~~~~~~~
 
-The EMComposition's `memory <EMComposition.memory>` is stored in the `memory <ExternalMemory.memory>` `Parameter`
-of the `ExternalMechansim` for each `field <EMComposition_Fields>`. Each field is treated as a separate "channel"
-for storage and retrieval, and is associated with its own corresponding input (query or value) and output (retrieved
-value) `Node <Composition_Nodes>`. These are coordinated for retrieval and storage by the `combined_scores_node
-<EMComposition.combined_scores_node>`. The structure of the memory is configured as descrbied in
-`EMComposition_Memory_Specification`. The full contents of the EMComposition's memory can be accessed from its
-`memory <EMComposition.memory>` Parameter, which aggregates and formats the `memory <ExternalMemory.memory>` of each
-field into a single 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
-the values for each field of a given entry.  Note that, since fields can have different "widths" (i.e., their values
-can different in length), the full memory array can be "ragged." Information about each field can be accessed in the
-`fields <EMComposition.fields>` attribute, which is a list of `Field` objects containing information about the nodes
-adn values associated with each field.
+**Memory structure**. The EMComposition's `memory <EMComposition.memory>` is stored in the `memory
+  <ExternalMemory.memory>` `Parameter` of the `field_memory_node <EMComposition.field_memory_nodes>` for each `field
+  <EMComposition_Fields>`. Each field is treated as a separate "channel" for storage and retrieval, and is associated
+  with its own corresponding input (query or value) and output (retrieved value) `Node <Composition_Nodes>`. These
+  are coordinated for retrieval and storage by the `combined_scores_node <EMComposition.combined_scores_node>`. The
+  structure of the memory is configured as descrbied in `EMComposition_Memory_Specification`. The full contents of
+  the EMComposition's memory can be accessed from its `memory <EMComposition.memory>` Parameter, which aggregates and
+  formats the `memory <ExternalMemory.memory>` of each field into a single 3d array, in which rows (axis 0) are
+  entries, columns (axis 1) are fields, and items (axis 2) are the values for each field of a given entry. Note that,
+  since fields can have different "widths" (i.e., their values can have different in lengths), the full memory array
+  can be "ragged." Information about each field can be accessed in the `fields <EMComposition.fields>` attribute,
+  which is a list of `Field` objects containing information about the nodes adn values associated with each field.
+
+**field_memory_nodes**. Each `field_memory_node <EMComposition.field_memory_nodes>` has a *QUERY* or *VALUE* InputPort,
+  that receives the input to the EMComposition for that field; *COMBINED_SCORES* and *COMBINED_NORMS* InputPorts, that
+  receive corresponding vectors from the `combined_scores_node <EMComposition.combined_scores_node>` used for retrieval
+  and storage, respectively; a *SCORES* (if it is a key field) and a *NORMS* OutputPort that provide the corresponding
+  vectors to the `combined_scores_node <EMComposition.combined_scores_node>` which combines these across fields; and a
+  *RETRIEVED* OutputPort that projects to the `retrieved_node <EMComposition.retrieved_nodes>` for that field.
+
+**combined_memory_node**. The `combined_memory_node <EMComposition.combined_memory_node>` receives Projections to its
+  *SCORES* and *NORMS* InputPorts from the corresponding *SCORES* (for key fields) and *NORMS* OutputPorts of the
+  `field_memory_nodes <EMComposition.field_memory_nodes>`.  It combines the vectors of similarity scores and
+  softmax-normalizes them across fields, and also combines norms across fields, assigning these as the `values
+  <OutputPort.values>` of its *COMBINED_SCORES* and *COMBINED_NORMS* OutputPorts, respecively, that project back to
+  the corresponding InputPorts of the `field_memory_nodes <EMComposition.field_memory_nodes>` for use in retrieval and
+  storage.
 
 .. _EMComposition_Output:
 
 *Output*
 ~~~~~~~~
 
-The `retrieved_nodes <EMComposition.retrieved_nodes>` of the EMComposition are assigned as its `OUTPUT
-<NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`, and their `values <OutputPort.value>` as the `output_values
-<Composition.output_values>` of the EMComposition as well as to its `results <Composition.results>` attribute
-when it executes.
+The `retrieved_nodes <EMComposition.retrieved_nodes>` receive their inputs from the *RETRIEVED* OutputPorts of
+the corresponding `field_memory_nodes <EMComposition.field_memory_nodes>` and assign these as the `values
+<OutputPort.values>` of their OutputPorts.  They are assigned as the <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of
+the EMComposition, and their `values <OutputPort.value>` are assigned as its `output_values <Composition.output_values>`
+as well as to its `results <Composition.results>` attribute when it executes.
 
 .. _EMComposition_Execution:
 
 Execution
 ---------
 
+.. _EMComposition_Processing:
+
+*Processing*
+~~~~~~~~~~~~
+
+The arguments of the `run() <Composition.run>`, `learn() <Composition.learn>` and `execute() <Composition.execute>`
+methods of an EMComposition are the same as those of a `Composition`, and they can be passed any of the arguments
+valid for an `AutodiffComposition`.
+
+**Summary**. The inputs to an EMComposition, comprised of its queriess and values, are assigned to each of its
+`INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`: queries (i.e., that are matched to its keys) are assigned
+ot its `query_input_nodes  <EMComposition.query_input_nodes>`; and the remaining inputs are assigned to its
+`value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition is executed, the retrieved values for
+all fields are returned as the result, and recorded in its `results <Composition.result>` attribute. The value for
+each field is assigned as the `value <OutputPort.value>` of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`.
+The input is then stored in its `memory <EMComposition.memory>`, with a probability determined by its `storage_prob
+<EMComposition.storage_prob>` `Parameter`, and all previous memories are decayed by its `memory_decay_rate
+<EMComposition.memory_decay_rate>`.
+
 COMMENT:
+BREADCRUMB: CHECK FIGURE
+COMMENT
+(also see `figure <EMComposition_Example_Fig>`):
 
-BREADCRUMB: INTEGRATE WITH BELOW:
+The following is a more detailed description of the operations carried out when the EMComposition executes:
 
-The inputs to an EMComposition, comprised of
-its queriess and values, are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`:
-queries (i.e., that are matched to its keys) are assigned to its `query_input_nodes  <EMComposition.query_input_nodes>`;
-and the remaining inputs are assigned to it `value_input_nodes <EMComposition.value_input_nodes>`. When the
-EMComposition is executed, the retrieved values for all fields are returned as the result, and recorded in its `results
-<Composition.result>` attribute. The value for each field is assigned as the `value <OutputPort.value>` of its
-`OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`. The input is then stored in its `memory <EMComposition.memory>`,
-with a probability determined by its `storage_prob <EMComposition.storage_prob>` `Parameter`, and all previous memories
-decayed by its `memory_decay_rate <EMComposition.memory_decay_rate>`. The `memory <EMComposition.memory>` can be
-accessed using its `memory <EMComposition.memory>` Parameter.
+* **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
+  and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the similarity scores
+  for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
 
-  .. technical_note::
-     The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
-     from the `combined_scores_node <EMComposition.combined_scores_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
-     `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>` from the
-     `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
-     <EMComposition.match_nodes>`. This is done so that the match of each query to the keys in memory for the
-     corresponding field can be computed simply by passing the input for each query through the Projection (which
-     computes the distance of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to the
-     corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions for
-     each field computed in the `combined_scores_node <EMComposition.combined_scores_node>` through its Projection
-     to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
-     `MappingProjections <MappingProjection>` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
-     of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the distance of the weighted
-     softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
-------------------
+.. _EMComposition_Compute_Similarity_Scores:
 
-**Operations**
-
-When an EMComposition is executed, the following operations are carried out:
-
+COMMENT
+BREADCRUMB: INTEGRATE WITH BELOW
 *Scoring.* The query for each field is compared against the keys in the memory for that field, and a match score is
 generated based on the similarity of the query to the keys for that field. By default, for queries and keys that are
 vectors, normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query
@@ -665,54 +680,7 @@ XXXCOMMENT
 The scores are assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
 <EMCompositon.field_memory_nodes>`, which is passed to the `combined_scores_node <EMComposition.combined_scores_node>`
 to generated a *COMBINED_SCORES* that is used for retrieval (see below).
-
-*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
-on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
-values in the corresponding field for each entry in memory. By default, for queries and keys that are vectors,
-normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query to each
-key in memory; and if they are scalars the L0 norm is used.  These distances are then weighted by the corresponding
-`field_weights <EMComposition.field_weights>` for each field (if specified) and then summed, and the sum is softmaxed
-to produce a softmax distribution over the entries in memory. That is then used to generate a softmax-weighted average
-of the retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition's
-`execution <Composition_Execution>` (an EMComposition can also be configured to return the exact entry with the lowest
-distance (weighted by field), however then it is not compatible with learning; see `softmax_choice
-<EMComposition_Softmax_Choice>`).
-
-  XXXCOMMENT:
-  TBD DISTANCE ATTRIBUTES:
-  The distance used for the last retrieval is stored in XXXX, and the distances of each of their corresponding fields
-  (weighted by `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), are returned in XXX,
-  respectively.
-  XXXCOMMENT
-
-*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored
-in `memory <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
-<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then
-the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
-<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
-(i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 COMMENT
-
-The arguments of the `run() <Composition.run>` , `learn() <Composition.learn>` and `execute() <Composition.execute>`
-methods of an EMComposition are the same as those of a `Composition`, and they can be passed any of the arguments
-valid for an `AutodiffComposition`. The details of how the EMComposition executes are described below.
-
-.. _EMComposition_Processing:
-
-*Processing*
-~~~~~~~~~~~~
-
-When the EMComposition is executed, the following sequence of operations occur
-COMMENT:
-BREADCRUMB: CHECK FIGURE
-COMMENT
-(also see `figure <EMComposition_Example_Fig>`):
-
-* **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
-  and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the similarity scores
-  for each `key field <EMComposition_Fields_and_Entries>`, while the latter are stored but not used for matching.
-
-.. _EMComposition_Compute_Similarity_Scores:
 
 * **Compute similarity scores and norms**. By default, the input to every `query_input_node
   <EMComposition.query_input_nodes>` is passed to the corresponding `field_memory_node
@@ -774,11 +742,10 @@ COMMENT
      since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
      then `use_gating_for_weighting` should be set to ``False``.  
   COMMENT
-  This is done using the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives a 
-  Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node 
-  <EMComposition.field_weight_nodes>`, and multiplies them to produce the weighted scores for that field as its
-  output.  The `values <OutputPort.value>` of the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>` are
-  passed to the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
+  This is done by the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives a
+  Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node
+  <EMComposition.field_weight_nodes>`, and multiplies them to produce a weighted scores vector for that field as its
+  output which are passed to the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
 
 .. _EMComposition_Combine_Scores:
 
@@ -802,16 +769,28 @@ COMMENT
 
 .. _EMComposition_Retrieve_Values:
 
-* **Retrieve values by field**. The vector of softmax-normalized combined scores is passed back to each
-`field_memory_node <EMComposition.field_memory_nodes>` of the EMCompositon, for use in generated the retrieved
-value for each field.  XXX
-
-  `retrieved_nodes
-  <EMComposition.retrieved_nodes>` to compute the retrieved value for each field, which is assigned as the value
-  of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`.
+COMMENT:
+BREADCRUMB: INTEGRATE WITH BELOW
+*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
+on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
+values in the corresponding field for each entry in memory. By default, for queries and keys that are vectors,
+normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query to each
+key in memory; and if they are scalars the L0 norm is used.  These distances are then weighted by the corresponding
+`field_weights <EMComposition.field_weights>` for each field (if specified) and then summed, and the sum is softmaxed
+to produce a softmax distribution over the entries in memory. That is then used to generate a softmax-weighted average
+of the retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition's
+`execution <Composition_Execution>` (an EMComposition can also be configured to return the exact entry with the lowest
+distance (weighted by field), however then it is not compatible with learning; see `softmax_choice
+<EMComposition_Softmax_Choice>`).
+COMMENT
+* **Retrieve values by field**. The vector of softmax-normalized combined scores is passed to the *COMBINED_SCORES*
+  InputPort of each `field_memory_node <EMComposition.field_memory_nodes>`, that is dot producted with the node's
+  `memory <ExternalMemoryMechanism.memory>` to compute a weighted average of the values in memory for that field.
+  That is assigned as the `value <OutputPort.value>` of the *RETRIEVED* OutputPort for that field, and passed to the
+  `retrieved_node <EMComposition.retrieved_nodes>` for that field.
 
 .. _EMComposition_Decay_Memories:
-
+XXX
 * **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is ``True``, then each of the memories is
   decayed by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
 
@@ -825,6 +804,15 @@ value for each field.  XXX
 
 .. _EMComposition_Store_Values:
 
+COMMENT:
+*BREADCRUMB: INTEGRATE WITH BELOW*
+*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored
+in `memory <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
+<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then
+the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
+<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
+(i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
+COMMENT
 * **Store memories**. After the values have been retrieved, the `storage_node <EMComposition.storage_node>`
   adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition.query_input_nodes>` and
   `value_input_nodes <EMComposition.value_input_nodes>`) as a new entry in `memory <EMComposition.memory>`,
