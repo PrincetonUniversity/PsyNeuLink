@@ -52,7 +52,6 @@ Contents
         - `Retrieve Values <EMComposition_Retrieve_Values>`
         - `Decay Memories <EMComposition_Decay_Memories>`
         - `Store Values <EMComposition_Store_Values>`
-
      - `Learning <EMComposition_Learning_Execution>`
   * `EMComposition_Examples`
      - `Example Case <EMComposition_Example_Case>`
@@ -1434,6 +1433,9 @@ class EMComposition(AutodiffComposition):
         storage_prob=1.0,               \
         store_on_optimization=FIRST,    \
         memory_decay_rate=AUTO,         \
+        COMMENT:
+        store_at=WEAKEST                \
+        COMMENT
         enable_learning=True,           \
         target_fields=None,             \
         use_gating_for_weighting=False, \
@@ -1545,6 +1547,12 @@ class EMComposition(AutodiffComposition):
     store_on_optimization : FIRST, LAST, ALL : default FIRST
         specifies the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
+
+    COMMENT:
+    store_at : str : WEAKEST
+        specifies which entry in `memory <EMComposition.memory>` is replaced when a new one is stored
+        (see `store_at <EMComposition_Store_At>` for details).
+    COMMENT
 
     memory_decay_rate : float : AUTO
         specifies the rate at which items in the EMComposition's memory decay
@@ -1662,6 +1670,12 @@ class EMComposition(AutodiffComposition):
     memory_decay_rate : float
         determines the rate at which items in the EMComposition's memory decay
         (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
+
+    COMMENT:
+    store_at : str
+        determines which entry in `memory <EMComposition.memory>` is replaced when a new one is stored
+        (see `store_at <EMComposition_Store_At>` for details).
+    COMMENT
 
     purge_by_field_weights : bool
         determines whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to replace
@@ -1824,6 +1838,14 @@ class EMComposition(AutodiffComposition):
                     :default value: 1000
                     :type: ``int``
 
+                COMMENT:
+                store_at
+                    see `store_at <EMComposition.store_at>`
+
+                    :default value: WEAKEST
+                    :type: ``str``
+                COMMENT
+
                 memory_decay_rate
                     see `memory_decay_rate <EMComposition.memory_decay_rate>`
 
@@ -1899,6 +1921,7 @@ class EMComposition(AutodiffComposition):
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
+        # store_at = Parameter(WEAKEST, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True)
         store_on_optimization = Parameter(FIRST)
         memory_decay_rate = Parameter(AUTO, modulable=True)
@@ -1952,6 +1975,10 @@ class EMComposition(AutodiffComposition):
             if not is_numeric_scalar(storage_prob) or not 0 <= storage_prob <= 1:
                 return "must be a float in the interval [0, 1]."
 
+        # def _validate_store_at(self, store_at):
+        #     if self.store_at not in {WEAKEST, RANDOM, CYCLE, BY_WEIGHT}:
+        #         return f"must be one of '{WEAKEST}', '{RANDOM}', '{CYCLE}', or '{BY_WEIGHT}'."
+        #
         def _validate_store_on_optimization(self, option):
             if option not in {FIRST, LAST, ALL}:
                 return "must be one of FIRST, LAST, or ALL."
@@ -1974,6 +2001,7 @@ class EMComposition(AutodiffComposition):
         softmax_gain: Union[float, ADAPTIVE, CONTROL] = 1.0,
         softmax_threshold: Optional[float] = .001,
         storage_prob: float = 1.0,
+        # store_at: Union[WEAKEST, RANDOM, CYCLE, BY_WEIGHT] = WEAKEST,
         store_on_optimization: Union[FIRST, LAST, ALL] = FIRST,
         memory_decay_rate: Union[float, AUTO] = AUTO,
         purge_by_field_weights: bool = False,
@@ -2042,6 +2070,7 @@ class EMComposition(AutodiffComposition):
             softmax_gain=softmax_gain,
             softmax_threshold=softmax_threshold,
             storage_prob=storage_prob,
+            # store_at=store_at,
             store_on_optimization=store_on_optimization,
             memory_decay_rate=memory_decay_rate,
             purge_by_field_weights=purge_by_field_weights,
