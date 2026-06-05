@@ -5,11 +5,12 @@ from typing import Any
 
 import numpy as np
 
-from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
 from psyneulink.core.batched.graph import DDM_MODEL, STABILITY_FLEXIBILITY_MODEL, projection_inputs
+from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
+from psyneulink.core.batched.kernel_ir import KernelIR, lower_to_kernel_ir
 
 
-def run_reference(
+def run_ir_debug(
     ir: BatchedCompositionIR,
     inputs,
     parameter_sets,
@@ -20,14 +21,15 @@ def run_reference(
 ) -> BatchedSimulationResult:
     params = normalize_parameter_sets(parameter_sets, ir)
     prepared_inputs = prepare_inputs(ir, inputs, subject_slices)
+    kernel = lower_to_kernel_ir(ir)
 
-    values = _run_graph(ir, prepared_inputs, params, num_estimates, seed, common_random_numbers)
+    values = _run_kernel(kernel, prepared_inputs, params, num_estimates, seed, common_random_numbers)
 
     return BatchedSimulationResult(
         values=values,
         output_names=ir.output_names,
-        backend="reference",
-        metadata={"model_kind": ir.model_kind},
+        backend="ir_debug",
+        metadata={"model_kind": ir.model_kind, "fusion_kind": kernel.fusion_kind},
     )
 
 
@@ -74,7 +76,7 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
 
 def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dict[str, np.ndarray]:
     if ir.graph is None:
-        raise ValueError("Batched reference execution requires a graph IR.")
+        raise ValueError("Batched IR debug execution requires a graph IR.")
 
     values = {}
     for input_spec in ir.graph.inputs:
@@ -94,17 +96,17 @@ def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dic
     return prepared
 
 
-def _run_graph(
-    ir: BatchedCompositionIR,
+def _run_kernel(
+    kernel: KernelIR,
     inputs: dict[str, np.ndarray],
     params: list[dict[str, float]],
     num_estimates: int,
     seed,
     common_random_numbers: bool,
 ) -> np.ndarray:
-    graph = ir.graph
+    graph = kernel.graph
     if graph is None:
-        raise ValueError("Batched reference execution requires a graph IR.")
+        raise ValueError("Batched IR debug execution requires a graph IR.")
 
     first_input = inputs[graph.inputs[0].node]
     num_subjects, num_trials = first_input.shape[:2]
@@ -131,7 +133,7 @@ def _run_graph(
                             s_idx,
                             t_idx,
                             rng,
-                            ir.max_steps,
+                            kernel.max_steps,
                         )
                     cursor = 0
                     for output in graph.outputs:

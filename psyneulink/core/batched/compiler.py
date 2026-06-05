@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport
+from psyneulink.core.batched.ir_debug import run_ir_debug
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
-from psyneulink.core.batched.reference import run_reference
 from psyneulink.core.batched.registry import analyze_composition
 
 
@@ -12,23 +12,25 @@ class BatchedCompileError(RuntimeError):
     pass
 
 
+_SUPPORTED_BACKENDS = {"ir_debug", "triton"}
+
+
 class BatchedCompositionCompiler:
     @staticmethod
-    def diagnose(composition, backend: str = "reference", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
+    def diagnose(composition, backend: str = "ir_debug", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
+        _validate_backend(backend)
         report, _ = analyze_composition(composition, backend=backend, outputs=outputs, max_steps=max_steps)
         return report
 
     @staticmethod
-    def compile(composition, backend: str = "reference", outputs=None, max_steps: int | None = None) -> "BatchedSimulationPlan":
+    def compile(composition, backend: str = "ir_debug", outputs=None, max_steps: int | None = None) -> "BatchedSimulationPlan":
+        _validate_backend(backend)
         report, ir = analyze_composition(composition, backend=backend, outputs=outputs, max_steps=max_steps)
         if not report.is_supported or ir is None:
             raise BatchedCompileError(
                 "Composition cannot be compiled for batched simulation: "
                 + "; ".join(report.unsupported_reasons)
             )
-
-        if backend not in {"reference", "triton"}:
-            raise BatchedCompileError(f"Unknown batched backend '{backend}'.")
 
         return BatchedSimulationPlan(ir=ir, backend=backend, capability_report=report)
 
@@ -48,8 +50,8 @@ class BatchedSimulationPlan:
         seed=None,
         common_random_numbers: bool = True,
     ) -> BatchedSimulationResult:
-        if self.backend == "reference":
-            return run_reference(
+        if self.backend == "ir_debug":
+            return run_ir_debug(
                 self.ir,
                 inputs,
                 parameter_sets,
@@ -57,10 +59,10 @@ class BatchedSimulationPlan:
                 subject_slices=subject_slices,
                 seed=seed,
                 common_random_numbers=common_random_numbers,
-            )
+        )
 
         if self.backend == "triton":
-            from psyneulink.core.batched.triton_backend import run_triton
+            from psyneulink.core.batched.backend.triton import run_triton
 
             return run_triton(
                 self.ir,
@@ -73,3 +75,8 @@ class BatchedSimulationPlan:
             )
 
         raise BatchedCompileError(f"Unknown batched backend '{self.backend}'.")
+
+
+def _validate_backend(backend: str) -> None:
+    if backend not in _SUPPORTED_BACKENDS:
+        raise BatchedCompileError(f"Unknown batched backend '{backend}'.")

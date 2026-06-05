@@ -14,6 +14,12 @@ from psyneulink.core.batched import (
     BatchedCompileError,
     BatchedCompositionCompiler,
 )
+from psyneulink.core.batched.kernel_ir import (
+    STATEFUL_LANE_LAYOUT,
+    TRIAL_LANE_LAYOUT,
+    iter_kernel_ops,
+    lower_to_kernel_ir,
+)
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction
 
@@ -52,9 +58,20 @@ def _with_graph_fusion_kind(plan, fusion_kind):
 
 
 @pytest.mark.composition
-def test_batched_reference_ddm_deterministic():
+def test_batched_compiler_rejects_reference_backend_name():
+    comp, _ = _make_ddm_comp(noise=0.0)
+
+    with pytest.raises(BatchedCompileError, match="Unknown batched backend 'reference'"):
+        BatchedCompositionCompiler.diagnose(comp, backend="reference")
+
+    with pytest.raises(BatchedCompileError, match="Unknown batched backend 'reference'"):
+        BatchedCompositionCompiler.compile(comp, backend="reference")
+
+
+@pytest.mark.composition
+def test_batched_ir_debug_ddm_deterministic():
     comp, decision = _make_ddm_comp(noise=0.0)
-    plan = BatchedCompositionCompiler.compile(comp, backend="reference")
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
     result = plan.run(
         inputs={decision: np.array([[1.0], [-1.0]], dtype=float)},
         parameter_sets=[{"rate": 1.0, "threshold": 0.05, "time_step_size": 0.01}],
@@ -68,9 +85,9 @@ def test_batched_reference_ddm_deterministic():
 
 
 @pytest.mark.composition
-def test_batched_reference_ddm_common_random_numbers():
+def test_batched_ir_debug_ddm_common_random_numbers():
     comp, decision = _make_ddm_comp(noise=0.2)
-    plan = BatchedCompositionCompiler.compile(comp, backend="reference")
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
     params = [
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
@@ -102,14 +119,14 @@ def _make_linear_projection_comp():
 
 
 @pytest.mark.composition
-def test_batched_reference_transfer_only_generic_graph():
+def test_batched_ir_debug_transfer_only_generic_graph():
     mech = pnl.TransferMechanism(
         input_shapes=2,
         function=pnl.Linear(slope=2.0, intercept=1.0),
         name="linear",
     )
     comp = pnl.Composition(pathways=mech)
-    plan = BatchedCompositionCompiler.compile(comp, backend="reference")
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
     result = plan.run(
         inputs={mech: np.array([[1.0, 2.0], [3.0, 4.0]], dtype=float)},
         parameter_sets=[{}],
@@ -124,9 +141,25 @@ def test_batched_reference_transfer_only_generic_graph():
 
 
 @pytest.mark.composition
-def test_batched_reference_mapping_projection_generic_graph():
+def test_kernel_ir_transfer_only_structure():
+    mech = pnl.TransferMechanism(
+        input_shapes=2,
+        function=pnl.Linear(slope=2.0, intercept=1.0),
+        name="linear",
+    )
+    comp = pnl.Composition(pathways=mech)
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    kernel = lower_to_kernel_ir(plan.ir)
+    op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
+
+    assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
+    assert op_kinds == ["LoadInput", "ElementwiseLinear", "StoreOutput"]
+
+
+@pytest.mark.composition
+def test_batched_ir_debug_mapping_projection_generic_graph():
     comp, source, _ = _make_linear_projection_comp()
-    result = BatchedCompositionCompiler.compile(comp, backend="reference").run(
+    result = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
         inputs={source: np.array([[2.0, 4.0]], dtype=float)},
         parameter_sets=[{}],
         num_estimates=1,
@@ -137,7 +170,19 @@ def test_batched_reference_mapping_projection_generic_graph():
 
 
 @pytest.mark.composition
-def test_batched_reference_product_combine_generic_graph():
+def test_kernel_ir_dense_projection_structure():
+    comp, source, _ = _make_linear_projection_comp()
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    kernel = lower_to_kernel_ir(plan.ir)
+    op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
+
+    assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
+    assert "DenseMatVec" in op_kinds
+    assert "CombineSum" in op_kinds
+
+
+@pytest.mark.composition
+def test_batched_ir_debug_product_combine_generic_graph():
     left = pnl.TransferMechanism(input_shapes=2, name="left")
     right = pnl.TransferMechanism(input_shapes=2, name="right")
     product = pnl.TransferMechanism(
@@ -152,7 +197,7 @@ def test_batched_reference_product_combine_generic_graph():
     comp.add_projection(sender=left, receiver=product)
     comp.add_projection(sender=right, receiver=product)
 
-    result = BatchedCompositionCompiler.compile(comp, backend="reference").run(
+    result = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
         inputs={
             left: np.array([[2.0, 3.0]], dtype=float),
             right: np.array([[4.0, 5.0]], dtype=float),
@@ -165,7 +210,30 @@ def test_batched_reference_product_combine_generic_graph():
 
 
 @pytest.mark.composition
-def test_batched_reference_ddm_behind_transfer_generic_graph():
+def test_kernel_ir_product_combine_structure():
+    left = pnl.TransferMechanism(input_shapes=2, name="left")
+    right = pnl.TransferMechanism(input_shapes=2, name="right")
+    product = pnl.TransferMechanism(
+        input_shapes=2,
+        function=pnl.Linear(slope=1.0, intercept=0.0),
+        input_ports=pnl.InputPort(combine=pnl.PRODUCT),
+        name="product",
+    )
+    comp = pnl.Composition()
+    for node in (left, right, product):
+        comp.add_node(node)
+    comp.add_projection(sender=left, receiver=product)
+    comp.add_projection(sender=right, receiver=product)
+
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    kernel = lower_to_kernel_ir(plan.ir)
+    op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
+
+    assert "CombineProduct" in op_kinds
+
+
+@pytest.mark.composition
+def test_batched_ir_debug_ddm_behind_transfer_generic_graph():
     source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
@@ -180,7 +248,7 @@ def test_batched_reference_ddm_behind_transfer_generic_graph():
         name="DDM",
     )
     comp = pnl.Composition(pathways=[[source, decision]])
-    plan = BatchedCompositionCompiler.compile(comp, backend="reference", max_steps=64)
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
     result = plan.run(
         inputs={source: np.array([[1.0], [-1.0]], dtype=float)},
         parameter_sets=[{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}],
@@ -191,6 +259,31 @@ def test_batched_reference_ddm_behind_transfer_generic_graph():
     assert plan.ir.graph.fusion_kind == "ddm_graph"
     np.testing.assert_allclose(result.values[0, 0, :, 0, 0], [1.0, 0.0])
     np.testing.assert_allclose(result.values[0, 0, :, 0, 1], [0.05, 0.05])
+
+
+@pytest.mark.composition
+def test_kernel_ir_ddm_graph_structure():
+    source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0,
+            rate=1.0,
+            noise=0.0,
+            threshold=0.05,
+            non_decision_time=0.0,
+            time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    comp = pnl.Composition(pathways=[[source, decision]])
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
+    kernel = lower_to_kernel_ir(plan.ir)
+    op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
+
+    assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
+    assert "DDMIntegrateUntilFinished" in op_kinds
+    assert kernel.rng_streams[0].name == "DDM.ddm"
 
 
 @pytest.mark.composition
@@ -259,14 +352,14 @@ def test_pec_can_compile_batched_diagnostic():
         initial_seed=1,
     )
 
-    report = pec.can_compile_batched(backend="reference")
+    report = pec.can_compile_batched(backend="ir_debug")
     assert report.is_supported
     assert report.model_kind == "ddm"
     assert isinstance(report.metadata["fusion_kind"], str)
 
 
 @pytest.mark.composition
-def test_stability_flexibility_reference_smoke():
+def test_stability_flexibility_ir_debug_smoke():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex
 
@@ -279,7 +372,7 @@ def test_stability_flexibility_reference_smoke():
     )
     task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=3)
     inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
-    plan = BatchedCompositionCompiler.compile(comp, backend="reference")
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
     assert plan.ir.model_kind == "stability_flexibility"
     assert plan.ir.graph.fusion_kind == "stateful_graph"
     assert plan.ir.graph.metadata["stability_flexibility_roles"]["lca_node"].startswith("Task Activations")
@@ -294,12 +387,36 @@ def test_stability_flexibility_reference_smoke():
     assert np.all(np.isfinite(result.values))
 
 
+@pytest.mark.composition
+def test_kernel_ir_stability_flexibility_stateful_structure():
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from test_stab_flex_pec_fit import make_stab_flex
+
+    comp = make_stab_flex(
+        lca_time_step_size=0.01,
+        ddm_time_step_size=0.01,
+        threshold=0.05,
+        ddm_noise=0.0,
+        lca_noise=0.0,
+    )
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=256)
+    kernel = lower_to_kernel_ir(plan.ir)
+    op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
+
+    assert kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
+    assert op_kinds[0] == "InitializeState"
+    assert "ForTrials" in op_kinds
+    assert "LCAIntegrateUntilFinished" in op_kinds
+    assert "DDMIntegrateUntilFinished" in op_kinds
+    assert {stream.step_extent for stream in kernel.rng_streams} == {"LCA_MAX_STEPS", "MAX_STEPS"}
+
+
 @pytest.mark.triton
 @pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_stateless_graph_matches_reference():
+def test_triton_stateless_graph_matches_ir_debug():
     comp, source, _ = _make_linear_projection_comp()
     inputs = {source: np.array([[2.0, 4.0], [1.0, 1.0]], dtype=float)}
-    reference = BatchedCompositionCompiler.compile(comp, backend="reference").run(
+    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
         inputs=inputs,
         parameter_sets=[{}],
         num_estimates=2,
@@ -310,16 +427,16 @@ def test_triton_stateless_graph_matches_reference():
         num_estimates=2,
     )
 
-    np.testing.assert_allclose(triton.values, reference.values, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
 
 
 @pytest.mark.triton
 @pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_ddm_matches_reference_deterministic():
+def test_triton_ddm_matches_ir_debug_deterministic():
     comp, decision = _make_ddm_comp(noise=0.0)
     inputs = {decision: np.array([[1.0], [-1.0]], dtype=float)}
     params = [{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}]
-    reference = BatchedCompositionCompiler.compile(comp, backend="reference", max_steps=64).run(
+    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64).run(
         inputs=inputs,
         parameter_sets=params,
         num_estimates=2,
@@ -332,12 +449,12 @@ def test_triton_ddm_matches_reference_deterministic():
         seed=11,
     )
 
-    np.testing.assert_allclose(triton.values, reference.values, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
 
 
 @pytest.mark.triton
 @pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_ddm_behind_transfer_generated_graph_matches_reference():
+def test_triton_ddm_behind_transfer_generated_graph_matches_ir_debug():
     source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
@@ -355,7 +472,7 @@ def test_triton_ddm_behind_transfer_generated_graph_matches_reference():
     inputs = {source: np.array([[1.0], [-1.0]], dtype=float)}
     params = [{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}]
 
-    reference = BatchedCompositionCompiler.compile(comp, backend="reference", max_steps=64).run(
+    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64).run(
         inputs=inputs,
         parameter_sets=params,
         num_estimates=2,
@@ -370,7 +487,7 @@ def test_triton_ddm_behind_transfer_generated_graph_matches_reference():
         seed=11,
     )
 
-    np.testing.assert_allclose(triton.values, reference.values, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
 
 
 @pytest.mark.triton
@@ -389,7 +506,7 @@ def test_triton_stability_flexibility_smoke():
     task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=4)
     inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
     params = [{"threshold": 0.05, "ddm_noise": 0.0, "lca_noise": 0.0}]
-    reference = BatchedCompositionCompiler.compile(comp, backend="reference", max_steps=256).run(
+    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=256).run(
         inputs=inputs,
         parameter_sets=params,
         num_estimates=1,
@@ -406,7 +523,7 @@ def test_triton_stability_flexibility_smoke():
 
     assert result.values.shape == (1, 1, 2, 1, 2)
     assert np.all(np.isfinite(result.values))
-    np.testing.assert_allclose(result.values, reference.values, rtol=1e-5, atol=1e-5)
+    np.testing.assert_allclose(result.values, ir_debug.values, rtol=1e-5, atol=1e-5)
 
 
 @pytest.mark.triton

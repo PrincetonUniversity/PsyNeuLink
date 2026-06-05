@@ -517,7 +517,7 @@ def _parse_args():
     parser.add_argument(
         "--backend",
         action="append",
-        choices=("reference", "triton", "triton_fused", "llvm", "ptx"),
+        choices=("ir_debug", "triton", "triton_fused", "llvm", "ptx"),
         dest="backends",
         help="'llvm' and 'ptx' run current PEC grid_evaluate; 'triton' runs the batched simulator.",
     )

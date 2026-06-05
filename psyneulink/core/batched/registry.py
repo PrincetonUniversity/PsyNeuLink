@@ -12,7 +12,7 @@ from psyneulink.core.batched.graph import (
 from psyneulink.core.batched.ir import BatchedCompositionIR
 
 
-def analyze_composition(composition, backend: str = "reference", outputs=None, max_steps: int | None = None):
+def analyze_composition(composition, backend: str = "ir_debug", outputs=None, max_steps: int | None = None):
     lowering = lower_composition(composition, outputs=outputs)
     backend_available, backend_messages = _backend_availability(backend, lowering.model_kind, lowering.graph)
 
@@ -62,7 +62,7 @@ def analyze_composition(composition, backend: str = "reference", outputs=None, m
 
 
 def _backend_availability(backend: str, model_kind: str | None, graph) -> tuple[bool, list[str]]:
-    if backend == "reference":
+    if backend == "ir_debug":
         return True, []
     if backend != "triton":
         return False, [f"Unknown batched backend '{backend}'."]

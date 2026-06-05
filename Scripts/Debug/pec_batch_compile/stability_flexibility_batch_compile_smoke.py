@@ -23,7 +23,7 @@ task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=1)
 inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
 params = [{"threshold": 0.05, "ddm_noise": 0.0, "lca_noise": 0.0}]
 
-for backend in ("reference", "triton"):
+for backend in ("ir_debug", "triton"):
     report = BatchedCompositionCompiler.diagnose(comp, backend=backend)
     print(f"{backend} supported={report.is_supported} available={report.backend_available}")
     if not report.is_supported or not report.backend_available:

@@ -20,7 +20,7 @@ comp = pnl.Composition(pathways=decision)
 inputs = {decision: np.array([[1.0], [-1.0]], dtype=float)}
 params = [{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}]
 
-for backend in ("reference", "triton"):
+for backend in ("ir_debug", "triton"):
     report = BatchedCompositionCompiler.diagnose(comp, backend=backend)
     print(f"{backend} supported={report.is_supported} available={report.backend_available}")
     if not report.is_supported or not report.backend_available:
