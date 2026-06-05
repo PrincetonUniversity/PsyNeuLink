@@ -41,6 +41,7 @@ Contents
   * `EMComposition_Execution`
      - `Processing <EMComposition_Processing>`
         - `Compute Similarity Scores <EMComposition_Compute_Similarity_Scores>`
+        - `Compute Norms <EMComposition_Compute_Norms>`
         - `Concatenate Queries <EMComposition_Concatenate_Queries>`
         - `Weight Fields <EMComposition_Weight_Fields>`
         - `Combine Scores <EMComposition_Combine_Scores>`
@@ -456,12 +457,12 @@ COMMENT
   is stored; the default rate is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`,
   such that the oldest memories are the weakest and
   COMMENT:
-  , if `forget <EMComposition.forget>` is set to *WEAKEST*,
+  , if `store_at <EMComposition.store_at>` is set to *WEAKEST*,
   COMMENT
   the most likely to be replaced. If **memory_decay_rate** is set to 0 or ``False``,
   then memories do not decay
   COMMENT:
-  REMOVE THE FOLLOWING WHEN **forget** IS IMPLEMENTED
+  REMOVE THE FOLLOWING WHEN **store_at** IS IMPLEMENTED
   COMMENT
   and, when `memory_capacity <EMComposition.memory_capacity>` is reached, the weakest
   memories (ones with the lowest norm) are replaced, irrespective of order of entry.
@@ -472,11 +473,11 @@ COMMENT
      then memory_decay_rate has no effect, since all memories have the same norm.
      COMMENT: BREADCRUMB TBD
      In that case, a warning is issued, and memories are randomly replace ?? replaced with incrementing index?
-     BREADCRUMB: MENTION purge_by_field_weight PER BELOW AND/OR REVISE THE ABOVE WHEN **forget** IS IMPLEMENTED
+     BREADCRUMB: MENTION purge_by_field_weight PER BELOW AND/OR REVISE THE ABOVE WHEN **store_at** IS IMPLEMENTED
      COMMENT
 
 COMMENT:
-BREADCRUMB: REMOVE OR REVISE WHEN **forget** IS IMPLEMENTED
+BREADCRUMB: REMOVE OR REVISE WHEN **store_at** IS IMPLEMENTED
 COMMENT
 .. _EMComposition_Purge_by_Weight:
 
@@ -668,39 +669,31 @@ The following is a more detailed description of the operations carried out when 
 
 .. _EMComposition_Compute_Similarity_Scores:
 
-COMMENT
-BREADCRUMB: INTEGRATE WITH BELOW
-*Scoring.* The query for each field is compared against the keys in the memory for that field, and a match score is
-generated based on the similarity of the query to the keys for that field. By default, for queries and keys that are
-vectors, normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query
-to each key in memory; and if they are scalars the L0 norm is used.
-XXXCOMMENT: EM2 BREADCRUMB -- ADD WHEN IMPLEMENTED
-Optionally, COSINE SIMILARITY...
-XXXCOMMENT
-The scores are assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for each `field_memory_node
-<EMCompositon.field_memory_nodes>`, which is passed to the `combined_scores_node <EMComposition.combined_scores_node>`
-to generated a *COMBINED_SCORES* that is used for retrieval (see below).
-COMMENT
+* **Compute similarity scores**.  The  `field_memory_node <EMComposition.field_memory_nodes>` for each query field
+  receives its input from the corresponding `query_input_node <EMComposition.query_input_nodes>` compares this to
+  each key in the memory for that field, to generate a vector of similarity scores. The similarity scores are computed
+  by applying the `scores_metric <EMComposition.scores_metric>`. If the values in the field are vectors, the default
+  metric is the normalized dot product between them (i.e., between the normalized query vector and the normalized
+  key for the corresponding `field <EMComposition_Fields_and_Entries>`, that is comparable to using COSINE similarity);
+  however, if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product
+  is computed. For scalar values, the default is the L0 norm (difference) between them. The method of scoring can also
+  be customized by specifying a different `scores_metric <EMComposition.scores_metric>` in the **scores_metric**
+  argument of the EMComposition's constructor. The vector of similarity scores is assigned as the `value
+  <OutputPort.value>` of the `field_memory_node <EMComposition.field_memory_nodes>`\'s *SCORES* OutputPort. If no
+  `field_weights <EMComposition.field_weights>` are specified, then the scores vector for each field is passed to
+  the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`; if `field_weights
+  <EMComposition.field_weights>` are specified, then the scores vector is passed to the `weighted_scores_node
+  <EMComposition.weighted_scores_node>` for the field, which multiples the scores vector by the weight and passes
+  the resulting vector to the *SCORES* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`
+  (see `Weight field scores <EMComposition_Weight_Fields>` below).
 
-* **Compute similarity scores and norms**. By default, the input to every `query_input_node
-  <EMComposition.query_input_nodes>` is passed to the corresponding `field_memory_node
-  <EMComposition.field_memory_nodes>`, that scores the similarity of the query to each key (i.e., the value of each
-  entry) in memory for that field) using its `scores_metric <EMComposition.scores_metric>`. By default, the similarity
-  scores are computed as the normalized dot product (i.e., between the normalized query vector and the normalized
-  key for the corresponding `field <EMComposition_Fields_and_Entries>`, that is comparable to using COSINE similarity).
-  However, if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product
-  is computed. The method of scoring can also be customized by specifying a different `scores_metric
-  <EMComposition.scores_metric>` in the **scores_metric** argument of the EMComposition's constructor. The vector of
-  similarity scores for each field is assigned as the `value <OutputPort.value>` of the *SCORES* OutputPort for its
-  `field_memory_node <EMComposition.field_memory_nodes>`. If no `field_weights <EMComposition.field_weights>`
-  are specified, then the scores vector for each field are passed to the *SCORES* InputPort of the `combined_scores_node
-  <EMComposition.combined_scores_node>`; if `field_weights <EMComposition.field_weights>` are specified,
-  then the similarity scores are passed to the `weighted_scores_node <EMComposition.weighted_scores_node>` for each
-  field, which weights the field scores and passes them to the *SCORES* InputPort of the `combined_scores_node
-  <EMComposition.combined_scores_node>` (see `Weight field scores <EMComposition_Weight_Fields>` below).
-  The `field_memory_nodes <EMComposition.field_memory_nodes>` also calculate the norm of each entry in
-  memory for their fields, assigns the norms vector as the `value <OutputPort.value>` of the *NORMS* OutputPort,
-  and passes that to the *NORMS* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>`.
+.. _EMComposition_Compute_Norms:
+
+* **Compute norms**.
+  All `field_memory_nodes <EMComposition.field_memory_nodes>` calculate the norm of each entry in
+  memory for their fields, assign the norms vector as the `value <OutputPort.value>` of the *NORMS* OutputPort,
+  and pass that to the *NORMS* InputPort of the `combined_scores_node <EMComposition.combined_scores_node>` to be
+  combined across fields (see `Combine scores <EMComposition_Combine_Scores>` below).
 
 .. _EMComposition_Concatenate_Queries:
   
@@ -749,14 +742,20 @@ COMMENT
 
 .. _EMComposition_Combine_Scores:
 
-* **Combine scores**.  The vectors of similarity scores received from each `field_memory_node
+* **Combine scores**. The vectors of similarity scores received from each `field_memory_node
   <EMComposition.field_memory_nodes>`, possibly weighted by the corresponding `weighted_scores_nodes
   <EMComposition.weighted_scores_nodes>`, are Hadamard summed by the `combined_scores_node
-  <EMComposition.combined_scores_node>`.  Note that even if the EMComposition is specified to
-  have only a single key field, the `combined_scores_node <EMComposition.combined_scores_node>` is still constructed,
-  and used to pass the similarity score vector (in this case, determined entirely by the single key field) to the
-  `field_memory_node(s) <EMComposition.field_memory_nodes>` for any value field(s), as well as the one for the key
-  field, for use in retrieval (see `retrieve values by field <EMComposition_Retrieve_Values>`below).
+  <EMComposition.combined_scores_node>` and then softmax normalized (see `below
+  <EMComposition_Softmax_Normalize_Scores>` before being assigned as the `value <OutputPort.value>`
+  of its *COMBINED_SCORES* OutputPort. The vectors of norms received from each `field_memory_node
+  <EMComposition.field_memory_nodes>` are also Hadamard summed by the `combined_scores_node
+  <EMComposition.combined_scores_node>`, and assigbned as the `value <OutputPort.value>` of its
+  *COMBINED_NORMS* OutputPort. Note that even if the EMComposition is specified to have only a single
+  key field, the `combined_scores_node <EMComposition.combined_scores_node>` is still constructed,
+  and used to pass the similarity score vector (in this case, determined entirely by the single key
+  field) to the `field_memory_node(s) <EMComposition.field_memory_nodes>` for any value field(s),
+  as well as the one for the key field, for use in retrieval (see `retrieve values by field
+  <EMComposition_Retrieve_Values>`below).
 
 .. _EMComposition_Softmax_Normalize_Scores:
 
@@ -769,51 +768,69 @@ COMMENT
 
 .. _EMComposition_Retrieve_Values:
 
-COMMENT:
-BREADCRUMB: INTEGRATE WITH BELOW
-*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
-on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
-values in the corresponding field for each entry in memory. By default, for queries and keys that are vectors,
-normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query to each
-key in memory; and if they are scalars the L0 norm is used.  These distances are then weighted by the corresponding
-`field_weights <EMComposition.field_weights>` for each field (if specified) and then summed, and the sum is softmaxed
-to produce a softmax distribution over the entries in memory. That is then used to generate a softmax-weighted average
-of the retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition's
-`execution <Composition_Execution>` (an EMComposition can also be configured to return the exact entry with the lowest
-distance (weighted by field), however then it is not compatible with learning; see `softmax_choice
-<EMComposition_Softmax_Choice>`).
-COMMENT
 * **Retrieve values by field**. The vector of softmax-normalized combined scores is passed to the *COMBINED_SCORES*
   InputPort of each `field_memory_node <EMComposition.field_memory_nodes>`, that is dot producted with the node's
   `memory <ExternalMemoryMechanism.memory>` to compute a weighted average of the values in memory for that field.
-  That is assigned as the `value <OutputPort.value>` of the *RETRIEVED* OutputPort for that field, and passed to the
-  `retrieved_node <EMComposition.retrieved_nodes>` for that field.
+  That is assigned as the `value <OutputPort.value>` of the *RETRIEVED* OutputPort for the `field_memory_node
+  <EMComposition.field_memory_nodes>`, and passed to the `retrieved_node <EMComposition.retrieved_nodes>` for
+  that field.
 
 .. _EMComposition_Decay_Memories:
-XXX
-* **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is ``True``, then each of the memories is
-  decayed by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
+
+* **Decay memories**.  If `memory_decay_rate <EMComposition.memory_decay>` is assigned a value, then each entry in
+memory is decayed by the amount specified; if it is specified as ``AUTO``, memories are decayed by 1/`memory_capacity
+<EMComposition.memory_capacity>`. How this impacts `retrieval <EMComposition_Retrieve_Values>` and `storage
+<EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
+COMMENT:
+BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
+the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, and the `store_at
+<EMComposition.store_at>` Parameter.
+COMMENT
+and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores (see `Store memories
+<EMComposition_Store_Values>` below).
 
     .. technical_note::
-       This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
-       the `combined_scores_node <EMComposition.combined_scores_node>` to each of the `retrieved_nodes
-       <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
-       `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the corresponding
-       `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
-        by 1 - `memory_decay <EMComposition.memory_decay_rate>`.
+       Memory decay is applied by multiplying all values for all entries across fields in `memory
+       <EMComposition.memory>` by 1 - `memory_decay_rate <EMComposition.memory_decay_rate>`.
 
 .. _EMComposition_Store_Values:
 
-COMMENT:
-*BREADCRUMB: INTEGRATE WITH BELOW*
-*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored
-in `memory <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
-<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then
-the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
-<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
+* **Store memories**. This always occurs after retrieval has completed and `memory decay
+  <EMComposition_Decay_Memories>` has been applied. The inputs to the `query nodes
+  <EMComposition.query_input_nodes>` and `value nodes <EMComposition.value_input_nodes>`
+  are then stored in `memory <EMComposition.memory>` after each execution, with a probability
+  determined by `storage_prob <EMComposition.storage_prob>`. Where the storage occurs is determined
+  by whether memories are `normalized <EMComposition_Normalize_Memories>`,
+  COMMENT:
+  BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
+  the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores, and the `store_at
+  <EMComposition.store_at>` Parameter.
+  COMMENT
+  and the `scores_metric <EMComposition.scores_metric>` used to compute similarity scores.
+  If memories not normalized <EMComposition.normalize_memories>`, the `scores_metric <EMComposition.scores_metric>`
+  is *not* *COSINE*,
+  COMMENT:
+  BREADCRUMB: ADD WHEN **store_at** HAS BEEN IMPLEMENTED
+  and `store_at <EMComposition.store_at>` is set to *WEAKEST*,
+  COMMENT
+  then the current inputs (queries and values) are stored in the entry of `memory <EMComposition.memory>` that has
+  the lowest norm across fields (see `compute norms <EMComposition_Compute_Norms>`).
+
+XXX
+
+  THIS ENSURES THAT, IN GENERAL, OLDEST ONES ARE REPLACED, BUT ALSO POSSIBLE THAT MORE SALIENT ONES (IE WITH
+  LARGET NORMS) SURVIVE LONGER THAN LESS SALIENT ONES (IE WITH SMALLER NORMS).
+
+
 (i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
-COMMENT
-* **Store memories**. After the values have been retrieved, the `storage_node <EMComposition.storage_node>`
+  and `value nodes <EMComposition.value_input_nodes>` are stored in `memory <EMComposition.memory>` after each execution,
+  with a probability determined by `storage_prob <EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>`
+  is specified, then the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If
+  `memory_capacity <EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
+  (i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.  If `normalize_memories
+  <EMComposition.normalize_memories>` is ``False``, then the `scores_metric <EMComposition.scores_metric>` is *not* *COSINE*,
+  and `store_at <EMComposition.store_at>` is set to *WEAKEST*, then the current inputs (queries and values) are stored in the>`
+
   adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition.query_input_nodes>` and
   `value_input_nodes <EMComposition.value_input_nodes>`) as a new entry in `memory <EMComposition.memory>`,
   replacing the weakest one. The weakest memory is the one with the lowest norm, multipled  by its `field_weight
