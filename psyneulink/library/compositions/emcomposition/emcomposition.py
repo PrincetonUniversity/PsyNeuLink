@@ -45,7 +45,7 @@ Contents
      - `Processing <EMComposition_Processing>`
         - `Compute Similarity Scores <EMComposition_Compute_Similarity_Scores>`
         - `Compute Norms <EMComposition_Compute_Norms>`
-        - `Concatenate Queries <EMComposition_Concatenate_Queries>`
+        - `Concatenate Queries <EMComposition_Query_Concatenation>`
         - `Weight Fields <EMComposition_Weight_Fields>`
         - `Combine Scores <EMComposition_Combine_Scores>`
         - `Softmax Normalize Scores <EMComposition_Softmax_Normalize_Scores>`
@@ -115,8 +115,11 @@ field to retrieval can be weighted by asisgning `field_weights
 <EMComposition.memory>` attribute, which returns a 3d array, the rows of which (axis 0) are each entry,
 the columns of which (axis 1) are the fields of each entry, and the items of which (axis 2) are the values
 of the entries for each field. The EMComposition's fields are listed in its `fields <EMComposition.fields>`
-attribute, and its The memory for a given field can be accessed via the `em.fields[*NAME*].memory
+attribute, and its The memory for a given field can be accessed via the `em.fields[<NAME>].memory
 <ExternalMemoryMechanism.memory>` attribute.
+
+
+.. _EMComposition_Operation:
 
 **Operation**
 
@@ -143,7 +146,7 @@ Creation
 
 An EMComposition is created by calling its constructor. There are four major elements that can be configured:
 the structure of its `memory <EMComposition_Memory_Specification>`; the characteristics of its
-fields <EMComposition_Fields>`; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether
+`fields <EMComposition_Fields>`; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether
 and how `learning <EMComposition_Learning_Creation>` is carried out.
 
 .. _EMComposition_Memory_Specification:
@@ -219,12 +222,12 @@ stored in the EMComposition's `memory <EMComposition.memory>`. These are describ
 .. _EMComposition_Memory_Capacity:
 
 * **memory_capacity**: specifies the number of entries that can be stored in the EMComposition's memory; when
-  `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites an existing one. By
-  default, this is the weakest entry (i.e., the one with the smallest norm across all of its fields); however
-  different behaviors can be configured (see `EMComposition_Memory_Decay_Rate`). If `memory_template
-  <EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is
-  used to determine `memory_capacity <EMComposition.memory_capacity>` (if it is specified and conflicts with either
-  of those an error is generated). Otherwise, it can be specified using a numerical value, with a default of 1000.
+  `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites an existing one. By default,
+  this is the weakest entry (i.e., the one with the smallest norm across all of its fields); however different
+  behaviors can be configured (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>`). If `memory_template
+  <EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is used
+  to determine `memory_capacity <EMComposition.memory_capacity>` (if it is specified and conflicts with either of
+  those an error is generated). Otherwise, it can be specified using a numerical value, with a default of 1000.
 
   .. warning::
      The `memory_capacity <EMComposition.memory_capacity>` of an EMComposition cannot be modified after construction.
@@ -262,7 +265,7 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
     - *TARGET_FIELD* `specification <EMComposition_Target_Fields>` - value must be a boolean; if ``True``,
       the value of the `retrieved_node <EMComposition.retrieved_nodes>` for that field conrtributes to the
-      error computed during learning and backpropagated through the EMComposition (see `Backpropagation of
+      error computed during learning and backpropagated through the EMComposition (see `Backpropagation of error
       <EMComposition_Error_BackPropagation>`); if ``False``, the retrieved value for that field does not
       contribute to the error; however, its field_weight can still be learned if that is specfified in
       `learn_field_weight <EMComposition_Field_Weights_Learning>`.
@@ -291,12 +294,12 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 * **field_weights**: specifies which fields are used as keys vs. value fields, and how key fields are weighted during
   retrieval. Fields designated as keys are used to match inputs (queries) against entries in memory for retrieval (see
-  `Match memories by field <EMComposition_Processing>`); entries designated as *values* are ignored during the matching
-  process, but their stored values are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding
-  `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds to the format
-  of a standard "dictionary," though in that case only a single key and value are allowed, whereas in an EMComposition
-  there can be one or more keys and any number of values; if all fields are keys, this implements a full form of
-  content-addressable memory. The following options can be used to specify **field_weights**:
+  `Compute Similarity Scores <EMComposition_Compute_Similarity_Scores>`); entries designated as *values* are ignored
+  during the matching process, but their stored values are retrieved and assigned as the `value <Mechanism_Base.value>`
+  of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value
+  corresponds to the format of a standard "dictionary," though in that case only a single key and value are allowed,
+  whereas in an EMComposition there can be one or more keys and any number of values; if all fields are keys, this
+  implements a full form of content-addressable memory. The following options can be used to specify **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are assigned a weight of 1,
       while the last field is treated as a value field (same as assiging it ``None`` in a list or tuple (see below).
@@ -359,12 +362,12 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
   their raw values are used. If ``True``, the value of all non-``None`` and non-``False`` `field_weights
   <EMComposition.field_weights>` are normalized so that they sum to 1.0, and the normalized values are used to weight
   (i.e., multiply) the corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`). If
-  `normalize_field_weights <EMComposition_Processing.normalize_field_weights>` is ``False``, the raw values of the
-  `field_weights <EMComposition.field_weights>` are used to weight the retrieved value of each field. This setting
-  is ignored if **field_weights** is ``None`` or `concatenate_queries <EMComposition_Concatenate_Queries>` is ``True``.
+  `normalize_field_weights <EMComposition.normalize_field_weights>` is ``False``, the raw values of the `field_weights
+  <EMComposition.field_weights>` are used to weight the retrieved value of each field. This setting is ignored if
+  **field_weights** is ``None`` or `concatenate_queries <EMComposition_Query_Concatenation>` is ``True``.
 
 
-.. _EMComposition_Concatenate_Queries:
+.. _EMComposition_Query_Concatenation:
 
 * **concatenate_queries**: specifies whether queries are concatenated before they are matched to keys in memory.
   This is ``False`` by default; setting it to ``True`` causes all the fields to be treated, in effect, as a single
@@ -398,19 +401,19 @@ The following arguments can be used to configure how retrieval and storage opera
 .. _EMComposition_Normalize_Memories:
 
 * **normalize_memories**: specifies whether query inputs and keys in memory are normalized before computing their
-similarity.  If this is set to ``True`` and `scores_metric <EMComposition.scores_metric>` is set to *DOT_PRODUCT*,
-then the scores correspond to the cosine similarity of the queries and keys.
-COMMENT:
-BREADCRUMB FROM AI: ADD WHEN THESE METRICS ARE SUPPORTED
-If `scores_metric <EMComposition.scores_metric>` is set to *EUCLIDEAN* or *MANHATTAN*, then the scores correspond
-to the negative of the euclidean or manhattan distance, respectively
-COMMENT
+  similarity.  If this is set to ``True`` and `scores_metric <EMComposition.scores_metric>` is set to *DOT_PRODUCT*,
+  then the scores correspond to the cosine similarity of the queries and keys.
+  COMMENT:
+  BREADCRUMB FROM AI: ADD WHEN THESE METRICS ARE SUPPORTED
+  If `scores_metric <EMComposition.scores_metric>` is set to *EUCLIDEAN* or *MANHATTAN*, then the scores correspond
+  to the negative of the euclidean or manhattan distance, respectively
+  COMMENT
 
 .. _EMComposition_Softmax_Choice:
 
 * **softmax_choice**: specifies how the `SoftMax` Function of the EMComposition's `combined_scores_node
   <EMComposition.combined_scores_node>` is applied to similarity scores between queries and keys summed
-  across fields (`combined_scores <EMComposition_Combined_Scores>`); the following are the options that can be
+  across fields (`combined_scores <EMComposition_Combine_Scores>`); the following are the options that can be
   used, and the type of retrieved value they produce:
 
   * *WEIGHTED_AVG* (default): softmax-normalized transform of combined_scores, that is used to produce a
@@ -523,7 +526,7 @@ kind occurs, no error can be backpropagated through the EMComposition, and so EM
 in a `learning pathway <AutodiffComposition_Learning_Pathways>`; if it is ``True``, then both forms of learning
 are enabled.
 
-.. _EMComposition_Error_BackPropagation
+.. _EMComposition_Error_BackPropagation:
 
 *Backpropagation of error*.  If **enable_learning** is ``True``, then the values retrieved from `memory
 <EMComposition.memory>` when the EMComposition is executed during learning can be used for error computation
@@ -724,7 +727,7 @@ The following is a more detailed description of the operations carried out when 
 
 .. _EMComposition_Concatenate_Queries:
   
-* **Concatente queries**. The above applies if `concatenate_queries <EMComposition.concatenate_queries>` is ``False``
+* **Concatenate queries**. The above applies if `concatenate_queries <EMComposition.concatenate_queries>` is ``False``
   (the default).  If `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, then inputs and scoring
   are handled differently: The inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
   are concatenated into a single vector in the `concatenate_queries_node <EMComposition.concatenate_queries_node>`.
@@ -733,7 +736,7 @@ The following is a more detailed description of the operations carried out when 
   <EMComposition.memory>`. Note that for this to work, all key fields must have the same `field_weight
   <EMComposition_Field_Weights>`, and `normalize_memories <EMComposition.normalize_memories>` must be set to
   ``True``.  Note also that this will not necessarily produce the same results as treating each query independently
-  (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional information).
+  (see `concatenate_queries <EMComposition_Query_Concatenation>` for additional information).
 
 .. _EMComposition_Weight_Fields:
 
@@ -804,7 +807,7 @@ The following is a more detailed description of the operations carried out when 
 
 .. _EMComposition_Decay_Memories:
 
-* **Decay memories**.  If `memory_decay_rate <EMComposition.memory_decay>` is assigned a value, then each entry in
+* **Decay memories**.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is assigned a value, then each entry in
   memory is decayed by the amount specified; if it is specified as ``AUTO``, memories are decayed by 1/`memory_capacity
   <EMComposition.memory_capacity>`. How this impacts `retrieval <EMComposition_Retrieve_Values>` and `storage
   <EMComposition_Store_Values>` is determined by whether memories are `normalized <EMComposition_Normalize_Memories>`,
