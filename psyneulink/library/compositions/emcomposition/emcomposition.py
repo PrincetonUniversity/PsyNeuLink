@@ -65,10 +65,10 @@ Overview
 EMComposition implements a configurable, content-addressable form of episodic (or external) memory. It is a subclass
 of `AutodiffComposition`, which allows it to backpropagate error signals and learn how to differentially weight cues
 (queries) used for retrieval. It uses `ExternalMemoryMechanism` to manage field-specific memory matrices.
-EMComposition supports one or more memory fields, which can be configured as keys or values. Keys are used to match
-queries against stored entries, while values are retrieved but not used for matching.
+EMComposition supports one or more memory fields, which can be configured as keys or values. Keys are used to score
+the similarity of queries to keys stored in memory, while values are retrieved but not used for matching.
 
-It also allows several other factors to be configured, including the function used for evaluating the match of
+It also allows several other factors to be configured, including the function used for evaluating the similarity of
 queries to keys ("scoring"), the gain of the `SoftMax` function used to normalize the scores for each memory field,
 whether the gain is adapted to the number of entries in memory, and whether the `memory <EMComposition.memory>` is
 decayed by a specified amount after each storage. In many of these respects, it implements a variant of a `Modern
@@ -366,7 +366,6 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
   <EMComposition.field_weights>` are used to weight the retrieved value of each field. This setting is ignored if
   **field_weights** is ``None`` or `concatenate_queries <EMComposition_Query_Concatenation>` is ``True``.
 
-
 .. _EMComposition_Query_Concatenation:
 
 * **concatenate_queries**: specifies whether queries are concatenated before they are matched to keys in memory.
@@ -407,6 +406,23 @@ The following arguments can be used to configure how retrieval and storage opera
   BREADCRUMB FROM AI: ADD WHEN THESE METRICS ARE SUPPORTED
   If `scores_metric <EMComposition.scores_metric>` is set to *EUCLIDEAN* or *MANHATTAN*, then the scores correspond
   to the negative of the euclidean or manhattan distance, respectively
+  COMMENT
+
+.. _EMComposition_Scores_Metric:
+
+* **scores_metric**: specifies the metric used by the `field_memory_nodes <EMComposition.field_memory_nodes>`
+  to compute similarity between queries and keys in memory. The following metrics are supported:
+
+  * *L0*: computes the difference between queries and keys;
+
+  * *DOT_PRODUCT*: computes the dot product between queries and keys; when used with `normalize_memories
+    <EMComposition_Normalize_Memories>` set to ``True``, the scores correspond to the cosine similarity of
+    the queries and keys.
+
+  COMMENT:
+  * *EUCLIDEAN*: computes the negative of the euclidean distance between queries and keys.
+
+  * *MANHATTAN*: computes the negative of the manhattan distance between queries and keys.
   COMMENT
 
 .. _EMComposition_Softmax_Choice:
@@ -684,12 +700,11 @@ all fields are returned as the result, and recorded in its `results <Composition
 each field is assigned as the `value <OutputPort.value>` of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`.
 The input is then stored in its `memory <EMComposition.memory>`, with a probability determined by its `storage_prob
 <EMComposition.storage_prob>` `Parameter`, and all previous memories are decayed by its `memory_decay_rate
-<EMComposition.memory_decay_rate>`.
-
+<EMComposition.memory_decay_rate>`
 COMMENT:
 BREADCRUMB: CHECK FIGURE
 COMMENT
-(also see `figure <EMComposition_Example_Fig>`):
+(also see `figure <EMComposition_Example_Fig>`).
 
 The following is a more detailed description of the operations carried out when the EMComposition executes:
 
@@ -1143,7 +1158,7 @@ import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate, LinearCombination, MatrixTransform
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate, LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -1439,6 +1454,7 @@ class EMComposition(AutodiffComposition):
         normalize_field_weights=True,   \
         concatenate_queries=False,      \
         normalize_memories=True,        \
+        scores_metric=DOT_PRODUCT,      \
         softmax_choice=WEIGHTED_AVG,    \
         softmax_gain=1.0,               \
         softmax_threshold=.001,         \
@@ -1547,6 +1563,10 @@ class EMComposition(AutodiffComposition):
     normalize_memories : bool : default True
         specifies whether queries and keys are normalized before computing their similarity
         (see `normalize_memories <EMComposition_Normalize_Memories>` for additional details).
+
+    scores_metric : DOT_PRODUCT or L0 : default DOT_PRODUCT
+        specifies the metric used by the `field_memory_nodes <EMComposition.field_memory_nodes>`
+        (see `scores_metric <EMComposition_Scores_Metric>` for a description of options).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
         specifies how softmax-normalization over summed similarity scores of queries and keys in memory is used for
@@ -1666,9 +1686,13 @@ class EMComposition(AutodiffComposition):
         determines whether queries and keys are normalized before computing their similarity
         (see `normalize_memories <EMComposition_Normalize_Memories>` for additional details).
 
+    scores_metric : DOT_PRODUCT or L0
+        determines the metric used by the `field_memory_nodes <EMComposition.field_memory_nodes>` (see
+        `scores_metric <EMComposition_Scores_Metric>` for additional_details).
+
     softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
         determines how softmax-normalization over summed similarity scores of queries and keys in memory is used for
-        retrieval (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of options).
+        retrieval (see `softmax_choice <EMComposition_Softmax_Choice>` for additional details).
 
     softmax_gain : float, ADAPTIVE or CONTROL
         determines gain (inverse temperature) used for softmax-normalizing the summed similarity scores of queries
@@ -1769,8 +1793,8 @@ class EMComposition(AutodiffComposition):
 
     softmax_gain_control_node : list[ControlMechanism]
         `ControlMechanism <ControlMechanism>` that adaptively controls the `softmax_gain <EMComposition.softmax_gain>`
-        of the `SoftMax` function used by the `combined_scores_node <EMComposition.softmax_node>`. This is implemented
-        only if `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
+        of the `SoftMax` function used by the `combined_scores_node <EMComposition.combined_scores_node>`. This is
+        implemented only if `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
         <EMComposition_Softmax_Gain>` for details).
 
     retrieved_nodes : list[ProcessingMechanism]
@@ -1884,6 +1908,11 @@ class EMComposition(AutodiffComposition):
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
+                scores_metric
+                    see `scores_metric <EMComposition.scores_metric>`
+                    :default value: DOT_PRODUCT
+                    :type: ``keyword``
+
                 softmax_choice
                     see `softmax_choice <EMComposition.softmax_choice>`
                     :default value: WEIGHTED_AVG
@@ -1928,6 +1957,7 @@ class EMComposition(AutodiffComposition):
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
         normalize_memories = Parameter(True)
+        scores_metric = Parameter(DOT_PRODUCT, modulable=False, specify_none=True)
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
@@ -2007,6 +2037,7 @@ class EMComposition(AutodiffComposition):
         normalize_field_weights: bool = True,
         concatenate_queries: bool = False,
         normalize_memories: bool = True,
+        scores_metric: Optional[Union[DOT_PRODUCT, L0]] = DOT_PRODUCT,
         softmax_choice: Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]] = WEIGHTED_AVG,
         softmax_gain: Union[float, ADAPTIVE, CONTROL] = 1.0,
         softmax_threshold: Optional[float] = .001,
@@ -2076,6 +2107,7 @@ class EMComposition(AutodiffComposition):
             normalize_field_weights=normalize_field_weights,
             concatenate_queries=concatenate_queries,
             normalize_memories=normalize_memories,
+            scores_metric=scores_metric,
             softmax_choice=softmax_choice,
             softmax_gain=softmax_gain,
             softmax_threshold=softmax_threshold,
@@ -2101,6 +2133,7 @@ class EMComposition(AutodiffComposition):
             memory_template=self.memory_template,
             memory_capacity=self.memory_capacity,
             normalize_memories=self.normalize_memories,
+            scores_metric=self.scores_metric,
             softmax_choice=self.softmax_choice,
             softmax_gain=self.softmax_gain,
             softmax_threshold=self.softmax_threshold,
@@ -2484,6 +2517,7 @@ class EMComposition(AutodiffComposition):
         memory_template,
         memory_capacity,
         normalize_memories,
+        scores_metric,
         softmax_choice,
         softmax_gain,
         softmax_threshold,
@@ -2498,14 +2532,15 @@ class EMComposition(AutodiffComposition):
         self._construct_concatenate_queries_node()
         self._construct_field_memory_nodes(
             memory_template,
-            memory_capacity,
             normalize_memories,
+            scores_metric,
             storage_prob,
             memory_decay_rate,
         )
         self._construct_concatenated_memory_node(
             memory_template,
             normalize_memories,
+            scores_metric,
             storage_prob,
             memory_decay_rate,
         )
@@ -2626,8 +2661,8 @@ class EMComposition(AutodiffComposition):
     def _construct_field_memory_nodes(
         self,
         memory_template,
-        memory_capacity,
         normalize_memories,
+        scores_metric,
         storage_prob,
         memory_decay_rate,
     ):
@@ -2642,7 +2677,7 @@ class EMComposition(AutodiffComposition):
                 field_memory = field_memory,
                 decay_rate = memory_decay_rate,
                 storage_prob = storage_prob,
-                scores_metric = L0 if key_len == 1 else DOT_PRODUCT,
+                scores_metric = L0 if key_len == 1 else scores_metric,
                 normalize_memories = True if key_len == 1 else normalize_memories,
                 name=f"{field.name}{FIELD_MEMORY_AFFIX}",
             )
@@ -2658,6 +2693,7 @@ class EMComposition(AutodiffComposition):
         self,
         memory_template,
         normalize_memories,
+        scores_metric,
         storage_prob,
         memory_decay_rate,
     ):
@@ -2677,7 +2713,7 @@ class EMComposition(AutodiffComposition):
             field_memory=concatenated_memory,
             decay_rate=memory_decay_rate,
             storage_prob=storage_prob,
-            scores_metric=L0 if key_len == 1 else DOT_PRODUCT,
+            scores_metric=L0 if key_len == 1 else scores_metric,
             normalize_memories=True if key_len == 1 else normalize_memories,
             name=f"{CONCATENATED}{FIELD_MEMORY_AFFIX}",
         )
@@ -2744,7 +2780,6 @@ class EMComposition(AutodiffComposition):
                                                  softmax_choice):
         """Construct combined_scores_node
         This is constructed even if num_keys == 1, since it computes the softmax over the scores
-        IMPLEMENTATION NOTE:  This plays the same role as the softmax_node in emcomposition_proj.py
         """
 
         if softmax_choice == ARG_MAX:
