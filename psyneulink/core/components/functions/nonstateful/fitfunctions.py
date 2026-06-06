@@ -133,6 +133,40 @@ def _experimental_category(exp_trial_cat):
     return tuple(exp_trial_cat)
 
 
+def _histogram_category_key(category):
+    if category is None:
+        return None
+
+    if isinstance(category, tuple):
+        return category
+
+    category = np.asarray(category)
+    if category.ndim == 0:
+        return category.item()
+
+    return tuple(category.tolist())
+
+
+def _histogram_category_ids(cat_sim_data):
+    if cat_sim_data.shape[-1] == 0:
+        category_ids = np.zeros(cat_sim_data.shape[:2], dtype=int)
+        return [None], {None: 0}, category_ids
+
+    if cat_sim_data.shape[-1] == 1:
+        categories, inverse = np.unique(cat_sim_data[..., 0].reshape(-1), return_inverse=True)
+        categories = [_histogram_category_key(category) for category in categories]
+    else:
+        categories_arr, inverse = np.unique(
+            cat_sim_data.reshape((-1, cat_sim_data.shape[-1])),
+            axis=0,
+            return_inverse=True,
+        )
+        categories = [_histogram_category_key(category) for category in categories_arr]
+
+    category_ids = inverse.reshape(cat_sim_data.shape[:2])
+    return categories, {category: i for i, category in enumerate(categories)}, category_ids
+
+
 def _regular_histogram_edges(dsub, bins, range_pad):
     if dsub.ndim == 1:
         dsub = dsub[:, None]
@@ -189,7 +223,107 @@ def _histogram_counts(dsub, bins, edges, backend, threads):
     return _histogram_counts_numpy(dsub, bins, edges)
 
 
-def _simulation_likelihood_histogram(
+def _histogram_counts_vectorized_numpy(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+):
+    samples = [trial_ids, category_ids]
+    samples.extend(con_data[:, dim] for dim in range(con_data.shape[1]))
+    samples = np.column_stack(samples)
+
+    hist_bins = [num_trials, num_categories] + list(bins)
+    hist_ranges = [(0, num_trials), (0, num_categories)]
+    hist_ranges.extend((edge[0], edge[-1]) for edge in edges)
+    counts, _ = np.histogramdd(samples, bins=hist_bins, range=hist_ranges)
+    return counts
+
+
+def _histogram_counts_vectorized_boost(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+    threads,
+):
+    try:
+        import boost_histogram as bh
+    except ImportError:
+        return _histogram_counts_vectorized_numpy(
+            trial_ids,
+            category_ids,
+            con_data,
+            num_trials,
+            num_categories,
+            bins,
+            edges,
+        ), "numpy"
+
+    axes = [
+        bh.axis.Integer(0, num_trials, underflow=False, overflow=False),
+        bh.axis.Integer(0, num_categories, underflow=False, overflow=False),
+    ]
+    axes.extend(
+        bh.axis.Regular(bins[dim], edges[dim][0], edges[dim][-1], underflow=False, overflow=False)
+        for dim in range(len(bins))
+    )
+    hist = bh.Histogram(*axes, storage=bh.storage.Double())
+    hist.fill(
+        trial_ids,
+        category_ids,
+        *(con_data[:, dim] for dim in range(con_data.shape[1])),
+        threads=int(threads),
+    )
+    return hist.values(), "boost"
+
+
+def _histogram_counts_vectorized(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+    backend,
+    threads,
+):
+    if backend not in {"auto", "numpy", "boost"}:
+        raise ValueError(
+            f"Unknown histogram_backend {backend!r}; expected 'auto', 'numpy', or 'boost'."
+        )
+
+    if backend in {"auto", "boost"}:
+        return _histogram_counts_vectorized_boost(
+            trial_ids,
+            category_ids,
+            con_data,
+            num_trials,
+            num_categories,
+            bins,
+            edges,
+            threads,
+        )[0]
+
+    return _histogram_counts_vectorized_numpy(
+        trial_ids,
+        category_ids,
+        con_data,
+        num_trials,
+        num_categories,
+        bins,
+        edges,
+    )
+
+
+def _simulation_likelihood_histogram_vectorized(
     sim_data,
     exp_data=None,
     categorical_dims=None,
@@ -203,6 +337,137 @@ def _simulation_likelihood_histogram(
 ):
     if exp_data is None:
         raise ValueError("The histogram estimator requires exp_data.")
+
+    if sim_data.ndim == 2:
+        sim_data = sim_data[None, :, :]
+
+    if combine_trials and sim_data.shape[0] > 1:
+        sim_data = np.vstack(sim_data)[None, :, :]
+
+    categorical_dims = _categorical_dims_to_mask(categorical_dims, sim_data.shape[-1])
+    con_sim_data = sim_data[:, :, ~categorical_dims]
+    cat_sim_data = sim_data[:, :, categorical_dims]
+    categories, category_to_index, category_ids = _histogram_category_ids(cat_sim_data)
+
+    num_trials, num_estimates, num_con_dims = con_sim_data.shape
+    kdes_eval = np.zeros((len(exp_data),))
+    con_flat = con_sim_data.reshape((-1, num_con_dims))
+
+    if num_con_dims:
+        bins_for_dims, edges = _regular_histogram_edges(con_flat, bins, range_pad)
+        if edges is None:
+            warnings.warn(
+                BadLikelihoodWarning(
+                    "Could not perform histogram likelihood estimate. Range of simulation data was 0 "
+                    "for at least one dimension."
+                )
+            )
+            kdes_eval[:] = zero_prob
+            return kdes_eval
+    else:
+        bins_for_dims = []
+        edges = []
+
+    trial_ids = np.repeat(np.arange(num_trials), num_estimates)
+    counts = _histogram_counts_vectorized(
+        trial_ids,
+        category_ids.reshape(-1),
+        con_flat,
+        num_trials,
+        len(categories),
+        bins_for_dims,
+        edges,
+        histogram_backend,
+        threads,
+    )
+
+    for trial in range(len(exp_data)):
+        hist_trial = 0 if num_trials == 1 else trial
+        exp_trial_cat = _histogram_category_key(_experimental_category(exp_data[trial, categorical_dims]))
+        exp_trial_con = exp_data[trial, ~categorical_dims]
+        category_index = category_to_index.get(exp_trial_cat)
+
+        if category_index is None or hist_trial >= num_trials:
+            kdes_eval[trial] = zero_prob
+            continue
+
+        category_counts = counts[hist_trial, category_index]
+        category_count = np.sum(category_counts)
+        category_prob = category_count / num_estimates
+
+        if num_con_dims == 0:
+            kdes_eval[trial] = max(zero_prob, category_prob)
+            continue
+
+        idx = []
+        widths = []
+        in_range = True
+        for dim, edge in enumerate(edges):
+            bin_idx = np.searchsorted(edge, exp_trial_con[dim], side="right") - 1
+            if bin_idx == len(edge) - 1 and exp_trial_con[dim] == edge[-1]:
+                bin_idx -= 1
+            if bin_idx < 0 or bin_idx >= len(edge) - 1:
+                in_range = False
+                break
+            idx.append(bin_idx)
+            widths.append(edge[bin_idx + 1] - edge[bin_idx])
+
+        if not in_range:
+            kdes_eval[trial] = zero_prob
+            continue
+
+        num_cells = category_counts.size
+        denom = (category_count + pseudocount * num_cells) * float(np.prod(widths))
+        if denom <= 0:
+            kdes_eval[trial] = zero_prob
+            continue
+
+        density = (category_counts[tuple(idx)] + pseudocount) / denom
+        kdes_eval[trial] = max(zero_prob, category_prob * density)
+
+    if all(kdes_eval == zero_prob):
+        warnings.warn(
+            BadLikelihoodWarning(
+                "Evaluating likelihood generated by simulation data resulted in zero values for all trials "
+                "of experimental data. This means the model is not generating data similar to your "
+                "experimental data. If you have categorical dimensions, make sure values match exactly to "
+                "output values of the composition. Also make sure parameter ranges you are searching over "
+                "are reasonable for your data."
+            )
+        )
+
+    return kdes_eval
+
+
+def _simulation_likelihood_histogram(
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    bins=32,
+    pseudocount=0.0,
+    zero_prob=1e-10,
+    range_pad=1e-9,
+    histogram_backend="auto",
+    threads=1,
+    vectorized=False,
+):
+    if exp_data is None:
+        raise ValueError("The histogram estimator requires exp_data.")
+
+    if vectorized:
+        return _simulation_likelihood_histogram_vectorized(
+            sim_data=sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            combine_trials=combine_trials,
+            bins=bins,
+            pseudocount=pseudocount,
+            zero_prob=zero_prob,
+            range_pad=range_pad,
+            histogram_backend=histogram_backend,
+            threads=threads,
+        )
 
     if sim_data.ndim == 2:
         sim_data = sim_data[None, :, :]
@@ -370,6 +635,9 @@ def simulation_likelihood(
 
     histogram_backend: Histogram backend used when estimator is "histogram". Supported values are
         "auto", "numpy", and "boost".
+
+    For the "histogram" estimator, passing ``vectorized=True`` in ``estimator_kwargs`` uses shared continuous
+    bin edges plus explicit trial and category axes to fill all simulation data in one histogram call.
 
     Returns
     -------

@@ -23,6 +23,7 @@ def _parse_args():
     parser.add_argument("--histogram-bins", type=int, default=32)
     parser.add_argument("--histogram-pseudocount", type=float, default=0.0)
     parser.add_argument("--histogram-threads", type=int, default=1)
+    parser.add_argument("--histogram-vectorized", action="store_true")
     return parser.parse_args()
 
 
@@ -62,6 +63,7 @@ def _likelihood_estimator_kwargs(args):
         "bins": args.histogram_bins,
         "pseudocount": args.histogram_pseudocount,
         "threads": args.histogram_threads,
+        "vectorized": args.histogram_vectorized,
     }
 
 
@@ -82,7 +84,7 @@ print(
     f"max_iterations={args.max_iterations}, likelihood_estimator={args.likelihood_estimator}, "
     f"histogram_backend={args.histogram_backend}, histogram_backend_used={_histogram_backend_used(args)}, "
     f"histogram_bins={args.histogram_bins}, histogram_pseudocount={args.histogram_pseudocount}, "
-    f"histogram_threads={args.histogram_threads}",
+    f"histogram_threads={args.histogram_threads}, histogram_vectorized={args.histogram_vectorized}",
     flush=True,
 )
 

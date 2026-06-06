@@ -277,7 +277,8 @@ class ParameterEstimationComposition(Composition):
 
     likelihood_estimator_kwargs : Mapping : default None
         specifies keyword arguments passed to the selected likelihood estimator. For "histogram", supported options
-        include ``bins``, ``pseudocount``, ``zero_prob``, ``range_pad``, ``histogram_backend``, and ``threads``.
+        include ``bins``, ``pseudocount``, ``zero_prob``, ``range_pad``, ``histogram_backend``, ``threads``, and
+        ``vectorized``.
 
     objective_function : ObjectiveFunction, function or method
         specifies the function used by **optimization_function** (see `objective_function

@@ -560,6 +560,27 @@ def test_simulation_likelihood_histogram_matches_hand_computed(histogram_likelih
 
 
 @pytest.mark.composition
+def test_simulation_likelihood_vectorized_histogram_matches_hand_computed(histogram_likelihood_data):
+    sim_data, exp_data, categorical_dims = histogram_likelihood_data
+
+    like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+        estimator="histogram",
+        estimator_kwargs={
+            "histogram_backend": "numpy",
+            "bins": 2,
+            "range_pad": 0.0,
+            "vectorized": True,
+        },
+    )
+
+    expected = np.array([0.5 * (5 / (10 * 0.45)), 0.5 * (5 / (10 * 0.45))])
+    np.testing.assert_allclose(like, expected)
+
+
+@pytest.mark.composition
 def test_simulation_likelihood_histogram_boost_falls_back_to_numpy(monkeypatch, histogram_likelihood_data):
     import builtins
 
@@ -578,6 +599,33 @@ def test_simulation_likelihood_histogram_boost_falls_back_to_numpy(monkeypatch, 
         categorical_dims=categorical_dims,
         estimator="histogram",
         estimator_kwargs={"histogram_backend": "boost", "bins": 2},
+    )
+
+    assert np.all(np.isfinite(like))
+
+
+@pytest.mark.composition
+def test_simulation_likelihood_vectorized_histogram_boost_falls_back_to_numpy(
+    monkeypatch,
+    histogram_likelihood_data,
+):
+    import builtins
+
+    sim_data, exp_data, categorical_dims = histogram_likelihood_data
+    real_import = builtins.__import__
+
+    def import_hook(name, *args, **kwargs):
+        if name == "boost_histogram":
+            raise ImportError
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", import_hook)
+    like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+        estimator="histogram",
+        estimator_kwargs={"histogram_backend": "boost", "bins": 2, "vectorized": True},
     )
 
     assert np.all(np.isfinite(like))
