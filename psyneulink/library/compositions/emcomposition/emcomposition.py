@@ -660,7 +660,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
   which is a list of `Field` objects containing information about the nodes adn values associated with each field.
 
 **field_memory_nodes**. Each `field_memory_node <EMComposition.field_memory_nodes>` has a *QUERY* or *VALUE* InputPort,
-  that receives the input to the EMComposition for that field; *COMBINED_SCORES* and *COMBINED_NORMS* InputPorts, that
+  that receives the input to the EMComposition for that field; *COMBINED_SCORES* and *MIN_NORM_INDEX* InputPorts, that
   receive corresponding vectors from the `combined_scores_node <EMComposition.combined_scores_node>` used for retrieval
   and storage, respectively; a *SCORES* (if it is a key field) and a *NORMS* OutputPort that provide the corresponding
   vectors to the `combined_scores_node <EMComposition.combined_scores_node>` which combines these across fields; and a
@@ -670,7 +670,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
   *SCORES* and *NORMS* InputPorts from the corresponding *SCORES* (for key fields) and *NORMS* OutputPorts of the
   `field_memory_nodes <EMComposition.field_memory_nodes>`.  It combines the vectors of similarity scores and
   softmax-normalizes them across fields, and also combines norms across fields, assigning these as the `values
-  <OutputPort.values>` of its *COMBINED_SCORES* and *COMBINED_NORMS* OutputPorts, respecively, that project back to
+  <OutputPort.values>` of its *COMBINED_SCORES* and *MIN_NORM_INDEX* OutputPorts, respecively, that project back to
   the corresponding InputPorts of the `field_memory_nodes <EMComposition.field_memory_nodes>` for use in retrieval and
   storage.
 
@@ -802,7 +802,7 @@ The following is a more detailed description of the operations carried out when 
   of its *COMBINED_SCORES* OutputPort. The vectors of norms received from each `field_memory_node
   <EMComposition.field_memory_nodes>` are also Hadamard summed by the `combined_scores_node
   <EMComposition.combined_scores_node>`, and assigbned as the `value <OutputPort.value>` of its
-  *COMBINED_NORMS* OutputPort. Note that even if the EMComposition is specified to have only a single
+  *MIN_NORM_INDEX* OutputPort. Note that even if the EMComposition is specified to have only a single
   key field, the `combined_scores_node <EMComposition.combined_scores_node>` is still constructed,
   and used to pass the similarity score vector (in this case, determined entirely by the single key
   field) to the `field_memory_node(s) <EMComposition.field_memory_nodes>` for any value field(s),
@@ -1226,7 +1226,7 @@ from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.scheduling.condition import AfterNodes, All, Always, Any, BeforeNCalls, AfterNCalls
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism import (
-    ExternalMemoryMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, COMBINED_NORMS)
+    ExternalMemoryMechanism, NORMS, QUERY, SCORES, RETRIEVED, COMBINED_SCORES, MIN_NORM_INDEX)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 
 
@@ -2808,8 +2808,8 @@ class EMComposition(AutodiffComposition):
         # Construct combined_scores_function
         def _combined_scores_function(variable, gain=initial_softmax_gain):
             """Return softmax over combined scores, and index of minimum norm over combined norms
-            variable[0] = scores of memory Nodes combined by hadamard addition in the COMBINED_SCORES input_port
-            variable[1] = norms of memory Nodes combined by hadamard addition in the COMBINED_NORMS input_port
+            variable[0] = scores of memory Nodes combined by hadamard addition in the SCORES input_port
+            variable[1] = norms of memory Nodes combined by hadamard addition in the NORMS input_port
             """
             assert len(variable) == 2, \
                 (f"PROGRAM ERROR: expected variable with 2 items for combined_scores_function; got {len(variable)}")
@@ -2884,7 +2884,7 @@ class EMComposition(AutodiffComposition):
                      for i, source in enumerate(norms_inputs)]},
             ],
             output_ports=[{NAME:COMBINED_SCORES, VARIABLE: (OWNER_VALUE, 0)},
-                          {NAME:COMBINED_NORMS, VARIABLE: (OWNER_VALUE, 1)}],
+                          {NAME:MIN_NORM_INDEX, VARIABLE: (OWNER_VALUE, 1)}],
             function=combined_scores_function
         )
 
@@ -2907,7 +2907,7 @@ class EMComposition(AutodiffComposition):
             field.weighted_norms_projection = norms_proj
 
             # EM2 BREADCRUMB: NEED TO EXPLICITLY ADD PROJECTIONS TO COMPOSITION,
-            #     SINCE THE COMBINED_SCORES ONE DOES NOT SEEM TO BE GETTING ADDED (BLOCKED BY COMBINED_NORMS ONE?)
+            #     SINCE THE COMBINED_SCORES ONE DOES NOT SEEM TO BE GETTING ADDED (BLOCKED BY MIN_NORM_INDEX ONE?)
             # Assign Projections from combined_scores nodes back to COMBINED_SCORES input_ports of field_memory_nodes
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_scores_projection = MappingProjection(
@@ -2917,14 +2917,14 @@ class EMComposition(AutodiffComposition):
                 matrix=IDENTITY_MATRIX,
                 name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_SCORES",
             )
-            # Assign Projections from combined_scores nodes back to COMBINED_NORMS input_ports of field_memory_nodes
+            # Assign Projections from min norm index back to MIN_NORM_INDEX input_ports of field_memory_nodes
             # Note: this has to be constructed here, as it depends on the combined_scores_node being constructed first
             field.combined_norms_projection = MappingProjection(
-                sender=self.combined_scores_node.output_ports[COMBINED_NORMS],
+                sender=self.combined_scores_node.output_ports[MIN_NORM_INDEX],
                 feedback=True,
-                receiver=field.memory_node.input_ports[COMBINED_NORMS],
+                receiver=field.memory_node.input_ports[MIN_NORM_INDEX],
                 matrix=IDENTITY_MATRIX,
-                name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} COMBINED_NORMS",
+                name=f"{COMBINED_SCORES_NODE_NAME} to {field.name} MIN_NORM_INDEX",
             )
 
         if self.concatenate_queries:
@@ -2936,13 +2936,12 @@ class EMComposition(AutodiffComposition):
                 name=f"{COMBINED_SCORES_NODE_NAME} to {CONCATENATE_QUERIES_NAME} COMBINED_SCORES",
             )
             self.concatenated_combined_norms_projection = MappingProjection(
-                sender=self.combined_scores_node.output_ports[COMBINED_NORMS],
+                sender=self.combined_scores_node.output_ports[MIN_NORM_INDEX],
                 feedback=True,
-                receiver=self.concatenated_memory_node.input_ports[COMBINED_NORMS],
+                receiver=self.concatenated_memory_node.input_ports[MIN_NORM_INDEX],
                 matrix=IDENTITY_MATRIX,
-                name=f"{COMBINED_SCORES_NODE_NAME} to {CONCATENATE_QUERIES_NAME} COMBINED_NORMS",
+                name=f"{COMBINED_SCORES_NODE_NAME} to {CONCATENATE_QUERIES_NAME} MIN_NORM_INDEX",
             )
-
 
     def _construct_softmax_gain_control_node(self, softmax_gain):
         node = None
