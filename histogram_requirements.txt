@@ -1,0 +1,3 @@
+boost-histogram>=1.5,<1.6; python_version < "3.9"
+boost-histogram>=1.6,<1.7; python_version >= "3.9" and python_version < "3.10"
+boost-histogram>=1.7,<1.8; python_version >= "3.10"

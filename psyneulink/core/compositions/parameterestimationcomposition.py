@@ -41,7 +41,7 @@ A `ParameterEstimationComposition` is a subclass of `Composition` that is used t
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition,
 in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
 of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`)
-via likelihood maximization using kernel density estimation (KDE), or to optimize a user provided scalar
+via likelihood maximization using kernel density estimation (KDE) by default, or to optimize a user provided scalar
 `objective_function` (`ParameterEstimationComposition_Optimization`). In either case, when the
 ParameterEstimationComposition is `run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`,
 it returns the set of parameter values in its `optimized_parameter_values
@@ -105,9 +105,9 @@ specified:
 
     .. technical_note::
     * **objective_function** - A function that computes the sum of the log likelihood of the data is automatically
-      assigned for data fitting purposes and should not need to be specified. This function uses a kernel density
-      estimation of the data to compute the likelihood of the data given the model. If you would like to use your own
-      estimation of the likelhood, see `ParameterEstimationComposition_Optimization` below.
+      assigned for data fitting purposes and should not need to be specified. This function uses either kernel density
+      estimation or an opt-in histogram estimator to compute the likelihood of the data given the model. If you would
+      like to use your own estimation of the likelihood, see `ParameterEstimationComposition_Optimization` below.
 
     .. warning::
        The **objective_function** argument should NOT be specified for data fitting; specifying both the
@@ -271,6 +271,13 @@ class ParameterEstimationComposition(Composition):
         it is an iterable of integers, it is assumed to be a list of the categorical dimensions indices. If it is None,
         all data dimensions are assumed to be continuous. Alternatively, if data is a pandas DataFrame, then the columns
         which have Category dtype are assumed to be categorical.
+
+    likelihood_estimator : str : default "kde"
+        specifies the likelihood estimator used for data fitting. Supported values are "kde" and "histogram".
+
+    likelihood_estimator_kwargs : Mapping : default None
+        specifies keyword arguments passed to the selected likelihood estimator. For "histogram", supported options
+        include ``bins``, ``pseudocount``, ``zero_prob``, ``range_pad``, ``histogram_backend``, and ``threads``.
 
     objective_function : ObjectiveFunction, function or method
         specifies the function used by **optimization_function** (see `objective_function
@@ -476,6 +483,8 @@ class ParameterEstimationComposition(Composition):
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
         likelihood_include_mask: Optional[np.ndarray] = None,
+        likelihood_estimator: Literal["kde", "histogram"] = "kde",
+        likelihood_estimator_kwargs: Optional[Mapping] = None,
         data_categorical_dims=None,
         objective_function: Optional[Callable] = None,
         num_estimates: int = 1,
@@ -559,6 +568,10 @@ class ParameterEstimationComposition(Composition):
         # Store the data used to fit the model, None if in OptimizationMode (the default)
         self.data = data
         self.data_categorical_dims = data_categorical_dims
+        self.likelihood_estimator = likelihood_estimator
+        self.likelihood_estimator_kwargs = (
+            {} if likelihood_estimator_kwargs is None else dict(likelihood_estimator_kwargs)
+        )
 
         if not isinstance(self.nodes[0], Composition):
             raise ValueError(
@@ -644,6 +657,8 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            likelihood_estimator=self.likelihood_estimator,
+            likelihood_estimator_kwargs=self.likelihood_estimator_kwargs,
             context=context,
         )
         self.add_controller(ocm, context)
@@ -803,6 +818,12 @@ class ParameterEstimationComposition(Composition):
                 f"('data' for fitting or 'objective_function' for optimization)."
             )
 
+        if args["likelihood_estimator"] not in {"kde", "histogram"}:
+            raise ValueError(
+                f"Unknown likelihood_estimator {args['likelihood_estimator']!r}; "
+                "expected 'kde' or 'histogram'."
+            )
+
     def _instantiate_ocm(
         self,
         agent_rep,
@@ -815,6 +836,8 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
+        likelihood_estimator,
+        likelihood_estimator_kwargs,
         context=None,
     ):
 
@@ -836,6 +859,8 @@ class ParameterEstimationComposition(Composition):
                     sim_data=sim_data,
                     exp_data=self._data_numpy,
                     categorical_dims=self.data_categorical_dims,
+                    estimator=likelihood_estimator,
+                    estimator_kwargs=likelihood_estimator_kwargs,
                 )
 
                 return np.sum(np.log(like[self.likelihood_include_mask]))
@@ -996,7 +1021,7 @@ class ParameterEstimationComposition(Composition):
         return results
 
     @handle_external_context()
-    def log_likelihood(self, *args, inputs=None, context=None) -> float:
+    def log_likelihood(self, *args, inputs=None, return_sim_data=False, context=None) -> Union[float, tuple]:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
 
@@ -1006,9 +1031,13 @@ class ParameterEstimationComposition(Composition):
             Positional args, one for each paramter of the model. These must correspond directly to the parameters that
             have been specified in the `parameters` argument of the constructor.
 
+        return_sim_data : bool
+            If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
+
         Returns
         -------
-        The sum of the log-likelihoods of the data given the specified parameters of the model.
+        The sum of the log-likelihoods of the data given the specified parameters of the model, or
+        `(log_likelihood, sim_data)` when `return_sim_data` is True.
 
         """
 
@@ -1054,7 +1083,11 @@ class ParameterEstimationComposition(Composition):
 
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
-        return self.controller.function.log_likelihood(*args, context=context)
+        ll, sim_data = self.controller.function.log_likelihood(*args, context=context)
+        ll = float(ll)
+        if return_sim_data:
+            return ll, sim_data
+        return ll
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass

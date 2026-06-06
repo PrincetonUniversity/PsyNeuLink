@@ -82,14 +82,248 @@ class BadLikelihoodWarning(PECObjectiveFuncWarning):
     pass
 
 
+def _categorical_dims_to_mask(categorical_dims, num_dims):
+    if categorical_dims is None:
+        return np.zeros(num_dims, dtype=bool)
+
+    categorical_dims = np.array(categorical_dims)
+
+    if categorical_dims.dtype == bool:
+        if len(categorical_dims) != num_dims:
+            raise ValueError(
+                f"categorical_dims mask must have length {num_dims}; got {len(categorical_dims)}."
+            )
+        return categorical_dims
+
+    mask = np.zeros(num_dims, dtype=bool)
+    if categorical_dims.size:
+        mask[categorical_dims.astype(int)] = True
+    return mask
+
+
+def _histogram_categories(cat_sim_data):
+    if cat_sim_data.shape[-1] == 0:
+        return [None]
+
+    if cat_sim_data.shape[-1] == 1:
+        return np.unique(cat_sim_data[..., 0])
+
+    categories = np.unique(
+        cat_sim_data.reshape((-1, cat_sim_data.shape[-1])),
+        axis=0,
+    )
+    return [tuple(category) for category in categories]
+
+
+def _category_mask(cat_values, category):
+    if cat_values.shape[-1] == 0:
+        return np.ones(cat_values.shape[0], dtype=bool)
+
+    if cat_values.shape[-1] == 1:
+        return cat_values[:, 0] == category
+
+    return np.all(cat_values == np.array(category), axis=1)
+
+
+def _experimental_category(exp_trial_cat):
+    if len(exp_trial_cat) == 0:
+        return None
+    if len(exp_trial_cat) == 1:
+        return exp_trial_cat[0]
+    return tuple(exp_trial_cat)
+
+
+def _regular_histogram_edges(dsub, bins, range_pad):
+    if dsub.ndim == 1:
+        dsub = dsub[:, None]
+
+    num_dims = dsub.shape[1]
+    bins = [int(bins)] * num_dims if np.isscalar(bins) else [int(b) for b in bins]
+    if len(bins) != num_dims:
+        raise ValueError(f"bins must be scalar or have length {num_dims}; got {bins}.")
+
+    ranges = []
+    for dim in range(num_dims):
+        low = float(np.min(dsub[:, dim]))
+        high = float(np.max(dsub[:, dim]))
+        span = high - low
+        if span <= 0:
+            return None, None
+        pad = max(float(range_pad), span * float(range_pad))
+        ranges.append((low - pad, high + pad))
+
+    edges = [np.linspace(low, high, bins[dim] + 1) for dim, (low, high) in enumerate(ranges)]
+    return bins, edges
+
+
+def _histogram_counts_numpy(dsub, bins, edges):
+    ranges = [(edge[0], edge[-1]) for edge in edges]
+    counts, edges = np.histogramdd(dsub, bins=bins, range=ranges)
+    return counts, edges
+
+
+def _histogram_counts_boost(dsub, bins, edges, threads):
+    try:
+        import boost_histogram as bh
+    except ImportError:
+        return _histogram_counts_numpy(dsub, bins, edges), "numpy"
+
+    axes = [
+        bh.axis.Regular(bins[dim], edges[dim][0], edges[dim][-1], underflow=False, overflow=False)
+        for dim in range(len(bins))
+    ]
+    hist = bh.Histogram(*axes, storage=bh.storage.Double())
+    hist.fill(*(dsub[:, dim] for dim in range(dsub.shape[1])), threads=int(threads))
+    return (hist.values(), [np.asarray(axis.edges) for axis in hist.axes]), "boost"
+
+
+def _histogram_counts(dsub, bins, edges, backend, threads):
+    if backend not in {"auto", "numpy", "boost"}:
+        raise ValueError(
+            f"Unknown histogram_backend {backend!r}; expected 'auto', 'numpy', or 'boost'."
+        )
+
+    if backend in {"auto", "boost"}:
+        return _histogram_counts_boost(dsub, bins, edges, threads)[0]
+
+    return _histogram_counts_numpy(dsub, bins, edges)
+
+
+def _simulation_likelihood_histogram(
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    bins=32,
+    pseudocount=0.0,
+    zero_prob=1e-10,
+    range_pad=1e-9,
+    histogram_backend="auto",
+    threads=1,
+):
+    if exp_data is None:
+        raise ValueError("The histogram estimator requires exp_data.")
+
+    if sim_data.ndim == 2:
+        sim_data = sim_data[None, :, :]
+
+    if combine_trials and sim_data.shape[0] > 1:
+        sim_data = np.vstack(sim_data)[None, :, :]
+
+    categorical_dims = _categorical_dims_to_mask(categorical_dims, sim_data.shape[-1])
+    con_sim_data = sim_data[:, :, ~categorical_dims]
+    cat_sim_data = sim_data[:, :, categorical_dims]
+    categories = _histogram_categories(cat_sim_data)
+
+    kdes_eval = np.zeros((len(exp_data),))
+    histogram_cache = []
+    for trial in range(len(con_sim_data)):
+        s = con_sim_data[trial]
+        dens_u = {}
+        for category in categories:
+            category_member = _category_mask(cat_sim_data[trial], category)
+            dsub = s[category_member]
+
+            if len(dsub) < 10:
+                dens_u[category] = (None, None, 0.0)
+                continue
+
+            dsub = np.atleast_2d(dsub)
+            if dsub.shape[0] == 1 and dsub.shape[1] != s.shape[1]:
+                dsub = dsub.T
+
+            if dsub.shape[1] == 0:
+                dens_u[category] = (None, None, len(dsub) / len(s))
+                continue
+
+            bins_for_dims, edges = _regular_histogram_edges(dsub, bins, range_pad)
+            if edges is None:
+                dens_u[category] = (None, None, 0.0)
+                warnings.warn(
+                    BadLikelihoodWarning(
+                        "Could not perform histogram likelihood estimate. Range of simulation data was 0 "
+                        "for at least one dimension."
+                    )
+                )
+                continue
+
+            counts, edges = _histogram_counts(
+                dsub,
+                bins_for_dims,
+                edges,
+                histogram_backend,
+                threads,
+            )
+            dens_u[category] = (counts, edges, len(dsub) / len(s))
+        histogram_cache.append(dens_u)
+
+    for trial in range(len(exp_data)):
+        exp_trial_cat = _experimental_category(exp_data[trial, categorical_dims])
+        exp_trial_con = exp_data[trial, ~categorical_dims]
+
+        if len(histogram_cache) == 1:
+            counts, edges, category_prob = histogram_cache[0].get(exp_trial_cat, (None, None, 0.0))
+        else:
+            counts, edges, category_prob = histogram_cache[trial].get(exp_trial_cat, (None, None, 0.0))
+
+        if counts is None and edges is None:
+            kdes_eval[trial] = max(zero_prob, category_prob)
+            continue
+
+        idx = []
+        widths = []
+        in_range = True
+        for dim, edge in enumerate(edges):
+            bin_idx = np.searchsorted(edge, exp_trial_con[dim], side="right") - 1
+            if bin_idx == len(edge) - 1 and exp_trial_con[dim] == edge[-1]:
+                bin_idx -= 1
+            if bin_idx < 0 or bin_idx >= len(edge) - 1:
+                in_range = False
+                break
+            idx.append(bin_idx)
+            widths.append(edge[bin_idx + 1] - edge[bin_idx])
+
+        if not in_range:
+            kdes_eval[trial] = zero_prob
+            continue
+
+        num_cells = counts.size
+        bin_volume = float(np.prod(widths))
+        density = (
+            (counts[tuple(idx)] + pseudocount)
+            / ((np.sum(counts) + pseudocount * num_cells) * bin_volume)
+        )
+        kdes_eval[trial] = max(zero_prob, category_prob * density)
+
+    if all(kdes_eval == zero_prob):
+        warnings.warn(
+            BadLikelihoodWarning(
+                "Evaluating likelihood generated by simulation data resulted in zero values for all trials "
+                "of experimental data. This means the model is not generating data similar to your "
+                "experimental data. If you have categorical dimensions, make sure values match exactly to "
+                "output values of the composition. Also make sure parameter ranges you are searching over "
+                "are reasonable for your data."
+            )
+        )
+
+    return kdes_eval
+
+
 def simulation_likelihood(
-    sim_data, exp_data=None, categorical_dims=None, combine_trials=False
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    estimator="kde",
+    estimator_kwargs=None,
+    histogram_backend="auto",
 ):
     """
     Compute the likelihood of a simulation dataset (or the parameters that generated it) conditional
-    on a set of experimental data. This function essentially just computes the kernel density estimate (KDE)
-    of the simulation data at the experimental data points. If no experimental data is provided just return
-    the KDE evaluated at default points provided by the fastkde library.
+    on a set of experimental data. By default, this function computes the kernel density estimate (KDE)
+    of the simulation data at the experimental data points. It can also compute an approximate per-trial
+    histogram likelihood. If no experimental data is provided for KDE, return the KDE evaluated at default
+    points provided by the fastkde library.
 
     Some related work:
 
@@ -130,12 +364,35 @@ def simulation_likelihood(
     combine_trials: Combine data across all trials into a single likelihood estimate, this assumes
         that the parameters of the simulations are identical across trials.
 
+    estimator: Estimator used to compute likelihoods. Supported values are "kde" and "histogram".
+
+    estimator_kwargs: Optional keyword arguments passed to the selected estimator.
+
+    histogram_backend: Histogram backend used when estimator is "histogram". Supported values are
+        "auto", "numpy", and "boost".
+
     Returns
     -------
     The pdf of simulation data (or in other words, the generating parameters) conditioned on the
     experimental data.
 
     """
+
+    estimator = estimator.lower()
+    estimator_kwargs = {} if estimator_kwargs is None else dict(estimator_kwargs)
+
+    if estimator == "histogram":
+        estimator_kwargs.setdefault("histogram_backend", histogram_backend)
+        return _simulation_likelihood_histogram(
+            sim_data=sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            combine_trials=combine_trials,
+            **estimator_kwargs,
+        )
+
+    if estimator != "kde":
+        raise ValueError(f"Unknown likelihood estimator {estimator!r}; expected 'kde' or 'histogram'.")
 
     # Add a singleton dimension for trials if needed.
     if sim_data.ndim == 2:
@@ -480,14 +737,21 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         def objfunc(*args):
-            sim_data = self._run_simulations(*args, context=context)
-
-            # The composition might have more outputs than outcome variables, we need to subset the ones we need.
-            sim_data = sim_data[:, :, self.outcome_variable_indices]
-
-            return self._pec_objective_function(sim_data)
+            obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
+            return obj_val
 
         return objfunc
+
+    def _evaluate_objective_and_sim_data(self, *args, context=None):
+        """
+        Run simulations for a parameter setting and return both the PEC objective value and simulated data.
+        """
+        sim_data = self._run_simulations(*args, context=context)
+
+        # The composition might have more outputs than outcome variables, we need to subset the ones we need.
+        sim_data = sim_data[:, :, self.outcome_variable_indices]
+
+        return self._pec_objective_function(sim_data), sim_data
 
     def _function(self, variable=None, context=None, params=None, **kwargs):
         """
@@ -952,12 +1216,11 @@ class PECOptimizationFunction(OptimizationFunction):
                 "ParameterEstimationControlMechanism for more information."
             )
 
-        # Make sure we have instantiated the log-likelihood function.
-        if self._ll_func is None:
-            self._ll_func = self._make_objective_func(context=context)
-
+        execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING
-        ll, sim_data = self._ll_func(*args)
-        context.remove_flag(ContextFlags.PROCESSING)
+        try:
+            ll, sim_data = self._evaluate_objective_and_sim_data(*args, context=context)
+        finally:
+            context.execution_phase = execution_phase_at_entry
 
         return ll, sim_data
