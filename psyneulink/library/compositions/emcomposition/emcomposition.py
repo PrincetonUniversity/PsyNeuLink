@@ -684,12 +684,7 @@ all fields are returned as the result, and recorded in its `results <Composition
 each field is assigned as the `value <OutputPort.value>` of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`.
 The input is then stored in its `memory <EMComposition.memory>`, with a probability determined by its `storage_prob
 <EMComposition.storage_prob>` `Parameter`, and all previous memories are decayed by its `memory_decay_rate
-<EMComposition.memory_decay_rate>`.
-
-COMMENT:
-BREADCRUMB: CHECK FIGURE
-COMMENT
-(also see `figure <EMComposition_Example_Fig>`):
+<EMComposition.memory_decay_rate>` (also see `figure <EMComposition_Example_Fig>`):
 
 The following is a more detailed description of the operations carried out when the EMComposition executes:
 
@@ -1079,50 +1074,63 @@ Here again, **memory_fill** can be used to specify a different value::
 ~~~~~~~~~~~~~~~
 
 By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
-that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
-For example, in the `figure <EMComposition_Example_fig>` above, the first field specified was used as a key field,
-and the last as a value field. However, the **field_weights** argument can be used to modify this, specifying which
-fields should be used as keys fields -- including the relative contribution that each makes to the matching process
--- and which should be used as value fields.  Non-zero elements in the **field_weights** argument designate key fields,
-and zeros specify value fields. For example, the following specifies that the first two fields should be used as keys
-while the last two should be used as values::
+that is, one that is not included in the similarity scoring process, but for which a value is retrieved along with the
+key fields. For example, in the `figure <EMComposition_Example_fig>` above, the first field specified was used as a
+key field, and the last as a value field. However, the **field_weights** argument can be used to modify this,
+specifying which fields should be used as keys fields -- including the relative contribution that each makes to the
+`scoring process <EMComposition_Compute_Similarity_Scores>` -- and which should be used as value fields. A numeric
+value in the **field_weights** argument specifies a key field, and ``None`` specifies a value fields. For example,
+the following specifies that the first two fields are designated as keys while the last two are designated as values::
 
-    >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
+    >>> em = EMComposition(memory_template=[[0,0],[0],[0],[0,0]], memory_capacity=3, field_weights=[3, 1, None,None])
     >>> em.show_graph()
     <BLANKLINE>
 
-
 .. _EMComposition_Example_Field_Weights_Equal_fig:
 
-.. figure:: _static/EMComposition_field_weights_equal_fig.svg
+.. figure:: _static/EMComposition_field_weights_fig.svg
 
     **Use of field_weights to specify keys and values.**
 
-Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `Nodes <Composition_Nodes>`,
-that are used to implement the relative contribution that each key field makes to the matching process specifed in
-`field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
-but different values can be used to weight the relative contribution of each key field.  The values are normalized so
-that they sum 1, and the relative contribution of each is determined by the ratio of its value to the sum of all
-non-zero values.  For example, the following specifies that the first two fields should be used as keys,
-with the first contributing 75% to the matching process and the second field contributing 25%::
+Note that the figure now shows nodes with the `[WEIGHT] <EMComposition.field_weight_nodes>` appended to their name,
+to the right of each `query node <EMComposition.query_input_nodes>`, that are used to implement the relative
+contribution -- specifed in `field_weights <EMComposition.field_weights>` argument -- that each key field makes to
+the `similarity scoring process <EMComposition_Compute_Similarity_Scores>`. If multiple key fields are specified
+without weights, they are all assigned an equal weight of 1. As shown above, however they can be assigned
+different weights. By default, `field_weights <EMComposition.field_weights>` are normalized to sum to 1, so in the
+example above, the first key field would actualy be weighted .75 and the second .25.  However, this can be disabled,
+and the absolute value of the weights applied, by setting `normalize_field_weights
+<EMComposition.normalize_field_weights>` to ``False``.
 
-    >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0]], memory_capacity=3, field_weights=[3,1,0])
+.. _EMComposition_Example_Concatenate_Queries:
+
+*Concatenate Queries*
+~~~~~~~~~~~~~~~~~~~~~
+
+When no `field_weights <EMComposition.field_weights>` are specified, or all key fields are assigned equal weights and
+and `normalize_memories <EMComposition.normalize_memories>` is ``True``, then the query inputs can be concatenated,
+by setting `concatenate_queries <EMComposition.concatenate_queries>` to ``True``. In that case, all of the
+`query_input_nodes <EMComposition.query_input_nodes>` project directly to the `combined_scores_node
+<EMComposition.combined_scores_node>`, as well as to their individual `field_memory_nodes
+<EMComposition.field_memory_nodes>`.  The combined_scores_node <EMComposition.combined_scores_node> is then used to
+is used to compute the `similarity scores <EMComposition_Compute_Similarity_Scores>` treating all queries as a single
+vector, that is scored against the the concatentated entries for all key fields (see `concatenate_queries
+<EMComposition_Concatenate_Queries>` for additional details) to generate and `softmax-normalize the scores
+<EMComposition_Softmax_Normalize_Scores>`.  The resulting combined_scores is then passed back to each `field_memory_node
+<EMComposition.field_memory_nodes>` for retrieval and storage of memories in each field. The following example
+shows such a configuration.  Since no `field_weights <EMComposition.field_weights>` are specified, the first two fields
+are treated as keys, and the queries for them are concatenated, while the las is a value field::
+
+    >>> em = EMComposition(memory_template=[[0,0],[0],[0,0]], memory_capacity=3, concatenate_queries=True)
+    >>> em.show_graph()
     <BLANKLINE>
 
-COMMENT:
-.. _EMComposition_Example_Field_Weights_Different_fig:
+.. _EMComposition_Example_Concatenate_Queries_fig:
 
-.. figure:: _static/EMComposition_field_weights_different.svg
+.. figure:: _static/EMComposition_Example_concatenate_queries.svg
 
-    **Use of field_weights to specify relative contribution of fields to matching process.**
+    **Configuration when concatenate_queries is used.**
 
-Note that in this case, the `concatenate_queries_node <EMComposition.concatenate_queries_node>` has been replaced by
-a pair of `weighted_match_node <EMComposition.weighted_match_node>`, one for each key field.  This is because
-the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
-and `normalize_memories <EMComposition.normalize_memories>` is ``True``, then the keys are concatenated and are
-concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as ``False``
-(see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional details).
-COMMENT
 
 .. _EMComposition_Class_Reference:
 
