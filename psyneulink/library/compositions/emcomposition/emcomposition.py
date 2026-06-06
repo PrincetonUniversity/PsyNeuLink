@@ -37,6 +37,9 @@ Contents
         - `Purge by Weight <EMComposition_purge_by_field_weight>`
         COMMENT
      - `Learning <EMComposition_Learning_Creation>`
+        - `Backpropagation of Error <EMComposition_Error_BackPropagation>`
+        - `TARGET Fields for Learning <EMComposition_Target_Fields>`
+        - `Learning Field Weights <EMComposition_Field_Weights_Learning>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
      - `Memory <EMComposition_Memory_Structure>`
@@ -100,8 +103,8 @@ its own `ExternalMemoryMechanism`. Fields are divided into two types:
 
 .. _EMComposition_Keys:
 
-* **key fields**: receive a query vector as input on each trial, the similarity of which is computed against each entry
-  in `memory <EMComposition.memory>` that is used to determine retrieval; an EMCcomposition must have at least
+* **key fields**: receive a query vector as input on each trial, the similarity of which is computed against each
+  entry in `memory <EMComposition.memory>` that is used to determine retrieval; an EMCcomposition must have at least
   one key field, and can have as many as desired.
 
 .. _EMComposition_Values:
@@ -109,15 +112,13 @@ its own `ExternalMemoryMechanism`. Fields are divided into two types:
 **value fields**: recieve a value vector as input on each trial, that is stored and retrieved from memory, but not used
   to determine retrieval; an EMComposition does not require an value fields, but can have as many as desired.
 
-The EMComposition coordinates the storage and retrieval of entries across fields. The contribution of each key
-field to retrieval can be weighted by asisgning `field_weights
-<EMComposition.field_weights>`. The EMComposition's full memory can be accessed using its `memory
-<EMComposition.memory>` attribute, which returns a 3d array, the rows of which (axis 0) are each entry,
-the columns of which (axis 1) are the fields of each entry, and the items of which (axis 2) are the values
-of the entries for each field. The EMComposition's fields are listed in its `fields <EMComposition.fields>`
-attribute, and its The memory for a given field can be accessed via the `em.fields[<NAME>].memory
-<ExternalMemoryMechanism.memory>` attribute.
-
+The EMComposition coordinates the storage and retrieval of entries across fields. Key fields and values fields, and
+the contribution of each key field to retrieval, can be configured using `field_weights <EMComposition_Field_Weights>`.
+The EMComposition's full memory can be accessed using its `memory <EMComposition.memory>` attribute, which returns a
+3d array, the rows of which (axis 0) are each entry, the columns of which (axis 1) are the fields of each entry, and
+the items of which (axis 2) are the values of the entries for each field. The EMComposition's fields are listed in its
+`fields <EMComposition.fields>` attribute, and its The memory for a given field can be accessed via the
+`em.fields[<NAME>].memory <ExternalMemoryMechanism.memory>` attribute.
 
 .. _EMComposition_Operation:
 
@@ -254,10 +255,11 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
   * *dict or tuple*: either of which must have three entries; if a dict, the key to each entry must be the keyword
     specified below or, if a tuple, the entries must appear in the following order:
 
-    - *FIELD_WEIGHT* `specification <EMComposition_Field_Weights>` - value must be a scalar or ``None``.
-      If it is a scalar, the field is treated as a `retrieval key <EMComposition_Field_Weights>` in `memory
-      <EMComposition.memory>` that is weighted by that value during retrieval; if ``None``, it is treated as a
-      value in `memory <EMComposition.memory>` and the field cannot be reconfigured later.
+    - *FIELD_WEIGHT* `specification <EMComposition_Field_Weights>` - value must be numeric or ``None``.
+      If it is numeric, the field is treated as a `key field <EMComposition_Keys>`, that is weighted by that
+      value during retrieval; if ``None``, it is treated as a value field <_EMComposition_Values>` and it
+      cannot be reconfigured later (see `fields_weights <EMComposition_Field_Weights>` for additional information).
+
 
     - *LEARN_FIELD_WEIGHT* `specification <EMComposition_Field_Weights_Learning>` - value must be a boolean or a float;
       if ``False``, the field_weight for that field is not learned; if ``True``, the field weight is learned using the
@@ -292,14 +294,15 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 .. _EMComposition_Field_Weights:
 
-* **field_weights**: specifies which fields are used as keys vs. value fields, and how key fields are weighted during
-  retrieval. Fields designated as keys are used to match inputs (queries) against entries in memory for retrieval (see
-  `Compute Similarity Scores <EMComposition_Compute_Similarity_Scores>`); entries designated as *values* are ignored
-  during the matching process, but their stored values are retrieved and assigned as the `value <Mechanism_Base.value>`
-  of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value
+* **field_weights**: specifies which fields are used as `key fields <EMComposition_Keys>`, which are used as `value
+  fields <EMComposition_Values>`, and how key fields are weighted during retrieval. Key fields are used to `score the
+  similarity <EMComposition_Compute_Similarity_Scores>` of their inputs (queries) to the entries in their `memory
+  <EMComposition.field_memory_nodes>` during retrieval; values fields are ignored during similarity scoring, but
+  their entries are retrieved based on the scores computed for key fields. This distinction between keys and values
   corresponds to the format of a standard "dictionary," though in that case only a single key and value are allowed,
-  whereas in an EMComposition there can be one or more keys and any number of values; if all fields are keys, this
-  implements a full form of content-addressable memory. The following options can be used to specify **field_weights**:
+  whereas in an EMComposition there can be one or more keys and any number of values (or none at all); if all fields
+  are keys, this implements a full form of content-addressable memory. The following options can be used to specify
+  **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are assigned a weight of 1,
       while the last field is treated as a value field (same as assiging it ``None`` in a list or tuple (see below).
@@ -313,20 +316,23 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
          At present these have the same result, since the `SoftMax` function is used to normalize the match
          scores. However, other retrieval functions may be added in the future that would be affected by
          the value of the `field_weights <EMComposition.field_weights>`. Therefore, it is recommended to leave
-         `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to ``True`` (the default) to ensure that
-         the `field_weights <EMComposition.field_weights>` are normalized to sum to 1.0.
+         `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to ``True`` (the default) to ensure
+         that the `field_weights <EMComposition.field_weights>` are normalized to sum to 1.0.
 
-    * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**, and all
-      entries must be either 0, a positive scalar value, ``None``, or ``False``. If all entries are identical, they
-      are treated as if a single value was specified (see above); if the entries are non-identical, any entries that
-      are not ``None`` or ``False`` are used to weight the corresponding fields during retrieval (see `Weight fields
-      <EMComposition_Processing>`), including those that are 0 (though these will not be used in the retrieval
-      process unless/until they are changed to a positive value). If `normalize_field_weights
-      <EMComposition_Normalize_Field_Weights>` is ``True``, all non-None/non-False field_weight entries are normalized
-      so that they sum to 1.0; if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``False``, the
-      raw values are used to weight the retrieval of the corresponding fields. All entries of ``None`` or ``False`` are
-      treated as value fields, are not assigned a `field_weight_node <EMComposition.field_weight_nodes>`, and are
-      ignored during retrieval. These *cannot be modified after the EMComposition has been constructed (see note below).
+    * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**,
+      and all entries must be either numeric, ``None``, or ``False``. If all entries are identical, they
+      are treated as if a single value was specified (see above). If the entries are non-identical, any entries
+      that are numeric designate `key fields <EMComposition_Keys>`, and are assigned a `field_weight_node
+      <EMComposition.field_weight_nodes>` that is used to weight the corresponding fields during retrieval
+      (see `Weight fields <EMComposition_Processing>`); this includes 0, though these will not be used in the
+      retrieval process (that is, they will function as `value fields <EMComposition_Values>` during retrieval) unless/
+      until they are changed to a positive value. The value of a field_weight can be changed programmatically, or by
+      `learning <EMComposition_Learning_Creation>`. If `normalize_field_weights <EMComposition_Normalize_Field_Weights>`
+      is ``True``, all numeric field_weights are normalized so that they sum to 1.0; if `normalize_field_weights
+      <EMComposition_Normalize_Field_Weights>` is ``False``, the raw values are used to weight the retrieval of the
+      corresponding fields. All entries of ``None`` or ``False`` designate value fields, are not assigned a
+      `field_weight_node <EMComposition.field_weight_nodes>`, and are ignored during retrieval. These *cannot be
+      modified after the EMComposition has been constructed (see note below).
 
     .. _EMComposition_No_Field_Weights_For_Single_Key_Note:
 
@@ -337,13 +343,14 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
     .. _EMComposition_Field_Weights_Change_Note:
 
     .. note::
-       The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
-       to the `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
-       key fields (i.e., that were initially assigned non-None or non-False field_weights) can be modified; the weights
-       for value fields (i.e., ones that were initially assigned a field_weight of ``None`` or ``False``) cannot be
-       modified, and doing so raises an error. If a field that will be used initially as a value but may later need
-       to be used as a key, it should be assigned a `field_weight <EMComposition.field_weights>` of ``0`` at
-       construction (rather than ``None`` or ``False``), which can then later be changed as needed.
+       The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of
+       weights to the `field_weights <EMComposition.field_weights>` `Parameter` or through `learning
+       <EMComposition_Learning_Creation>`. However, only field_weights associated with key fields (i.e.,
+       that were initially assigned a numeric field_weight) can be modified; the weights for value fields (i.e.,
+       ones that were initially assigned a field_weight of ``None`` or ``False``) cannot be modified, and doing so
+       raises an error. If a field that will be used initially as a value but may later need to be used as a key,
+       it should be assigned a `field_weight <EMComposition.field_weights>` of ``0`` at construction (rather than
+       ``None`` or ``False``), which can then later be changed as needed.
 
     .. technical_note::
        The reason that field_weights can be modified only for keys is that `field_weight_nodes
@@ -372,10 +379,10 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
   This is ``False`` by default; setting it to ``True`` causes all the fields to be treated, in effect, as a single
   field for scoring, retrieval and norming, while preserving the ability to provide separate inputs for each field,
   inspect them individually, and keep their retrieved values separate (in the EMComposition's `retrieved_nodes
-  <EMComposition.retrieved_nodes>`). This requires that all non-zero `field_weights <EMComposition.field_weights>`
+  <EMComposition.retrieved_nodes>`). This requires that all numeric `field_weights <EMComposition.field_weights>`
   have the same value (see `field_weights <EMComposition_Field_Weights>`) and that `normalize_memories
   <EMComposition.normalize_memories>` is set to ``True``; otherwise, setting concatenate_queries to ``True`` issues
-  a warning, and the setting is ignored. Setting **concatenate_queries** causes a `concatenate_queries_node
+  a warning, and the setting is ignored. Setting **concatenate_queries** to ``True`` causes a `concatenate_queries_node
   <EMComposition.concatenate_queries_node>` to be created that receives input from all of the `query_input_nodes
   <EMComposition.query_input_nodes>`, and passes them as a single vector to the `combined_scores_node
   <EMComposition.combined_scores_node>`.
@@ -1543,13 +1550,13 @@ class EMComposition(AutodiffComposition):
         **field_names** is not necessary and doing so issues a warning.
 
     field_weights : list or tuple : default (1,0)
-        specifies which fields of the EMComposition should be configured as `key fields <EMComposition_Keys>` and
-        which should be configured as `value fields <EMComposition_Values>`: keys are specified by non-zero entries
-        in the list or tuple, and values by  are a zero. Non-zero entries used to specify keys can also be used to
-        specify the relative weight assigned to each key field when computing the similarity of a query to the entries
-        in the key field's `memory <ExternalMemoryMechanism.memory>` (see `field weights <EMComposition_Field_Weights>`
-        for additional details). If the **fields** argument is specified, specifying **field_weights** is not necessary
-        and doing so issues a warning.
+        specifies which fields of the EMComposition should be configured as `key fields <EMComposition_Keys>`
+        and which should be configured as `value fields <EMComposition_Values>`: keys are specified by numeric
+        entries in the list or tuple, and values by ``None``. The numeric value used to specify keys also specifies
+        the relative weight assigned to each key field when computing the similarity of a query to the entries in
+        the key field's `memory <ExternalMemoryMechanism.memory>` (see `field weights <EMComposition_Field_Weights>`
+        for additional details). If the **fields** argument is specified, specifying **field_weights** is not
+        necessary and doing so issues a warning.
 
     learn_field_weights : bool or list[bool, int, float]: default False
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
@@ -1667,8 +1674,8 @@ class EMComposition(AutodiffComposition):
 
     field_weights : tuple[float]
         determines which fields are configured as `key fields <EMComposition_Keys>` and which are configured as
-        `value fields <EMComposition_Values>`: keys are designated by non-zero entries and values by a zero. The
-        non-zero entries for keys specify the relative weight assigned to each key field when computing the similarity
+        `value fields <EMComposition_Values>`: keys are designated by numeric entries and values by ``None``. The
+        numeric values for keys designate the relative weight assigned to each key field when computing the similarity
         of a query to the entries in the key field's `memory <ExternalMemoryMechanism.memory>` (see `field weights
         <EMComposition_Field_Weights>` for additional details). The field_weights can be changed by assigning a new
         list of weights to the `field_weights <EMComposition.field_weights>` attribute, however only the weights for
