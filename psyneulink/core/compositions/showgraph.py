@@ -2716,9 +2716,11 @@ class ShowGraph():
             return item.split(' [', 1)[0]
 
         def add_role_rank_constraints():
-            """Constrain INPUT nodes to the bottom rank and OUTPUT nodes to the top rank."""
+            """Constrain only INPUT nodes to the bottom rank and only OUTPUT nodes to the top rank."""
             input_node_ids = []
             output_node_ids = []
+            non_input_node_ids = []
+            non_output_node_ids = []
 
             for node in nodes:
                 if isinstance(node, Composition):
@@ -2731,15 +2733,39 @@ class ShowGraph():
                     output_node_ids.append(node_id)
                 elif NodeRole.INPUT in roles:
                     input_node_ids.append(node_id)
+                if NodeRole.INPUT not in roles:
+                    non_input_node_ids.append(node_id)
+                if NodeRole.OUTPUT not in roles:
+                    non_output_node_ids.append(node_id)
 
-            for rank, node_ids in ((self.input_rank, input_node_ids),
-                                   (self.output_rank, output_node_ids)):
+            # Use Graphviz's exclusive rank variants for the default bottom/top ranks,
+            # so unrelated isolated nodes are not allowed to share those ranks.
+            input_rank = 'source' if self.input_rank in {'min', 'source'} else self.input_rank
+            output_rank = 'sink' if self.output_rank in {'max', 'sink'} else self.output_rank
+
+            for rank, node_ids in ((input_rank, input_node_ids),
+                                   (output_rank, output_node_ids)):
                 if not node_ids:
                     continue
                 with G.subgraph() as rank_subgraph:
                     rank_subgraph.attr(rank=rank)
                     for node_id in node_ids:
                         rank_subgraph.node(node_id)
+
+            invisible_edge_attrs = {
+                'arrowhead': 'none',
+                'constraint': 'true',
+                'style': 'invis',
+                'weight': '100',
+            }
+            if input_node_ids:
+                input_anchor = input_node_ids[0]
+                for node_id in non_input_node_ids:
+                    G.edge(input_anchor, node_id, **invisible_edge_attrs)
+            if output_node_ids:
+                output_anchor = output_node_ids[0]
+                for node_id in non_output_node_ids:
+                    G.edge(node_id, output_anchor, **invisible_edge_attrs)
 
         for node in nodes:
             if isinstance(node, Composition):
