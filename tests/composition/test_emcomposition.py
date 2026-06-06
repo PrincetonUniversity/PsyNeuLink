@@ -8,9 +8,7 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-# from psyneulink.library.compositions.emcomposition_proj.emcomposition_proj import EMComposition_Proj, EMCompositionError
-from psyneulink.library.compositions.emcomposition.emcomposition import (
-    EMComposition, EMCompositionError, CONCATENATE_QUERIES_NAME)
+from psyneulink.library.compositions.emcomposition.emcomposition import (EMComposition, EMCompositionError)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
@@ -194,9 +192,10 @@ class TestConstruction:
         if em.concatenate_queries:
             assert em.field_weight_nodes == []
             assert bool(softmax_gain == CONTROL) == bool(em.softmax_gain_control_node)
-            concatenated_queries_width = sum([len(em.query_input_nodes[i].value[0]) for i in range(num_keys)])
-            assert concatenated_queries_width == len(em.nodes[pnl.CONCATENATE_QUERIES_NAME].value[0])
-            assert concatenated_queries_width == len(em.match_nodes[0].value[0])
+            concatenated_queries_width = len(em.nodes[pnl.CONCATENATE_QUERIES_NAME].value[0])
+            assert concatenated_queries_width == sum([len(em.query_input_nodes[i].value[0]) for i in range(num_keys)])
+            assert concatenated_queries_width == sum([len(em.field_memory_nodes[i].value[0]) for i in range(num_keys)])
+
             assert True
         else:
             if num_keys > 1:

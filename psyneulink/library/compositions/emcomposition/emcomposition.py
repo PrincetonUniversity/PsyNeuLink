@@ -69,7 +69,7 @@ EMComposition implements a configurable, content-addressable form of episodic (o
 of `AutodiffComposition`, which allows it to backpropagate error signals and learn how to differentially weight cues
 (queries) used for retrieval. It uses `ExternalMemoryMechanism` to manage field-specific memory matrices.
 EMComposition supports one or more memory fields, which can be configured as keys or values. Keys are used to score
-the similarity of queries to keys stored in memory, while values are retrieved but not used for matching.
+the similarity of queries to keys stored in memory, while values are retrieved but not used for similarity scoring.
 
 It also allows several other factors to be configured, including the function used for evaluating the similarity of
 queries to keys ("scoring"), the gain of the `SoftMax` function used to normalize the scores for each memory field,
@@ -313,7 +313,7 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
       specified is used to weight the retrieval of all keys with that value.
 
       .. note::
-         At present these have the same result, since the `SoftMax` function is used to normalize the match
+         At present these have the same result, since the `SoftMax` function is used to normalize the similarity
          scores. However, other retrieval functions may be added in the future that would be affected by
          the value of the `field_weights <EMComposition.field_weights>`. Therefore, it is recommended to leave
          `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to ``True`` (the default) to ensure
@@ -375,7 +375,7 @@ EMComposition's constructor, or a combination of the **field_names**, **field_we
 
 .. _EMComposition_Query_Concatenation:
 
-* **concatenate_queries**: specifies whether queries are concatenated before they are matched to keys in memory.
+* **concatenate_queries**: specifies whether queries are concatenated before they are compared to keys in memory.
   This is ``False`` by default; setting it to ``True`` causes all the fields to be treated, in effect, as a single
   field for scoring, retrieval and norming, while preserving the ability to provide separate inputs for each field,
   inspect them individually, and keep their retrieved values separate (in the EMComposition's `retrieved_nodes
@@ -470,7 +470,7 @@ The following arguments can be used to configure how retrieval and storage opera
     `combined_scores_node <EMComposition.combined_scores_node>`;
 
   * *ADAPTIVE*: the `adapt_gain <SoftMax.adapt_gain>` method of the `SoftMax` Function is used to adaptively set
-    the `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the match scores, in order to preserve
+    the `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the similarity scores, in order to preserve
     the distribution over non- (or near) zero entries irrespective of how many (near) zero entries there are
     (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details);
 
@@ -700,7 +700,7 @@ methods of an EMComposition are the same as those of a `Composition`, and they c
 valid for an `AutodiffComposition`.
 
 **Summary**. The inputs to an EMComposition, comprised of its queriess and values, are assigned to each of its
-`INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`: queries (i.e., that are matched to its keys) are assigned
+`INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`: queries (i.e., that are compared to keys) are assigned
 to its `query_input_nodes  <EMComposition.query_input_nodes>`; and the remaining inputs are assigned to its
 `value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition is executed, the retrieved values for
 all fields are returned as the result, and recorded in its `results <Composition.result>` attribute. The value for
@@ -717,7 +717,7 @@ The following is a more detailed description of the operations carried out when 
 
 * **Input**.  The inputs to the EMComposition are provided to the `query_input_nodes <EMComposition.query_input_nodes>`
   and `value_input_nodes <EMComposition.value_input_nodes>`. The former are used to compute the similarity scores
-  for each `key field <EMComposition_Keys>`, while the latter are stored but not used for matching.
+  for each `key field <EMComposition_Keys>`, while the latter are stored but not used for similarity scoring.
 
 .. _EMComposition_Compute_Similarity_Scores:
 
@@ -1435,10 +1435,6 @@ class Field:
         return self.input_node.variable
 
     @property
-    def match(self):
-        return self.memory_node.output_ports[SCORES].value
-
-    @property
     def retrieved_memory(self):
         return self.memory_node.output_ports[RETRIEVED].value
 
@@ -1793,7 +1789,7 @@ class EMComposition(AutodiffComposition):
     weighted_scores_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that combine the `field weight <EMComposition.field_weights>`
         for each `key field <EMComposition_Fields>` with the dot product computed by the corresponding the
-        `match_node <EMComposition.match_nodes>`.
+        `field_memory_node <EMComposition.field_memory_nodes>`.
         COMMENT:
         These are only implemented if `use_gating_for_weighting
         <EMComposition.use_gating_for_weighting>` is ``False`` (see `Weight distances <EMComposition_Field_Weighting>`
@@ -3338,13 +3334,6 @@ class EMComposition(AutodiffComposition):
         if getattr(self, "concatenated_memory_node", None) is not None:
             nodes.append(self.concatenated_memory_node)
         return nodes
-
-    @property
-    def match_nodes(self):
-        # Compatibility alias: the old "match_nodes" are now the key ExternalMemoryMechanisms.
-        if self.concatenate_queries and getattr(self, "concatenated_memory_node", None) is not None:
-            return [self.concatenated_memory_node]
-        return [field.memory_node for field in self.key_fields]
 
     @property
     def field_weight_nodes(self):
