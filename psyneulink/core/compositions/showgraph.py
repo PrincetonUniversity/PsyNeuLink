@@ -21,7 +21,7 @@ of the Composition and, optionally, any `nested Compositions <Composition_Nested
 them as edges.
 
 .. technical_note::
-    Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
+    Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing emshowgraph.py module.
     The `show_graph <ShowGraph.show_graph>` method of a Composition directly calls the `show_graph
     <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
     `show_graph`.
@@ -2699,8 +2699,47 @@ class ShowGraph():
                             return i
                     else:
                         assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
-                elif 'subgraph' in item and node_type in {COMPOSITION}:
+                elif (node_type in {COMPOSITION}
+                      and item.lstrip().startswith('subgraph ')
+                      and f'cluster_{node.name}' in item):
                     return i
+
+        def get_node_id_in_G_body(node):
+            """Get the Graphviz node identifier used for node in G.body."""
+            i = get_index_of_node_in_G_body(node, MECHANISM)
+            if i is None:
+                return None
+            item = G.body[i].strip()
+            quoted_items = item.split('"')[1::2]
+            if quoted_items:
+                return quoted_items[0]
+            return item.split(' [', 1)[0]
+
+        def add_role_rank_constraints():
+            """Constrain INPUT nodes to the bottom rank and OUTPUT nodes to the top rank."""
+            input_node_ids = []
+            output_node_ids = []
+
+            for node in nodes:
+                if isinstance(node, Composition):
+                    continue
+                roles = self._get_roles_by_node(node)
+                node_id = get_node_id_in_G_body(node)
+                if node_id is None:
+                    continue
+                if NodeRole.OUTPUT in roles:
+                    output_node_ids.append(node_id)
+                elif NodeRole.INPUT in roles:
+                    input_node_ids.append(node_id)
+
+            for rank, node_ids in ((self.input_rank, input_node_ids),
+                                   (self.output_rank, output_node_ids)):
+                if not node_ids:
+                    continue
+                with G.subgraph() as rank_subgraph:
+                    rank_subgraph.attr(rank=rank)
+                    for node_id in node_ids:
+                        rank_subgraph.node(node_id)
 
         for node in nodes:
             if isinstance(node, Composition):
@@ -2730,6 +2769,8 @@ class ShowGraph():
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
+
+        add_role_rank_constraints()
 
         # Put controller of Composition, except for nested Composition(s)
         if composition.controller and show_controller:

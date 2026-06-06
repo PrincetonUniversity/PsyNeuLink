@@ -2128,6 +2128,12 @@ class EMComposition(AutodiffComposition):
                 f"Use 'memory_fill' with non-zero values to avoid this."
             )
 
+    def assign_ShowGraph(self, show_graph_attributes):
+        """Override to use EMComposition-specific graph layout constraints."""
+        from psyneulink.library.compositions.emcomposition.emshowgraph import EMCompositionShowGraph
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = EMCompositionShowGraph(self, **show_graph_attributes)
+
     # *****************************************************************************************************************
     # *********************************** Memory Construction Methods **************************************************
     # *****************************************************************************************************************
