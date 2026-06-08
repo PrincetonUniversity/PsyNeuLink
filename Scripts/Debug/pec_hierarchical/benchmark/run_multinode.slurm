@@ -9,26 +9,42 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=4G
-#SBATCH --time=03:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=%x_%j.out
+#SBATCH --mail-type=begin,end,fail  # receive email notifications
+#SBATCH --mail-user=ap9344@princeton.edu
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
 BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
 OUT=$BD/results_multinode.jsonl
-NE=4000
-TE=240
+NE=8000
+TE=800
+NT=250     # observed data trials per fit (bump for precision; also makes sims heavier)
+WT=3600   # per-config worker-start timeout (s): wait up to 1h for all workers
 
 cd $REPO
 rm -f "$OUT"
 
-# Each config builds its own SLURMCluster, scales, runs, tears down. Workers may
-# queue on a busy partition; --worker-timeout guards that wait.
-# 4x4 = 16 cores across nodes (control vs the single-node 4x4 LocalCluster point)
-$PY $BD/bench.py --mode dask-jobqueue --n-workers 4 --worker-cores 4  --num-estimates $NE --total-evals $TE --reps 1 --worker-timeout 1200 --out $OUT
-# scale beyond one node's cores
-$PY $BD/bench.py --mode dask-jobqueue --n-workers 4 --worker-cores 16 --num-estimates $NE --total-evals $TE --reps 1 --worker-timeout 1200 --out $OUT
-$PY $BD/bench.py --mode dask-jobqueue --n-workers 8 --worker-cores 16 --num-estimates $NE --total-evals $TE --reps 1 --worker-timeout 1800 --out $OUT
+# Each config builds its own SLURMCluster, scales, runs, tears down. Ordered by
+# worker_cores ASCENDING: small (1-2 core) workers backfill fast on a busy
+# partition, so the cheap-to-schedule data lands first; the fat 16-core workers
+# (hard to place) run last, where a timeout costs the least.
+
+# --- 16-core-total controls: same splits as the single-node sweep, but across
+# --- nodes. The delta vs single-node = network/serialization overhead.
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 1  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+
+# --- scale-out beyond one node's 16 cores, with cheap 1-core workers ---
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 32 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+
+# --- fat-worker scale-out (16 cores/worker): hard to place, so run LAST ---
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 4  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --mode dask-jobqueue --n-workers 8  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
 
 echo "==== SUMMARY ===="
 $PY $BD/summarize.py $OUT

@@ -1,7 +1,4 @@
 """Problem and run configuration for the Dask PEC MLE prototype.
-
-Pure data -- no PsyNeuLink / Dask imports -- so it is cheap to import on both
-the driver and every worker.
 """
 
 # --- Observed-data / simulation sizing ---
@@ -34,7 +31,7 @@ WORKER_WALLTIME = "02:00:00"  # -> `short` QOS; driver alloc must outlast this
 # --- Ground-truth DDM parameters used to synthesize the test data ---
 TRUE_PARAMS = dict(
     starting_value=0.0, rate=0.3, noise=1.0,
-    threshold=0.6, non_decision_time=0.15, time_step_size=0.01,
+    threshold=0.6, non_decision_time=0.15, time_step_size=0.001,
 )
 
 # --- Fit parameters: name -> (low, high) ---

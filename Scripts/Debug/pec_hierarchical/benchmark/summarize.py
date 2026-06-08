@@ -53,6 +53,9 @@ def main():
     # baseline loop time per num_estimates = the regular run
     base = {a["ne"]: a["loop_s"] for a in agg if a["mode"] == "regular"}
 
+    def fnum(v, width, prec):
+        return ("-" if v is None else f"{v:.{prec}f}").rjust(width)
+
     hdr = (f"{'config':<22}{'cores':>6}{'ne':>6}{'loop_s':>9}{'evals/s':>9}"
            f"{'speedup':>9}{'util%':>7}{'rss_gb':>8}{'err%':>7}{'core_h':>9}")
     print(hdr)
@@ -62,13 +65,13 @@ def main():
         sp = (b / a["loop_s"]) if (b and a["loop_s"]) else None
         print(
             f"{a['label']:<22}{a['cores']:>6}{a['ne']:>6}"
-            f"{(a['loop_s'] or 0):>9.1f}{(a['evals_per_s'] or 0):>9.1f}"
-            f"{(sp or 0):>9.2f}{(a['util_pct'] or 0):>7.0f}"
-            f"{(a['rss_gb'] or 0):>8.2f}{(a['err'] or 0):>7.1f}{(a['core_hours'] or 0):>9.4f}"
+            f"{fnum(a['loop_s'], 9, 1)}{fnum(a['evals_per_s'], 9, 1)}"
+            f"{fnum(sp, 9, 2)}{fnum(a['util_pct'], 7, 0)}"
+            f"{fnum(a['rss_gb'], 8, 2)}{fnum(a['err'], 7, 1)}{fnum(a['core_hours'], 9, 4)}"
         )
     print("\nspeedup = regular loop_s / config loop_s (per num_estimates).")
-    print("util%   = mean busy cores / allocated cores (single-node only; "
-          "remote jobqueue workers are not sampled).")
+    print("util%   = mean busy cores / allocated cores; '-' for multi-node "
+          "(jobqueue) since remote workers are not locally sampled.")
 
 
 if __name__ == "__main__":

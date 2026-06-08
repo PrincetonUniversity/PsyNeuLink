@@ -1,4 +1,4 @@
-"""Synthetic "observed" data generation -- the test harness.
+"""Synthetic "observed" data generation
 
 In a real experiment this is replaced by actual subject data; here we generate
 data from known ``TRUE_PARAMS`` so we can check whether the fit recovers them.
