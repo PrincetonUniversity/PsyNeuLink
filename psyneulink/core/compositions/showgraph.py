@@ -2716,11 +2716,14 @@ class ShowGraph():
             return item.split(' [', 1)[0]
 
         def add_role_rank_constraints():
-            """Constrain only INPUT nodes to the bottom rank and only OUTPUT nodes to the top rank."""
+            """Constrain role-specific display layers at the bottom and top of the graph."""
             input_node_ids = []
             output_node_ids = []
+            learning_objective_node_ids = []
             non_input_node_ids = []
             non_output_node_ids = []
+            non_learning_objective_node_ids = []
+            non_output_or_learning_objective_node_ids = []
 
             for node in nodes:
                 if isinstance(node, Composition):
@@ -2729,7 +2732,9 @@ class ShowGraph():
                 node_id = get_node_id_in_G_body(node)
                 if node_id is None:
                     continue
-                if NodeRole.OUTPUT in roles:
+                if NodeRole.LEARNING_OBJECTIVE in roles:
+                    learning_objective_node_ids.append(node_id)
+                elif NodeRole.OUTPUT in roles:
                     output_node_ids.append(node_id)
                 elif NodeRole.INPUT in roles:
                     input_node_ids.append(node_id)
@@ -2737,14 +2742,20 @@ class ShowGraph():
                     non_input_node_ids.append(node_id)
                 if NodeRole.OUTPUT not in roles:
                     non_output_node_ids.append(node_id)
+                if NodeRole.LEARNING_OBJECTIVE not in roles:
+                    non_learning_objective_node_ids.append(node_id)
+                if NodeRole.OUTPUT not in roles and NodeRole.LEARNING_OBJECTIVE not in roles:
+                    non_output_or_learning_objective_node_ids.append(node_id)
 
             # Use Graphviz's exclusive rank variants for the default bottom/top ranks,
             # so unrelated isolated nodes are not allowed to share those ranks.
             input_rank = 'source' if self.input_rank in {'min', 'source'} else self.input_rank
-            output_rank = 'sink' if self.output_rank in {'max', 'sink'} else self.output_rank
+            top_rank = 'sink' if self.output_rank in {'max', 'sink'} else self.output_rank
+            output_rank = 'same' if learning_objective_node_ids else top_rank
 
             for rank, node_ids in ((input_rank, input_node_ids),
-                                   (output_rank, output_node_ids)):
+                                   (output_rank, output_node_ids),
+                                   (top_rank, learning_objective_node_ids)):
                 if not node_ids:
                     continue
                 with G.subgraph() as rank_subgraph:
@@ -2764,8 +2775,15 @@ class ShowGraph():
                     G.edge(input_anchor, node_id, **invisible_edge_attrs)
             if output_node_ids:
                 output_anchor = output_node_ids[0]
-                for node_id in non_output_node_ids:
+                lower_node_ids = (non_output_or_learning_objective_node_ids
+                                  if learning_objective_node_ids else non_output_node_ids)
+                for node_id in lower_node_ids:
                     G.edge(node_id, output_anchor, **invisible_edge_attrs)
+            if learning_objective_node_ids:
+                learning_objective_anchor = learning_objective_node_ids[0]
+                lower_node_ids = output_node_ids or non_learning_objective_node_ids
+                for node_id in lower_node_ids:
+                    G.edge(node_id, learning_objective_anchor, **invisible_edge_attrs)
 
         for node in nodes:
             if isinstance(node, Composition):
