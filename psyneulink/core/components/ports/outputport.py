@@ -839,6 +839,15 @@ class OutputPort(Port_Base):
         `mod_afferents <Port.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for additional
         details).
 
+    element_names : list of str : default None
+        optional semantic labels for each element of the OutputPort's
+        `value <OutputPort.value>`, surfaced by the `_debugger`
+        NODE_EXECUTION snapshot and consumed by inspection tools. The
+        list length must equal the size of the port's value; a
+        mismatch raises a `PortError` at construction. Static
+        construction metadata only — not threaded through the
+        `Parameters` system and does not participate in execution.
+
     Attributes
     ----------
 
@@ -885,6 +894,10 @@ class OutputPort(Port_Base):
         <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Registry_Naming>` apply to the
         OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
         <Port_Naming_Note>`).
+
+    element_names : list of str or None
+        the value passed to the **element_names** argument of the constructor (or ``None`` if unset). See the
+        argument description for usage and validation rules.
 
     """
 
@@ -958,8 +971,8 @@ class OutputPort(Port_Base):
         # Parameters system because it never participates in execution.
         # Consumed by the _debugger NODE_EXECUTION snapshot and by
         # downstream tools (PsyNeuView's pill / Run State / Inspector).
-        # Stored verbatim; length-vs-shape validation is deferred to a
-        # follow-up so this PR stays purely additive.
+        # Stored verbatim here; length-vs-shape validation runs after
+        # super().__init__() once the port's actual value shape is known.
         self.element_names = list(element_names) if element_names else None
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
@@ -1007,6 +1020,7 @@ class OutputPort(Port_Base):
             assign=assign,
             **kwargs
         )
+
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.variable is compatible with the reference_value

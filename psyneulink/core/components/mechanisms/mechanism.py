@@ -1265,6 +1265,19 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
+    element_names : list of str : default None
+        Mechanism-level shorthand that assigns semantic labels to each
+        element of the Mechanism's default (primary) InputPort *and*
+        default OutputPort, but only when those ports don't already
+        carry their own ``element_names``. Equivalent in effect to
+        passing ``element_names=[...]`` to both ports individually. Per-port
+        labels (set via `InputPort.element_names <InputPort.element_names>` or
+        `OutputPort.element_names <OutputPort.element_names>`) always win
+        if both are supplied. Distinct from **input_labels** /
+        **output_labels**, which map symbolic names to value vectors.
+        The list length must equal the size of the default port's
+        value; a mismatch raises a `PortError` at construction.
+
     Attributes
     ----------
 
@@ -1796,13 +1809,18 @@ class Mechanism_Base(Mechanism):
         # ``output_labels`` (those are symbolic-name → value-vector
         # dictionaries — a different concept).
         if element_names:
+            from psyneulink.core.components.ports.port import (
+                _validate_element_names_length,
+            )
             shorthand = list(element_names)
             if (getattr(self, 'input_ports', None)
                     and self.input_ports[0].element_names is None):
                 self.input_ports[0].element_names = shorthand
+                _validate_element_names_length(self.input_ports[0])
             if (getattr(self, 'output_ports', None)
                     and self.output_ports[0].element_names is None):
                 self.output_ports[0].element_names = shorthand
+                _validate_element_names_length(self.output_ports[0])
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
