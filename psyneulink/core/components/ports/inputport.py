@@ -1536,6 +1536,20 @@ class InputPort(Port_Base):
 
         return Port_Base._get_port_function_value(owner=owner, function=function, variable=variable)
 
+    @property
+    def _mdf_metadata(self):
+        # #11 slice 4: round-trip element_names through the free-form
+        # MDF metadata channel. Only injected when set, so default
+        # ports don't accumulate a stray ``element_names: None``.
+        from psyneulink.core.globals.keywords import MODEL_SPEC_ID_METADATA
+        md = super()._mdf_metadata
+        if self.element_names:
+            md[MODEL_SPEC_ID_METADATA] = {
+                **md[MODEL_SPEC_ID_METADATA],
+                'element_names': list(self.element_names),
+            }
+        return md
+
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
 
