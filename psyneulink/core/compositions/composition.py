@@ -4247,7 +4247,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
+        # #14: propagate element_names across identity MappingProjections.
+        # Runs after all projection wiring is finalized so we see the
+        # actual incoming-projection topology per InputPort.
+        self._propagate_element_names()
         self.needs_update_graph = False
+
+    def _propagate_element_names(self):
+        """Auto-derive missing ``InputPort.element_names`` from upstream
+        ``OutputPort.element_names`` via identity-style MappingProjections.
+
+        Closes #14 (slice 3 of #11). The rules are intentionally conservative:
+
+        - ``MappingProjection`` with an identity matrix (and no active
+          learning) propagates — element-for-element passthrough, meaning
+          preserved.
+        - Non-identity static matrices, learnable matrices, modulator
+          projections (Control / Learning), and multi-source fan-in with
+          inconsistent labels all leave the downstream port untouched
+          (``element_names`` stays ``None``), so consumers fall back to
+          index labels.
+
+        Only fills in ports whose ``element_names`` is currently ``None`` —
+        explicit per-port specs always win.
+        """
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        import numpy as _np
+
+        def _matrix_is_identity(m):
+            """True if the projection's effective matrix is identity."""
+            if m is None:
+                return False
+            # AUTO_ASSIGN_MATRIX / IDENTITY_MATRIX get resolved to ndarrays
+            # during projection instantiation, so we don't need to special-case
+            # the string keyword form here.
+            try:
+                arr = _np.asarray(m, dtype=float)
+            except (TypeError, ValueError):
+                return False
+            if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
+                return False
+            return _np.allclose(arr, _np.eye(arr.shape[0]))
+
+        def _projection_propagates(proj):
+            """Whether ``proj`` should carry element_names across.
+
+            Conservative v1: must be a plain MappingProjection with an
+            identity matrix at composition-init time. Control / Learning
+            projection subclasses (modulators) are excluded by type.
+
+            We deliberately do *not* reject ``learnable=True`` here —
+            that's the MappingProjection default, set on every plain
+            projection. Once learning actually moves the matrix away
+            from identity at run time, the labels become stale; that's
+            no worse than the same risk on any non-identity start.
+            Treating learnable-by-default as "unsafe" would reject the
+            common case and is more conservative than useful.
+            """
+            if not isinstance(proj, MappingProjection):
+                return False
+            try:
+                matrix = proj.matrix.base
+            except AttributeError:
+                matrix = getattr(proj, "matrix", None)
+            return _matrix_is_identity(matrix)
+
+        for node in self.nodes:
+            input_ports = getattr(node, "input_ports", None)
+            if not input_ports:
+                continue
+            for in_port in input_ports:
+                if getattr(in_port, "element_names", None) is not None:
+                    continue  # explicit per-port spec wins
+                # Walk incoming projections; collect candidate label lists
+                # from senders that propagate. If exactly one consistent
+                # set, use it.
+                candidates = []
+                for proj in getattr(in_port, "path_afferents", []):
+                    if not _projection_propagates(proj):
+                        continue
+                    sender = getattr(proj, "sender", None)
+                    upstream = getattr(sender, "element_names", None) if sender else None
+                    if upstream:
+                        candidates.append(list(upstream))
+                if not candidates:
+                    continue
+                first = candidates[0]
+                if all(c == first for c in candidates[1:]):
+                    in_port.element_names = first
+                # Otherwise mismatched fan-in: leave None (conservative).
 
     def _update_processing_graph(self):
         """
