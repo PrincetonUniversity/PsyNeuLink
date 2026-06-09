@@ -54,7 +54,8 @@ END_OF_TRIAL            trial_num, scheduler, context, outputs
 EXECUTION_SET           execution_set, scheduler, context
 END_OF_EXECUTION_SET    execution_set, scheduler, context, outputs
 INPUTS_TO_NODE          node, execution_set, scheduler, context
-NODE_EXECUTION          node, execution_set, scheduler, context  (fires post-execute)
+NODE_EXECUTION          node, execution_set, scheduler, context,
+                        output_port_element_names  (fires post-execute)
 PARAMETER_SETTING       parameter, owner, value, context
 EXCEPTION               exception, scheduler, context, trial_num
 END_OF_INIT             component
