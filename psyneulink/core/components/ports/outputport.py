@@ -940,6 +940,7 @@ class OutputPort(Port_Base):
                  prefs:   Optional[ValidPrefSet] = None,
                  index=None,
                  assign=None,
+                 element_names=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
@@ -952,6 +953,14 @@ class OutputPort(Port_Base):
 
         # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
+        # #11: optional semantic labels for the elements of this port's
+        # value. Static construction metadata — not threaded through the
+        # Parameters system because it never participates in execution.
+        # Consumed by the _debugger NODE_EXECUTION snapshot and by
+        # downstream tools (PsyNeuView's pill / Run State / Inspector).
+        # Stored verbatim; length-vs-shape validation is deferred to a
+        # follow-up so this PR stays purely additive.
+        self.element_names = list(element_names) if element_names else None
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or reference_value is None:

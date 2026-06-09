@@ -892,7 +892,13 @@ class InputPort(Port_Base):
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,
                  context=None,
+                 element_names=None,
                  **kwargs):
+
+        # #11: optional semantic labels for the elements of this port's
+        # value. See OutputPort.__init__ for the rationale (purely
+        # additive, no Parameters integration, no shape validation).
+        self.element_names = list(element_names) if element_names else None
 
         if variable is None and input_shapes is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, input_shapes, projections)
