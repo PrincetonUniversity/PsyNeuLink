@@ -1719,6 +1719,7 @@ class Mechanism_Base(Mechanism):
                  function=None,
                  output_ports=None,
                  output_labels=None,
+                 element_names=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -1787,6 +1788,21 @@ class Mechanism_Base(Mechanism):
             output_labels_dict=output_labels,
             **kwargs
         )
+
+        # #11: Mechanism-level ``element_names`` is a shorthand: apply it
+        # to the default (first) input port AND the default output port
+        # whenever those ports don't already carry their own element_names.
+        # Note: this is *not* the same as ``input_labels`` /
+        # ``output_labels`` (those are symbolic-name → value-vector
+        # dictionaries — a different concept).
+        if element_names:
+            shorthand = list(element_names)
+            if (getattr(self, 'input_ports', None)
+                    and self.input_ports[0].element_names is None):
+                self.input_ports[0].element_names = shorthand
+            if (getattr(self, 'output_ports', None)
+                    and self.output_ports[0].element_names is None):
+                self.output_ports[0].element_names = shorthand
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
