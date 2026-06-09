@@ -4375,6 +4375,39 @@ class Mechanism_Base(Mechanism):
             self.parameter_ports,
         ))
 
+    @property
+    def _mdf_metadata(self):
+        # #11 slice 4: surface the shorthand element_names back to the
+        # mechanism's metadata whenever the default input + output port
+        # carry identical labels. This lets ``generate_script_from_mdf``
+        # emit ``element_names=[...]`` on the mechanism constructor (via
+        # the metadata-to-parameters merge already done by the script
+        # generator). Per-port specs are still preserved on each port's
+        # own metadata for tools that want them; if the two default
+        # ports diverge, we leave shorthand out and rely on the per-port
+        # metadata channel.
+        # Broad except: some mechanism subclasses (e.g.
+        # OptimizationControlMechanism's defaults-only instantiation)
+        # raise ParameterNoValueError when ``input_ports`` is accessed
+        # before a Composition wires them up. In those paths we just
+        # skip the shorthand surfacing.
+        from psyneulink.core.globals.keywords import MODEL_SPEC_ID_METADATA
+        md = super()._mdf_metadata
+        in_labels = out_labels = None
+        try:
+            if self.input_ports:
+                in_labels = self.input_ports[0].element_names
+            if self.output_ports:
+                out_labels = self.output_ports[0].element_names
+        except Exception:
+            pass
+        if in_labels and in_labels == out_labels:
+            md[MODEL_SPEC_ID_METADATA] = {
+                **md[MODEL_SPEC_ID_METADATA],
+                'element_names': list(in_labels),
+            }
+        return md
+
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
         from psyneulink.core.globals.mdf import _get_id_for_mdf_port

@@ -823,6 +823,12 @@ def _generate_component_string(
                 and not parameter_value_matches_default(component_type, arg, val)
             ):
                 additional_arguments.append(f'{constructor_arg}={val}')
+            elif arg == 'element_names' and val:
+                # #11 slice 4: ``element_names`` is a constructor kwarg
+                # carried in the MDF metadata channel but isn't a
+                # registered Parameter, so it falls through the gate
+                # above. Surface it back when set.
+                additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
             try:
                 val[MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE]
