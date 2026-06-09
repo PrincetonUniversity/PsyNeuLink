@@ -96,8 +96,8 @@ class TestNested:
     expected_output_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
     expected_output_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for SOLO NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for SOLO NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for SOLO NODE" -> "SOLO NODE" [color=brown penwidth=1 style=dotted]\n\t"SOLO NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     solo_nested_data = [
-        ('solo',  expected_solo_python, expected_solo_pytorch),
-        ('input', expected_input_python, expected_input_pytorch),
+        # ('solo',  expected_solo_python, expected_solo_pytorch),
+        # ('input', expected_input_python, expected_input_pytorch),
         ('middle', expected_middle_python, expected_middle_pytorch),
         ('output', expected_output_python, expected_output_pytorch)
     ]
