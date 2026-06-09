@@ -3,12 +3,7 @@ from __future__ import annotations
 import importlib.util
 
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport, BatchedDiagnostic
-from psyneulink.core.batched.graph import (
-    DDM_MODEL,
-    GRAPH_MODEL,
-    STABILITY_FLEXIBILITY_MODEL,
-    lower_composition,
-)
+from psyneulink.core.batched.graph import lower_composition
 from psyneulink.core.batched.ir import BatchedCompositionIR
 
 
@@ -47,6 +42,7 @@ def analyze_composition(composition, backend: str = "ir_debug", outputs=None, ma
         metadata={
             "num_nodes": len(getattr(composition, "nodes", [])),
             "fusion_kind": None if lowering.graph is None else lowering.graph.fusion_kind,
+            "schedule_kind": lowering.schedule_kind,
         },
     )
 

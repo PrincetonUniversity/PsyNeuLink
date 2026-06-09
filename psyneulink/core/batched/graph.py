@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from collections.abc import Iterable
+import re
 from typing import Any
 
 import numpy as np
@@ -23,17 +24,16 @@ from psyneulink.core.batched.ir import (
 
 GRAPH_MODEL = "graph"
 DDM_MODEL = "ddm"
-STABILITY_FLEXIBILITY_MODEL = "stability_flexibility"
 STATELESS_GRAPH_FUSION = "stateless_graph"
 DDM_GRAPH_FUSION = "ddm_graph"
 STATEFUL_GRAPH_FUSION = "stateful_graph"
+STATIC_GRAPH_SCHEDULE = "static_graph"
+PRECOMPUTED_TRACE_SCHEDULE = "precomputed_trace"
+DYNAMIC_LANE_LOCAL_SCHEDULE = "dynamic_lane_local"
+UNSUPPORTED_SCHEDULE = "unsupported"
 
-_SUPPORTED_SCHEDULER_CONDITIONS = {
-    "Always",
-    "AtTrialStart",
-    "EveryNCalls",
-    "WhenFinished",
-}
+_PRECOMPUTED_TRACE_CONDITIONS = {"EveryNCalls"}
+_DYNAMIC_LANE_LOCAL_CONDITIONS = {"Threshold"}
 
 _STATELESS_MECHANISMS = {"TransferMechanism", "ProcessingMechanism"}
 _STATELESS_FUNCTIONS = {"Linear", "Logistic"}
@@ -45,6 +45,7 @@ class LoweringResult:
     params: tuple[BatchedParamSpec, ...]
     bindings: BatchedComponentBindings
     model_kind: str | None
+    schedule_kind: str
     supported_nodes: tuple[str, ...]
     rejected_nodes: tuple[BatchedDiagnostic, ...]
     supported_conditions: tuple[str, ...]
@@ -58,8 +59,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     rejected_nodes: list[BatchedDiagnostic] = []
     supported_nodes: list[str] = []
 
-    roles = _infer_stability_flexibility_roles(composition, nodes)
-    model_kind = _classify_model(nodes, roles)
+    model_kind = _classify_model(nodes)
+    schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(composition, nodes)
     node_bindings = {
         _node_name(node): node
         for node in nodes
@@ -78,7 +79,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         node_name = _node_name(node)
         if component_type == "ControlMechanism":
             supported_nodes.append(node_name)
-            node_specs.append(_node_spec(node, params, model_kind, roles))
+            node_specs.append(_node_spec(node, params, model_kind, composition))
             continue
 
         diagnostic = _node_support_diagnostic(node)
@@ -87,7 +88,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             continue
 
         supported_nodes.append(node_name)
-        node_spec = _node_spec(node, params, model_kind, roles)
+        node_spec = _node_spec(node, params, model_kind, composition)
         node_specs.append(node_spec)
         if component_type == "LCAMechanism":
             state_specs.extend(
@@ -101,11 +102,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
 
     projections, projection_rejections, projection_bindings = _projection_specs(composition, node_names)
     rejected_nodes.extend(projection_rejections)
-    supported_conditions, rejected_conditions = _analyze_scheduler_conditions(composition)
 
     graph = None
     if not rejected_nodes and not rejected_conditions:
-        inputs = _input_specs(nodes, projections, roles)
+        inputs = _input_specs(nodes, projections)
         outputs = _output_specs(composition, outputs, nodes)
         execution_order = tuple(
             _node_name(node)
@@ -139,7 +139,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             fusion_kind=_fusion_kind(model_kind, nodes),
             metadata={
                 "composition_name": getattr(composition, "name", None),
-                "stability_flexibility_roles": roles,
+                "schedule_kind": schedule_kind,
             },
         )
 
@@ -152,6 +152,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             projections=projection_bindings,
         ),
         model_kind=model_kind,
+        schedule_kind=schedule_kind,
         supported_nodes=tuple(supported_nodes),
         rejected_nodes=tuple(rejected_nodes),
         supported_conditions=tuple(supported_conditions),
@@ -172,21 +173,7 @@ def projection_inputs(graph: BatchedGraphIR, receiver: str) -> tuple[BatchedProj
 
 
 def scheduler_condition_names(composition) -> tuple[list[BatchedDiagnostic], list[str]]:
-    rejected: list[BatchedDiagnostic] = []
-    supported: list[str] = []
-    for node, condition in _scheduler_conditions(composition).items():
-        condition_name = type(condition).__name__
-        node_name = _node_name(node)
-        if condition_name in _SUPPORTED_SCHEDULER_CONDITIONS:
-            supported.append(f"{node_name}: {condition_name}")
-        else:
-            rejected.append(
-                BatchedDiagnostic(
-                    component=node_name,
-                    reason="unsupported scheduler condition",
-                    detail=condition_name,
-                )
-            )
+    _, supported, rejected = _classify_schedule(composition, _composition_nodes(composition))
     return rejected, supported
 
 
@@ -203,7 +190,7 @@ class _ParamBuilder:
         return name
 
 
-def _node_spec(node, params: _ParamBuilder, model_kind: str | None, roles: dict[str, str]) -> BatchedNodeSpec:
+def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition) -> BatchedNodeSpec:
     component_type = type(node).__name__
     function = getattr(node, "function", None)
     function_type = type(function).__name__
@@ -217,89 +204,125 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, roles: dict[
     if component_type in _STATELESS_MECHANISMS:
         attrs["output_ports"] = tuple(port.name for port in getattr(node, "output_ports", []))
         if function_type == "Linear":
-            slope_name = _stateless_param_name(node_name, "slope", roles)
-            intercept_name = _stateless_param_name(node_name, "intercept", roles)
+            slope_name = f"{node_name}.slope"
+            intercept_name = f"{node_name}.intercept"
             param_map["slope"] = params.add(
                 slope_name,
                 _get_param(function, "slope", 1.0),
-                aliases=(f"{node_name}.slope",),
+                aliases=_node_param_aliases(node_name, "slope"),
             )
             param_map["intercept"] = params.add(
                 intercept_name,
                 _get_param(function, "intercept", 0.0),
-                aliases=(f"{node_name}.intercept",),
+                aliases=_node_param_aliases(node_name, "intercept"),
             )
         elif function_type == "Logistic":
             param_map["gain"] = params.add(
                 f"{node_name}.gain",
                 _get_param(function, "gain", 1.0),
-                aliases=(f"{node_name}.gain",),
+                aliases=_node_param_aliases(node_name, "gain"),
             )
     elif component_type == "DDM":
         function = node.function
-        prefix = "ddm_" if model_kind == STABILITY_FLEXIBILITY_MODEL else ""
         aliases_prefix = "DDM"
+        rate_name = "rate" if model_kind == DDM_MODEL else f"{node_name}.rate"
+        noise_name = "noise" if model_kind == DDM_MODEL else f"{node_name}.noise"
+        threshold_name = "threshold" if model_kind == DDM_MODEL else f"{node_name}.threshold"
+        non_decision_time_name = (
+            "non_decision_time"
+            if model_kind == DDM_MODEL
+            else f"{node_name}.non_decision_time"
+        )
+        time_step_size_name = (
+            "time_step_size"
+            if model_kind == DDM_MODEL
+            else f"{node_name}.time_step_size"
+        )
+        starting_value_name = (
+            "starting_value"
+            if model_kind == DDM_MODEL
+            else f"{node_name}.starting_value"
+        )
+        offset_name = "offset" if model_kind == DDM_MODEL else f"{node_name}.offset"
         param_map["rate"] = params.add(
-            "rate" if model_kind == DDM_MODEL else f"{node_name}.rate",
+            rate_name,
             _get_param(function, "rate", 1.0),
-            aliases=("ddm.rate", f"{aliases_prefix}.rate"),
+            aliases=("ddm.rate", f"{aliases_prefix}.rate") + _node_param_aliases(node_name, "rate"),
         )
         param_map["noise"] = params.add(
-            f"{prefix}noise" if model_kind == STABILITY_FLEXIBILITY_MODEL else "noise",
+            noise_name,
             _get_param(function, "noise", 0.0),
-            aliases=("ddm.noise", f"{aliases_prefix}.noise"),
+            aliases=("ddm.noise", f"{aliases_prefix}.noise") + _node_param_aliases(node_name, "noise"),
         )
         param_map["threshold"] = params.add(
-            "threshold",
+            threshold_name,
             _get_param(function, "threshold", 1.0),
-            aliases=("ddm.threshold", f"{aliases_prefix}.threshold"),
+            aliases=("ddm.threshold", f"{aliases_prefix}.threshold") + _node_param_aliases(node_name, "threshold"),
         )
         param_map["non_decision_time"] = params.add(
-            "non_decision_time",
+            non_decision_time_name,
             _get_param(function, "non_decision_time", 0.0),
-            aliases=("ddm.non_decision_time", f"{aliases_prefix}.non_decision_time"),
+            aliases=(
+                "ddm.non_decision_time",
+                f"{aliases_prefix}.non_decision_time",
+            ) + _node_param_aliases(node_name, "non_decision_time"),
         )
         param_map["time_step_size"] = params.add(
-            f"{prefix}time_step_size" if model_kind == STABILITY_FLEXIBILITY_MODEL else "time_step_size",
+            time_step_size_name,
             _get_param(function, "time_step_size", 1.0),
-            aliases=("ddm.time_step_size", f"{aliases_prefix}.time_step_size"),
+            aliases=(
+                "ddm.time_step_size",
+                f"{aliases_prefix}.time_step_size",
+            ) + _node_param_aliases(node_name, "time_step_size"),
         )
         param_map["starting_value"] = params.add(
-            "starting_value",
+            starting_value_name,
             _get_param(function, "initializer", _get_param(function, "starting_value", 0.0)),
-            aliases=("ddm.starting_value", f"{aliases_prefix}.starting_value"),
+            aliases=(
+                "ddm.starting_value",
+                f"{aliases_prefix}.starting_value",
+            ) + _node_param_aliases(node_name, "starting_value"),
         )
         param_map["offset"] = params.add(
-            "ddm_offset" if model_kind == STABILITY_FLEXIBILITY_MODEL else "offset",
+            offset_name,
             _get_param(function, "offset", 0.0),
-            aliases=("ddm.offset", f"{aliases_prefix}.offset"),
+            aliases=("ddm.offset", f"{aliases_prefix}.offset") + _node_param_aliases(node_name, "offset"),
         )
         attrs["output_ports"] = tuple(port.name for port in getattr(node, "output_ports", []))
     elif component_type == "LCAMechanism":
         function = getattr(node, "function", None)
-        param_map["gain"] = params.add("gain", _get_param(function, "gain", 1.0), aliases=(f"{node_name}.gain",))
+        param_map["gain"] = params.add(
+            f"{node_name}.gain",
+            _get_param(function, "gain", 1.0),
+            aliases=_node_param_aliases(node_name, "gain"),
+        )
         param_map["leak"] = params.add(
-            "leak",
+            f"{node_name}.leak",
             _get_param(node, "leak", _get_param(getattr(node, "integrator_function", None), "rate", 1.0)),
-            aliases=(f"{node_name}.leak",),
+            aliases=_node_param_aliases(node_name, "leak"),
         )
         param_map["competition"] = params.add(
-            "competition",
+            f"{node_name}.competition",
             _get_param(node, "competition", 1.0),
-            aliases=(f"{node_name}.competition",),
+            aliases=_node_param_aliases(node_name, "competition"),
         )
         param_map["self_excitation"] = params.add(
-            "self_excitation",
+            f"{node_name}.self_excitation",
             _get_param(node, "self_excitation", _get_param(node, "auto", 0.0)),
-            aliases=(f"{node_name}.self_excitation",),
+            aliases=_node_param_aliases(node_name, "self_excitation"),
         )
-        param_map["noise"] = params.add("lca_noise", _get_param(node, "noise", 0.0), aliases=(f"{node_name}.noise",))
+        param_map["noise"] = params.add(
+            f"{node_name}.noise",
+            _get_param(node, "noise", 0.0),
+            aliases=_node_param_aliases(node_name, "noise"),
+        )
         param_map["time_step_size"] = params.add(
-            "lca_time_step_size",
+            f"{node_name}.time_step_size",
             _get_param(node, "time_step_size", 0.01),
-            aliases=(f"{node_name}.time_step_size",),
+            aliases=_node_param_aliases(node_name, "time_step_size"),
         )
-        attrs["termination_input_node"] = roles.get("cue_node")
+        termination_input_node = _control_monitor_source_for(composition, node)
+        attrs["termination_input_node"] = None if termination_input_node is None else _node_name(termination_input_node)
         attrs["termination_threshold"] = _get_param(node, "termination_threshold", 1200)
 
     return BatchedNodeSpec(
@@ -386,7 +409,7 @@ def _projection_specs(
     return projections, rejected, bindings
 
 
-def _input_specs(nodes, projections: list[BatchedProjectionSpec], roles: dict[str, str]) -> list[BatchedInputSpec]:
+def _input_specs(nodes, projections: list[BatchedProjectionSpec]) -> list[BatchedInputSpec]:
     receiver_names = {projection.receiver for projection in projections}
     specs = []
     for node in nodes:
@@ -397,13 +420,6 @@ def _input_specs(nodes, projections: list[BatchedProjectionSpec], roles: dict[st
         if node_name in receiver_names:
             continue
         specs.append(BatchedInputSpec(name=node_name, node=node_name, width=_input_width(node)))
-
-    for role in ("cue_node", "correct_node"):
-        node_name = roles.get(role)
-        if node_name and node_name not in {spec.node for spec in specs}:
-            node = _find_node_by_name(nodes, node_name)
-            if node is not None:
-                specs.append(BatchedInputSpec(name=node_name, node=node_name, width=_input_width(node)))
     return specs
 
 
@@ -443,14 +459,11 @@ def _output_spec_from_name(name: str, nodes) -> BatchedOutputSpec:
     raise KeyError(f"Could not resolve batched output '{name}'.")
 
 
-def _classify_model(nodes, roles: dict[str, str]) -> str | None:
+def _classify_model(nodes) -> str | None:
     executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
     ddm_nodes = [node for node in executable_nodes if type(node).__name__ == "DDM"]
-    lca_nodes = [node for node in executable_nodes if type(node).__name__ == "LCAMechanism"]
     if len(executable_nodes) == 1 and len(ddm_nodes) == 1:
         return DDM_MODEL
-    if len(ddm_nodes) == 1 and len(lca_nodes) == 1 and roles:
-        return STABILITY_FLEXIBILITY_MODEL
     if executable_nodes:
         return GRAPH_MODEL
     return None
@@ -493,56 +506,6 @@ def _is_stateful_graph_fusible(nodes) -> bool:
     return has_stateful_node
 
 
-def _infer_stability_flexibility_roles(composition, nodes) -> dict[str, str]:
-    ddm_nodes = [node for node in nodes if type(node).__name__ == "DDM"]
-    lca_nodes = [node for node in nodes if type(node).__name__ == "LCAMechanism"]
-    if len(ddm_nodes) != 1 or len(lca_nodes) != 1:
-        return {}
-
-    ddm = ddm_nodes[0]
-    lca = lca_nodes[0]
-    roles: dict[str, str] = {"ddm_node": _node_name(ddm), "lca_node": _node_name(lca)}
-    lca_sources = _mapping_sources(lca)
-    task_sources = [source for source in lca_sources if source is not lca]
-    if task_sources:
-        roles["task_node"] = _node_name(task_sources[0])
-    cue = _control_monitor_source_for(composition, lca)
-    if cue is not None:
-        roles["cue_node"] = _node_name(cue)
-
-    ddm_sources = _mapping_sources(ddm)
-    if ddm_sources:
-        scale = ddm_sources[0]
-        roles["scale_node"] = _node_name(scale)
-        recode_sources = _mapping_sources(scale)
-        if recode_sources:
-            recode = recode_sources[0]
-            roles["recode_node"] = _node_name(recode)
-            recode_input_sources = _mapping_sources(recode)
-            product_sources = _source_names(recode_input_sources)
-            upstream = _first_source_with_combine(recode_input_sources, "sum")
-            if upstream is not None:
-                roles["combination_node"] = _node_name(upstream)
-                for source in recode_input_sources:
-                    if source is not upstream:
-                        roles["correct_node"] = _node_name(source)
-                combo_sources = _mapping_sources(upstream)
-                product_node = _first_source_with_combine(combo_sources, "product")
-                if product_node is not None:
-                    roles["nonautomatic_node"] = _node_name(product_node)
-                    for source in combo_sources:
-                        if source is not product_node:
-                            roles["automaticity_node"] = _node_name(source)
-                    for source in _mapping_sources(product_node):
-                        if source is not lca:
-                            roles["stimulus_node"] = _node_name(source)
-            elif len(product_sources) == 2:
-                roles["correct_node"] = product_sources[1]
-
-    required = {"task_node", "stimulus_node", "cue_node", "correct_node", "automaticity_node", "scale_node"}
-    return roles if required.issubset(roles) else {}
-
-
 def _control_monitor_source_for(composition, controlled_node):
     deps = getattr(composition.graph_processing, "dependency_dict", {}).get(controlled_node, [])
     for dependency in deps:
@@ -554,37 +517,6 @@ def _control_monitor_source_for(composition, controlled_node):
                 if sender is not None:
                     return sender
     return None
-
-
-def _mapping_sources(node):
-    sources = []
-    for input_port in getattr(node, "input_ports", []):
-        for projection in getattr(input_port, "path_afferents", []):
-            if type(projection).__name__ != "MappingProjection":
-                continue
-            sender = getattr(getattr(projection, "sender", None), "owner", None)
-            if sender is not None:
-                sources.append(sender)
-    return sources
-
-
-def _first_source_with_combine(sources, combine: str):
-    for source in sources:
-        if _combine_name(source) == combine:
-            return source
-    return None
-
-
-def _source_names(sources) -> list[str]:
-    return [_node_name(source) for source in sources]
-
-
-def _stateless_param_name(node_name: str, param: str, roles: dict[str, str]) -> str:
-    if roles.get("automaticity_node") == node_name and param == "slope":
-        return "automaticity"
-    if roles.get("scale_node") == node_name and param == "slope":
-        return "scale"
-    return f"{node_name}.{param}"
 
 
 def _op_kind(node) -> str:
@@ -608,6 +540,70 @@ def _terminal_node_names(composition) -> list[str]:
     return terminal
 
 
+def _classify_schedule(composition, nodes) -> tuple[str, list[str], list[BatchedDiagnostic]]:
+    conditions = _scheduler_conditions(composition)
+    if not conditions:
+        return STATIC_GRAPH_SCHEDULE, [], []
+
+    node_index = {_node_name(node): idx for idx, node in enumerate(nodes)}
+    supported: list[str] = []
+    rejected: list[BatchedDiagnostic] = []
+    required_schedule_kind = STATIC_GRAPH_SCHEDULE
+
+    for node, condition in conditions.items():
+        node_name = _node_name(node)
+        condition_name = type(condition).__name__
+        condition_schedule_kind = _condition_schedule_kind(condition, node, node_index)
+        supported.append(f"{node_name}: {condition_name}")
+
+        if condition_schedule_kind == STATIC_GRAPH_SCHEDULE:
+            continue
+        if condition_schedule_kind == UNSUPPORTED_SCHEDULE:
+            rejected.append(
+                BatchedDiagnostic(
+                    component=node_name,
+                    reason="unsupported scheduler condition for static batched graph",
+                    detail=condition_name,
+                )
+            )
+            required_schedule_kind = UNSUPPORTED_SCHEDULE
+            continue
+
+        if required_schedule_kind != UNSUPPORTED_SCHEDULE:
+            required_schedule_kind = condition_schedule_kind
+        rejected.append(
+            BatchedDiagnostic(
+                component=node_name,
+                reason="batched schedule kind is not executable yet",
+                detail=f"{condition_name} requires {condition_schedule_kind}",
+            )
+        )
+
+    if rejected:
+        return required_schedule_kind, supported, rejected
+    return STATIC_GRAPH_SCHEDULE, supported, []
+
+
+def _condition_schedule_kind(condition, node, node_index: dict[str, int]) -> str:
+    condition_name = type(condition).__name__
+    if condition_name in {"Always", "AtTrialStart"}:
+        return STATIC_GRAPH_SCHEDULE
+    if condition_name == "WhenFinished":
+        args = getattr(condition, "args", ())
+        if len(args) != 1:
+            return DYNAMIC_LANE_LOCAL_SCHEDULE
+        target = args[0]
+        target_name = _node_name(target)
+        if node_index.get(target_name, -1) < node_index.get(_node_name(node), -1):
+            return STATIC_GRAPH_SCHEDULE
+        return DYNAMIC_LANE_LOCAL_SCHEDULE
+    if condition_name in _PRECOMPUTED_TRACE_CONDITIONS:
+        return PRECOMPUTED_TRACE_SCHEDULE
+    if condition_name in _DYNAMIC_LANE_LOCAL_CONDITIONS:
+        return DYNAMIC_LANE_LOCAL_SCHEDULE
+    return UNSUPPORTED_SCHEDULE
+
+
 def _scheduler_conditions(composition):
     scheduler = getattr(composition, "scheduler", None)
     if scheduler is None:
@@ -619,24 +615,24 @@ def _scheduler_conditions(composition):
     return conditions_basic
 
 
-def _analyze_scheduler_conditions(composition) -> tuple[list[str], list[BatchedDiagnostic]]:
-    rejected, supported = scheduler_condition_names(composition)
-    return supported, rejected
-
-
 def _composition_nodes(composition) -> list[Any]:
     return list(getattr(composition, "nodes", []))
 
 
-def _find_node_by_name(nodes, name: str):
-    for node in nodes:
-        if _node_name(node) == name:
-            return node
-    return None
-
-
 def _node_name(node) -> str:
     return getattr(node, "name", str(node))
+
+
+def _node_param_aliases(node_name: str, param_name: str) -> tuple[str, ...]:
+    qualified = f"{node_name}.{param_name}"
+    base_name = _unsuffixed_node_name(node_name)
+    if base_name == node_name:
+        return (qualified,)
+    return (qualified, f"{base_name}.{param_name}")
+
+
+def _unsuffixed_node_name(node_name: str) -> str:
+    return re.sub(r"-\d+$", "", node_name)
 
 
 def _combine_name(node) -> str:

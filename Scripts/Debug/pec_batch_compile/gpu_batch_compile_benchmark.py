@@ -5,7 +5,6 @@ import statistics
 import sys
 import time
 import warnings
-from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -29,23 +28,11 @@ _PEC_GRID_MODES = {
     "llvm": "LLVM",
     "ptx": "PTX",
 }
-_MONOLITHIC_SF_FUSION = "stability_flexibility"
 
 
 class _BatchedResultAdapter:
     def __init__(self, values):
         self.values = values
-
-
-def _with_graph_fusion_kind(plan, fusion_kind: str):
-    graph = replace(plan.ir.graph, fusion_kind=fusion_kind)
-    metadata = dict(plan.ir.metadata)
-    metadata["fusion_kind"] = fusion_kind
-    ir = replace(plan.ir, graph=graph, metadata=metadata)
-    report_metadata = dict(plan.capability_report.metadata)
-    report_metadata["fusion_kind"] = fusion_kind
-    report = replace(plan.capability_report, metadata=report_metadata)
-    return replace(plan, ir=ir, capability_report=report)
 
 
 class _PECGridDDMPlan:
@@ -228,7 +215,7 @@ class _PECGridStabilityFlexibilityPlan:
         parameter_values = []
         for param in parameter_sets:
             self.pec.controller.function._ll_func = None
-            _, sim_data = self.pec.log_likelihood(param["threshold"], inputs=pec_inputs)
+            _, sim_data = self.pec.log_likelihood(param["DDM.threshold"], inputs=pec_inputs)
             parameter_values.append(np.asarray(sim_data, dtype=np.float32))
 
         return _BatchedResultAdapter(np.asarray(parameter_values, dtype=np.float32)[:, None, :, :, :])
@@ -292,6 +279,21 @@ def _ddm_parameter_sets(count):
     ]
 
 
+def _ddm_graph_parameter_sets(count):
+    rates = np.linspace(0.7, 1.3, count, dtype=np.float32)
+    thresholds = np.linspace(0.04, 0.08, count, dtype=np.float32)
+    return [
+        {
+            "DDM.rate": float(rate),
+            "DDM.threshold": float(threshold),
+            "DDM.noise": 0.2,
+            "DDM.time_step_size": 0.01,
+            "DDM.non_decision_time": 0.0,
+        }
+        for rate, threshold in zip(rates, thresholds)
+    ]
+
+
 def _make_stability_flexibility_comp():
     return make_stab_flex(
         lca_time_step_size=0.01,
@@ -312,9 +314,9 @@ def _stability_flexibility_parameter_sets(count):
     thresholds = np.linspace(0.04, 0.08, count, dtype=np.float32)
     return [
         {
-            "threshold": float(threshold),
-            "ddm_noise": 0.1,
-            "lca_noise": 0.05,
+            "DDM.threshold": float(threshold),
+            "DDM.noise": 0.1,
+            "Task Activations [Act1, Act2].noise": 0.05,
         }
         for threshold in thresholds
     ]
@@ -408,9 +410,6 @@ def _run_ddm(args):
         inputs = _ddm_inputs(decision, trials)
         params = _ddm_parameter_sets(params_count)
         for backend in args.backends:
-            if backend == "triton_fused":
-                print("ddm,triton_fused,SKIP,monolithic SF fusion is only available for stability-flexibility")
-                continue
             if backend in _PEC_GRID_MODES:
                 plan = _PECGridDDMPlan(_PEC_GRID_MODES[backend], trials, estimates)
                 compiled_inputs = _ddm_inputs(plan.comp, trials)
@@ -434,14 +433,11 @@ def _run_ddm_graph(args):
     comp, source, _ = _make_ddm_graph_comp()
     for params_count, trials, estimates in args.ddm_graph_cases:
         inputs = _ddm_inputs(source, trials)
-        params = _ddm_parameter_sets(params_count)
         for backend in args.backends:
-            if backend == "triton_fused":
-                print("ddm_graph,triton_fused,SKIP,monolithic SF fusion is only available for stability-flexibility")
-                continue
             if backend in _PEC_GRID_MODES:
                 plan = _PECGridDDMGraphPlan(_PEC_GRID_MODES[backend], trials, estimates)
                 compiled_inputs = _ddm_inputs(plan.comp, trials)
+                params = _ddm_parameter_sets(params_count)
             else:
                 report = BatchedCompositionCompiler.diagnose(comp, backend=backend, max_steps=args.ddm_max_steps)
                 if not report.is_supported or not report.backend_available:
@@ -455,6 +451,7 @@ def _run_ddm_graph(args):
                     continue
                 plan = BatchedCompositionCompiler.compile(comp, backend=backend, max_steps=args.ddm_max_steps)
                 compiled_inputs = inputs
+                params = _ddm_graph_parameter_sets(params_count)
 
             try:
                 metrics = _time_run(plan, compiled_inputs, params, estimates, args.seed, args.repeats, args.warmups)
@@ -473,14 +470,11 @@ def _run_stability_flexibility(args):
             else:
                 comp = _make_stability_flexibility_comp()
                 inputs = _stability_flexibility_inputs(comp, trials)
-                diagnose_backend = "triton" if backend == "triton_fused" else backend
-                report = BatchedCompositionCompiler.diagnose(comp, backend=diagnose_backend, max_steps=args.sf_max_steps)
+                report = BatchedCompositionCompiler.diagnose(comp, backend=backend, max_steps=args.sf_max_steps)
                 if not report.is_supported or not report.backend_available:
                     print(f"stability_flexibility,{backend},SKIP,{'; '.join(report.unsupported_reasons)}")
                     continue
-                plan = BatchedCompositionCompiler.compile(comp, backend=diagnose_backend, max_steps=args.sf_max_steps)
-                if backend == "triton_fused":
-                    plan = _with_graph_fusion_kind(plan, _MONOLITHIC_SF_FUSION)
+                plan = BatchedCompositionCompiler.compile(comp, backend=backend, max_steps=args.sf_max_steps)
 
             params = _stability_flexibility_parameter_sets(params_count)
             try:
@@ -517,7 +511,7 @@ def _parse_args():
     parser.add_argument(
         "--backend",
         action="append",
-        choices=("ir_debug", "triton", "triton_fused", "llvm", "ptx"),
+        choices=("ir_debug", "triton", "llvm", "ptx"),
         dest="backends",
         help="'llvm' and 'ptx' run current PEC grid_evaluate; 'triton' runs the batched simulator.",
     )

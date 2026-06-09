@@ -21,7 +21,13 @@ comp = make_stab_flex(
 )
 task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=1)
 inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
-params = [{"threshold": 0.05, "ddm_noise": 0.0, "lca_noise": 0.0}]
+params = [
+    {
+        "DDM.threshold": 0.05,
+        "DDM.noise": 0.0,
+        "Task Activations [Act1, Act2].noise": 0.0,
+    }
+]
 
 for backend in ("ir_debug", "triton"):
     report = BatchedCompositionCompiler.diagnose(comp, backend=backend)

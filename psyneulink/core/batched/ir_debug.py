@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from psyneulink.core.batched.graph import DDM_MODEL, STABILITY_FLEXIBILITY_MODEL, projection_inputs
+from psyneulink.core.batched.graph import DDM_MODEL, projection_inputs
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
 from psyneulink.core.batched.kernel_ir import KernelIR, lower_to_kernel_ir
 
@@ -85,14 +85,8 @@ def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dic
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
     prepared = _split_subject_trials(values, subject_slices)
-    roles = ir.graph.metadata.get("stability_flexibility_roles", {})
     if ir.graph.fusion_kind == DDM_MODEL and ir.graph.inputs:
         prepared["stimulus"] = prepared[ir.graph.inputs[0].node]
-    elif ir.graph.fusion_kind == STABILITY_FLEXIBILITY_MODEL and roles:
-        prepared["task"] = prepared[roles["task_node"]]
-        prepared["stimulus"] = prepared[roles["stimulus_node"]]
-        prepared["cue"] = prepared[roles["cue_node"]]
-        prepared["correct"] = prepared[roles["correct_node"]]
     return prepared
 
 
@@ -319,12 +313,10 @@ def _simulate_lca_cue_period(
     return pre, act
 
 
-def _stability_flexibility_lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> int:
+def _lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> int:
     metadata_limit = int(ir.metadata.get("lca_max_steps", 0) or 0)
     input_limit = 0
-    if "cue" in inputs and np.size(inputs["cue"]):
-        input_limit = int(np.ceil(np.max(inputs["cue"])))
-    elif ir.graph is not None:
+    if ir.graph is not None:
         for node in ir.graph.nodes:
             if node.component_type != "LCAMechanism":
                 continue
@@ -395,14 +387,28 @@ def _unwrap_singletons(value):
 
 def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> dict[str, float]:
     canonical = dict(ir.param_defaults)
+    matched = set()
     for spec in ir.params:
         candidate_names = (spec.name,) + spec.aliases
         for name in candidate_names:
             if name in row:
                 canonical[spec.name] = float(row[name])
+                matched.add(name)
         for name, value in row.items():
             if isinstance(name, str) and any(name.endswith(f".{candidate}") for candidate in candidate_names):
                 canonical[spec.name] = float(value)
+                matched.add(name)
+    unknown = sorted(
+        str(name)
+        for name in row
+        if name not in matched and name not in canonical
+    )
+    if unknown:
+        available = sorted({spec.name for spec in ir.params} | {alias for spec in ir.params for alias in spec.aliases})
+        raise ValueError(
+            "Unknown batched parameter(s): "
+            f"{', '.join(unknown)}. Available parameters: {', '.join(available)}"
+        )
     return canonical
 
 

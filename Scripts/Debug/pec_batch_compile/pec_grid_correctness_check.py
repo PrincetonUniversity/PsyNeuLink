@@ -159,7 +159,13 @@ def _triton_sf_values(noise, trials, estimates, threshold, max_steps=256):
         lca_noise=noise,
     )
     inputs = _sf_inputs(comp, trials)
-    params = [{"threshold": threshold, "ddm_noise": noise, "lca_noise": noise}]
+    params = [
+        {
+            "DDM.threshold": threshold,
+            "DDM.noise": noise,
+            "Task Activations [Act1, Act2].noise": noise,
+        }
+    ]
     return BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=max_steps).run(
         inputs,
         params,
