@@ -9,7 +9,10 @@ tools (PsyNeuView's pill / Run State / Inspector via the ``_debugger``
 snapshot path, plus future MDF serialization).
 """
 
+import pytest
+
 import psyneulink as pnl
+from psyneulink.core.components.ports.port import PortError
 
 
 def test_unset_element_names_default_to_none():
@@ -71,3 +74,54 @@ def test_falsy_element_names_treated_as_unset():
     to downstream tools as if labels were intentionally provided."""
     assert pnl.OutputPort(element_names=None).element_names is None
     assert pnl.OutputPort(element_names=[]).element_names is None
+
+
+# ---------------------------------------------------------------------------
+# Length validation (Phase 1 polish)
+# ---------------------------------------------------------------------------
+
+
+def test_mechanism_shorthand_length_match_ok():
+    """Length matches the port's value size → no error."""
+    m = pnl.TransferMechanism(
+        input_shapes=[3],
+        name='ok',
+        element_names=['a', 'b', 'c'],
+    )
+    assert m.input_ports[0].element_names == ['a', 'b', 'c']
+    assert m.output_ports[0].element_names == ['a', 'b', 'c']
+
+
+def test_mechanism_shorthand_length_mismatch_raises():
+    """Mechanism shorthand with wrong number of labels → PortError."""
+    with pytest.raises(PortError, match='element_names'):
+        pnl.TransferMechanism(
+            input_shapes=[3],
+            name='bad',
+            element_names=['only', 'two'],
+        )
+
+
+def test_explicit_outputport_length_mismatch_raises():
+    """Explicit OutputPort with mismatched element_names → PortError.
+
+    Must attach to an owner so the deferred-init path resolves and the
+    port's value shape is known.
+    """
+    with pytest.raises(PortError, match='element_names'):
+        pnl.TransferMechanism(
+            input_shapes=[2],
+            name='bad_out',
+            output_ports=[pnl.OutputPort(name='RESULT', element_names=['a', 'b', 'c'])],
+        )
+
+
+def test_explicit_inputport_length_mismatch_raises():
+    """Explicit InputPort with mismatched element_names → PortError."""
+    with pytest.raises(PortError, match='element_names'):
+        pnl.TransferMechanism(
+            default_variable=[[0, 0]],
+            name='bad_in',
+            input_ports=[pnl.InputPort(name='InputPort-0',
+                                       element_names=['a', 'b', 'c'])],
+        )

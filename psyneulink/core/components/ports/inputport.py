@@ -696,6 +696,15 @@ class InputPort(Port_Base):
         specifies whether the InputPort requires external input when its `owner <Port_Base.owner>` is the `INPUT`
         `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
+    element_names : list of str : default None
+        optional semantic labels for each element of the InputPort's
+        `value <InputPort.value>`, surfaced by the `_debugger`
+        NODE_EXECUTION snapshot and consumed by inspection tools. The
+        list length must equal the size of the port's value; a
+        mismatch raises a `PortError` at construction. Static
+        construction metadata only — not threaded through the
+        `Parameters` system and does not participate in execution.
+
     Attributes
     ----------
 
@@ -777,6 +786,10 @@ class InputPort(Port_Base):
         InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions
         <Registry_Naming>` apply to the InputPorts specified, as well as any that are added to the Mechanism once it
         is created (see `note <Port_Naming_Note>`).
+
+    element_names : list of str or None
+        the value passed to the **element_names** argument of the constructor (or ``None`` if unset). See the
+        argument description for usage and validation rules.
 
     """
 

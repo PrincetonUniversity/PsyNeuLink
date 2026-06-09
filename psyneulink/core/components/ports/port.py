@@ -864,6 +864,30 @@ class PortError(ComponentError):
     pass
 
 
+def _validate_element_names_length(port):
+    # #11 polish: element_names is a flat list of labels, one per
+    # element of the port's value vector. If the count doesn't match
+    # the value's size, the labels would silently fall through to
+    # numeric indices at debug/render time -- almost certainly a typo
+    # in the user's model. Raise here so the mistake surfaces at
+    # construction.
+    names = getattr(port, "element_names", None)
+    if not names:
+        return
+    try:
+        value = port.defaults.value
+        expected_len = int(np.asarray(value).size)
+    except Exception:
+        return
+    if len(names) != expected_len:
+        raise PortError(
+            f"element_names for {port.__class__.__name__} "
+            f"{port.name!r} has {len(names)} entries ({names!r}) but "
+            f"the port's value has {expected_len} element(s); the "
+            f"number of labels must match the value's size."
+        )
+
+
 # DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
@@ -1120,6 +1144,13 @@ class Port_Base(Port):
             pass
 
         self.projections = self._get_all_projections()
+
+        # #11 polish: validate element_names length now that the
+        # port's value shape is known. Placed here (rather than in
+        # OutputPort/InputPort.__init__) so the deferred-init replay
+        # path -- which routes through Port_Base.__init__ directly,
+        # bypassing the subclass __init__ -- also runs the check.
+        _validate_element_names_length(self)
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
