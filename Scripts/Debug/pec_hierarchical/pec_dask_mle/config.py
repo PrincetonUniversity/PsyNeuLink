@@ -10,7 +10,12 @@ INITIAL_SEED = 42          # fixed simulation seed (with CRN -> reproducible)
 N_WORKERS = 4              # Dask workers (one evaluation each, in parallel)
 WORKER_CORES = 4           # LLVM threads per worker (estimate-level parallelism)
 BATCH_SIZE = N_WORKERS     # evaluations submitted per ask/tell round
-TOTAL_EVALS = 240          # total likelihood evaluations across the run
+N_ROUNDS = 30              # CMA-ES generations / ask-tell rounds
+
+
+def total_evals():
+    """Likelihood evaluations implied by the fixed-round budget."""
+    return N_ROUNDS * BATCH_SIZE
 
 # --- SLURM worker jobs (Option A: dask-jobqueue) ---
 # Each Dask worker is one SLURM job reserving WORKER_CORES cpus.

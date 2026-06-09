@@ -7,8 +7,8 @@ cleanup when compiled executions run on multiple threads of one process.)
 Because worker processes re-import the real ``config``, monkeypatches only
 reach the driver side. That is enough: workers read only NUM_ESTIMATES /
 INITIAL_SEED / FIT_BOUNDS, so the tests shrink the driver-side knobs
-(NUM_TRIALS for the synthetic data, TOTAL_EVALS / BATCH_SIZE for the loop) and
-keep NUM_ESTIMATES at full size on both sides so serial and distributed
+(NUM_TRIALS for the synthetic data, N_ROUNDS / BATCH_SIZE for the loop) and keep
+NUM_ESTIMATES at full size on both sides so serial and distributed
 evaluations are comparable.
 
 Pins down:
@@ -83,7 +83,7 @@ def test_distributed_scores_match_serial(small_data, client):
 
 
 def test_run_fit_end_to_end(small_data, client, monkeypatch):
-    monkeypatch.setattr(config, "TOTAL_EVALS", 8)
+    monkeypatch.setattr(config, "N_ROUNDS", 2)
     monkeypatch.setattr(config, "BATCH_SIZE", 4)
     data, inputs = small_data
 

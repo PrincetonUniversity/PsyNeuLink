@@ -18,7 +18,7 @@ PY=$REPO/.venv/bin/python3
 BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
 OUT=$BD/results_singlenode.jsonl
 NE=8000
-TE=800
+NR=30
 NT=200     # observed data trials per fit (bump for precision; also makes sims heavier)
 REPS=2
 
@@ -26,14 +26,13 @@ cd $REPO
 rm -f "$OUT"
 
 # regular baseline: serial trials, all 16 cores for estimate-level threading
-$PY $BD/bench.py --mode regular     --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+$PY $BD/bench.py --mode regular     --worker-cores 16 --num-estimates $NE --num-trials $NT --n-rounds $NR --reps $REPS --out $OUT
 
-# dask-local sweep at fixed 16 cores: trade trial-parallel vs estimate-parallel
-$PY $BD/bench.py --mode dask-local --n-workers 1  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --mode dask-local --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --mode dask-local --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --mode dask-local --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --mode dask-local --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+# dask-local sweep at fixed 16 cores and fixed CMA-ES rounds.
+$PY $BD/bench.py --mode dask-local --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps $REPS --out $OUT
+$PY $BD/bench.py --mode dask-local --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps $REPS --out $OUT
+$PY $BD/bench.py --mode dask-local --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps $REPS --out $OUT
+$PY $BD/bench.py --mode dask-local --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps $REPS --out $OUT
 
 echo "==== SUMMARY ===="
 $PY $BD/summarize.py $OUT

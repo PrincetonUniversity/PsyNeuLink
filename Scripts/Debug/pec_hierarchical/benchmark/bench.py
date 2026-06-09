@@ -2,7 +2,7 @@
 
 Compares the *regular* PEC optimizer against the Dask-distributed ask/tell
 backend on the identical problem (same DDM, data, bounds, CMA-ES seed,
-num_estimates, evaluation budget). Run ONE config per process for clean
+num_estimates, fixed CMA-ES round budget). Run ONE config per process for clean
 isolation (fresh LLVM compile, no thread-setting/cluster leakage between runs).
 
 Modes
@@ -15,7 +15,7 @@ loop, so the throughput numbers are not distorted by compilation.
 
 Usage:
   python bench.py --mode regular       --worker-cores 16 --num-estimates 4000 \
-                  --total-evals 240 --reps 2 --out results.jsonl
+                  --n-rounds 30 --reps 2 --out results.jsonl
   python bench.py --mode dask-local    --n-workers 4 --worker-cores 4 ...
   python bench.py --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
 """
@@ -23,6 +23,7 @@ Usage:
 import argparse
 import json
 import logging
+import math
 import os
 import socket
 import sys
@@ -46,6 +47,22 @@ os.environ["PYTHONPATH"] = PKG_PARENT + os.pathsep + os.environ.get("PYTHONPATH"
 
 from pec_dask_mle import config  # noqa: E402
 from pec_dask_mle.data import make_data  # noqa: E402
+
+
+def default_cma_popsize():
+    """Optuna/cmaes default: 4 + floor(3 * log(d))."""
+    return 4 + math.floor(3 * math.log(len(config.FIT_BOUNDS)))
+
+
+def sampler_popsize(args):
+    """Population size used for this benchmark point."""
+    return args.n_workers if args.mode != "regular" else default_cma_popsize()
+
+
+def total_evals(args):
+    """Likelihood evaluations implied by the fixed-round budget."""
+    return args.n_rounds * sampler_popsize(args)
+
 
 try:
     import psutil
@@ -120,7 +137,7 @@ class UsageSampler(threading.Thread):
 # ---------------------------------------------------------------------------
 # Regular PEC baseline (CMA-ES via Optuna, pec.run())
 # ---------------------------------------------------------------------------
-def build_regular_pec(data_to_fit, num_estimates, max_iterations):
+def build_regular_pec(data_to_fit, num_estimates, max_iterations, popsize):
     """A standard PEC configured with a real CMA-ES optimizer for pec.run()."""
     import optuna
     import psyneulink as pnl
@@ -141,7 +158,8 @@ def build_regular_pec(data_to_fit, num_estimates, max_iterations):
         ],
         data=data_to_fit,
         optimization_function=pnl.PECOptimizationFunction(
-            method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=max_iterations
+            method=optuna.samplers.CmaEsSampler(seed=0, popsize=popsize),
+            max_iterations=max_iterations,
         ),
         num_estimates=num_estimates,
         initial_seed=config.INITIAL_SEED,
@@ -156,7 +174,10 @@ def run_regular(args, data_to_fit, trial_inputs):
     import psyneulink as pnl
 
     pnl.set_num_threads(args.worker_cores)
-    pec, comp = build_regular_pec(data_to_fit, args.num_estimates, args.total_evals)
+    popsize = sampler_popsize(args)
+    pec, comp = build_regular_pec(
+        data_to_fit, args.num_estimates, total_evals(args), popsize
+    )
 
     # Warmup: one likelihood eval compiles + caches the LLVM binary on this PEC.
     mid = [(lo + hi) / 2.0 for lo, hi in config.FIT_BOUNDS.values()]
@@ -200,8 +221,9 @@ def _run_with_client(client, args, data_to_fit, trial_inputs):
 
     # Override the package config for this benchmark point.
     config.NUM_ESTIMATES = args.num_estimates
+    config.N_WORKERS = args.n_workers
     config.WORKER_CORES = args.worker_cores
-    config.TOTAL_EVALS = args.total_evals
+    config.N_ROUNDS = args.n_rounds
     config.BATCH_SIZE = args.n_workers
 
     compile_s = _warmup_workers(client, data_to_fit, trial_inputs, args.worker_cores)
@@ -268,15 +290,27 @@ def main():
     p.add_argument("--n-workers", type=int, default=1)
     p.add_argument("--worker-cores", type=int, default=16)
     p.add_argument("--num-estimates", type=int, default=4000)
-    p.add_argument("--total-evals", type=int, default=240)
+    p.add_argument("--num-trials", type=int, default=config.NUM_TRIALS)
+    p.add_argument("--n-rounds", type=int, default=config.N_ROUNDS)
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--worker-timeout", type=int, default=900)
     p.add_argument("--out", default=os.path.join(HERE, "results.jsonl"))
     args = p.parse_args()
 
+    if args.n_rounds < 1:
+        p.error("--n-rounds must be >= 1")
+    if args.mode != "regular" and args.n_workers < 2:
+        p.error(
+            "Dask CMA-ES fixed-round runs require --n-workers >= 2 "
+            "(batch/popsize 1 is not a valid CMA-ES population)."
+        )
+
     total_cores = (1 if args.mode == "regular" else args.n_workers) * args.worker_cores
+    n_evals = total_evals(args)
+    popsize = sampler_popsize(args)
 
     # Same data for every mode/rep (parity).
+    config.NUM_TRIALS = args.num_trials
     data_to_fit, trial_inputs = make_data()
     true = {k: config.TRUE_PARAMS[k] for k in config.FIT_BOUNDS}
 
@@ -306,12 +340,15 @@ def main():
             "worker_cores": args.worker_cores,
             "total_cores": total_cores,
             "num_estimates": args.num_estimates,
-            "total_evals": args.total_evals,
+            "num_trials": args.num_trials,
+            "n_rounds": args.n_rounds,
+            "batch_size": popsize,
+            "total_evals": n_evals,
             "rep": rep,
             "compile_s": round(compile_s, 3),
             "loop_s": round(loop_s, 3),
             "total_s": round(total_s, 3),
-            "evals_per_s": round(args.total_evals / loop_s, 3) if loop_s else None,
+            "evals_per_s": round(n_evals / loop_s, 3) if loop_s else None,
             "core_hours": round(total_cores * loop_s / 3600.0, 5),
             "mean_cpu_cores": round(mcc, 2) if mcc is not None else None,
             "util_pct": round(100.0 * mcc / total_cores, 1) if mcc is not None else None,
@@ -324,8 +361,9 @@ def main():
             f.write(json.dumps(row) + "\n")
         print(
             f"[{args.mode} {args.n_workers}x{args.worker_cores} ne={args.num_estimates} "
-            f"rep{rep}] loop={loop_s:.1f}s compile={compile_s:.1f}s "
-            f"evals/s={row['evals_per_s']} util={row['util_pct']}% err={max_pct_err:.1f}%",
+            f"rounds={args.n_rounds} evals={n_evals} rep{rep}] "
+            f"loop={loop_s:.1f}s compile={compile_s:.1f}s evals/s={row['evals_per_s']} "
+            f"util={row['util_pct']}% err={max_pct_err:.1f}%",
             flush=True,
         )
 
