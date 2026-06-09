@@ -12880,7 +12880,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         {"node": node,
                                          "execution_set": execution_set,
                                          "scheduler": execution_scheduler,
-                                         "context": mech_context})
+                                         "context": mech_context,
+                                         # #13: per-port element_names from the model-intrinsic Layer 1
+                                         # API. Lets snapshot consumers (log replays, remote tools)
+                                         # read labels without a separate introspection pass.
+                                         "output_port_element_names": [
+                                             getattr(p, "element_names", None) for p in node.output_ports
+                                         ]})
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):

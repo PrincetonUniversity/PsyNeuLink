@@ -124,7 +124,51 @@ def test_categories_fire_during_composition_run():
         elif cat is BreakpointCategory.INPUTS_TO_NODE:
             assert {"node", "execution_set", "scheduler", "context"} <= locs.keys()
         elif cat is BreakpointCategory.NODE_EXECUTION:
-            assert {"node", "execution_set", "scheduler", "context"} <= locs.keys()
+            assert {"node", "execution_set", "scheduler", "context",
+                    "output_port_element_names"} <= locs.keys()
+
+
+def test_node_execution_carries_element_names_when_set(capsys):
+    """#13: NODE_EXECUTION snapshot exposes each output port's element_names
+    (Layer 1 labels from PsyNeuLink#11). When unset → list of Nones; when
+    set via constructor → list of label lists in port-index order."""
+    captured = {}
+
+    def listener(category, locals_provider):
+        if category is BreakpointCategory.NODE_EXECUTION:
+            locs = locals_provider()
+            captured.setdefault(locs["node"].name, []).append(locs)
+
+    labeled = pnl.TransferMechanism(
+        input_shapes=[2],
+        name="labeled",
+        element_names=["red", "green"],
+    )
+    plain = pnl.TransferMechanism(input_shapes=[2], name="plain")
+    comp = pnl.Composition(name="comp_element_names")
+    comp.add_node(labeled)
+    comp.add_node(plain)
+
+    _debugger.set_listener(listener)
+    try:
+        comp.run(inputs={labeled: [[1.0, 2.0]], plain: [[3.0, 4.0]]}, num_trials=1)
+    finally:
+        _debugger.set_listener(None)
+
+    assert "labeled" in captured and captured["labeled"], "expected NODE_EXECUTION for labeled"
+    assert "plain" in captured and captured["plain"], "expected NODE_EXECUTION for plain"
+
+    labeled_locs = captured["labeled"][0]
+    assert labeled_locs["output_port_element_names"] == [["red", "green"]], (
+        f"labeled mechanism should surface its element_names per output port; "
+        f"got {labeled_locs['output_port_element_names']}"
+    )
+
+    plain_locs = captured["plain"][0]
+    assert plain_locs["output_port_element_names"] == [None], (
+        f"plain mechanism should surface None per output port; "
+        f"got {plain_locs['output_port_element_names']}"
+    )
 
 
 def test_run_level_categories_fire_once_per_run():
