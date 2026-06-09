@@ -4257,7 +4257,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Auto-derive missing ``InputPort.element_names`` from upstream
         ``OutputPort.element_names`` via identity-style MappingProjections.
 
-        Closes #14 (slice 3 of #11). The rules are intentionally conservative:
+        Closes #14 (slice 3 of #11) and #18 (Phase 2: CIM / nested
+        Composition propagation). The rules are intentionally
+        conservative:
 
         - ``MappingProjection`` with an identity matrix (and no active
           learning) propagates — element-for-element passthrough, meaning
@@ -4267,12 +4269,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           inconsistent labels all leave the downstream port untouched
           (``element_names`` stays ``None``), so consumers fall back to
           index labels.
+        - ``input_CIM`` / ``output_CIM`` ports mirror the labels on the
+          contained-Node port they pair with (the CIM is an `Identity`
+          passthrough by construction), so introspecting a Composition
+          from the outside sees the same element labels as its INPUT /
+          OUTPUT Nodes.
 
         Only fills in ports whose ``element_names`` is currently ``None`` —
         explicit per-port specs always win.
         """
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         import numpy as _np
+
+        # #18: depth-first recursion into nested Compositions. Their
+        # internal propagation pass must run first so their CIM ports
+        # carry labels before our own per-node pass walks the outer
+        # graph and sees them as upstream senders.
+        for node in self.nodes:
+            if isinstance(node, Composition):
+                node._propagate_element_names()
+
+        # #18: mirror labels across CIM port pairs. ``port_map`` is a
+        # dict keyed by the contained-Node port the CIM pairs with;
+        # the value is the (input_port, output_port) tuple on the CIM
+        # itself. The CIM's function is ``Identity``, so labels carry
+        # element-for-element.
+        for cim in (
+            getattr(self, "input_CIM", None),
+            getattr(self, "output_CIM", None),
+        ):
+            port_map = getattr(cim, "port_map", None) if cim is not None else None
+            if not port_map:
+                continue
+            for inner_port, pair in port_map.items():
+                if not pair or len(pair) != 2:
+                    continue
+                cim_in, cim_out = pair
+                labels = getattr(inner_port, "element_names", None)
+                if not labels:
+                    continue
+                if getattr(cim_in, "element_names", None) is None:
+                    cim_in.element_names = list(labels)
+                if getattr(cim_out, "element_names", None) is None:
+                    cim_out.element_names = list(labels)
 
         def _matrix_is_identity(m):
             """True if the projection's effective matrix is identity."""
