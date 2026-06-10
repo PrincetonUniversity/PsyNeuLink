@@ -35,6 +35,7 @@ def main():
     groups = defaultdict(list)
     for r in rows:
         model = r.get("model", "ddm")  # back-compat with pre-model rows
+        popsize = r.get("optimizer_popsize", r.get("batch_size"))
         groups[
             (
                 model,
@@ -43,17 +44,19 @@ def main():
                 r["worker_cores"],
                 r["num_estimates"],
                 r.get("n_rounds"),
+                popsize,
             )
         ].append(r)
 
     agg = []
-    for (model, mode, nw, wc, ne, nr), rs in groups.items():
+    for (model, mode, nw, wc, ne, nr, popsize), rs in groups.items():
         agg.append({
             "label": f"{model}/{mode} {nw}x{wc}",
             "model": model, "mode": mode, "ne": ne, "rounds": nr,
+            "popsize": popsize,
             "cores": rs[0]["total_cores"],
             "evals": rs[0].get("total_evals"),
-            "batch": rs[0].get("batch_size"),
+            "batch": rs[0].get("optimizer_popsize", rs[0].get("batch_size")),
             "loop_s": med([r["loop_s"] for r in rs]),
             "compile_s": med([r["compile_s"] for r in rs]),
             "evals_per_s": med([r["evals_per_s"] for r in rs]),
@@ -63,22 +66,23 @@ def main():
             "core_hours": med([r["core_hours"] for r in rs]),
         })
 
-    # baseline loop time = the regular run, per (model, num_estimates). Rounds
-    # are deliberately NOT in the key: equal-budget (--total-evals) sweeps give
-    # every config a different round count, and each sweep writes one results
-    # file with a single budget, so (model, ne) identifies the baseline.
-    base = {(a["model"], a["ne"]): a["loop_s"] for a in agg if a["mode"] == "regular"}
+    # baseline loop time = the regular run for the same model/problem/work. With
+    # fixed popsize, worker sweeps should share both evals and optimizer path.
+    base = {
+        (a["model"], a["ne"], a["popsize"], a["evals"]): a["loop_s"]
+        for a in agg if a["mode"] == "regular"
+    }
 
     def fnum(v, width, prec):
         return ("-" if v is None else f"{v:.{prec}f}").rjust(width)
 
-    hdr = (f"{'config':<26}{'cores':>6}{'ne':>7}{'rounds':>8}{'batch':>7}"
+    hdr = (f"{'config':<26}{'cores':>6}{'ne':>7}{'rounds':>8}{'pop':>7}"
            f"{'evals':>7}{'loop_s':>9}{'evals/s':>9}{'speedup':>9}"
            f"{'util%':>7}{'rss_gb':>8}{'err%':>7}{'core_h':>9}")
     print(hdr)
     print("-" * len(hdr))
     for a in sorted(agg, key=lambda x: (x["model"], x["ne"], x["cores"], x["label"])):
-        b = base.get((a["model"], a["ne"]))
+        b = base.get((a["model"], a["ne"], a["popsize"], a["evals"]))
         sp = (b / a["loop_s"]) if (b and a["loop_s"]) else None
         print(
             f"{a['label']:<26}{a['cores']:>6}{a['ne']:>7}"
@@ -88,7 +92,8 @@ def main():
             f"{fnum(sp, 9, 2)}{fnum(a['util_pct'], 7, 0)}"
             f"{fnum(a['rss_gb'], 8, 2)}{fnum(a['err'], 7, 1)}{fnum(a['core_hours'], 9, 4)}"
         )
-    print("\nspeedup = regular loop_s / config loop_s (per num_estimates).")
+    print("\nspeedup = regular loop_s / config loop_s "
+          "(matching model, num_estimates, pop, and evals).")
     print("util%   = mean busy cores / allocated cores; '-' for multi-node "
           "(jobqueue) since remote workers are not locally sampled.")
 

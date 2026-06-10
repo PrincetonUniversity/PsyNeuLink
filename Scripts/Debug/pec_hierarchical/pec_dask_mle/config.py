@@ -9,13 +9,15 @@ INITIAL_SEED = 42          # fixed simulation seed (with CRN -> reproducible)
 # --- Dask / parallelism ---
 N_WORKERS = 4              # Dask workers (one evaluation each, in parallel)
 WORKER_CORES = 4           # LLVM threads per worker (estimate-level parallelism)
-BATCH_SIZE = N_WORKERS     # evaluations submitted per ask/tell round
+# Keep this fixed when sweeping N_WORKERS so every run follows the same CMA-ES
+# trajectory. Set it >= N_WORKERS if you want every worker busy every round.
+OPTIMIZER_POPSIZE = 16     # CMA-ES population / evals per ask-tell round
 N_ROUNDS = 30              # CMA-ES generations / ask-tell rounds
 
 
 def total_evals():
     """Likelihood evaluations implied by the fixed-round budget."""
-    return N_ROUNDS * BATCH_SIZE
+    return N_ROUNDS * OPTIMIZER_POPSIZE
 
 # --- SLURM worker jobs (Option A: dask-jobqueue) ---
 # Each Dask worker is one SLURM job reserving WORKER_CORES cpus.

@@ -20,7 +20,8 @@ OUT=$BD/results_singlenode.jsonl
 MODEL=ddm   # which model provider to benchmark (ddm | stabflex)
 NE=8000
 TE=960     # fixed eval budget for EVERY config (apples-to-apples: same total
-           # work; rounds scale as TE/popsize). Divisible by all n_workers used.
+           # work; rounds = TE/POP, independent of worker count)
+POP=32     # fixed CMA-ES population; >= max n-workers keeps workers busy
 NT=200     # observed data trials per fit (bump for precision; also makes sims heavier)
 REPS=1
 
@@ -28,13 +29,13 @@ cd $REPO
 rm -f "$OUT"
 
 # regular baseline: serial trials, all 16 cores for estimate-level threading
-$PY $BD/bench.py --model $MODEL --mode regular     --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+$PY $BD/bench.py --model $MODEL --mode regular     --worker-cores 16 --optimizer-popsize $POP --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
 
-# dask-local sweep at fixed 16 cores and a fixed eval budget (n-workers >= 2).
-$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+# dask-local sweep at fixed 16 cores, fixed optimizer path, and fixed eval budget.
+$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 2  --worker-cores 8  --optimizer-popsize $POP --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 4  --worker-cores 4  --optimizer-popsize $POP --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 8  --worker-cores 2  --optimizer-popsize $POP --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-local --n-workers 16 --worker-cores 1  --optimizer-popsize $POP --num-estimates $NE --num-trials $NT --total-evals $TE --reps $REPS --out $OUT
 
 echo "==== SUMMARY ===="
 $PY $BD/summarize.py $OUT

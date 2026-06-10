@@ -54,14 +54,13 @@ def run_fit(client, model_name, data, *, num_trials, num_estimates, total_evals,
             batch_size, worker_cores, fit_bounds, verbose=False):
     """Driver: owns one CMA-ES study; ask a batch -> submit -> gather -> tell.
 
-    The CMA-ES population is pinned to ``batch_size`` (one proposal per Dask
-    worker per round) so a fixed ``n_rounds = total_evals // batch_size`` of
-    synchronous ask/tell rounds gives deterministic, reproducible accuracy.
+    The CMA-ES population is pinned to ``batch_size`` independently of Dask
+    worker count, so a fixed ``n_rounds = total_evals // batch_size`` gives the
+    same optimizer trajectory while Dask only changes evaluation concurrency.
     """
     if batch_size < 2:
         raise ValueError(
-            "CMA-ES requires popsize/batch_size >= 2; use at least two Dask "
-            "workers for the fixed-round ask/tell driver."
+            "CMA-ES requires popsize/batch_size >= 2."
         )
     optuna.logging.set_verbosity(optuna.logging.WARNING)
 

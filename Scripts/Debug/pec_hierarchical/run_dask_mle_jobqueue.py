@@ -81,15 +81,15 @@ def main():
     client = Client(cluster)
     print(f"Dask dashboard: {client.dashboard_link}", flush=True)
     print(
-        f"Submitted {config.N_WORKERS} worker jobs; waiting for the first to start "
+        f"Submitted {config.N_WORKERS} worker jobs; waiting for all workers "
         f"(squeue to watch)...",
         flush=True,
     )
-    # Start as soon as one worker is up; the rest join elastically as their jobs
-    # schedule. Raise after 10 min if the partition never gives us a worker.
-    client.wait_for_workers(1, timeout=600)
+    # For performance comparisons, start only after all requested workers are
+    # connected; otherwise early CMA-ES generations would run with fewer workers.
+    client.wait_for_workers(config.N_WORKERS, timeout=600)
     n_up = len(client.scheduler_info()["workers"])
-    print(f"{n_up} worker(s) connected; starting fit.", flush=True)
+    print(f"{n_up} workers connected; starting fit.", flush=True)
 
     try:
         study = run_fit(client, data_to_fit, trial_inputs)

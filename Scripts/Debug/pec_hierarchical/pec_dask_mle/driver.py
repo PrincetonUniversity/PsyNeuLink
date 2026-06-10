@@ -20,10 +20,10 @@ from .worker import evaluate_loglik
 
 def run_fit(client, data_to_fit, trial_inputs, *, verbose=True):
     """Run the distributed ask/tell MLE fit. Returns the completed Optuna study."""
-    if config.BATCH_SIZE < 2:
+    popsize = config.OPTIMIZER_POPSIZE
+    if popsize < 2:
         raise ValueError(
-            "CMA-ES requires BATCH_SIZE/popsize >= 2; use at least two "
-            "Dask workers for the fixed-round ask/tell driver."
+            "CMA-ES requires OPTIMIZER_POPSIZE >= 2."
         )
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -40,15 +40,16 @@ def run_fit(client, data_to_fit, trial_inputs, *, verbose=True):
 
     # Single authoritative study in the driver -- no shared storage.
     study = optuna.create_study(
-        sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=config.BATCH_SIZE),
+        sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=popsize),
         direction="maximize",
     )
 
     n_batches = config.N_ROUNDS
     for b in range(n_batches):
-        # Ask one CMA-ES generation per synchronous Dask round. With one Dask
-        # worker evaluating one trial, BATCH_SIZE should match N_WORKERS.
-        trials = [study.ask(distributions) for _ in range(config.BATCH_SIZE)]
+        # Ask one fixed-size CMA-ES generation per synchronous Dask round.
+        # N_WORKERS only controls concurrency: if workers < popsize, Dask runs
+        # the generation in waves; if workers > popsize, extras sit idle.
+        trials = [study.ask(distributions) for _ in range(popsize)]
         futures = [
             client.submit(
                 evaluate_loglik,

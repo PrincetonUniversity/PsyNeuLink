@@ -3,7 +3,7 @@
 A FakeClient stands in for ``dask.distributed.Client`` and evaluates a known
 analytic objective synchronously. This isolates the driver's bookkeeping:
 
-  * exactly N_ROUNDS * BATCH_SIZE trials are asked and told,
+  * exactly N_ROUNDS * OPTIMIZER_POPSIZE trials are asked and told,
   * candidate values respect FIT_BOUNDS,
   * parameter vectors are sent to workers in FIT_BOUNDS insertion order,
   * each future's score is told back to the *matching* trial,
@@ -74,7 +74,7 @@ class FakeClient:
 @pytest.fixture
 def short_run(monkeypatch):
     monkeypatch.setattr(config, "N_ROUNDS", 4)
-    monkeypatch.setattr(config, "BATCH_SIZE", 6)
+    monkeypatch.setattr(config, "OPTIMIZER_POPSIZE", 6)
 
 
 @pytest.fixture
@@ -133,7 +133,7 @@ def test_submits_use_scattered_handles_and_worker_cores(fitted):
 
 def test_cmaes_maximizes_toward_target(monkeypatch):
     monkeypatch.setattr(config, "N_ROUNDS", 20)
-    monkeypatch.setattr(config, "BATCH_SIZE", 8)
+    monkeypatch.setattr(config, "OPTIMIZER_POPSIZE", 8)
     client = FakeClient(neg_quadratic)
     study = run_fit(client, data_to_fit=None, trial_inputs=None, verbose=False)
 
@@ -146,8 +146,8 @@ def test_cmaes_maximizes_toward_target(monkeypatch):
 
 def test_rejects_one_trial_cmaes_population(monkeypatch):
     monkeypatch.setattr(config, "N_ROUNDS", 2)
-    monkeypatch.setattr(config, "BATCH_SIZE", 1)
+    monkeypatch.setattr(config, "OPTIMIZER_POPSIZE", 1)
     client = FakeClient(neg_quadratic)
 
-    with pytest.raises(ValueError, match="BATCH_SIZE/popsize"):
+    with pytest.raises(ValueError, match="OPTIMIZER_POPSIZE"):
         run_fit(client, data_to_fit=None, trial_inputs=None, verbose=False)

@@ -14,13 +14,15 @@ Modes
 Timing separates a one-time warmup (LLVM compile) from the steady-state fit
 loop, so throughput is not distorted by compilation.
 
-Budget: either --n-rounds (fixed CMA-ES generations; total work scales with
-popsize == n_workers) or --total-evals (fixed evaluation budget shared by all
-configs -- the apples-to-apples scaling comparison; rounds = budget // popsize).
+Budget: either --n-rounds (fixed CMA-ES generations; total work scales with the
+fixed optimizer population size) or --total-evals (fixed evaluation budget
+shared by all configs; rounds = budget // optimizer_popsize). Keep
+--optimizer-popsize fixed across a worker sweep to make every run follow the
+same optimizer trajectory and differ only in evaluation concurrency.
 
 Usage:
   python bench.py --model ddm --mode regular    --worker-cores 16 --num-estimates 4000 \
-                  --total-evals 960 --reps 2 --out results.jsonl
+                  --optimizer-popsize 32 --total-evals 960 --reps 2 --out results.jsonl
   python bench.py --model ddm --mode dask-local    --n-workers 4 --worker-cores 4 ...
   python bench.py --model ddm --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
 """
@@ -28,7 +30,6 @@ Usage:
 import argparse
 import json
 import logging
-import math
 import os
 import socket
 import sys
@@ -65,26 +66,14 @@ import models  # noqa: E402
 import bench_core  # noqa: E402
 
 
-def default_cma_popsize(n_params):
-    """Optuna/cmaes default: 4 + floor(3 * log(d))."""
-    return 4 + math.floor(3 * math.log(n_params))
+def sampler_popsize(args):
+    """Fixed CMA-ES population size used for every benchmark point."""
+    return args.optimizer_popsize
 
 
-def sampler_popsize(args, provider):
-    """Population size used for this benchmark point.
-
-    Dask modes evaluate one CMA-ES proposal per worker, so popsize == n_workers.
-    The regular (serial) baseline has no such constraint, so it uses Optuna's
-    default popsize for the model's fit-parameter dimensionality.
-    """
-    if args.mode != "regular":
-        return args.n_workers
-    return default_cma_popsize(len(provider.FIT_BOUNDS))
-
-
-def total_evals(args, provider):
+def total_evals(args):
     """Likelihood evaluations implied by the fixed-round budget."""
-    return args.n_rounds * sampler_popsize(args, provider)
+    return args.n_rounds * sampler_popsize(args)
 
 
 try:
@@ -173,8 +162,8 @@ def run_regular(args, provider, data):
     inputs = provider.make_inputs(comp, args.num_trials)
     # Fixed-round budget: popsize per generation x n_rounds == total_evals.
     optimizer = pnl.PECOptimizationFunction(
-        method=optuna.samplers.CmaEsSampler(seed=0, popsize=sampler_popsize(args, provider)),
-        max_iterations=total_evals(args, provider),
+        method=optuna.samplers.CmaEsSampler(seed=0, popsize=sampler_popsize(args)),
+        max_iterations=total_evals(args),
     )
     pec = provider.build_pec(comp, data, args.num_estimates, optimization_function=optimizer)
 
@@ -213,12 +202,12 @@ def _warmup_workers(client, args, provider, data):
 def _run_with_client(client, args, provider, data):
     compile_s = _warmup_workers(client, args, provider, data)
     t0 = time.perf_counter()
-    # Fixed-round budget: batch (== popsize == n_workers) per CMA-ES generation,
-    # for total_evals == n_rounds * batch evaluations overall.
+    # Fixed-round budget: one fixed-size CMA-ES population per generation. Dask
+    # worker count controls only how many candidates are evaluated concurrently.
     study = bench_core.run_fit(
         client, args.model, data,
         num_trials=args.num_trials, num_estimates=args.num_estimates,
-        total_evals=total_evals(args, provider), batch_size=sampler_popsize(args, provider),
+        total_evals=total_evals(args), batch_size=sampler_popsize(args),
         worker_cores=args.worker_cores, fit_bounds=provider.FIT_BOUNDS,
         verbose=False,
     )
@@ -286,6 +275,10 @@ def main():
     p.add_argument("--mode", required=True, choices=list(RUNNERS))
     p.add_argument("--n-workers", type=int, default=1)
     p.add_argument("--worker-cores", type=int, default=16)
+    p.add_argument("--optimizer-popsize", type=int, default=config.OPTIMIZER_POPSIZE,
+                   help="fixed CMA-ES population / synchronous batch size; "
+                        "keep constant across worker sweeps for identical "
+                        "optimizer trajectories")
     p.add_argument("--num-estimates", type=int, default=4000)
     p.add_argument("--num-trials", type=int, default=config.NUM_TRIALS,
                    help="observed data trials; more data disentangles params")
@@ -303,17 +296,13 @@ def main():
 
     if args.n_rounds is not None and args.total_evals is not None:
         p.error("--n-rounds and --total-evals are mutually exclusive")
-    if args.mode != "regular" and args.n_workers < 2:
-        p.error(
-            "Dask CMA-ES fixed-round runs require --n-workers >= 2 "
-            "(batch/popsize 1 is not a valid CMA-ES population)."
-        )
-
     provider = models.get(args.model)
-    popsize = sampler_popsize(args, provider)
+    popsize = sampler_popsize(args)
+    if popsize < 2:
+        p.error("--optimizer-popsize must be >= 2")
     if args.total_evals is not None:
         if args.total_evals < popsize:
-            p.error(f"--total-evals must be >= popsize ({popsize} for this config)")
+            p.error(f"--total-evals must be >= --optimizer-popsize ({popsize})")
         args.n_rounds = args.total_evals // popsize
     elif args.n_rounds is None:
         args.n_rounds = config.N_ROUNDS
@@ -321,7 +310,14 @@ def main():
         p.error("--n-rounds must be >= 1")
 
     total_cores = (1 if args.mode == "regular" else args.n_workers) * args.worker_cores
-    n_evals = total_evals(args, provider)
+    n_evals = total_evals(args)
+    if args.mode != "regular" and args.n_workers > popsize:
+        print(
+            f"warning: n_workers ({args.n_workers}) > optimizer_popsize ({popsize}); "
+            "extra workers may be idle",
+            file=sys.stderr,
+            flush=True,
+        )
 
     # Same data for every mode/rep (parity).
     data = provider.make_data(args.num_trials)
@@ -353,6 +349,7 @@ def main():
             "num_estimates": args.num_estimates,
             "num_trials": args.num_trials,
             "n_rounds": args.n_rounds,
+            "optimizer_popsize": popsize,
             "batch_size": popsize,
             "total_evals": n_evals,
             "rep": rep,
@@ -372,7 +369,8 @@ def main():
             f.write(json.dumps(row) + "\n")
         print(
             f"[{args.model} {args.mode} {args.n_workers}x{args.worker_cores} "
-            f"ne={args.num_estimates} nt={args.num_trials} rounds={args.n_rounds} "
+            f"ne={args.num_estimates} nt={args.num_trials} pop={popsize} "
+            f"rounds={args.n_rounds} "
             f"evals={n_evals} rep{rep}] loop={loop_s:.1f}s compile={compile_s:.1f}s "
             f"evals/s={row['evals_per_s']} util={row['util_pct']}% err={max_pct_err:.1f}%",
             flush=True,
