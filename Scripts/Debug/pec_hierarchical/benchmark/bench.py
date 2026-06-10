@@ -1,9 +1,10 @@
 """Benchmark one configuration of PEC fitting and append a JSON metrics row.
 
-Compares the *regular* PEC optimizer against the Dask-distributed ask/tell
-backend on the identical problem (same DDM, data, bounds, CMA-ES seed,
-num_estimates, fixed CMA-ES round budget). Run ONE config per process for clean
-isolation (fresh LLVM compile, no thread-setting/cluster leakage between runs).
+backend on an identical problem (same data, bounds, CMA-ES seed, num_estimates,
+fixed CMA-ES round budget). The model is pluggable via ``--model`` (see
+``models/`` -- ddm, stabflex, ...); the harness itself is model-agnostic.
+Run ONE config per process for clean isolation (fresh LLVM compile, no
+thread-setting/cluster leakage between runs).
 
 Modes
   regular        standard pec.run(): serial trials, estimates over all cores
@@ -11,13 +12,13 @@ Modes
   dask-jobqueue  SLURMCluster, n_workers jobs x worker_cores each (multi-node)
 
 Timing separates a one-time warmup (LLVM compile) from the steady-state fit
-loop, so the throughput numbers are not distorted by compilation.
+loop, so throughput is not distorted by compilation.
 
 Usage:
-  python bench.py --mode regular       --worker-cores 16 --num-estimates 4000 \
+  python bench.py --model ddm --mode regular    --worker-cores 16 --num-estimates 4000 \
                   --n-rounds 30 --reps 2 --out results.jsonl
-  python bench.py --mode dask-local    --n-workers 4 --worker-cores 4 ...
-  python bench.py --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
+  python bench.py --model ddm --mode dask-local    --n-workers 4 --worker-cores 4 ...
+  python bench.py --model ddm --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
 """
 
 import argparse
@@ -38,30 +39,48 @@ def _quiet_dask():
                  "distributed.nanny", "distributed.core", "bokeh"):
         logging.getLogger(name).setLevel(logging.WARNING)
 
-# Make the pec_dask_mle package importable (this file lives in
-# pec_hierarchical/benchmark/, the package in pec_hierarchical/).
+
+# This file lives in pec_hierarchical/benchmark/. Make both that dir (for
+# `models` + `bench_core`) and its parent (for pec_dask_mle.config) importable,
+# locally and on spawned/remote Dask workers.
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG_PARENT = os.path.dirname(HERE)
-sys.path.insert(0, PKG_PARENT)
-os.environ["PYTHONPATH"] = PKG_PARENT + os.pathsep + os.environ.get("PYTHONPATH", "")
+for _p in (PKG_PARENT, HERE):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+os.environ["PYTHONPATH"] = (
+    HERE + os.pathsep + PKG_PARENT + os.pathsep + os.environ.get("PYTHONPATH", "")
+)
 
-from pec_dask_mle import config  # noqa: E402
-from pec_dask_mle.data import make_data  # noqa: E402
+# Repo root (.../PsyNeuLink) and a home for dask-jobqueue worker logs.
+REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+LOG_DIR = os.path.join(REPO, "slurm_logs")
+
+from pec_dask_mle import config  # noqa: E402  (SLURM/infra config only)
+import models  # noqa: E402
+import bench_core  # noqa: E402
 
 
-def default_cma_popsize():
+def default_cma_popsize(n_params):
     """Optuna/cmaes default: 4 + floor(3 * log(d))."""
-    return 4 + math.floor(3 * math.log(len(config.FIT_BOUNDS)))
+    return 4 + math.floor(3 * math.log(n_params))
 
 
-def sampler_popsize(args):
-    """Population size used for this benchmark point."""
-    return args.n_workers if args.mode != "regular" else default_cma_popsize()
+def sampler_popsize(args, provider):
+    """Population size used for this benchmark point.
+
+    Dask modes evaluate one CMA-ES proposal per worker, so popsize == n_workers.
+    The regular (serial) baseline has no such constraint, so it uses Optuna's
+    default popsize for the model's fit-parameter dimensionality.
+    """
+    if args.mode != "regular":
+        return args.n_workers
+    return default_cma_popsize(len(provider.FIT_BOUNDS))
 
 
-def total_evals(args):
+def total_evals(args, provider):
     """Likelihood evaluations implied by the fixed-round budget."""
-    return args.n_rounds * sampler_popsize(args)
+    return args.n_rounds * sampler_popsize(args, provider)
 
 
 try:
@@ -72,8 +91,8 @@ except ImportError:
 
 # ---------------------------------------------------------------------------
 # Usage sampler: mean CPU (in cores) and peak RSS over this process + children.
-# Captures Dask LocalCluster workers (they are child processes); does NOT see
-# remote jobqueue workers (separate SLURM jobs -- use sacct for those).
+# Captures Dask LocalCluster workers (child processes); does NOT see remote
+# jobqueue workers (separate SLURM jobs -- use sacct for those).
 # ---------------------------------------------------------------------------
 class UsageSampler(threading.Thread):
     def __init__(self, interval=0.25):
@@ -134,80 +153,51 @@ class UsageSampler(threading.Thread):
         return self.peak_rss / 1e9 if self.peak_rss else None
 
 
+def _mid(provider):
+    return [(lo + hi) / 2.0 for lo, hi in provider.FIT_BOUNDS.values()]
+
+
 # ---------------------------------------------------------------------------
 # Regular PEC baseline (CMA-ES via Optuna, pec.run())
 # ---------------------------------------------------------------------------
-def build_regular_pec(data_to_fit, num_estimates, max_iterations, popsize):
-    """A standard PEC configured with a real CMA-ES optimizer for pec.run()."""
+def run_regular(args, provider, data):
     import optuna
-    import psyneulink as pnl
-    from pec_dask_mle.factory import build_model
-
-    comp, decision = build_model()
-    fit_parameters = {
-        (name, decision): np.linspace(lo, hi, 1000)
-        for name, (lo, hi) in config.FIT_BOUNDS.items()
-    }
-    pec = pnl.ParameterEstimationComposition(
-        name="pec_bench",
-        nodes=[comp],
-        parameters=fit_parameters,
-        outcome_variables=[
-            decision.output_ports[pnl.DECISION_OUTCOME],
-            decision.output_ports[pnl.RESPONSE_TIME],
-        ],
-        data=data_to_fit,
-        optimization_function=pnl.PECOptimizationFunction(
-            method=optuna.samplers.CmaEsSampler(seed=0, popsize=popsize),
-            max_iterations=max_iterations,
-        ),
-        num_estimates=num_estimates,
-        initial_seed=config.INITIAL_SEED,
-        same_seed_for_all_parameter_combinations=True,  # CRN, matches Dask path
-    )
-    pec.controller.parameters.comp_execution_mode.set("LLVM")
-    return pec, comp
-
-
-def run_regular(args, data_to_fit, trial_inputs):
-    import optuna  # noqa: F401  (ensure available)
     import psyneulink as pnl
 
     pnl.set_num_threads(args.worker_cores)
-    popsize = sampler_popsize(args)
-    pec, comp = build_regular_pec(
-        data_to_fit, args.num_estimates, total_evals(args), popsize
+    comp = provider.build_comp()
+    inputs = provider.make_inputs(comp, args.num_trials)
+    # Fixed-round budget: popsize per generation x n_rounds == total_evals.
+    optimizer = pnl.PECOptimizationFunction(
+        method=optuna.samplers.CmaEsSampler(seed=0, popsize=sampler_popsize(args, provider)),
+        max_iterations=total_evals(args, provider),
     )
+    pec = provider.build_pec(comp, data, args.num_estimates, optimization_function=optimizer)
 
     # Warmup: one likelihood eval compiles + caches the LLVM binary on this PEC.
-    mid = [(lo + hi) / 2.0 for lo, hi in config.FIT_BOUNDS.values()]
     t0 = time.perf_counter()
-    pec.log_likelihood(*mid, inputs={comp: trial_inputs})
+    pec.log_likelihood(*_mid(provider), inputs=inputs)
     compile_s = time.perf_counter() - t0
 
-    # Timed fit (warm).
     t0 = time.perf_counter()
-    pec.run(inputs={comp: trial_inputs})
+    pec.run(inputs=inputs)
     loop_s = time.perf_counter() - t0
 
-    recovered = dict(zip(config.FIT_BOUNDS.keys(), pec.optimized_parameter_values.values()))
+    recovered = dict(zip(provider.FIT_BOUNDS, pec.optimized_parameter_values.values()))
     return compile_s, loop_s, recovered
 
 
 # ---------------------------------------------------------------------------
-# Dask paths (reuse the package's factory/worker/driver)
+# Dask paths (model-agnostic via bench_core + the provider)
 # ---------------------------------------------------------------------------
-def _warmup_workers(client, data_to_fit, trial_inputs, worker_cores):
-    """Submit one eval to each worker so every worker builds+compiles+caches its
-    PEC before the timed loop. Returns wall time of the slowest warmup."""
-    from pec_dask_mle.worker import evaluate_loglik
-
-    mid = [(lo + hi) / 2.0 for lo, hi in config.FIT_BOUNDS.values()]
+def _warmup_workers(client, args, provider, data):
+    """One eval per worker so each builds+compiles+caches its PEC before timing."""
     addrs = list(client.scheduler_info()["workers"])
     t0 = time.perf_counter()
     futs = [
         client.submit(
-            evaluate_loglik, mid, trial_inputs, data_to_fit, worker_cores,
+            bench_core.evaluate_loglik, args.model, _mid(provider),
+            args.num_trials, data, args.num_estimates, args.worker_cores,
             workers=[a], pure=False,
         )
         for a in addrs
@@ -216,25 +206,24 @@ def _warmup_workers(client, data_to_fit, trial_inputs, worker_cores):
     return time.perf_counter() - t0
 
 
-def _run_with_client(client, args, data_to_fit, trial_inputs):
-    from pec_dask_mle import driver
-
-    # Override the package config for this benchmark point.
-    config.NUM_ESTIMATES = args.num_estimates
-    config.N_WORKERS = args.n_workers
-    config.WORKER_CORES = args.worker_cores
-    config.N_ROUNDS = args.n_rounds
-    config.BATCH_SIZE = args.n_workers
-
-    compile_s = _warmup_workers(client, data_to_fit, trial_inputs, args.worker_cores)
+def _run_with_client(client, args, provider, data):
+    compile_s = _warmup_workers(client, args, provider, data)
     t0 = time.perf_counter()
-    study = driver.run_fit(client, data_to_fit, trial_inputs, verbose=False)
+    # Fixed-round budget: batch (== popsize == n_workers) per CMA-ES generation,
+    # for total_evals == n_rounds * batch evaluations overall.
+    study = bench_core.run_fit(
+        client, args.model, data,
+        num_trials=args.num_trials, num_estimates=args.num_estimates,
+        total_evals=total_evals(args, provider), batch_size=sampler_popsize(args, provider),
+        worker_cores=args.worker_cores, fit_bounds=provider.FIT_BOUNDS,
+        verbose=False,
+    )
     loop_s = time.perf_counter() - t0
-    recovered = {n: study.best_params[n] for n in config.FIT_BOUNDS}
+    recovered = {n: study.best_params[n] for n in provider.FIT_BOUNDS}
     return compile_s, loop_s, recovered
 
 
-def run_dask_local(args, data_to_fit, trial_inputs):
+def run_dask_local(args, provider, data):
     from dask.distributed import Client, LocalCluster
 
     _quiet_dask()
@@ -244,17 +233,18 @@ def run_dask_local(args, data_to_fit, trial_inputs):
     client = Client(cluster)
     try:
         client.wait_for_workers(args.n_workers, timeout=120)
-        return _run_with_client(client, args, data_to_fit, trial_inputs)
+        return _run_with_client(client, args, provider, data)
     finally:
         client.close()
         cluster.close()
 
 
-def run_dask_jobqueue(args, data_to_fit, trial_inputs):
+def run_dask_jobqueue(args, provider, data):
     from dask.distributed import Client
     from dask_jobqueue import SLURMCluster
 
     _quiet_dask()
+    os.makedirs(LOG_DIR, exist_ok=True)
     cluster = SLURMCluster(
         queue=config.SLURM_PARTITION,
         cores=1,
@@ -263,14 +253,16 @@ def run_dask_jobqueue(args, data_to_fit, trial_inputs):
         memory=config.WORKER_MEMORY,
         walltime=config.WORKER_WALLTIME,
         interface=config.SLURM_INTERFACE,
-        job_script_prologue=[f"export PYTHONPATH={PKG_PARENT}:$PYTHONPATH"],
+        log_directory=LOG_DIR,  # worker slurm-*.out land here, not the cwd
+        # Workers must import bench_core + models (HERE) and pec_dask_mle (PKG_PARENT).
+        job_script_prologue=[f"export PYTHONPATH={HERE}:{PKG_PARENT}:$PYTHONPATH"],
     )
     cluster.scale(jobs=args.n_workers)
     client = Client(cluster)
     try:
         print(f"waiting for {args.n_workers} workers...", flush=True)
         client.wait_for_workers(args.n_workers, timeout=args.worker_timeout)
-        return _run_with_client(client, args, data_to_fit, trial_inputs)
+        return _run_with_client(client, args, provider, data)
     finally:
         client.close()
         cluster.close()
@@ -286,11 +278,13 @@ RUNNERS = {
 # ---------------------------------------------------------------------------
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--model", default="ddm", choices=list(models.REGISTRY))
     p.add_argument("--mode", required=True, choices=list(RUNNERS))
     p.add_argument("--n-workers", type=int, default=1)
     p.add_argument("--worker-cores", type=int, default=16)
     p.add_argument("--num-estimates", type=int, default=4000)
-    p.add_argument("--num-trials", type=int, default=config.NUM_TRIALS)
+    p.add_argument("--num-trials", type=int, default=config.NUM_TRIALS,
+                   help="observed data trials; more data disentangles params")
     p.add_argument("--n-rounds", type=int, default=config.N_ROUNDS)
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--worker-timeout", type=int, default=900)
@@ -305,36 +299,34 @@ def main():
             "(batch/popsize 1 is not a valid CMA-ES population)."
         )
 
+    provider = models.get(args.model)
     total_cores = (1 if args.mode == "regular" else args.n_workers) * args.worker_cores
-    n_evals = total_evals(args)
-    popsize = sampler_popsize(args)
+    n_evals = total_evals(args, provider)
+    popsize = sampler_popsize(args, provider)
 
     # Same data for every mode/rep (parity).
-    config.NUM_TRIALS = args.num_trials
-    data_to_fit, trial_inputs = make_data()
-    true = {k: config.TRUE_PARAMS[k] for k in config.FIT_BOUNDS}
+    data = provider.make_data(args.num_trials)
+    true = provider.TRUE_FIT_VALUES
 
     for rep in range(args.reps):
         sampler = UsageSampler()
         sampler.start()
         t_total = time.perf_counter()
-        compile_s, loop_s, recovered = RUNNERS[args.mode](args, data_to_fit, trial_inputs)
+        compile_s, loop_s, recovered = RUNNERS[args.mode](args, provider, data)
         total_s = time.perf_counter() - t_total
         sampler.stop()
         sampler.join(timeout=2)
 
-        max_pct_err = max(
-            100.0 * abs(true[k] - recovered[k]) / true[k] for k in true
-        )
+        max_pct_err = max(100.0 * abs(true[k] - recovered[k]) / true[k] for k in true)
         mcc = sampler.mean_cpu_cores
         prg = sampler.peak_rss_gb
         # The local sampler only sees THIS process. For jobqueue the workers are
-        # separate SLURM jobs on other nodes, so the driver-only CPU/RSS readings
-        # are meaningless -- drop them. (Use sacct of the worker jobs, or
-        # core_hours below, for true multi-node usage.)
+        # separate SLURM jobs on other nodes, so its driver-only CPU/RSS readings
+        # are meaningless -- drop them (use sacct, or core_hours, for those).
         if args.mode == "dask-jobqueue":
             mcc = prg = None
         row = {
+            "model": args.model,
             "mode": args.mode,
             "n_workers": args.n_workers if args.mode != "regular" else 1,
             "worker_cores": args.worker_cores,
@@ -360,10 +352,10 @@ def main():
         with open(args.out, "a") as f:
             f.write(json.dumps(row) + "\n")
         print(
-            f"[{args.mode} {args.n_workers}x{args.worker_cores} ne={args.num_estimates} "
-            f"rounds={args.n_rounds} evals={n_evals} rep{rep}] "
-            f"loop={loop_s:.1f}s compile={compile_s:.1f}s evals/s={row['evals_per_s']} "
-            f"util={row['util_pct']}% err={max_pct_err:.1f}%",
+            f"[{args.model} {args.mode} {args.n_workers}x{args.worker_cores} "
+            f"ne={args.num_estimates} nt={args.num_trials} rounds={args.n_rounds} "
+            f"evals={n_evals} rep{rep}] loop={loop_s:.1f}s compile={compile_s:.1f}s "
+            f"evals/s={row['evals_per_s']} util={row['util_pct']}% err={max_pct_err:.1f}%",
             flush=True,
         )
 

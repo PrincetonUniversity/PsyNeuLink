@@ -34,8 +34,10 @@ def main():
 
     groups = defaultdict(list)
     for r in rows:
+        model = r.get("model", "ddm")  # back-compat with pre-model rows
         groups[
             (
+                model,
                 r["mode"],
                 r["n_workers"],
                 r["worker_cores"],
@@ -45,10 +47,11 @@ def main():
         ].append(r)
 
     agg = []
-    for (mode, nw, wc, ne, nr), rs in groups.items():
+    for (model, mode, nw, wc, ne, nr), rs in groups.items():
         agg.append({
-            "label": f"{mode} {nw}x{wc}",
-            "mode": mode, "ne": ne, "rounds": nr, "cores": rs[0]["total_cores"],
+            "label": f"{model}/{mode} {nw}x{wc}",
+            "model": model, "mode": mode, "ne": ne, "rounds": nr,
+            "cores": rs[0]["total_cores"],
             "evals": rs[0].get("total_evals"),
             "batch": rs[0].get("batch_size"),
             "loop_s": med([r["loop_s"] for r in rs]),
@@ -60,9 +63,9 @@ def main():
             "core_hours": med([r["core_hours"] for r in rs]),
         })
 
-    # baseline loop time per num_estimates/round budget = the regular run
+    # baseline loop time = the regular run, per (model, num_estimates, round budget)
     base = {
-        (a["ne"], a["rounds"]): a["loop_s"]
+        (a["model"], a["ne"], a["rounds"]): a["loop_s"]
         for a in agg
         if a["mode"] == "regular"
     }
@@ -70,16 +73,16 @@ def main():
     def fnum(v, width, prec):
         return ("-" if v is None else f"{v:.{prec}f}").rjust(width)
 
-    hdr = (f"{'config':<22}{'cores':>6}{'ne':>6}{'rounds':>8}{'batch':>7}"
+    hdr = (f"{'config':<26}{'cores':>6}{'ne':>7}{'rounds':>8}{'batch':>7}"
            f"{'evals':>7}{'loop_s':>9}{'evals/s':>9}{'speedup':>9}"
            f"{'util%':>7}{'rss_gb':>8}{'err%':>7}{'core_h':>9}")
     print(hdr)
     print("-" * len(hdr))
-    for a in sorted(agg, key=lambda x: (x["ne"], x["cores"], x["label"])):
-        b = base.get((a["ne"], a["rounds"]))
+    for a in sorted(agg, key=lambda x: (x["model"], x["ne"], x["cores"], x["label"])):
+        b = base.get((a["model"], a["ne"], a["rounds"]))
         sp = (b / a["loop_s"]) if (b and a["loop_s"]) else None
         print(
-            f"{a['label']:<22}{a['cores']:>6}{a['ne']:>6}"
+            f"{a['label']:<26}{a['cores']:>6}{a['ne']:>7}"
             f"{str(a['rounds'] or '-'):>8}{str(a['batch'] or '-'):>7}"
             f"{str(a['evals'] or '-'):>7}"
             f"{fnum(a['loop_s'], 9, 1)}{fnum(a['evals_per_s'], 9, 1)}"
