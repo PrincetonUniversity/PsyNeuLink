@@ -14,9 +14,13 @@ Modes
 Timing separates a one-time warmup (LLVM compile) from the steady-state fit
 loop, so throughput is not distorted by compilation.
 
+Budget: either --n-rounds (fixed CMA-ES generations; total work scales with
+popsize == n_workers) or --total-evals (fixed evaluation budget shared by all
+configs -- the apples-to-apples scaling comparison; rounds = budget // popsize).
+
 Usage:
   python bench.py --model ddm --mode regular    --worker-cores 16 --num-estimates 4000 \
-                  --n-rounds 30 --reps 2 --out results.jsonl
+                  --total-evals 960 --reps 2 --out results.jsonl
   python bench.py --model ddm --mode dask-local    --n-workers 4 --worker-cores 4 ...
   python bench.py --model ddm --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
 """
@@ -285,14 +289,20 @@ def main():
     p.add_argument("--num-estimates", type=int, default=4000)
     p.add_argument("--num-trials", type=int, default=config.NUM_TRIALS,
                    help="observed data trials; more data disentangles params")
-    p.add_argument("--n-rounds", type=int, default=config.N_ROUNDS)
+    p.add_argument("--n-rounds", type=int, default=None,
+                   help=f"fixed CMA-ES generations (default {config.N_ROUNDS}); "
+                        f"total work then scales with popsize")
+    p.add_argument("--total-evals", type=int, default=None,
+                   help="fixed evaluation budget shared across configs "
+                        "(apples-to-apples scaling); rounds = budget // popsize, "
+                        "rounded down to whole generations")
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--worker-timeout", type=int, default=900)
     p.add_argument("--out", default=os.path.join(HERE, "results.jsonl"))
     args = p.parse_args()
 
-    if args.n_rounds < 1:
-        p.error("--n-rounds must be >= 1")
+    if args.n_rounds is not None and args.total_evals is not None:
+        p.error("--n-rounds and --total-evals are mutually exclusive")
     if args.mode != "regular" and args.n_workers < 2:
         p.error(
             "Dask CMA-ES fixed-round runs require --n-workers >= 2 "
@@ -300,9 +310,18 @@ def main():
         )
 
     provider = models.get(args.model)
+    popsize = sampler_popsize(args, provider)
+    if args.total_evals is not None:
+        if args.total_evals < popsize:
+            p.error(f"--total-evals must be >= popsize ({popsize} for this config)")
+        args.n_rounds = args.total_evals // popsize
+    elif args.n_rounds is None:
+        args.n_rounds = config.N_ROUNDS
+    if args.n_rounds < 1:
+        p.error("--n-rounds must be >= 1")
+
     total_cores = (1 if args.mode == "regular" else args.n_workers) * args.worker_cores
     n_evals = total_evals(args, provider)
-    popsize = sampler_popsize(args, provider)
 
     # Same data for every mode/rep (parity).
     data = provider.make_data(args.num_trials)

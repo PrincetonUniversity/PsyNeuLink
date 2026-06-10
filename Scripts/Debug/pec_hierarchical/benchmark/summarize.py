@@ -63,12 +63,11 @@ def main():
             "core_hours": med([r["core_hours"] for r in rs]),
         })
 
-    # baseline loop time = the regular run, per (model, num_estimates, round budget)
-    base = {
-        (a["model"], a["ne"], a["rounds"]): a["loop_s"]
-        for a in agg
-        if a["mode"] == "regular"
-    }
+    # baseline loop time = the regular run, per (model, num_estimates). Rounds
+    # are deliberately NOT in the key: equal-budget (--total-evals) sweeps give
+    # every config a different round count, and each sweep writes one results
+    # file with a single budget, so (model, ne) identifies the baseline.
+    base = {(a["model"], a["ne"]): a["loop_s"] for a in agg if a["mode"] == "regular"}
 
     def fnum(v, width, prec):
         return ("-" if v is None else f"{v:.{prec}f}").rjust(width)
@@ -79,7 +78,7 @@ def main():
     print(hdr)
     print("-" * len(hdr))
     for a in sorted(agg, key=lambda x: (x["model"], x["ne"], x["cores"], x["label"])):
-        b = base.get((a["model"], a["ne"], a["rounds"]))
+        b = base.get((a["model"], a["ne"]))
         sp = (b / a["loop_s"]) if (b and a["loop_s"]) else None
         print(
             f"{a['label']:<26}{a['cores']:>6}{a['ne']:>7}"

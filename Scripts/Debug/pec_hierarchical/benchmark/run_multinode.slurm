@@ -20,7 +20,8 @@ BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
 OUT=$BD/results_multinode.jsonl
 MODEL=ddm   # which model provider to benchmark (ddm | stabflex)
 NE=8000
-NR=30
+TE=960     # fixed eval budget for EVERY config (apples-to-apples: same total
+           # work; rounds scale as TE/popsize). Divisible by all n_workers used.
 NT=250     # observed data trials per fit (bump for precision; also makes sims heavier)
 WT=3600   # per-config worker-start timeout (s): wait up to 1h for all workers
 
@@ -34,17 +35,17 @@ rm -f "$OUT"
 
 # --- 16-core-total controls: same splits as the single-node sweep, but across
 # --- nodes. The delta vs single-node = network/serialization overhead.
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 16 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 8  --worker-cores 2  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 4  --worker-cores 4  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 2  --worker-cores 8  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
 
 # --- scale-out beyond one node's 16 cores, with cheap 1-core workers ---
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 32 --worker-cores 1  --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 32 --worker-cores 1  --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
 
 # --- fat-worker scale-out (16 cores/worker): hard to place, so run LAST ---
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 4  --worker-cores 16 --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
-$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 8  --worker-cores 16 --num-estimates $NE --num-trials $NT --n-rounds $NR --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 4  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
+$PY $BD/bench.py --model $MODEL --mode dask-jobqueue --n-workers 8  --worker-cores 16 --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 --worker-timeout $WT --out $OUT
 
 echo "==== SUMMARY ===="
 $PY $BD/summarize.py $OUT
