@@ -73,10 +73,10 @@ def build_comp():
 
 def make_inputs(comp, num_trials):
     """Node-keyed 4-layer inputs; deterministic in num_trials."""
-    taskLayer = comp.nodes["Task Input [I1, I2]"]
-    stimulusInfo = comp.nodes["Stimulus Input [S1, S2]"]
-    cueInterval = comp.nodes["Cue-Stimulus Interval"]
-    correctInfo = comp.nodes["Correct Response Info"]
+    taskLayer = _node(comp, "Task Input [I1, I2]")
+    stimulusInfo = _node(comp, "Stimulus Input [S1, S2]")
+    cueInterval = _node(comp, "Cue-Stimulus Interval")
+    correctInfo = _node(comp, "Correct Response Info")
 
     # Generate enough counterbalanced trials (multiple of 16), then take num_trials.
     seq_n = max(240, ((num_trials + 15) // 16) * 16)
@@ -111,11 +111,11 @@ def make_data(num_trials):
 
 
 def build_pec(comp, data, num_estimates, optimization_function=None):
-    controlModule = comp.nodes["Task Activations [Act1, Act2]"]
-    congruenceWeighting = comp.nodes["Automaticity-weighted Stimulus Input [w*S1, w*S2]"]
-    decisionMaker = comp.nodes["DDM"]
-    decisionGate = comp.nodes["DECISION_GATE"]
-    responseGate = comp.nodes["RESPONSE_GATE"]
+    controlModule = _node(comp, "Task Activations [Act1, Act2]")
+    congruenceWeighting = _node(comp, "Automaticity-weighted Stimulus Input [w*S1, w*S2]")
+    decisionMaker = _node(comp, "DDM")
+    decisionGate = _node(comp, "DECISION_GATE")
+    responseGate = _node(comp, "RESPONSE_GATE")
 
     fit_parameters = {
         ("gain", controlModule): np.linspace(*FIT_BOUNDS["gain"], 1000),

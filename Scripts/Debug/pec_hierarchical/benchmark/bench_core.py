@@ -64,7 +64,10 @@ def run_fit(client, model_name, data, *, num_trials, num_estimates, total_evals,
         )
     optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-    data_f = client.scatter(data, broadcast=True)  # broadcast once, not per submit
+    # Broadcast once, not per submit. hash=False gives this fit a unique key:
+    # with content-hashed keys, a SECOND fit on the same data races against the
+    # release of the first fit's key and gets "lost dependencies" cancellations.
+    data_f = client.scatter(data, broadcast=True, hash=False)
     param_order = list(fit_bounds)
     distributions = {n: FloatDistribution(lo, hi) for n, (lo, hi) in fit_bounds.items()}
 
