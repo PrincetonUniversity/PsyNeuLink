@@ -19,10 +19,14 @@ def total_evals():
     """Likelihood evaluations implied by the fixed-round budget."""
     return N_ROUNDS * OPTIMIZER_POPSIZE
 
-# --- SLURM worker jobs (Option A: dask-jobqueue) ---
-# Each Dask worker is one SLURM job reserving WORKER_CORES cpus.
-SLURM_PARTITION = "cpu"
+# --- SLURM / network ---
 SLURM_INTERFACE = "ib0"     # network interface for scheduler<->worker (InfiniBand)
+
+# --- dask-jobqueue worker jobs -- TODO(remove-jobqueue) ---
+# Everything below this line serves only the deprecated dask-jobqueue mode
+# (one SLURM job per worker); dask-srun launches workers inside the existing
+# allocation and needs none of it. Delete with the mode.
+SLURM_PARTITION = "cpu"
 WORKER_MEMORY = "8GB"       # memory per worker job
 # Della auto-assigns the QOS from the *walltime* (an explicit --qos is
 # overridden), and the QOS sets the per-user concurrent-JOB cap that one-job-

@@ -6,8 +6,13 @@
 #SBATCH --partition=cpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=48G
+#SBATCH --cpus-per-task=16   # the benchmark budget; the node is still whole-charged
+# Exclusive + pinned to the same homogeneous pool as run_multinode.slurm so
+# single-node and multi-node rows are comparable (no co-tenants, same CPU).
+#SBATCH --exclusive
+#SBATCH --mem=180G   # ~all of a 190G r3c node (Della rejects --mem=0)
+#SBATCH --constraint=cascade
+#SBATCH --exclude=della-h12n[1-18],della-h17n[1-3],della-i13n[1-25]
 #SBATCH --time=1-12:00:00   # 36h -> `medium` QOS (>24h); ample for the ~10h sweep
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-type=begin,end,fail  # receive email notifications

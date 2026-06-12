@@ -9,7 +9,13 @@ thread-setting/cluster leakage between runs).
 Modes
   regular        standard pec.run(): serial trials, estimates over all cores
   dask-local     LocalCluster, n_workers x worker_cores on one node
+  dask-srun      SLURMRunner inside an existing allocation (multi-node): launch
+                 via `srun -n (n_workers+2) -c worker_cores python bench.py ...`;
+                 rank 0 = scheduler, rank 1 = driver, ranks 2+ = workers, all
+                 started at once -- no per-worker job queueing
   dask-jobqueue  SLURMCluster, n_workers jobs x worker_cores each (multi-node)
+                 TODO(remove-jobqueue): deprecated -- kept only to measure the
+                 provisioning overhead dask-srun eliminates; delete once recorded
 
 Timing separates a one-time warmup (LLVM compile) from the steady-state fit
 loop, so throughput is not distorted by compilation.
@@ -24,7 +30,7 @@ Usage:
   python bench.py --model ddm --mode regular    --worker-cores 16 --num-estimates 4000 \
                   --optimizer-popsize 32 --total-evals 960 --reps 2 --out results.jsonl
   python bench.py --model ddm --mode dask-local    --n-workers 4 --worker-cores 4 ...
-  python bench.py --model ddm --mode dask-jobqueue --n-workers 4 --worker-cores 16 ...
+  srun -n 6 -c 16 python bench.py --model ddm --mode dask-srun --n-workers 4 --worker-cores 16 ...
 """
 
 import argparse
@@ -232,6 +238,64 @@ def run_dask_local(args, provider, data):
         cluster.close()
 
 
+def maybe_start_runner(mode):
+    """dask-srun only: split this srun step's SLURM ranks into cluster roles.
+
+    Under ``srun -n (n_workers+2)`` every rank executes this script. Call this
+    IMMEDIATELY after argparse, before any heavy setup: only the client rank
+    (SLURM_PROCID 1) returns from the SLURMRunner constructor -- rank 0 serves
+    the scheduler and ranks 2+ serve workers until the client finishes, then
+    exit the process. Gating early keeps data generation, metrics, and result
+    writing on the single client rank.
+    """
+    if mode != "dask-srun":
+        return None
+    from dask_jobqueue.slurm import SLURMRunner
+
+    _quiet_dask()
+    os.makedirs(LOG_DIR, exist_ok=True)
+    # Unique per srun STEP: one allocation hosts many sequential configs, so a
+    # per-job filename would go stale (the next config's client/workers would
+    # read the previous, dead scheduler's address).
+    tag = f"{os.environ['SLURM_JOB_ID']}_{os.environ['SLURM_STEP_ID']}"
+    return SLURMRunner(
+        scheduler_file=os.path.join(LOG_DIR, f"scheduler_{tag}.json"),
+        scheduler_options={"interface": config.SLURM_INTERFACE, "dashboard": False},
+        # nthreads=1: one task slot per worker (the srun -c cores feed LLVM
+        # threads, set per-eval in bench_core). memory_limit=0: no spill/pause
+        # heuristics; memory is governed by the exclusive allocation.
+        worker_options={
+            "nthreads": 1,
+            "memory_limit": 0,
+            "interface": config.SLURM_INTERFACE,
+            "local_directory": os.environ.get("TMPDIR", "/tmp"),
+        },
+    )
+
+
+def run_dask_srun(args, provider, data):
+    from dask.distributed import Client
+
+    client = Client(args._runner)  # runner built in main(), before data prep
+    try:
+        client.wait_for_workers(args.n_workers, timeout=args.worker_timeout)
+        hosts = sorted({w["host"] for w in client.scheduler_info()["workers"].values()})
+        print(f"{args.n_workers} workers up on {len(hosts)} node(s): {' '.join(hosts)}",
+              flush=True)
+        return _run_with_client(client, args, provider, data)
+    finally:
+        # Terminate scheduler + workers so all ranks exit and the srun step
+        # ends; without this the step (and the sweep) would hang here. The
+        # scheduler removes its own scheduler-file on exit (distributed's
+        # del_scheduler_file finalizer), so we must NOT delete it here -- doing
+        # so races that finalizer into a FileNotFoundError on the scheduler
+        # rank. The batch script sweeps any leftovers as a safety net.
+        client.shutdown()
+        client.close()
+
+
+# TODO(remove-jobqueue): retained only for the provisioning-overhead comparison
+# against dask-srun; delete this runner once those numbers are recorded.
 def run_dask_jobqueue(args, provider, data):
     from dask.distributed import Client
     from dask_jobqueue import SLURMCluster
@@ -264,7 +328,8 @@ def run_dask_jobqueue(args, provider, data):
 RUNNERS = {
     "regular": run_regular,
     "dask-local": run_dask_local,
-    "dask-jobqueue": run_dask_jobqueue,
+    "dask-srun": run_dask_srun,
+    "dask-jobqueue": run_dask_jobqueue,  # TODO(remove-jobqueue)
 }
 
 
@@ -308,6 +373,14 @@ def main():
         args.n_rounds = config.N_ROUNDS
     if args.n_rounds < 1:
         p.error("--n-rounds must be >= 1")
+    if args.mode == "dask-srun" and args.reps != 1:
+        # The cluster lives for this process; a second rep would reuse warm
+        # workers (compile_s ~ 0). Rerun via separate srun steps instead.
+        p.error("--mode dask-srun supports --reps 1 only")
+
+    # MUST precede provider/data setup: parks the scheduler/worker ranks so
+    # only the client rank does the work below (no-op for other modes).
+    args._runner = maybe_start_runner(args.mode)
 
     total_cores = (1 if args.mode == "regular" else args.n_workers) * args.worker_cores
     n_evals = total_evals(args)
@@ -335,10 +408,11 @@ def main():
         max_pct_err = max(100.0 * abs(true[k] - recovered[k]) / true[k] for k in true)
         mcc = sampler.mean_cpu_cores
         prg = sampler.peak_rss_gb
-        # The local sampler only sees THIS process. For jobqueue the workers are
-        # separate SLURM jobs on other nodes, so its driver-only CPU/RSS readings
-        # are meaningless -- drop them (use sacct, or core_hours, for those).
-        if args.mode == "dask-jobqueue":
+        # The local sampler only sees THIS process. For dask-srun and jobqueue
+        # the workers are separate processes on other nodes, so its driver-only
+        # CPU/RSS readings are meaningless -- drop them (use sacct, or
+        # core_hours, for those).
+        if args.mode in ("dask-jobqueue", "dask-srun"):
             mcc = prg = None
         row = {
             "model": args.model,
