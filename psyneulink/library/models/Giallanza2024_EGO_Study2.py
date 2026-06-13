@@ -9,7 +9,7 @@ between them,  without the catastrophic interference characteristic of simple fe
 The task and data simulated are based ones reported in `https://www.nature.com/articles/s44271-024-00079-4`_.
 
 .. note::
-    The word "context" is overloaded in this script. In the model, "context" refers to the internal
+    The term "context" is overloaded in this script. In the model, "context" refers to the internal
     representation of the context that is a linearly integrated representation of past states.
     In the task environment, "context" refers to the two different sets of state transitions that
     must be learned from experience. The context is cued by the first stimulus in each trial
@@ -26,6 +26,9 @@ Differences from the Pytorch implementation described in `Giallanza et al. (2024
 - In the original implementation, the Episodic Memory (EM) module was a dynamically growing list of memories
   initialized as an empty list. Here, the EM module is implemented using `EMComposition`, which uses a fixed-size
   memory buffer initialized with small non-zero values.
+
+Model:
+BREADCRUMB: FIGURE HERE
 
 
 """
