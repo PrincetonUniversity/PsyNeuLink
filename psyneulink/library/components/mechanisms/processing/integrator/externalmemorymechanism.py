@@ -51,7 +51,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.episodicmemo
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError)
 
 __all__ = ['ExternalMemoryMechanism', 'ExternalMemoryMechanismError',
-           'QUERY', 'SCORES', 'COMBINED_SCORES', 'COMBINED_NORMS', 'RETRIEVED']
+           'QUERY', 'SCORES', 'COMBINED_SCORES', 'MIN_NORM_INDEX', 'RETRIEVED']
 
 
 DifferentiableContentAddressableMemory_FUNCTION = 'DifferentiableContentAddressableMemory Function'
@@ -59,7 +59,7 @@ QUERY = "QUERY"
 SCORES = "SCORES"
 NORMS = "NORMS"
 COMBINED_SCORES = "COMBINED SCORES"
-COMBINED_NORMS = "COMBINED NORMS"
+MIN_NORM_INDEX = "MIN NORM INDEX"
 RETRIEVED = "RETRIEVED"
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
@@ -211,7 +211,7 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
         # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
                        {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
-                       {NAME: COMBINED_NORMS, VARIABLE: np.zeros(1)},]
+                       {NAME: MIN_NORM_INDEX, VARIABLE: np.zeros(1)},]
 
         output_ports = [{NAME: RETRIEVED, VARIABLE: (OWNER_VALUE, 0)}]
         output_ports.append({NAME: NORMS, VARIABLE: (OWNER_VALUE, 2)})
@@ -262,12 +262,12 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
     def _validate_variable(self, variable, context=None):
         variable = np.asarray(variable, dtype=object)
         assert len(variable) == 3, (f"Variable for {self.name} must contain three items: "
-                                    f"QUERY, COMBINED_SCORES and COMBINED_NORMS.")
+                                    f"QUERY, COMBINED_SCORES and MIN_NORM_INDEX.")
         assert len(variable[0]) == self.field_shape, (f"QUERY input for {self.name} has length {len(variable[0])}; "
                                                       f"expected {self.field_shape}.")
         assert len(variable[1]) == self.memory_capacity,(f"COMBINED_SCORES input for {self.name} has length "
                                                          f"{len(variable[1])}; expected {self.memory_capacity}.")
-        assert len(variable[2]) == 1, (f"COMBINED_NORMS input for {self.name} has length "
+        assert len(variable[2]) == 1, (f"MIN_NORM_INDEX input for {self.name} has length "
                                        f"{len(variable[2])}; expected 1.")
         return variable
 
