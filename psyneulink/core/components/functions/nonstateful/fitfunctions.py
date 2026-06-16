@@ -574,8 +574,26 @@ class PECOptimizationFunction(OptimizationFunction):
             )
         elif isinstance(self.method, optuna.study.Study):
 
-            if self._optuna_kwargs is not None:
+            if self._optuna_kwargs:
                 warnings.warn("optuna_kwargs are being ignored because method is an optuna study")
+
+            # The direction of the passed study is fixed at study creation time and is used as-is (we do not
+            # recreate the study). Warn if it doesn't match the direction this PEC expects, since a mismatch will
+            # silently optimize the wrong way. For data fitting (maximum likelihood estimation) the study must be
+            # created with direction='maximize'.
+            expected_direction = (
+                optuna.study.StudyDirection.MAXIMIZE
+                if self.direction == "maximize"
+                else optuna.study.StudyDirection.MINIMIZE
+            )
+            if self.method.direction != expected_direction:
+                warnings.warn(
+                    f"The optuna study passed as method has direction "
+                    f"'{self.method.direction.name.lower()}', but this PECOptimizationFunction expects "
+                    f"'{self.direction}'. The study's direction will be used as-is, which may produce incorrect "
+                    f"results. When data fitting (maximum likelihood estimation), create the study with "
+                    f"direction='maximize'."
+                )
 
             return self._fit_optuna(
                 obj_func=obj_func, opt_func=self.method, display_iter=display_iter
