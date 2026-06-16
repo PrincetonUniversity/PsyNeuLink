@@ -13,9 +13,6 @@ Modes
                  via `srun -n (n_workers+2) -c worker_cores python bench.py ...`;
                  rank 0 = scheduler, rank 1 = driver, ranks 2+ = workers, all
                  started at once -- no per-worker job queueing
-  dask-jobqueue  SLURMCluster, n_workers jobs x worker_cores each (multi-node)
-                 TODO(remove-jobqueue): deprecated -- kept only to measure the
-                 provisioning overhead dask-srun eliminates; delete once recorded
 
 Timing separates a one-time warmup (LLVM compile) from the steady-state fit
 loop, so throughput is not distorted by compilation.
@@ -63,7 +60,7 @@ os.environ["PYTHONPATH"] = (
     HERE + os.pathsep + PKG_PARENT + os.pathsep + os.environ.get("PYTHONPATH", "")
 )
 
-# Repo root (.../PsyNeuLink) and a home for dask-jobqueue worker logs.
+# Repo root (.../PsyNeuLink) and a home for the dask-srun scheduler files.
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 LOG_DIR = os.path.join(REPO, "slurm_logs")
 
@@ -91,7 +88,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Usage sampler: mean CPU (in cores) and peak RSS over this process + children.
 # Captures Dask LocalCluster workers (child processes); does NOT see remote
-# jobqueue workers (separate SLURM jobs -- use sacct for those).
+# dask-srun workers (separate SLURM ranks on other nodes -- use sacct for those).
 # ---------------------------------------------------------------------------
 class UsageSampler(threading.Thread):
     def __init__(self, interval=0.25):
@@ -160,7 +157,6 @@ def _mid(provider):
 # Regular PEC baseline (CMA-ES via Optuna, pec.run())
 # ---------------------------------------------------------------------------
 def run_regular(args, provider, data):
-    import optuna
     import psyneulink as pnl
 
     pnl.set_num_threads(args.worker_cores)
@@ -168,7 +164,7 @@ def run_regular(args, provider, data):
     inputs = provider.make_inputs(comp, args.num_trials)
     # Fixed-round budget: popsize per generation x n_rounds == total_evals.
     optimizer = pnl.PECOptimizationFunction(
-        method=optuna.samplers.CmaEsSampler(seed=0, popsize=sampler_popsize(args)),
+        method=bench_core.make_sampler(args.sampler, seed=0, popsize=sampler_popsize(args)),
         max_iterations=total_evals(args),
     )
     pec = provider.build_pec(comp, data, args.num_estimates, optimization_function=optimizer)
@@ -215,7 +211,7 @@ def _run_with_client(client, args, provider, data):
         num_trials=args.num_trials, num_estimates=args.num_estimates,
         total_evals=total_evals(args), batch_size=sampler_popsize(args),
         worker_cores=args.worker_cores, fit_bounds=provider.FIT_BOUNDS,
-        verbose=False,
+        sampler=args.sampler, verbose=False,
     )
     loop_s = time.perf_counter() - t0
     recovered = {n: study.best_params[n] for n in provider.FIT_BOUNDS}
@@ -294,42 +290,10 @@ def run_dask_srun(args, provider, data):
         client.close()
 
 
-# TODO(remove-jobqueue): retained only for the provisioning-overhead comparison
-# against dask-srun; delete this runner once those numbers are recorded.
-def run_dask_jobqueue(args, provider, data):
-    from dask.distributed import Client
-    from dask_jobqueue import SLURMCluster
-
-    _quiet_dask()
-    os.makedirs(LOG_DIR, exist_ok=True)
-    cluster = SLURMCluster(
-        queue=config.SLURM_PARTITION,
-        cores=1,
-        processes=1,
-        job_cpu=args.worker_cores,
-        memory=config.WORKER_MEMORY,
-        walltime=config.WORKER_WALLTIME,
-        interface=config.SLURM_INTERFACE,
-        log_directory=LOG_DIR,  # worker slurm-*.out land here, not the cwd
-        # Workers must import bench_core + models (HERE) and pec_dask_mle (PKG_PARENT).
-        job_script_prologue=[f"export PYTHONPATH={HERE}:{PKG_PARENT}:$PYTHONPATH"],
-    )
-    cluster.scale(jobs=args.n_workers)
-    client = Client(cluster)
-    try:
-        print(f"waiting for {args.n_workers} workers...", flush=True)
-        client.wait_for_workers(args.n_workers, timeout=args.worker_timeout)
-        return _run_with_client(client, args, provider, data)
-    finally:
-        client.close()
-        cluster.close()
-
-
 RUNNERS = {
     "regular": run_regular,
     "dask-local": run_dask_local,
     "dask-srun": run_dask_srun,
-    "dask-jobqueue": run_dask_jobqueue,  # TODO(remove-jobqueue)
 }
 
 
@@ -338,6 +302,9 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="ddm", choices=list(models.REGISTRY))
     p.add_argument("--mode", required=True, choices=list(RUNNERS))
+    p.add_argument("--sampler", default="cmaes", choices=list(bench_core.SAMPLERS),
+                   help="Optuna sampler; popsize/batch == --optimizer-popsize. "
+                        "Generational (cmaes, nsga2) need popsize >= 2.")
     p.add_argument("--n-workers", type=int, default=1)
     p.add_argument("--worker-cores", type=int, default=16)
     p.add_argument("--optimizer-popsize", type=int, default=config.OPTIMIZER_POPSIZE,
@@ -408,15 +375,15 @@ def main():
         max_pct_err = max(100.0 * abs(true[k] - recovered[k]) / true[k] for k in true)
         mcc = sampler.mean_cpu_cores
         prg = sampler.peak_rss_gb
-        # The local sampler only sees THIS process. For dask-srun and jobqueue
-        # the workers are separate processes on other nodes, so its driver-only
-        # CPU/RSS readings are meaningless -- drop them (use sacct, or
-        # core_hours, for those).
-        if args.mode in ("dask-jobqueue", "dask-srun"):
+        # The local sampler only sees THIS process. For dask-srun the workers are
+        # separate processes on other nodes, so its driver-only CPU/RSS readings
+        # are meaningless -- drop them (use sacct, or core_hours, for those).
+        if args.mode == "dask-srun":
             mcc = prg = None
         row = {
             "model": args.model,
             "mode": args.mode,
+            "sampler": args.sampler,
             "n_workers": args.n_workers if args.mode != "regular" else 1,
             "worker_cores": args.worker_cores,
             "total_cores": total_cores,
@@ -442,7 +409,7 @@ def main():
         with open(args.out, "a") as f:
             f.write(json.dumps(row) + "\n")
         print(
-            f"[{args.model} {args.mode} {args.n_workers}x{args.worker_cores} "
+            f"[{args.model} {args.mode} {args.sampler} {args.n_workers}x{args.worker_cores} "
             f"ne={args.num_estimates} nt={args.num_trials} pop={popsize} "
             f"rounds={args.n_rounds} "
             f"evals={n_evals} rep{rep}] loop={loop_s:.1f}s compile={compile_s:.1f}s "

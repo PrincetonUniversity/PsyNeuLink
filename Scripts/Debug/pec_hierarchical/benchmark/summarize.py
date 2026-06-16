@@ -35,10 +35,12 @@ def main():
     groups = defaultdict(list)
     for r in rows:
         model = r.get("model", "ddm")  # back-compat with pre-model rows
+        sampler = r.get("sampler", "cmaes")  # back-compat with pre-sampler rows
         popsize = r.get("optimizer_popsize", r.get("batch_size"))
         groups[
             (
                 model,
+                sampler,
                 r["mode"],
                 r["n_workers"],
                 r["worker_cores"],
@@ -49,10 +51,10 @@ def main():
         ].append(r)
 
     agg = []
-    for (model, mode, nw, wc, ne, nr, popsize), rs in groups.items():
+    for (model, sampler, mode, nw, wc, ne, nr, popsize), rs in groups.items():
         agg.append({
-            "label": f"{model}/{mode} {nw}x{wc}",
-            "model": model, "mode": mode, "ne": ne, "rounds": nr,
+            "label": f"{model}/{sampler}/{mode} {nw}x{wc}",
+            "model": model, "sampler": sampler, "mode": mode, "ne": ne, "rounds": nr,
             "popsize": popsize,
             "cores": rs[0]["total_cores"],
             "evals": rs[0].get("total_evals"),
@@ -66,26 +68,26 @@ def main():
             "core_hours": med([r["core_hours"] for r in rs]),
         })
 
-    # baseline loop time = the regular run for the same model/problem/work. With
-    # fixed popsize, worker sweeps should share both evals and optimizer path.
+    # baseline loop time = the regular run for the same model/sampler/problem/work.
+    # With fixed popsize, worker sweeps share both evals and optimizer path.
     base = {
-        (a["model"], a["ne"], a["popsize"], a["evals"]): a["loop_s"]
+        (a["model"], a["sampler"], a["ne"], a["popsize"], a["evals"]): a["loop_s"]
         for a in agg if a["mode"] == "regular"
     }
 
     def fnum(v, width, prec):
         return ("-" if v is None else f"{v:.{prec}f}").rjust(width)
 
-    hdr = (f"{'config':<26}{'cores':>6}{'ne':>7}{'rounds':>8}{'pop':>7}"
+    hdr = (f"{'config':<34}{'cores':>6}{'ne':>7}{'rounds':>8}{'pop':>7}"
            f"{'evals':>7}{'loop_s':>9}{'evals/s':>9}{'speedup':>9}"
            f"{'util%':>7}{'rss_gb':>8}{'err%':>7}{'core_h':>9}")
     print(hdr)
     print("-" * len(hdr))
-    for a in sorted(agg, key=lambda x: (x["model"], x["ne"], x["cores"], x["label"])):
-        b = base.get((a["model"], a["ne"], a["popsize"], a["evals"]))
+    for a in sorted(agg, key=lambda x: (x["model"], x["sampler"], x["ne"], x["cores"], x["label"])):
+        b = base.get((a["model"], a["sampler"], a["ne"], a["popsize"], a["evals"]))
         sp = (b / a["loop_s"]) if (b and a["loop_s"]) else None
         print(
-            f"{a['label']:<26}{a['cores']:>6}{a['ne']:>7}"
+            f"{a['label']:<34}{a['cores']:>6}{a['ne']:>7}"
             f"{str(a['rounds'] or '-'):>8}{str(a['batch'] or '-'):>7}"
             f"{str(a['evals'] or '-'):>7}"
             f"{fnum(a['loop_s'], 9, 1)}{fnum(a['evals_per_s'], 9, 1)}"
@@ -93,9 +95,9 @@ def main():
             f"{fnum(a['rss_gb'], 8, 2)}{fnum(a['err'], 7, 1)}{fnum(a['core_hours'], 9, 4)}"
         )
     print("\nspeedup = regular loop_s / config loop_s "
-          "(matching model, num_estimates, pop, and evals).")
-    print("util%   = mean busy cores / allocated cores; '-' for multi-node "
-          "(jobqueue) since remote workers are not locally sampled.")
+          "(matching model, sampler, num_estimates, pop, and evals).")
+    print("util%   = mean busy cores / allocated cores; '-' for dask-srun "
+          "since remote workers on other nodes are not locally sampled.")
 
 
 if __name__ == "__main__":

@@ -7,23 +7,24 @@
 # workers, so there is no idle-driver wait either. Each config writes its own
 # results file; a dependent summary job merges them when all have finished.
 #
-# Run from a login node:  ./submit_multinode.sh
+# Run from a login node:  ./slurm/sweep_core_grid.sh
 set -euo pipefail
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
 BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
-RESDIR=$BD/results_multinode.d        # one JSONL per config; summarize globs them
+RESDIR=$BD/results/core_grid.d        # one JSONL per config; summarize globs them
 CORES_PER_NODE=32                     # the pinned r3c nodes
 
 MODEL=ddm
+SAMPLER=cmaes  # fixed-popsize core-scaling grid uses CMA-ES (the original study)
 NE=8000     # simulations per likelihood evaluation
 TE=960      # fixed eval budget for EVERY config (rounds = TE/POP)
 POP=32      # fixed CMA-ES population (>= max NW keeps workers busy)
 NT=250      # observed-data trials per fit
 WT=300      # worker-start timeout (s); srun workers come up in seconds
 
-mkdir -p "$RESDIR"
+mkdir -p "$RESDIR" "$BD/logs"
 rm -f "$RESDIR"/*.jsonl
 
 ids=()
@@ -35,8 +36,8 @@ submit () {   # submit NW WC
   local out="$RESDIR/results_${NW}x${WC}.jsonl"
   local jid
   jid=$(sbatch --parsable --nodes="$nodes" --job-name="pec_mn_${NW}x${WC}" \
-        --export=ALL,NW=$NW,WC=$WC,MODEL=$MODEL,NE=$NE,TE=$TE,POP=$POP,NT=$NT,WT=$WT,OUT="$out" \
-        "$BD/run_one.slurm")
+        --export=ALL,NW=$NW,WC=$WC,MODEL=$MODEL,SAMPLER=$SAMPLER,NE=$NE,TE=$TE,POP=$POP,NT=$NT,WT=$WT,OUT="$out" \
+        "$BD/slurm/run_config.slurm")
   printf '  %-6s %2d core(s)/worker -> %d node(s)  job %s\n' "${NW}x${WC}" "$WC" "$nodes" "$jid"
   ids+=("$jid")
 }
@@ -61,8 +62,8 @@ done
 dep=$(IFS=:; echo "${ids[*]}")
 sum=$(sbatch --parsable --dependency="afterany:$dep" --kill-on-invalid-dep=yes \
       --job-name=pec_mn_summary --partition=cpu --time=00:10:00 --mem=4G \
-      --output="$BD/pec_mn_summary_%j.out" \
+      --output="$BD/logs/pec_mn_summary_%j.out" \
       --wrap="$PY $BD/summarize.py $RESDIR/*.jsonl")
-echo "summary: job $sum (runs after all configs; see pec_mn_summary_*.out)"
+echo "summary: job $sum (runs after all configs; see logs/pec_mn_summary_*.out)"
 echo "live results land in $RESDIR/ -- summarize anytime with:"
 echo "  $PY $BD/summarize.py $RESDIR/*.jsonl"

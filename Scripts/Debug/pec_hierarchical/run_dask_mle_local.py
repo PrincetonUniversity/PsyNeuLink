@@ -6,8 +6,8 @@ Run via salloc:
     .venv/bin/python3 Scripts/Debug/pec_hierarchical/run_dask_mle_local.py
 
 This validates the driver/worker ask/tell loop on one node. For true multi-node,
-see run_dask_mle_jobqueue.py (Option A, dask-jobqueue): the only change is the
-driver building a SLURMCluster instead of a LocalCluster -- run_fit() is the same.
+see the benchmark's dask-srun mode (benchmark/bench.py + slurm/run_config.slurm),
+which launches the scheduler + workers as SLURM ranks inside one allocation.
 """
 
 import os

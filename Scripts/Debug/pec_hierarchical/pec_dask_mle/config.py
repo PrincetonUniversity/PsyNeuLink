@@ -22,23 +22,6 @@ def total_evals():
 # --- SLURM / network ---
 SLURM_INTERFACE = "ib0"     # network interface for scheduler<->worker (InfiniBand)
 
-# --- dask-jobqueue worker jobs -- TODO(remove-jobqueue) ---
-# Everything below this line serves only the deprecated dask-jobqueue mode
-# (one SLURM job per worker); dask-srun launches workers inside the existing
-# allocation and needs none of it. Delete with the mode.
-SLURM_PARTITION = "cpu"
-WORKER_MEMORY = "8GB"       # memory per worker job
-# Della auto-assigns the QOS from the *walltime* (an explicit --qos is
-# overridden), and the QOS sets the per-user concurrent-JOB cap that one-job-
-# per-worker scaling runs into:
-#     <= 61 min -> test    (2 jobs/user)   <-- too few: blocks scaling
-#     <= 24 h   -> short   (300 jobs, 300 cores/user)
-#     <= 72 h   -> medium  (100 jobs, 250 cores/user)
-#     <= 144 h  -> vlong   (40 jobs,  160 cores/user)
-# So request just over an hour to land in `short`. The worker job still ends as
-# soon as the fit finishes (Dask closes the cluster); walltime is only a ceiling.
-WORKER_WALLTIME = "02:00:00"  # -> `short` QOS; driver alloc must outlast this
-
 # --- Ground-truth DDM parameters used to synthesize the test data ---
 TRUE_PARAMS = dict(
     starting_value=0.0, rate=0.3, noise=1.0,

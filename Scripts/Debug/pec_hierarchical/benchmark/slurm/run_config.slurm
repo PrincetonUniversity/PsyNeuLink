@@ -1,10 +1,11 @@
 #!/bin/bash
-# ONE core-scaling config of the PEC benchmark. Launches a fresh Dask cluster
-# (scheduler + NW workers, WC cores each) all at once inside this allocation
-# via a single srun step, runs the fit, tears down. The allocation is sized to
-# exactly this config's cores so nothing sits idle -- do not run directly;
-# submit_multinode.sh computes --nodes/--job-name and passes the config via
-# --export.
+# ONE config of the PEC benchmark (the pinned/exclusive building block used by
+# the sweep_*.sh launchers). Launches a fresh Dask cluster (scheduler + NW
+# workers, WC cores each) all at once inside this allocation via a single srun
+# step, runs the fit, tears down. The allocation is sized to exactly this
+# config's cores so nothing sits idle -- do not run directly; a sweep launcher
+# (sweep_core_grid.sh, sweep_samplers.sh) computes --nodes/--job-name and passes
+# the config via --export, including SAMPLER (defaults to cmaes if unset).
 #SBATCH --partition=cpu
 #SBATCH --exclusive
 #SBATCH --mem=180G           # ~all of a 190G r3c node (Della rejects --mem=0)
@@ -14,7 +15,7 @@
 # homogeneous, exclusive node makes every config's timing comparable.
 #SBATCH --exclude=della-h12n[1-18],della-h17n[1-3],della-i13n[1-25]
 #SBATCH --time=02:00:00      # >61min keeps it in `short` QOS, not the capped `test` QOS
-#SBATCH --output=%x_%j.out
+#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/benchmark/logs/%x_%j.out
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
@@ -31,7 +32,7 @@ cd $REPO
 # cgroup-confine each worker to exactly its WC cores.
 srun --exact --distribution=block --cpu-bind=cores \
     --ntasks=$((NW + 2)) --cpus-per-task=$WC \
-    $PY $BD/bench.py --model $MODEL --mode dask-srun \
+    $PY $BD/bench.py --model $MODEL --mode dask-srun --sampler ${SAMPLER:-cmaes} \
     --n-workers $NW --worker-cores $WC --optimizer-popsize $POP \
     --num-estimates $NE --num-trials $NT --total-evals $TE --reps 1 \
     --worker-timeout $WT --out $OUT
