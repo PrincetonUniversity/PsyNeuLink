@@ -1017,7 +1017,9 @@ class ParameterEstimationComposition(Composition):
                 f"unless its controller comp_execution_mode is 'LLVM'; got {comp_execution_mode!r}."
             )
 
-        pnllvm.cleanup()
+        # No pnllvm.cleanup() here: log_likelihood re-scores one fixed PEC many
+        # times, so the compiled binary must be reused (cleanup forces a ~8x
+        # recompile per eval). run()'s cleanup still guards the optimization entry.
         context.composition = self
 
         assert self.controller is not None
