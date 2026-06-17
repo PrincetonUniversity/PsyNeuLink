@@ -87,6 +87,22 @@ class TestSimpleCompositions:
 
 class TestNested:
 
+    def test_outer_nodes_projecting_to_and_from_nested_composition_are_rank_constrained(self):
+        outer_input = ProcessingMechanism(name='OUTER INPUT')
+        inner = ProcessingMechanism(name='INNER')
+        outer_output = ProcessingMechanism(name='OUTER OUTPUT')
+        nested_comp = Composition(name='NESTED COMP', pathways=[inner])
+        comp = Composition(name='OUTER COMP', pathways=[[outer_input, nested_comp, outer_output]])
+
+        gv = comp.show_graph(output_fmt='source', show_nested=NESTED)
+
+        assert '\trank=same\n\t\t"OUTER INPUT"\n' in gv
+        assert '\trank=same\n\t\t"OUTER OUTPUT"\n' in gv
+        assert ('"OUTER INPUT" -> INNER '
+                '[arrowhead=none constraint=true style=invis weight=100]') in gv
+        assert ('INNER -> "OUTER OUTPUT" '
+                '[arrowhead=none constraint=true style=invis weight=100]') in gv
+
     expected_solo_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=brown\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
     expected_solo_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n}\n'
     expected_input_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
