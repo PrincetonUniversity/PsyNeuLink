@@ -483,6 +483,8 @@ class ParameterEstimationComposition(Composition):
         initial_seed: Optional[int] = None,
         same_seed_for_all_parameter_combinations: Optional[bool] = None,
         depends_on: Optional[Mapping] = None,
+        distributed: bool = False,
+        distributed_options: Optional[Mapping] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
         **kwargs,
@@ -644,6 +646,8 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            distributed=distributed,
+            distributed_options=distributed_options,
             context=context,
         )
         self.add_controller(ocm, context)
@@ -815,6 +819,8 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
+        distributed=False,
+        distributed_options=None,
         context=None,
     ):
 
@@ -861,6 +867,16 @@ class ParameterEstimationComposition(Composition):
             )
         else:
             optimization_function.set_pec_objective_function(objective_function)
+
+        # Forward PEC-level distributed knobs onto the optimization function. A
+        # passed PECOptimizationFunction that already enabled distributed keeps its
+        # own options (authoritative); otherwise PEC-level settings apply, so a
+        # plain string method (e.g. 'differential_evolution') can be distributed
+        # straight from the PEC constructor.
+        if distributed and not optimization_function.distributed:
+            optimization_function.distributed = True
+            if distributed_options is not None:
+                optimization_function._distributed_options = dict(distributed_options)
 
         if data is not None:
             optimization_function.data_fitting_mode = True

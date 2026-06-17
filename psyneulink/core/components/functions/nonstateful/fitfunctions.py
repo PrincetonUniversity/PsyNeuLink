@@ -29,6 +29,8 @@ from psyneulink._typing import (
 )
 
 
+import functools
+import os
 import time
 import numpy as np
 
@@ -259,6 +261,175 @@ def simulation_likelihood(
         return kdes
 
 
+# ---------------------------------------------------------------------------
+# Distributed (Dask) PEC fitting helpers.
+#
+# These are module-level (importable-by-reference) so Dask can ship them to
+# workers by name. All Dask imports are lazy: ``distributed=False`` never
+# imports Dask, and a missing Dask install raises a clear, actionable error
+# only when distributed fitting is actually requested. A live PEC is never
+# pickled; each worker rebuilds one locally from a user-supplied ``pec_factory``
+# and caches it, so only the factory (by value), broadcast data, parameter
+# values, and a scalar result cross the wire.
+# ---------------------------------------------------------------------------
+
+# The client formed by the ``python -m psyneulink.dask_run`` launcher, if any.
+# Set on the driver rank by the launcher so ``distributed=True`` study scripts
+# auto-detect the launcher-formed cluster without any address handling.
+_ACTIVE_LAUNCHER_CLIENT = None
+
+# Per-process fallback PEC cache for evaluations made outside a Dask worker
+# (e.g. a serial sanity check). Inside Dask the cache lives on the worker object.
+_PEC_FALLBACK_CACHE = {}
+
+
+def _set_active_launcher_client(client):
+    """Register the launcher-formed Dask client as the active client (driver rank)."""
+    global _ACTIVE_LAUNCHER_CLIENT
+    _ACTIVE_LAUNCHER_CLIENT = client
+
+
+def _require_dask():
+    """Import dask.distributed or raise an actionable error."""
+    try:
+        import dask.distributed as dd  # noqa: F401
+    except ImportError as e:
+        raise ImportError(
+            "Distributed PEC fitting (distributed=True) requires Dask. "
+            "Install it with `pip install psyneulink[dask]`."
+        ) from e
+    return dd
+
+
+def _resolve_worker_cores(options):
+    """LLVM threads per worker: explicit option, else $SLURM_CPUS_PER_TASK, else cores."""
+    wc = (options or {}).get("worker_cores")
+    if wc is not None:
+        return int(wc)
+    env = os.environ.get("SLURM_CPUS_PER_TASK")
+    if env:
+        return int(env)
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
+
+
+def _dask_client(options):
+    """Resolve a Dask client from ``distributed_options``; return ``(client, close_fn)``.
+
+    Resolution order (first match wins):
+      1. explicit ``client``
+      2. explicit ``scheduler_address`` / ``scheduler_file``
+      3. the active launcher client (set by ``psyneulink.dask_run``)
+      4. a ``LocalCluster`` on the current node (zero-config single-node default)
+
+    ``close_fn`` tears down only resources created here (the LocalCluster); it is
+    ``None`` for externally-supplied or launcher clients, which we must not close.
+    """
+    dd = _require_dask()
+    options = dict(options or {})
+
+    client = options.get("client")
+    if client is not None:
+        return client, None
+
+    addr = options.get("scheduler_address")
+    if addr is not None:
+        client = dd.Client(addr)
+        return client, client.close
+
+    sched_file = options.get("scheduler_file")
+    if sched_file is not None:
+        client = dd.Client(scheduler_file=sched_file)
+        return client, client.close
+
+    if _ACTIVE_LAUNCHER_CLIENT is not None:
+        return _ACTIVE_LAUNCHER_CLIENT, None
+
+    # Zero-config single-node default: process workers (threads_per_worker=1 --
+    # PNL's LLVM runtime asserts on multi-threaded in-process cleanup).
+    lc_kwargs = {"threads_per_worker": 1}
+    n_workers = options.get("n_workers")
+    if n_workers is not None:
+        lc_kwargs["n_workers"] = n_workers
+    cluster = dd.LocalCluster(**lc_kwargs)
+    client = dd.Client(cluster)
+
+    def _close():
+        client.close()
+        cluster.close()
+
+    return client, _close
+
+
+def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores):
+    """One candidate -> one scalar log-likelihood, on a Dask worker.
+
+    Rebuilds (once per worker) and caches ``(pec, inputs)`` from ``pec_factory``,
+    pinning this worker's LLVM thread count, then re-scores the cached PEC for
+    every subsequent candidate so the compiled binary is reused.
+    """
+    try:
+        from dask.distributed import get_worker
+        worker = get_worker()
+        cache = getattr(worker, "_pec_cache", None)
+    except (ImportError, ValueError):
+        worker = None
+        cache = _PEC_FALLBACK_CACHE.get("pec")
+
+    if cache is None:
+        from psyneulink.core.globals.threads import set_num_threads
+        if worker_cores is not None:
+            set_num_threads(worker_cores)
+        cache = pec_factory(data)
+        if worker is not None:
+            worker._pec_cache = cache
+        else:
+            _PEC_FALLBACK_CACHE["pec"] = cache
+
+    pec, inputs = cache
+    return float(pec.log_likelihood(*param_values, inputs=inputs))
+
+
+def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, param_values):
+    """scipy.optimize-facing objective: a value to MINIMIZE.
+
+    Top-level (picklable) so it can be shipped to workers; never a closure over a
+    live PEC. scipy minimizes, so flip the sign when the PEC direction is maximize.
+    """
+    ll = _dask_evaluate_loglik(pec_factory, list(param_values), data, worker_cores)
+    return -ll if direction == "maximize" else ll
+
+
+def _dask_map(client, func, iterable):
+    """A ``map``-like for scipy's ``differential_evolution(workers=...)``.
+
+    Submit ``func`` over ``iterable`` to the cluster and gather in order. Bind the
+    client with ``functools.partial(_dask_map, client)`` to get the ``workers`` callable.
+    """
+    futures = [client.submit(func, x, pure=False) for x in iterable]
+    return list(client.gather(futures))
+
+
+def _run_ask_tell_rounds(study, distributions, param_order, batch, n_rounds,
+                         submit_one, gather):
+    """Synchronous batched ask/tell loop for a distributed optuna study.
+
+    Each round asks ``batch`` candidates, dispatches each candidate's parameter
+    vector (in ``param_order``) via ``submit_one(param_values) -> future``, gathers
+    the scalar scores with ``gather(futures)``, and tells each score back to its
+    own trial. Pure bookkeeping with no Dask/PNL dependency so it can be tested
+    against a synchronous fake evaluator; the real path passes Dask submit/gather.
+    """
+    for _ in range(n_rounds):
+        trials = [study.ask(distributions) for _ in range(batch)]
+        futures = [submit_one([t.params[name] for name in param_order]) for t in trials]
+        values = gather(futures)
+        for trial, value in zip(trials, values):
+            study.tell(trial, value)
+    return study
+
+
 class PECOptimizationFunction(OptimizationFunction):
     """
     A subclass of OptimizationFunction that is used to interface with the PEC. This class is used to specify the
@@ -303,6 +474,15 @@ class PECOptimizationFunction(OptimizationFunction):
 
 
     """
+
+    # Share (do not deepcopy) the distributed options: they can hold a live Dask
+    # Client, which is not deepcopyable (holds an asyncio.Task). The OCM deepcopies
+    # its function on instantiation and during simulation; _dask_client only ever
+    # reads a local copy of these options, so sharing the reference is safe.
+    _deepcopy_shared_keys = (
+        OptimizationFunction._deepcopy_shared_keys | frozenset(['_distributed_options'])
+    )
+
     class Parameters(OptimizationFunction.Parameters):
         initial_seed = SharedParameter(attribute_name='owner')
 
@@ -318,12 +498,22 @@ class PECOptimizationFunction(OptimizationFunction):
         save_values: Optional[bool] = None,
         max_iterations: int = 500,
         direction: Literal["maximize", "minimize"] = "maximize",
+        distributed: bool = False,
+        distributed_options: Optional[Mapping] = None,
         **kwargs,
     ):
         self.method = method
         self._optuna_kwargs = {} if optuna_kwargs is None else {**optuna_kwargs}
 
         self.direction = direction
+
+        # Distributed (Dask) fitting knobs. Both default off, so existing serial
+        # code paths are untouched. ``distributed_options`` keys (all optional
+        # except ``pec_factory``, which is required when distributed): pec_factory,
+        # worker_cores, max_concurrent_evaluations, and connection escape hatches
+        # (client / scheduler_address / scheduler_file / n_workers).
+        self.distributed = distributed
+        self._distributed_options = dict(distributed_options) if distributed_options else {}
 
         # The outcome variables to select from the composition's output need to be specified. These will be
         # set automatically by the PEC when PECOptimizationFunction is passed to it.
@@ -553,8 +743,45 @@ class PECOptimizationFunction(OptimizationFunction):
         display_iter: bool = True,
         context: Context = None,
     ):
+        if not self.distributed:
+            return self._fit_dispatch(obj_func, display_iter, context, client=None)
+
+        # Distributed path: warn if the fit will not be reproducible (no common
+        # random numbers), resolve the Dask client exactly once, dispatch, and
+        # tear down only resources we created (an internally-built LocalCluster).
+        self._warn_if_no_crn(context)
+        client, close_dask = _dask_client(self._distributed_options)
+        try:
+            return self._fit_dispatch(obj_func, display_iter, context, client=client)
+        finally:
+            if close_dask is not None:
+                close_dask()
+
+    def _warn_if_no_crn(self, context):
+        """Warn when distributed fitting runs without common random numbers."""
+        owner = self.owner
+        crn = owner is not None and bool(
+            owner.parameters.same_seed_for_all_allocations._get(context)
+        )
+        if not crn:
+            warnings.warn(
+                "Distributed PEC fitting without common random numbers "
+                "(same_seed_for_all_parameter_combinations=True) is valid but not "
+                "reproducible: the seeds a candidate receives depend on worker "
+                "placement, so results will not match a serial fit. Set "
+                "same_seed_for_all_parameter_combinations=True with a fixed "
+                "initial_seed for reproducible, serial-matching results."
+            )
+
+    def _fit_dispatch(
+        self,
+        obj_func: Callable,
+        display_iter: bool,
+        context: Context,
+        client,
+    ):
         if self.method == "differential_evolution":
-            return self._fit_differential_evolution(obj_func, display_iter, context)
+            return self._fit_differential_evolution(obj_func, display_iter, context, client=client)
         elif isinstance(self.method, optuna.samplers.BaseSampler):
 
             if self.owner.initial_seed is not None:
@@ -562,7 +789,7 @@ class PECOptimizationFunction(OptimizationFunction):
                               "want deterministic behavior, make sure to specify seed on optuna sampler as well")
 
             return self._fit_optuna(
-                obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+                obj_func=obj_func, opt_func=self.method, display_iter=display_iter, client=client
             )
         # If this is a class of type base sampler, instantiate it and pass it to _fit_optuna
         elif isinstance(self.method, type) and issubclass(self.method, optuna.samplers.BaseSampler):
@@ -577,7 +804,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 self._optuna_kwargs["seed"] = self.owner.initial_seed
 
             return self._fit_optuna(
-                obj_func=obj_func, opt_func=self.method(**self._optuna_kwargs), display_iter=display_iter
+                obj_func=obj_func, opt_func=self.method(**self._optuna_kwargs), display_iter=display_iter, client=client
             )
         elif isinstance(self.method, optuna.study.Study):
 
@@ -603,7 +830,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 )
 
             return self._fit_optuna(
-                obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+                obj_func=obj_func, opt_func=self.method, display_iter=display_iter, client=client
             )
 
         else:
@@ -695,10 +922,13 @@ class PECOptimizationFunction(OptimizationFunction):
         obj_func: Callable,
         display_iter: bool = True,
         context: Context = None,
+        client=None,
     ):
         """
         Implementation of search using scipy's differential_evolution algorithm.
         """
+        if self.distributed:
+            return self._fit_differential_evolution_distributed(context, client)
 
         bounds = self.fit_param_bounds
 
@@ -798,12 +1028,64 @@ class PECOptimizationFunction(OptimizationFunction):
 
         return output_dict
 
+    def _fit_differential_evolution_distributed(self, context, client):
+        """Distributed differential_evolution: map each generation across Dask workers.
+
+        scipy drives the search; ``workers=`` distributes each (deferred) generation's
+        population across the cluster via ``_dask_map``. The objective is a top-level,
+        picklable factory objective -- never a closure over the live PEC. Returns the
+        same ``{"fitted_params", "optimal_value"}`` dict as the serial path.
+        """
+        pec_factory = self._resolve_pec_factory()
+        worker_cores = _resolve_worker_cores(self._distributed_options)
+        data = self.owner.composition.data
+
+        bounds = [(lb, ub) for name, (lb, ub, step) in self.fit_param_bounds.items()]
+        seed_for_scipy = try_extract_0d_array_item(
+            self._get_current_parameter_value('initial_seed', context)
+        )
+
+        # Top-level objective bound to picklable args. Data is bound by value (not a
+        # scattered Future) so it survives being frozen inside the partial scipy hands
+        # to workers; the per-worker PEC cache means each worker materialises the data
+        # and builds its PEC only once. (The optuna path uses the more efficient
+        # client.scatter, where we control submit and pass the data future directly.)
+        objective = functools.partial(
+            _dask_evaluate_loglik_de, pec_factory, worker_cores, data, self.direction
+        )
+
+        # updating="deferred" is mandatory with workers: the whole population is
+        # evaluated per generation, which is exactly what _dask_map distributes.
+        de_kwargs = dict(self._method_kwargs)
+        de_kwargs.pop("updating", None)
+        de_kwargs.pop("workers", None)
+        de_kwargs.setdefault("popsize", 15)
+        de_kwargs.setdefault("polish", False)
+
+        r = differential_evolution(
+            objective,
+            bounds,
+            maxiter=self.parameters.max_iterations.get() - 1,
+            seed=seed_for_scipy,
+            updating="deferred",
+            workers=functools.partial(_dask_map, client),
+            **de_kwargs,
+        )
+
+        direction = 1 if self.direction == "minimize" else -1
+        fitted_params = dict(zip(list(self.fit_param_names), r.x))
+        return {"fitted_params": fitted_params, "optimal_value": direction * r.fun}
+
     def _fit_optuna(
         self,
         obj_func: Callable,
         opt_func: Union[optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study],
         display_iter: bool = True,
+        client=None,
     ):
+        if self.distributed:
+            return self._fit_optuna_distributed(opt_func, client)
+
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
@@ -896,6 +1178,112 @@ class PECOptimizationFunction(OptimizationFunction):
         }
 
         return output_dict
+
+    def _resolve_pec_factory(self):
+        """Return the user's ``pec_factory`` or raise an actionable error."""
+        pec_factory = self._distributed_options.get("pec_factory")
+        if pec_factory is None:
+            raise OptimizationFunctionError(
+                "Distributed PEC fitting (distributed=True) requires a 'pec_factory' in "
+                "distributed_options: a top-level callable that takes the observed data and "
+                "returns a fresh (pec, inputs) for a worker to score. A live PEC cannot be "
+                "shipped to workers (Compositions are not safely picklable)."
+            )
+        return pec_factory
+
+    # Optuna samplers whose ask/tell trajectory is generational and therefore
+    # requires a per-round batch (population) of at least 2 candidates.
+    _GENERATIONAL_SAMPLERS = (optuna.samplers.CmaEsSampler, optuna.samplers.NSGAIISampler)
+
+    def _resolve_batch_size(self, client, opt_func):
+        """Candidates per ask/tell round (a.k.a. ``max_concurrent_evaluations``).
+
+        Explicit option wins; otherwise default to the live worker count (>= 1).
+        Generational samplers (CMA-ES, NSGA-II) require a batch of at least 2.
+        """
+        batch = self._distributed_options.get("max_concurrent_evaluations")
+        if batch is None:
+            try:
+                batch = len(client.scheduler_info()["workers"])
+            except Exception:
+                batch = 0
+            batch = max(batch, 1)
+        batch = int(batch)
+        if batch < 1:
+            raise OptimizationFunctionError("max_concurrent_evaluations must be >= 1.")
+
+        if isinstance(opt_func, type):
+            sampler_type = opt_func
+        elif isinstance(opt_func, optuna.study.Study):
+            sampler_type = type(opt_func.sampler)
+        else:
+            sampler_type = type(opt_func)
+        if issubclass(sampler_type, self._GENERATIONAL_SAMPLERS) and batch < 2:
+            raise OptimizationFunctionError(
+                f"Generational sampler {sampler_type.__name__} requires a distributed "
+                f"batch size (max_concurrent_evaluations / live worker count) of at "
+                f"least 2; got {batch}."
+            )
+        return batch
+
+    def _fit_optuna_distributed(self, opt_func, client):
+        """Distributed optuna ask/tell: ask a batch, score it across Dask workers, tell.
+
+        Mirrors the serial study trajectory but evaluates each round's candidates
+        concurrently on the cluster. With common random numbers the result is
+        identical to the serial fit; Dask changes only evaluation concurrency.
+        Returns the same ``{"fitted_params", "optimal_value"}`` dict as the serial path.
+        """
+        from optuna.distributions import FloatDistribution
+
+        pec_factory = self._resolve_pec_factory()
+        worker_cores = _resolve_worker_cores(self._distributed_options)
+        data = self.owner.composition.data
+
+        param_order = list(self.fit_param_names)
+        # Match the serial path's discretization (trial.suggest_float(..., step=step))
+        # so distributed candidates land on the same grid -- required for serial parity
+        # with tell-order-independent samplers (e.g. RandomSampler).
+        distributions = {
+            name: FloatDistribution(lower, upper, step=step)
+            for name, (lower, upper, step) in self.fit_param_bounds.items()
+        }
+
+        max_iterations = self.parameters.max_iterations.get()
+        batch = self._resolve_batch_size(client, opt_func)
+        n_rounds = max_iterations // batch
+        if n_rounds < 1:
+            raise OptimizationFunctionError(
+                f"max_iterations ({max_iterations}) is smaller than the distributed batch "
+                f"size ({batch}); increase max_iterations or reduce max_concurrent_evaluations."
+            )
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        if isinstance(opt_func, optuna.study.Study):
+            study = opt_func
+        else:
+            study = optuna.create_study(sampler=opt_func, direction=self.direction)
+
+        # Broadcast the observed data once. hash=False gives this fit a unique key:
+        # with content-hashed keys, a second fit on the same data in one process
+        # races the release of the first fit's key ("lost dependencies" cancellations).
+        data_f = client.scatter(data, broadcast=True, hash=False)
+
+        def submit_one(param_values):
+            return client.submit(
+                _dask_evaluate_loglik, pec_factory, param_values, data_f, worker_cores,
+                pure=False,
+            )
+
+        _run_ask_tell_rounds(
+            study, distributions, param_order, batch, n_rounds,
+            submit_one=submit_one, gather=client.gather,
+        )
+
+        fitted_params = dict(
+            zip(param_order, [study.best_params[name] for name in param_order])
+        )
+        return {"fitted_params": fitted_params, "optimal_value": study.best_value}
 
     @property
     def fit_param_names(self) -> List[str]:
