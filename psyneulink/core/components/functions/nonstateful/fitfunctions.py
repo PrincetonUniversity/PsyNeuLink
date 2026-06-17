@@ -472,6 +472,30 @@ class PECOptimizationFunction(OptimizationFunction):
         Whether to maximize or minimize the objective function. If 'maximize', the objective function is maximized. If
         'minimize', the objective function is minimized.
 
+    distributed :
+        If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
+        candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
+        ``differential_evolution``) still runs on the driver. Defaults to False, in which case fitting is fully
+        serial and Dask is never imported. Requires the ``psyneulink[dask]`` extra and LLVM execution. With common
+        random numbers (``same_seed_for_all_parameter_combinations=True`` and a fixed ``initial_seed``) a distributed
+        fit with a tell-order-independent sampler matches the serial fit; otherwise a warning is issued that results
+        are valid but not reproducible.
+
+    distributed_options :
+        A mapping configuring distributed fitting (only used when ``distributed=True``). Keys (all optional except
+        ``pec_factory``):
+
+            - ``"pec_factory"`` : a top-level (picklable) callable taking the observed data and returning a fresh
+              ``(pec, inputs)`` for a worker to score. **Required** when distributed: a live PEC cannot be shipped to
+              workers, so each worker rebuilds and caches one locally from this recipe.
+            - ``"worker_cores"`` : LLVM threads per worker. Defaults to ``$SLURM_CPUS_PER_TASK`` (else the available
+              cores), so it mirrors ``--cpus-per-task`` without retyping.
+            - ``"max_concurrent_evaluations"`` : candidates evaluated per ask/tell round. Defaults to the live worker
+              count; generational samplers (CMA-ES, NSGA-II) require at least 2.
+            - one of ``"client"`` / ``"scheduler_address"`` / ``"scheduler_file"`` / ``"n_workers"`` : an advanced
+              escape hatch to connect to or form a specific cluster. If none is given, an active cluster formed by
+              ``python -m psyneulink.dask_run`` is used, else a single-node ``LocalCluster`` is created.
+
 
     """
 

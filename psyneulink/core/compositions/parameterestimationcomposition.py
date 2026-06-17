@@ -307,6 +307,17 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition's `controller <Composition.controller>` to set its
         `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
+    distributed : bool : default False
+        specifies whether to evaluate candidate parameterizations in parallel across a Dask cluster during fitting;
+        forwarded to the `PECOptimizationFunction` (a `PECOptimizationFunction` passed explicitly as
+        **optimization_function** with its own ``distributed`` setting takes precedence). See
+        `distributed <PECOptimizationFunction>` for details; requires the ``psyneulink[dask]`` extra and LLVM execution.
+
+    distributed_options : Mapping : default None
+        specifies options for distributed fitting (used only when **distributed** is True); forwarded to the
+        `PECOptimizationFunction`. Must include a ``"pec_factory"`` callable; see
+        `distributed_options <PECOptimizationFunction>` for the full set of keys.
+
 
     Attributes
     ----------
