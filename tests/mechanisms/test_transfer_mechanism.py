@@ -1853,8 +1853,9 @@ def test_reset_multi_stateful_integrator_with_owner_value_output_port(comp_mode)
 
     comp.run(inputs={inp: [[1.0]]}, execution_mode=comp_mode)
 
-    # Output port selects the second FHN term (w); identical in Python and compiled.
-    np.testing.assert_allclose(np.squeeze(comp.results), 0.002795524774843733)
+    # Output port selects the second FHN term (w); identical in Python and compiled
+    # (tolerance allows for reduced fp32 precision in compiled CI runs).
+    np.testing.assert_allclose(np.squeeze(comp.results), 0.002795524774843733, rtol=1e-5, atol=1e-8)
 
 
 class TestTerminationMeasure:
