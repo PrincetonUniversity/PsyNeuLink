@@ -30,6 +30,8 @@ Differences from the Pytorch implementation described in `Giallanza et al. (2024
 Model:
 BREADCRUMB: FIGURE HERE
 
+**PsyNeulink Implementation of EGO Model**
+
 .. figure:: _static/Giallanza_2024_EGO_study_2.svg
    :align: left
    :alt: N-Back Model Animation
