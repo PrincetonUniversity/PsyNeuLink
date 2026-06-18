@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 
+from psyneulink.core.batched import specs
 from psyneulink.core.batched.bindings import BatchedComponentBindings, projection_binding_key
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import (
@@ -35,9 +36,6 @@ UNSUPPORTED_SCHEDULE = "unsupported"
 _PRECOMPUTED_TRACE_CONDITIONS = {"EveryNCalls"}
 _DYNAMIC_LANE_LOCAL_CONDITIONS = {"Threshold"}
 
-_STATELESS_MECHANISMS = {"TransferMechanism", "ProcessingMechanism"}
-_STATELESS_FUNCTIONS = {"Linear", "Logistic"}
-
 
 @dataclass(frozen=True)
 class LoweringResult:
@@ -53,6 +51,8 @@ class LoweringResult:
 
 
 def lower_composition(composition, outputs=None) -> LoweringResult:
+    specs.ensure_builtin_specs()
+
     nodes = _composition_nodes(composition)
     node_names = {_node_name(node) for node in nodes}
     params = _ParamBuilder()
@@ -90,15 +90,18 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         supported_nodes.append(node_name)
         node_spec = _node_spec(node, params, model_kind, composition)
         node_specs.append(node_spec)
-        if component_type == "LCAMechanism":
-            state_specs.extend(
-                (
-                    BatchedStateSpec(f"{node_name}.pre", node_name, node_spec.output_width, tuple([0.0] * node_spec.output_width)),
-                    BatchedStateSpec(f"{node_name}.act", node_name, node_spec.output_width, tuple([0.0] * node_spec.output_width)),
+        mechanism_spec = specs.mechanism_spec_for(node)
+        if mechanism_spec is not None:
+            for state_decl in mechanism_spec.states:
+                width = state_decl.width if state_decl.width is not None else node_spec.output_width
+                state_specs.append(
+                    BatchedStateSpec(
+                        f"{node_name}.{state_decl.name}",
+                        node_name,
+                        width,
+                        tuple([state_decl.initial] * width),
+                    )
                 )
-            )
-        elif component_type == "DDM":
-            state_specs.append(BatchedStateSpec(f"{node_name}.value", node_name, 1, (0.0,)))
 
     projections, projection_rejections, projection_bindings = _projection_specs(composition, node_names)
     rejected_nodes.extend(projection_rejections)
@@ -160,21 +163,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     )
 
 
-def is_stateless_graph(graph: BatchedGraphIR) -> bool:
-    return all(graph.node(node_name).component_type in _STATELESS_MECHANISMS for node_name in graph.execution_order)
-
-
-def node_by_name(graph: BatchedGraphIR, name: str) -> BatchedNodeSpec:
-    return graph.node(name)
-
-
 def projection_inputs(graph: BatchedGraphIR, receiver: str) -> tuple[BatchedProjectionSpec, ...]:
     return tuple(projection for projection in graph.projections if projection.receiver == receiver)
-
-
-def scheduler_condition_names(composition) -> tuple[list[BatchedDiagnostic], list[str]]:
-    _, supported, rejected = _classify_schedule(composition, _composition_nodes(composition))
-    return rejected, supported
 
 
 class _ParamBuilder:
@@ -195,141 +185,54 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
     function = getattr(node, "function", None)
     function_type = type(function).__name__
     node_name = _node_name(node)
-    input_width = _input_width(node)
-    output_width = _primary_output_width(node)
     combine = _combine_name(node)
     param_map: dict[str, str] = {}
-    attrs: dict[str, Any] = {}
+    attrs: dict[str, Any] = {
+        "output_ports": tuple(port.name for port in getattr(node, "output_ports", [])),
+    }
 
-    if component_type in _STATELESS_MECHANISMS:
-        attrs["output_ports"] = tuple(port.name for port in getattr(node, "output_ports", []))
-        if function_type == "Linear":
-            slope_name = f"{node_name}.slope"
-            intercept_name = f"{node_name}.intercept"
-            param_map["slope"] = params.add(
-                slope_name,
-                _get_param(function, "slope", 1.0),
-                aliases=_node_param_aliases(node_name, "slope"),
+    mechanism_spec = specs.mechanism_spec_for(node)
+    function_spec = specs.function_spec_for(function)
+    output_width = _node_output_width(node, mechanism_spec)
+
+    if mechanism_spec is not None:
+        attrs["spec_kind"] = "mechanism"
+        attrs["spec_key"] = mechanism_spec.key
+        # Single-node model families (for example a lone DDM) keep unqualified
+        # public parameter names; graph models use node-qualified names.
+        single_node_model = model_kind is not None and model_kind != GRAPH_MODEL
+        for binding in mechanism_spec.params:
+            public_name = binding.arg if single_node_model else f"{node_name}.{binding.arg}"
+            aliases = tuple(
+                f"{prefix}.{binding.arg}" for prefix in mechanism_spec.param_alias_prefixes
+            ) + _node_param_aliases(node_name, binding.arg)
+            param_map[binding.arg] = params.add(public_name, binding.resolve(node), aliases=aliases)
+        if mechanism_spec.extract_attrs is not None:
+            attrs.update(mechanism_spec.extract_attrs(node, composition))
+        if mechanism_spec.outputs is not None:
+            attrs["op_outputs"] = tuple((decl.port, decl.width) for decl in mechanism_spec.outputs)
+        else:
+            primary_port = attrs["output_ports"][0] if attrs["output_ports"] else "RESULT"
+            attrs["op_outputs"] = ((primary_port, output_width),)
+        attrs["rng_streams"] = tuple(
+            (decl.name, decl.step_extent, decl.width if decl.width is not None else output_width)
+            for decl in mechanism_spec.rng
+        )
+    elif specs.passthrough_spec_for(node) is not None and function_spec is not None:
+        attrs["spec_kind"] = "elementwise"
+        attrs["spec_key"] = function_spec.key
+        for binding in function_spec.params:
+            param_map[binding.arg] = params.add(
+                f"{node_name}.{binding.arg}",
+                binding.resolve(function),
+                aliases=_node_param_aliases(node_name, binding.arg),
             )
-            param_map["intercept"] = params.add(
-                intercept_name,
-                _get_param(function, "intercept", 0.0),
-                aliases=_node_param_aliases(node_name, "intercept"),
-            )
-        elif function_type == "Logistic":
-            param_map["gain"] = params.add(
-                f"{node_name}.gain",
-                _get_param(function, "gain", 1.0),
-                aliases=_node_param_aliases(node_name, "gain"),
-            )
-    elif component_type == "DDM":
-        function = node.function
-        aliases_prefix = "DDM"
-        rate_name = "rate" if model_kind == DDM_MODEL else f"{node_name}.rate"
-        noise_name = "noise" if model_kind == DDM_MODEL else f"{node_name}.noise"
-        threshold_name = "threshold" if model_kind == DDM_MODEL else f"{node_name}.threshold"
-        non_decision_time_name = (
-            "non_decision_time"
-            if model_kind == DDM_MODEL
-            else f"{node_name}.non_decision_time"
-        )
-        time_step_size_name = (
-            "time_step_size"
-            if model_kind == DDM_MODEL
-            else f"{node_name}.time_step_size"
-        )
-        starting_value_name = (
-            "starting_value"
-            if model_kind == DDM_MODEL
-            else f"{node_name}.starting_value"
-        )
-        offset_name = "offset" if model_kind == DDM_MODEL else f"{node_name}.offset"
-        param_map["rate"] = params.add(
-            rate_name,
-            _get_param(function, "rate", 1.0),
-            aliases=("ddm.rate", f"{aliases_prefix}.rate") + _node_param_aliases(node_name, "rate"),
-        )
-        param_map["noise"] = params.add(
-            noise_name,
-            _get_param(function, "noise", 0.0),
-            aliases=("ddm.noise", f"{aliases_prefix}.noise") + _node_param_aliases(node_name, "noise"),
-        )
-        param_map["threshold"] = params.add(
-            threshold_name,
-            _get_param(function, "threshold", 1.0),
-            aliases=("ddm.threshold", f"{aliases_prefix}.threshold") + _node_param_aliases(node_name, "threshold"),
-        )
-        param_map["non_decision_time"] = params.add(
-            non_decision_time_name,
-            _get_param(function, "non_decision_time", 0.0),
-            aliases=(
-                "ddm.non_decision_time",
-                f"{aliases_prefix}.non_decision_time",
-            ) + _node_param_aliases(node_name, "non_decision_time"),
-        )
-        param_map["time_step_size"] = params.add(
-            time_step_size_name,
-            _get_param(function, "time_step_size", 1.0),
-            aliases=(
-                "ddm.time_step_size",
-                f"{aliases_prefix}.time_step_size",
-            ) + _node_param_aliases(node_name, "time_step_size"),
-        )
-        param_map["starting_value"] = params.add(
-            starting_value_name,
-            _get_param(function, "initializer", _get_param(function, "starting_value", 0.0)),
-            aliases=(
-                "ddm.starting_value",
-                f"{aliases_prefix}.starting_value",
-            ) + _node_param_aliases(node_name, "starting_value"),
-        )
-        param_map["offset"] = params.add(
-            offset_name,
-            _get_param(function, "offset", 0.0),
-            aliases=("ddm.offset", f"{aliases_prefix}.offset") + _node_param_aliases(node_name, "offset"),
-        )
-        attrs["output_ports"] = tuple(port.name for port in getattr(node, "output_ports", []))
-    elif component_type == "LCAMechanism":
-        function = getattr(node, "function", None)
-        param_map["gain"] = params.add(
-            f"{node_name}.gain",
-            _get_param(function, "gain", 1.0),
-            aliases=_node_param_aliases(node_name, "gain"),
-        )
-        param_map["leak"] = params.add(
-            f"{node_name}.leak",
-            _get_param(node, "leak", _get_param(getattr(node, "integrator_function", None), "rate", 1.0)),
-            aliases=_node_param_aliases(node_name, "leak"),
-        )
-        param_map["competition"] = params.add(
-            f"{node_name}.competition",
-            _get_param(node, "competition", 1.0),
-            aliases=_node_param_aliases(node_name, "competition"),
-        )
-        param_map["self_excitation"] = params.add(
-            f"{node_name}.self_excitation",
-            _get_param(node, "self_excitation", _get_param(node, "auto", 0.0)),
-            aliases=_node_param_aliases(node_name, "self_excitation"),
-        )
-        param_map["noise"] = params.add(
-            f"{node_name}.noise",
-            _get_param(node, "noise", 0.0),
-            aliases=_node_param_aliases(node_name, "noise"),
-        )
-        param_map["time_step_size"] = params.add(
-            f"{node_name}.time_step_size",
-            _get_param(node, "time_step_size", 0.01),
-            aliases=_node_param_aliases(node_name, "time_step_size"),
-        )
-        termination_input_node = _control_monitor_source_for(composition, node)
-        attrs["termination_input_node"] = None if termination_input_node is None else _node_name(termination_input_node)
-        attrs["termination_threshold"] = _get_param(node, "termination_threshold", 1200)
 
     return BatchedNodeSpec(
         name=node_name,
         component_type=component_type,
         function_type=function_type,
-        input_width=input_width,
+        input_width=_input_width(node),
         output_width=output_width,
         combine=combine,
         params=param_map,
@@ -338,28 +241,33 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
 
 
 def _node_support_diagnostic(node) -> BatchedDiagnostic | None:
-    component_type = type(node).__name__
-    function_type = type(getattr(node, "function", None)).__name__
+    function = getattr(node, "function", None)
+    function_type = type(function).__name__
     node_name = _node_name(node)
-    if component_type in _STATELESS_MECHANISMS:
-        if function_type not in _STATELESS_FUNCTIONS:
+
+    mechanism_spec = specs.mechanism_spec_for(node)
+    if mechanism_spec is not None:
+        if mechanism_spec.function_class is not None and type(function) is not mechanism_spec.function_class:
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported {mechanism_spec.label} function for batched v2",
+                function_type,
+            )
+        if mechanism_spec.supports is not None:
+            diagnostic = mechanism_spec.supports(node)
+            if diagnostic is not None:
+                return diagnostic
+        return None
+
+    if specs.passthrough_spec_for(node) is not None:
+        if specs.function_spec_for(function) is None:
             return BatchedDiagnostic(node_name, "unsupported function for batched v2", function_type)
         combine = _combine_name(node)
         if combine not in {"sum", "product"}:
             return BatchedDiagnostic(node_name, "unsupported input combine for batched v2", combine)
         return None
-    if component_type == "DDM":
-        if function_type != "DriftDiffusionIntegrator":
-            return BatchedDiagnostic(node_name, "unsupported DDM function for batched v2", function_type)
-        return None
-    if component_type == "LCAMechanism":
-        if function_type != "Logistic":
-            return BatchedDiagnostic(node_name, "unsupported LCA function for batched v2", function_type)
-        width = _primary_output_width(node)
-        if width != 2:
-            return BatchedDiagnostic(node_name, "unsupported LCA width for batched v2", f"width={width}")
-        return None
-    return BatchedDiagnostic(node_name, "unsupported node for batched v2", component_type)
+
+    return BatchedDiagnostic(node_name, "unsupported node for batched v2", type(node).__name__)
 
 
 def _projection_specs(
@@ -383,7 +291,8 @@ def _projection_specs(
                     continue
                 if projection_type in {"AutoAssociativeProjection", "ControlProjection"}:
                     continue
-                if projection_type != "MappingProjection":
+                projection_spec = specs.projection_spec_for(projection)
+                if projection_spec is None:
                     rejected.append(
                         BatchedDiagnostic(
                             getattr(projection, "name", projection_type),
@@ -401,6 +310,7 @@ def _projection_specs(
                         receiver=receiver_name,
                         receiver_port=receiver_port,
                         matrix=np.asarray(_get_matrix(projection), dtype=np.float32),
+                        spec_key=projection_spec.key,
                     )
                 )
                 bindings[
@@ -411,7 +321,7 @@ def _projection_specs(
 
 def _input_specs(nodes, projections: list[BatchedProjectionSpec]) -> list[BatchedInputSpec]:
     receiver_names = {projection.receiver for projection in projections}
-    specs = []
+    specs_out = []
     for node in nodes:
         component_type = type(node).__name__
         node_name = _node_name(node)
@@ -419,8 +329,8 @@ def _input_specs(nodes, projections: list[BatchedProjectionSpec]) -> list[Batche
             continue
         if node_name in receiver_names:
             continue
-        specs.append(BatchedInputSpec(name=node_name, node=node_name, width=_input_width(node)))
-    return specs
+        specs_out.append(BatchedInputSpec(name=node_name, node=node_name, width=_input_width(node)))
+    return specs_out
 
 
 def _output_specs(composition, outputs, nodes) -> list[BatchedOutputSpec]:
@@ -430,18 +340,20 @@ def _output_specs(composition, outputs, nodes) -> list[BatchedOutputSpec]:
     terminal_names = _terminal_node_names(composition)
     if not terminal_names:
         terminal_names = [_node_name(nodes[-1])] if nodes else []
-    specs = []
+    specs_out = []
     for node in nodes:
         if _node_name(node) not in terminal_names or type(node).__name__ == "ControlMechanism":
             continue
         output_ports = tuple(getattr(node, "output_ports", []))
-        if type(node).__name__ == "DDM":
-            selected = [port for port in output_ports if port.name in {"DECISION_OUTCOME", "RESPONSE_TIME"}]
+        mechanism_spec = specs.mechanism_spec_for(node)
+        if mechanism_spec is not None and mechanism_spec.outputs is not None:
+            wanted = {decl.port for decl in mechanism_spec.outputs}
+            selected = [port for port in output_ports if port.name in wanted]
         else:
             selected = [output_ports[0]] if output_ports else []
         for port in selected:
-            specs.append(_output_spec_from_port(port))
-    return specs
+            specs_out.append(_output_spec_from_port(port))
+    return specs_out
 
 
 def _output_spec_from_port(port) -> BatchedOutputSpec:
@@ -461,70 +373,44 @@ def _output_spec_from_name(name: str, nodes) -> BatchedOutputSpec:
 
 def _classify_model(nodes) -> str | None:
     executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
-    ddm_nodes = [node for node in executable_nodes if type(node).__name__ == "DDM"]
-    if len(executable_nodes) == 1 and len(ddm_nodes) == 1:
-        return DDM_MODEL
+    if len(executable_nodes) == 1:
+        mechanism_spec = specs.mechanism_spec_for(executable_nodes[0])
+        if mechanism_spec is not None and mechanism_spec.single_node_model_kind:
+            return mechanism_spec.single_node_model_kind
     if executable_nodes:
         return GRAPH_MODEL
     return None
 
 
 def _fusion_kind(model_kind: str | None, nodes) -> str | None:
-    if model_kind == DDM_MODEL:
-        return DDM_MODEL
     executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
-    if executable_nodes and all(type(node).__name__ in _STATELESS_MECHANISMS for node in executable_nodes):
+    if not executable_nodes:
+        return None
+
+    mechanism_specs = []
+    for node in executable_nodes:
+        mechanism_spec = specs.mechanism_spec_for(node)
+        if mechanism_spec is not None:
+            mechanism_specs.append(mechanism_spec)
+            continue
+        if (
+            specs.passthrough_spec_for(node) is not None
+            and specs.function_spec_for(getattr(node, "function", None)) is not None
+        ):
+            continue
+        return None
+
+    if not mechanism_specs:
         return STATELESS_GRAPH_FUSION
-    if _is_ddm_graph_fusible(executable_nodes):
-        return DDM_GRAPH_FUSION
-    if _is_stateful_graph_fusible(executable_nodes):
+    if any(spec.persistent_state for spec in mechanism_specs) or len(mechanism_specs) > 1:
         return STATEFUL_GRAPH_FUSION
-    return None
-
-
-def _is_ddm_graph_fusible(nodes) -> bool:
-    ddm_count = sum(type(node).__name__ == "DDM" for node in nodes)
-    return ddm_count == 1 and all(
-        type(node).__name__ in _STATELESS_MECHANISMS or type(node).__name__ == "DDM"
-        for node in nodes
-    )
-
-
-def _is_stateful_graph_fusible(nodes) -> bool:
-    has_stateful_node = False
-    for node in nodes:
-        component_type = type(node).__name__
-        if component_type in _STATELESS_MECHANISMS:
-            continue
-        if component_type == "LCAMechanism":
-            has_stateful_node = True
-            continue
-        if component_type == "DDM":
-            has_stateful_node = True
-            continue
-        return False
-    return has_stateful_node
-
-
-def _control_monitor_source_for(composition, controlled_node):
-    deps = getattr(composition.graph_processing, "dependency_dict", {}).get(controlled_node, [])
-    for dependency in deps:
-        if type(dependency).__name__ != "ControlMechanism":
-            continue
-        for input_port in getattr(dependency, "input_ports", []):
-            for projection in getattr(input_port, "path_afferents", []):
-                sender = getattr(getattr(projection, "sender", None), "owner", None)
-                if sender is not None:
-                    return sender
-    return None
+    return DDM_GRAPH_FUSION
 
 
 def _op_kind(node) -> str:
-    component_type = type(node).__name__
-    if component_type == "DDM":
-        return "DDMIntegrateUntilFinished"
-    if component_type == "LCAMechanism":
-        return "LCAIntegrateUntilFinished"
+    mechanism_spec = specs.mechanism_spec_for(node)
+    if mechanism_spec is not None:
+        return f"{mechanism_spec.label}IntegrateUntilFinished"
     return type(getattr(node, "function", None)).__name__
 
 
@@ -655,11 +541,15 @@ def _input_width(node) -> int:
         return _primary_output_width(node)
 
 
+def _node_output_width(node, mechanism_spec) -> int:
+    if mechanism_spec is not None and mechanism_spec.outputs:
+        return mechanism_spec.outputs[0].width
+    return _primary_output_width(node)
+
+
 def _primary_output_width(node) -> int:
     output_ports = getattr(node, "output_ports", [])
     if not output_ports:
-        return 1
-    if type(node).__name__ == "DDM":
         return 1
     try:
         return int(np.asarray(output_ports[0].value).reshape(-1).size)
@@ -678,40 +568,3 @@ def _get_matrix(projection) -> np.ndarray:
     if defaults is not None and hasattr(defaults, "matrix"):
         return np.asarray(defaults.matrix, dtype=np.float32)
     return np.eye(1, dtype=np.float32)
-
-
-def _get_param(component, name: str, default: float) -> float:
-    if component is None:
-        return float(default)
-
-    parameters = getattr(component, "parameters", None)
-    if parameters is not None and hasattr(parameters, name):
-        parameter = getattr(parameters, name)
-        for getter in ("get", "_get"):
-            if hasattr(parameter, getter):
-                try:
-                    return _as_float(getattr(parameter, getter)(None))
-                except Exception:
-                    pass
-
-    defaults = getattr(component, "defaults", None)
-    if defaults is not None and hasattr(defaults, name):
-        try:
-            return _as_float(getattr(defaults, name))
-        except Exception:
-            pass
-
-    if hasattr(component, name):
-        try:
-            return _as_float(getattr(component, name))
-        except Exception:
-            pass
-
-    return float(default)
-
-
-def _as_float(value) -> float:
-    array = np.asarray(value, dtype=float).reshape(-1)
-    if len(array) == 0:
-        return 0.0
-    return float(array[0])

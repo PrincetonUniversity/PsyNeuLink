@@ -13,13 +13,14 @@ from psyneulink.core.batched import (
     BatchedCompileError,
     BatchedCompositionCompiler,
 )
+from psyneulink.core.batched import specs as batched_specs
+from psyneulink.core.batched.neutral_math import bm
+from psyneulink.core.batched.specs import BatchedOpSpecError
 from psyneulink.core.batched.backend.triton.api import (
     TritonOpError,
     pnl_triton_op,
 )
-from psyneulink.core.batched.backend.triton.component_hooks import (
-    ensure_triton_hooks_installed,
-)
+from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
 from psyneulink.core.batched.kernel_ir import (
     STATEFUL_LANE_LAYOUT,
     TRIAL_LANE_LAYOUT,
@@ -204,7 +205,7 @@ def test_batched_ir_debug_mapping_projection_generic_graph():
 
 
 @pytest.mark.composition
-def test_triton_hook_diagnostics_accept_supported_components():
+def test_registry_diagnostics_accept_supported_components():
     comp, _, _ = _make_linear_projection_comp()
     report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
 
@@ -213,16 +214,109 @@ def test_triton_hook_diagnostics_accept_supported_components():
 
 
 @pytest.mark.composition
-def test_triton_hook_diagnostics_report_missing_function_hook(monkeypatch):
+def test_registry_diagnostics_report_missing_triton_implementation(monkeypatch):
+    import dataclasses
+
     from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 
-    ensure_triton_hooks_installed()
-    monkeypatch.delattr(Linear, "_gen_triton_function", raising=False)
+    batched_specs.ensure_builtin_specs()
+    spec = batched_specs._FUNCTION_SPECS[Linear]
+    monkeypatch.setitem(
+        batched_specs._SPECS_BY_KEY,
+        spec.key,
+        dataclasses.replace(spec, triton_template=None),
+    )
     comp, _, _ = _make_linear_projection_comp()
     report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
 
     assert not report.is_supported
-    assert "missing Triton function hook" in "; ".join(report.unsupported_reasons)
+    assert "missing Triton implementation" in "; ".join(report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_batched_op_decorator_registers_custom_elementwise_function():
+    @batched_specs.batched_op(pnl.Exponential)
+    def exponential(x, rate, scale):
+        return scale * bm.exp(rate * x)
+
+    try:
+        mech = pnl.TransferMechanism(
+            input_shapes=2,
+            function=pnl.Exponential(rate=2.0, scale=1.5),
+            name="exp_mech",
+        )
+        comp = pnl.Composition(pathways=mech)
+        report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
+        assert report.is_supported
+
+        plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+        result = plan.run(
+            inputs={mech: np.array([[0.0, 1.0]], dtype=float)},
+            parameter_sets=[{}],
+            num_estimates=1,
+        )
+        np.testing.assert_allclose(
+            result.values[0, 0, 0, 0],
+            [1.5, 1.5 * np.exp(2.0)],
+            rtol=1e-5,
+        )
+    finally:
+        removed = batched_specs._FUNCTION_SPECS.pop(pnl.Exponential, None)
+        if removed is not None:
+            batched_specs._SPECS_BY_KEY.pop(removed.key, None)
+
+
+@pytest.mark.composition
+def test_batched_op_decorator_rejects_unknown_parameter_name():
+    with pytest.raises(BatchedOpSpecError, match="does not match a Parameter"):
+        @batched_specs.batched_op(pnl.Exponential)
+        def bad(x, not_a_parameter):
+            return x + not_a_parameter
+
+    assert pnl.Exponential not in batched_specs._FUNCTION_SPECS
+
+
+@pytest.mark.composition
+def test_batched_op_specs_do_not_apply_to_subclasses():
+    class CustomLinear(pnl.Linear):
+        pass
+
+    mech = pnl.TransferMechanism(
+        input_shapes=1,
+        function=CustomLinear(),
+        name="custom_linear",
+    )
+    comp = pnl.Composition(pathways=mech)
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert not report.is_supported
+    assert "CustomLinear" in "; ".join(report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_triton_stateless_graph_source_structure():
+    comp, _, _ = _make_linear_projection_comp()
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    source = triton_graph_kernel_source(lower_to_kernel_ir(plan.ir))
+
+    compile(source, "<pnl batched kernel>", "exec")
+    assert "pnl_batched_stateless_graph_kernel" in source
+    assert "_pnl_triton_linear" in source
+    assert "_pnl_triton_projection_term" in source
+    assert "@triton.jit" in source
+
+
+@pytest.mark.composition
+def test_single_ddm_uses_generated_graph_kernel():
+    comp, _ = _make_ddm_comp(noise=0.0)
+    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
+
+    assert plan.ir.model_kind == "ddm"
+    assert plan.ir.graph.fusion_kind == "ddm_graph"
+    source = triton_graph_kernel_source(lower_to_kernel_ir(plan.ir))
+    compile(source, "<pnl batched kernel>", "exec")
+    assert "pnl_batched_ddm_graph_kernel" in source
+    assert "_pnl_triton_ddm_integrate" in source
 
 
 @pytest.mark.composition
@@ -346,7 +440,7 @@ def test_kernel_ir_ddm_graph_structure():
 
     assert kernel.lane_layout.kind == TRIAL_LANE_LAYOUT
     assert "CallMechanism" in op_kinds
-    assert kernel.rng_streams[0].name == "DDM.ddm"
+    assert kernel.rng_streams[0].name == "DDM.rng"
 
 
 @pytest.mark.composition

@@ -5,6 +5,21 @@ from psyneulink.core.batched.compiler import (
     BatchedCompositionCompiler,
     BatchedSimulationPlan,
 )
+from psyneulink.core.batched.neutral_math import bm
+from psyneulink.core.batched.specs import (
+    BatchedOpSpecError,
+    DenseProjectionSpec,
+    ElementwiseFunctionSpec,
+    MechanismOpSpec,
+    OutputDecl,
+    ParamBinding,
+    PassthroughMechanismSpec,
+    RngDecl,
+    StateDecl,
+    batched_op,
+    param,
+    register_batched_op,
+)
 from psyneulink.core.batched.diagnostics import (
     BatchedCapabilityReport,
     BatchedDiagnostic,
@@ -33,6 +48,7 @@ __all__ = [
     "BatchedInputSpec",
     "BatchedNodeSpec",
     "BatchedOp",
+    "BatchedOpSpecError",
     "BatchedOutputSpec",
     "BatchedParamSpec",
     "BatchedProjectionSpec",
@@ -40,4 +56,16 @@ __all__ = [
     "BatchedSimulationPlan",
     "BatchedSimulationResult",
     "BatchedStateSpec",
+    "DenseProjectionSpec",
+    "ElementwiseFunctionSpec",
+    "MechanismOpSpec",
+    "OutputDecl",
+    "ParamBinding",
+    "PassthroughMechanismSpec",
+    "RngDecl",
+    "StateDecl",
+    "batched_op",
+    "bm",
+    "param",
+    "register_batched_op",
 ]

@@ -5,7 +5,8 @@ from typing import Any
 
 import numpy as np
 
-from psyneulink.core.batched.graph import DDM_MODEL, projection_inputs
+from psyneulink.core.batched import specs
+from psyneulink.core.batched.graph import projection_inputs
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
 from psyneulink.core.batched.kernel_ir import KernelIR, lower_to_kernel_ir
 
@@ -84,10 +85,7 @@ def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dic
         coerced = _coerce_trials(raw_value, width=input_spec.width)
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
-    prepared = _split_subject_trials(values, subject_slices)
-    if ir.graph.fusion_kind == DDM_MODEL and ir.graph.inputs:
-        prepared["stimulus"] = prepared[ir.graph.inputs[0].node]
-    return prepared
+    return _split_subject_trials(values, subject_slices)
 
 
 def _run_kernel(
@@ -149,60 +147,63 @@ def _execute_node(
     rng: np.random.Generator,
     max_steps: int,
 ) -> dict[str, np.ndarray]:
-    if node.component_type in {"TransferMechanism", "ProcessingMechanism"}:
-        input_value = _node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx)
-        if node.function_type == "Linear":
-            value = _param(params, node, "slope") * input_value + _param(params, node, "intercept")
-        elif node.function_type == "Logistic":
-            value = 1.0 / (1.0 + np.exp(-_param(params, node, "gain") * input_value))
-        else:
-            raise ValueError(f"Unsupported stateless function '{node.function_type}'.")
+    spec_key = node.attrs.get("spec_key")
+    if not spec_key:
+        raise ValueError(f"Unsupported batched graph node '{node.name}' ({node.component_type}).")
+    spec = specs.lookup_spec(spec_key)
+    input_value = _node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx)
+
+    if isinstance(spec, specs.ElementwiseFunctionSpec):
+        args = [_param(params, node, binding.arg) for binding in spec.params]
+        value = spec.body(input_value, *args)
         return {_primary_output_port(node): np.asarray(value, dtype=np.float32).reshape(-1)}
 
-    if node.component_type == "LCAMechanism":
-        task = _node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx)
-        termination_input_node = node.attrs.get("termination_input_node")
-        if termination_input_node is not None and termination_input_node in inputs:
-            cue = float(np.asarray(inputs[termination_input_node][subject_idx, trial_idx]).reshape(-1)[0])
-        else:
-            cue = float(node.attrs.get("termination_threshold", 1.0))
-        pre_key = f"{node.name}.pre"
-        act_key = f"{node.name}.act"
-        pre, act = _simulate_lca_cue_period(
-            task=task,
-            pre_activity=state[pre_key],
-            activity=state[act_key],
-            cue=cue,
-            gain=_param(params, node, "gain"),
-            leak=_param(params, node, "leak"),
-            competition=_param(params, node, "competition"),
-            self_excitation=_param(params, node, "self_excitation"),
-            noise=_param(params, node, "noise"),
-            time_step_size=_param(params, node, "time_step_size"),
-            max_steps=max(int(np.ceil(cue)), 1),
-            rng=rng,
-        )
-        state[pre_key] = pre
-        state[act_key] = act
-        return {_primary_output_port(node): act.astype(np.float32)}
+    if isinstance(spec, specs.MechanismOpSpec):
+        resolved_params = {binding.arg: _param(params, node, binding.arg) for binding in spec.params}
+        if spec.cpu_execute is not None:
+            return spec.cpu_execute(
+                node,
+                input_value,
+                inputs,
+                state,
+                resolved_params,
+                subject_idx,
+                trial_idx,
+                rng,
+                max_steps,
+            )
+        if spec.cpu_body is None:
+            raise ValueError(f"Batched op for '{node.name}' has no CPU implementation.")
 
-    if node.component_type == "DDM":
-        drift_input = float(_node_input(graph, node, inputs, node_outputs, subject_idx, trial_idx).reshape(-1)[0])
-        decision, response_time = _simulate_ddm_trial(
-            drift_input=drift_input,
-            rate=_param(params, node, "rate"),
-            noise=_param(params, node, "noise"),
-            threshold=_param(params, node, "threshold"),
-            non_decision_time=_param(params, node, "non_decision_time"),
-            time_step_size=_param(params, node, "time_step_size"),
-            starting_value=_param(params, node, "starting_value"),
-            offset=_param(params, node, "offset"),
-            max_steps=max_steps,
-            rng=rng,
-        )
+        args = []
+        for binding in spec.cpu_bindings:
+            if binding.role == "input":
+                args.append(float(input_value.reshape(-1)[0]) if node.input_width == 1 else input_value)
+            elif binding.role == "param":
+                args.append(resolved_params[binding.name])
+            elif binding.role == "rng":
+                args.append(rng)
+            elif binding.role == "max_steps":
+                args.append(max_steps)
+            elif binding.role == "state":
+                args.append(state[f"{node.name}.{binding.name}"])
+            else:
+                raise ValueError(
+                    f"Batched op for '{node.name}' has an unsupported CPU arg role "
+                    f"'{binding.role}'."
+                )
+        results = spec.cpu_body(*args)
+        if not isinstance(results, tuple):
+            results = (results,)
+        op_outputs = tuple(node.attrs.get("op_outputs", ()))
+        if len(results) != len(op_outputs):
+            raise ValueError(
+                f"Batched op for '{node.name}' returned {len(results)} values, "
+                f"expected {len(op_outputs)}."
+            )
         return {
-            "DECISION_OUTCOME": np.asarray([decision], dtype=np.float32),
-            "RESPONSE_TIME": np.asarray([response_time], dtype=np.float32),
+            port: np.asarray(value, dtype=np.float32).reshape(-1)
+            for (port, _width), value in zip(op_outputs, results)
         }
 
     raise ValueError(f"Unsupported batched graph node '{node.name}' ({node.component_type}).")
@@ -252,75 +253,14 @@ def _param(params: dict[str, float], node, local_name: str) -> float:
     return float(params[node.params[local_name]])
 
 
-def _simulate_ddm_trial(
-    *,
-    drift_input: float,
-    rate: float,
-    noise: float,
-    threshold: float,
-    non_decision_time: float,
-    time_step_size: float,
-    starting_value: float,
-    offset: float,
-    max_steps: int,
-    rng: np.random.Generator,
-) -> tuple[float, float]:
-    value = float(starting_value)
-    steps = 0
-    sqrt_dt = np.sqrt(time_step_size)
-    boundary_tolerance = max(1e-7, abs(threshold) * 1e-6)
-    for _ in range(max_steps):
-        if abs(value) + boundary_tolerance >= threshold:
-            break
-        random_draw = rng.normal()
-        value = value + rate * drift_input * time_step_size + noise * sqrt_dt * random_draw
-        value = float(np.clip(value + offset, -threshold, threshold))
-        steps += 1
-    return (1.0 if value > 0 else 0.0), float(non_decision_time + steps * time_step_size)
-
-
-def _simulate_lca_cue_period(
-    *,
-    task: np.ndarray,
-    pre_activity: np.ndarray,
-    activity: np.ndarray,
-    cue: float,
-    gain: float,
-    leak: float,
-    competition: float,
-    self_excitation: float,
-    noise: float,
-    time_step_size: float,
-    max_steps: int,
-    rng: np.random.Generator,
-) -> tuple[np.ndarray, np.ndarray]:
-    steps = min(max(int(np.ceil(cue)), 0), max_steps)
-    sqrt_dt = np.sqrt(time_step_size)
-    pre = np.array(pre_activity, dtype=float, copy=True)
-    act = np.array(activity, dtype=float, copy=True)
-    for _ in range(steps):
-        recurrent = np.array(
-            [
-                self_excitation * act[0] - competition * act[1],
-                -competition * act[0] + self_excitation * act[1],
-            ]
-        )
-        update = (task + recurrent - leak * pre) * time_step_size
-        if noise:
-            update = update + noise * sqrt_dt * rng.normal(size=2)
-        pre = pre + update
-        act = 1.0 / (1.0 + np.exp(-gain * pre))
-    return pre, act
-
-
 def _lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> int:
     metadata_limit = int(ir.metadata.get("lca_max_steps", 0) or 0)
     input_limit = 0
     if ir.graph is not None:
         for node in ir.graph.nodes:
-            if node.component_type != "LCAMechanism":
-                continue
             termination_input_node = node.attrs.get("termination_input_node")
+            if termination_input_node is None:
+                continue
             if termination_input_node in inputs and np.size(inputs[termination_input_node]):
                 input_limit = max(input_limit, int(np.ceil(np.max(inputs[termination_input_node]))))
     return max(1, metadata_limit, input_limit)

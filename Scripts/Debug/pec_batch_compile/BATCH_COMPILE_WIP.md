@@ -70,10 +70,19 @@ The important commits on this branch are:
   `backend/triton`.
 - `640c690a55` - component-owned Triton hooks with `@pnl_triton_op`.
 - `4fd3be6718` - remove stability-flexibility-specific compiler/runtime paths.
+- (Milestone A) - declarative batched op specs: replace the `_gen_triton_*`
+  monkeypatched hooks with a class-keyed spec registry and the
+  `@batched_op` auto-binding decorator; retire the monolithic DDM kernel.
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
 graph.
+
+After Milestone A, components are registered through
+`psyneulink.core.batched.specs` instead of installing private methods on
+component classes, and single-DDM models execute through the generated
+`ddm_graph` kernel (the hand-written monolithic DDM kernel is gone; the
+generated kernel was benchmarked checksum-identical and faster).
 
 ## Code Map
 
@@ -103,11 +112,43 @@ graph.
   - Builds node-qualified parameters and component bindings.
   - Rejects unsupported pieces with `BatchedDiagnostic`.
 
+- `psyneulink/core/batched/specs.py`
+  - Declarative batched op specs and the researcher-facing registration API.
+  - `@batched_op(ComponentClass)` introspects the decorated body's signature
+    and auto-binds argument names against PNL `Parameters` metadata.
+    Reserved names: `x`, `rng` (CPU), `seed`/`rng_base` (Triton),
+    `max_steps`.  Irregular bindings use `bind={...}` with `specs.param(...)`.
+  - Spec kinds: `ElementwiseFunctionSpec` (one neutral body for both
+    backends), `MechanismOpSpec` (declared params/state/RNG/outputs with
+    matched CPU and Triton bodies, plus `cpu_execute`/`triton_emit` escape
+    hatches), `PassthroughMechanismSpec`, `DenseProjectionSpec`.
+  - Registry is keyed by **exact** component class; subclasses are not
+    inherited (PNL subclasses change semantics, e.g.
+    LCA < RecurrentTransfer < Transfer).
+  - IRs reference specs only by string `spec_key`, so `BatchedGraphIR` and
+    `KernelIR` stay serializable and backend-neutral.
+
+- `psyneulink/core/batched/neutral_math.py`
+  - The backend-neutral `bm` namespace for elementwise bodies. Executed as
+    numpy in `ir_debug`; AST-rewritten `bm` -> `tl` for Triton source.
+
+- `psyneulink/core/batched/components/`
+  - Built-in batched op definitions, one module per component:
+    `linear`, `logistic`, `passthrough` (Transfer/Processing),
+    `mapping_projection`, `ddm` (the declarative reference example),
+    `lca` (the escape-hatch example).
+  - Registered on first lowering via `specs.ensure_builtin_specs()`.
+  - These modules double as reference examples for researchers registering
+    their own components.
+
 - `psyneulink/core/batched/kernel_ir.py`
   - Backend-neutral execution-level IR.
   - Converts `BatchedGraphIR` into structured execution ops:
     `LoadInput`, `CallProjection`, `CombineSum`, `CombineProduct`,
     `CallFunction`, `CallMechanism`, `StoreOutput`, and stateful `ForTrials`.
+  - Dispatch is driven by `spec_kind`/`spec_key`/`rng_streams`/`op_outputs`
+    node attrs written at lowering time; kernel_ir does not import the
+    registry.
   - The intent is that a future MLIR backend starts here, not from generated
     Triton source.
 
@@ -139,32 +180,28 @@ psyneulink/core/batched/backend/triton/
   - Imports Torch/Triton lazily.
   - Checks CUDA availability.
   - Prepares Torch buffers.
-  - Dispatches to DDM, stateless graph, DDM graph, or stateful graph kernels.
-  - The normal stability-flexibility monolithic kernel path has been removed.
+  - Dispatches to stateless graph, DDM graph, or stateful graph kernels.
+  - The monolithic DDM and stability-flexibility kernel paths have been
+    removed; everything goes through the generated graph kernels.
 
 - `graph_emit.py`
   - Emits inspectable Triton Python source from `KernelIR`.
   - Owns lane decode, parameter loads, state initialization, trial loops, RNG
-    base layout, output stores, and calls into component hooks.
+    base layout, output stores, and spec-driven op emission (declarative
+    elementwise/mechanism calls plus `triton_emit` escape hatches resolved
+    through `spec_key`).
   - This file is still more complex than ideal and is a major future refactor
-    target.
-
-- `component_hooks.py`
-  - Installs private `_gen_triton_*` hooks on supported component classes.
-  - Current hooks cover:
-    - `Linear`
-    - `Logistic`
-    - dense `MappingProjection`
-    - `DDM`
-    - width-2 `LCAMechanism`
-  - The helpers are decorated with `@pnl_triton_op`.
+    target (Milestone D: split into an `emit/` package).
 
 - `api.py`
   - Defines `@pnl_triton_op`, `TritonOpTemplate`, `TritonOpCall`,
     `TritonEmitContext`, and `TritonOpError`.
   - `@pnl_triton_op` captures inspectable Python source and emits it as a
     `@triton.jit` helper without importing Triton at PsyNeuLink import time.
-  - Helpers may reference `tl`; other globals/closures are rejected.
+  - Helpers may reference `tl` or the neutral `bm` namespace (rewritten to
+    `tl` in the captured source); other globals/closures are rejected.
+  - `backend/triton/__init__.py` imports `runtime` lazily so importing the
+    spec/registration API does not create an import cycle.
 
 - `cache.py`
   - Writes generated source to a real Python module path and imports it. This
@@ -214,16 +251,15 @@ fall back to Python or LLVM inside this stack.
 
 Current fusion kinds:
 
-- `ddm`
-  - Single DDM composition.
-  - Uses the monolithic DDM fast path.
-
 - `stateless_graph`
   - Transfer/Processing-only static graph.
   - Lane layout: `(parameter_set, subject, trial, estimate)`.
 
 - `ddm_graph`
-  - Static graph with stateless nodes feeding one DDM.
+  - Static graph with one non-persistent mechanism op (e.g. a DDM), possibly
+    behind stateless nodes.  A single-DDM composition is just the one-node
+    case (`model_kind="ddm"` is retained as a naming policy: unqualified
+    public parameter names).
   - Lane layout: `(parameter_set, subject, trial, estimate)`.
 
 - `stateful_graph`
@@ -404,20 +440,25 @@ script supports:
 
 ## Good Next Steps
 
-1. Add declarative Triton component specs.
+1. DONE (Milestone A): declarative batched op specs.
 
-   `@pnl_triton_op` solved source extraction, but `_gen_triton_*` still repeats
-   binding boilerplate. Add internal specs such as:
+   `psyneulink.core.batched.specs` now provides the class-keyed registry and
+   the `@batched_op` auto-binding decorator.  `Linear`, `Logistic`, dense
+   `MappingProjection`, and DDM are declarative; LCA uses the
+   `cpu_execute`/`triton_emit` escape hatches until the state/RNG/control
+   spec is proven.  Researchers register one module per component without
+   touching PNL core classes:
 
-   ```text
-   TritonElementwiseFunctionSpec
-   TritonDenseProjectionSpec
-   TritonMechanismCallSpec
-   TritonStatefulMechanismSpec
+   ```python
+   from psyneulink.core.batched import batched_op, bm
+
+   @batched_op(SoftReLU)
+   def soft_relu(x, gain, bias):
+       return bm.log(1.0 + bm.exp(gain * (x - bias))) / gain
    ```
 
-   Convert `Linear`, `Logistic`, and dense `MappingProjection` first. Convert
-   DDM next. Leave LCA custom until the state/RNG/control spec is proven.
+   Remaining follow-ups: declarative stateful mechanisms (states in the
+   decorator path) and width>1 inputs for declarative mechanism ops.
 
 2. Make truncation visible.
 

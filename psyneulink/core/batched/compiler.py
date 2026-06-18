@@ -92,7 +92,6 @@ class BatchedSimulationPlan:
                 subject_slices=subject_slices,
                 seed=seed,
                 common_random_numbers=common_random_numbers,
-                component_bindings=self.component_bindings,
             )
 
         raise BatchedCompileError(f"Unknown batched backend '{self.backend}'.")

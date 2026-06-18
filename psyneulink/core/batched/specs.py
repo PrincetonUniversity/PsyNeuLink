@@ -1,0 +1,635 @@
+"""Declarative batched op specs and the researcher-facing registration API.
+
+A *batched op spec* declares, once, everything the batched compiler needs to
+lower a PsyNeuLink component: which parameters its kernel reads, which
+lane-local state it owns, which RNG streams it draws from, and the CPU
+(``ir_debug``) and Triton implementations.  Specs are registered per exact
+component class; subclasses are intentionally **not** inherited because
+PsyNeuLink subclasses routinely change semantics (for example
+``LCAMechanism`` is a ``TransferMechanism`` subclass).
+
+The primary registration surface is the :func:`batched_op` decorator, which
+introspects the decorated body's signature and binds argument names against
+the component's PNL ``Parameters`` metadata:
+
+    from psyneulink.core.batched.specs import batched_op
+    from psyneulink.core.batched.neutral_math import bm
+
+    @batched_op(SoftReLU)
+    def soft_relu(x, gain, bias):
+        return bm.log(1.0 + bm.exp(gain * (x - bias))) / gain
+
+Reserved argument names carry roles instead of binding to parameters:
+
+- ``x``: the node's (combined) input.
+- ``rng``: a ``numpy.random.Generator`` (CPU bodies only).
+- ``seed`` / ``rng_base``: the RNG seed and per-lane stream offset (Triton
+  bodies only); a CPU ``rng`` argument corresponds to the Triton pair.
+- ``max_steps``: the bounded-loop step cap (``tl.constexpr`` on Triton).
+
+Every other argument name must resolve to a ``Parameter`` on the component
+class (for mechanisms, the required function class is searched first).  Names
+that PNL metadata cannot express - aliases, fallbacks, cross-component
+lookups - are declared explicitly through the ``bind=`` mapping with
+:func:`param`, or by constructing and registering a spec dataclass directly.
+"""
+
+from __future__ import annotations
+
+import inspect
+from dataclasses import dataclass, field, replace
+from typing import Any, Callable, Mapping
+
+import numpy as np
+
+from psyneulink.core.batched.backend.triton.api import TritonOpTemplate, pnl_triton_op
+
+
+class BatchedOpSpecError(ValueError):
+    """Raised when a batched op spec cannot be built or registered."""
+
+
+# Reserved body-argument names and the roles they bind to.
+INPUT_ARG = "x"
+CPU_RNG_ARG = "rng"
+SEED_ARG = "seed"
+RNG_BASE_ARG = "rng_base"
+MAX_STEPS_ARG = "max_steps"
+
+_CPU_RESERVED = {INPUT_ARG, CPU_RNG_ARG, MAX_STEPS_ARG}
+_TRITON_RESERVED = {INPUT_ARG, SEED_ARG, RNG_BASE_ARG, MAX_STEPS_ARG}
+
+
+@dataclass(frozen=True)
+class ArgBinding:
+    """How one body argument is supplied at execution/emission time."""
+
+    role: str  # "input" | "param" | "state" | "rng" | "seed" | "rng_base" | "max_steps"
+    name: str = ""
+
+
+@dataclass(frozen=True)
+class ParamBinding:
+    """Binds one kernel argument to a PNL parameter value.
+
+    ``resolve`` reads the live value from a node at lowering time.  ``scope``
+    selects whether the parameter lives on the mechanism or on its primary
+    function; ``get`` overrides resolution entirely for irregular bindings.
+    """
+
+    arg: str
+    pnl_name: str = ""
+    fallbacks: tuple[str, ...] = ()
+    default: float = 0.0
+    scope: str = "function"  # "function" | "mechanism"
+    get: Callable[[Any], float] | None = None
+
+    def resolve(self, component) -> float:
+        if self.get is not None:
+            return float(self.get(component))
+        owner = component
+        if self.scope == "function":
+            # Navigate to the owned function component when given a mechanism;
+            # a Function's own `.function` attribute is a method, not a component.
+            function = getattr(component, "function", None)
+            if function is not None and hasattr(function, "parameters"):
+                owner = function
+        for name in (self.pnl_name or self.arg,) + self.fallbacks:
+            value = component_param(owner, name)
+            if value is not None:
+                return value
+        return float(self.default)
+
+
+def param(
+    pnl_name: str = "",
+    *,
+    fallback: str | tuple[str, ...] = (),
+    default: float = 0.0,
+    scope: str = "function",
+    get: Callable[[Any], float] | None = None,
+) -> ParamBinding:
+    """Explicit ``bind=`` override for one body argument."""
+
+    fallbacks = (fallback,) if isinstance(fallback, str) else tuple(fallback)
+    return ParamBinding(
+        arg="",
+        pnl_name=pnl_name,
+        fallbacks=fallbacks,
+        default=default,
+        scope=scope,
+        get=get,
+    )
+
+
+@dataclass(frozen=True)
+class StateDecl:
+    """A lane-local state slot owned by a mechanism op.
+
+    ``width=None`` resolves to the node's primary output width at lowering.
+    Declared states persist across trials, which selects the stateful lane
+    layout for the containing graph.
+    """
+
+    name: str
+    width: int | None = None
+    initial: float = 0.0
+
+
+@dataclass(frozen=True)
+class RngDecl:
+    """A lane-local random stream owned by a mechanism op.
+
+    ``step_extent`` is the symbolic per-step extent of the stream and must be
+    one of the kernel step caps (currently ``"MAX_STEPS"`` or
+    ``"LCA_MAX_STEPS"``).  ``width=None`` resolves to the node's primary
+    output width.
+    """
+
+    name: str
+    step_extent: str = "MAX_STEPS"
+    width: int | None = 1
+
+
+@dataclass(frozen=True)
+class OutputDecl:
+    port: str
+    width: int = 1
+
+
+@dataclass(frozen=True)
+class ElementwiseFunctionSpec:
+    """A stateless elementwise PNL ``Function`` (for example ``Linear``).
+
+    ``body`` is the neutral implementation ``body(x, *params)``: executed
+    directly with numpy by ``ir_debug`` and captured as Triton source (with
+    ``bm`` rewritten to ``tl``) for the GPU backend.
+    """
+
+    function_class: type
+    params: tuple[ParamBinding, ...]
+    body: Callable
+    triton_template: TritonOpTemplate | None = None
+    key: str = ""
+
+
+@dataclass(frozen=True)
+class PassthroughMechanismSpec:
+    """A mechanism that just combines its inputs and applies its function.
+
+    Nodes whose mechanism class has a passthrough spec are supported whenever
+    their function class has an :class:`ElementwiseFunctionSpec`.
+    """
+
+    mechanism_class: type
+    key: str = ""
+
+
+@dataclass(frozen=True)
+class DenseProjectionSpec:
+    """A projection lowered to a dense matrix multiply."""
+
+    projection_class: type
+    triton_emit: Callable | None = None
+    key: str = ""
+
+
+@dataclass(frozen=True)
+class MechanismOpSpec:
+    """A mechanism with its own kernel body (integrators, accumulators, ...).
+
+    Declarative specs supply ``cpu_body``/``triton_template`` with matching
+    argument bindings.  Specs whose semantics the declarative form cannot
+    express yet use the ``cpu_execute``/``triton_emit`` escape hatches.
+    """
+
+    mechanism_class: type
+    function_class: type | None = None
+    display_name: str = ""
+    params: tuple[ParamBinding, ...] = ()
+    states: tuple[StateDecl, ...] = ()
+    rng: tuple[RngDecl, ...] = ()
+    outputs: tuple[OutputDecl, ...] | None = None
+    cpu_body: Callable | None = None
+    cpu_bindings: tuple[ArgBinding, ...] = ()
+    triton_template: TritonOpTemplate | None = None
+    triton_bindings: tuple[ArgBinding, ...] = ()
+    supports: Callable | None = None
+    extract_attrs: Callable | None = None
+    cpu_execute: Callable | None = None
+    triton_emit: Callable | None = None
+    single_node_model_kind: str | None = None
+    param_alias_prefixes: tuple[str, ...] = ()
+    key: str = ""
+
+    @property
+    def persistent_state(self) -> bool:
+        return bool(self.states)
+
+    @property
+    def has_triton(self) -> bool:
+        return self.triton_template is not None or self.triton_emit is not None
+
+    @property
+    def label(self) -> str:
+        return self.display_name or self.mechanism_class.__name__
+
+
+_FUNCTION_SPECS: dict[type, ElementwiseFunctionSpec] = {}
+_MECHANISM_SPECS: dict[type, MechanismOpSpec] = {}
+_PASSTHROUGH_SPECS: dict[type, PassthroughMechanismSpec] = {}
+_PROJECTION_SPECS: dict[type, DenseProjectionSpec] = {}
+_SPECS_BY_KEY: dict[str, Any] = {}
+
+_BUILTINS_REGISTERED = False
+
+
+def spec_key(component_class: type) -> str:
+    return f"{component_class.__module__}.{component_class.__qualname__}"
+
+
+def register_batched_op(spec):
+    """Register a batched op spec for its exact component class."""
+
+    if isinstance(spec, ElementwiseFunctionSpec):
+        target, table = spec.function_class, _FUNCTION_SPECS
+    elif isinstance(spec, MechanismOpSpec):
+        target, table = spec.mechanism_class, _MECHANISM_SPECS
+    elif isinstance(spec, PassthroughMechanismSpec):
+        target, table = spec.mechanism_class, _PASSTHROUGH_SPECS
+    elif isinstance(spec, DenseProjectionSpec):
+        target, table = spec.projection_class, _PROJECTION_SPECS
+    else:
+        raise BatchedOpSpecError(f"Unknown batched op spec type '{type(spec).__name__}'.")
+
+    spec = replace(spec, key=spec_key(target))
+    table[target] = spec
+    _SPECS_BY_KEY[spec.key] = spec
+    return spec
+
+
+def function_spec_for(function) -> ElementwiseFunctionSpec | None:
+    return _FUNCTION_SPECS.get(type(function))
+
+
+def mechanism_spec_for(node) -> MechanismOpSpec | None:
+    return _MECHANISM_SPECS.get(type(node))
+
+
+def passthrough_spec_for(node) -> PassthroughMechanismSpec | None:
+    return _PASSTHROUGH_SPECS.get(type(node))
+
+
+def projection_spec_for(projection) -> DenseProjectionSpec | None:
+    return _PROJECTION_SPECS.get(type(projection))
+
+
+def lookup_spec(key: str):
+    try:
+        return _SPECS_BY_KEY[key]
+    except KeyError as error:
+        raise BatchedOpSpecError(f"No registered batched op spec for key '{key}'.") from error
+
+
+def registered_specs() -> tuple:
+    return tuple(_SPECS_BY_KEY.values())
+
+
+def ensure_builtin_specs() -> None:
+    """Register the built-in component specs (idempotent)."""
+
+    global _BUILTINS_REGISTERED
+    if _BUILTINS_REGISTERED:
+        return
+    import psyneulink.core.batched.components  # noqa: F401  (registers on import)
+
+    _BUILTINS_REGISTERED = True
+
+
+def batched_op(
+    component_class: type,
+    *,
+    function: type | None = None,
+    triton=None,
+    outputs=None,
+    bind: Mapping[str, ParamBinding] | None = None,
+    display_name: str | None = None,
+    single_node_model_kind: str | None = None,
+    param_alias_prefixes: tuple[str, ...] = (),
+):
+    """Register a batched op for ``component_class`` from a decorated body.
+
+    The decorated function's signature is introspected: reserved names
+    (``x``, ``rng``, ``seed``, ``rng_base``, ``max_steps``) bind to execution
+    roles, and every other argument must resolve to a ``Parameter`` on the
+    component class.  For mechanism ops, ``function`` names the required
+    function class and is searched first; when a name exists on both the
+    function and the mechanism, the function parameter wins.
+
+    For PNL ``Function`` subclasses the body is the single neutral
+    implementation used by both backends.  For ``Mechanism`` subclasses the
+    body is the CPU implementation and ``triton`` supplies the matching
+    ``@pnl_triton_op`` template (a CPU ``rng`` argument corresponds to the
+    Triton ``seed, rng_base`` pair).
+    """
+
+    def decorate(body):
+        if not inspect.isfunction(body):
+            raise BatchedOpSpecError("@batched_op can only decorate Python functions.")
+        if _is_pnl_function_class(component_class):
+            _register_function_op(component_class, body, bind or {})
+        else:
+            _register_mechanism_op(
+                component_class,
+                body,
+                function_class=function,
+                triton_template=triton,
+                outputs=outputs,
+                bind=bind or {},
+                display_name=display_name,
+                single_node_model_kind=single_node_model_kind,
+                param_alias_prefixes=param_alias_prefixes,
+            )
+        return body
+
+    return decorate
+
+
+def _register_function_op(function_class, body, bind):
+    arg_names = _signature_args(body)
+    if not arg_names or arg_names[0] != INPUT_ARG:
+        raise BatchedOpSpecError(
+            f"Elementwise batched op for '{function_class.__name__}' must take "
+            f"'{INPUT_ARG}' as its first argument."
+        )
+    reserved = [name for name in arg_names[1:] if name in (_CPU_RESERVED | _TRITON_RESERVED)]
+    if reserved:
+        raise BatchedOpSpecError(
+            f"Elementwise batched op for '{function_class.__name__}' supports only "
+            f"(x, parameters...); reserved arguments are not allowed: {', '.join(reserved)}."
+        )
+
+    params = tuple(
+        _bind_parameter_arg(name, function_class, None, bind, scope="function")
+        for name in arg_names[1:]
+    )
+    template = pnl_triton_op(
+        name=f"_pnl_triton_{function_class.__name__.lower()}",
+    )(body)
+    register_batched_op(
+        ElementwiseFunctionSpec(
+            function_class=function_class,
+            params=params,
+            body=body,
+            triton_template=template,
+        )
+    )
+
+
+def _register_mechanism_op(
+    mechanism_class,
+    cpu_body,
+    *,
+    function_class,
+    triton_template,
+    outputs,
+    bind,
+    display_name,
+    single_node_model_kind,
+    param_alias_prefixes,
+):
+    if triton_template is not None and not isinstance(triton_template, TritonOpTemplate):
+        raise BatchedOpSpecError(
+            f"Batched op for '{mechanism_class.__name__}': triton= must be a "
+            "@pnl_triton_op template."
+        )
+
+    cpu_args = _signature_args(cpu_body)
+    cpu_bindings, params = _bind_mechanism_args(
+        cpu_args, mechanism_class, function_class, bind, backend="cpu"
+    )
+
+    triton_bindings: tuple[ArgBinding, ...] = ()
+    if triton_template is not None:
+        triton_bindings, triton_params = _bind_mechanism_args(
+            triton_template.arg_names, mechanism_class, function_class, bind, backend="triton"
+        )
+        cpu_param_names = tuple(binding.arg for binding in params)
+        triton_param_names = tuple(binding.arg for binding in triton_params)
+        if _expand_rng(cpu_bindings) != triton_bindings:
+            raise BatchedOpSpecError(
+                f"Batched op for '{mechanism_class.__name__}': CPU body arguments "
+                f"{cpu_args} do not match Triton template arguments "
+                f"{triton_template.arg_names} (a CPU 'rng' argument corresponds to "
+                "the Triton 'seed, rng_base' pair)."
+            )
+        assert cpu_param_names == triton_param_names
+
+    uses_rng = any(binding.role in {"rng", "seed"} for binding in cpu_bindings + triton_bindings)
+    rng = (RngDecl(name="rng", step_extent="MAX_STEPS", width=1),) if uses_rng else ()
+
+    register_batched_op(
+        MechanismOpSpec(
+            mechanism_class=mechanism_class,
+            function_class=function_class,
+            display_name=display_name or mechanism_class.__name__,
+            params=params,
+            rng=rng,
+            outputs=_normalize_outputs(outputs),
+            cpu_body=cpu_body,
+            cpu_bindings=cpu_bindings,
+            triton_template=triton_template,
+            triton_bindings=triton_bindings,
+            single_node_model_kind=single_node_model_kind,
+            param_alias_prefixes=tuple(param_alias_prefixes),
+        )
+    )
+
+
+def _bind_mechanism_args(arg_names, mechanism_class, function_class, bind, *, backend):
+    reserved = _CPU_RESERVED if backend == "cpu" else _TRITON_RESERVED
+    bindings: list[ArgBinding] = []
+    params: list[ParamBinding] = []
+    for name in arg_names:
+        if name == INPUT_ARG:
+            bindings.append(ArgBinding(role="input"))
+        elif name == MAX_STEPS_ARG:
+            bindings.append(ArgBinding(role="max_steps"))
+        elif name == CPU_RNG_ARG and backend == "cpu":
+            bindings.append(ArgBinding(role="rng"))
+        elif name == SEED_ARG and backend == "triton":
+            bindings.append(ArgBinding(role="seed"))
+        elif name == RNG_BASE_ARG and backend == "triton":
+            bindings.append(ArgBinding(role="rng_base"))
+        elif name in reserved or name in (_CPU_RESERVED | _TRITON_RESERVED):
+            raise BatchedOpSpecError(
+                f"Batched op for '{mechanism_class.__name__}': reserved argument "
+                f"'{name}' is not valid in a {backend} body."
+            )
+        else:
+            binding = _bind_parameter_arg(name, function_class, mechanism_class, bind, scope=None)
+            bindings.append(ArgBinding(role="param", name=name))
+            params.append(binding)
+    return tuple(bindings), tuple(params)
+
+
+def _expand_rng(bindings: tuple[ArgBinding, ...]) -> tuple[ArgBinding, ...]:
+    """CPU bindings with `rng` expanded to the Triton (seed, rng_base) pair."""
+
+    expanded: list[ArgBinding] = []
+    for binding in bindings:
+        if binding.role == "rng":
+            expanded.append(ArgBinding(role="seed"))
+            expanded.append(ArgBinding(role="rng_base"))
+        else:
+            expanded.append(binding)
+    return tuple(expanded)
+
+
+def _bind_parameter_arg(name, function_class, mechanism_class, bind, *, scope):
+    override = bind.get(name)
+    if override is not None:
+        if not isinstance(override, ParamBinding):
+            raise BatchedOpSpecError(
+                f"bind['{name}'] must be a ParamBinding (use specs.param(...))."
+            )
+        return replace(override, arg=name)
+
+    on_function = function_class is not None and _class_has_parameter(function_class, name)
+    on_mechanism = mechanism_class is not None and _class_has_parameter(mechanism_class, name)
+    if scope == "function" or on_function:
+        owner_class, owner_scope, found = function_class, "function", on_function
+    else:
+        owner_class, owner_scope, found = mechanism_class, "mechanism", on_mechanism
+
+    if not found:
+        available = sorted(
+            set(_class_parameter_names(function_class)) | set(_class_parameter_names(mechanism_class))
+        )
+        target = (mechanism_class or function_class).__name__
+        raise BatchedOpSpecError(
+            f"Batched op argument '{name}' does not match a Parameter on "
+            f"'{target}'"
+            + (f" or its function '{function_class.__name__}'" if mechanism_class and function_class else "")
+            + f". Available parameters: {', '.join(available) or '<none>'}. "
+            "Use bind={...} with specs.param(...) for irregular bindings."
+        )
+
+    return ParamBinding(
+        arg=name,
+        pnl_name=name,
+        default=_class_default(owner_class, name),
+        scope=owner_scope,
+    )
+
+
+def component_param(component, name: str) -> float | None:
+    """Read a scalar parameter value from a live component, or ``None``.
+
+    Resolution order matches the live-value semantics the batched compiler
+    has always used: ``parameters.<name>.get(None)``, then
+    ``defaults.<name>``, then a plain attribute.
+    """
+
+    if component is None:
+        return None
+
+    parameters = getattr(component, "parameters", None)
+    if parameters is not None and hasattr(parameters, name):
+        parameter = getattr(parameters, name)
+        for getter in ("get", "_get"):
+            if hasattr(parameter, getter):
+                try:
+                    return _as_float(getattr(parameter, getter)(None))
+                except Exception:
+                    pass
+
+    defaults = getattr(component, "defaults", None)
+    if defaults is not None and hasattr(defaults, name):
+        try:
+            return _as_float(getattr(defaults, name))
+        except Exception:
+            pass
+
+    if hasattr(component, name):
+        try:
+            return _as_float(getattr(component, name))
+        except Exception:
+            pass
+
+    return None
+
+
+def resolve_component_param(component, name: str, default: float) -> float:
+    value = component_param(component, name)
+    return float(default) if value is None else value
+
+
+def _class_has_parameter(component_class, name: str) -> bool:
+    try:
+        return hasattr(component_class.parameters, name)
+    except Exception:
+        return False
+
+
+def _class_parameter_names(component_class) -> tuple[str, ...]:
+    if component_class is None:
+        return ()
+    try:
+        return tuple(parameter.name for parameter in component_class.parameters)
+    except Exception:
+        return ()
+
+
+def _class_default(component_class, name: str, fallback: float = 0.0) -> float:
+    for source_name in ("class_defaults", "defaults"):
+        source = getattr(component_class, source_name, None)
+        if source is not None and hasattr(source, name):
+            try:
+                return _as_float(getattr(source, name))
+            except Exception:
+                pass
+    try:
+        return _as_float(getattr(component_class.parameters, name).default_value)
+    except Exception:
+        return float(fallback)
+
+
+def _normalize_outputs(outputs) -> tuple[OutputDecl, ...] | None:
+    if outputs is None:
+        return None
+    normalized = []
+    for output in outputs:
+        if isinstance(output, OutputDecl):
+            normalized.append(output)
+        else:
+            port, width = output
+            normalized.append(OutputDecl(port=str(port), width=int(width)))
+    return tuple(normalized)
+
+
+def _signature_args(body) -> tuple[str, ...]:
+    signature = inspect.signature(body)
+    for parameter in signature.parameters.values():
+        if parameter.kind not in (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            raise BatchedOpSpecError(
+                f"Batched op body '{body.__name__}' must use plain positional "
+                f"arguments; got '{parameter}'."
+            )
+    return tuple(signature.parameters)
+
+
+def _is_pnl_function_class(component_class) -> bool:
+    from psyneulink.core.components.functions.function import Function_Base
+
+    return isinstance(component_class, type) and issubclass(component_class, Function_Base)
+
+
+def _as_float(value) -> float:
+    array = np.asarray(value, dtype=float).reshape(-1)
+    if len(array) == 0:
+        return 0.0
+    return float(array[0])

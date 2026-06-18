@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from psyneulink.core.batched.graph import (
-    DDM_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
     projection_inputs,
 )
@@ -181,22 +180,13 @@ def _rng_streams(graph: BatchedGraphIR) -> tuple[KernelRngStream, ...]:
     streams = []
     for node_name in graph.execution_order:
         node = graph.node(node_name)
-        if node.component_type == "LCAMechanism":
+        for stream_name, step_extent, width in node.attrs.get("rng_streams", ()):
             streams.append(
                 KernelRngStream(
-                    name=f"{node.name}.lca",
+                    name=f"{node.name}.{stream_name}",
                     node=node.name,
-                    width=node.output_width,
-                    step_extent="LCA_MAX_STEPS",
-                )
-            )
-        elif node.component_type == "DDM":
-            streams.append(
-                KernelRngStream(
-                    name=f"{node.name}.ddm",
-                    node=node.name,
-                    width=1,
-                    step_extent="MAX_STEPS",
+                    width=int(width),
+                    step_extent=step_extent,
                 )
             )
     return tuple(streams)
@@ -255,7 +245,8 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                 )
             )
 
-        if node.component_type in {"TransferMechanism", "ProcessingMechanism"}:
+        spec_kind = node.attrs.get("spec_kind")
+        if spec_kind == "elementwise":
             output_port = _primary_output_port_name(node)
             output_value = KernelValue(f"{node.name}:{output_port}", node.output_width)
             ops.append(
@@ -269,46 +260,36 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                         "function_type": node.function_type,
                         "params": dict(node.params),
                         "output_port": output_port,
+                        "spec_key": node.attrs["spec_key"],
                     },
                 )
             )
-        elif node.component_type == "LCAMechanism":
-            output_port = _primary_output_port_name(node)
+        elif spec_kind == "mechanism":
+            op_outputs = tuple(node.attrs.get("op_outputs", ()))
+            rng_streams = tuple(node.attrs.get("rng_streams", ()))
+            attrs = {
+                "component_type": node.component_type,
+                "function_type": node.function_type,
+                "params": dict(node.params),
+                "spec_key": node.attrs["spec_key"],
+            }
+            if rng_streams:
+                attrs["step_extent"] = rng_streams[0][1]
             ops.append(
                 KernelOp(
                     kind="CallMechanism",
                     target=node.name,
                     inputs=(node_input,),
-                    outputs=(KernelValue(f"{node.name}:{output_port}", node.output_width),),
-                    attrs={
-                        "component_type": node.component_type,
-                        "function_type": node.function_type,
-                        "params": dict(node.params),
-                        "output_port": output_port,
-                        "pre_state": f"{node.name}.pre",
-                        "act_state": f"{node.name}.act",
-                        "termination_input_node": node.attrs.get("termination_input_node"),
-                        "step_extent": "LCA_MAX_STEPS",
-                    },
-                )
-            )
-        elif node.component_type == "DDM":
-            ops.append(
-                KernelOp(
-                    kind="CallMechanism",
-                    target=node.name,
-                    inputs=(node_input,),
-                    outputs=(
-                        KernelValue(f"{node.name}:DECISION_OUTCOME", 1),
-                        KernelValue(f"{node.name}:RESPONSE_TIME", 1),
+                    outputs=tuple(
+                        KernelValue(f"{node.name}:{port}", int(width))
+                        for port, width in op_outputs
                     ),
-                    attrs={
-                        "component_type": node.component_type,
-                        "function_type": node.function_type,
-                        "params": dict(node.params),
-                        "step_extent": "MAX_STEPS",
-                    },
+                    attrs=attrs,
                 )
+            )
+        else:
+            raise ValueError(
+                f"Batched graph node '{node.name}' has no registered batched op spec."
             )
 
     for output in graph.outputs:

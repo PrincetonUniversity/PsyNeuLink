@@ -33,6 +33,7 @@ class BatchedProjectionSpec:
     receiver: str
     receiver_port: str
     matrix: np.ndarray
+    spec_key: str = ""
 
 
 @dataclass(frozen=True)

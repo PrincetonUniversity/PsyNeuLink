@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 
+from psyneulink.core.batched import specs
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport, BatchedDiagnostic
 from psyneulink.core.batched.graph import lower_composition
 from psyneulink.core.batched.ir import BatchedCompositionIR
@@ -13,13 +14,7 @@ def analyze_composition(composition, backend: str = "ir_debug", outputs=None, ma
 
     rejected_nodes = list(lowering.rejected_nodes)
     if backend == "triton" and lowering.graph is not None and not rejected_nodes:
-        from psyneulink.core.batched.backend.triton.component_hooks import (
-            triton_hook_diagnostics,
-        )
-
-        rejected_nodes.extend(
-            triton_hook_diagnostics(lowering.graph, lowering.bindings)
-        )
+        rejected_nodes.extend(_triton_spec_diagnostics(lowering.graph))
 
     if lowering.graph is None and not rejected_nodes:
         rejected_nodes.append(
@@ -64,6 +59,53 @@ def analyze_composition(composition, backend: str = "ir_debug", outputs=None, ma
         )
 
     return report, ir, lowering.bindings
+
+
+def _triton_spec_diagnostics(graph) -> list[BatchedDiagnostic]:
+    """Report nodes/projections whose batched op specs lack a Triton implementation."""
+
+    diagnostics: list[BatchedDiagnostic] = []
+
+    for node_name in graph.execution_order:
+        node = graph.node(node_name)
+        spec_key = node.attrs.get("spec_key")
+        if not spec_key:
+            continue
+        spec = specs.lookup_spec(spec_key)
+        if isinstance(spec, specs.ElementwiseFunctionSpec):
+            if spec.triton_template is None:
+                diagnostics.append(
+                    BatchedDiagnostic(
+                        component=node.name,
+                        reason="missing Triton implementation for batched op",
+                        detail=node.function_type,
+                    )
+                )
+        elif isinstance(spec, specs.MechanismOpSpec):
+            if not spec.has_triton:
+                diagnostics.append(
+                    BatchedDiagnostic(
+                        component=node.name,
+                        reason="missing Triton implementation for batched op",
+                        detail=node.component_type,
+                    )
+                )
+
+    for projection in graph.projections:
+        spec = specs.lookup_spec(projection.spec_key) if projection.spec_key else None
+        if spec is None or spec.triton_emit is None:
+            diagnostics.append(
+                BatchedDiagnostic(
+                    component=(
+                        f"{projection.sender}.{projection.sender_port}->"
+                        f"{projection.receiver}.{projection.receiver_port}"
+                    ),
+                    reason="missing Triton implementation for batched op",
+                    detail="projection",
+                )
+            )
+
+    return diagnostics
 
 
 def _backend_availability(backend: str, model_kind: str | None, graph) -> tuple[bool, list[str]]:

@@ -1,21 +1,16 @@
 from __future__ import annotations
 
+from psyneulink.core.batched import specs
 from psyneulink.core.batched.graph import (
     DDM_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
 )
-from psyneulink.core.batched.bindings import (
-    EMPTY_COMPONENT_BINDINGS,
-    BatchedComponentBindings,
-)
 from psyneulink.core.batched.kernel_ir import KernelIR, KernelOp
 from psyneulink.core.batched.backend.triton.api import (
     TritonEmitContext,
+    TritonOpCall,
     TritonOpTemplate,
-)
-from psyneulink.core.batched.backend.triton.component_hooks import (
-    ensure_triton_hooks_installed,
 )
 from psyneulink.core.batched.backend.triton.source_builder import (
     SourceBuilder,
@@ -31,13 +26,10 @@ _KERNEL_NAMES = {
 }
 
 
-def triton_graph_kernel_source(
-    kernel: KernelIR,
-    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
-) -> str:
+def triton_graph_kernel_source(kernel: KernelIR) -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel, component_bindings).emit()
+    return TritonGraphEmitter(kernel).emit()
 
 
 class TritonGraphEmitter:
@@ -45,17 +37,13 @@ class TritonGraphEmitter:
 
     This class is intentionally Triton-specific.  KernelIR remains free of
     `tl.*` syntax and source fragments so another backend can lower the same
-    execution ops independently.
+    execution ops independently.  Component implementations are resolved from
+    the batched op spec registry through the `spec_key` op attributes.
     """
 
-    def __init__(
-        self,
-        kernel: KernelIR,
-        component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
-    ):
+    def __init__(self, kernel: KernelIR):
         self.kernel = kernel
         self.graph = kernel.graph
-        self.component_bindings = component_bindings
         self.builder = SourceBuilder()
         self.templates: dict[str, TritonOpTemplate] = {}
         self.input_index = {
@@ -73,7 +61,7 @@ class TritonGraphEmitter:
         self.lane_out_emitted = False
 
     def emit(self) -> str:
-        ensure_triton_hooks_installed()
+        specs.ensure_builtin_specs()
         self._index_rng_streams()
         with self.builder.indent():
             self._emit_lane_decode()
@@ -268,22 +256,16 @@ class TritonGraphEmitter:
 
     def _emit_projection_call(self, op: KernelOp) -> None:
         projection_spec = self._projection_spec_for_op(op)
-        projection = self.component_bindings.projection(
-            projection_spec.sender,
-            projection_spec.sender_port,
-            projection_spec.receiver,
-            projection_spec.receiver_port,
-        )
-        hook = getattr(projection, "_gen_triton_projection", None)
-        if hook is None:
+        spec = specs.lookup_spec(projection_spec.spec_key)
+        if spec.triton_emit is None:
             raise ValueError(
-                "Triton graph emitter has no projection hook for "
-                f"{type(projection).__name__} "
-                f"'{projection_spec.sender}->{projection_spec.receiver}'."
+                "Batched op spec for projection "
+                f"'{projection_spec.sender}->{projection_spec.receiver}' has no "
+                "Triton implementation."
             )
         sender_values = self._get_value(op.inputs[0].name)
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
-        values = hook(
+        values = spec.triton_emit(
             TritonEmitContext(self),
             projection_spec,
             sender_values,
@@ -306,58 +288,108 @@ class TritonGraphEmitter:
 
     def _emit_function_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
-        function = self.component_bindings.function(node.name)
-        hook = getattr(function, "_gen_triton_function", None)
-        if hook is None:
+        spec = specs.lookup_spec(op.attrs["spec_key"])
+        if spec.triton_template is None:
             raise ValueError(
-                "Triton graph emitter has no function hook for "
-                f"{node.function_type} on '{node.name}'."
+                "Batched op spec for function "
+                f"{node.function_type} on '{node.name}' has no Triton implementation."
             )
         input_values = self._get_value(op.inputs[0].name)
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
-        values = hook(
-            TritonEmitContext(self),
-            node,
-            input_values,
-            output_vars,
+        param_args = tuple(
+            self.param_vars[node.params[binding.arg]] for binding in spec.params
         )
-        self._set_value(op.outputs[0].name, list(values))
+        ctx = TritonEmitContext(self)
+        for input_value, output_var in zip(input_values, output_vars):
+            ctx.emit_call(
+                TritonOpCall(
+                    template=spec.triton_template,
+                    outputs=(output_var,),
+                    args=(input_value,) + param_args,
+                )
+            )
+        self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 
     def _emit_mechanism_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
-        mechanism = self.component_bindings.node(node.name)
-        hook = getattr(mechanism, "_gen_triton_mechanism", None)
-        if hook is None:
+        spec = specs.lookup_spec(op.attrs["spec_key"])
+        if not spec.has_triton:
             raise ValueError(
-                "Triton graph emitter has no mechanism hook for "
-                f"{node.component_type} '{node.name}'."
+                "Batched op spec for mechanism "
+                f"{node.component_type} '{node.name}' has no Triton implementation."
             )
         input_values = self._get_value(op.inputs[0].name)
         output_vars = []
         for output in op.outputs:
             output_vars.extend(self._component_vars(output.name, output.width))
-        values = list(
-            hook(
-                TritonEmitContext(self),
-                node,
-                input_values,
-                output_vars,
+
+        if spec.triton_emit is not None:
+            values = list(
+                spec.triton_emit(
+                    TritonEmitContext(self),
+                    node,
+                    input_values,
+                    output_vars,
+                )
             )
-        )
+        else:
+            values = self._emit_declarative_mechanism(spec, node, input_values, output_vars)
+
         expected_width = sum(output.width for output in op.outputs)
         if len(values) != expected_width:
             raise ValueError(
-                f"Triton hook for '{node.name}' returned {len(values)} values, "
+                f"Batched Triton op for '{node.name}' returned {len(values)} values, "
                 f"expected {expected_width}."
             )
         cursor = 0
         for output in op.outputs:
             self._set_value(output.name, values[cursor:cursor + output.width])
             cursor += output.width
-        if node.component_type == "DDM":
-            self._set_primary_alias(node.name, self._get_value(op.outputs[0].name))
+        primary_value_name = f"{node.name}:{_primary_output_port_name(node)}"
+        if primary_value_name not in self.value_vars:
+            self._set_value(primary_value_name, self._get_value(op.outputs[0].name))
         self.builder.line()
+
+    def _emit_declarative_mechanism(self, spec, node, input_values, output_vars) -> list[str]:
+        if spec.states:
+            raise ValueError(
+                f"Batched op for '{node.name}' declares lane state; declarative "
+                "stateful mechanisms are not supported yet - provide triton_emit."
+            )
+        if node.input_width != 1:
+            raise ValueError(
+                f"Declarative batched mechanism op for '{node.name}' requires "
+                f"input width 1, got {node.input_width}."
+            )
+        if spec.rng:
+            self._emit_trial_random_base_if_needed()
+
+        args = []
+        for binding in spec.triton_bindings:
+            if binding.role == "input":
+                args.append(input_values[0])
+            elif binding.role == "param":
+                args.append(self.param_vars[node.params[binding.name]])
+            elif binding.role == "seed":
+                args.append("SEED")
+            elif binding.role == "rng_base":
+                args.append(self._rng_base(node.name))
+            elif binding.role == "max_steps":
+                args.append("MAX_STEPS")
+            else:
+                raise ValueError(
+                    f"Batched op for '{node.name}' has an unsupported Triton arg "
+                    f"role '{binding.role}'."
+                )
+        TritonEmitContext(self).emit_call(
+            TritonOpCall(
+                template=spec.triton_template,
+                outputs=tuple(output_vars),
+                args=tuple(args),
+            )
+        )
+        return list(output_vars)
 
     def _emit_trial_random_base_if_needed(self) -> None:
         if self.kernel.fusion_kind != DDM_GRAPH_FUSION:
@@ -411,7 +443,7 @@ class TritonGraphEmitter:
     def raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
         return self._raw_input_value(node_name, component_idx)
 
-    def _ddm_random_base(self, node_name: str) -> str:
+    def _rng_base(self, node_name: str) -> str:
         if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
             return (
                 f"random_base + ({self.lca_stream_count}) * LCA_MAX_STEPS "
@@ -419,8 +451,8 @@ class TritonGraphEmitter:
             )
         return "random_base"
 
-    def ddm_random_base(self, node_name: str) -> str:
-        return self._ddm_random_base(node_name)
+    def rng_base(self, node_name: str) -> str:
+        return self._rng_base(node_name)
 
     def _index_rng_streams(self) -> None:
         for stream in self.kernel.rng_streams:
@@ -437,10 +469,6 @@ class TritonGraphEmitter:
 
     def _set_value(self, name: str, values: list[str]) -> None:
         self.value_vars[name] = values
-
-    def _set_primary_alias(self, node_name: str, values: list[str]) -> None:
-        node = self.graph.node(node_name)
-        self.value_vars[f"{node_name}:{_primary_output_port_name(node)}"] = values
 
     def _get_value(self, name: str) -> list[str]:
         try:
