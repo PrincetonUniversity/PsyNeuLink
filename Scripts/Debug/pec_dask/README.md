@@ -19,7 +19,9 @@ optimizer = PECOptimizationFunction(
 `pec_factory(data) -> (pec, inputs)` is a top-level, picklable callable that
 rebuilds a fresh serial PEC plus its inputs. Each worker (where the likelihood evaluation happens) 
 builds and caches its own from this recipe and reuses the compiled LLVM binary across evaluations. 
-Keep the factory self-contained (imports and literals inside) so Dask can ship it by value.
+Define it at module level and have it depend only on its data argument and
+importable names, so Dask can ship it to workers by value. PsyNeuLink must be
+importable in the worker environment.
 
 `distributed_options` keys (all optional except `pec_factory`):
 

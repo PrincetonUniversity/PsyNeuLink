@@ -72,15 +72,11 @@ def make_observed_data():
 def pec_factory(data):
     """Worker recipe: rebuild a fresh serial PEC + inputs from the observed data.
 
-    Self-contained (imports + literals inside) so Dask can ship it to workers by
-    value; workers only need PsyNeuLink importable in the same environment.
+    A top-level function defined alongside the study, so Dask ships it to workers by
+    value together with the module-level names it uses. Workers only need PsyNeuLink
+    importable in the same environment. Keep it self-contained: depend only on the
+    data argument and importable names, never on driver-side state.
     """
-    import numpy as np
-    import psyneulink as pnl
-    from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-        PECOptimizationFunction,
-    )
-
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
