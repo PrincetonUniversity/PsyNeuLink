@@ -14,13 +14,13 @@
 #SBATCH --constraint=cascade
 #SBATCH --exclude=della-h12n[1-18],della-h17n[1-3],della-i13n[1-25]
 #SBATCH --time=1-12:00:00   # 36h -> `medium` QOS (>24h); ample for the ~10h sweep
-#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/benchmark/logs/%x_%j.out
+#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_dask/benchmark/logs/%x_%j.out
 #SBATCH --mail-type=begin,end,fail  # receive email notifications
 #SBATCH --mail-user=ap9344@princeton.edu
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 OUT=$BD/results/singlenode.jsonl
 mkdir -p $BD/results $BD/logs
 MODEL=ddm   # which model provider to benchmark (ddm | stabflex)

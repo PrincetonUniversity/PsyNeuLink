@@ -6,7 +6,7 @@ import sys
 import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PKG_ROOT = os.path.dirname(HERE)  # .../pec_hierarchical
+PKG_ROOT = os.path.dirname(HERE)  # .../pec_dask
 # The repo checkout must shadow any pip-installed psyneulink: the prototype
 # depends on this branch (e.g. log_likelihood(..., return_sim_data=...),
 # set_num_threads).

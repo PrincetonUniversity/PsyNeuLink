@@ -210,5 +210,5 @@ slurm_logs/
 
 # PEC benchmark output: raw per-config result dumps + derived CSVs are
 # regenerable (commit the figures under plots/, not the data).
-Scripts/Debug/pec_hierarchical/benchmark/results/
-Scripts/Debug/pec_hierarchical/benchmark/plots/*.csv
+Scripts/Debug/pec_dask/benchmark/results/
+Scripts/Debug/pec_dask/benchmark/plots/*.csv

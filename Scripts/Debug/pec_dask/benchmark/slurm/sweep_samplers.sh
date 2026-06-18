@@ -29,7 +29,7 @@ set -euo pipefail
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 RESDIR=$BD/results/samplers.d         # one JSONL per (sampler, NW, WC)
 CORES_PER_NODE=32                     # the pinned r3c nodes
 RUNNER="${RUNNER:-run_config.slurm}"  # pinned by default; run_config_quick.slurm = shared

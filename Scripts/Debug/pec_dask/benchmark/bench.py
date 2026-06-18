@@ -48,7 +48,7 @@ def _quiet_dask():
         logging.getLogger(name).setLevel(logging.WARNING)
 
 
-# This file lives in pec_hierarchical/benchmark/. Make both that dir (for
+# This file lives in pec_dask/benchmark/. Make both that dir (for
 # `models` + `bench_core`) and its parent (for pec_dask_mle.config) importable,
 # locally and on spawned/remote Dask workers.
 HERE = os.path.dirname(os.path.abspath(__file__))

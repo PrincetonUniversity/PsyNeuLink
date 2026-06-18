@@ -15,11 +15,11 @@
 # homogeneous, exclusive node makes every config's timing comparable.
 #SBATCH --exclude=della-h12n[1-18],della-h17n[1-3],della-i13n[1-25]
 #SBATCH --time=02:00:00      # >61min keeps it in `short` QOS, not the capped `test` QOS
-#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/benchmark/logs/%x_%j.out
+#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_dask/benchmark/logs/%x_%j.out
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 export PYTHONPATH=$BD:$(dirname $BD):${PYTHONPATH:-}   # workers import bench_core/models/pec_dask_mle
 
 cd $REPO

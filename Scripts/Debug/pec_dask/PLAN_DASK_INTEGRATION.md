@@ -7,7 +7,7 @@ agreed design **before** any `psyneulink/` code is written.
 ## Context
 
 The evaluation-level Dask MLE backend is built and benchmark-validated under
-`Scripts/Debug/pec_hierarchical/` (the `benchmark/bench_core.py` ask/tell driver,
+`Scripts/Debug/pec_dask/` (the `benchmark/bench_core.py` ask/tell driver,
 the `pec_dask_mle/` prototype, dask-srun verified multinode, per-sampler sweep
 done). It currently lives outside the package and drives an unmodified
 `pec.log_likelihood`. The goal is to fold it into core PsyNeuLink so a user
@@ -185,4 +185,4 @@ New core test module: `tests/composition/test_pec_dask.py`, `pytest.importorskip
 - `psyneulink/dask_run.py` (new) — `python -m psyneulink.dask_run` launcher
 - `psyneulink/core/compositions/parameterestimationcomposition.py` — forward knobs, delete `:1020` cleanup, no-CRN warning
 - `setup.py` + `dask_requirements.txt` — `dask` extra
-- Reference (reuse, don't re-derive): `Scripts/Debug/pec_hierarchical/benchmark/bench_core.py`, `pec_dask_mle/worker.py`, `bench.py` (`run_dask_local`, `maybe_start_runner`), `tests/test_driver_logic.py`/`test_distributed.py`
+- Reference (reuse, don't re-derive): `Scripts/Debug/pec_dask/benchmark/bench_core.py`, `pec_dask_mle/worker.py`, `bench.py` (`run_dask_local`, `maybe_start_runner`), `tests/test_driver_logic.py`/`test_distributed.py`

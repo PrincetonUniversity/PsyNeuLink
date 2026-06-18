@@ -11,11 +11,11 @@
 #SBATCH --cpus-per-task=8       # LLVM threads per worker (heavy model -> threading helps)
 #SBATCH --mem-per-cpu=4G
 #SBATCH --time=02:00:00         # >61min -> short QOS; measured ~0.4-0.5s/eval
-#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/benchmark/logs/%x_%j.out
+#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_dask/benchmark/logs/%x_%j.out
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 OUT=$BD/results/stabflex.jsonl
 export PYTHONPATH=$BD:$(dirname $BD):${PYTHONPATH:-}   # workers import bench_core/models/pec_dask_mle
 

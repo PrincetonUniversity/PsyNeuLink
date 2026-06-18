@@ -12,7 +12,7 @@ set -euo pipefail
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 RESDIR=$BD/results/core_grid.d        # one JSONL per config; summarize globs them
 CORES_PER_NODE=32                     # the pinned r3c nodes
 

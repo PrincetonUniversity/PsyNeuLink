@@ -6,11 +6,11 @@
 #SBATCH --partition=cpu
 #SBATCH --time=01:30:00          # >61min -> short QOS; post-fix each config is minutes
 #SBATCH --mem-per-cpu=4G
-#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/benchmark/logs/%x_%j.out
+#SBATCH --output=/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_dask/benchmark/logs/%x_%j.out
 
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
 PY=$REPO/.venv/bin/python3
-BD=$REPO/Scripts/Debug/pec_hierarchical/benchmark
+BD=$REPO/Scripts/Debug/pec_dask/benchmark
 export PYTHONPATH=$BD:$(dirname $BD):${PYTHONPATH:-}
 cd $REPO
 

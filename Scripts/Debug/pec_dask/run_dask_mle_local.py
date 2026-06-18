@@ -3,7 +3,7 @@
 Run via salloc:
 
     salloc --nodes=1 --ntasks=1 --cpus-per-task=16 --mem=8G --time=00:30:00 --partition=cpu
-    .venv/bin/python3 Scripts/Debug/pec_hierarchical/run_dask_mle_local.py
+    .venv/bin/python3 Scripts/Debug/pec_dask/run_dask_mle_local.py
 
 This validates the driver/worker ask/tell loop on one node. For true multi-node,
 see the benchmark's dask-srun mode (benchmark/bench.py + slurm/run_config.slurm),
