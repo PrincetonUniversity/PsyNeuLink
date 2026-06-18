@@ -6,8 +6,8 @@ Three layers, fastest first:
     fakes (no cluster, no PNL run): worker-cores resolution, the map-like used by
     differential_evolution, the per-worker PEC cache, and the missing-Dask guard.
   * **Driver logic** -- the synchronous ask/tell bookkeeping (``_run_ask_tell_rounds``)
-    against an analytic objective: exactly ``n_rounds * batch`` trials asked/told in
-    order, scores routed to the matching trial, and CMA-ES actually maximizing.
+    against an analytic objective: exactly ``n_trials`` asked/told in order (including
+    a partial final batch), scores routed to the matching trial, and CMA-ES maximizing.
   * **Integration** -- a real process-based ``LocalCluster`` (workers in separate
     processes, like the SLURM deployment) for the headline claims: distributed
     per-candidate log-likelihoods match serial, an end-to-end distributed fit
@@ -257,16 +257,16 @@ def _distributions():
 
 
 def test_ask_tell_exact_count_order_and_routing():
-    batch, n_rounds = 6, 4
+    batch, n_trials = 6, 24
     study = optuna.create_study(
         sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
         direction="maximize",
     )
     ev = _SyncEvaluator(_neg_quadratic)
-    _run_ask_tell_rounds(study, _distributions(), PARAM_ORDER, batch, n_rounds,
+    _run_ask_tell_rounds(study, _distributions(), PARAM_ORDER, batch, n_trials,
                          ev.submit_one, ev.gather)
 
-    assert len(study.trials) == batch * n_rounds == 24
+    assert len(study.trials) == n_trials == 24
     assert len(ev.submitted) == 24
     assert all(t.state == optuna.trial.TrialState.COMPLETE for t in study.trials)
     for t in study.trials:
@@ -281,14 +281,31 @@ def test_ask_tell_exact_count_order_and_routing():
         assert math.isfinite(t.value)
 
 
+def test_ask_tell_partial_final_batch_asks_exact_count():
+    # n_trials not a multiple of batch: a partial final round makes the total
+    # asked/told exactly n_trials, matching serial study.optimize(n_trials=...)
+    # rather than truncating to whole batches (4 full rounds of 6 = 24, dropping 5).
+    batch, n_trials = 6, 29
+    study = optuna.create_study(
+        sampler=optuna.samplers.RandomSampler(seed=0), direction="maximize",
+    )
+    ev = _SyncEvaluator(_neg_quadratic)
+    _run_ask_tell_rounds(study, _distributions(), PARAM_ORDER, batch, n_trials,
+                         ev.submit_one, ev.gather)
+
+    assert len(study.trials) == n_trials == 29
+    assert len(ev.submitted) == 29
+    assert all(t.state == optuna.trial.TrialState.COMPLETE for t in study.trials)
+
+
 def test_ask_tell_cmaes_maximizes_toward_target():
-    batch, n_rounds = 8, 20
+    batch, n_trials = 8, 160
     study = optuna.create_study(
         sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
         direction="maximize",
     )
     ev = _SyncEvaluator(_neg_quadratic)
-    _run_ask_tell_rounds(study, _distributions(), PARAM_ORDER, batch, n_rounds,
+    _run_ask_tell_rounds(study, _distributions(), PARAM_ORDER, batch, n_trials,
                          ev.submit_one, ev.gather)
     assert study.best_value > -0.01
     for name in PARAM_ORDER:

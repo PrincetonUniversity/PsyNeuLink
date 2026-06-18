@@ -401,22 +401,29 @@ def _dask_map(client, func, iterable):
     return list(client.gather(futures))
 
 
-def _run_ask_tell_rounds(study, distributions, param_order, batch, n_rounds,
+def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
                          submit_one, gather):
     """Synchronous batched ask/tell loop for a distributed optuna study.
 
-    Each round asks ``batch`` candidates, dispatches each candidate's parameter
-    vector (in ``param_order``) via ``submit_one(param_values) -> future``, gathers
-    the scalar scores with ``gather(futures)``, and tells each score back to its
-    own trial. Pure bookkeeping with no Dask/PNL dependency so it can be tested
-    against a synchronous fake evaluator; the real path passes Dask submit/gather.
+    Asks exactly ``n_trials`` candidates total, dispatched in rounds of at most
+    ``batch``. When ``n_trials`` is not a multiple of ``batch`` the final round is
+    smaller, so the distributed path evaluates the same number of candidates as the
+    serial ``study.optimize(n_trials=...)`` rather than truncating to whole batches.
+    Each round asks its candidates, dispatches each candidate's parameter vector (in
+    ``param_order``) via ``submit_one(param_values) -> future``, gathers the scalar
+    scores with ``gather(futures)``, and tells each score back to its own trial.
+    Pure bookkeeping with no Dask/PNL dependency so it can be tested against a
+    synchronous fake evaluator; the real path passes Dask submit/gather.
     """
-    for _ in range(n_rounds):
-        trials = [study.ask(distributions) for _ in range(batch)]
+    remaining = n_trials
+    while remaining > 0:
+        size = min(batch, remaining)
+        trials = [study.ask(distributions) for _ in range(size)]
         futures = [submit_one([t.params[name] for name in param_order]) for t in trials]
         values = gather(futures)
         for trial, value in zip(trials, values):
             study.tell(trial, value)
+        remaining -= size
     return study
 
 
@@ -1267,11 +1274,9 @@ class PECOptimizationFunction(OptimizationFunction):
 
         max_iterations = self.parameters.max_iterations.get()
         batch = self._resolve_batch_size(client, opt_func)
-        n_rounds = max_iterations // batch
-        if n_rounds < 1:
+        if max_iterations < 1:
             raise OptimizationFunctionError(
-                f"max_iterations ({max_iterations}) is smaller than the distributed batch "
-                f"size ({batch}); increase max_iterations or reduce max_concurrent_evaluations."
+                f"max_iterations ({max_iterations}) must be >= 1."
             )
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -1292,7 +1297,7 @@ class PECOptimizationFunction(OptimizationFunction):
             )
 
         _run_ask_tell_rounds(
-            study, distributions, param_order, batch, n_rounds,
+            study, distributions, param_order, batch, max_iterations,
             submit_one=submit_one, gather=client.gather,
         )
 
