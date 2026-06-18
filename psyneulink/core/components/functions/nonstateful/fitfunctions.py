@@ -1323,10 +1323,17 @@ class PECOptimizationFunction(OptimizationFunction):
                 fit_id, pure=False,
             )
 
-        _run_ask_tell_rounds(
-            study, distributions, param_order, batch, max_iterations,
-            submit_one=submit_one, gather=client.gather,
-        )
+        # Release the broadcast dataset from worker memory when the fit ends (also on
+        # error). It would be freed when data_f is garbage collected, but an explicit
+        # cancel matters for a long-lived/externally-supplied client, where successive
+        # fits would otherwise accumulate pinned copies (each has a unique hash=False key).
+        try:
+            _run_ask_tell_rounds(
+                study, distributions, param_order, batch, max_iterations,
+                submit_one=submit_one, gather=client.gather,
+            )
+        finally:
+            client.cancel(data_f)
 
         fitted_params = dict(
             zip(param_order, [study.best_params[name] for name in param_order])
