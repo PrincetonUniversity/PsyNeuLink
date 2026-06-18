@@ -219,14 +219,15 @@ psyneulink/core/batched/backend/triton/
     compiled mode so both can coexist in `sys.modules`.  `interpret_scope`
     holds `knobs.runtime.interpret` across import and launch.
 
-- `graph_emit.py`
+- `emit/` (package; `graph_emit.py` is now a thin re-export shim)
   - Emits inspectable Triton Python source from `KernelIR`.
-  - Owns lane decode, parameter loads, state initialization, trial loops, RNG
-    base layout, output stores, and spec-driven op emission (declarative
-    elementwise/mechanism calls plus `triton_emit` escape hatches resolved
-    through `spec_key`).
-  - This file is still more complex than ideal and is a major future refactor
-    target (roadmap step 3: split into an `emit/` package).
+  - `emitter.py`: `TritonGraphEmitter` (composed from the mixins below) — shared
+    state, `emit()` orchestration, signature/module rendering, params/state setup.
+  - `lanes.py` (`LaneEmitMixin`): lane decode, RNG-base layout, raw input loads.
+  - `ops.py` (`OpEmitMixin`): per-`KernelOp` emission + value table. New op kinds
+    (e.g. truncation `StoreFlag`, scheduling variants) are added here.
+  - Spec-driven op emission (declarative elementwise/mechanism calls plus
+    `triton_emit` escape hatches) resolved through `spec_key`.
 
 - `api.py`
   - Defines `@pnl_triton_op`, `TritonOpTemplate`, `TritonOpCall`,
@@ -292,11 +293,11 @@ target for "supporting researchers' models," and the roadmap in "Good Next
 Steps" is scoped to close the gap to it.
 
 `BatchedCompositionCompiler.diagnose()` currently **rejects** it. Explicit
-rejections: the `driftRate` `UserDefinedFunction`, and `AtPass` scheduler
-conditions on five nodes. Two nodes are **silently mis-handled** (not rejected):
-`taskInput` and `thresholdMechanism` are `TransferMechanism`s with
-`integrator_mode=True`, which the support check ignores — they would be lowered
-as stateless `Linear`.
+rejections: the `driftRate` `UserDefinedFunction`; `AtPass` scheduler conditions
+on five nodes; and (as of roadmap step 1) `taskInput` and `thresholdMechanism`,
+which are `TransferMechanism`s with `integrator_mode=True` — these are stateful
+integrators and are now rejected rather than silently lowered as stateless
+`Linear`.
 
 Gaps (each maps to a milestone in "Good Next Steps"):
 
@@ -543,25 +544,28 @@ script supports:
   executor and per-op CPU twins are gone (one body per op); PsyNeuLink Python
   mode is the test oracle (`tests/composition/pec/test_batched_reference.py`).
 
+- **`integrator_mode` guard + `graph_emit.py` split** (roadmap steps 1 & 3).
+  Stateful `integrator_mode=True` transfers are now rejected (no longer silently
+  lowered as stateless `Linear`). `graph_emit.py` is now the `emit/` package
+  (`emitter`/`lanes`/`ops` mixins); a byte-identical golden-source snapshot test
+  (`tests/composition/pec/test_batched_kernel_source.py`,
+  `golden_kernels/*.py`) guards emission.
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
 steps 9-10 make the full PEC fit run on the batched path.
 
-1. **Reject `integrator_mode` transfers** (near-term correctness guard). In
-   `graph.py:_node_support_diagnostic`, reject `TransferMechanism`/
-   `ProcessingMechanism` with `integrator_mode=True` (and unsupported
-   `integrator_function`) instead of silently lowering them as stateless
-   `Linear` — closes the silent mis-handling hole (gap 2) ahead of full support.
-   Small; lands with step 2.
+1. **Reject `integrator_mode` transfers** — DONE (see Done above). Rejected in
+   `graph.py:_node_support_diagnostic` with a clear diagnostic instead of being
+   silently lowered as stateless `Linear`.
 
 2. **Truncation visibility.** Bounded-loop kernels (DDM/LCA) surface a
    truncation flag; tests/diagnostics warn or fail when `MAX_STEPS` is too low.
    Tested via `triton_cpu` + PNL reference (no `ir_debug` mirror needed).
 
-3. **Split `graph_emit.py`** into a `backend/triton/emit/` package. No semantic
-   change; acceptance via the generated-source snapshot test. Prerequisite for
-   the scheduling/kernel work in steps 4 and 8.
+3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
+   Done above). New `KernelOp` emitters are added in `emit/ops.py`.
 
 4. **Tiered scheduling** (pay only when needed). Precomputed per-trial traces for
    `EveryNCalls`-style conditions, **plus** recognition of the `AtPass(0)`
@@ -605,9 +609,9 @@ steps 9-10 make the full PEC fit run on the batched path.
 
 ## Known Sharp Edges
 
-- `graph_emit.py` is still hard to maintain. The source builder is better than
-  the initial monolithic generator, but op emission should be split further
-  (roadmap step 3: split into a `backend/triton/emit/` package).
+- Emission now lives in the `emit/` package (`emitter`/`lanes`/`ops` mixins);
+  the byte-identical `golden_kernels` snapshots must be regenerated
+  (`PNL_UPDATE_KERNEL_GOLDENS=1`) on any *intentional* emission change.
 - `triton_cpu` (interpret mode) is for testing/debugging, not performance; it
   runs the real kernel but pure-Python/numpy interpretation is slow, so keep
   CPU cases small.

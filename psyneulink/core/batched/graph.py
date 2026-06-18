@@ -260,6 +260,16 @@ def _node_support_diagnostic(node) -> BatchedDiagnostic | None:
         return None
 
     if specs.passthrough_spec_for(node) is not None:
+        if _integrator_mode_enabled(node):
+            # A TransferMechanism with integrator_mode=True is a stateful leaky/
+            # simple integrator, not the stateless transfer the passthrough spec
+            # assumes. Reject it rather than silently lower it as a stateless
+            # function (a stateful integrating-transfer op is a future milestone).
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported stateful transfer (integrator_mode) for batched v2",
+                "integrator_mode=True",
+            )
         if specs.function_spec_for(function) is None:
             return BatchedDiagnostic(node_name, "unsupported function for batched v2", function_type)
         combine = _combine_name(node)
@@ -519,6 +529,17 @@ def _node_param_aliases(node_name: str, param_name: str) -> tuple[str, ...]:
 
 def _unsuffixed_node_name(node_name: str) -> str:
     return re.sub(r"-\d+$", "", node_name)
+
+
+def _integrator_mode_enabled(node) -> bool:
+    parameters = getattr(node, "parameters", None)
+    param = getattr(parameters, "integrator_mode", None) if parameters is not None else None
+    if param is not None:
+        try:
+            return bool(param.get(None))
+        except Exception:
+            pass
+    return bool(getattr(getattr(node, "defaults", None), "integrator_mode", False))
 
 
 def _combine_name(node) -> str:

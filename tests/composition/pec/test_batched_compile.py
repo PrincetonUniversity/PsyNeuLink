@@ -468,6 +468,42 @@ def test_batched_compiler_rejects_unsupported_custom_function():
 
 
 @pytest.mark.composition
+def test_batched_compiler_rejects_integrator_mode_transfer():
+    mech = pnl.TransferMechanism(input_shapes=1, integrator_mode=True, name="integ")
+    comp = pnl.Composition(pathways=mech)
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert not report.is_supported
+    assert "integrator_mode" in "; ".join(report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_batched_compiler_accepts_stateless_transfer():
+    mech = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear(slope=2.0), name="plain")
+    comp = pnl.Composition(pathways=mech)
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert report.is_supported
+    assert not any("integrator_mode" in reason for reason in report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_csi_surrogate_integrator_mode_transfers_are_rejected():
+    csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
+    sys.path.insert(0, str(csi_dir))
+    from csi_model_surrogate import make_stab_flex
+
+    comp = make_stab_flex(iti=10, csi_repeat=10, csi_switch=10, threshold_collapse=-0.001)
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert not report.is_supported
+    rejected = {d.component: d.reason for d in report.rejected_nodes}
+    # The two integrator_mode=True transfers must be rejected, not silently accepted.
+    assert "integrator_mode" in rejected.get("Task Input", "")
+    assert "integrator_mode" in rejected.get("Threshold Mechanism", "")
+
+
+@pytest.mark.composition
 def test_batched_compiler_rejects_unsupported_scheduler_condition():
     mech = pnl.TransferMechanism(input_shapes=1, name="linear")
     comp = pnl.Composition(pathways=mech)
