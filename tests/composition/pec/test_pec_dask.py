@@ -558,7 +558,9 @@ def test_distributed_fit_end_to_end_and_worker_cache(ddm_data, cluster_client):
     pec.run(inputs={comp: _trial_inputs()})
 
     recovered = pec.optimized_parameter_values
-    assert set(recovered) == {f"DDM.{p}" for p in PARAM_ORDER}
+    # The mechanism may carry a dedup suffix (DDM vs DDM-1) depending on what else
+    # built a DDM in this process, so assert on the parameter names, not the prefix.
+    assert {k.split(".")[-1] for k in recovered} == set(PARAM_ORDER)
     assert all(np.isfinite(v) for v in recovered.values())
 
     # Every worker that evaluated must hold a cached PEC (built once per worker).
