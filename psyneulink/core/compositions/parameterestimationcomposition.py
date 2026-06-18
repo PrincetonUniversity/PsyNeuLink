@@ -941,7 +941,7 @@ class ParameterEstimationComposition(Composition):
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
 
-        inputs_dict = self._prepare_pec_inputs_for_simulation(inputs, context)
+        self._prepare_pec_inputs_for_simulation(inputs, context)
 
         kwargs.pop("inputs", None)
 
