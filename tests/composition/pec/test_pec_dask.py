@@ -333,6 +333,75 @@ def test_resolve_pec_factory_missing_raises():
 
 
 # ===========================================================================
+# Layer 2c: PEC-level forwarding of distributed knobs onto the optimizer
+# (construction only -- no cluster, no fit)
+# ===========================================================================
+_FIT_PARAMS_SPEC = {
+    "rate": FIT_BOUNDS["rate"],
+    "threshold": FIT_BOUNDS["threshold"],
+    "non_decision_time": FIT_BOUNDS["non_decision_time"],
+}
+
+
+def _make_pec_with(optimization_function, data, decision, comp, **pec_kwargs):
+    return pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={
+            (name, decision): np.linspace(lo, hi, 1000)
+            for name, (lo, hi) in _FIT_PARAMS_SPEC.items()
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        optimization_function=optimization_function,
+        num_estimates=NUM_ESTIMATES,
+        initial_seed=INITIAL_SEED,
+        same_seed_for_all_parameter_combinations=True,
+        **pec_kwargs,
+    )
+
+
+@pytest.mark.composition
+def test_pec_forwards_distributed_to_string_optimizer(ddm_data):
+    """distributed=True on the PEC + a string method forwards onto the created optimizer."""
+    comp, decision = _build_ddm_comp()
+    pec = _make_pec_with(
+        "differential_evolution", ddm_data, decision, comp,  # Form 2: string method
+        name="pec_fwd_string",
+        distributed=True,
+        distributed_options={"pec_factory": build_ddm_pec, "worker_cores": 1},
+    )
+    of = pec.controller.function
+    assert isinstance(of, PECOptimizationFunction)
+    assert of.method == "differential_evolution"
+    assert of.distributed is True
+    assert of._distributed_options.get("pec_factory") is build_ddm_pec
+    assert of._distributed_options.get("worker_cores") == 1
+
+
+@pytest.mark.composition
+def test_pec_passed_optimizer_distributed_is_authoritative(ddm_data):
+    """A passed optimizer that already enabled distributed keeps its own options."""
+    own_opts = {"pec_factory": build_ddm_pec, "worker_cores": 3}
+    optimizer = PECOptimizationFunction(
+        method="differential_evolution", max_iterations=1,
+        distributed=True, distributed_options=own_opts,
+    )
+    comp, decision = _build_ddm_comp()
+    pec = _make_pec_with(
+        optimizer, ddm_data, decision, comp,
+        name="pec_fwd_instance",
+        distributed=False,                          # PEC off...
+        distributed_options={"worker_cores": 99},   # ...must NOT override the instance
+    )
+    of = pec.controller.function
+    assert of.distributed is True
+    assert of._distributed_options.get("worker_cores") == 3   # its own, not 99
+
+
+# ===========================================================================
 # Layer 3: integration over a real process-based LocalCluster
 # ===========================================================================
 @pytest.fixture(scope="module")
