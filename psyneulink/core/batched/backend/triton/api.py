@@ -98,7 +98,7 @@ class TritonEmitContext:
         return "tl.zeros((BLOCK,), dtype=tl.float32)"
 
 
-_ALLOWED_TEMPLATE_GLOBALS = frozenset({"tl", "bm"})
+_ALLOWED_TEMPLATE_GLOBALS = frozenset({"tl"})
 
 
 def pnl_triton_op(
@@ -110,10 +110,8 @@ def pnl_triton_op(
     """Capture a small helper function as generated `@triton.jit` source.
 
     The decorated function body may refer to `tl` because the generated kernel
-    source imports `triton.language as tl`, or to the backend-neutral `bm`
-    namespace, which is rewritten to `tl` in the captured source. Other
-    globals and closures are rejected so the emitted helper remains
-    inspectable and self-contained.
+    source imports `triton.language as tl`. Other globals and closures are
+    rejected so the emitted helper remains inspectable and self-contained.
     """
 
     def decorate(func):
@@ -166,7 +164,6 @@ def _template_from_function(func, *, name: str | None, constexpr: tuple[str, ...
     ]
     function_def.name = name or func.__name__
     _annotate_constexpr_args(function_def, constexpr)
-    _NeutralMathRewriter().visit(module)
     ast.fix_missing_locations(module)
 
     return TritonOpTemplate(
@@ -184,15 +181,6 @@ def _single_function_def(module: ast.Module, function_name: str) -> ast.Function
             f"Triton op helper '{function_name}' must contain exactly one function definition."
         )
     return function_defs[0]
-
-
-class _NeutralMathRewriter(ast.NodeTransformer):
-    """Rewrite references to the neutral `bm` namespace to `tl`."""
-
-    def visit_Name(self, node: ast.Name) -> ast.Name:
-        if node.id == "bm":
-            return ast.copy_location(ast.Name(id="tl", ctx=node.ctx), node)
-        return node
 
 
 def _annotate_constexpr_args(function_def: ast.FunctionDef, constexpr: Sequence[str]) -> None:

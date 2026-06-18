@@ -14,7 +14,6 @@ from psyneulink.core.batched import (
     BatchedCompositionCompiler,
 )
 from psyneulink.core.batched import specs as batched_specs
-from psyneulink.core.batched.neutral_math import bm
 from psyneulink.core.batched.specs import BatchedOpSpecError
 from psyneulink.core.batched.backend.triton.api import (
     TritonOpError,
@@ -62,12 +61,14 @@ def _make_ddm_comp(noise=0.0):
     return pnl.Composition(pathways=decision), decision
 
 
-def _triton_available():
-    if importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None:
-        return False
-    import torch
-
-    return torch.cuda.is_available()
+# Numeric batched execution runs the generated kernels through Triton's CPU
+# interpreter, so it needs torch + triton importable (no CUDA required).  Pure
+# lowering / diagnostic / source-emission tests do not import triton and run
+# unconditionally.
+requires_triton = pytest.mark.skipif(
+    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
+    reason="torch + triton are required for batched CPU (interpret) execution",
+)
 
 
 @pytest.mark.composition
@@ -104,9 +105,10 @@ def test_pnl_triton_op_rejects_closures_and_globals():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_ddm_deterministic():
     comp, decision = _make_ddm_comp(noise=0.0)
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     result = plan.run(
         inputs={decision: np.array([[1.0], [-1.0]], dtype=float)},
         parameter_sets=[{"rate": 1.0, "threshold": 0.05, "time_step_size": 0.01}],
@@ -120,9 +122,10 @@ def test_batched_ir_debug_ddm_deterministic():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_ddm_common_random_numbers():
     comp, decision = _make_ddm_comp(noise=0.2)
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     params = [
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
@@ -154,6 +157,7 @@ def _make_linear_projection_comp():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_transfer_only_generic_graph():
     mech = pnl.TransferMechanism(
         input_shapes=2,
@@ -161,7 +165,7 @@ def test_batched_ir_debug_transfer_only_generic_graph():
         name="linear",
     )
     comp = pnl.Composition(pathways=mech)
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     result = plan.run(
         inputs={mech: np.array([[1.0, 2.0], [3.0, 4.0]], dtype=float)},
         parameter_sets=[{}],
@@ -183,7 +187,7 @@ def test_kernel_ir_transfer_only_structure():
         name="linear",
     )
     comp = pnl.Composition(pathways=mech)
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     kernel = lower_to_kernel_ir(plan.ir)
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
@@ -192,9 +196,10 @@ def test_kernel_ir_transfer_only_structure():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_mapping_projection_generic_graph():
     comp, source, _ = _make_linear_projection_comp()
-    result = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
+    result = BatchedCompositionCompiler.compile(comp, backend="triton_cpu").run(
         inputs={source: np.array([[2.0, 4.0]], dtype=float)},
         parameter_sets=[{}],
         num_estimates=1,
@@ -234,10 +239,11 @@ def test_registry_diagnostics_report_missing_triton_implementation(monkeypatch):
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_op_decorator_registers_custom_elementwise_function():
     @batched_specs.batched_op(pnl.Exponential)
     def exponential(x, rate, scale):
-        return scale * bm.exp(rate * x)
+        return scale * tl.exp(rate * x)  # tl: triton.language (resolved at emission)
 
     try:
         mech = pnl.TransferMechanism(
@@ -249,7 +255,7 @@ def test_batched_op_decorator_registers_custom_elementwise_function():
         report = BatchedCompositionCompiler.diagnose(comp, backend="triton")
         assert report.is_supported
 
-        plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
         result = plan.run(
             inputs={mech: np.array([[0.0, 1.0]], dtype=float)},
             parameter_sets=[{}],
@@ -296,7 +302,7 @@ def test_batched_op_specs_do_not_apply_to_subclasses():
 @pytest.mark.composition
 def test_triton_stateless_graph_source_structure():
     comp, _, _ = _make_linear_projection_comp()
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     source = triton_graph_kernel_source(lower_to_kernel_ir(plan.ir))
 
     compile(source, "<pnl batched kernel>", "exec")
@@ -309,20 +315,20 @@ def test_triton_stateless_graph_source_structure():
 @pytest.mark.composition
 def test_single_ddm_uses_generated_graph_kernel():
     comp, _ = _make_ddm_comp(noise=0.0)
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64)
 
     assert plan.ir.model_kind == "ddm"
     assert plan.ir.graph.fusion_kind == "ddm_graph"
     source = triton_graph_kernel_source(lower_to_kernel_ir(plan.ir))
     compile(source, "<pnl batched kernel>", "exec")
     assert "pnl_batched_ddm_graph_kernel" in source
-    assert "_pnl_triton_ddm_integrate" in source
+    assert "_pnl_triton_ddm" in source
 
 
 @pytest.mark.composition
 def test_kernel_ir_dense_projection_structure():
     comp, source, _ = _make_linear_projection_comp()
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     kernel = lower_to_kernel_ir(plan.ir)
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
@@ -332,6 +338,7 @@ def test_kernel_ir_dense_projection_structure():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_product_combine_generic_graph():
     left = pnl.TransferMechanism(input_shapes=2, name="left")
     right = pnl.TransferMechanism(input_shapes=2, name="right")
@@ -347,7 +354,7 @@ def test_batched_ir_debug_product_combine_generic_graph():
     comp.add_projection(sender=left, receiver=product)
     comp.add_projection(sender=right, receiver=product)
 
-    result = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
+    result = BatchedCompositionCompiler.compile(comp, backend="triton_cpu").run(
         inputs={
             left: np.array([[2.0, 3.0]], dtype=float),
             right: np.array([[4.0, 5.0]], dtype=float),
@@ -375,7 +382,7 @@ def test_kernel_ir_product_combine_structure():
     comp.add_projection(sender=left, receiver=product)
     comp.add_projection(sender=right, receiver=product)
 
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     kernel = lower_to_kernel_ir(plan.ir)
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
@@ -383,6 +390,7 @@ def test_kernel_ir_product_combine_structure():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_batched_ir_debug_ddm_behind_transfer_generic_graph():
     source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
     decision = pnl.DDM(
@@ -398,7 +406,7 @@ def test_batched_ir_debug_ddm_behind_transfer_generic_graph():
         name="DDM",
     )
     comp = pnl.Composition(pathways=[[source, decision]])
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64)
     result = plan.run(
         inputs={source: np.array([[1.0], [-1.0]], dtype=float)},
         parameter_sets=[
@@ -434,7 +442,7 @@ def test_kernel_ir_ddm_graph_structure():
         name="DDM",
     )
     comp = pnl.Composition(pathways=[[source, decision]])
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64)
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64)
     kernel = lower_to_kernel_ir(plan.ir)
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
@@ -525,13 +533,14 @@ def test_pec_can_compile_batched_diagnostic():
         initial_seed=1,
     )
 
-    report = pec.can_compile_batched(backend="ir_debug")
+    report = pec.can_compile_batched(backend="triton_cpu")
     assert report.is_supported
     assert report.model_kind == "ddm"
     assert isinstance(report.metadata["fusion_kind"], str)
 
 
 @pytest.mark.composition
+@requires_triton
 def test_stability_flexibility_ir_debug_smoke():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex
@@ -545,7 +554,7 @@ def test_stability_flexibility_ir_debug_smoke():
     )
     task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=3)
     inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
     assert plan.ir.model_kind == "graph"
     assert plan.ir.graph.fusion_kind == "stateful_graph"
     assert plan.ir.graph.metadata["schedule_kind"] == "static_graph"
@@ -569,6 +578,7 @@ def test_stability_flexibility_ir_debug_smoke():
 
 
 @pytest.mark.composition
+@requires_triton
 def test_stability_flexibility_rejects_old_model_specific_parameter_names():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex
@@ -582,7 +592,7 @@ def test_stability_flexibility_rejects_old_model_specific_parameter_names():
     )
     task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=3)
     inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug")
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
 
     with pytest.raises(ValueError, match="Unknown batched parameter"):
         plan.run(
@@ -605,7 +615,7 @@ def test_kernel_ir_stability_flexibility_stateful_structure():
         ddm_noise=0.0,
         lca_noise=0.0,
     )
-    plan = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=256)
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=256)
     kernel = lower_to_kernel_ir(plan.ir)
     op_kinds = [op.kind for op in iter_kernel_ops(kernel)]
 
@@ -619,131 +629,3 @@ def test_kernel_ir_stability_flexibility_stateful_structure():
     }
     assert mechanism_types == {"LCAMechanism", "DDM"}
     assert {stream.step_extent for stream in kernel.rng_streams} == {"LCA_MAX_STEPS", "MAX_STEPS"}
-
-
-@pytest.mark.triton
-@pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_stateless_graph_matches_ir_debug():
-    comp, source, _ = _make_linear_projection_comp()
-    inputs = {source: np.array([[2.0, 4.0], [1.0, 1.0]], dtype=float)}
-    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug").run(
-        inputs=inputs,
-        parameter_sets=[{}],
-        num_estimates=2,
-    )
-    triton = BatchedCompositionCompiler.compile(comp, backend="triton").run(
-        inputs=inputs,
-        parameter_sets=[{}],
-        num_estimates=2,
-    )
-
-    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
-
-
-@pytest.mark.triton
-@pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_ddm_matches_ir_debug_deterministic():
-    comp, decision = _make_ddm_comp(noise=0.0)
-    inputs = {decision: np.array([[1.0], [-1.0]], dtype=float)}
-    params = [{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}]
-    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64).run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=2,
-        seed=11,
-    )
-    triton = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=64).run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=2,
-        seed=11,
-    )
-
-    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
-
-
-@pytest.mark.triton
-@pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_ddm_behind_transfer_generated_graph_matches_ir_debug():
-    source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
-    decision = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(
-            starting_value=0.0,
-            rate=1.0,
-            noise=0.0,
-            threshold=0.05,
-            non_decision_time=0.0,
-            time_step_size=0.01,
-        ),
-        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-        name="DDM",
-    )
-    comp = pnl.Composition(pathways=[[source, decision]])
-    inputs = {source: np.array([[1.0], [-1.0]], dtype=float)}
-    params = [
-        {
-            "DDM.rate": 1.0,
-            "DDM.threshold": 0.05,
-            "DDM.noise": 0.0,
-            "DDM.time_step_size": 0.01,
-        }
-    ]
-
-    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=64).run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=2,
-        seed=11,
-    )
-    triton_plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=64)
-    assert triton_plan.ir.graph.fusion_kind == "ddm_graph"
-    triton = triton_plan.run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=2,
-        seed=11,
-    )
-
-    np.testing.assert_allclose(triton.values, ir_debug.values, rtol=1e-6, atol=1e-6)
-
-
-@pytest.mark.triton
-@pytest.mark.skipif(not _triton_available(), reason="Triton CUDA backend is not available")
-def test_triton_stability_flexibility_smoke():
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex
-
-    comp = make_stab_flex(
-        lca_time_step_size=0.01,
-        ddm_time_step_size=0.01,
-        threshold=0.05,
-        ddm_noise=0.0,
-        lca_noise=0.0,
-    )
-    task, stimulus, cue, correct = generate_trial_sequence(16, 0.5, seed=4)
-    inputs = make_input_dict(comp, task[:2], stimulus[:2], cue[:2], correct[:2])
-    params = [
-        {
-            "DDM.threshold": 0.05,
-            "DDM.noise": 0.0,
-            "Task Activations [Act1, Act2].noise": 0.0,
-        }
-    ]
-    ir_debug = BatchedCompositionCompiler.compile(comp, backend="ir_debug", max_steps=256).run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=1,
-        seed=4,
-    )
-    triton_plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=256)
-    assert triton_plan.ir.graph.fusion_kind == "stateful_graph"
-    result = triton_plan.run(
-        inputs=inputs,
-        parameter_sets=params,
-        num_estimates=1,
-        seed=4,
-    )
-
-    assert result.values.shape == (1, 1, 2, 1, 2)
-    assert np.all(np.isfinite(result.values))
-    np.testing.assert_allclose(result.values, ir_debug.values, rtol=1e-5, atol=1e-5)

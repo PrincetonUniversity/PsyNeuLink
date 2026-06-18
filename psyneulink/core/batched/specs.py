@@ -2,22 +2,22 @@
 
 A *batched op spec* declares, once, everything the batched compiler needs to
 lower a PsyNeuLink component: which parameters its kernel reads, which
-lane-local state it owns, which RNG streams it draws from, and the CPU
-(``ir_debug``) and Triton implementations.  Specs are registered per exact
-component class; subclasses are intentionally **not** inherited because
-PsyNeuLink subclasses routinely change semantics (for example
-``LCAMechanism`` is a ``TransferMechanism`` subclass).
+lane-local state it owns, which RNG streams it draws from, and the Triton
+kernel body (which runs compiled on GPU and interpreted on CPU — there is no
+separate numpy implementation).  Specs are registered per exact component
+class; subclasses are intentionally **not** inherited because PsyNeuLink
+subclasses routinely change semantics (for example ``LCAMechanism`` is a
+``TransferMechanism`` subclass).
 
 The primary registration surface is the :func:`batched_op` decorator, which
 introspects the decorated body's signature and binds argument names against
 the component's PNL ``Parameters`` metadata:
 
     from psyneulink.core.batched.specs import batched_op
-    from psyneulink.core.batched.neutral_math import bm
 
     @batched_op(SoftReLU)
     def soft_relu(x, gain, bias):
-        return bm.log(1.0 + bm.exp(gain * (x - bias))) / gain
+        return tl.log(1.0 + tl.exp(gain * (x - bias))) / gain  # tl: triton.language
 
 Reserved argument names carry roles instead of binding to parameters:
 
@@ -37,7 +37,7 @@ lookups - are declared explicitly through the ``bind=`` mapping with
 from __future__ import annotations
 
 import inspect
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from typing import Any, Callable, Mapping
 
 import numpy as np
@@ -51,12 +51,10 @@ class BatchedOpSpecError(ValueError):
 
 # Reserved body-argument names and the roles they bind to.
 INPUT_ARG = "x"
-CPU_RNG_ARG = "rng"
 SEED_ARG = "seed"
 RNG_BASE_ARG = "rng_base"
 MAX_STEPS_ARG = "max_steps"
 
-_CPU_RESERVED = {INPUT_ARG, CPU_RNG_ARG, MAX_STEPS_ARG}
 _TRITON_RESERVED = {INPUT_ARG, SEED_ARG, RNG_BASE_ARG, MAX_STEPS_ARG}
 
 
@@ -64,7 +62,7 @@ _TRITON_RESERVED = {INPUT_ARG, SEED_ARG, RNG_BASE_ARG, MAX_STEPS_ARG}
 class ArgBinding:
     """How one body argument is supplied at execution/emission time."""
 
-    role: str  # "input" | "param" | "state" | "rng" | "seed" | "rng_base" | "max_steps"
+    role: str  # "input" | "param" | "seed" | "rng_base" | "max_steps"
     name: str = ""
 
 
@@ -161,9 +159,9 @@ class OutputDecl:
 class ElementwiseFunctionSpec:
     """A stateless elementwise PNL ``Function`` (for example ``Linear``).
 
-    ``body`` is the neutral implementation ``body(x, *params)``: executed
-    directly with numpy by ``ir_debug`` and captured as Triton source (with
-    ``bm`` rewritten to ``tl``) for the GPU backend.
+    ``body`` is the kernel body ``body(x, *params)``, written against
+    ``triton.language`` (``tl``), captured as Triton source and run compiled on
+    GPU / interpreted on CPU.
     """
 
     function_class: type
@@ -198,9 +196,11 @@ class DenseProjectionSpec:
 class MechanismOpSpec:
     """A mechanism with its own kernel body (integrators, accumulators, ...).
 
-    Declarative specs supply ``cpu_body``/``triton_template`` with matching
-    argument bindings.  Specs whose semantics the declarative form cannot
-    express yet use the ``cpu_execute``/``triton_emit`` escape hatches.
+    The op has a single implementation: the Triton kernel body, supplied either
+    declaratively as ``triton_template`` (auto-bound from its signature) or via
+    the ``triton_emit`` escape hatch for irregular emission.  That kernel runs
+    compiled on the GPU and interpreted on the CPU, so there is no separate CPU
+    body to maintain.
     """
 
     mechanism_class: type
@@ -210,13 +210,10 @@ class MechanismOpSpec:
     states: tuple[StateDecl, ...] = ()
     rng: tuple[RngDecl, ...] = ()
     outputs: tuple[OutputDecl, ...] | None = None
-    cpu_body: Callable | None = None
-    cpu_bindings: tuple[ArgBinding, ...] = ()
     triton_template: TritonOpTemplate | None = None
     triton_bindings: tuple[ArgBinding, ...] = ()
     supports: Callable | None = None
     extract_attrs: Callable | None = None
-    cpu_execute: Callable | None = None
     triton_emit: Callable | None = None
     single_node_model_kind: str | None = None
     param_alias_prefixes: tuple[str, ...] = ()
@@ -310,42 +307,45 @@ def batched_op(
     component_class: type,
     *,
     function: type | None = None,
-    triton=None,
     outputs=None,
     bind: Mapping[str, ParamBinding] | None = None,
+    constexpr: tuple[str, ...] = (),
     display_name: str | None = None,
     single_node_model_kind: str | None = None,
     param_alias_prefixes: tuple[str, ...] = (),
 ):
-    """Register a batched op for ``component_class`` from a decorated body.
+    """Register a batched op for ``component_class`` from its kernel body.
 
-    The decorated function's signature is introspected: reserved names
-    (``x``, ``rng``, ``seed``, ``rng_base``, ``max_steps``) bind to execution
-    roles, and every other argument must resolve to a ``Parameter`` on the
-    component class.  For mechanism ops, ``function`` names the required
-    function class and is searched first; when a name exists on both the
-    function and the mechanism, the function parameter wins.
+    The decorated function is the op's single kernel body — written against
+    ``triton.language`` (``tl``), captured as inspectable Triton source, and run
+    compiled on the GPU and interpreted on the CPU.  Its
+    signature is introspected: reserved names (``x``, ``seed``, ``rng_base``,
+    ``max_steps``) bind to execution roles, and every other argument must
+    resolve to a ``Parameter`` on the component.  For mechanism ops,
+    ``function`` names the required function class and is searched first; when a
+    name exists on both the function and the mechanism, the function parameter
+    wins.
 
-    For PNL ``Function`` subclasses the body is the single neutral
-    implementation used by both backends.  For ``Mechanism`` subclasses the
-    body is the CPU implementation and ``triton`` supplies the matching
-    ``@pnl_triton_op`` template (a CPU ``rng`` argument corresponds to the
-    Triton ``seed, rng_base`` pair).
+    Stateful mechanisms (lane-local state, custom RNG/termination) that the
+    declarative form cannot express register a :class:`MechanismOpSpec` with a
+    ``triton_emit`` callable directly via :func:`register_batched_op`.
     """
 
     def decorate(body):
         if not inspect.isfunction(body):
             raise BatchedOpSpecError("@batched_op can only decorate Python functions.")
         if _is_pnl_function_class(component_class):
+            if constexpr:
+                raise BatchedOpSpecError("Elementwise batched ops do not take constexpr arguments.")
             _register_function_op(component_class, body, bind or {})
         else:
             _register_mechanism_op(
                 component_class,
                 body,
                 function_class=function,
-                triton_template=triton,
                 outputs=outputs,
                 bind=bind or {},
+                constexpr=tuple(constexpr),
                 display_name=display_name,
                 single_node_model_kind=single_node_model_kind,
                 param_alias_prefixes=param_alias_prefixes,
@@ -362,7 +362,7 @@ def _register_function_op(function_class, body, bind):
             f"Elementwise batched op for '{function_class.__name__}' must take "
             f"'{INPUT_ARG}' as its first argument."
         )
-    reserved = [name for name in arg_names[1:] if name in (_CPU_RESERVED | _TRITON_RESERVED)]
+    reserved = [name for name in arg_names[1:] if name in _TRITON_RESERVED]
     if reserved:
         raise BatchedOpSpecError(
             f"Elementwise batched op for '{function_class.__name__}' supports only "
@@ -388,44 +388,24 @@ def _register_function_op(function_class, body, bind):
 
 def _register_mechanism_op(
     mechanism_class,
-    cpu_body,
+    body,
     *,
     function_class,
-    triton_template,
     outputs,
     bind,
+    constexpr,
     display_name,
     single_node_model_kind,
     param_alias_prefixes,
 ):
-    if triton_template is not None and not isinstance(triton_template, TritonOpTemplate):
-        raise BatchedOpSpecError(
-            f"Batched op for '{mechanism_class.__name__}': triton= must be a "
-            "@pnl_triton_op template."
-        )
-
-    cpu_args = _signature_args(cpu_body)
-    cpu_bindings, params = _bind_mechanism_args(
-        cpu_args, mechanism_class, function_class, bind, backend="cpu"
+    template = pnl_triton_op(
+        name=f"_pnl_triton_{mechanism_class.__name__.lower()}",
+        constexpr=constexpr,
+    )(body)
+    triton_bindings, params = _bind_mechanism_args(
+        template.arg_names, mechanism_class, function_class, bind
     )
-
-    triton_bindings: tuple[ArgBinding, ...] = ()
-    if triton_template is not None:
-        triton_bindings, triton_params = _bind_mechanism_args(
-            triton_template.arg_names, mechanism_class, function_class, bind, backend="triton"
-        )
-        cpu_param_names = tuple(binding.arg for binding in params)
-        triton_param_names = tuple(binding.arg for binding in triton_params)
-        if _expand_rng(cpu_bindings) != triton_bindings:
-            raise BatchedOpSpecError(
-                f"Batched op for '{mechanism_class.__name__}': CPU body arguments "
-                f"{cpu_args} do not match Triton template arguments "
-                f"{triton_template.arg_names} (a CPU 'rng' argument corresponds to "
-                "the Triton 'seed, rng_base' pair)."
-            )
-        assert cpu_param_names == triton_param_names
-
-    uses_rng = any(binding.role in {"rng", "seed"} for binding in cpu_bindings + triton_bindings)
+    uses_rng = any(binding.role == "seed" for binding in triton_bindings)
     rng = (RngDecl(name="rng", step_extent="MAX_STEPS", width=1),) if uses_rng else ()
 
     register_batched_op(
@@ -436,9 +416,7 @@ def _register_mechanism_op(
             params=params,
             rng=rng,
             outputs=_normalize_outputs(outputs),
-            cpu_body=cpu_body,
-            cpu_bindings=cpu_bindings,
-            triton_template=triton_template,
+            triton_template=template,
             triton_bindings=triton_bindings,
             single_node_model_kind=single_node_model_kind,
             param_alias_prefixes=tuple(param_alias_prefixes),
@@ -446,8 +424,7 @@ def _register_mechanism_op(
     )
 
 
-def _bind_mechanism_args(arg_names, mechanism_class, function_class, bind, *, backend):
-    reserved = _CPU_RESERVED if backend == "cpu" else _TRITON_RESERVED
+def _bind_mechanism_args(arg_names, mechanism_class, function_class, bind):
     bindings: list[ArgBinding] = []
     params: list[ParamBinding] = []
     for name in arg_names:
@@ -455,35 +432,20 @@ def _bind_mechanism_args(arg_names, mechanism_class, function_class, bind, *, ba
             bindings.append(ArgBinding(role="input"))
         elif name == MAX_STEPS_ARG:
             bindings.append(ArgBinding(role="max_steps"))
-        elif name == CPU_RNG_ARG and backend == "cpu":
-            bindings.append(ArgBinding(role="rng"))
-        elif name == SEED_ARG and backend == "triton":
+        elif name == SEED_ARG:
             bindings.append(ArgBinding(role="seed"))
-        elif name == RNG_BASE_ARG and backend == "triton":
+        elif name == RNG_BASE_ARG:
             bindings.append(ArgBinding(role="rng_base"))
-        elif name in reserved or name in (_CPU_RESERVED | _TRITON_RESERVED):
+        elif name in _TRITON_RESERVED:
             raise BatchedOpSpecError(
                 f"Batched op for '{mechanism_class.__name__}': reserved argument "
-                f"'{name}' is not valid in a {backend} body."
+                f"'{name}' is not valid here."
             )
         else:
             binding = _bind_parameter_arg(name, function_class, mechanism_class, bind, scope=None)
             bindings.append(ArgBinding(role="param", name=name))
             params.append(binding)
     return tuple(bindings), tuple(params)
-
-
-def _expand_rng(bindings: tuple[ArgBinding, ...]) -> tuple[ArgBinding, ...]:
-    """CPU bindings with `rng` expanded to the Triton (seed, rng_base) pair."""
-
-    expanded: list[ArgBinding] = []
-    for binding in bindings:
-        if binding.role == "rng":
-            expanded.append(ArgBinding(role="seed"))
-            expanded.append(ArgBinding(role="rng_base"))
-        else:
-            expanded.append(binding)
-    return tuple(expanded)
 
 
 def _bind_parameter_arg(name, function_class, mechanism_class, bind, *, scope):

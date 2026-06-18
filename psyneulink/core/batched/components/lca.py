@@ -3,8 +3,10 @@
 This is a narrow, performance-oriented lowering for width-2 LCA-like
 stateful graphs, not a full implementation of PsyNeuLink ``LCAMechanism``
 semantics (see BATCH_COMPILE_WIP.md, "LCA Caveats").  Because its state, RNG,
-and termination handling are still custom, it uses the ``cpu_execute`` /
-``triton_emit`` escape hatches instead of the declarative body form.
+and termination handling are still custom, it uses the ``triton_emit`` escape
+hatch instead of the declarative body form.  The single kernel body runs
+compiled on the GPU and interpreted on the CPU; there is no separate numpy
+implementation.
 """
 
 import numpy as np
@@ -85,45 +87,6 @@ def _lca_extract_attrs(node, composition) -> dict:
     }
 
 
-def _lca_cpu_execute(
-    node,
-    input_value,
-    raw_inputs,
-    state,
-    params,
-    subject_idx,
-    trial_idx,
-    rng,
-    max_steps,
-):
-    termination_input_node = node.attrs.get("termination_input_node")
-    if termination_input_node is not None and termination_input_node in raw_inputs:
-        cue = float(
-            np.asarray(raw_inputs[termination_input_node][subject_idx, trial_idx]).reshape(-1)[0]
-        )
-    else:
-        cue = float(node.attrs.get("termination_threshold", 1.0))
-    pre_key = f"{node.name}.pre"
-    act_key = f"{node.name}.act"
-    pre, act = _simulate_lca_cue_period(
-        task=input_value,
-        pre_activity=state[pre_key],
-        activity=state[act_key],
-        cue=cue,
-        gain=params["gain"],
-        leak=params["leak"],
-        competition=params["competition"],
-        self_excitation=params["self_excitation"],
-        noise=params["noise"],
-        time_step_size=params["time_step_size"],
-        max_steps=max(int(np.ceil(cue)), 1),
-        rng=rng,
-    )
-    state[pre_key] = pre
-    state[act_key] = act
-    return {_primary_output_port(node): act.astype(np.float32)}
-
-
 def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     if node_spec.output_width != 2:
         raise ValueError(
@@ -179,40 +142,6 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     return (act0, act1)
 
 
-def _simulate_lca_cue_period(
-    *,
-    task: np.ndarray,
-    pre_activity: np.ndarray,
-    activity: np.ndarray,
-    cue: float,
-    gain: float,
-    leak: float,
-    competition: float,
-    self_excitation: float,
-    noise: float,
-    time_step_size: float,
-    max_steps: int,
-    rng: np.random.Generator,
-) -> tuple[np.ndarray, np.ndarray]:
-    steps = min(max(int(np.ceil(cue)), 0), max_steps)
-    sqrt_dt = np.sqrt(time_step_size)
-    pre = np.array(pre_activity, dtype=float, copy=True)
-    act = np.array(activity, dtype=float, copy=True)
-    for _ in range(steps):
-        recurrent = np.array(
-            [
-                self_excitation * act[0] - competition * act[1],
-                -competition * act[0] + self_excitation * act[1],
-            ]
-        )
-        update = (task + recurrent - leak * pre) * time_step_size
-        if noise:
-            update = update + noise * sqrt_dt * rng.normal(size=2)
-        pre = pre + update
-        act = 1.0 / (1.0 + np.exp(-gain * pre))
-    return pre, act
-
-
 def _control_monitor_source_for(composition, controlled_node):
     deps = getattr(composition.graph_processing, "dependency_dict", {}).get(controlled_node, [])
     for dependency in deps:
@@ -234,13 +163,6 @@ def _primary_output_width(node) -> int:
         return int(np.asarray(output_ports[0].value).reshape(-1).size)
     except Exception:
         return 1
-
-
-def _primary_output_port(node_spec) -> str:
-    output_ports = tuple(node_spec.attrs.get("output_ports", ()))
-    if output_ports:
-        return output_ports[0]
-    return "RESULT"
 
 
 def _safe_ident(name: str) -> str:
@@ -281,7 +203,6 @@ register_batched_op(
         outputs=None,
         supports=_lca_supports,
         extract_attrs=_lca_extract_attrs,
-        cpu_execute=_lca_cpu_execute,
         triton_emit=_lca_triton_emit,
     )
 )

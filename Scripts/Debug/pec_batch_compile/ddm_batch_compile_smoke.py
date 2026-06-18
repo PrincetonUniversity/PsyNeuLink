@@ -4,6 +4,17 @@ import psyneulink as pnl
 from psyneulink.core.batched import BatchedCompositionCompiler
 
 
+def _default_backend():
+    # triton_cpu (interpret) and triton (compiled GPU) cannot coexist in one
+    # process, so pick one by CUDA availability.
+    try:
+        import torch
+
+        return "triton" if torch.cuda.is_available() else "triton_cpu"
+    except ImportError:
+        return "triton_cpu"
+
+
 decision = pnl.DDM(
     function=pnl.DriftDiffusionIntegrator(
         starting_value=0.0,
@@ -20,7 +31,7 @@ comp = pnl.Composition(pathways=decision)
 inputs = {decision: np.array([[1.0], [-1.0]], dtype=float)}
 params = [{"rate": 1.0, "threshold": 0.05, "noise": 0.0, "time_step_size": 0.01}]
 
-for backend in ("ir_debug", "triton"):
+for backend in (_default_backend(),):
     report = BatchedCompositionCompiler.diagnose(comp, backend=backend)
     print(f"{backend} supported={report.is_supported} available={report.backend_available}")
     if not report.is_supported or not report.backend_available:
@@ -29,7 +40,7 @@ for backend in ("ir_debug", "triton"):
         result = BatchedCompositionCompiler.compile(
             comp,
             backend=backend,
-            max_steps=64 if backend == "triton" else None,
+            max_steps=64,
         ).run(
             inputs=inputs,
             parameter_sets=params,

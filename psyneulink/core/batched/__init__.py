@@ -5,7 +5,6 @@ from psyneulink.core.batched.compiler import (
     BatchedCompositionCompiler,
     BatchedSimulationPlan,
 )
-from psyneulink.core.batched.neutral_math import bm
 from psyneulink.core.batched.specs import (
     BatchedOpSpecError,
     DenseProjectionSpec,
@@ -65,7 +64,6 @@ __all__ = [
     "RngDecl",
     "StateDecl",
     "batched_op",
-    "bm",
     "param",
     "register_batched_op",
 ]

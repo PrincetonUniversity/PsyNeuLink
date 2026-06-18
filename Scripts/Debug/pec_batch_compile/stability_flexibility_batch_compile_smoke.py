@@ -12,6 +12,17 @@ sys.path.insert(0, str(HELPER_DIR))
 from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex  # noqa: E402
 
 
+def _default_backend():
+    # triton_cpu (interpret) and triton (compiled GPU) cannot coexist in one
+    # process, so pick one by CUDA availability.
+    try:
+        import torch
+
+        return "triton" if torch.cuda.is_available() else "triton_cpu"
+    except ImportError:
+        return "triton_cpu"
+
+
 comp = make_stab_flex(
     lca_time_step_size=0.01,
     ddm_time_step_size=0.01,
@@ -29,7 +40,7 @@ params = [
     }
 ]
 
-for backend in ("ir_debug", "triton"):
+for backend in (_default_backend(),):
     report = BatchedCompositionCompiler.diagnose(comp, backend=backend)
     print(f"{backend} supported={report.is_supported} available={report.backend_available}")
     if not report.is_supported or not report.backend_available:
@@ -39,7 +50,7 @@ for backend in ("ir_debug", "triton"):
         result = BatchedCompositionCompiler.compile(
             comp,
             backend=backend,
-            max_steps=256 if backend == "triton" else None,
+            max_steps=256,
         ).run(
             inputs=inputs,
             parameter_sets=params,

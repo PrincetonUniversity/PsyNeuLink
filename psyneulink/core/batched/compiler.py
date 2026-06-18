@@ -7,7 +7,6 @@ from psyneulink.core.batched.bindings import (
     BatchedComponentBindings,
 )
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport
-from psyneulink.core.batched.ir_debug import run_ir_debug
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
 from psyneulink.core.batched.registry import analyze_composition
 
@@ -16,12 +15,16 @@ class BatchedCompileError(RuntimeError):
     pass
 
 
-_SUPPORTED_BACKENDS = {"ir_debug", "triton"}
+# "triton_cpu" runs the generated kernels through Triton's interpreter on CPU (no
+# CUDA needed); "triton" compiles and runs them on the GPU.  Both execute the same
+# kernel source, so the CPU path is a true stand-in for the GPU path in testing.
+_BACKEND_DEVICES = {"triton_cpu": "cpu", "triton": "cuda"}
+_SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 
 class BatchedCompositionCompiler:
     @staticmethod
-    def diagnose(composition, backend: str = "ir_debug", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
+    def diagnose(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
         _validate_backend(backend)
         report, _, _ = analyze_composition(
             composition,
@@ -32,7 +35,7 @@ class BatchedCompositionCompiler:
         return report
 
     @staticmethod
-    def compile(composition, backend: str = "ir_debug", outputs=None, max_steps: int | None = None) -> "BatchedSimulationPlan":
+    def compile(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> "BatchedSimulationPlan":
         _validate_backend(backend)
         report, ir, bindings = analyze_composition(
             composition,
@@ -70,31 +73,23 @@ class BatchedSimulationPlan:
         seed=None,
         common_random_numbers: bool = True,
     ) -> BatchedSimulationResult:
-        if self.backend == "ir_debug":
-            return run_ir_debug(
-                self.ir,
-                inputs,
-                parameter_sets,
-                num_estimates,
-                subject_slices=subject_slices,
-                seed=seed,
-                common_random_numbers=common_random_numbers,
+        try:
+            device = _BACKEND_DEVICES[self.backend]
+        except KeyError:
+            raise BatchedCompileError(f"Unknown batched backend '{self.backend}'.")
+
+        from psyneulink.core.batched.backend.triton import run_triton
+
+        return run_triton(
+            self.ir,
+            inputs,
+            parameter_sets,
+            num_estimates,
+            subject_slices=subject_slices,
+            seed=seed,
+            common_random_numbers=common_random_numbers,
+            device=device,
         )
-
-        if self.backend == "triton":
-            from psyneulink.core.batched.backend.triton import run_triton
-
-            return run_triton(
-                self.ir,
-                inputs,
-                parameter_sets,
-                num_estimates,
-                subject_slices=subject_slices,
-                seed=seed,
-                common_random_numbers=common_random_numbers,
-            )
-
-        raise BatchedCompileError(f"Unknown batched backend '{self.backend}'.")
 
 
 def _validate_backend(backend: str) -> None:

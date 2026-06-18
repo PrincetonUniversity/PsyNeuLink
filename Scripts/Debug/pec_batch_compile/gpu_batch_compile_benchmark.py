@@ -443,9 +443,9 @@ def _run_ddm_graph(args):
                 if not report.is_supported or not report.backend_available:
                     print(f"ddm_graph,{backend},SKIP,{'; '.join(report.unsupported_reasons)}")
                     continue
-                if backend == "triton" and report.metadata.get("fusion_kind") != "ddm_graph":
+                if backend in ("triton", "triton_cpu") and report.metadata.get("fusion_kind") != "ddm_graph":
                     print(
-                        "ddm_graph,triton,SKIP,"
+                        f"ddm_graph,{backend},SKIP,"
                         f"expected fusion_kind ddm_graph, got {report.metadata.get('fusion_kind')}"
                     )
                     continue
@@ -511,9 +511,13 @@ def _parse_args():
     parser.add_argument(
         "--backend",
         action="append",
-        choices=("ir_debug", "triton", "llvm", "ptx"),
+        choices=("triton_cpu", "triton", "llvm", "ptx"),
         dest="backends",
-        help="'llvm' and 'ptx' run current PEC grid_evaluate; 'triton' runs the batched simulator.",
+        help=(
+            "'llvm' and 'ptx' run current PEC grid_evaluate; 'triton' runs the batched "
+            "simulator on GPU; 'triton_cpu' runs the same kernels via Triton interpret "
+            "mode on CPU. 'triton' and 'triton_cpu' cannot be combined in one run."
+        ),
     )
     parser.add_argument("--ddm-case", action="append", type=_case, dest="ddm_cases")
     parser.add_argument("--ddm-graph-case", action="append", type=_case, dest="ddm_graph_cases")

@@ -37,18 +37,42 @@ The public experimental API is in `psyneulink.core.batched`.
 ```python
 from psyneulink.core.batched import BatchedCompositionCompiler
 
-report = BatchedCompositionCompiler.diagnose(comp, backend="ir_debug")
+report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
 plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=256)
 result = plan.run(inputs, parameter_sets, num_estimates, seed=11)
 ```
 
-Supported backends:
+Supported backends (both run the *same* generated Triton kernels):
 
-- `ir_debug`: CPU debug executor. This is the default.
-- `triton`: CUDA/Triton executor.
+- `triton_cpu`: runs the kernels through Triton's interpreter on CPU (no CUDA).
+  This is the default and the CPU test/debug path. It is slow (pure-Python /
+  numpy interpretation), so keep cases small.
+- `triton`: compiles and runs the kernels on a CUDA GPU.
 
-The old prototype backend name `reference` is intentionally rejected. It is not
-an alias for `ir_debug`.
+There is no separate numpy CPU executor (`ir_debug` was removed): the CPU and
+GPU paths execute the identical kernel source, including identical `tl.randn`
+Philox draws.
+
+The old prototype backend names `reference` and `ir_debug` are intentionally
+rejected.
+
+**Mode constraint:** Triton bakes interpret-vs-compiled when its library
+`@triton.jit` functions (e.g. `tl.randn`) are first imported, so `triton_cpu`
+(interpret) and `triton` (compiled GPU) cannot be used in the **same process**.
+`triton_cpu` sets `TRITON_INTERPRET=1` before importing triton; a clear error is
+raised if a process tries to mix the two. Validate CPU and GPU in separate
+processes.
+
+### Reference / testing model
+
+PsyNeuLink itself is the correctness oracle, not a hand-written twin:
+
+- Unit tests (`tests/composition/pec/test_batched_reference.py`) compare the
+  batched backend against real PNL **Python-mode** execution — deterministic
+  (noise=0) cases exactly, stochastic cases by summary statistics.
+- PEC-scale / GPU-compiled validation lives in
+  `pec_grid_correctness_check.py`, which uses PNL **LLVM** grid evaluation as
+  the reference (separate process from interpret-mode tests).
 
 `ParameterEstimationComposition.can_compile_batched(..., backend="triton")` is
 diagnostic-only. It calls `BatchedCompositionCompiler.diagnose()` on the model
@@ -70,19 +94,25 @@ The important commits on this branch are:
   `backend/triton`.
 - `640c690a55` - component-owned Triton hooks with `@pnl_triton_op`.
 - `4fd3be6718` - remove stability-flexibility-specific compiler/runtime paths.
-- (Milestone A) - declarative batched op specs: replace the `_gen_triton_*`
+- `653a57cbf9` - declarative batched op specs: replace the `_gen_triton_*`
   monkeypatched hooks with a class-keyed spec registry and the
   `@batched_op` auto-binding decorator; retire the monolithic DDM kernel.
+- `960d3aba6d` - CPU interpret execution + PsyNeuLink oracle (see below).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
 graph.
 
-After Milestone A, components are registered through
+After `653a57cbf9`, components are registered through
 `psyneulink.core.batched.specs` instead of installing private methods on
 component classes, and single-DDM models execute through the generated
 `ddm_graph` kernel (the hand-written monolithic DDM kernel is gone; the
 generated kernel was benchmarked checksum-identical and faster).
+
+After `960d3aba6d`, there is one implementation per op (the Triton kernel body),
+run compiled on GPU (`triton`) and interpreted on CPU (`triton_cpu`). The numpy
+CPU executor (`ir_debug`) and the per-op numpy CPU bodies (`cpu_body` /
+`cpu_execute`) were removed; PsyNeuLink itself is the correctness oracle.
 
 ## Code Map
 
@@ -92,7 +122,9 @@ generated kernel was benchmarked checksum-identical and faster).
   - Public compiler facade.
   - Defines `BatchedCompositionCompiler`, `BatchedSimulationPlan`, and
     `BatchedCompileError`.
-  - Dispatches plan execution to `ir_debug` or `backend.triton.run_triton`.
+  - Dispatches plan execution to `backend.triton.run_triton`, choosing
+    `device="cpu"` (interpret) for `triton_cpu` or `device="cuda"` (compiled)
+    for `triton`.
 
 - `psyneulink/core/batched/diagnostics.py`
   - Capability report and diagnostic dataclasses.
@@ -114,23 +146,26 @@ generated kernel was benchmarked checksum-identical and faster).
 
 - `psyneulink/core/batched/specs.py`
   - Declarative batched op specs and the researcher-facing registration API.
-  - `@batched_op(ComponentClass)` introspects the decorated body's signature
-    and auto-binds argument names against PNL `Parameters` metadata.
-    Reserved names: `x`, `rng` (CPU), `seed`/`rng_base` (Triton),
-    `max_steps`.  Irregular bindings use `bind={...}` with `specs.param(...)`.
-  - Spec kinds: `ElementwiseFunctionSpec` (one neutral body for both
-    backends), `MechanismOpSpec` (declared params/state/RNG/outputs with
-    matched CPU and Triton bodies, plus `cpu_execute`/`triton_emit` escape
-    hatches), `PassthroughMechanismSpec`, `DenseProjectionSpec`.
+  - `@batched_op(ComponentClass)` introspects the decorated kernel body's
+    signature and auto-binds argument names against PNL `Parameters` metadata.
+    Reserved names: `x`, `seed`/`rng_base`, `max_steps`.  Irregular bindings
+    use `bind={...}` with `specs.param(...)`.  The decorated body is the single
+    kernel body (written against `triton.language`, `tl.*`), captured as Triton
+    source.
+  - Spec kinds: `ElementwiseFunctionSpec` (one kernel body), `MechanismOpSpec`
+    (declared params/state/RNG/outputs with a Triton kernel body, plus a
+    `triton_emit` escape hatch for irregular emission), `PassthroughMechanismSpec`,
+    `DenseProjectionSpec`.  There are no CPU bodies — the same Triton kernel
+    runs on CPU via interpret mode.
   - Registry is keyed by **exact** component class; subclasses are not
     inherited (PNL subclasses change semantics, e.g.
     LCA < RecurrentTransfer < Transfer).
   - IRs reference specs only by string `spec_key`, so `BatchedGraphIR` and
     `KernelIR` stay serializable and backend-neutral.
 
-- `psyneulink/core/batched/neutral_math.py`
-  - The backend-neutral `bm` namespace for elementwise bodies. Executed as
-    numpy in `ir_debug`; AST-rewritten `bm` -> `tl` for Triton source.
+- `psyneulink/core/batched/prep.py`
+  - Backend-neutral input/parameter normalization (`normalize_parameter_sets`,
+    `prepare_inputs`, `lca_max_steps`, ...) shared by the CPU and GPU runtimes.
 
 - `psyneulink/core/batched/components/`
   - Built-in batched op definitions, one module per component:
@@ -152,17 +187,10 @@ generated kernel was benchmarked checksum-identical and faster).
   - The intent is that a future MLIR backend starts here, not from generated
     Triton source.
 
-- `psyneulink/core/batched/ir_debug.py`
-  - CPU debug executor for the same lowered semantics.
-  - Also owns common input and parameter normalization helpers used by Triton.
-  - This is not a performance backend; it is for debugging and deterministic
-    parity against generated kernels.
-
 - `psyneulink/core/batched/bindings.py`
   - Sidecar live-object map from graph specs back to the actual PsyNeuLink
     components.
-  - Keeps live Python objects out of `BatchedGraphIR` and `KernelIR`, while
-    letting the Triton backend call component-owned hooks.
+  - Keeps live Python objects out of `BatchedGraphIR` and `KernelIR`.
 
 - `psyneulink/core/batched/registry.py`
   - Ties lowering, backend availability, and capability reporting together.
@@ -177,12 +205,19 @@ psyneulink/core/batched/backend/triton/
 ```
 
 - `runtime.py`
-  - Imports Torch/Triton lazily.
-  - Checks CUDA availability.
-  - Prepares Torch buffers.
+  - Imports Torch/Triton lazily.  `device="cpu"` enables interpret mode (sets
+    `TRITON_INTERPRET=1` before importing triton) and runs on CPU tensors;
+    `device="cuda"` requires a GPU.  Guards against mixing interpret and
+    compiled modes in one process.
+  - Prepares Torch buffers (via `prep.py`).
   - Dispatches to stateless graph, DDM graph, or stateful graph kernels.
   - The monolithic DDM and stability-flexibility kernel paths have been
     removed; everything goes through the generated graph kernels.
+
+- `cache.py`
+  - Writes generated source to an importable module, tagged by interpret vs
+    compiled mode so both can coexist in `sys.modules`.  `interpret_scope`
+    holds `knobs.runtime.interpret` across import and launch.
 
 - `graph_emit.py`
   - Emits inspectable Triton Python source from `KernelIR`.
@@ -191,15 +226,15 @@ psyneulink/core/batched/backend/triton/
     elementwise/mechanism calls plus `triton_emit` escape hatches resolved
     through `spec_key`).
   - This file is still more complex than ideal and is a major future refactor
-    target (Milestone D: split into an `emit/` package).
+    target (roadmap step 3: split into an `emit/` package).
 
 - `api.py`
   - Defines `@pnl_triton_op`, `TritonOpTemplate`, `TritonOpCall`,
     `TritonEmitContext`, and `TritonOpError`.
   - `@pnl_triton_op` captures inspectable Python source and emits it as a
     `@triton.jit` helper without importing Triton at PsyNeuLink import time.
-  - Helpers may reference `tl` or the neutral `bm` namespace (rewritten to
-    `tl` in the captured source); other globals/closures are rejected.
+  - Helpers may reference `tl` (`triton.language`); other globals/closures are
+    rejected.
   - `backend/triton/__init__.py` imports `runtime` lazily so importing the
     spec/registration API does not create an import cycle.
 
@@ -246,6 +281,47 @@ Recognized but not executable yet:
 
 Unsupported scheduler conditions should return diagnostics. Do not silently
 fall back to Python or LLVM inside this stack.
+
+## Capability Gaps — Real Research Models
+
+The stability-flexibility model in the test suite is a *toy*. The model a
+researcher actually runs is the **CSI surrogate** stability-flexibility model in
+`csi_model_surrogate.py` (fit at PEC scale by `csi_fit_parameter_recovery.py`:
+128 trials x 10k estimates, CMA-ES over 5 parameters). It is the north-star
+target for "supporting researchers' models," and the roadmap in "Good Next
+Steps" is scoped to close the gap to it.
+
+`BatchedCompositionCompiler.diagnose()` currently **rejects** it. Explicit
+rejections: the `driftRate` `UserDefinedFunction`, and `AtPass` scheduler
+conditions on five nodes. Two nodes are **silently mis-handled** (not rejected):
+`taskInput` and `thresholdMechanism` are `TransferMechanism`s with
+`integrator_mode=True`, which the support check ignores — they would be lowered
+as stateless `Linear`.
+
+Gaps (each maps to a milestone in "Good Next Steps"):
+
+1. **Custom / UDF elementwise op** (`driftRate`, a nested-logistic over a
+   7-vector). Elementwise and expressible in `tl`, but UDFs share one class so
+   the class-keyed registry cannot bind it -> needs **instance-level / UDF op
+   registration**.
+2. **Stateful integrating `TransferMechanism`** (`integrator_mode=True` with
+   `reset_stateful_function_when=AtTrialStart`) -> needs a **stateful
+   integrating-transfer op** (lane state + per-trial reset). *Near-term:* reject
+   `integrator_mode=True` instead of silently mis-running it.
+3. **`AtPass` / `WhenFinished` multi-pass timing** (the CSI/ITI mechanism) ->
+   needs **scheduler-pattern recognition** mapping the idiom to the existing
+   cue-driven stateful graph (broader than `EveryNCalls` precomputed traces).
+4. **Collapsing DDM threshold** (`threshold_collapse` + a control mechanism
+   rewriting the DDM `threshold` each step) -> needs a **time-varying DDM
+   boundary** in the kernel.
+5. **Control mechanisms with transform functions** (`csiOverride`/
+   `thresholdOverride` apply a `Linear` then OVERRIDE a target param) -> needs
+   **general control-mechanism routing** (apply function; route to arbitrary
+   target parameter).
+
+None are fundamentally incompatible with the batched architecture — the
+cue-driven LCA and stateful-graph lane model already point the right way — but
+together they are a multi-milestone effort.
 
 ## Fusion and Lane Layout
 
@@ -407,9 +483,13 @@ Benchmark scripts should compare Triton against the current PEC
 Focused checks used during this work:
 
 ```bash
-.venv/bin/python -m compileall -q psyneulink/core/batched tests/composition/pec/test_batched_compile.py Scripts/Debug/pec_batch_compile
-.venv/bin/python -m pytest tests/composition/pec/test_batched_compile.py -q -n 0
+.venv/bin/python -m compileall -q psyneulink/core/batched tests/composition/pec Scripts/Debug/pec_batch_compile
+.venv/bin/python -m pytest tests/composition/pec/test_batched_compile.py tests/composition/pec/test_batched_reference.py -q -n 0
 ```
+
+Numeric tests run the real kernels on CPU through Triton interpret mode and so
+require `torch`+`triton` importable (no CUDA); they skip otherwise. They cannot
+share a process with compiled GPU runs.
 
 Correctness scripts:
 
@@ -429,7 +509,7 @@ Adjust case sizes based on available GPU memory and runtime. The benchmark
 script supports:
 
 ```bash
---backend ir_debug
+--backend triton_cpu
 --backend triton
 --backend llvm
 --backend ptx
@@ -438,76 +518,103 @@ script supports:
 --sf-case PARAMSxTRIALSxESTIMATES
 ```
 
-## Good Next Steps
+(`triton` and `triton_cpu` cannot be combined in one invocation.)
 
-1. DONE (Milestone A): declarative batched op specs.
+## Milestone Roadmap
 
-   `psyneulink.core.batched.specs` now provides the class-keyed registry and
-   the `@batched_op` auto-binding decorator.  `Linear`, `Logistic`, dense
-   `MappingProjection`, and DDM are declarative; LCA uses the
-   `cpu_execute`/`triton_emit` escape hatches until the state/RNG/control
-   spec is proven.  Researchers register one module per component without
-   touching PNL core classes:
+### Done
 
-   ```python
-   from psyneulink.core.batched import batched_op, bm
+- **Declarative batched op specs** (`653a57cbf9`). `psyneulink.core.batched.specs`
+  provides the class-keyed registry and the `@batched_op` auto-binding decorator.
+  `Linear`, `Logistic`, dense `MappingProjection`, and DDM are declarative; LCA
+  uses the `triton_emit` escape hatch. Researchers register one module per
+  component without touching PNL core classes:
 
-   @batched_op(SoftReLU)
-   def soft_relu(x, gain, bias):
-       return bm.log(1.0 + bm.exp(gain * (x - bias))) / gain
-   ```
+  ```python
+  from psyneulink.core.batched import batched_op  # body uses tl (triton.language)
 
-   Remaining follow-ups: declarative stateful mechanisms (states in the
-   decorator path) and width>1 inputs for declarative mechanism ops.
+  @batched_op(SoftReLU)
+  def soft_relu(x, gain, bias):
+      return tl.log(1.0 + tl.exp(gain * (x - bias))) / gain
+  ```
 
-2. Make truncation visible.
+- **CPU interpret execution + PsyNeuLink oracle** (`960d3aba6d`). `triton_cpu`
+  runs the same kernels on CPU via Triton interpret mode; the `ir_debug` numpy
+  executor and per-op CPU twins are gone (one body per op); PsyNeuLink Python
+  mode is the test oracle (`tests/composition/pec/test_batched_reference.py`).
 
-   DDM/LCA helpers should be able to return or store a termination/truncation
-   flag. Tests and diagnostics should fail or warn when `MAX_STEPS` is too low.
+### Planned (in execution order; scoped to close the Capability Gaps above)
 
-3. Generalize LCA carefully.
+The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
+steps 9-10 make the full PEC fit run on the batched path.
 
-   Move from width-2 scalar recurrence to matrix/vector recurrence. Keep the
-   current width-2 path as a specialized lowering only after a generic semantic
-   representation exists.
+1. **Reject `integrator_mode` transfers** (near-term correctness guard). In
+   `graph.py:_node_support_diagnostic`, reject `TransferMechanism`/
+   `ProcessingMechanism` with `integrator_mode=True` (and unsupported
+   `integrator_function`) instead of silently lowering them as stateless
+   `Linear` — closes the silent mis-handling hole (gap 2) ahead of full support.
+   Small; lands with step 2.
 
-4. Implement precomputed scheduler traces.
+2. **Truncation visibility.** Bounded-loop kernels (DDM/LCA) surface a
+   truncation flag; tests/diagnostics warn or fail when `MAX_STEPS` is too low.
+   Tested via `triton_cpu` + PNL reference (no `ir_debug` mirror needed).
 
-   Some scheduler cases such as `EveryNCalls` can likely be represented as a
-   precomputed per-trial/per-node execution trace without dynamic scheduler
-   state inside the GPU kernel.
+3. **Split `graph_emit.py`** into a `backend/triton/emit/` package. No semantic
+   change; acceptance via the generated-source snapshot test. Prerequisite for
+   the scheduling/kernel work in steps 4 and 8.
 
-5. Avoid dynamic scheduler machinery unless needed.
+4. **Tiered scheduling** (pay only when needed). Precomputed per-trial traces for
+   `EveryNCalls`-style conditions, **plus** recognition of the `AtPass(0)`
+   origins / `Always` LCA / `WhenFinished(LCA)` idiom (gap 3) so the CSI/ITI
+   multi-pass timing lowers to the existing cue-driven stateful graph. Prefer
+   static erasure / precomputed traces over dynamic lane-local scheduler state
+   (which would recreate the LLVM/PTX overhead problem).
 
-   Full lane-local scheduler state may recreate the overhead problems of the
-   LLVM/PTX path. Prefer static erasure or precomputed traces for PEC-style
-   workloads.
+5. **Generalize LCA.** Width-2 scalar recurrence -> width-N matrix/vector
+   recurrence (custom `triton_emit`), reading the real recurrent matrix; also
+   drop the init-`act=0` approximation so an isolated LCA matches PNL, not just
+   in-context. Keep width-2 as a specialized lowering only if benchmarks justify.
 
-6. Move more PEC objective work onto GPU.
+6. **UDF / instance-level ops** (gap 1). Let researchers register a batched op
+   for a specific function/UDF *instance* (capture its `custom_function` as a
+   `tl` body), since the registry is class-keyed and all UDFs share one class.
 
-   The current batched simulator returns simulated outcomes. Full PEC speedups
-   will likely require moving likelihood/KDE or summary aggregation closer to
-   the GPU execution path.
+7. **Stateful integrating transfers** (gap 2). A stateful transfer/integrator op
+   (Leaky/Simple integrator + function) with lane-local state and per-trial
+   reset, reusing the LCA state machinery.
 
-7. Preserve KernelIR backend neutrality.
+8. **Time-varying DDM boundary + control routing** (gaps 4-5). Collapsing
+   threshold in the DDM kernel (`threshold(step)=θ₀+collapse·step`); control
+   mechanisms apply their function and route to arbitrary target parameters.
 
-   Do not put `tl.*`, source fragments, or Triton-only expressions into
-   `KernelIR`. If an MLIR backend is added later, it should lower from
-   `KernelIR`.
+9. **GPU likelihood/KDE.** Torch port of `fitfunctions.simulation_likelihood` so
+   PEC objective aggregation runs near the GPU execution path (the current
+   simulator only returns outcomes).
 
-8. Keep benchmark baselines honest.
+10. **PEC fit routing.** Route the PEC objective through `BatchedSimulationPlan`,
+    guarded by `can_compile_batched`; never silently fall back.
 
-   Use PEC `grid_evaluate` LLVM/PTX baselines for comparison, not repeated
-   `run()` loops.
+### Design invariants (do not regress)
+
+- **KernelIR backend neutrality.** No `tl.*`, source fragments, or Triton-only
+  expressions in `KernelIR`; a future MLIR backend should lower from it.
+- **No silent fallback.** Unsupported components/conditions return diagnostics;
+  never silently fall back to Python or LLVM inside this stack.
+- **Honest benchmarks.** Compare against PEC `grid_evaluate` LLVM/PTX baselines,
+  not repeated `Composition.run()` loops.
 
 ## Known Sharp Edges
 
 - `graph_emit.py` is still hard to maintain. The source builder is better than
   the initial monolithic generator, but op emission should be split further
-  once declarative component specs exist.
-- `ir_debug` is useful for parity, not performance.
-- Triton execution requires CUDA and imports Torch/Triton lazily.
-- Current tests may skip Triton on non-CUDA machines.
+  (roadmap step 3: split into a `backend/triton/emit/` package).
+- `triton_cpu` (interpret mode) is for testing/debugging, not performance; it
+  runs the real kernel but pure-Python/numpy interpretation is slow, so keep
+  CPU cases small.
+- `triton_cpu` (interpret) and `triton` (compiled GPU) cannot be used in the
+  same process; triton bakes the mode when `tl.randn` et al. are first imported.
+- Triton execution imports Torch/Triton lazily; the GPU path requires CUDA.
+- Numeric tests need `torch`+`triton` importable and skip otherwise.
 - The generated kernels use float32.
 - Parameter aliases are intentionally generic. Avoid adding model-specific
   aliases to make one example script more convenient.
