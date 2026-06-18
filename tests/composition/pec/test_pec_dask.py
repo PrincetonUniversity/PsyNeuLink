@@ -172,7 +172,8 @@ def clear_fallback_cache():
     fitfunctions._PEC_FALLBACK_CACHE.clear()
 
 
-def test_dask_evaluate_loglik_builds_once_and_caches(clear_fallback_cache):
+@pytest.mark.usefixtures("clear_fallback_cache")
+def test_dask_evaluate_loglik_builds_once_and_caches():
     calls = {"n": 0}
 
     class _FakePEC:
@@ -193,7 +194,8 @@ def test_dask_evaluate_loglik_builds_once_and_caches(clear_fallback_cache):
     assert calls["n"] == 1
 
 
-def test_dask_evaluate_loglik_de_sign(clear_fallback_cache):
+@pytest.mark.usefixtures("clear_fallback_cache")
+def test_dask_evaluate_loglik_de_sign():
     class _FakePEC:
         def log_likelihood(self, *params, inputs=None):
             return 5.0
