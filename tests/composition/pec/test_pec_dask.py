@@ -146,6 +146,14 @@ def test_resolve_worker_cores_fallback(monkeypatch):
     assert isinstance(cores, int) and cores >= 1
 
 
+def test_resolve_worker_cores_clamps_to_at_least_one(monkeypatch):
+    # set_num_threads requires >= 1, so a stray 0 / negative is clamped.
+    assert _resolve_worker_cores({"worker_cores": 0}) == 1
+    assert _resolve_worker_cores({"worker_cores": -4}) == 1
+    monkeypatch.setenv("SLURM_CPUS_PER_TASK", "0")
+    assert _resolve_worker_cores({}) == 1
+
+
 def test_dask_map_applies_func_in_order():
     class _MapClient:
         def __init__(self):
@@ -185,13 +193,41 @@ def test_dask_evaluate_loglik_builds_once_and_caches():
         assert data == "DATA"
         return _FakePEC(), {"inputs": "x"}
 
-    v1 = _dask_evaluate_loglik(factory, [1.0, 2.0, 3.0], "DATA", worker_cores=None)
-    v2 = _dask_evaluate_loglik(factory, [10.0, 20.0, 30.0], "DATA", worker_cores=None)
+    v1 = _dask_evaluate_loglik(factory, [1.0, 2.0, 3.0], "DATA", None, "fit-a")
+    v2 = _dask_evaluate_loglik(factory, [10.0, 20.0, 30.0], "DATA", None, "fit-a")
 
     assert v1 == 6.0 and v2 == 60.0
     assert isinstance(v1, float)
-    # Built exactly once (cached) despite two evaluations.
+    # Built exactly once (cached) despite two evaluations within one fit.
     assert calls["n"] == 1
+
+
+@pytest.mark.usefixtures("clear_fallback_cache")
+def test_dask_evaluate_loglik_rebuilds_on_new_fit_id():
+    # A worker reused across fits (e.g. a warm Client) must not score against the
+    # previous fit's cached PEC: a different fit_id forces a rebuild from the new
+    # data/factory, while the same fit_id reuses the cache.
+    seen = {"data": []}
+
+    class _FakePEC:
+        def __init__(self, data):
+            self.data = data
+
+        def log_likelihood(self, *params, inputs=None):
+            return float(sum(params))
+
+    def make_factory(tag):
+        def factory(data):
+            seen["data"].append((tag, data))
+            return _FakePEC(data), {"inputs": tag}
+        return factory
+
+    _dask_evaluate_loglik(make_factory("A"), [1.0], "DATA_A", None, "fit-a")
+    _dask_evaluate_loglik(make_factory("A"), [1.0], "DATA_A", None, "fit-a")  # cached
+    _dask_evaluate_loglik(make_factory("B"), [1.0], "DATA_B", None, "fit-b")  # rebuild
+
+    # Two builds total: once for fit-a (reused on the 2nd call), once for fit-b.
+    assert seen["data"] == [("A", "DATA_A"), ("B", "DATA_B")]
 
 
 @pytest.mark.usefixtures("clear_fallback_cache")
@@ -204,9 +240,9 @@ def test_dask_evaluate_loglik_de_sign():
         return _FakePEC(), None
 
     # scipy minimizes: maximize -> flip the sign, minimize -> as is.
-    assert _dask_evaluate_loglik_de(factory, None, "D", "maximize", [0.0]) == -5.0
+    assert _dask_evaluate_loglik_de(factory, None, "D", "maximize", "fit-a", [0.0]) == -5.0
     fitfunctions._PEC_FALLBACK_CACHE.clear()
-    assert _dask_evaluate_loglik_de(factory, None, "D", "minimize", [0.0]) == 5.0
+    assert _dask_evaluate_loglik_de(factory, None, "D", "minimize", "fit-a", [0.0]) == 5.0
 
 
 def test_require_dask_present_returns_module():
@@ -351,6 +387,15 @@ def test_resolve_pec_factory_missing_raises():
         opt._resolve_pec_factory()
 
 
+def test_distributed_requires_data_fitting_mode():
+    # Distributed evaluation only implements log-likelihood scoring; reject it
+    # upfront in objective-function mode (data_fitting_mode defaults to False).
+    opt = _opt_func(optuna.samplers.RandomSampler(seed=0))
+    assert opt.data_fitting_mode is False
+    with pytest.raises(OptimizationFunctionError, match="only supported for data fitting"):
+        opt._fit(obj_func=lambda *a: 0.0)
+
+
 # ===========================================================================
 # Layer 2c: PEC-level forwarding of distributed knobs onto the optimizer
 # (construction only -- no cluster, no fit)
@@ -454,7 +499,7 @@ def test_distributed_loglik_matches_serial(ddm_data, cluster_client):
     data_f = cluster_client.scatter(ddm_data, broadcast=True, hash=False)
     futures = [
         cluster_client.submit(
-            _dask_evaluate_loglik, build_ddm_pec, c, data_f, 1, pure=False
+            _dask_evaluate_loglik, build_ddm_pec, c, data_f, 1, "fit-x", pure=False
         )
         for c in candidates
     ]

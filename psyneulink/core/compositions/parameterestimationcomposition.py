@@ -494,10 +494,10 @@ class ParameterEstimationComposition(Composition):
         initial_seed: Optional[int] = None,
         same_seed_for_all_parameter_combinations: Optional[bool] = None,
         depends_on: Optional[Mapping] = None,
-        distributed: bool = False,
-        distributed_options: Optional[Mapping] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
+        distributed: bool = False,
+        distributed_options: Optional[Mapping] = None,
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC

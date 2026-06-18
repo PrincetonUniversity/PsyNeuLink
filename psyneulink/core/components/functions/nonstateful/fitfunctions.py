@@ -32,6 +32,7 @@ from psyneulink._typing import (
 import functools
 import os
 import time
+import uuid
 import numpy as np
 
 from rich.progress import Progress, BarColumn, TimeRemainingColumn
@@ -302,13 +303,18 @@ def _require_dask():
 
 
 def _resolve_worker_cores(options):
-    """LLVM threads per worker: explicit option, else $SLURM_CPUS_PER_TASK, else cores."""
+    """LLVM threads per worker: explicit option, else $SLURM_CPUS_PER_TASK, else cores.
+
+    Clamped to at least 1: the result is passed to ``set_num_threads``, which requires
+    a positive count, so a stray ``worker_cores=0`` or ``SLURM_CPUS_PER_TASK=0`` does
+    not produce an invalid thread count.
+    """
     wc = (options or {}).get("worker_cores")
     if wc is not None:
-        return int(wc)
+        return max(1, int(wc))
     env = os.environ.get("SLURM_CPUS_PER_TASK")
     if env:
-        return int(env)
+        return max(1, int(env))
     if hasattr(os, "sched_getaffinity"):
         return len(os.sched_getaffinity(0))
     return os.cpu_count() or 1
@@ -352,12 +358,15 @@ def _dask_client(options):
     return client, _close
 
 
-def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores):
+def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
-    Rebuilds (once per worker) and caches ``(pec, inputs)`` from ``pec_factory``,
-    pinning this worker's LLVM thread count, then re-scores the cached PEC for
-    every subsequent candidate so the compiled binary is reused.
+    Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``,
+    pinning this worker's LLVM thread count, then re-scores the cached PEC for every
+    subsequent candidate so the compiled binary is reused. The cache is a single slot
+    tagged with ``fit_id``: a worker reused across fits (e.g. a warm Client passed by
+    the caller) rebuilds when the fit changes, so a candidate is never scored against
+    a stale PEC built from a previous fit's data or factory.
     """
     try:
         from dask.distributed import get_worker
@@ -367,27 +376,28 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores):
         worker = None
         cache = _PEC_FALLBACK_CACHE.get("pec")
 
-    if cache is None:
+    # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
+    if cache is None or cache[0] != fit_id:
         from psyneulink.core.globals.threads import set_num_threads
         if worker_cores is not None:
             set_num_threads(worker_cores)
-        cache = pec_factory(data)
+        cache = (fit_id, *pec_factory(data))
         if worker is not None:
             worker._pec_cache = cache
         else:
             _PEC_FALLBACK_CACHE["pec"] = cache
 
-    pec, inputs = cache
+    _, pec, inputs = cache
     return float(pec.log_likelihood(*param_values, inputs=inputs))
 
 
-def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, param_values):
+def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, fit_id, param_values):
     """scipy.optimize-facing objective: a value to MINIMIZE.
 
     Top-level (picklable) so it can be shipped to workers; never a closure over a
     live PEC. scipy minimizes, so flip the sign when the PEC direction is maximize.
     """
-    ll = _dask_evaluate_loglik(pec_factory, list(param_values), data, worker_cores)
+    ll = _dask_evaluate_loglik(pec_factory, list(param_values), data, worker_cores, fit_id)
     return -ll if direction == "maximize" else ll
 
 
@@ -769,6 +779,16 @@ class PECOptimizationFunction(OptimizationFunction):
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
 
+        # Distributed evaluation only implements log-likelihood scoring (workers call
+        # PEC.log_likelihood). Reject it upfront in objective-function mode rather than
+        # failing later inside a worker with a less actionable error.
+        if not self.data_fitting_mode:
+            raise OptimizationFunctionError(
+                "Distributed fitting (distributed=True) is only supported for data "
+                "fitting; construct the ParameterEstimationComposition with data=... "
+                "It is not available in objective-function mode."
+            )
+
         # Distributed path: warn if the fit will not be reproducible (no common
         # random numbers), resolve the Dask client exactly once, dispatch, and
         # tear down only resources we created (an internally-built LocalCluster).
@@ -1068,13 +1088,16 @@ class PECOptimizationFunction(OptimizationFunction):
             self._get_current_parameter_value('initial_seed', context)
         )
 
+        # Per-fit id so a worker reused across fits rebuilds its cached PEC.
+        fit_id = uuid.uuid4().hex
+
         # Top-level objective bound to picklable args. Data is bound by value (not a
         # scattered Future) so it survives being frozen inside the partial scipy hands
         # to workers; the per-worker PEC cache means each worker materialises the data
         # and builds its PEC only once. (The optuna path uses the more efficient
         # client.scatter, where we control submit and pass the data future directly.)
         objective = functools.partial(
-            _dask_evaluate_loglik_de, pec_factory, worker_cores, data, self.direction
+            _dask_evaluate_loglik_de, pec_factory, worker_cores, data, self.direction, fit_id
         )
 
         # updating="deferred" is mandatory with workers: the whole population is
@@ -1290,10 +1313,13 @@ class PECOptimizationFunction(OptimizationFunction):
         # races the release of the first fit's key ("lost dependencies" cancellations).
         data_f = client.scatter(data, broadcast=True, hash=False)
 
+        # Per-fit id so a worker reused across fits rebuilds its cached PEC.
+        fit_id = uuid.uuid4().hex
+
         def submit_one(param_values):
             return client.submit(
                 _dask_evaluate_loglik, pec_factory, param_values, data_f, worker_cores,
-                pure=False,
+                fit_id, pure=False,
             )
 
         _run_ask_tell_rounds(
