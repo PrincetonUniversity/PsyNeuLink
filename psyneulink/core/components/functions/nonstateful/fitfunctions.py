@@ -381,7 +381,8 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id)
         from psyneulink.core.globals.threads import set_num_threads
         if worker_cores is not None:
             set_num_threads(worker_cores)
-        cache = (fit_id, *pec_factory(data))
+        pec, inputs = pec_factory(data)
+        cache = (fit_id, pec, inputs)
         if worker is not None:
             worker._pec_cache = cache
         else:
