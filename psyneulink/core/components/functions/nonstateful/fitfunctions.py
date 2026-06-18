@@ -318,10 +318,10 @@ def _dask_client(options):
     """Resolve a Dask client from ``distributed_options``; return ``(client, close_fn)``.
 
     Resolution order (first match wins):
-      1. explicit ``client``
-      2. explicit ``scheduler_address`` / ``scheduler_file``
-      3. the active launcher client (set by ``psyneulink.dask_run``)
-      4. a ``LocalCluster`` on the current node (zero-config single-node default)
+      1. an explicit ``client`` (bring-your-own: notebooks, non-SLURM clusters,
+         or a warm cluster reused across fits)
+      2. the active launcher client (set by ``psyneulink.dask_run``)
+      3. a ``LocalCluster`` on the current node (zero-config single-node default)
 
     ``close_fn`` tears down only resources created here (the LocalCluster); it is
     ``None`` for externally-supplied or launcher clients, which we must not close.
@@ -332,16 +332,6 @@ def _dask_client(options):
     client = options.get("client")
     if client is not None:
         return client, None
-
-    addr = options.get("scheduler_address")
-    if addr is not None:
-        client = dd.Client(addr)
-        return client, client.close
-
-    sched_file = options.get("scheduler_file")
-    if sched_file is not None:
-        client = dd.Client(scheduler_file=sched_file)
-        return client, client.close
 
     if _ACTIVE_LAUNCHER_CLIENT is not None:
         return _ACTIVE_LAUNCHER_CLIENT, None
@@ -492,9 +482,11 @@ class PECOptimizationFunction(OptimizationFunction):
               cores), so it mirrors ``--cpus-per-task`` without retyping.
             - ``"max_concurrent_evaluations"`` : candidates evaluated per ask/tell round. Defaults to the live worker
               count; generational samplers (CMA-ES, NSGA-II) require at least 2.
-            - one of ``"client"`` / ``"scheduler_address"`` / ``"scheduler_file"`` / ``"n_workers"`` : an advanced
-              escape hatch to connect to or form a specific cluster. If none is given, an active cluster formed by
+            - ``"client"`` : a Dask ``Client`` to use instead of an auto-resolved cluster (for notebooks, non-SLURM
+              clusters, or a warm cluster reused across fits). If omitted, an active cluster formed by
               ``python -m psyneulink.dask_run`` is used, else a single-node ``LocalCluster`` is created.
+            - ``"n_workers"`` : number of workers for the auto-created single-node ``LocalCluster`` (single-node only;
+              ignored when a ``client`` or launcher cluster is used).
 
 
     """
@@ -534,8 +526,8 @@ class PECOptimizationFunction(OptimizationFunction):
         # Distributed (Dask) fitting knobs. Both default off, so existing serial
         # code paths are untouched. ``distributed_options`` keys (all optional
         # except ``pec_factory``, which is required when distributed): pec_factory,
-        # worker_cores, max_concurrent_evaluations, and connection escape hatches
-        # (client / scheduler_address / scheduler_file / n_workers).
+        # worker_cores, max_concurrent_evaluations, and the cluster options
+        # client (bring-your-own) / n_workers (auto LocalCluster size).
         self.distributed = distributed
         self._distributed_options = dict(distributed_options) if distributed_options else {}
 

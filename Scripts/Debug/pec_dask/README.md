@@ -1,8 +1,7 @@
 # Distributed PEC fitting (Dask)
 
 Run `ParameterEstimationComposition` fits with candidate evaluations distributed
-across a Dask cluster, behind a single constructor flag. You do **no** Dask
-administration: no scheduler to start, no addresses to pass.
+across a Dask cluster.
 
 ## Enabling it
 
@@ -18,10 +17,9 @@ optimizer = PECOptimizationFunction(
 ```
 
 `pec_factory(data) -> (pec, inputs)` is a top-level, picklable callable that
-rebuilds a fresh serial PEC plus its inputs. A live PEC is never shipped to
-workers; each worker builds and caches its own from this recipe and reuses the
-compiled LLVM binary across evaluations. Keep the factory self-contained (imports
-and literals inside) so Dask can ship it by value.
+rebuilds a fresh serial PEC plus its inputs. Each worker (where the likelihood evaluation happens) 
+builds and caches its own from this recipe and reuses the compiled LLVM binary across evaluations. 
+Keep the factory self-contained (imports and literals inside) so Dask can ship it by value.
 
 `distributed_options` keys (all optional except `pec_factory`):
 
@@ -29,22 +27,50 @@ and literals inside) so Dask can ship it by value.
 |---|---|---|
 | `pec_factory` | worker recipe `(data) -> (pec, inputs)` | **required** |
 | `worker_cores` | LLVM threads per worker | `$SLURM_CPUS_PER_TASK`, else cores |
-| `max_concurrent_evaluations` | candidates per ask/tell round | live worker count |
-| `client` / `scheduler_address` / `scheduler_file` / `n_workers` | advanced cluster escape hatch | — |
+| `max_concurrent_evaluations` | candidates dispatched per ask/tell round | live worker count |
+
+*Live worker count* = the number of workers registered with the scheduler when the
+fit starts (srun tasks − 2 with the launcher; the `LocalCluster` size on a single
+node). Defaulting `max_concurrent_evaluations` to it means each round sends one
+candidate per worker — every worker busy, nothing idle or queued.
 
 Optimizers: any optuna sampler/study and `differential_evolution`. LLVM execution
 and a single scalar objective only.
 
+### Choosing the cluster (optional)
+
+You normally set neither of the options below: with the launcher PsyNeuLink uses the
+cluster it formed, and otherwise it creates a single-node `LocalCluster` for you.
+
+| key | use it to |
+|---|---|
+| `client` | run the fit on a `dask.distributed.Client` you provide instead of an auto-resolved cluster |
+| `n_workers` | set how many workers the auto-created single-node `LocalCluster` spawns |
+
+`client` is the door to anything beyond the SLURM launcher or a single node: pass a
+`Client` you built yourself — for a notebook, a non-SLURM cluster, or a warm cluster
+reused across many fits. It covers connecting to an existing scheduler too, since
+that is just `Client("tcp://host:port")` or `Client(scheduler_file="…")`:
+
+```python
+client = Client("tcp://head-node:8786")          # or Client(KubeCluster(...)), etc.
+distributed_options={"client": client, "pec_factory": pec_factory}
+```
+
+You own a `client` you pass (PsyNeuLink never shuts it down), which is exactly what
+you want for reuse across fits.
+
 ## Running
 
-**Single node (zero config).** A `LocalCluster` is formed automatically:
+**Single node -** A `LocalCluster` is formed automatically:
 
 ```bash
 python study.py
 ```
 
-**Multiple nodes (the launcher).** PsyNeuLink forms the cluster from the SLURM
-ranks of one srun step — rank 0 scheduler, rank 1 driver (runs your script),
+**Multiple nodes -** PsyNeuLink forms the cluster from the SLURM
+ranks of one srun step — 
+rank 0 scheduler, rank 1 driver (runs your script),
 ranks 2+ workers — so workers = tasks − 2:
 
 ```bash
