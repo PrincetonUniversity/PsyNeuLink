@@ -48,8 +48,8 @@ class TestLCControlMechanism:
             from psyneulink import parse_context
             context = parse_context(composition)
             gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
-            mod_gain_assigned_to_A.append([A.get_mod_gain(composition)])
-            mod_gain_assigned_to_B.append([B.get_mod_gain(composition)])
+            mod_gain_assigned_to_A.append(A.get_mod_gain(composition))
+            mod_gain_assigned_to_B.append(B.get_mod_gain(composition))
             base_gain_assigned_to_A.append(A.function.gain.base)
             base_gain_assigned_to_B.append(B.function.gain.base)
 
@@ -81,12 +81,6 @@ class TestLCControlMechanism:
 
         val = benchmark(EX, [10.0])
         expected = [[3.001397762387422]]
-
-        # The difference in result shape is caused by shape mismatch in output port values.
-        # The default shape is 1D, giving 2D overall result in compiled mode.
-        # The true results are 2D per port, giving 3d overall result in Python mode.
-        if mech_mode == 'Python':
-            expected = [[ex] for ex in expected]
 
         np.testing.assert_allclose(val, expected)
 
