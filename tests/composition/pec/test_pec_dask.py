@@ -38,9 +38,11 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
 )
 
-# The cluster fixtures/tests need real Dask; the helper/driver tests above use
-# fakes but the whole module imports cleanly either way.
-distributed = pytest.importorskip("dask.distributed")
+# This module imports without Dask installed: the helper/driver/forwarding tests
+# below use fakes (or the ImportError fallback in _dask_evaluate_loglik) and run
+# under a plain [dev] install, so they are exercised in CI. Only the parts that need
+# a real cluster -- the cluster_client fixture and the _require_dask-present test --
+# skip when dask.distributed is absent.
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +248,8 @@ def test_dask_evaluate_loglik_de_sign():
 
 
 def test_require_dask_present_returns_module():
-    assert _require_dask() is distributed
+    dd = pytest.importorskip("dask.distributed")
+    assert _require_dask() is dd
 
 
 def test_require_dask_missing_raises(monkeypatch):
@@ -473,6 +476,7 @@ def cluster_client():
     # Process workers, threads_per_worker=1: PNL's LLVM runtime asserts on
     # multi-threaded in-process cleanup, so an in-process threaded cluster is
     # not usable here.
+    pytest.importorskip("dask.distributed")
     from dask.distributed import Client, LocalCluster
     with LocalCluster(n_workers=2, threads_per_worker=1, dashboard_address=None) as cluster:
         with Client(cluster) as client:
