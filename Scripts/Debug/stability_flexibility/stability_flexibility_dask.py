@@ -9,7 +9,7 @@ there is no Dask administration here: no scheduler, no addresses.
 
 Run it two ways:
 
-  Single node (zero config -- a LocalCluster is created automatically)::
+  Single node (a LocalCluster is created automatically)::
 
       python stability_flexibility_dask.py
 
@@ -60,7 +60,7 @@ FIT_BOUNDS = {
     "threshold": (0.01, 0.5),
     "non_decision_time": (0.1, 0.4),
 }
-NUM_TRIALS = 50
+NUM_TRIALS = 200
 NUM_ESTIMATES = 10000
 INITIAL_SEED = 42
 TRIAL_SEQ_SEED = 0
@@ -69,7 +69,7 @@ TRIAL_SEQ_SEED = 0
 # Provision roughly this many workers (see the SLURM script) so each round keeps
 # every worker busy; pinning it keeps the CMA-ES trajectory deterministic.
 MAX_CONCURRENT = 16
-NUM_GENERATIONS = 30
+NUM_GENERATIONS = 60
 
 
 def get_node(comp, name):
