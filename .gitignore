@@ -202,3 +202,7 @@ tests/*.pdf
 
 # VSCode settings
 .vscode/
+
+# asv benchmark environments and generated dashboard (results/ is tracked)
+.asv/env/
+.asv/html/

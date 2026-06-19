@@ -1,0 +1,16 @@
+{
+    "version": 1,
+    "project": "psyneulink-batched",
+    "project_url": "https://github.com/PrincetonUniversity/PsyNeuLink",
+    "repo": ".",
+    "branches": ["feat/pec_batch_compile"],
+    "environment_type": "existing",
+    "show_commit_url": "https://github.com/PrincetonUniversity/PsyNeuLink/commit/",
+    "benchmark_dir": "benchmarks",
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html",
+    "build_command": [],
+    "install_command": [],
+    "uninstall_command": []
+}
