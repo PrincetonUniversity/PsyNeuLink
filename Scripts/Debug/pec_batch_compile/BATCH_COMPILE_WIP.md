@@ -521,6 +521,20 @@ script supports:
 
 (`triton` and `triton_cpu` cannot be combined in one invocation.)
 
+The one-off script above gives ad-hoc triton-vs-LLVM numbers. To **track**
+batched-compiler performance across commits, use the asv suite in `benchmarks/`
+(see `benchmarks/README.md`). It reuses the existing venv (GPU box) and
+forward-tracks — after each commit:
+
+```bash
+.venv/bin/asv run --set-commit-hash $(git rev-parse HEAD)   # record current commit
+.venv/bin/asv publish && .venv/bin/asv preview              # dashboard
+```
+
+`.asv/results/` is committed (per-commit timings + checksums); `.asv/env|html/`
+are git-ignored. The `--set-commit-hash` flag is required for `existing`
+environments to persist results.
+
 ## Milestone Roadmap
 
 ### Done

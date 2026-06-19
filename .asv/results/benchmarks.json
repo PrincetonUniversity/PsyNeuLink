@@ -1,0 +1,77 @@
+{
+    "batched.DDM.time_run": {
+        "code": "class DDM:\n    def time_run(self, estimates):\n        self._run()\n\n    def setup(self, estimates):\n        _require_cuda()\n        decision = pnl.DDM(\n            function=pnl.DriftDiffusionIntegrator(\n                starting_value=0.0, rate=1.0, noise=0.1, threshold=0.05,\n                non_decision_time=0.0, time_step_size=0.01,\n            ),\n            output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],\n            name=\"DDM\",\n        )\n        comp = pnl.Composition(pathways=decision)\n        self._plan = BatchedCompositionCompiler.compile(comp, backend=\"triton\", max_steps=64)\n        self._inputs = {decision: np.ones((TRIALS, 1), dtype=float)}\n        self._param_sets = [\n            {\"rate\": 1.0, \"threshold\": 0.05, \"noise\": 0.1, \"time_step_size\": 0.01}\n            for _ in range(PARAM_SETS)\n        ]\n        self._estimates = estimates\n        # Warm up: triggers kernel compilation + GPU warm-up, and records checksum.\n        result = self._run()\n        self._checksum = float(np.sum(result.values))",
+        "min_run_count": 2,
+        "name": "batched.DDM.time_run",
+        "number": 0,
+        "param_names": [
+            "estimates"
+        ],
+        "params": [
+            [
+                "1024",
+                "4096"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "68f9ec79ca304c59797a04c7186b816b7e2489b9d7ff7ac32ce22e0b6fd8d681",
+        "warmup_time": -1
+    },
+    "batched.DDM.track_checksum": {
+        "code": "class DDM:\n    def track_checksum(self, estimates):\n        return self._checksum\n\n    def setup(self, estimates):\n        _require_cuda()\n        decision = pnl.DDM(\n            function=pnl.DriftDiffusionIntegrator(\n                starting_value=0.0, rate=1.0, noise=0.1, threshold=0.05,\n                non_decision_time=0.0, time_step_size=0.01,\n            ),\n            output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],\n            name=\"DDM\",\n        )\n        comp = pnl.Composition(pathways=decision)\n        self._plan = BatchedCompositionCompiler.compile(comp, backend=\"triton\", max_steps=64)\n        self._inputs = {decision: np.ones((TRIALS, 1), dtype=float)}\n        self._param_sets = [\n            {\"rate\": 1.0, \"threshold\": 0.05, \"noise\": 0.1, \"time_step_size\": 0.01}\n            for _ in range(PARAM_SETS)\n        ]\n        self._estimates = estimates\n        # Warm up: triggers kernel compilation + GPU warm-up, and records checksum.\n        result = self._run()\n        self._checksum = float(np.sum(result.values))",
+        "name": "batched.DDM.track_checksum",
+        "param_names": [
+            "estimates"
+        ],
+        "params": [
+            [
+                "1024",
+                "4096"
+            ]
+        ],
+        "type": "track",
+        "unit": "sum",
+        "version": "67efd2a224af11f75c691bd032a9a65e3e85034cd18b226cb44467537f85076c"
+    },
+    "batched.StabilityFlexibility.time_run": {
+        "code": "class StabilityFlexibility:\n    def time_run(self, estimates):\n        self._run()\n\n    def setup(self, estimates):\n        _require_cuda()\n        from test_stab_flex_pec_fit import (\n            generate_trial_sequence,\n            make_input_dict,\n            make_stab_flex,\n        )\n    \n        comp = make_stab_flex(\n            lca_time_step_size=0.01, ddm_time_step_size=0.01,\n            threshold=0.05, ddm_noise=0.1, lca_noise=0.0,\n        )\n        task, stimulus, cue, correct = generate_trial_sequence(TRIALS, 0.5, seed=3)\n        self._inputs = make_input_dict(\n            comp, task[:TRIALS], stimulus[:TRIALS], cue[:TRIALS], correct[:TRIALS]\n        )\n        self._plan = BatchedCompositionCompiler.compile(comp, backend=\"triton\", max_steps=256)\n        self._param_sets = [\n            {\"DDM.threshold\": 0.05, \"DDM.noise\": 0.1, \"Task Activations [Act1, Act2].noise\": 0.0}\n            for _ in range(PARAM_SETS)\n        ]\n        self._estimates = estimates\n        result = self._run()\n        self._checksum = float(np.sum(result.values))",
+        "min_run_count": 2,
+        "name": "batched.StabilityFlexibility.time_run",
+        "number": 0,
+        "param_names": [
+            "estimates"
+        ],
+        "params": [
+            [
+                "1024"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "c6f8e68c45765617ae325f1b8496237c3b0949a3c962e6c1be2ce04841d6e2f8",
+        "warmup_time": -1
+    },
+    "batched.StabilityFlexibility.track_checksum": {
+        "code": "class StabilityFlexibility:\n    def track_checksum(self, estimates):\n        return self._checksum\n\n    def setup(self, estimates):\n        _require_cuda()\n        from test_stab_flex_pec_fit import (\n            generate_trial_sequence,\n            make_input_dict,\n            make_stab_flex,\n        )\n    \n        comp = make_stab_flex(\n            lca_time_step_size=0.01, ddm_time_step_size=0.01,\n            threshold=0.05, ddm_noise=0.1, lca_noise=0.0,\n        )\n        task, stimulus, cue, correct = generate_trial_sequence(TRIALS, 0.5, seed=3)\n        self._inputs = make_input_dict(\n            comp, task[:TRIALS], stimulus[:TRIALS], cue[:TRIALS], correct[:TRIALS]\n        )\n        self._plan = BatchedCompositionCompiler.compile(comp, backend=\"triton\", max_steps=256)\n        self._param_sets = [\n            {\"DDM.threshold\": 0.05, \"DDM.noise\": 0.1, \"Task Activations [Act1, Act2].noise\": 0.0}\n            for _ in range(PARAM_SETS)\n        ]\n        self._estimates = estimates\n        result = self._run()\n        self._checksum = float(np.sum(result.values))",
+        "name": "batched.StabilityFlexibility.track_checksum",
+        "param_names": [
+            "estimates"
+        ],
+        "params": [
+            [
+                "1024"
+            ]
+        ],
+        "type": "track",
+        "unit": "sum",
+        "version": "e6b87b89a3266f418f26054ad7c9bb0f03a759f2b2f82eccf5d95cc095dc8a4e"
+    },
+    "version": 2
+}
