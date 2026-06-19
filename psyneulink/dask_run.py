@@ -68,6 +68,7 @@ def main(argv=None):
     # Only rank 1 executes the study body.
     with SLURMRunner(scheduler_file=scheduler_file, worker_options=worker_options) as runner:
         with Client(runner) as client:
+            client.wait_for_workers(runner.n_workers)
             _set_active_launcher_client(client)
             sys.argv = [study_py, *study_args]
             try:
