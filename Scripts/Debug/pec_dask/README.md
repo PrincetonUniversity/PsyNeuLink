@@ -82,6 +82,14 @@ srun -n <workers+2> python -m psyneulink.dask_run study.py
 See [submit_dask.slurm](submit_dask.slurm) for a ready-to-edit batch script and
 [study.py](study.py) for a complete DDM example.
 
+For a heavier, multi-node-sized example on a richer model (an LCA control module
+feeding a DDM), see
+[../stability_flexibility/stability_flexibility_dask.py](../stability_flexibility/stability_flexibility_dask.py)
+and its [submit_stabflex_dask.slurm](../stability_flexibility/submit_stabflex_dask.slurm).
+That `pec_factory` rebuilds the model with `make_stab_flex` from the co-located
+`stability_flexibility.py`, so the batch script puts that directory on `PYTHONPATH`
+for every rank -- workers import the model by name rather than receiving it by value.
+
 ## Reproducibility
 
 With common random numbers — `same_seed_for_all_parameter_combinations=True` and a
