@@ -199,6 +199,41 @@ def test_dask_evaluate_loglik_builds_once_and_caches():
 
 
 @pytest.mark.usefixtures("clear_fallback_cache")
+def test_dask_evaluate_loglik_holds_evaluation_lock(monkeypatch):
+    class _RecordingLock:
+        def __init__(self):
+            self.inside = False
+            self.entries = 0
+            self.exits = 0
+
+        def __enter__(self):
+            assert not self.inside
+            self.inside = True
+            self.entries += 1
+
+        def __exit__(self, *args):
+            assert self.inside
+            self.inside = False
+            self.exits += 1
+
+    lock = _RecordingLock()
+    monkeypatch.setattr(fitfunctions, "_PEC_EVALUATION_LOCK", lock)
+
+    class _FakePEC:
+        def log_likelihood(self, *params, inputs=None):
+            assert lock.inside
+            assert inputs == {"inputs": "x"}
+            return float(sum(params))
+
+    def factory(data):
+        assert lock.inside
+        return _FakePEC(), {"inputs": "x"}
+
+    assert _dask_evaluate_loglik(factory, [1.0, 2.0], "DATA", None, "fit-a") == 3.0
+    assert lock.entries == lock.exits == 1
+
+
+@pytest.mark.usefixtures("clear_fallback_cache")
 def test_dask_evaluate_loglik_rebuilds_on_new_fit_id():
     # A worker reused across fits (e.g. a warm Client) must not score against the
     # previous fit's cached PEC: a different fit_id forces a rebuild from the new

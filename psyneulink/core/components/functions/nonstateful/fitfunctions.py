@@ -31,6 +31,7 @@ from psyneulink._typing import (
 
 import functools
 import os
+import threading
 import time
 import uuid
 import numpy as np
@@ -276,6 +277,9 @@ _ACTIVE_LAUNCHER_CLIENT = None
 # (e.g. a serial sanity check). Inside Dask the cache lives on the worker object.
 _PEC_FALLBACK_CACHE = {}
 
+# One cached PEC is reused per worker process, so only one task may drive it at a time.
+_PEC_EVALUATION_LOCK = threading.Lock()
+
 
 def _set_active_launcher_client(client):
     """Register the launcher-formed Dask client as the active client (driver rank)."""
@@ -354,28 +358,29 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id)
 
     Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``.
     """
-    try:
-        from dask.distributed import get_worker
-        worker = get_worker()
-        cache = getattr(worker, "_pec_cache", None)
-    except (ImportError, ValueError):
-        worker = None
-        cache = _PEC_FALLBACK_CACHE.get("pec")
+    with _PEC_EVALUATION_LOCK:
+        try:
+            from dask.distributed import get_worker
+            worker = get_worker()
+            cache = getattr(worker, "_pec_cache", None)
+        except (ImportError, ValueError):
+            worker = None
+            cache = _PEC_FALLBACK_CACHE.get("pec")
 
-    # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
-    if cache is None or cache[0] != fit_id:
-        from psyneulink.core.globals.threads import set_num_threads
-        if worker_cores is not None:
-            set_num_threads(worker_cores)
-        pec, inputs = pec_factory(data)
-        cache = (fit_id, pec, inputs)
-        if worker is not None:
-            worker._pec_cache = cache
-        else:
-            _PEC_FALLBACK_CACHE["pec"] = cache
+        # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
+        if cache is None or cache[0] != fit_id:
+            from psyneulink.core.globals.threads import set_num_threads
+            if worker_cores is not None:
+                set_num_threads(worker_cores)
+            pec, inputs = pec_factory(data)
+            cache = (fit_id, pec, inputs)
+            if worker is not None:
+                worker._pec_cache = cache
+            else:
+                _PEC_FALLBACK_CACHE["pec"] = cache
 
-    _, pec, inputs = cache
-    return float(pec.log_likelihood(*param_values, inputs=inputs))
+        _, pec, inputs = cache
+        return float(pec.log_likelihood(*param_values, inputs=inputs))
 
 
 def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, fit_id, param_values):
