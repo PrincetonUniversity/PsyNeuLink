@@ -142,6 +142,32 @@ def test_resolve_worker_cores_fallback(monkeypatch):
     assert isinstance(cores, int) and cores >= 1
 
 
+def test_resolve_worker_cores_auto_localcluster_splits_available_cores(monkeypatch):
+    monkeypatch.delenv("SLURM_CPUS_PER_TASK", raising=False)
+    monkeypatch.setattr(fitfunctions, "_available_cores", lambda: 8)
+
+    # _dask_client creates LocalCluster(threads_per_worker=1). With no explicit
+    # n_workers, Dask creates one worker per available core, so each worker should
+    # use one LLVM thread by default.
+    assert _resolve_worker_cores({}) == 1
+
+    # With an explicit LocalCluster size, divide the available cores across workers.
+    assert _resolve_worker_cores({"n_workers": 2}) == 4
+    assert _resolve_worker_cores({"n_workers": 3}) == 3
+    assert _resolve_worker_cores({"n_workers": 16}) == 1
+
+
+def test_resolve_worker_cores_supplied_client_uses_live_worker_count(monkeypatch):
+    class _InfoClient:
+        def scheduler_info(self):
+            return {"workers": {f"w{i}": {} for i in range(4)}}
+
+    monkeypatch.delenv("SLURM_CPUS_PER_TASK", raising=False)
+    monkeypatch.setattr(fitfunctions, "_available_cores", lambda: 8)
+
+    assert _resolve_worker_cores({"client": _InfoClient()}) == 2
+
+
 def test_resolve_worker_cores_clamps_to_at_least_one(monkeypatch):
     # set_num_threads requires >= 1, so a stray 0 / negative is clamped.
     assert _resolve_worker_cores({"worker_cores": 0}) == 1

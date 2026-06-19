@@ -299,22 +299,58 @@ def _require_dask():
     return dd
 
 
+def _available_cores():
+    """Best-effort count of cores available to this process."""
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
+
+
+def _live_worker_count(client):
+    """Best-effort count of workers currently registered with a Dask client."""
+    if client is None:
+        return None
+    try:
+        return len(client.scheduler_info()["workers"])
+    except Exception:
+        return None
+
+
 def _resolve_worker_cores(options):
-    """LLVM threads per worker: explicit option, else $SLURM_CPUS_PER_TASK, else cores.
+    """LLVM threads per worker.
+
+    Resolution order:
+      1. explicit ``worker_cores``
+      2. ``$SLURM_CPUS_PER_TASK``
+      3. available cores divided across the worker count
+      4. all available cores if the worker count cannot be resolved
 
     Clamped to at least 1: the result is passed to ``set_num_threads``, which requires
-    a positive count, so a stray ``worker_cores=0`` or ``SLURM_CPUS_PER_TASK=0`` does
-    not produce an invalid thread count.
+    a positive count.
     """
-    wc = (options or {}).get("worker_cores")
+    options = options or {}
+    wc = options.get("worker_cores")
     if wc is not None:
         return max(1, int(wc))
     env = os.environ.get("SLURM_CPUS_PER_TASK")
     if env:
         return max(1, int(env))
-    if hasattr(os, "sched_getaffinity"):
-        return len(os.sched_getaffinity(0))
-    return os.cpu_count() or 1
+
+    cores = _available_cores()
+    client = options.get("client") or _ACTIVE_LAUNCHER_CLIENT
+    n_workers = _live_worker_count(client)
+    if n_workers is None and client is None:
+        # _dask_client creates LocalCluster(threads_per_worker=1). When n_workers
+        # is omitted, Dask creates one worker per available core, so the matching
+        # LLVM default is one core per worker. If n_workers is explicit, split the
+        # available cores across those workers.
+        n_workers = max(1, int(options.get("n_workers", cores)))
+
+    if n_workers is not None:
+        n_workers = max(1, int(n_workers))
+        return max(1, (cores + n_workers - 1) // n_workers)
+
+    return cores
 
 
 def _dask_client(options):
@@ -485,8 +521,8 @@ class PECOptimizationFunction(OptimizationFunction):
 
             - ``"pec_factory"`` : a top-level (picklable) callable taking the observed data and returning a fresh
               ``(pec, inputs)`` for a worker to score. **Required** when distributed.
-            - ``"worker_cores"`` : LLVM threads per worker. Defaults to ``$SLURM_CPUS_PER_TASK`` (else the available
-              cores).
+            - ``"worker_cores"`` : LLVM threads per worker. Defaults to ``$SLURM_CPUS_PER_TASK``; otherwise
+              defaults to available cores divided by the live or requested worker count (minimum 1).
             - ``"max_concurrent_evaluations"`` : candidates evaluated per ask/tell round. Defaults to the live worker
               count; generational samplers (CMA-ES, NSGA-II) require at least 2.
             - ``"client"`` : a Dask ``Client`` to use instead of an auto-resolved cluster. If omitted, an active

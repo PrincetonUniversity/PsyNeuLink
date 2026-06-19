@@ -26,7 +26,7 @@ worker environment.
 | key | meaning | default |
 |---|---|---|
 | `pec_factory` | worker recipe `(data) -> (pec, inputs)` | **required** |
-| `worker_cores` | LLVM threads per worker | `$SLURM_CPUS_PER_TASK`, else cores |
+| `worker_cores` | LLVM threads per worker | `$SLURM_CPUS_PER_TASK`, else available cores divided by workers |
 | `max_concurrent_evaluations` | candidates dispatched per ask/tell round | live worker count |
 
 *Live worker count* is the number of workers registered with the scheduler when
