@@ -14,6 +14,7 @@ Three layers, fastest first:
 
 import builtins
 import math
+import warnings
 
 import numpy as np
 import optuna
@@ -404,6 +405,8 @@ _FIT_PARAMS_SPEC = {
 
 
 def _make_pec_with(optimization_function, data, decision, comp, **pec_kwargs):
+    initial_seed = pec_kwargs.pop("initial_seed", INITIAL_SEED)
+    same_seed = pec_kwargs.pop("same_seed_for_all_parameter_combinations", True)
     return pnl.ParameterEstimationComposition(
         nodes=[comp],
         parameters={
@@ -417,8 +420,8 @@ def _make_pec_with(optimization_function, data, decision, comp, **pec_kwargs):
         data=data,
         optimization_function=optimization_function,
         num_estimates=NUM_ESTIMATES,
-        initial_seed=INITIAL_SEED,
-        same_seed_for_all_parameter_combinations=True,
+        initial_seed=initial_seed,
+        same_seed_for_all_parameter_combinations=same_seed,
         **pec_kwargs,
     )
 
@@ -459,6 +462,48 @@ def test_pec_passed_optimizer_distributed_is_authoritative(ddm_data):
     of = pec.controller.function
     assert of.distributed is True
     assert of._distributed_options.get("worker_cores") == 3   # its own, not 99
+
+
+@pytest.mark.composition
+def test_distributed_crn_warning_requires_fixed_initial_seed(ddm_data):
+    optimizer = PECOptimizationFunction(
+        method=optuna.samplers.RandomSampler(seed=0),
+        distributed=True,
+        distributed_options={"pec_factory": build_ddm_pec},
+    )
+    comp, decision = _build_ddm_comp()
+    pec = _make_pec_with(
+        optimizer, ddm_data, decision, comp,
+        name="pec_dask_crn_no_seed",
+        initial_seed=None,
+        same_seed_for_all_parameter_combinations=True,
+    )
+
+    with pytest.warns(UserWarning, match="fixed initial_seed"):
+        pec.controller.function._warn_if_no_crn(None)
+
+
+@pytest.mark.composition
+def test_distributed_crn_warning_silent_with_fixed_initial_seed(ddm_data):
+    optimizer = PECOptimizationFunction(
+        method=optuna.samplers.RandomSampler(seed=0),
+        distributed=True,
+        distributed_options={"pec_factory": build_ddm_pec},
+    )
+    comp, decision = _build_ddm_comp()
+    pec = _make_pec_with(
+        optimizer, ddm_data, decision, comp,
+        name="pec_dask_crn_seeded",
+    )
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        pec.controller.function._warn_if_no_crn(None)
+
+    assert not any(
+        "Distributed PEC fitting is reproducible" in str(w.message)
+        for w in caught
+    )
 
 
 # ===========================================================================

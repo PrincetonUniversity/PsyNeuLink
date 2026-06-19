@@ -879,6 +879,8 @@ class ParameterEstimationComposition(Composition):
         else:
             optimization_function.set_pec_objective_function(objective_function)
 
+        optimization_function._pec_initial_seed_user_specified = initial_seed is not None
+
         # Forward PEC-level distributed knobs onto the optimization function. A
         # passed PECOptimizationFunction that already enabled distributed keeps its
         # own options (authoritative); otherwise PEC-level settings apply, so a

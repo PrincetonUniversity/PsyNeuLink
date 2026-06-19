@@ -786,19 +786,20 @@ class PECOptimizationFunction(OptimizationFunction):
                 close_dask()
 
     def _warn_if_no_crn(self, context):
-        """Warn when distributed fitting runs without common random numbers."""
+        """Warn when distributed fitting is not serial-reproducible."""
         owner = self.owner
-        crn = owner is not None and bool(
+        same_seed = owner is not None and bool(
             owner.parameters.same_seed_for_all_allocations._get(context)
         )
-        if not crn:
+        fixed_initial_seed = bool(
+            getattr(self, "_pec_initial_seed_user_specified", False)
+        )
+        if not (same_seed and fixed_initial_seed):
             warnings.warn(
-                "Distributed PEC fitting without common random numbers "
-                "(same_seed_for_all_parameter_combinations=True) is valid but not "
-                "reproducible: the seeds a candidate receives depend on worker "
-                "placement, so results will not match a serial fit. Set "
-                "same_seed_for_all_parameter_combinations=True with a fixed "
-                "initial_seed for reproducible, serial-matching results."
+                "Distributed PEC fitting is reproducible only with "
+                "same_seed_for_all_parameter_combinations=True and a fixed "
+                "initial_seed. Without both, candidate seeds can depend on worker "
+                "construction or placement, so results may not match a serial fit."
             )
 
     def _fit_dispatch(
