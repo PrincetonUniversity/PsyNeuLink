@@ -17,11 +17,9 @@ optimizer = PECOptimizationFunction(
 ```
 
 `pec_factory(data) -> (pec, inputs)` is a top-level, picklable callable that
-rebuilds a fresh serial PEC plus its inputs. Each worker (where the likelihood evaluation happens) 
-builds and caches its own from this recipe and reuses the compiled LLVM binary across evaluations. 
-Define it at module level and have it depend only on its data argument and
-importable names, so Dask can ship it to workers by value. PsyNeuLink must be
-importable in the worker environment.
+rebuilds a serial PEC plus its inputs. Each worker caches its PEC and reuses the
+compiled LLVM binary across evaluations. PsyNeuLink must be importable in the
+worker environment.
 
 `distributed_options` keys (all optional except `pec_factory`):
 
@@ -31,64 +29,57 @@ importable in the worker environment.
 | `worker_cores` | LLVM threads per worker | `$SLURM_CPUS_PER_TASK`, else cores |
 | `max_concurrent_evaluations` | candidates dispatched per ask/tell round | live worker count |
 
-*Live worker count* = the number of workers registered with the scheduler when the
-fit starts (srun tasks − 2 with the launcher; the `LocalCluster` size on a single
-node). Defaulting `max_concurrent_evaluations` to it means each round sends one
-candidate per worker — every worker busy, nothing idle or queued.
+*Live worker count* is the number of workers registered with the scheduler when
+the fit starts (srun tasks - 2 with the launcher; the `LocalCluster` size on a
+single node).
 
 Optimizers: any optuna sampler/study and `differential_evolution`. LLVM execution
 and a single scalar objective only.
 
 ### Choosing the cluster (optional)
 
-You normally set neither of the options below: with the launcher PsyNeuLink uses the
-cluster it formed, and otherwise it creates a single-node `LocalCluster` for you.
+If neither option is set, PsyNeuLink uses the launcher client when present;
+otherwise it creates a single-node `LocalCluster`.
 
 | key | use it to |
 |---|---|
 | `client` | run the fit on a `dask.distributed.Client` you provide instead of an auto-resolved cluster |
 | `n_workers` | set how many workers the auto-created single-node `LocalCluster` spawns |
 
-`client` is the door to anything beyond the SLURM launcher or a single node: pass a
-`Client` you built yourself — for a notebook, a non-SLURM cluster, or a warm cluster
-reused across many fits. It covers connecting to an existing scheduler too, since
-that is just `Client("tcp://host:port")` or `Client(scheduler_file="…")`:
+Pass `client` to use an existing `dask.distributed.Client`, including a notebook,
+a non-SLURM cluster, or an existing scheduler:
 
 ```python
 client = Client("tcp://head-node:8786")          # or Client(KubeCluster(...)), etc.
 distributed_options={"client": client, "pec_factory": pec_factory}
 ```
 
-You own a `client` you pass (PsyNeuLink never shuts it down), which is exactly what
-you want for reuse across fits.
+PsyNeuLink does not close a client supplied by the caller.
 
 ## Running
 
-**Single node -** A `LocalCluster` is formed automatically:
+**Single node -**
 
 ```bash
 python study.py
 ```
 
-**Multiple nodes -** PsyNeuLink forms the cluster from the SLURM
-ranks of one srun step — 
-rank 0 scheduler, rank 1 driver (runs your script),
-ranks 2+ workers — so workers = tasks − 2:
+**Multiple nodes -** Use one SLURM `srun` step: rank 0 is the scheduler,
+rank 1 is the driver, and ranks 2+ are workers.
 
 ```bash
 srun -n <workers+2> python -m psyneulink.dask_run study.py
 ```
 
-See [submit_dask.slurm](submit_dask.slurm) for a ready-to-edit batch script and
-[study.py](study.py) for a complete DDM example.
+See [submit_dask.slurm](submit_dask.slurm) for a batch template and
+[study.py](study.py) for a DDM example.
 
-For a heavier, multi-node-sized example on a richer model (an LCA control module
-feeding a DDM), see
+For a larger Stability-Flexibility example, see
 [../stability_flexibility/stability_flexibility_dask.py](../stability_flexibility/stability_flexibility_dask.py)
 and its [submit_stabflex_dask.slurm](../stability_flexibility/submit_stabflex_dask.slurm).
-That `pec_factory` rebuilds the model with `make_stab_flex` from the co-located
-`stability_flexibility.py`, so the batch script puts that directory on `PYTHONPATH`
-for every rank -- workers import the model by name rather than receiving it by value.
+That `pec_factory` imports `make_stab_flex` from the co-located
+`stability_flexibility.py`, so the batch script puts that directory on
+`PYTHONPATH`.
 
 ## Reproducibility
 

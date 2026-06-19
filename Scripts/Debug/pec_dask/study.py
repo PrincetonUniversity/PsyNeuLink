@@ -1,27 +1,22 @@
 """Example: distributed PEC maximum-likelihood fitting (DDM).
 
-A normal, serial-looking PEC study. The only difference from a serial fit is
-``distributed=True`` plus a ``pec_factory`` in ``distributed_options``. There is
-no Dask administration here -- no scheduler, no addresses.
+The Dask-specific settings are ``distributed=True`` and ``pec_factory`` in
+``distributed_options``.
 
 Run it two ways:
 
-  Single node (zero config -- a LocalCluster is created automatically)::
+  Single node::
 
       python study.py
 
-  Multiple nodes (PsyNeuLink forms the cluster from the SLURM allocation)::
+  Multiple nodes::
 
       srun -n <workers+2> python -m psyneulink.dask_run study.py
 
-  i.e. rank 0 runs the scheduler, rank 1 runs this script (the driver), and the
-  remaining ranks are workers. See submit_dask.slurm for a ready-to-edit batch
-  script. Requires the ``psyneulink[dask]`` extra and LLVM execution.
+  rank 0 is the scheduler, rank 1 is the driver, and ranks 2+ are workers.
+  Requires the ``psyneulink[dask]`` extra and LLVM execution.
 
-``pec_factory(data) -> (pec, inputs)`` is how a worker rebuilds the model: a live
-PEC is never shipped across the wire, so each worker builds and caches its own
-from this recipe. Keep it self-contained (imports + literals inside) so it can be
-shipped to workers by value.
+``pec_factory(data) -> (pec, inputs)`` rebuilds the model on each worker.
 """
 
 import numpy as np
@@ -70,13 +65,7 @@ def make_observed_data():
 
 
 def pec_factory(data):
-    """Worker recipe: rebuild a fresh serial PEC + inputs from the observed data.
-
-    A top-level function defined alongside the study, so Dask ships it to workers by
-    value together with the module-level names it uses. Workers only need PsyNeuLink
-    importable in the same environment. Keep it self-contained: depend only on the
-    data argument and importable names, never on driver-side state.
-    """
+    """Worker recipe: rebuild a serial PEC and inputs from observed data."""
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
@@ -118,9 +107,6 @@ def main():
     data = make_observed_data()
     comp, decision = build_ddm()
 
-    # CMA-ES; with the launcher, max_concurrent_evaluations defaults to the live
-    # worker count. Pinning the CMA-ES popsize to the batch keeps the trajectory
-    # deterministic. Adjust max_iterations for your evaluation budget.
     optimizer = PECOptimizationFunction(
         method=optuna.samplers.CmaEsSampler(seed=0, popsize=8),
         max_iterations=480,

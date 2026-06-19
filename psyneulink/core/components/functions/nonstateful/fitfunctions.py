@@ -265,18 +265,11 @@ def simulation_likelihood(
 # ---------------------------------------------------------------------------
 # Distributed (Dask) PEC fitting helpers.
 #
-# These are module-level (importable-by-reference) so Dask can ship them to
-# workers by name. All Dask imports are lazy: ``distributed=False`` never
-# imports Dask, and a missing Dask install raises a clear, actionable error
-# only when distributed fitting is actually requested. A live PEC is never
-# pickled; each worker rebuilds one locally from a user-supplied ``pec_factory``
-# and caches it, so only the factory (by value), broadcast data, parameter
-# values, and a scalar result cross the wire.
+# These helpers are module-level so Dask can serialize them. Dask imports stay
+# lazy: ``distributed=False`` never imports Dask.
 # ---------------------------------------------------------------------------
 
-# The client formed by the ``python -m psyneulink.dask_run`` launcher, if any.
-# Set on the driver rank by the launcher so ``distributed=True`` study scripts
-# auto-detect the launcher-formed cluster without any address handling.
+# Client registered by ``python -m psyneulink.dask_run`` on the driver rank.
 _ACTIVE_LAUNCHER_CLIENT = None
 
 # Per-process fallback PEC cache for evaluations made outside a Dask worker
@@ -323,14 +316,13 @@ def _resolve_worker_cores(options):
 def _dask_client(options):
     """Resolve a Dask client from ``distributed_options``; return ``(client, close_fn)``.
 
-    Resolution order (first match wins):
-      1. an explicit ``client`` (bring-your-own: notebooks, non-SLURM clusters,
-         or a warm cluster reused across fits)
+    Resolution order:
+      1. an explicit ``client``
       2. the active launcher client (set by ``psyneulink.dask_run``)
-      3. a ``LocalCluster`` on the current node (zero-config single-node default)
+      3. a ``LocalCluster`` on the current node
 
     ``close_fn`` tears down only resources created here (the LocalCluster); it is
-    ``None`` for externally-supplied or launcher clients, which we must not close.
+    ``None`` for externally-supplied or launcher clients.
     """
     dd = _require_dask()
     options = dict(options or {})
@@ -342,8 +334,7 @@ def _dask_client(options):
     if _ACTIVE_LAUNCHER_CLIENT is not None:
         return _ACTIVE_LAUNCHER_CLIENT, None
 
-    # Zero-config single-node default: process workers (threads_per_worker=1 --
-    # PNL's LLVM runtime asserts on multi-threaded in-process cleanup).
+    # Process workers avoid multi-threaded LLVM cleanup.
     lc_kwargs = {"threads_per_worker": 1}
     n_workers = options.get("n_workers")
     if n_workers is not None:
@@ -361,12 +352,7 @@ def _dask_client(options):
 def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
-    Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``,
-    pinning this worker's LLVM thread count, then re-scores the cached PEC for every
-    subsequent candidate so the compiled binary is reused. The cache is a single slot
-    tagged with ``fit_id``: a worker reused across fits (e.g. a warm Client passed by
-    the caller) rebuilds when the fit changes, so a candidate is never scored against
-    a stale PEC built from a previous fit's data or factory.
+    Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``.
     """
     try:
         from dask.distributed import get_worker
@@ -395,8 +381,7 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id)
 def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, fit_id, param_values):
     """scipy.optimize-facing objective: a value to MINIMIZE.
 
-    Top-level (picklable) so it can be shipped to workers; never a closure over a
-    live PEC. scipy minimizes, so flip the sign when the PEC direction is maximize.
+    scipy minimizes, so flip the sign when the PEC direction is maximize.
     """
     ll = _dask_evaluate_loglik(pec_factory, list(param_values), data, worker_cores, fit_id)
     return -ll if direction == "maximize" else ll
@@ -494,15 +479,14 @@ class PECOptimizationFunction(OptimizationFunction):
         ``pec_factory``):
 
             - ``"pec_factory"`` : a top-level (picklable) callable taking the observed data and returning a fresh
-              ``(pec, inputs)`` for a worker to score. **Required** when distributed: a live PEC cannot be shipped to
-              workers, so each worker rebuilds and caches one locally from this recipe.
+              ``(pec, inputs)`` for a worker to score. **Required** when distributed.
             - ``"worker_cores"`` : LLVM threads per worker. Defaults to ``$SLURM_CPUS_PER_TASK`` (else the available
-              cores), so it mirrors ``--cpus-per-task`` without retyping.
+              cores).
             - ``"max_concurrent_evaluations"`` : candidates evaluated per ask/tell round. Defaults to the live worker
               count; generational samplers (CMA-ES, NSGA-II) require at least 2.
-            - ``"client"`` : a Dask ``Client`` to use instead of an auto-resolved cluster (for notebooks, non-SLURM
-              clusters, or a warm cluster reused across fits). If omitted, an active cluster formed by
-              ``python -m psyneulink.dask_run`` is used, else a single-node ``LocalCluster`` is created.
+            - ``"client"`` : a Dask ``Client`` to use instead of an auto-resolved cluster. If omitted, an active
+              cluster formed by ``python -m psyneulink.dask_run`` is used, else a single-node ``LocalCluster`` is
+              created.
             - ``"n_workers"`` : number of workers for the auto-created single-node ``LocalCluster`` (single-node only;
               ignored when a ``client`` or launcher cluster is used).
 
@@ -1075,10 +1059,8 @@ class PECOptimizationFunction(OptimizationFunction):
     def _fit_differential_evolution_distributed(self, context, client):
         """Distributed differential_evolution: map each generation across Dask workers.
 
-        scipy drives the search; ``workers=`` distributes each (deferred) generation's
-        population across the cluster via ``_dask_map``. The objective is a top-level,
-        picklable factory objective -- never a closure over the live PEC. Returns the
-        same ``{"fitted_params", "optimal_value"}`` dict as the serial path.
+        scipy drives the search; ``workers=`` distributes each deferred generation's
+        population across the cluster via ``_dask_map``.
         """
         pec_factory = self._resolve_pec_factory()
         worker_cores = _resolve_worker_cores(self._distributed_options)
@@ -1092,17 +1074,12 @@ class PECOptimizationFunction(OptimizationFunction):
         # Per-fit id so a worker reused across fits rebuilds its cached PEC.
         fit_id = uuid.uuid4().hex
 
-        # Top-level objective bound to picklable args. Data is bound by value (not a
-        # scattered Future) so it survives being frozen inside the partial scipy hands
-        # to workers; the per-worker PEC cache means each worker materialises the data
-        # and builds its PEC only once. (The optuna path uses the more efficient
-        # client.scatter, where we control submit and pass the data future directly.)
+        # Data is bound by value for scipy; the optuna path scatters it.
         objective = functools.partial(
             _dask_evaluate_loglik_de, pec_factory, worker_cores, data, self.direction, fit_id
         )
 
-        # updating="deferred" is mandatory with workers: the whole population is
-        # evaluated per generation, which is exactly what _dask_map distributes.
+        # updating="deferred" is mandatory when workers are supplied.
         de_kwargs = dict(self._method_kwargs)
         de_kwargs.pop("updating", None)
         de_kwargs.pop("workers", None)
@@ -1233,8 +1210,7 @@ class PECOptimizationFunction(OptimizationFunction):
             raise OptimizationFunctionError(
                 "Distributed PEC fitting (distributed=True) requires a 'pec_factory' in "
                 "distributed_options: a top-level callable that takes the observed data and "
-                "returns a fresh (pec, inputs) for a worker to score. A live PEC cannot be "
-                "shipped to workers (Compositions are not safely picklable)."
+                "returns a fresh (pec, inputs) for a worker to score."
             )
         return pec_factory
 

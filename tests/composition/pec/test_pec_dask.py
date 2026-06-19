@@ -8,11 +8,8 @@ Three layers, fastest first:
   * **Driver logic** -- the synchronous ask/tell bookkeeping (``_run_ask_tell_rounds``)
     against an analytic objective: exactly ``n_trials`` asked/told in order (including
     a partial final batch), scores routed to the matching trial, and CMA-ES maximizing.
-  * **Integration** -- a real process-based ``LocalCluster`` (workers in separate
-    processes, like the SLURM deployment) for the headline claims: distributed
-    per-candidate log-likelihoods match serial, an end-to-end distributed fit
-    completes with each worker caching its PEC, and -- with common random numbers --
-    a distributed fit matches the serial fit's optimized values.
+  * **Integration** -- a process-based ``LocalCluster`` for distributed/serial
+    log-likelihood parity, end-to-end fitting, worker caching, and CRN parity.
 """
 
 import builtins
@@ -93,11 +90,7 @@ def make_ddm_data():
 
 
 def build_ddm_pec(data):
-    """pec_factory: rebuild a fresh serial PEC + inputs from the observed data.
-
-    Top-level and data-argument-only (no driver-side captured state) so a worker
-    can build its own local PEC. Returns ``(pec, inputs)``; never ship a live PEC.
-    """
+    """pec_factory used by distributed PEC tests."""
     comp, decision = _build_ddm_comp()
     pec = pnl.ParameterEstimationComposition(
         name="pec_dask_test",

@@ -1,31 +1,26 @@
 """Distributed PEC fitting of the Stability-Flexibility model.
 
-A heavier, multi-node-oriented analogue of ``Scripts/Debug/pec_dask/study.py``:
-the model is a full Stability-Flexibility composition (an LCA control module
-feeding a DDM) rather than a bare DDM, and the evaluation budget is sized for a
-real cluster run. The distributed contract is identical to the DDM example --
-``distributed=True`` plus a ``pec_factory`` in ``distributed_options`` -- and
-there is no Dask administration here: no scheduler, no addresses.
+This is a larger example than ``Scripts/Debug/pec_dask/study.py``: a full
+Stability-Flexibility composition with an LCA control module feeding a DDM. The
+Dask-specific settings are ``distributed=True`` and ``pec_factory`` in
+``distributed_options``.
 
 Run it two ways:
 
-  Single node (a LocalCluster is created automatically)::
+  Single node::
 
       python stability_flexibility_dask.py
 
-  Multiple nodes (PsyNeuLink forms the cluster from the SLURM allocation)::
+  Multiple nodes::
 
       srun -n <workers+2> python -m psyneulink.dask_run stability_flexibility_dask.py
 
-  i.e. rank 0 runs the scheduler, rank 1 runs this script (the driver), and the
-  remaining ranks are workers. See ``submit_stabflex_dask.slurm`` for a ready-to-edit
-  batch script. Requires the ``psyneulink[dask]`` extra and LLVM execution.
+  rank 0 is the scheduler, rank 1 is the driver, and ranks 2+ are workers.
+  Requires the ``psyneulink[dask]`` extra and LLVM execution.
 
 The model itself is reused from ``stability_flexibility.py`` (same directory).
-Because Dask ships ``pec_factory`` to workers and the factory calls
-``make_stab_flex`` / ``generate_trial_sequence`` *by reference*, those names must
-be importable in the worker environment too: the SLURM script puts this directory
-on ``PYTHONPATH`` so every rank can ``import stability_flexibility``.
+The SLURM script puts this directory on ``PYTHONPATH`` so workers can import
+``make_stab_flex`` and ``generate_trial_sequence``.
 """
 
 import os
@@ -66,8 +61,6 @@ INITIAL_SEED = 42
 TRIAL_SEQ_SEED = 0
 
 # CMA-ES population per generation == candidates dispatched per ask/tell round.
-# Provision roughly this many workers (see the SLURM script) so each round keeps
-# every worker busy; pinning it keeps the CMA-ES trajectory deterministic.
 MAX_CONCURRENT = 16
 NUM_GENERATIONS = 60
 
@@ -129,15 +122,7 @@ def outcome_variables(comp):
 
 
 def pec_factory(data):
-    """Worker recipe: rebuild a fresh serial PEC + inputs from the observed data.
-
-    Top-level and self-contained: it depends only on the ``data`` argument and on
-    importable names (``pnl``, ``np``, and ``make_stab_flex`` /
-    ``generate_trial_sequence`` from ``stability_flexibility``). Each worker builds
-    and caches its own PEC from this recipe, reusing the compiled LLVM binary across
-    candidate evaluations. The inner optimizer is required by the constructor but is
-    never run -- the worker calls ``pec.log_likelihood`` directly.
-    """
+    """Worker recipe: rebuild a serial PEC and inputs from observed data."""
     comp = make_stab_flex(**SF_PARAMS)
     pec = pnl.ParameterEstimationComposition(
         name="stabflex_worker", nodes=comp,
