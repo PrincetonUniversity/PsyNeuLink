@@ -1,8 +1,10 @@
 # Batched compiler benchmarks (asv)
 
 [airspeed velocity](https://asv.readthedocs.io) benchmarks tracking the GPU
-batched Triton simulator (`benchmarks/batched.py`: DDM and stability-flexibility,
-`time_run` + `track_checksum`) across commits.
+batched Triton simulator across commits (`benchmarks/batched.py`): `DDM`,
+`DDMGraph` (transfer→DDM), `LCA` (isolated width-2, cue-driven), and
+`StabilityFlexibility` (LCA+DDM) — each `time_run` + `track_checksum`, swept
+over the number of estimates (GPU lanes).
 
 ## Constraints
 
