@@ -296,7 +296,6 @@ def _distributions():
 
 
 def test_ask_tell_exact_count_order_and_routing():
-    pytest.importorskip("cmaes")  # optuna's CmaEsSampler imports `cmaes` on first ask
     batch, n_trials = 6, 24
     study = optuna.create_study(
         sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
@@ -339,7 +338,6 @@ def test_ask_tell_partial_final_batch_asks_exact_count():
 
 
 def test_ask_tell_cmaes_maximizes_toward_target():
-    pytest.importorskip("cmaes")  # optuna's CmaEsSampler imports `cmaes` on first ask
     batch, n_trials = 8, 160
     study = optuna.create_study(
         sampler=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
@@ -547,7 +545,6 @@ def _distributed_options(cluster_client, **overrides):
 
 @pytest.mark.composition
 def test_distributed_fit_end_to_end_and_worker_cache(ddm_data, cluster_client):
-    pytest.importorskip("cmaes")
     batch = 4
     optimizer = PECOptimizationFunction(
         method=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
@@ -633,7 +630,6 @@ def test_distributed_differential_evolution_runs(ddm_data, cluster_client):
 @pytest.mark.composition
 def test_distributed_without_crn_warns(ddm_data, cluster_client):
     """A distributed fit with CRN off is valid but warns about non-reproducibility."""
-    pytest.importorskip("cmaes")
     batch = 2
     optimizer = PECOptimizationFunction(
         method=optuna.samplers.CmaEsSampler(seed=0, popsize=batch),
