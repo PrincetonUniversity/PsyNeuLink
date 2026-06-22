@@ -56,6 +56,12 @@ The PsyNeuLink implementation of the model used in this example is shown below.
    :align: center
    :alt: Giallanza et al., Model graph implemented in PsyNeuLink
 
+PsyNeuLink implementation (using EMComposition):
+
+.. figure:: _static/Giallanza_2024_EGO_study_2.svg
+   :align: left
+   :alt: N-Back Model Animation
+
 
 Please note:
 ------------

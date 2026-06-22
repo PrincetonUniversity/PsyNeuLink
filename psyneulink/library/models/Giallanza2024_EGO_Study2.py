@@ -18,7 +18,7 @@ The task and data simulated are based ones reported in `https://www.nature.com/a
     predict each subsequent state from the current one.
 
 Differences from the Pytorch implementation described in `Giallanza et al. (2024)
-<https://pubmed.ncbi.nlm.nih.gov/38828434/>`_, and available at BREADCRUMB GitHub REPO:
+<https://pubmed.ncbi.nlm.nih.gov/38828434/>`_, and available at <BREADCRUMB GitHub REPO:>
 
 - In the original implementation, the tanh activation function is applied to the state before it is
   passed to the context layer. Here, the tanh activation is applied to the output of the context layer.
@@ -26,9 +26,6 @@ Differences from the Pytorch implementation described in `Giallanza et al. (2024
 - In the original implementation, the Episodic Memory (EM) module was a dynamically growing list of memories
   initialized as an empty list. Here, the EM module is implemented using `EMComposition`, which uses a fixed-size
   memory buffer initialized with small non-zero values.
-
-Model:
-BREADCRUMB: FIGURE HERE
 
 
 """
