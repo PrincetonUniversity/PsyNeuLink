@@ -545,6 +545,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             param.set(kwargs[attr], context, override=True)
             value.append(param._get(context))
 
+        # Return (and store) value as a single array (an object array if the
+        # stateful attributes have incompatible shapes) rather than a list, so
+        # callers do not each have to convert it.
+        value = convert_all_elements_to_np_array(value)
         self.parameters.value.set(value, context, override=True)
         return value
 
