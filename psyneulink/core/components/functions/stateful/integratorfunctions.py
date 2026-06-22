@@ -4896,9 +4896,9 @@ class FitzHughNagumoIntegrator(
         # during initialization and with compiled execution (which unwraps the
         # same dimension; see helpers.unwrap_2d_array). Standalone use with a
         # genuinely 2d variable (matching 2d stateful values) is unaffected.
-        if not np.isscalar(variable) and variable.ndim > np.ndim(previous_v) \
-                and variable.size == np.size(previous_v):
-            variable = variable.reshape(np.shape(previous_v))
+        # reshape raises if variable and the stateful values are incompatible.
+        if np.ndim(variable) > np.ndim(previous_v):
+            variable = np.reshape(variable, np.shape(previous_v))
 
         # integration_method is a compile time parameter
         integration_method = self.parameters.integration_method.get()

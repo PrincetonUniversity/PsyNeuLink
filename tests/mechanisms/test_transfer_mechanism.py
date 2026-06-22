@@ -1853,14 +1853,12 @@ def test_reset_multi_stateful_integrator_with_owner_value_output_port(comp_mode)
 
     comp.run(inputs={inp: [[1.0]]}, execution_mode=comp_mode)
 
-    # The mechanism's value is the 3 FHN terms (v, w, time), each of size 1, so
-    # its shape is (3, 1) in both Python and compiled mode (previously Python
-    # inflated this to (3, 1, 1); see FitzHughNagumoIntegrator._function).
-    np.testing.assert_array_equal(np.asarray(lc.parameters.value.get(comp)).shape, (3, 1))
-
-    # Output port selects the second FHN term (w); identical in Python and compiled
-    # (tolerance allows for reduced fp32 precision in compiled CI runs).
-    np.testing.assert_allclose(np.squeeze(comp.results), 0.002795524774843733, rtol=1e-5, atol=1e-8)
+    # Output port selects the second FHN term (w); the result is identical in
+    # Python and compiled mode, including its shape (previously Python inflated
+    # the value to (3, 1, 1); see FitzHughNagumoIntegrator._function), so the
+    # explicit shape of the expected result also guards against that regression.
+    # Tolerance allows for reduced fp32 precision in compiled CI runs.
+    np.testing.assert_allclose(comp.results, [[[0.002795524774843733]]], rtol=1e-5, atol=1e-8)
 
 
 class TestTerminationMeasure:

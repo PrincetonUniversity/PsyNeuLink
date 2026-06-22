@@ -45,27 +45,19 @@ class TestReset:
         I.reset_stateful_function_when = Never()
         I.execute(1.0)
 
-        np.testing.assert_allclose([0.05127053], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.00279552], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.05], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
         I.function.reset(0.01, 0.02, 0.03)
 
-        np.testing.assert_allclose(0.01, I.function.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.02, I.function.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.03, I.function.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.01], [0.02], [0.03]], I.function.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([0.05127053], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.00279552], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.05], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
         np.testing.assert_allclose([0.05127053], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
         I.execute(1.0)
 
-        np.testing.assert_allclose([0.06075727], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.02277156], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([0.08], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.06075727], [0.02277156], [0.08]], I.value, rtol=1e-5, atol=1e-8)
 
         np.testing.assert_allclose([0.06075727], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
