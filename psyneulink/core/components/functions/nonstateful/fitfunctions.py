@@ -630,14 +630,19 @@ class PECOptimizationFunction(OptimizationFunction):
             elapsed = time.time() - t0
             self.num_evals = self.num_evals + 1
 
-            # Keep a log of warnings and the parameters that caused them
-            if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
+            # Keep a log of warnings and the parameters that caused them. Only the warning(s)
+            # raised by this evaluation are relevant, so capture it before clearing the warns
+            # buffer below.
+            got_pec_warning = len(warns) > 0 and issubclass(
+                warns[-1].category, PECObjectiveFuncWarning
+            )
+            if got_pec_warning:
                 warns_with_params.append((warns[-1], params))
 
             # Are we displaying each iteration
             if display_iter:
                 # If we got a warning generating the objective function value, report it
-                if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
+                if got_pec_warning:
                     progress.console.print(f"Warning: ", style="bold red")
                     progress.console.print(f"{warns[-1].message}", style="bold red")
                     progress.console.print(
@@ -646,8 +651,6 @@ class PECOptimizationFunction(OptimizationFunction):
                         style="bold red",
                         highlight=False,
                     )
-                    # Clear the warnings
-                    warns.clear()
                 else:
                     progress.console.print(
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
@@ -679,9 +682,44 @@ class PECOptimizationFunction(OptimizationFunction):
                             % max_evals,
                         )
 
+            # Clear the recorded warnings so the next evaluation starts fresh and warns[-1]
+            # cannot be mis-attributed to a later (possibly warning-free) parameter set.
+            warns.clear()
+
             return p
 
         return objfunc_wrapper
+
+    def _report_degenerate_warnings(self, progress, warns_with_params):
+        """
+        Summarize any degenerate objective-function warnings accumulated since the last
+        optimizer callback, then clear them.
+
+        ``warns_with_params`` accumulates a ``(warning, params)`` tuple for every evaluation
+        that raised a ``PECObjectiveFuncWarning`` during the current iteration/trial. This
+        prints those parameter sets and then empties the list so that subsequent callbacks
+        only report newly degenerate parameter sets, rather than re-printing every degenerate
+        set seen since the search began.
+        """
+        if len(warns_with_params) == 0:
+            return
+
+        progress.console.print(
+            f"Warning: degenerate {self.obj_func_desc_str} values for the following parameter values ",
+            style="bold red",
+        )
+        for w in warns_with_params:
+            progress.console.print(f"\t{get_param_str(w[1])}", style="bold red")
+        progress.console.print(
+            "If these warnings are intermittent, check to see if search "
+            "space is appropriately bounded. If they are constant, and you are fitting to "
+            "data, make sure experimental data and output of your composition are similar.",
+            style="bold red",
+        )
+
+        # Clear the accumulated warnings so the next iteration/trial only reports the
+        # parameter sets that were degenerate during that iteration.
+        warns_with_params.clear()
 
     def _fit_differential_evolution(
         self,
@@ -750,21 +788,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     )
 
                     # If we encounter any PECObjectiveFuncWarnings. Summarize them for the user
-                    if len(warns_with_params) > 0:
-                        progress.console.print(
-                            f"Warning: degenerate {self.obj_func_desc_str} values for the following parameter values ",
-                            style="bold red",
-                        )
-                        for w in warns_with_params:
-                            progress.console.print(
-                                f"\t{get_param_str(w[1])}", style="bold red"
-                            )
-                        progress.console.print(
-                            "If these warnings are intermittent, check to see if search "
-                            "space is appropriately bounded. If they are constant, and you are fitting to"
-                            "data, make sure experimental data and output of your composition are similar.",
-                            style="bold red",
-                        )
+                    self._report_degenerate_warnings(progress, warns_with_params)
 
                     progress.update(opt_task, completed=convergence_pct)
                     self.gen_count = self.gen_count + 1
@@ -842,21 +866,7 @@ class PECOptimizationFunction(OptimizationFunction):
                         )
 
                     # If we encounter any PECObjectiveFuncWarnings. Summarize them for the user
-                    if len(warns_with_params) > 0:
-                        progress.console.print(
-                            f"Warning: degenerate {self.obj_func_desc_str} values for the following parameter values ",
-                            style="bold red",
-                        )
-                        for w in warns_with_params:
-                            progress.console.print(
-                                f"\t{get_param_str(w[1])}", style="bold red"
-                            )
-                        progress.console.print(
-                            "If these warnings are intermittent, check to see if search "
-                            "space is appropriately bounded. If they are constant, and you are fitting to"
-                            "data, make sure experimental data and output of your composition are similar.",
-                            style="bold red",
-                        )
+                    self._report_degenerate_warnings(progress, warns_with_params)
 
                     progress.update(opt_task, advance=1)
 
