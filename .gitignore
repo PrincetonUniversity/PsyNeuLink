@@ -202,3 +202,6 @@ tests/*.pdf
 
 # VSCode settings
 .vscode/
+
+# asv (airspeed velocity) benchmarks
+.asv/
