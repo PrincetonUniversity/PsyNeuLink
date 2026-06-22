@@ -881,11 +881,8 @@ class ParameterEstimationComposition(Composition):
 
         optimization_function._pec_initial_seed_user_specified = initial_seed is not None
 
-        # Forward PEC-level distributed knobs onto the optimization function. A
-        # passed PECOptimizationFunction that already enabled distributed keeps its
-        # own options (authoritative); otherwise PEC-level settings apply, so a
-        # plain string method (e.g. 'differential_evolution') can be distributed
-        # straight from the PEC constructor.
+        # Forward PEC-level distributed settings, unless the optimization function
+        # already enabled distributed itself (its own options take precedence).
         if distributed and not optimization_function.distributed:
             optimization_function.distributed = True
             if distributed_options is not None:
@@ -1046,9 +1043,8 @@ class ParameterEstimationComposition(Composition):
                 f"unless its controller comp_execution_mode is 'LLVM'; got {comp_execution_mode!r}."
             )
 
-        # No pnllvm.cleanup() here: log_likelihood re-scores one fixed PEC many
-        # times, so the compiled binary must be reused (cleanup forces a ~8x
-        # recompile per eval). run()'s cleanup still guards the optimization entry.
+        # Unlike run(), no pnllvm.cleanup() here: log_likelihood re-scores one fixed
+        # PEC repeatedly and must reuse the compiled binary.
         context.composition = self
 
         assert self.controller is not None

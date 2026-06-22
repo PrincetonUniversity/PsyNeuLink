@@ -442,15 +442,12 @@ def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
                          submit_one, gather):
     """Synchronous batched ask/tell loop for a distributed optuna study.
 
-    Asks exactly ``n_trials`` candidates total, dispatched in rounds of at most
-    ``batch``. When ``n_trials`` is not a multiple of ``batch`` the final round is
-    smaller, so the distributed path evaluates the same number of candidates as the
-    serial ``study.optimize(n_trials=...)`` rather than truncating to whole batches.
-    Each round asks its candidates, dispatches each candidate's parameter vector (in
-    ``param_order``) via ``submit_one(param_values) -> future``, gathers the scalar
-    scores with ``gather(futures)``, and tells each score back to its own trial.
-    Pure bookkeeping with no Dask/PNL dependency so it can be tested against a
-    synchronous fake evaluator; the real path passes Dask submit/gather.
+    Asks exactly ``n_trials`` candidates in rounds of at most ``batch`` (the final
+    round may be smaller), matching the serial ``study.optimize(n_trials=...)`` count.
+    Each round asks its candidates, dispatches each parameter vector (in
+    ``param_order``) via ``submit_one(param_values) -> future``, gathers the scores
+    with ``gather(futures)``, and tells each back to its trial. No Dask/PNL dependency,
+    so it can be tested with a synchronous fake evaluator.
     """
     remaining = n_trials
     while remaining > 0:
@@ -534,10 +531,8 @@ class PECOptimizationFunction(OptimizationFunction):
 
     """
 
-    # Share (do not deepcopy) the distributed options: they can hold a live Dask
-    # Client, which is not deepcopyable (holds an asyncio.Task). The OCM deepcopies
-    # its function on instantiation and during simulation; _dask_client only ever
-    # reads a local copy of these options, so sharing the reference is safe.
+    # Don't deepcopy distributed_options: they may hold a live Dask Client (not
+    # deepcopyable). _dask_client only reads a local copy, so sharing is safe.
     _deepcopy_shared_keys = (
         OptimizationFunction._deepcopy_shared_keys | frozenset(['_distributed_options'])
     )
@@ -566,11 +561,7 @@ class PECOptimizationFunction(OptimizationFunction):
 
         self.direction = direction
 
-        # Distributed (Dask) fitting knobs. Both default off, so existing serial
-        # code paths are untouched. ``distributed_options`` keys (all optional
-        # except ``pec_factory``, which is required when distributed): pec_factory,
-        # worker_cores, max_concurrent_evaluations, and the cluster options
-        # client (bring-your-own) / n_workers (auto LocalCluster size).
+        # Distributed fitting is off by default, so serial paths are unchanged.
         self.distributed = distributed
         self._distributed_options = dict(distributed_options) if distributed_options else {}
 
@@ -609,10 +600,6 @@ class PECOptimizationFunction(OptimizationFunction):
 
         # Store max_iterations, this should be a common parameter for all optimization methods
         self.max_iterations = max_iterations
-
-        # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
-        # to a OptimizationControlMechanism under and ParameterEstimationComposition.
-        self._ll_func = None
 
         # This is the generation number we are on in the search, this corresponds to iterations in
         # differential_evolution
@@ -805,9 +792,8 @@ class PECOptimizationFunction(OptimizationFunction):
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
 
-        # Distributed evaluation only implements log-likelihood scoring (workers call
-        # PEC.log_likelihood). Reject it upfront in objective-function mode rather than
-        # failing later inside a worker with a less actionable error.
+        # Distributed evaluation only scores log-likelihoods; reject objective-function
+        # mode here rather than failing later inside a worker.
         if not self.data_fitting_mode:
             raise OptimizationFunctionError(
                 "Distributed fitting (distributed=True) is only supported for data "
@@ -815,9 +801,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 "It is not available in objective-function mode."
             )
 
-        # Distributed path: warn if the fit will not be reproducible (no common
-        # random numbers), resolve the Dask client exactly once, dispatch, and
-        # tear down only resources we created (an internally-built LocalCluster).
+        # Resolve the client once; close_dask is set only for a cluster we created.
         self._warn_if_no_crn(context)
         client, close_dask = _dask_client(self._distributed_options)
         try:
@@ -829,10 +813,8 @@ class PECOptimizationFunction(OptimizationFunction):
     def _warn_if_no_crn(self, context):
         """Warn when distributed fitting is not serial-reproducible."""
         owner = self.owner
-        # Use the public Parameter.get (not _get): it tolerates a None context by
-        # synthesizing a default one, whereas _get raises on a stateful parameter
-        # when context is None. _warn_if_no_crn may be called before any execution
-        # context exists (e.g. directly with None).
+        # Public .get (not ._get) tolerates a None context; this may run before any
+        # execution context exists.
         same_seed = owner is not None and bool(
             owner.parameters.same_seed_for_all_allocations.get(context)
         )
@@ -885,10 +867,8 @@ class PECOptimizationFunction(OptimizationFunction):
             if self._optuna_kwargs:
                 warnings.warn("optuna_kwargs are being ignored because method is an optuna study")
 
-            # The direction of the passed study is fixed at study creation time and is used as-is (we do not
-            # recreate the study). Warn if it doesn't match the direction this PEC expects, since a mismatch will
-            # silently optimize the wrong way. For data fitting (maximum likelihood estimation) the study must be
-            # created with direction='maximize'.
+            # A passed study's direction is used as-is; warn on a mismatch, which would
+            # silently optimize the wrong way (data fitting needs direction='maximize').
             expected_direction = (
                 optuna.study.StudyDirection.MAXIMIZE
                 if self.direction == "maximize"
@@ -1120,7 +1100,7 @@ class PECOptimizationFunction(OptimizationFunction):
         # Per-fit id so a worker reused across fits rebuilds its cached PEC.
         fit_id = uuid.uuid4().hex
 
-        # Data is bound by value for scipy; the optuna path scatters it.
+        # Bound by value: scipy's workers() interface can't take a scattered future.
         objective = functools.partial(
             _dask_evaluate_loglik_de, pec_factory, worker_cores, data, self.direction, fit_id
         )
@@ -1260,8 +1240,7 @@ class PECOptimizationFunction(OptimizationFunction):
             )
         return pec_factory
 
-    # Optuna samplers whose ask/tell trajectory is generational and therefore
-    # requires a per-round batch (population) of at least 2 candidates.
+    # Generational samplers need a per-round batch of at least 2.
     _GENERATIONAL_SAMPLERS = (optuna.samplers.CmaEsSampler, optuna.samplers.NSGAIISampler)
 
     def _resolve_batch_size(self, client, opt_func):
@@ -1310,9 +1289,8 @@ class PECOptimizationFunction(OptimizationFunction):
         data = self.owner.composition.data
 
         param_order = list(self.fit_param_names)
-        # Match the serial path's discretization (trial.suggest_float(..., step=step))
-        # so distributed candidates land on the same grid -- required for serial parity
-        # with tell-order-independent samplers (e.g. RandomSampler).
+        # Match the serial path's discretization so candidates land on the same grid
+        # (needed for parity with tell-order-independent samplers).
         distributions = {
             name: FloatDistribution(lower, upper, step=step)
             for name, (lower, upper, step) in self.fit_param_bounds.items()
@@ -1331,9 +1309,8 @@ class PECOptimizationFunction(OptimizationFunction):
         else:
             study = optuna.create_study(sampler=opt_func, direction=self.direction)
 
-        # Broadcast the observed data once. hash=False gives this fit a unique key:
-        # with content-hashed keys, a second fit on the same data in one process
-        # races the release of the first fit's key ("lost dependencies" cancellations).
+        # Broadcast the data once. hash=False keeps the key unique so a second fit on
+        # the same data doesn't race release of the first fit's key.
         data_f = client.scatter(data, broadcast=True, hash=False)
 
         # Per-fit id so a worker reused across fits rebuilds its cached PEC.
@@ -1345,10 +1322,8 @@ class PECOptimizationFunction(OptimizationFunction):
                 fit_id, pure=False,
             )
 
-        # Release the broadcast dataset from worker memory when the fit ends (also on
-        # error). It would be freed when data_f is garbage collected, but an explicit
-        # cancel matters for a long-lived/externally-supplied client, where successive
-        # fits would otherwise accumulate pinned copies (each has a unique hash=False key).
+        # Release the broadcast data when the fit ends; matters for a long-lived
+        # client where successive fits would otherwise accumulate pinned copies.
         try:
             _run_ask_tell_rounds(
                 study, distributions, param_order, batch, max_iterations,
