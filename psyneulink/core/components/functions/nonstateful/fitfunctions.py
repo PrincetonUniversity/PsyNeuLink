@@ -829,8 +829,12 @@ class PECOptimizationFunction(OptimizationFunction):
     def _warn_if_no_crn(self, context):
         """Warn when distributed fitting is not serial-reproducible."""
         owner = self.owner
+        # Use the public Parameter.get (not _get): it tolerates a None context by
+        # synthesizing a default one, whereas _get raises on a stateful parameter
+        # when context is None. _warn_if_no_crn may be called before any execution
+        # context exists (e.g. directly with None).
         same_seed = owner is not None and bool(
-            owner.parameters.same_seed_for_all_allocations._get(context)
+            owner.parameters.same_seed_for_all_allocations.get(context)
         )
         fixed_initial_seed = bool(
             getattr(self, "_pec_initial_seed_user_specified", False)

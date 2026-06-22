@@ -739,6 +739,6 @@ def test_distributed_without_crn_warns(ddm_data, cluster_client):
         ),
     )
     pec, comp = _make_driver_pec(ddm_data, optimizer, "pec_dask_nocrn", crn=False)
-    with pytest.warns(UserWarning, match="common random numbers"):
+    with pytest.warns(UserWarning, match="Distributed PEC fitting is reproducible"):
         pec.run(inputs={comp: _trial_inputs()})
     assert all(np.isfinite(v) for v in pec.optimized_parameter_values.values())
