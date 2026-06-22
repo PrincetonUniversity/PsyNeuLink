@@ -275,13 +275,14 @@ class PECOptimizationFunction(OptimizationFunction):
             - optuna.samplers: Pass any instance of an optuna sampler to use optuna for optimization.
             - Type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
             for optimization. In this case, the random seed used for the sampler will be the same as the seed used
-            as the intial_seed passed to PEC at contruction. Additional desired keyword arguments can be passed to the
+            as the initial_seed passed to PEC at construction. Additional desired keyword arguments can be passed to the
             sampler via the optuna_kwargs argument.
+            - optuna.study.Study: Pass an optuna study to use optuna for optimization.
 
     optuna_kwargs :
-        A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is an class of
+        A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is a class of
         type optuna.samplers.BaseSampler. Note: this argument is ignored if method is an already instantiated instance
-        of an optuna sampler.
+        of an optuna sampler or optuna study.
 
     objective_function :
         The objective function to use for optimization. This is the function that defines the optimization problem the
@@ -309,7 +310,7 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
+        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study],
         optuna_kwargs: Optional[Mapping] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
@@ -571,6 +572,33 @@ class PECOptimizationFunction(OptimizationFunction):
             return self._fit_optuna(
                 obj_func=obj_func, opt_func=self.method(**self._optuna_kwargs), display_iter=display_iter
             )
+        elif isinstance(self.method, optuna.study.Study):
+
+            if self._optuna_kwargs:
+                warnings.warn("optuna_kwargs are being ignored because method is an optuna study")
+
+            # The direction of the passed study is fixed at study creation time and is used as-is (we do not
+            # recreate the study). Warn if it doesn't match the direction this PEC expects, since a mismatch will
+            # silently optimize the wrong way. For data fitting (maximum likelihood estimation) the study must be
+            # created with direction='maximize'.
+            expected_direction = (
+                optuna.study.StudyDirection.MAXIMIZE
+                if self.direction == "maximize"
+                else optuna.study.StudyDirection.MINIMIZE
+            )
+            if self.method.direction != expected_direction:
+                warnings.warn(
+                    f"The optuna study passed as method has direction "
+                    f"'{self.method.direction.name.lower()}', but this PECOptimizationFunction expects "
+                    f"'{self.direction}'. The study's direction will be used as-is, which may produce incorrect "
+                    f"results. When data fitting (maximum likelihood estimation), create the study with "
+                    f"direction='maximize'."
+                )
+
+            return self._fit_optuna(
+                obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+            )
+
         else:
             raise ValueError(f"Invalid optimization_function method: {self.method}")
 
@@ -766,7 +794,7 @@ class PECOptimizationFunction(OptimizationFunction):
     def _fit_optuna(
         self,
         obj_func: Callable,
-        opt_func: Union[optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
+        opt_func: Union[optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study],
         display_iter: bool = True,
     ):
         with Progress(
@@ -835,9 +863,14 @@ class PECOptimizationFunction(OptimizationFunction):
                 # Turn off optuna logging except for errors or warnings, it doesn't work well with our PNL progress bar
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-                study = optuna.create_study(
-                    sampler=opt_func, direction=self.direction
-                )
+                # Check if opt_func is already and instance of optuna.study.Study, if not create a new study
+                if isinstance(opt_func, optuna.study.Study):
+                    study = opt_func
+                else:
+                    study = optuna.create_study(
+                        sampler=opt_func, direction=self.direction
+                    )
+
                 study.optimize(
                     objfunc_wrapper_wrapper,
                     n_trials=max_iterations,
