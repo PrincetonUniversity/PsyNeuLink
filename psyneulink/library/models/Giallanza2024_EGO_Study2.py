@@ -27,6 +27,12 @@ Differences from the Pytorch implementation described in `Giallanza et al. (2024
   initialized as an empty list. Here, the EM module is implemented using `EMComposition`, which uses a fixed-size
   memory buffer initialized with small non-zero values.
 
+Model:
+BREADCRUMB: FIGURE HERE
+
+.. figure:: _static/iallanza_2024_EGO_study_2.svg
+   :align: left
+   :alt: N-Back Model Animation
 
 """
 import matplotlib.pyplot as plt
