@@ -202,23 +202,26 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    (CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
-     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE,
-     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO)
+    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX,
+     LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED,
+     OWNER_VALUE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE,
+     VALUE, VARIABLE)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
-__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
+__all__ = ['LCAMechanism', 'LCAError', 'DECISION_INDEX', 'DECISION_STEPS', 'DECISION_TIME']
 
+DECISION_INDEX = 'DECISION_INDEX'
+DECISION_STEPS = 'DECISION_STEPS'
+DECISION_TIME = 'DECISION_TIME'
 
 logger = logging.getLogger(__name__)
 
 
 class LCAError(MechanismError):
     pass
-
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -313,8 +316,30 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         *MAX_VS_AVG* : float
             the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
-            and the average of all of the other elements.
+            with the highest value and the average of all of the other elements.
 
+        .. _DECISION_INDEX:
+
+        *DECISION_INDEX* : int
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the
+            index of the element of the LCAMechanism's `value <Mechanism_Base.value>` that had when `threshold
+            <LCAMechanism.threshold>` was reached;  otherwise, it is the index of the element with the highest
+            value when the LCAMechanism was last executed.
+
+        .. _DECISION_STEPS:
+
+        *DECISION_STEPS* : int
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the number of
+            executions taken to reach the `threshold <LCAMechanism.threshold>`; otherwise, it is the number of
+            times the LCAMechanism has executed since being `reset <TransferMechanism__Resetting>`.
+
+        .. _DECISION_TIME:
+
+        *DECISION_TIME* : float
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the time
+            (computed as `DECISION_STEPS` * `time_step_size <LCAMechanism.time_step_size>`) taken to reach the
+            `threshold  <LCAMechanism.threshold>`; otherwise, it is the number of times the LCAMechanism has executed
+            since being `reset <TransferMechanism__Resetting>` * `time_step_size <LCAMechanism.time_step_size>`.
 
     Returns
     -------
@@ -437,7 +462,18 @@ class LCAMechanism(RecurrentTransferMechanism):
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
                                     FUNCTION:max_vs_next},
                                    {NAME:MAX_VS_AVG,
-                                    FUNCTION:max_vs_avg}])
+                                    FUNCTION:max_vs_avg},
+                                  {NAME:DECISION_INDEX,
+                                   VARIABLE: OWNER_VALUE,
+                                   FUNCTION: lambda x: np.argmax(x)},
+                                  {NAME: DECISION_STEPS,
+                                   VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED},
+                                  {NAME: DECISION_TIME,
+                                   VARIABLE: [NUM_EXECUTIONS_BEFORE_FINISHED, TIME_STEP_SIZE],
+                                   FUNCTION: lambda x: x[0] * x[1]}
+                                  ])
+    standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([MAX_VS_NEXT, MAX_VS_AVG, DECISION_INDEX, DECISION_STEPS, DECISION_TIME])
 
     @check_user_specified
     @beartype
@@ -463,7 +499,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                  **kwargs):
         """Instantiate LCAMechanism
         """
-        # MODIFIED 1/22/20 NEW: [JDC]
         if MATRIX in kwargs:
             matrix = kwargs[MATRIX]
             if matrix is not None:
@@ -471,7 +506,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                 competition = None
         else:
             matrix = None
-        # MODIFIED 1/22/20 END
 
         try:
             if self_excitation is not None and kwargs[AUTO] is not None:
@@ -505,10 +539,8 @@ class LCAMechanism(RecurrentTransferMechanism):
         elif hetero is not None:
             competition = -hetero
 
-        # MODIFIED 10/26/19 NEW: [JDC]
         # Implemented for backward compatibility or, if kept, ease of use
         termination_threshold, termination_measure, termination_comparison_op = self._parse_threshold_args(kwargs)
-        # MODIFIED 10/26/19 END
 
         # Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize
@@ -542,14 +574,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:
-            # # MODIFIED 1/22/20 OLD:
-            # warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
-            #               f"the matrix for an {self.__class__.__name__} is specified using "
-            #               f"the 'self_excitation' and 'competition' args.")
-            # MODIFIED 1/22/20 NEW: [JDC]
             warnings.warn(f"The 'matrix' arg was specified for {self.name}, "
                           f"so its 'self_excitation' and 'competition' arguments will be ignored.")
-            # MODIFIED 1/22/20 END
 
     def _parse_threshold_args(self, kwargs):
         """Implements convenience arguments threshold and threshold_criterion
@@ -558,7 +584,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         and termination_comparison_op for TransferMechanism.
 
         Note:  specifying (threshold and termination_threshold) and/or (threshold and
-        threshold_criterion and termination_measure) causes an error.
+        threshold_criterion and termination_measure) raises an error.
         """
         termination_threshold = kwargs.pop(TERMINATION_THRESHOLD, None)
         threshold = kwargs.pop('threshold', None)

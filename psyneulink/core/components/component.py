@@ -528,11 +528,11 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
+import psyneulink.core.globals.keywords as kw
 from psyneulink.core.globals.keywords import (
     CONTEXT,
     CONTROL_PROJECTION,
     DEFERRED_INITIALIZATION,
-    DETERMINISTIC,
     EXECUTE_UNTIL_FINISHED,
     FUNCTION,
     FUNCTION_PARAMS,
@@ -553,7 +553,6 @@ from psyneulink.core.globals.keywords import (
     OWNER,
     PARAMS,
     PREFS_ARG,
-    RANDOM,
     RESET_STATEFUL_FUNCTION_WHEN,
     INPUT_SHAPES,
     VALUE,
@@ -652,7 +651,7 @@ class DefaultsFlexibility(Enum):
 
             ``pnl.TransferMechanism(default_variable=[0, 0], function=pnl.Linear())``
 
-            the Linear function is assigned a default variable ([0]) based on it's ClassDefault,
+            the Linear function is assigned a default variable ([0]) based on its ClassDefault,
             which conflicts with the default variable specified by its future owner ([0, 0]). Since
             the default for Linear was not explicitly stated, we allow the TransferMechanism to
             reassign the Linear's default variable as needed (`FLEXIBLE`)
@@ -769,7 +768,7 @@ def _has_initializers_setter(value, owning_component=None, context=None, *, comp
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
-class ComponentsMeta(ABCMeta):
+class UsesParametersMeta(ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -781,20 +780,28 @@ class ComponentsMeta(ABCMeta):
         self.parameters = self.Parameters(owner=self, parent=parent)
 
         for param in self.parameters:
-            if not hasattr(self, param.name):
-                setattr(self, param.name, make_parameter_property(param))
-
             try:
                 if param.default_value.owner is None:
                     param.default_value.owner = param
             except AttributeError:
                 pass
 
+            self._addl_per_parameter_setup(param)
+
+    def _addl_per_parameter_setup(self, param: Parameter):  # noqa: U100
+        pass
+
     # consider removing this for explicitness
     # but can be useful for simplicity
     @property
     def class_defaults(self):
         return self.defaults
+
+
+class ComponentsMeta(UsesParametersMeta):
+    def _addl_per_parameter_setup(self, param: Parameter):
+        if not hasattr(self, param.name):
+            setattr(self, param.name, make_parameter_property(param))
 
 
 class Component(MDFSerializable, metaclass=ComponentsMeta):
@@ -838,7 +845,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             - specify a default Function
             - this is checked in Component._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
-            - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
+            - if params[FUNCTION] IS specified, it assigns its value to self.function (superceding existing value):
                 self.function is aliased to it (in Component._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
@@ -870,7 +877,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it is checked for
         compatibility against **input_shapes** (see
-        `input_shapes <Component_Input_Shapes>` for additonal details).
+        `input_shapes <Component_Input_Shapes>` for additional details).
 
     COMMENT:
     param_defaults :   :  default None,
@@ -1422,55 +1429,70 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
-        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
+        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs", "target", "sample"}
 
         # Mechanisms;
         # * use "value" state
         # * can execute 'until finished'
         # * need to track number of executions
-        if hasattr(self, 'ports'):
-            whitelist.update({"value", "num_executions_before_finished",
-                              "num_executions", "is_finished_flag"})
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
+            whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
-            # it's DDM with integrator function.
+            # its DDM with integrator function.
             # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
+            # Drop combination function params from RTM if not needed
+            if getattr(self.parameters, 'has_recurrent_input_port', False):
+                blacklist.add('combination_function')
 
-        # Compositions need to track number of executions
-        if hasattr(self, 'nodes'):
-            whitelist.add("num_executions")
+            # Drop integrator function if integrator_mode is not enabled
+            if not getattr(self, 'integrator_mode', False):
+                blacklist.add('integrator_function')
 
-        # Drop combination function params from RTM if not needed
-        if getattr(self.parameters, 'has_recurrent_input_port', False):
-            blacklist.add('combination_function')
+        else:
+            # OneHot:
+            # * runtime abs_val and indicator are only used in deterministic mode.
+            # * random_state and seed are only used in RANDOM tie resolution.
+            if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
+                if self.mode != kw.DETERMINISTIC:
+                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                        whitelist.remove('random_state')
 
-        # Drop integrator function if integrator_mode is not enabled
-        if not getattr(self, 'integrator_mode', False):
-            blacklist.add('integrator_function')
+                elif self.tie != kw.RANDOM:
+                    whitelist.remove('random_state')
 
-        # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
-            if cost_functions.INTENSITY not in cost_functions:
-                blacklist.add('intensity_cost_fct')
-            if cost_functions.ADJUSTMENT not in cost_functions:
-                blacklist.add('adjustment_cost_fct')
-            if cost_functions.DURATION not in cost_functions:
-                blacklist.add('duration_cost_fct')
+            # Dropout:
+            # * random state is only used in learning mode
+            elif componentName == kw.DROPOUT_FUNCTION:
+                whitelist.remove('random_state')
 
-        if getattr(self, "mode", None) == DETERMINISTIC and getattr(self, "tie", None) != RANDOM:
-            whitelist.remove('random_state')
+            # DictionaryMemory:
+            # * previous_value is not used (history of 'value' is used instead)
+            elif componentName == kw.DictionaryMemory_FUNCTION:
+                blacklist.add("previous_value")
 
-        # Drop previous_value from MemoryFunctions
-        if hasattr(self.parameters, 'duplicate_keys'):
-            blacklist.add("previous_value")
+            # TransferWithCosts:
+            # * drop unused cost functions
+            elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
+                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                    blacklist.add('intensity_cost_fct')
 
-        # Matrices of learnable projections are stateful
-        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
-            whitelist.add('matrix')
+                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                    blacklist.add('adjustment_cost_fct')
+
+                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                    blacklist.add('duration_cost_fct')
+
+            # Compositions need to track number of executions
+            if hasattr(self, 'nodes'):
+                whitelist.add("num_executions")
+
+            # Matrices of learnable projections are stateful
+            if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+                whitelist.add('matrix')
 
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
@@ -1578,60 +1600,82 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
                      "minibatch_size", "optimizations_per_minibatch", "device",
-                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
-                     "torch_trained_outputs", "torch_targets", "torch_losses",
+                     "retain_torch_sample_values", "retain_torch_targets", "retain_torch_losses"
+                     "torch_sample_values", "torch_targets", "torch_losses",
+                     "learnable",
                      # "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
                      # "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
-                     "mask"
+                     "mask",
+                     # LossMechanism
+                     "loss", "metric",
                      }
 
-        # OneHot:
-        # * runtime abs_val and indicator are only used in deterministic mode.
-        # * random_state and seed are only used in RANDOM tie resolution.
-        if getattr(self, "mode", None) != DETERMINISTIC:
-            blacklist.update(['abs_val', 'indicator'])
-        elif getattr(self, "tie", None) != RANDOM:
-            blacklist.add("seed")
-
         # Mechanism's need few extra entries:
-        # * matrix -- is never used directly, and is flatened below
+        # * matrix -- is never used directly
         # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
-        if hasattr(self, 'ports'):
+        if self.componentCategory == kw.MECHANISM_COMPONENT_CATEGORY:
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
+
+            # If both the mechanism and its function use random_state.
+            # its DDM with integrator function.
+            # The mechanism's random_state or seed are not used
+            if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
+                blacklist.add("seed")
+
+            # Drop combination function params from RTM if not needed
+            if getattr(self.parameters, 'has_recurrent_input_port', False):
+                blacklist.add('combination_function')
+
+            # Drop integrator function if integrator_mode is not enabled
+            if not getattr(self, 'integrator_mode', False):
+                blacklist.add('integrator_function')
+
         else:
-            # Execute until finished is only used by mechanisms
+            # "execute_until_finished is only used by Mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
 
-            # "has_initializers" is only used by RTM
+            # "has_initializers" is only used by Mechanisms
             blacklist.add('has_initializers')
 
-        # Drop combination function params from RTM if not needed
-        if getattr(self.parameters, 'has_recurrent_input_port', False):
-            blacklist.add('combination_function')
+            # OneHot:
+            # * runtime abs_val and indicator are only used in deterministic mode.
+            # * random_state and seed are only used in RANDOM tie resolution.
+            if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
+                if self.mode != kw.DETERMINISTIC:
+                    blacklist.update(['abs_val', 'indicator'])
+                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                        blacklist.add('seed')
 
-        # Drop integrator function if integrator_mode is not enabled
-        if not getattr(self, 'integrator_mode', False):
-            blacklist.add('integrator_function')
+                elif self.tie != kw.RANDOM:
+                    blacklist.add('seed')
 
-        # Drop unused cost functions
-        cost_functions = getattr(self, 'enabled_cost_functions', None)
-        if cost_functions is not None:
-            if cost_functions.INTENSITY not in cost_functions:
-                blacklist.add('intensity_cost_fct')
-            if cost_functions.ADJUSTMENT not in cost_functions:
-                blacklist.add('adjustment_cost_fct')
-            if cost_functions.DURATION not in cost_functions:
-                blacklist.add('duration_cost_fct')
+            # Dropout:
+            # random state is only used in learning mode
+            elif componentName == kw.DROPOUT_FUNCTION:
+                blacklist.update(['seed', 'p'])
 
-        # Matrices of learnable projections are stateful
-        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
-            blacklist.add('matrix')
+            # TransferWithCosts:
+            # * drop unused cost functions
+            elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
+                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                    blacklist.add('intensity_cost_fct')
+
+                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                    blacklist.add('adjustment_cost_fct')
+
+                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                    blacklist.add('duration_cost_fct')
+
+            # Matrices of learnable projections are stateful
+            if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+                blacklist.add('matrix')
+
 
         def _is_compilation_param(p):
             return p.name not in blacklist and self._is_compilable_param(p)
@@ -1669,14 +1713,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 return x if x is not None else tuple()
 
         def _get_values(p):
-            param = p.get(context)
+            value = p.get(context)
             if p.name == 'num_trials_per_estimate': # Should always be int
-                return 0 if param is None else int(param)
+                return 0 if value is None else int(value)
 
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asarray(param, dtype=float).ravel())
+                return tuple(np.asarray(value, dtype=float).ravel())
 
-            return _convert(param)
+            elif p.name == 'seed':
+                value = np.asarray(value, dtype=float).squeeze()
+
+            return _convert(value)
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
@@ -3540,20 +3587,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         except TypeError:
             pass
 
-        parameter_port_list = None
         try:
             # parameter is SharedParameter and ultimately points to
             # something with a corresponding ParameterPort
             parameter_port_list = parameter.final_source._owner._owner.parameter_ports
         except AttributeError:
-            # prefer parameter ports from self over owner
             try:
-                parameter_port_list = self._parameter_ports
+                parameter_port_list = parameter.final_source.port._owner.parameter_ports
             except AttributeError:
+                # prefer parameter ports from self over owner
                 try:
-                    parameter_port_list = self.owner._parameter_ports
+                    parameter_port_list = self._parameter_ports
                 except AttributeError:
-                    pass
+                    try:
+                        parameter_port_list = self.owner._parameter_ports
+                    except AttributeError:
+                        parameter_port_list = None
 
         if parameter_port_list is not None:
             try:
@@ -3685,6 +3734,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self.parameters.num_executions.set(curr_num_execs, override=True)
         return curr_num_execs
 
+    def _reset_num_executions(self, context: Context, time_scale: TimeScale):
+        curr_num_execs = self.parameters.num_executions._get(context)
+        curr_num_execs._set_by_time_scale(time_scale, 0)
+        curr_num_execs._reset_by_time_scale(time_scale)
+
     @property
     def current_execution_time(self):
         try:
@@ -3812,6 +3866,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._name = value
 
     @property
+    def full_name(self):
+        """Stub to allow override by subclasses (such as port)
+        Allows use blind to whether subclass has a full_name attribute or not, providing default if not
+        """
+        return self.name
+
+    @property
     def input_shapes(self):
         s = []
 
@@ -3935,7 +3996,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     @property
     def is_initializing(self):
         try:
-            owner_initializing = self.owner.initialization_status == ContextFlags.INITIALIZING
+            owner_initializing = self.owner.is_initializing
         except AttributeError:
             owner_initializing = False
 

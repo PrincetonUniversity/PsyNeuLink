@@ -673,7 +673,7 @@ def test_DDM_reset(mech_mode, initializer_param, non_decision_time_param):
     result = ex([3])
     np.testing.assert_array_equal(result, [[100], [102 - initializer_value + non_decision_time_value]])
 
-    reset_ex = pytest.helpers.get_mech_execution(D, mech_mode, tags=frozenset({"reset"}), member="reset")
+    reset_ex = pytest.helpers.get_mech_execution(D, mech_mode, tags={"reset"}, member="reset")
 
     reset_result = reset_ex(None if mech_mode == "Python" else [0])
     np.testing.assert_array_equal(reset_result, [[initializer_value], [non_decision_time_value]])

@@ -277,6 +277,65 @@ class TestLCA:
         assert lca.defaults.termination_threshold == 0
         assert lca.parameters.termination_threshold in lca.parameter_ports
 
+    @pytest.mark.composition
+    @pytest.mark.lca_mechanism
+    # @pytest.mark.parametrize("comp_mode", [pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)])
+    def test_LCAMechanism_standard_output_ports(self, comp_mode):
+        lca = pnl.LCAMechanism(
+            input_shapes=2,
+            function=pnl.Logistic(gain=1, bias=0),
+            threshold=0.55,
+            leak=0,
+            competition=1,
+            self_excitation=0,
+            noise=0.1,
+            time_step_size=0.01,
+            execute_until_finished=True,
+            reset_stateful_function_when=pnl.AtTrialStart(),
+            output_ports = [pnl.RESULT,
+                            pnl.DECISION_INDEX,
+                            pnl.DECISION_STEPS,
+                            pnl.DECISION_TIME
+                            ]
+        )
+        comp = pnl.Composition(lca)
+        lca.execute_until_finished = True
+
+        lca.parameters.time_step_size.set(.01, comp.name)
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        np.testing.assert_allclose(
+            [np.asarray(result).item() for result in actual[1:]],
+            [0, 14, .14]
+        )
+
+        lca.parameters.time_step_size.set(.001, comp.name)
+        actual = comp.run(inputs=[[0, 1]], execution_mode=comp_mode)
+        np.testing.assert_allclose(
+            [np.asarray(result).item() for result in actual[1:]],
+            [1, 56, .056]
+        )
+
+        # BREADCRUMB: FAILS BELOW SINCE NOT STARTING FRESH IN LLMRun
+        lca.parameters.time_step_size.set(.001, comp.name)
+        lca.execute_until_finished = False
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        np.testing.assert_allclose(
+            [np.asarray(result).item() for result in actual[1:]],
+            [0, 1, .001]
+        )
+
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        np.testing.assert_allclose(
+            [np.asarray(result).item() for result in actual[1:]],
+            [0, 2, .002]
+        )
+
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        np.testing.assert_allclose(
+            [np.asarray(result).item() for result in actual[1:]],
+            [0, 3, .003]
+        )
+
 
 class TestLCAReset:
 

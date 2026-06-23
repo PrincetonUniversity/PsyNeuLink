@@ -45,7 +45,7 @@ rl_agent_state = ProcessingMechanism(name='RL Agent Port', input_shapes=5)
 rl_agent_action = ProcessingMechanism(name='RL Agent Action', input_shapes=5)
 rl_agent = Composition(name='RL Agent')
 rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
-# rl_agent.add_required_node_role(rl_agent_action, NodeRole.OUTPUT)
+# rl_agent._add_required_node_role(rl_agent_action, NodeRole.OUTPUT)
 rl_agent._analyze_graph()
 
 # *********************************************************************************************

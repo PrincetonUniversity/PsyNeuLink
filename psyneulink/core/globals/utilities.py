@@ -31,8 +31,9 @@ CONTENTS
 * `parameter_spec`
 * `optional_parameter_spec`
 * `all_within_range`
-* `is_matrix
+* `is_matrix`
 * `is_matrix_spec`
+* `is_identity_matrix`
 * `is_numeric`
 * `is_numeric_or_none`
 * `is_iterable`
@@ -143,14 +144,15 @@ from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_MET
 
 
 
-__all__ = [
+__all__ = ([
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',
-    'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'counts',
+    'get_class_attributes', 'extended_array_equal',
+    'flatten_list', 'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
-    'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
-    'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number', 'is_same_function_spec', 'is_unit_interval',
-    'is_value_spec',
+    'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric',  'is_identity_matrix',
+    'is_iterable', 'is_matrix', 'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number',
+    'is_same_function_spec', 'is_unit_interval', 'is_value_spec',
     'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'nesting_depth',
     'make_readonly_property',
@@ -161,9 +163,9 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
-    'PNLStrEnum',
-]
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
+    'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes', 'PNLStrEnum'
+])
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
@@ -480,6 +482,67 @@ def is_matrix(m):
                 return False
     return False
 
+def matrices_are_identical(a: Any, b: Any, equal_nan: bool = False) -> bool:
+    """
+    Return True if all elements of `a` and `b` are equal element-wise.
+    Handles numpy arrays (including object-dtype / ragged), scalars and lists.
+    If `equal_nan` is True, NaNs are treated as equal.
+    """
+    def _as_np(x):
+        if isinstance(x, np.ndarray):
+            return x
+        try:
+            return np.asarray(x)
+        except Exception:
+            return x
+
+    A = _as_np(a)
+    B = _as_np(b)
+
+    def _eq(x, y) -> bool:
+        # numpy arrays
+        if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            if x.shape != y.shape:
+                return False
+            # fast path for numeric/non-object arrays
+            if x.dtype != object and y.dtype != object:
+                return bool(np.array_equal(x, y, equal_nan=equal_nan))
+            # object-dtype: compare elementwise recursively
+            for idx in np.ndindex(x.shape):
+                if not _eq(x[idx], y[idx]):
+                    return False
+            return True
+
+        # one is 0-d ndarray -> unwrap
+        if isinstance(x, np.ndarray) and x.ndim == 0:
+            return _eq(x.item(), y)
+        if isinstance(y, np.ndarray) and y.ndim == 0:
+            return _eq(x, y.item())
+
+        # both not ndarrays: handle NaN option for floats
+        try:
+            if equal_nan and isinstance(x, float) and isinstance(y, float):
+                if np.isnan(x) and np.isnan(y):
+                    return True
+        except Exception:
+            pass
+
+        return x == y
+
+    return _eq(A, B)
+
+def is_identity_matrix(matrix):
+    """Return true of matrix is an identity matrix (in which every 2D slice is an identity matrix)."""
+    shape = matrix.shape
+    if not all(x == shape[0] for x in shape):
+        return False
+    # Construct multidimensional identity matrix that matches shape of m:
+    B = np.zeros(shape)
+    identity_matrix = np.arange(shape[-1])
+    B[..., identity_matrix, identity_matrix] = 1
+    if matrices_are_identical(matrix, B):
+        return True
+    return False
 
 def is_distance_metric(s):
     if s in DISTANCE_METRICS:
@@ -828,8 +891,8 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
-    # elif isinstance(l, dict):
-    #     return [(k,v) for k,v in l.items()]
+    elif isinstance(l, dict):
+        return [(k,v) for k,v in l.items()]
     elif isinstance(l, np.ndarray) and l.ndim > 0:
         return list(l)
     else:
@@ -852,7 +915,6 @@ def get_args(frame):
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
 
-
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -866,7 +928,6 @@ def recursive_update(d, u, non_destructive=False):
                 continue
             d[k] = u[k]
     return d
-
 
 def multi_getattr(obj, attr, default = None):
     """
@@ -936,7 +997,6 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
 
     return __deepcopy__
 
-
 def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_obj=None):
     result = result_obj or list()
 
@@ -951,7 +1011,6 @@ def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_ob
         result.append(new_item)
 
     return result
-
 
 def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
     try:
@@ -1034,7 +1093,6 @@ def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
 
     return result
 
-
 def get_alias_property_getter(name, attr=None):
     """
         Arguments
@@ -1061,7 +1119,6 @@ def get_alias_property_getter(name, attr=None):
 
     return getter
 
-
 def get_alias_property_setter(name, attr=None):
     """
         Arguments
@@ -1087,6 +1144,27 @@ def get_alias_property_setter(name, attr=None):
             setattr(obj, name, value)
 
     return setter
+
+def counts(item_list:list)->list:
+    """Return number of times each unique unhashable item (e.g., array) occurs in list of items
+    Note: can only handle one level of unhashable items (e.g., list within a list will raise an error)
+    Returns:
+        Dictionary where keys are the unique items (e.g., array values) and values are their counts.
+    """
+    counts = {}
+    for item in item_list:
+        # Iterate through existing keys in the counts dictionary to check for equality
+        found = False
+        for key in counts:
+            if key == item:
+                counts[key] += 1
+                found = True
+                break
+        if not found:
+            # If not found, add the new item as a key
+            counts[item] = 1
+    return counts
+
 #endregion
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
@@ -1270,7 +1348,7 @@ class ReadOnlyOrderedDict(UserDict):
 
 class ContentAddressableList(UserList):
     """
-    ContentAddressableList( component_type, key=None, list=None)
+    ContentAddressableList(component_type, key=None, list=None)
 
     Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
     entries.  If called, returns list of items.
@@ -2575,5 +2653,6 @@ def get_stacklevel_skip_file_prefixes(
         else:
             return i + 1
     return res
+
 
 #endregion

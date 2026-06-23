@@ -56,6 +56,31 @@ class TestOutputPorts:
 
         np.testing.assert_allclose(res, expected2)
 
+    @pytest.mark.mechanism
+    def test_output_port_variable_spec_num_executions_before_finished(self, mech_mode):
+        """OutputPorts should observe the final terminating iteration count."""
+        mech = pnl.TransferMechanism(
+            input_shapes=2,
+            integrator_mode=True,
+            termination_measure=max,
+            termination_threshold=0.9,
+            termination_comparison_op=pnl.GREATER_THAN_OR_EQUAL,
+            execute_until_finished=True,
+            output_ports=[
+                pnl.RESULT,
+                pnl.OutputPort(name="STEPS", variable="num_executions_before_finished"),
+            ],
+        )
+
+        EX = pytest.helpers.get_mech_execution(mech, mech_mode)
+        res = EX([0.5, 1.0])
+
+        np.testing.assert_allclose(res[0], [0.46875, 0.9375])
+        np.testing.assert_allclose(res[1], [4])
+
+        if mech_mode == "Python":
+            assert mech.num_executions_before_finished == 4
+
     @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.parametrize('spec, expected1, expected2',

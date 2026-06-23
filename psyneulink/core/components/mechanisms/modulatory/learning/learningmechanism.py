@@ -640,10 +640,14 @@ class LearningType(Enum):
     SUPERVISED
         does not implement a *ERROR_SIGNAL* InputPort.
 
+    PYTORCH_SUPERVISED
+        implemented via Pytorch autograd; requires torch to be installed
+        (reserved for use by LossMechanism if that is subclassed to LearningMechanism)
+
     """
     UNSUPERVISED = 0
     SUPERVISED = 1
-
+    PYTORCH_SUPERVISED = 2
 
 class LearningTiming(Enum):
     """
@@ -777,7 +781,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
-        <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
+        <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  its
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
         numeric values, corresponding to values provided by the LearningMechanism's *ACTIVATION_INPUT*,
         *ACTIVATION_OUTPUT*, and *ERROR_SOURCES* InputPorts, respectively (see `LearningMechanism_InputPorts
@@ -1135,9 +1139,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             prefs=prefs,
             **kwargs
         )
-        # Set default value, so any later assignments can be detected
-        #    (e.g., in CompositionRunner.run_learning)
-        self.defaults.learning_rate = self.parameters.learning_rate.get()
 
     def _check_type_and_timing(self):
         try:
@@ -1273,7 +1274,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                            context=context)
                 else:
                     pass
-
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Instantiate COVARIATES InputPorts if there are any covariate_sources"""

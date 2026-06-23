@@ -1,4 +1,6 @@
 import logging
+from copyreg import constructor
+
 import numpy as np
 import os
 import pytest
@@ -11,14 +13,16 @@ from psyneulink import RANDOM_CONNECTIVITY_MATRIX
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.pathway import Pathway
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import Loss, DEFAULT_LEARNING_RATE, TRAINING_SET
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
-
 
 logger = logging.getLogger(__name__)
 
@@ -54,41 +58,129 @@ class TestAutodiffConstructor:
         assert isinstance(comp, AutodiffComposition)
         assert isinstance(comp_2, AutodiffComposition)
 
-    # KAM removed this pytest 10/30 after removing target_CIM
-    # def test_target_CIM(self):
-    #     comp = AutodiffComposition()
-    #     assert isinstance(comp.target_CIM, CompositionInterfaceMechanism)
-    #     assert comp.target_CIM.composition == comp
-    #     assert comp.target_CIM_ports == {}
-
     def test_no_initial_pytorch_representation(self):
         comp = AutodiffComposition()
         assert comp.pytorch_representation is None
 
-    def test_duplicate_projections_to_nested_comp(self):
-        input_node_autodiff = pnl.ProcessingMechanism(name='autodiff INPUT', input_shapes=2)
-        hidden_node_autodiff_1 = pnl.ProcessingMechanism(name='autodiff HIDDEN 1', input_shapes=3)
-        hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
-        hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
-        output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
+    def test_warnings_and_errors_for_no_learnable_pathways(self):
+        input_mech = ProcessingMechanism(name="INPUT")
+        hidden_mech_1 = ProcessingMechanism(name="HIDDEN 1")
+        hidden_mech_2 = ProcessingMechanism(name="HIDDEN 2")
+        output_mech = ProcessingMechanism(name="OUTPUT")
+        solo_mech = ProcessingMechanism(name="SOLO")
 
-        nested = pnl.AutodiffComposition(name='autodiff NESTED',
-                                     nodes = [hidden_node_autodiff_1,
-                                              hidden_node_autodiff_2])
+        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING
+        # Test without **targets** specification
+        pathway_1 = Pathway([input_mech,
+                             MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                             hidden_mech_1,
+                             MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                             output_mech])
+        pathway_2 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP", pathways=[pathway_1, pathway_2])
 
-        nested = pnl.AutodiffComposition(name='autodiff NESTED 2',
-                                     nodes = [hidden_node_autodiff_1,
-                                              hidden_node_autodiff_2])
-        pathway_a = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_1), nested]
-        pathway_b = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_2), nested,
-                     MappingProjection(sender=hidden_node_autodiff_2, name="PROBLEM PROJ"), output_node_autodiff]
-        autodiff_comp = pnl.AutodiffComposition(pathways=[pathway_a, pathway_b], name='autodiff COMP')
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff_comp._build_pytorch_representation()
-        assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
-                                                "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
-                                                "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
-                                                "be that these Components belong to different Compositions.")
+        # Test for warning that show_graph(show_learning=True) is uncessary for AutodiffComposition
+        warning_message_1 = ("The 'show_learning' argument in the call to show_graph() for 'AUTODIFF COMP' is "
+                             "unnecessary since learning components are shown for an AutodiffComposition only when "
+                             "'show_pytorch' is used.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_1)):
+            autodiff_comp.show_graph(show_learning=True, output_fmt='source')
+
+        # Test for warning if show_pytorch=True with no learnable pathways
+        warning_message_2 = ("No learnable pathways were found in 'AUTODIFF COMP'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_2)):
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        autodiff_comp.run(inputs={input_mech: [[1.0]]})
+
+        # Test for error on learn() with no learnable pathways
+        error_msg = (f"'AUTODIFF COMP' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
+        # Test for error on **targets** specification for unlearnable pathway
+        unlearnable_proj = MappingProjection(input_mech, output_mech, learnable=False)
+        unlearnable_pathway = [input_mech, unlearnable_proj, output_mech]
+        # Test for **targets** specification with no learnable pathways
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_2', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_2",
+                                                pathways=unlearnable_pathway,
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of a non-learnable pathway when there are other learnable ones
+        input_mech_2 = ProcessingMechanism(name="INPUT_2")
+        output_mech_2 = ProcessingMechanism(name="OUTPUT_2")
+        learnable_proj = MappingProjection(input_mech_2, output_mech_2, learnable=True)
+        learnable_pathway = [input_mech_2, learnable_proj, output_mech_2]
+        error_msg = ("An external TARGET input can't be assigned to 'OUTPUT' in the 'targets' argument of "
+                     "'AUTODIFF COMP_3', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_3",
+                                                pathways=[unlearnable_pathway, learnable_pathway],
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("An external TARGET input can't be assigned to 'SOLO' in the 'targets' argument of "
+                     "'AUTODIFF COMP_4', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_4",
+                                                pathways=[learnable_pathway, solo_mech],
+                                                targets={solo_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_5', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_5",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_6', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_6",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for warning on nested SINGELTON without any learnable projections on show_graph(show_pytorch=True)
+        warning_message = ("No learnable pathways were found in 'AUTODIFF COMP_7'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message)):
+            nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_7",
+                                                pathways=[nested_comp])
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+
+        # Test for error on nested SINGELTON without any learnable projections on learn()
+        error_msg = (f"'AUTODIFF COMP_8' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+                                                pathways=[nested_comp],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
+        # Test learn() for nested SINGELTON with learnable projections in outer and no **targets** spec in constructor
+
+        # TEACHER_TARGET BREADCRUMB: REMOVE WHEN DONE DEBUGGING:
+        nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_9",
+                                            pathways=[input_mech, nested_comp])
+        autodiff_comp.learn(inputs={input_mech: [[1.0]]},
+                            targets={solo_mech: [[2.0]]})
 
     @pytest.fixture
     def copy_test_components(self):
@@ -277,6 +369,61 @@ class TestAutodiffConstructor:
                 copy_method(proj_spec, torch_param, torch_module, torch_slice, validate)
             assert error_text.value.error_value == error_msg
 
+    def test_LossMechanism_construction(self):
+        """Test sample and target assignments to LossMechanism
+        Also test dict + tuple + LossMechanism specification in **targets** argument of constructor
+        """
+        pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
+        pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
+        pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
+        pway2_mech_A = pnl.ProcessingMechanism(name='pway2_mech_A')
+        pway2_mech_B = pnl.ProcessingMechanism(name='pway2_mech_B')
+        pway2_mech_C = pnl.ProcessingMechanism(name='pway2_mech_C')
+        pway3_mech_A = pnl.ProcessingMechanism(name='pway3_mech_A')
+        pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
+        solo_input_mech = pnl.ProcessingMechanism(name='solo_input_mech')
+        loss_mech = pnl.LossMechanism(sample=pway3_mech_B.output_port, target=solo_input_mech)
+        pway1 = [pway1_mech_A, pway1_mech_B, pway1_mech_C]
+        pway2 = [pway2_mech_A, pway2_mech_B, pway2_mech_C]
+        pway3 = [pway3_mech_A, pway3_mech_B]
+        comp = pnl.AutodiffComposition(pathways=[pway1,pway2,pway3,solo_input_mech],
+                                       targets=[{pway1_mech_B: pway2_mech_B.output_port,
+                                                pway1_mech_C: solo_input_mech},
+                                                 (pway2_mech_C, pnl.TARGET),
+                                                loss_mech])
+        loss_mechs = comp.loss_mechanisms
+
+        assert loss_mechs[0].sample == pway1_mech_B.output_port
+        assert loss_mechs[0].target == pway2_mech_B.output_port
+        assert loss_mechs[1].sample == pway1_mech_C.output_port
+        assert loss_mechs[1].target == solo_input_mech.output_port
+        assert loss_mechs[2].sample == pway2_mech_C.output_port
+        assert loss_mechs[2].target == comp.target_input_mechanisms[0].output_port
+        assert loss_mechs[3].sample == pway3_mech_B.output_port
+        assert loss_mechs[3].target == solo_input_mech.output_port
+
+    def test_illegal_manual_LossMechanism(self):
+        # Test error for (manual) construction of free-standing LossMechanism
+        #    (i.e. outside of **targets** argument of Constructor)
+        pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
+        pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
+        pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
+        solo_input_mech = pnl.ProcessingMechanism(name='solo_input_mech')
+        loss_mech = pnl.LossMechanism(sample=pway1_mech_B.output_port,
+                                      target=solo_input_mech.output_port,
+                                      name='MANUALLY SPECIFIED LOSS MECHANISM')
+        pway1 = [pway1_mech_A, pway1_mech_B, pway1_mech_C]
+        comp = pnl.AutodiffComposition(pathways=[pway1,loss_mech], targets={pway1_mech_C: pnl.TARGET})
+
+        error_msg = ("The following LossMechanism was specified in the 'pathways' argument of the constructor for "
+                     "'autodiff_composition' or in one of its 'add' methods; this is not allowed, as LossMechanisms "
+                     "cannot be added as standalone Nodes of a Composition; they can only be added in the 'targets' "
+                     "argument of an AutodiffComposition's constructor: 'MANUALLY SPECIFIED LOSS MECHANISM'.")
+        with pytest.raises(CompositionError, match=re.escape(error_msg)):
+            comp.infer_backpropagation_learning_pathways(execution_mode=pnl.ExecutionMode.Python)
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            comp.infer_backpropagation_learning_pathways(execution_mode=pnl.ExecutionMode.PyTorch)
+
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
@@ -290,6 +437,524 @@ class TestAutodiffConstructor:
         # assert comp.patience == 10
 
 
+class TestAutodiffTargetSpecs:
+
+
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    def test_sample_and_target_attributes(self):
+        pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
+        pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
+        pway2_mech_A = pnl.ProcessingMechanism(name='pway2_mech_A')
+        pway2_mech_B = pnl.ProcessingMechanism(name='pway2_mech_B')
+        pway3_mech_A = pnl.ProcessingMechanism(name='pway3_mech_A')
+        pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
+        pway4_mech_A = pnl.ProcessingMechanism(name='pway4_mech_A')
+        pway4_mech_B = pnl.ProcessingMechanism(name='pway4_mech_B')
+        pway1 = [pway1_mech_A, pway1_mech_B]
+        pway2 = [pway2_mech_A, pway2_mech_B]
+        pway3 = [pway3_mech_A, pway3_mech_B]
+        pway4 = [pway4_mech_A, pway4_mech_B]
+
+        autodiff_comp = AutodiffComposition(pathways=[pway1,pway2,pway3,pway4],
+                                            targets={pway1_mech_B:pway2_mech_A,
+                                                     pway2_mech_B.output_port:pway4_mech_A,
+                                                     pway3_mech_B:pway4_mech_A,
+                                                     pway4_mech_B:pnl.TARGET,
+                                                     })
+
+        # Assign attributes to variables for comparison with values after call to learn() below
+        samples_and_targets = autodiff_comp._samples_and_targets
+        target_mechanisms = autodiff_comp.target_mechanisms
+        assert set(target_mechanisms) == set(samples_and_targets.target_mechs)
+        target_input_mechs = autodiff_comp.target_input_mechanisms
+        assert len(target_input_mechs) == 1 and target_input_mechs[0].name == 'TARGET for pway4_mech_B'
+        assert target_input_mechs == autodiff_comp._get_target_mechs(scope=pnl.INPUT)
+        target_internal_mechs = autodiff_comp.target_internal_mechanisms
+        assert target_internal_mechs == [pway2_mech_A, pway4_mech_A]
+        assert target_internal_mechs == autodiff_comp._get_target_mechs(scope=pnl.INTERNAL)
+        targets_dict = autodiff_comp._get_targets_dict()
+        sample_mechs = autodiff_comp.sample_mechanisms
+        assert set(sample_mechs) == set(samples_and_targets.sample_mechs)
+        # Test that it shows pway2_mech_A as orange (since it is TARGET_INPUT Node)
+        gv = autodiff_comp.show_graph(output_fmt='source', show_pytorch=True)
+        assert gv == ('digraph autodiff_composition {\n\tgraph [label=autodiff_composition overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tpway4_mech_A [color=orange penwidth=3 rank=source shape=oval]\n\tpway3_mech_A [color=green penwidth=3 rank=source shape=oval]\n\tpway2_mech_A [color=orange penwidth=3 rank=source shape=oval]\n\tpway1_mech_A [color=green penwidth=3 rank=source shape=oval]\n\t"TARGET for pway4_mech_B" [color=orange penwidth=3 rank=source shape=oval]\n\t"LOSS for pway1_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway1_mech_B -> "LOSS for pway1_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway2_mech_A -> "LOSS for pway1_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway2_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway2_mech_B -> "LOSS for pway2_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_A -> "LOSS for pway2_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway3_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\tpway3_mech_B -> "LOSS for pway3_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_A -> "LOSS for pway3_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for pway4_mech_B" [color=orange penwidth=1 rank=same shape=oval]\n\t"TARGET for pway4_mech_B" -> "LOSS for pway4_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway4_mech_B -> "LOSS for pway4_mech_B" [label="" arrowhead=normal color=black penwidth=1]\n\tpway1_mech_A -> pway1_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway2_mech_A -> pway2_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway3_mech_A -> pway3_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\tpway4_mech_A -> pway4_mech_B [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for pway1_mech_B" -> pway1_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway2_mech_B" -> pway2_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway3_mech_B" -> pway3_mech_B [color=brown penwidth=1 style=dotted]\n\t"LOSS for pway4_mech_B" -> pway4_mech_B [color=brown penwidth=1 style=dotted]\n\tpway1_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway2_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway3_mech_B [color=red penwidth=3 rank=max shape=oval]\n\tpway4_mech_B [color=red penwidth=3 rank=max shape=oval]\n}\n')
+
+        # Test after call to learn()
+        inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]], pway4_mech_A:[[4]]}
+        targets = {pway4_mech_B:[[9]]}
+        autodiff_comp.learn(inputs, targets, execution_mode=pnl.ExecutionMode.PyTorch)
+        assert autodiff_comp.target_mechanisms == target_mechanisms
+        assert autodiff_comp.target_input_mechanisms == target_input_mechs
+        assert autodiff_comp._get_target_mechs(scope=pnl.INTERNAL) == target_internal_mechs
+        assert autodiff_comp.target_internal_mechanisms == target_internal_mechs
+        assert autodiff_comp._get_targets_dict() == targets_dict
+        assert autodiff_comp.sample_mechanisms == sample_mechs
+
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    @pytest.mark.parametrize('target_spec', [
+        "default",
+        "internal",
+        "external",
+        "loss_mech",
+        "str"
+    ])
+    def test_output_port_as_sample_for_loss_mech(self, target_spec):
+        input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
+        output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
+        teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
+        if target_spec in {'internal', 'loss_mech'}: # In these cases, 'TEACHER MECH' is SINGLETON, and thus an OUTPUT
+            expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
+        else:   # In these cases, 'TEACHER MECH' is a TARGET_MECHANISM that projects to LossMechanism, and so not an OUTPUT
+            expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001], [0.0, 0.0, 0.0, 0.0, 0.0]]
+        # expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001]]
+        if target_spec == "default":
+            targets_constructor_arg = None
+        elif target_spec == "internal":
+            targets_constructor_arg = {output_mech.output_port:teacher_mech.output_port}
+            targets_learn_arg = None
+        elif target_spec == "external":
+            targets_learn_arg = None
+            targets_constructor_arg={output_mech.output_port:pnl.TARGET}
+        elif target_spec == "loss_mech":
+            targets_constructor_arg={pnl.LossMechanism(sample=output_mech.output_port,
+                                                       target=teacher_mech.output_port)}
+            targets_learn_arg = None
+        elif target_spec == "str":
+            targets_constructor_arg = pnl.TARGET
+            targets_learn_arg = None
+
+        if target_spec == "str":
+            error_msg = ("Value ('TARGET') assigned to parameter 'targets' of "
+                         "(AutodiffComposition AUTO-COMP).parameters is not valid: should be a dict of "
+                         "sample:target pairs or, alternatively, a set or list of (sample, target) tuples.")
+            with pytest.raises(pnl.ParameterError, match=re.escape(error_msg)):
+                autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+                                                    targets=targets_constructor_arg,
+                                                    name='AUTO-COMP')
+            return
+
+        autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+                                            targets=targets_constructor_arg,
+                                            name='AUTO-COMP')
+        if target_spec == 'default':
+            # Here, test use of SAMPLE_MECHANISM as key in **targets** arg of learn()
+            targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
+        elif target_spec == 'external':
+            # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
+            targets_learn_arg = {autodiff_comp.target_input_mechanisms[0]:[[0,0,0,0,0]]}
+
+        results = autodiff_comp.learn(num_trials = 2,
+                                      inputs={input_mech:[[1,2,3,4,5]]},
+                                      targets=targets_learn_arg,
+                                      execution_mode=pnl.ExecutionMode.PyTorch)
+        np.testing.assert_allclose(results, np.array(expected))
+
+        # For completeness, reverse use of SAMPLE_MECHANISM and TARGET_MECHANISMs in **targets** of learn()
+        #   for default and external
+        if target_spec == 'default':
+            # Here, test use of TARGET_MECHANISM for SAMPLE_MECHANISM as key in **targets** arg of learn()
+            targets_learn_arg = {autodiff_comp.target_input_mechanisms[0]:[[0,0,0,0,0]]}
+            autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+                                targets=targets_learn_arg,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
+        elif target_spec == 'external':
+            # Here, test use of SAMPLE_MECHANISM as key in **targets** arg of learn()
+            targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
+            autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+                                targets=targets_learn_arg,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
+
+    error_messages_for_target_spec_errors = {
+        0: ("A TARGET_MECHANISM ('pway3_mech_T') can't be assigned to 'pway3_mech_A' in the 'targets' argument of "
+            "'autodiff_composition', since there are no learnable Projections in any of the pathways that project "
+            "to that Node.", AutodiffCompositionError),
+        1: (f"The following specification in the 'targets' argument of the constructor for 'autodiff_composition' "
+             f"is not in the Composition or any nested within it: 'MECH NOT IN COMP'.", CompositionError),
+        2: (f"Value ([((ProcessingMechanism pway1_mech_C), (MappingProjection PROJ IN COMPOSITION)), "
+            f"((ProcessingMechanism pway2_mech_C), (ProcessingMechanism pway2_mech_T)), "
+            f"((ProcessingMechanism pway3_mech_C), (ProcessingMechanism pway3_mech_T))]) "
+            f"assigned to parameter 'targets' of (AutodiffComposition autodiff_composition).parameters is not valid: "
+            f"target specification '(MappingProjection PROJ IN COMPOSITION)' must be an OutputPort, "
+            f"ProcessingMechanism or the keyword 'TARGET'.", ParameterError),
+        2.5: ("Value ([((ProcessingMechanism pway1_mech_C), (ProcessingMechanism pway1_mech_T)), "
+              "((ProcessingMechanism pway2_mech_C), (ProcessingMechanism pway2_mech_T)), "
+              "((ProcessingMechanism pway3_mech_C), (LossMechanism loss mech))]) assigned to parameter 'targets' "
+              "of (AutodiffComposition autodiff_composition).parameters is not valid: target specification "
+              "'loss mech' cannot be a LossMechanism; that can only be used as an entry on its own to specify "
+              "a sample-target pair.", ParameterError),
+        3: ("The following Projections are learnable but are in pathways that do not end in a LossMechanism, "
+            "and therefore cannot be learned: "
+            "'(MappingProjection MappingProjection from pway2_mech_A[OutputPort-0] to pway2_mech_B[InputPort-0])', "
+            "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])', "
+            "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
+            AutodiffCompositionError),
+        4: ("The following Projection is learnable but is in a pathway that does not end in a LossMechanism, "
+            "and therefore cannot be learned: "
+            "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])'.",
+            AutodiffCompositionError),
+        5: ("The following Projections are learnable but are in pathways that do not end in a LossMechanism, "
+            "and therefore cannot be learned: "
+            "'(MappingProjection MappingProjection from pway1_mech_B[OutputPort-0] to pway1_mech_C[InputPort-0])', "
+            "'(MappingProjection MappingProjection from pway2_mech_A[OutputPort-0] to pway2_mech_B[InputPort-0])', "
+            "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])', "
+            "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
+            AutodiffCompositionError),
+        6: (f"The learn() method of 'autodiff_composition can't be executed because its 'targets' argument is "
+           f"missing a specification for the following SAMPLE (OUTPUT) Node of a learnable pathway: "
+            f"'pway2_mech_C'.", CompositionError),
+        7: (f"The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            f"specification in its 'targets' argument: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
+            f"be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).", CompositionError),
+        8: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            "specification in its 'targets' argument: 'pway3_mech_T' (in 'targets' dict): not in "
+            "'autodiff_composition'.", CompositionError),
+        8.5: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
+              "specifications in its 'targets' arguments: 'pway1_mech_T' (in 'targets' dict): SINGLETON Node that is "
+              "neither a SAMPLE_MECHANISM nor a TARGET_MECHANISM; 'pway2_mech_T' (in 'targets' dict): SINGLETON Node "
+              "that is neither a SAMPLE_MECHANISM nor a TARGET_MECHANISM; 'pway3_mech_T' (in 'targets' dict): not in "
+              "'autodiff_composition'.", CompositionError),
+        9: ("The learn() method of 'autodiff_composition' can't be executed because there is the following illegal "
+            "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): INTERNAL Node (which can't "
+            "be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).", CompositionError),
+        10: ("The learn() method of 'autodiff_composition' can't be executed because there are the following illegal "
+             "specifications in its 'targets' arguments: 'pway1_mech_B' (in 'targets' dict): INTERNAL Node (which "
+             "can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition); 'pway3_mech_B' (in 'targets' dict): "
+             "INTERNAL Node (which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition).",
+             CompositionError),
+        11: ("The learn() method of 'autodiff_composition' can't be executed because there are the following "
+             "illegal specifications in its 'targets' arguments: 'pway2_mech_B' (in 'targets' dict): INTERNAL Node "
+             "(which can't be a SAMPLE_MECHANISM or TARGET_MECHANISM in a Composition); 'pway3_mech_B' (in 'targets' "
+             "dict): not in 'autodiff_composition'.", CompositionError),
+        11.5: ("The learn() method of 'autodiff_composition' can\'t be executed because there is the following illegal "
+               "specification in its 'targets' argument: 'pway3_mech_B' (in 'targets' dict): not in "
+               "'autodiff_composition'.", CompositionError),
+        12: ("The learn() method of 'autodiff_composition' can't be executed because the following specification in "
+             "its 'targets' argument conflicts with one in the 'targets' argument of its constructor: for "
+             "SAMPLE_MECHANISM 'pway3_mech_C[OutputPort-0]' (specified as 'pway3_mech_C'): a source for its target "
+             "value ('pway3_mech_T') is specified in the 'targets' argument of the constructor, so there should be no "
+             "specification for it in learn().", AutodiffCompositionError),
+        13: ("The learn() method of 'autodiff_composition' can't be executed because the following specification "
+             "in its 'targets' argument conflicts with those in the 'targets' argument of its constructor: "
+             "for SAMPLE_MECHANISM 'pway2_mech_B': does not correspond to any SAMPLE_MECHANISM specified in "
+             "the constructor.", CompositionError),
+    }
+    test_args_for_target_spec_errors = [
+        #     method         num_specs          spec_type                errant_spec        err_msg_num
+        #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra  in/out/loss/all/bad/both   #
+        (     'cnstr',           0,              'node',                    'in',           0), # not learnable
+        (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
+        (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
+        (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
+        (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
+        (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
+        (     'cnstr',           0,               'bad',                  'loss',         2.5),# LossMechanism as target
+        (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
+        (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
+        (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
+        (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
+        (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
+        (      'lrn'  ,         -1,               'node',                   None,           6), # missing target spec
+        (      'lrn'  ,         -1,              'TARGET',                  None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'bad',                    None,           7), # missing TARGET spec
+        (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
+        (      'lrn',            0,              'TARGET',                 'all',         8.5), # 2 bad + 1 not in comp
+        (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
+        (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
+        (      'lrn',           +1,              'TARGET',                  None,          11), # extra TARGET spec
+        (      'lrn',           +1,               'bad',                    None,        11.5), # 1 bad + 1 extra
+        (     'both',            0,               'both',                   None,          12), # cstr + same lrn
+        (     'both',           +1,               'both',                   None,          13), # cstr + diff lrn
+    ]
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    @pytest.mark.parametrize(["method", "num_specs", "spec_type", "errant_spec", "err_msg_num"],
+                             test_args_for_target_spec_errors)
+    def test_target_spec_errors_in_constructor_and_learn(self,
+                                                         method, num_specs,
+                                                         errant_spec, spec_type, err_msg_num):
+        """Test errors for specifications of **targets** argument in constructor and learn() method
+        Note:  these overlap to some extent with tests in test_learning.py: TestInputAndTargetSpecs
+
+        constructor:
+        - pathway that has TARGET_MECHANISM spec for middle but not subequent projections
+        - pathway that has TARGET_MECHANISM spec for middle but not subequent projections
+        - pathway that has no spec (should be error in _instantiate_loss, not _validate_constructor_targets_specs)
+                   [TEACHER_TARGET BREADCRUMB: CHANGE ERROR in _validate_targets_specss to assert]
+        - bad spec: type -> _validate_targets
+            - bad spec: not in Comp -> _validate_constructor_targets_specs
+
+        learn():
+          - all keys are in composition
+          - Warning for any target specs in **targets** arg of learn() that are also in **inputs** arg
+          - w/ constructor **targets**:
+            - learn() should have an entry for every SAMPLE_MECHANISM specified as TARGET in the constructor
+            - no extra specs in **targets** arg of learn()
+          - no constructor **targets**:
+            - keys not in Comp
+            - keys that do not refer to an OUTPUT Node
+            - there is a spec for every TARGET_MECHANISM (OUTPUT Node) in Comp
+
+
+        TEACHER_TARGET BREADCRUMB: TODO:
+                        - TWO TARGET_MECHANISMs FOR SAME _MECHANISM -> ERROR
+                        - TWO SAMPLES FOR SAME TARGET_MECHANISM -> OK
+                        - BAD SPEC TYPE (e.g., string that isn't 'TARGET' or 'node') -> ERROR
+                        - SAMPLE_MECHANISM AND TARGET_MECHANISM FOR THAT SAME BOTH AS ENTRIES IN **targets** FOR learn()
+                                       (SEE EXAMPLE IN SCRATCH PAD)
+                                       (POSSIBLE SINCE THEY ARE DIFFERENT KEYS IN THE DICT) -> ERROR
+        """
+        pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
+        pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
+        pway1_mech_C = pnl.ProcessingMechanism(name='pway1_mech_C')
+        pway1_mech_T = pnl.ProcessingMechanism(name='pway1_mech_T')
+        pway2_mech_A = pnl.ProcessingMechanism(name='pway2_mech_A')
+        pway2_mech_B = pnl.ProcessingMechanism(name='pway2_mech_B')
+        pway2_mech_C = pnl.ProcessingMechanism(name='pway2_mech_C')
+        pway2_mech_T = pnl.ProcessingMechanism(name='pway2_mech_T')
+        pway3_mech_A = pnl.ProcessingMechanism(name='pway3_mech_A')
+        pway3_mech_B = pnl.ProcessingMechanism(name='pway3_mech_B')
+        pway3_mech_C = pnl.ProcessingMechanism(name='pway3_mech_C')
+        pway3_mech_T = pnl.ProcessingMechanism(name='pway3_mech_T')
+        loss_mech = pnl.LossMechanism(name='loss mech', sample=pway1_mech_B, target=pway1_mech_T)
+
+        proj_1_A_B = MappingProjection(pway1_mech_A, pway1_mech_B, name='PROJ IN COMPOSITION')
+        pway1 = [pway1_mech_A, proj_1_A_B, pway1_mech_B, pway1_mech_C]
+        pway2 = [pway2_mech_A,  pway2_mech_B, pway2_mech_C]
+        pway3 = [pway3_mech_A,  pway3_mech_B, pway3_mech_C]
+
+        learn_targets = None
+
+        if method == 'cnstr':
+            if num_specs == 0:
+                if spec_type in {'node', pnl.TARGET, 'both', 'extra'}:
+                    if errant_spec == 'in':
+                        # Not learnable error (since Target is for first Node in pathway) - Error 0
+                        constructor_targets = {pway3_mech_A: pway3_mech_T}
+                    elif errant_spec is None:
+                        if spec_type == 'node':
+                            constructor_targets = {pway1_mech_C: pway1_mech_T, # <- same target
+                                                   pway1_mech_B: pway1_mech_T, # <- same target
+                                                   pway2_mech_C: pway2_mech_T,
+                                                   pway3_mech_C: pway3_mech_T}
+                        elif spec_type == pnl.TARGET:
+                            learn_targets = {pway1_mech_B: [[1]],
+                                             pway1_mech_C: [[1]]}
+                            constructor_targets = {pway1_mech_B: pnl.TARGET,
+                                                   pway1_mech_C: pnl.TARGET,
+                                                   pway2_mech_C: pway2_mech_T,
+                                                   pway3_mech_C: pway3_mech_T}
+                        elif spec_type == 'both':
+                            learn_targets = {pway1_mech_C: [[1]]}
+                            constructor_targets = {pway1_mech_B: pway1_mech_T,
+                                                   pway1_mech_C: pnl.TARGET,
+                                                   pway2_mech_C: pway2_mech_T,
+                                                   pway3_mech_C: pway3_mech_T}
+                        elif spec_type == 'extra':
+                            learn_targets = {pway1_mech_C: [[1]]}
+                            constructor_targets = {pway1_mech_B: pway1_mech_T, # <- same target
+                                                   pway1_mech_C: pnl.TARGET,
+                                                   pway2_mech_C: pway1_mech_T, # <- same target
+                                                   pway3_mech_C: pway3_mech_T}
+
+                    else:
+                        assert False, f"TEST ERROR: bad 'errant_spec': {errant_spec}"
+
+                elif spec_type == 'bad':
+                    if errant_spec == 'bad':   # Spec is in Composition but bad item
+                        constructor_targets = {pway1_mech_C: proj_1_A_B, # <- Projection in Composition
+                                               pway2_mech_C: pway2_mech_T,
+                                               pway3_mech_C: pway3_mech_T}
+                    elif errant_spec == 'loss': # Target spec is a LossMechanism
+                        constructor_targets = {pway1_mech_C: pway1_mech_T,
+                                               pway2_mech_C: pway2_mech_T,
+                                               pway3_mech_C: loss_mech} # <- LossMechanism as target spec
+                    elif errant_spec == 'out':   # Spec is for node not in ("out" of) Composition
+                        constructor_targets = {pway1_mech_C: ProcessingMechanism(name='MECH NOT IN COMP'),
+                                               pway2_mech_C: pway2_mech_T,
+                                               pway3_mech_C: pway3_mech_T}
+                    else:
+                        assert False, f"TEST ERROR: bad 'errant_spec': {errant_spec}"
+
+                else:
+                    assert False, f"TEST ERROR: bad 'num_specs' spec:  {errant_spec}"
+
+            if num_specs == -1:
+                if spec_type == 'node':
+                    #  Missing spec for pway2, so both of its Projections are orphaned - Error 3
+                    #  Also tests for two samples with same target in same pathway (shouldn't matter even with error)
+                    constructor_targets = {pway1_mech_C: pway1_mech_T, # <- same target
+                                           pway1_mech_B: pway1_mech_T, # <- same target
+                                           # pway2_mech_C: pway2_mech_T, <- No spec, so both projs are orphaned
+                                           pway3_mech_B: pway3_mech_T}
+
+                elif spec_type == pnl.TARGET:
+                    #  Missing spec for pway2, so both of its Projections are orphaned - Error 3
+                    constructor_targets = {pway1_mech_C: pnl.TARGET,
+                                           pway1_mech_B: pnl.TARGET,
+                                           # pway2_mech_C: pway2_mech_T, <- No spec, so both projs are orphaned
+                                           pway3_mech_B: pnl.TARGET}
+
+                elif spec_type == 'both':
+                    #  Missing spec for pway2, so both of its Projections are orphaned - Error 3
+                    #  and spec for middle Node of pway3 so its last Projections is orphaned
+                    constructor_targets = {pway1_mech_B: pway1_mech_T,
+                                           pway1_mech_C: pnl.TARGET,
+                                           # pway2_mech_C: pway2_mech_T, <- No spec, so both projs are orphaned
+                                           pway3_mech_B: pnl.TARGET} # <- Middle spec so last proj is orphaned
+
+                elif spec_type == 'extra':
+                    #  Spec for middle Node in pway2, so its last Projection is orphaned - Error 4
+                    constructor_targets = {pway1_mech_C: pnl.TARGET,
+                                           pway2_mech_B: pnl.TARGET, # <- Middle spec so last proj is orphaned
+                                           pway3_mech_C: pway3_mech_T}
+
+                elif spec_type == 'bad':
+                    #  Spec for middle Nodes of pway1 and pway2, so their last Projections are orphaned
+                    #          and no spec for pway2 so both of its Projections are orphaned - Error 5
+                    constructor_targets = {pway1_mech_B: pway1_mech_T, # <- Middle spec so last proj is orphaned
+                                           # pway2_mech_C: pway2_mech_T, <- OMISSION CAUSES ERROR
+                                           pway3_mech_B: pway3_mech_T} # <- Middle spec so last proj is orphaned
+
+        elif method == 'lrn':
+            constructor_targets = None
+            if num_specs == -1:
+                if spec_type == 'node':
+                    # Missing spec in **targets** arg of learn(); others specified with SAMPLE_MECHANISM
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     pway3_mech_C: [[10]]}
+                elif spec_type == pnl.TARGET:
+                    # Missing spec in **targets** arg of learn(); others specified with TARGET_MECHANISM
+                    learn_targets = {'ADD TARGETS': [0, 2]}
+                elif spec_type == 'both':
+                    # Missing SAMPLE_MECHANISM spec in **targets** arg of learn();
+                    #   others specified as: other node, TARGET_MECHANISM
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     'ADD TARGETS': [2]}
+                elif spec_type == 'bad':
+                    # Bad spec in **targets** arg of learn() method;
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     pway2_mech_B: [[10]],
+                                     'ADD TARGETS': [2]}
+            elif num_specs == 0:
+                if spec_type == pnl.TARGET:
+                    if errant_spec == 'out':
+                        # One bad specificatons: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_C: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_T: [[10]]}
+                    elif errant_spec == 'all':
+                        # One bad specificatons: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_T: [[10]],
+                                         pway2_mech_T: [[10]],
+                                         pway3_mech_T: [[10]]}
+                elif errant_spec == 'all':
+                    # All bad specificatons: pway[1/2]_mech_T should be pway[1/2]_mech_C & pway3_mech_T not in Comp
+                    learn_targets = {pway1_mech_T: [[10]],
+                                     pway2_mech_T: [[10]],
+                                     pway3_mech_T: [[10]]}
+                elif spec_type == 'bad':
+                    if errant_spec == 'bad':
+                        # One bad specificaton: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_C: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    elif errant_spec == 'both':
+                        # Two bad specificatons: pway1 and pway3 should be mech_C not mech_B)
+                        learn_targets = {pway1_mech_B: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    else:
+                        assert False, f"TEST ERROR: bad errant_spec: {errant_spec}"
+                else:
+                    assert False, f"TEST ERROR: bad spec_type: {spec_type}"
+
+            elif num_specs == +1:
+                if spec_type == pnl.TARGET:
+                    # Extra spec in **targets** arg of learn() method
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     pway2_mech_B: [[10]],
+                                     pway3_mech_B: [[10]],
+                                     }
+                # 1 bad and 1 extra spec in **targets** arg of learn() method
+                elif spec_type == 'bad':
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     pway2_mech_C: [[10]],
+                                     pway3_mech_B: [[10]]}
+            else:
+                assert False, f"TEST ERROR: bad num_specs: {num_specs}"
+
+        elif method == 'both':
+            constructor_targets = {pway1_mech_C: pway1_mech_T,
+                                   pway2_mech_C: pway2_mech_T,
+                                   pway3_mech_C: pway3_mech_T}
+            if num_specs == 0:  # Specification in learn for TARGET_MECHANISM already specified in constructor
+                learn_targets = {pway3_mech_C: [[10]]}
+            elif num_specs == +1: # Specification in learn for TARGET_MECHANISM not specified in constructor
+                learn_targets = {pway2_mech_B: [[10]]}
+            else:
+                assert False, f"TEST ERROR: bad num_specs: {num_specs}"
+
+        else:
+            assert False, f"TEST ERROR: bad method spec: {method}"
+
+        # Construct pathways
+        if method in {'cnstr', 'both'}:
+            # Include pway1_mech_T, pway2_mech_T and pway3_mech_T for use as TARGET specs
+            pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T, pway3_mech_T]
+            inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+        elif method == 'lrn':
+            # No need for pway1_mech_T, pway2_mech_T or pway3_mech_T
+            if num_specs == -1:
+                # Construct 3 pathways, so that one can be missing
+                pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T, pway3_mech_T]
+                inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+            if num_specs == 0:
+                if spec_type == pnl.TARGET:
+                    # Construct 3 pathways but only two TARGET_MECHANISMs, to test "not in Comp" error for missing one
+                    pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T]
+                    inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+                elif spec_type in {'bad', 'both'}:
+                    # Construct 3 pathways, one or two of which will get erroneous spec
+                    pathways = [pway1, pway2, pway3]
+                    inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+                else:
+                    assert False, f"PROGRAM ERROR: bad spec_type: {spec_type}"
+
+            elif num_specs == +1:
+                # Construct 2 pathways, so the 3rd spec can be the erroneous extra one
+                pathways = [pway1, pway2]
+                inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]]}
+        else:
+            assert False, f"TEST ERROR: bad method spec"
+
+        if err_msg_num == -1:  # Conditions with no errors; should fully execute cconstructor and learn()
+            autodiff_comp = pnl.AutodiffComposition(pathways=pathways,
+                                                    targets=constructor_targets)
+            autodiff_comp.learn(inputs=inputs,
+                                targets=learn_targets,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
+            return
+
+        error_msg = self.error_messages_for_target_spec_errors[err_msg_num][0]
+        error_type = self.error_messages_for_target_spec_errors[err_msg_num][1]
+        with pytest.raises(error_type, match=re.escape(error_msg)):
+            autodiff_comp = pnl.AutodiffComposition(pathways=pathways,
+                                                    targets=constructor_targets)
+            if learn_targets and 'ADD TARGETS' in learn_targets:
+                # Add automatically constructed TARGET_MECHANISMs if specified
+                target_nodes = sorted(autodiff_comp.target_input_mechanisms)
+                specs = learn_targets.pop('ADD TARGETS')
+                learn_targets.update({target_nodes[spec]:[[1]] for spec in specs})
+            autodiff_comp.learn(inputs=inputs,
+                                targets=learn_targets,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
+
+
 # Expected results for test_projection_specific_learning_rates()
 # NOTE: these should be kept consistent with test_learning/test_projection_specific_learning_rates()
 #       to additionally test for identicality of effects with Python learning
@@ -299,6 +964,8 @@ input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
 hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
 inpt_learn_ovrd = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
 hid_learn_ovrd = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+inpt_learn_ovrd_post_constr = [[-3.964796, -3.964796, -3.964796, -3.964796, -3.964796]]
+hid_learn_ovrd_post_constr = [[43.157145, 43.157145, 43.157145, 43.157145, 43.157145]]
 input_dict_cnstr = [[3.2844555, 3.2844555, 3.2844555, 3.2844555, 3.2844555]]
 hid_dict_constr = [[11.45824471, 11.45824471, 11.45824471, 11.45824471, 11.45824471]]
 inp_cnstr_ovrd = [[0.12288, 0.12288, 0.12288, 0.12288, 0.12288]]
@@ -346,8 +1013,8 @@ class TestAutodiffLearningRateArgs:
         ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   False,   inpt_learn_ovrd),
         ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  False,   hid_learn_ovrd),
         # Projection spec made after AutodiffComposition contruction (should have no effect, since post-construction)
-        ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,    inpt_learn_ovrd),
-        ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,    hid_learn_ovrd),
+        ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,    inpt_learn_ovrd_post_constr),
+        ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,    hid_learn_ovrd_post_constr),
     ]
     # NOTE: this should be kept consistent with test_learning/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with Python learning
@@ -393,11 +1060,14 @@ class TestAutodiffLearningRateArgs:
             learn_method_learning_rate_dict.update({nested_proj: .2})
 
         # Construct outer_comp
+        outer_comp_learning_rate = (
+            constructor_learning_rate_dict
+            if 'constructor' in condition
+            else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}
+        )
         outer_comp = pnl.AutodiffComposition(name='Outer Comp',
                                              pathways=pathway,
-                                             learning_rate = (constructor_learning_rate_dict
-                                                              if "constructor" in condition
-                                                              else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
+                                             learning_rate=outer_comp_learning_rate)
         # Test for specified learning rates in constructor
         input_proj_lr = \
             .3 if constructor_dict_param == 'input' \
@@ -421,33 +1091,56 @@ class TestAutodiffLearningRateArgs:
             nested_proj.learning_rate = .7
 
         # Test learning
-        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        targets = outer_comp.target_input_mechanisms
+        if "learn" in condition:
+            used_learn_method_lr = learn_method_learning_rate_dict
+        else:
+            used_learn_method_lr = {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}
         pytorch_result = outer_comp.learn(
             inputs={outer_mech_in:input_stims, targets[0]: target_vals},
             num_trials=num_trials,
             execution_mode=pnl.ExecutionMode.PyTorch,
             # learning_rate=learn_method_lr
-            learning_rate=(learn_method_learning_rate_dict if "learn" in condition
-                           else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
+            learning_rate=used_learn_method_lr,
+        )
 
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
-        assert (pytorch_rep.get_torch_learning_rate_for_projection(input_proj) ==
-                (learn_method_learning_rate_dict[input_proj] if learn_dict_param == 'input'
-                 else constructor_learning_rate_dict[input_proj] if constructor_dict_param == 'input'
-                else input_lr if input_lr not in {None, True}
-                # else learn_method_lr if (pnl.DEFAULT_LEARNING_RATE in learn_method_learning_rate_dict and
-                #                          learn_method_learning_rate_dict[pnl.DEFAULT_LEARNING_RATE] not in {None, True})
-                else learn_method_lr if (learn_method_learning_rate_dict and learn_method_lr not in {None, True})
-                else .9 if post_constr
-                else default_lr))
-        assert (pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) ==
-                (learn_method_learning_rate_dict[nested_proj] if learn_dict_param == 'hidden'
-                 else constructor_learning_rate_dict[nested_proj] if constructor_dict_param == 'hidden'
-                else hidden_lr if hidden_lr not in {None, True}
-                else learn_method_lr if (learn_method_learning_rate_dict and learn_method_lr not in {None, True})
-                else .7 if post_constr
-                else default_lr))
+
+        if learn_dict_param == 'input':
+            input_proj_exp = learn_method_learning_rate_dict[input_proj]
+        elif constructor_dict_param == 'input':
+            input_proj_exp = constructor_learning_rate_dict[input_proj]
+        elif input_lr not in {None, True}:
+            input_proj_exp = input_lr
+        # else learn_method_lr if (pnl.DEFAULT_LEARNING_RATE in learn_method_learning_rate_dict and
+        #                          learn_method_learning_rate_dict[pnl.DEFAULT_LEARNING_RATE] not in {None, True})
+        elif post_constr:
+            input_proj_exp = .9
+        elif (learn_method_learning_rate_dict and learn_method_lr not in {None, True}):
+            # this case is DEFAULT_LEARNING_RATE entry
+            input_proj_exp = learn_method_lr
+        else:
+            input_proj_exp = default_lr
+
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_exp
+
+        if learn_dict_param == 'hidden':
+            nested_proj_exp = learn_method_learning_rate_dict[nested_proj]
+        elif constructor_dict_param == 'hidden':
+            nested_proj_exp = constructor_learning_rate_dict[nested_proj]
+        elif hidden_lr not in {None, True}:
+            nested_proj_exp = hidden_lr
+        elif post_constr:
+            nested_proj_exp = .7
+        elif (learn_method_learning_rate_dict and learn_method_lr not in {None, True}):
+            # this case is DEFAULT_LEARNING_RATE entry
+            nested_proj_exp = learn_method_lr
+        else:
+            nested_proj_exp = default_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == nested_proj_exp
+
         assert (pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) ==
                 (learn_method_lr if learn_method_lr is not None
                  else constructor_lr if constructor_lr is not None
@@ -530,7 +1223,7 @@ class TestAutodiffLearningRateArgs:
 
         # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
         outer_comp.learn(inputs={outer_mech_in: [[1]],
-                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                                 outer_comp.target_input_mechanisms[0]: [[1]]},
                          num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                          learning_rate={input_proj:12,
                                         "NESTED 2 PROJ BC": 13,
@@ -549,7 +1242,7 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 12
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
 
-        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]},
                          num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # learning_rates should revert to constructor-speficied values (e.g., input_proj) or composition defaults
@@ -586,9 +1279,9 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
-            # check that it has been assigned as default (in _optimizer_constructor_params);
+            # check that it has been assigned as the current parameter value;
             #     i.e., that it persists after a call to learn():
-            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]},
                              learning_rate={"NESTED 2 PROJ BC": 99},)
 
             pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
@@ -596,41 +1289,48 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
             pytorch_rep_constructor = outer_comp.parameters.pytorch_representation.get(None)
-            assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == .3
 
             # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
-            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]})
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
 
     error_test_args = [
-        ("comp_lr_spec_str",
-         "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "is not valid; it must be an int, float, bool or None."),
-        ("comp_lr_spec_proj",
-         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
-         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
-        ("dict_lr_val_str",
-         "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "is not valid; it must be an int, float, bool or None."),
-        ("dict_lr_val_proj",
-         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
-         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
-        ("dict_illegal_key_str",
-         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "is not in that Composition or any nested within it: 'woa a woa'."),
-        ("dict_illegal_key_int",
-         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "is not in that Composition or any nested within it: '23'."),
-        ("dict_key_bad_proj",
-         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
-        ("dict_proj_not_learnable",
-         "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
-         "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
-         "is not 'False', or remove it from the dict."),
-         ]
+        (
+            'comp_lr_spec_str',
+            "A value ('hello') specified for the learning_rate of 'Outer Comp' in the learn() method is not valid: must be an int, float, bool, None, or a dict",
+        ),
+        (
+            'comp_lr_spec_proj',
+            "A value ((MappingProjection INPUT PROJECTION)) specified for the learning_rate of 'Outer Comp' in the learn() method is not valid: must be an int, float, bool, None, or a dict",
+        ),
+        (
+            'dict_lr_val_str',
+            "A value ({'default_learning_rate': 0.1, (MappingProjection INPUT PROJECTION): 'goodbye'}).*specified for the learning_rate of 'Outer Comp' in the learn() method.*'goodbye' must be an int, float, bool, or None",
+        ),
+        (
+            'dict_lr_val_proj',
+            "A value ({'default_learning_rate': 0.1, (MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}).*specified for the learning_rate of 'Outer Comp' in the learn() method.*must be an int, float, bool, or None",
+        ),
+        (
+            'dict_illegal_key_str',
+            ".*'woa a woa' is not in that Composition or any nested within it",
+        ),
+        (
+            'dict_illegal_key_int',
+            "A value ({'default_learning_rate': 0.1, 23: 0.2}) specified for the learning_rate of 'Outer Comp' in the learn() method is not valid: entry key 23 must be a Projection or name of a Projection",
+        ),
+        (
+            'dict_key_bad_proj',
+            '.*(MappingProjection BAD PROJECTION) is not in that Composition or any nested within it',
+        ),
+        (
+            'dict_proj_not_learnable',
+            '.*(MappingProjection INPUT PROJECTION) specified in the dict is not enabled; check that its enable_learning_rate attribute is set to True and its learning_rate is not False, or remove it from the dict.',
+        ),
+    ]
     @pytest.mark.pytorch
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -653,13 +1353,10 @@ class TestAutodiffLearningRateArgs:
         key_spec = input_proj
         val_spec = .2
 
-        error_type = AutodiffCompositionError
         if condition == 'comp_lr_spec_str':
             comp_lr = 'hello'
-            error_type = pnl.CompositionError
         elif condition == 'comp_lr_spec_proj':
             comp_lr = input_proj
-            error_type = pnl.CompositionError
         elif condition == "dict_lr_val_str":
             val_spec = "goodbye"
         elif condition == "dict_lr_val_proj":
@@ -676,10 +1373,14 @@ class TestAutodiffLearningRateArgs:
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
-        with pytest.raises(error_type, match=re.escape(error_msg)):
+        # re.escape escapes '.*'
+        error_re = re.sub(r'([\(\)\[\{])', r'\\\1', error_msg)
+        with pytest.raises(CompositionError, match=error_re):
             outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
-            outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
-
+            target = outer_comp.target_input_mechanisms[0]
+            outer_comp.learn(inputs={outer_mech_in: [[1.0]]},
+                             targets={target:target.value},
+                             learning_rate=comp_lr)
 
     @pytest.mark.pytorch
     def test_learning_rate_utility_functions(self):
@@ -709,12 +1410,12 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .13
 
         param_to_proj_dict = pytorch_rep.torch_params_to_projections()
-        assert len(param_to_proj_dict) == 3
+        assert len(param_to_proj_dict) == 5 # (Includes Loss Projections)
         assert all(isinstance(param, torch.nn.Parameter) for param in param_to_proj_dict.keys())
         assert all(isinstance(proj, MappingProjection) for proj in param_to_proj_dict.values())
 
         proj_to_param_dict = pytorch_rep.projections_to_torch_params()
-        assert len(proj_to_param_dict) == 3
+        assert len(proj_to_param_dict) == 5 # (Includes Loss Projections)
         assert all(isinstance(proj, MappingProjection) for proj in proj_to_param_dict.keys())
         assert all(isinstance(param, torch.nn.Parameter) for param in proj_to_param_dict.values())
 
@@ -753,13 +1454,13 @@ class TestAutodiffLearningRateArgs:
 
         if enable_learning:
             # Execute learning without run
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]},
                                                num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                                learning_rate={input_proj:input_proj_lr})
 
         else:
             # Execute run, then enable learning and execute learning()
-            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]},
                                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
             # Check that learning rates are ones from construction
@@ -770,7 +1471,7 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == nested_proj_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.target_input_mechanisms[0]: [[1]]},
                                                num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                                learning_rate={input_proj:input_proj_lr})
             # Ensure learning occurred
@@ -789,7 +1490,8 @@ def test_autodiff_without_torch():
     mech_B = TransferMechanism()
     comp = AutodiffComposition([mech_A, mech_B])
     comp.run()
-    result = comp.learn(inputs={mech_A:[[1], [2]]}, epochs=3, execution_mode=pnl.ExecutionMode.Python)
+    targets = {target: target.value for target in comp.target_input_mechanisms}
+    result = comp.learn(inputs={mech_A:[[1], [2]]}, targets=targets, epochs=3, execution_mode=pnl.ExecutionMode.Python)
 
     assert comp.pytorch_representation is None
     np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
@@ -802,7 +1504,9 @@ def test_autodiff_without_torch():
         comp = AutodiffComposition([mech_A, mech_B])
         comp.run()
         with pytest.raises(AutodiffCompositionError) as error:
+            targets = {target: target.value for target in comp.target_input_mechanisms}
             result = comp.learn(inputs={mech_A:[[1], [2]]},
+                                targets=targets,
                                 epochs=3,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
             np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
@@ -851,9 +1555,10 @@ def test_retain_results():
     input_node = input_mech
     comp = AutodiffComposition([input_mech, output_mech])
     comp.run(inputs={input_node:inputs}, num_trials=1)
-    comp.learn(inputs={input_node:inputs},num_trials=2)
+    targets = {target: target.value for target in comp.target_input_mechanisms}
+    comp.learn(inputs={input_node:inputs}, targets=targets, num_trials=2)
     comp.run(inputs={input_node:inputs}, num_trials=3)
-    comp.learn(inputs={input_node:inputs},num_trials=4)
+    comp.learn(inputs={input_node:inputs}, targets=targets, num_trials=4)
     assert len(comp.results) == 10
 
 
@@ -912,7 +1617,6 @@ class TestTrainingCorrectness:
             accuracy_args = {}
 
         np.testing.assert_allclose(results, expected, **accuracy_args)
-
 
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.benchmark(group="Semantic net")
@@ -1222,7 +1926,6 @@ class TestTrainingCorrectness:
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
                 np.testing.assert_allclose(r, e, **accuracy_args)
-
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -1658,6 +2361,143 @@ class TestTrainingCorrectness:
 
         np.testing.assert_allclose(output, comparator, rtol=1e-5, atol=1e-8)
 
+    def test_pytorch_equivalence_with_constructor_target_assignment(self):
+        # inputs -------> sample -------> outputs
+        #     \             \  ^                  \
+        #      \             \  \                   \----> results
+        #       \             \  \............      /
+        #        \             LossMechanism .`    /
+        #         --> target -/                   /
+        #                     \------------------/
+        import torch
+        entry_torch_dtype = torch.get_default_dtype()
+        torch.set_default_dtype(torch.float64)
+
+        DIM = 3
+        LEARNING_RATE = .01
+        np.random.seed(0)
+
+        # TORCH MODEL -------------------------------------
+
+        # Construct torch model
+        class SimpleSampleTargetTorchModule(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.sample = torch.nn.Linear(DIM, DIM, bias=False)
+                self.target = torch.nn.Linear(DIM, DIM, bias=False)
+                self.out = torch.nn.Linear(DIM, DIM, bias=False)
+                with torch.no_grad():
+                    self.sample.weight.copy_(torch.eye(DIM))
+                    self.target.weight.copy_(torch.randn(DIM, DIM))
+                    self.out.weight.copy_(torch.eye(DIM))
+            def forward(self, x):
+                # Encode target
+                target = self.target(x)
+                # Learned encoding of sample (should learn the same encoding as target)
+                sample = self.sample(x)
+                # Report output of sample
+                out = self.out(sample)  # weights of .outputs should be set to R^{-1} and frozen
+                return sample, target, out
+        torch_model = SimpleSampleTargetTorchModule()
+        torch_sample_wts_before_learning = torch_model.sample.state_dict()['weight'].detach().clone()
+        torch_target_wts_before_learning = torch_model.target.state_dict()['weight'].detach().clone()
+        torch_output_wts_before_learning = torch_model.out.state_dict()['weight'].detach().clone()
+        torch_optimizer = torch.optim.SGD(torch_model.parameters(), lr=LEARNING_RATE)
+        torch_loss_function = torch.nn.MSELoss()
+
+        # Execute torch model
+        torch_stim = torch.rand(1, 3).detach()
+        torch_sample, torch_target, torch_out = torch_model(torch_stim)
+        torch_loss = torch_loss_function(torch_sample, torch_target.detach())
+        torch_optimizer.zero_grad()
+        torch_loss.backward()
+        torch_optimizer.step()
+        torch_sample_wts_after_learning = torch_model.sample.weight.detach().clone().numpy()
+        torch_target_wts_after_learning = torch_model.target.weight.detach().clone().numpy()
+        torch_out_wts_after_learning = torch_model.out.weight.detach().clone().numpy()
+        # Execute again to see effects of learning
+        s, t, o = torch_model(torch_stim)
+        # Record results
+        torch_sample_after_learning = s.detach().numpy().squeeze()
+        torch_target_after_learning = t.detach().numpy().squeeze()
+        torch_out_after_learning = o.detach().numpy().squeeze()
+
+        # PNL MODEL --------------------------------
+
+        # Construct PNL model
+
+        inputs = pnl.ProcessingMechanism(name='INPUTS', input_shapes=DIM)
+        sample = pnl.ProcessingMechanism(name=pnl.SAMPLE, input_shapes=DIM)
+        target = pnl.ProcessingMechanism(name=pnl.TARGET, input_shapes=DIM)
+        outputs = pnl.ProcessingMechanism(name='OUTPUTS', input_shapes=DIM)
+        pnl_sample_encoding_wts = MappingProjection(name='SAMPLE ENCODING WTS',
+                                            sender=inputs, receiver=sample, learning_rate=LEARNING_RATE)
+        pnl_target_encoding_wts = MappingProjection(name='TARGET ENCODING WTS',
+                                            sender=inputs, receiver=target, learnable=False)
+        pnl_output_decoding_wts = MappingProjection(name='OUTPUT DECODING WTS',
+                                                    sender=sample, receiver=outputs, learnable=False)
+        sample_pathway = [inputs, pnl_sample_encoding_wts, sample, pnl_output_decoding_wts, outputs]
+        target_pathway = [inputs, pnl_target_encoding_wts, target]
+        autodiff_comp = pnl.AutodiffComposition(pathways=[sample_pathway, target_pathway],
+                                                targets=[(sample, target)],
+                                                loss_spec=Loss.MSE,
+                                                name='autodiff_comp')
+
+        # Copy initial torch weights to PNL model and construct pytorch_represenation
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_sample_encoding_wts, torch_sample_wts_before_learning)
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_target_encoding_wts, torch_target_wts_before_learning)
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_output_decoding_wts, torch_output_wts_before_learning)
+        pytorch_rep = autodiff_comp._build_pytorch_representation()
+        # Ensure initial weights are identical for torch and PNL models
+        assert (pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS') == torch_sample_wts_before_learning.T).all()
+        assert (pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS') == torch_target_wts_before_learning.T).all()
+        assert (pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS') == torch_output_wts_before_learning.T).all()
+
+        # Execute PNL model
+        pnl_stim = torch_stim.detach().numpy()
+        autodiff_comp.learn(inputs={inputs: pnl_stim},
+                            execution_mode=pnl.ExecutionMode.PyTorch)
+
+        pnl_sample_wts_after_learning = pnl_sample_encoding_wts.parameters.matrix.get('autodiff_comp')
+        pnl_target_wts_after_learning = pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy()
+        pnl_out_wts_after_learning = pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy()
+        # Update pytorch_rep to be one used for learning
+        pytorch_rep = autodiff_comp.parameters.pytorch_representation.get('autodiff_comp')
+        pytorch_rep_sample_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS').detach().numpy())
+        pytorch_rep_target_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy())
+        pytorch_rep_out_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy())
+
+        # Record loss before executing again
+        pnl_loss = autodiff_comp.nodes['LOSS for SAMPLE'].parameters.value.get('autodiff_comp').squeeze()
+        # # Execute again to see effects of learning
+        result = autodiff_comp.run(inputs={inputs: pnl_stim},
+                                   execution_mode=pnl.ExecutionMode.PyTorch)
+        # Record results
+        pnl_sample_after_learning = autodiff_comp.nodes[pnl.SAMPLE].parameters.value.get('autodiff_comp').squeeze()
+        pnl_target_after_learning = autodiff_comp.nodes[pnl.TARGET].parameters.value.get('autodiff_comp').squeeze()
+        pnl_outputs_after_learning = autodiff_comp.nodes['OUTPUTS'].parameters.value.get('autodiff_comp').squeeze()
+        pnl_results_after_learning = autodiff_comp.results[1].squeeze()
+        # pnl_results_after_learning = autodiff_comp.learning_results[0].squeeze()
+
+        # COMPARE RESULTS -------------------------------
+        np.testing.assert_allclose(torch_stim, pnl_stim)
+        np.testing.assert_allclose(pnl_sample_after_learning, torch_sample_after_learning)
+        np.testing.assert_allclose(pnl_target_after_learning, torch_target_after_learning)
+        np.testing.assert_allclose(pnl_outputs_after_learning, torch_out_after_learning)
+        np.testing.assert_allclose(pnl_results_after_learning, torch_out_after_learning)
+        np.testing.assert_allclose(pnl_sample_wts_after_learning, torch_sample_wts_after_learning.T)
+        np.testing.assert_allclose(pnl_target_wts_after_learning, torch_target_wts_after_learning.T)
+        np.testing.assert_allclose(pnl_out_wts_after_learning, torch_out_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_sample_wts_after_learning, torch_sample_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_target_wts_after_learning, torch_target_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_out_wts_after_learning, torch_out_wts_after_learning.T)
+
+        # autodiff_comp.show_graph(show_pytorch=True)
+        torch.set_default_dtype(entry_torch_dtype)
+
 
 @pytest.mark.pytorch
 @pytest.mark.acidenticalness
@@ -1996,6 +2836,7 @@ class TestNestedNoLearning:
     )
     def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
                                             patience, min_delta, autodiff_mode):
+
         # the inputs we will provide to the model
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -2483,7 +3324,9 @@ class TestNestedLearning:
             else:
                 assert False, f'Invalid comp_type: {comp_type}'
 
+            targets = {target: target.value for target in comp.target_input_mechanisms}
             comp.learn(inputs=inputs,
+                       targets=targets,
                        learning_rate = learning_rate,
                        num_trials=num_trials,
                        execution_mode=execution_mode)
@@ -2500,14 +3343,15 @@ class TestNestedLearning:
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 1, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested_hidden_1 = AutodiffComposition(name='nested', nodes=[hidden_nodes[0]])
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[input_nodes[0], nested_hidden_1, output_nodes[0]],
                                             inputs=inputs)
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
@@ -2518,15 +3362,14 @@ class TestNestedLearning:
     def test_2_sequential_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
+        nested_hiddens = AutodiffComposition(name='nested', pathways=[hidden_nodes[0], hidden_nodes[1]])
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
-
-        nested_hiddens = AutodiffComposition(name='nested', pathways=[hidden_nodes[0],
-                                                                      hidden_nodes[1]])
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[input_nodes[0], nested_hiddens, output_nodes[0]],
                                             inputs=inputs)
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],
@@ -2541,18 +3384,19 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 4, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested_b = AutodiffComposition(name='nested_b', pathways=[hidden_nodes[1],
                                                                   hidden_nodes[2]])
         nested_a = AutodiffComposition(name='nested_a', pathways=[hidden_nodes[0],
                                                                   nested_b,
                                                                   hidden_nodes[3]])
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[input_nodes[0], nested_a, output_nodes[0]],
                                             inputs=inputs)
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],
@@ -2574,7 +3418,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 1, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         hidden_with_two_output_ports = pnl.ProcessingMechanism(input_shapes=3, output_ports=['FIRST', 'SECOND'])
 
         nested = AutodiffComposition([hidden_nodes[0], hidden_with_two_output_ports], name='nested')
@@ -2586,6 +3429,7 @@ class TestNestedLearning:
                      nested,
                      MappingProjection(hidden_with_two_output_ports.output_ports[1], output_nodes[1]),
                      output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2596,7 +3440,7 @@ class TestNestedLearning:
         #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
         pathway_a = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[1]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2615,11 +3459,12 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 1, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([hidden_nodes[0]],name='nested')
         pathway_a = [input_nodes[0], nested, output_nodes[0]]
         pathway_b = [input_nodes[0], nested, output_nodes[1]]
+
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2631,6 +3476,7 @@ class TestNestedLearning:
         pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[0], output_nodes[1]]
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2649,7 +3495,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 2, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0],
@@ -2662,6 +3507,7 @@ class TestNestedLearning:
                      nested,
                      MappingProjection(hidden_nodes[1],output_nodes[1]),
                      output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2672,7 +3518,7 @@ class TestNestedLearning:
         #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
         pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[1]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2693,7 +3539,6 @@ class TestNestedLearning:
         input_nodes, hidden_nodes, output_nodes = nodes
         hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', input_shapes=(3, 3), function=pnl.LinearCombination)
 
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([hidden_with_2_inputs],name='nested')
         pathway_a = [input_nodes[0],
@@ -2704,6 +3549,7 @@ class TestNestedLearning:
                      MappingProjection(input_nodes[1], hidden_with_2_inputs.input_ports[1]),
                      nested,
                      output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2720,7 +3566,7 @@ class TestNestedLearning:
                      # MappingProjection(input_nodes[1], hidden_with_2_inputs.input_ports[1]),
                      hidden_with_2_inputs,
                      output_nodes[0]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2737,13 +3583,12 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(2, 3, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
-
         nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
                                       [hidden_nodes[1], hidden_nodes[2]]],
                                      name='nested')
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested, output_nodes[0]]
         pathway_b = [input_nodes[1], MappingProjection(input_nodes[1], hidden_nodes[1]), nested, output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2754,6 +3599,7 @@ class TestNestedLearning:
         #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
         pathway_a = [input_nodes[0], hidden_nodes[0], hidden_nodes[2], output_nodes[0]]
         pathway_b = [input_nodes[1], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2770,13 +3616,13 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(2, 3, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
                                       [hidden_nodes[1], hidden_nodes[2]]],
                                       name='nested')
         pathway_a = [input_nodes[0], nested, output_nodes[0]]
         pathway_b = [input_nodes[1], nested, output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2789,6 +3635,7 @@ class TestNestedLearning:
         pathway_b = [input_nodes[0], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
         pathway_c = [input_nodes[1], hidden_nodes[0], hidden_nodes[2], output_nodes[0]]
         pathway_d = [input_nodes[1], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b, pathway_c, pathway_d],
@@ -2805,7 +3652,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(2, 2, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0],
@@ -2818,6 +3664,7 @@ class TestNestedLearning:
                      nested,
                      MappingProjection(hidden_nodes[1], output_nodes[1]),
                      output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -2828,6 +3675,7 @@ class TestNestedLearning:
         #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
         pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
         pathway_b = [input_nodes[1], hidden_nodes[1], output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -2867,7 +3715,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 2, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_nodes[1]],name='nested')
         indirect = [input_nodes[0],
@@ -2879,11 +3726,13 @@ class TestNestedLearning:
                   MappingProjection(hidden_nodes[1], output_nodes[1]),
                   output_nodes[1]]
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[indirect, direct],
                                             inputs=inputs)
 
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]],
@@ -2910,9 +3759,6 @@ class TestNestedLearning:
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
 
-        inputs = {input_nodes[0]: np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
-                  hidden_node_x.input_ports[0]: [[1], [1], [0], [0]]}
-
         direct_1 = [(nested, pnl.NodeRole.INPUT),
                   MappingProjection(hidden_nodes[0], output_nodes[0]),
                   output_nodes[0]]
@@ -2923,11 +3769,15 @@ class TestNestedLearning:
                       MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
                       nested]
 
+        inputs = {input_nodes[0]: np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]: [[1], [1], [0], [0]]}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[indirect, direct_1, direct_2],
                                             inputs=inputs)
 
+        inputs = {input_nodes[0]: np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]: [[1], [1], [0], [0]]}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[hidden_nodes[0], output_nodes[0]],
@@ -2987,12 +3837,11 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 2, 0)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
         pathway_b = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[1]), nested]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -3000,6 +3849,7 @@ class TestNestedLearning:
 
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -3016,7 +3866,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
@@ -3025,7 +3874,7 @@ class TestNestedLearning:
                      nested,
                      MappingProjection(hidden_nodes[1]),
                      output_nodes[0]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -3033,6 +3882,7 @@ class TestNestedLearning:
 
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -3049,7 +3899,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 2, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
@@ -3059,7 +3908,7 @@ class TestNestedLearning:
                      MappingProjection(hidden_nodes[1]),
                      output_nodes[0],
                      output_nodes[1]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b],
@@ -3067,6 +3916,7 @@ class TestNestedLearning:
 
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0], output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b],
@@ -3086,7 +3936,6 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(1, 4, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
@@ -3097,7 +3946,7 @@ class TestNestedLearning:
                      output_nodes[0],
                      output_nodes[1]]
         pathway_c = [input_nodes[0], hidden_nodes[2], hidden_nodes[3], output_nodes[1]]
-
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[pathway_a, pathway_b, pathway_c],
@@ -3106,6 +3955,7 @@ class TestNestedLearning:
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0], output_nodes[1]]
         pathway_c = [input_nodes[0], hidden_nodes[2], hidden_nodes[3], output_nodes[1]]
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[pathway_a, pathway_b, pathway_c],
@@ -3196,7 +4046,6 @@ class TestNestedLearning:
                      f"that are not AutodiffCompositions: 'nested'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.PyTorch)
-
         assert error_msg in str(error.value)
 
         # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
@@ -3208,7 +4057,6 @@ class TestNestedLearning:
                      "because it contains one or more nested Compositions: 'nested-1'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
-
         assert error_msg in str(error.value)
 
 
@@ -3258,9 +4106,10 @@ class TestAutodiffMultipleOutput_ports:
                                                       hidden_B,
                                                       output]],
                                            name='autodiff')
-        # autodiff.show_graph(show_all=True)
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3278,8 +4127,10 @@ class TestAutodiffMultipleOutput_ports:
                                                      [input_B, hidden_B, hidden_C, output]],
                                            name='autodiff')
 
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3305,8 +4156,10 @@ class TestAutodiffMultipleOutput_ports:
                                                    pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
                                                    hidden_B,
                                                    output])
+        targets = {target: target.value for target in comp.target_input_mechanisms}
         result_comp_ports = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       targets=targets,
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3328,8 +4181,10 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_B,
                                                    hidden_C,
                                                    output])
+        targets = {target: target.value for target in comp.target_input_mechanisms}
         result_comp_nodes = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       targets=targets,
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3361,7 +4216,8 @@ class TestAutodiffMultipleOutput_ports:
                                                       hidden_B,
                                                       output]],
                                            name='autodiff')
-        result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+        result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]],
+                                                       autodiff.target_input_mechanisms[0]: [0,0]},
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3378,6 +4234,7 @@ class TestAutodiffMultipleOutput_ports:
                                                      [input, hidden_B, hidden_C, output]],
                                            name='autodiff')
         result_autodiff_nodes = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               targets={output: [0, 0]},
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3403,6 +4260,7 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_B,
                                                    output])
         result_comp_ports = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       targets={output: [0, 0]},
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3418,6 +4276,7 @@ class TestAutodiffMultipleOutput_ports:
         comp.add_backpropagation_learning_pathway([input, hidden_A, hidden_C, output])
         comp.add_backpropagation_learning_pathway([input, hidden_B, hidden_C, output])
         result_comp_nodes = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       targets={output: [0, 0]},
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3446,7 +4305,9 @@ class TestAutodiffMultipleOutput_ports:
                                                   pnl.MappingProjection(hidden.output_ports[1],output),
                                                   output]                                         ],
                                        name='autodiff')
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_ports = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3459,7 +4320,9 @@ class TestAutodiffMultipleOutput_ports:
         hidden_B = nodes[HIDDEN_B]
         output = nodes[OUTPUT_A]
         autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output], [input, hidden_B, output]], name='autodiff')
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_nodes = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3474,7 +4337,9 @@ class TestAutodiffMultipleOutput_ports:
         comp = Composition(name='comp')
         comp.add_backpropagation_learning_pathway([input, hidden_A, output])
         comp.add_backpropagation_learning_pathway([input, hidden_B, output])
+        targets = {target: target.value for target in comp.target_input_mechanisms}
         result_comp_nodes = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                       targets=targets,
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3495,7 +4360,9 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden,
                                                    pnl.MappingProjection(hidden.output_ports[1],output),
                                                    output])
+        targets = {target: target.value for target in comp.target_input_mechanisms}
         result_comp_ports = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                       targets=targets,
                                        learning_rate=.01,
                                        epochs=3)
 
@@ -3516,8 +4383,10 @@ class TestAutodiffMultipleOutput_ports:
         autodiff = AutodiffComposition(pathways=[[input_A, MappingProjection(input_A, output.input_ports[0]), output],
                                                  [input_B, MappingProjection(input_B, output.input_ports[1]), output]],
                                        name='autodiff')
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3532,8 +4401,10 @@ class TestAutodiffMultipleOutput_ports:
         autodiff = AutodiffComposition(pathways=[[input_A, output_A],
                                                  [input_B, output_B]],
                                        name='autodiff')
+        targets = {target: target.value for target in autodiff.target_input_mechanisms}
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               targets=targets,
                                                learning_rate=.01,
                                                epochs=3,
                                                execution_mode=pnl.ExecutionMode.PyTorch)
@@ -3651,7 +4522,7 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.parametrize(
         'loss, expected', [
-            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
+            pytest.param(Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]], marks=pytest.mark.llvm_not_implemented),
             pytest.param(Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]], marks=pytest.mark.llvm_not_implemented),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
             pytest.param(Loss.POISSON_NLL, [[[0.99330385]], [[0.99933149]], [[0.99933149]], [[0.99985034]]], marks=pytest.mark.llvm_not_implemented),
@@ -3765,6 +4636,148 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    # # # TEACHER_TARGET BREADCRUMB: INCLUDES 2 LEVELS OF NESTING THAT FAILS
+    # @pytest.mark.parametrize(
+    #     'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
+    #         (1, 1, [0], [0], [0]),
+    #         (1, 3, [0], [0], [0]),
+    #         (3, 1, [0], [0], [0]),
+    #         (3, 3, [0], [0], [0])
+    #     ]
+    # )
+    # def test_additional_optimizations_and_retain_values_nested(self,
+    #                                                            minibatch_size,
+    #                                                            num_optimizations,
+    #                                                            expected_sample_values,
+    #                                                            expected_targets,
+    #                                                            expected_losses):
+    #     inner_mech = pnl.ProcessingMechanism(name='INNER NODE')
+    #     middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
+    #     middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
+    #     outer_mech_teacher = pnl.ProcessingMechanism(name='OUTER NODE TEACHER')
+    #     outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+    #     outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+    #
+    #     middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech,
+    #                                           name="MIDDLE PROJECTION 1")
+    #     middle_proj_2 = pnl.MappingProjection(inner_mech, middle_mech_2,
+    #                                           name="MIDDLE PROJECTION 2")
+    #     outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
+    #                                          name="OUTER PROJECTION 1")
+    #     outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
+    #                                          name="OUTER PROJECTION 2")
+    #
+    #     inner_comp = pnl.AutodiffComposition(
+    #         name='INNER Comp',
+    #         pathways=[inner_mech]
+    #     )
+    #     middle_comp = pnl.AutodiffComposition(
+    #         name='MIDDLE Comp',
+    #         pathways=[middle_mech_1, middle_proj_1,
+    #                   inner_comp, middle_proj_2, middle_mech_2]
+    #     )
+    #     outer_comp = pnl.AutodiffComposition(
+    #         pathways=[[outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
+    #                   [outer_mech_teacher]],
+    #         # targets={inner_comp: outer_mech_teacher,
+    #         #          outer_mech_out: pnl.TARGET},
+    #         targets={inner_mech: outer_mech_teacher,
+    #                  outer_mech_out: pnl.TARGET},
+    #         name='Outer Comp'
+    #     )
+    #     outer_comp._build_pytorch_representation()
+    #     # Learn
+    #     outer_comp.learn(inputs={outer_mech_in: [[1],[2],[3],[4]],
+    #                              outer_comp.target_input_mechanisms[0]: [[.5],[.6],[.7],[.8]]},
+    #                      num_trials=4,
+    #                      minibatch_size=minibatch_size,
+    #                      optimizations_per_minibatch=num_optimizations,
+    #                      execute_in_additional_optimizations={inner_mech_1: None,
+    #                                                           middle_mech_1: [(SLOPE, 2), (INTERCEPT, 3)],
+    #                                                           outer_mech_out: (SLOPE, 4)
+    #                                                           },
+    #                      execution_mode=pnl.ExecutionMode.PyTorch)
+    #     outer_comp.torch_sample_values = expected_sample_values
+    #     outer_comp.torch_targets = expected_targets
+    #     outer_comp.torch_losses = expected_losses
+
+
+    @pytest.mark.parametrize(
+        'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
+            (1, 1,
+             [[[[[3., 3., 3.]]]],
+              [[[[6.89815728, 6.89954496, 6.90093264]]]],
+              [[[[10.03520758, 10.04203698, 10.04886638]]]],
+              [[[[11.43676641, 11.45333151, 11.46989661]]]]],
+             [[[[[0.1, 0.2, 0.3]]]], [[[[0.4, 0.5, 0.6]]]], [[[[0.7, 0.8, 0.9]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[7.846666666666667], [40.96065862149859], [85.4210346911484], [105.13544798962482]]),
+            (1, 3,
+             [[[[[3., 3., 3.]]]], [[[[2.9547624, 2.9553568, 2.9559512]]]], [[[[2.91086682, 2.9120357, 2.91320457]]]],
+              [[[[6.70336877, 6.70739865, 6.71142853]]]], [[[[6.21660962, 6.22330099, 6.22999236]]]],[[[[5.79805965, 5.80699878, 5.81593791]]]],
+              [[[[8.55203308, 8.56911815, 8.58620321]]]], [[[[7.34812205, 7.36811662, 7.3881112 ]]]], [[[[6.45817216, 6.48016374, 6.50215532]]]],
+              [[[[7.88048368, 7.91244204, 7.9444004 ]]]], [[[[6.53558712, 6.56768038, 6.59977363]]]], [[[[5.6101948, 5.64210949, 5.67402417]]]]],
+             [[[[[0.1, 0.2, 0.3]]]], [[[[0.1, 0.2, 0.3]]]], [[[[0.1, 0.2, 0.3]]]],
+              [[[[0.4, 0.5, 0.6]]]], [[[[0.4, 0.5, 0.6]]]], [[[[0.4, 0.5, 0.6]]]],
+              [[[[0.7, 0.8, 0.9]]]], [[[[0.7, 0.8, 0.9]]]], [[[[0.7, 0.8, 0.9]]]],
+              [[[[1.1, 1.2, 1.3]]]], [[[[1.1, 1.2, 1.3]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[7.846666666666667], [7.598578744180479], [7.361649356078462],
+              [38.53793820119458], [32.7619785653037], [28.16976410462867],
+              [60.36378001953371], [43.14442321137341], [32.26831699119115],
+              [45.05996462963623], [28.81506685361018], [19.735427085583574]]),
+            (3, 1,
+             [[[[[ 3.,  3.,  3.]]], [[[ 7.,  7.,  7.]]], [[[11., 11., 11.]]]],
+              [[[[13.63361853, 13.64022793, 13.64683733]]]]],
+             [[[[[0.1, 0.2, 0.3]]], [[[0.4, 0.5, 0.6]]], [[[0.7, 0.8, 0.9]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[51.38333333333334], [154.76508556939916]]),
+            (3, 3, None, None, None) # <-expect error: optimizations_per_minibatch>1 allowed only if minibatch_size==1
+        ]
+    )
+    # TEACHER_TARGET BREADCRUMB: ADD PARAMETERIZTION OF retain_torch_values... options
+    def test_additional_optimizations_and_retain_values_simple(self,
+                                                               minibatch_size,
+                                                               num_optimizations,
+                                                               expected_sample_values,
+                                                               expected_targets,
+                                                               expected_losses):
+        input_mech = pnl.ProcessingMechanism(name='INPUT NODE', input_shapes=2)
+        middle_mech = pnl.ProcessingMechanism(name='MIDDLE NODE')
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT NODE', input_shapes=3)
+
+        autodiff_comp = pnl.AutodiffComposition(
+            pathways=[input_mech, middle_mech, output_mech],
+            name='AUTODIFF COMP'
+        )
+
+        learn_args = {'inputs': {input_mech: [[1,2],[3,4],[5,6],[7,8]],
+                                 autodiff_comp.target_input_mechanisms[0]: [[.1, .2, .3],
+                                                                       [.4, .5, .6],
+                                                                       [.7, .8, .9],
+                                                                       [1.1, 1.2, 1.3]]},
+                      'num_trials': 4,
+                      'minibatch_size': minibatch_size,
+                      'optimizations_per_minibatch': num_optimizations,
+                      'execute_in_additional_optimizations': {input_mech: None,
+                                                              middle_mech: pnl.ALL,
+                                                              output_mech: range(2)
+                                                              },
+                      'execution_mode': pnl.ExecutionMode.PyTorch}
+
+        if minibatch_size == 3 and num_optimizations == 3:
+            err_msg = ("'AUTODIFF COMP': 'optimizations_per_minibatch' (3) and "
+                       "'minimbatch_size' (3) cannot both be greater than 1.")
+            with pytest.raises(pnl.CompositionError, match=re.escape(err_msg)):
+                autodiff_comp.learn(**learn_args)
+            return
+
+        autodiff_comp.learn(**learn_args)
+        for data, expected_data in zip([autodiff_comp.torch_sample_values,
+                                        autodiff_comp.torch_targets,
+                                        autodiff_comp.torch_losses],
+                                       [expected_sample_values, expected_targets, expected_losses],):
+            for actual_val, expected_val in zip(data, expected_data):
+                np.testing.assert_allclose(actual_val, expected_val)
+
+
 
     # Data for test_learning_rate_assignments():
     default_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]      # lr = .0001
@@ -3868,13 +4881,11 @@ class TestMiscTrainingFunctionality:
             err_msg = None
             if condition == 'bad_proj':
                 opt_params = {condition: .66}
-                err_msg = ("The following Projection specified in the 'learning_rate' arg of the learn() method "
-                           "for 'OUTER' is not in that Composition or any nested within it: 'bad_proj'.")
+                err_msg = "'bad_proj' is not in that Composition or any nested within it"
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
-                err_msg = ("A value ('bad_lr') specified in the 'learning_rate' arg of the learn() method for 'OUTER' "
-                           "is not valid; it must be an int, float, bool or None.")
-            with pytest.raises(AutodiffCompositionError) as error_text:
+                err_msg = "must be an int, float, bool, or None"
+            with pytest.raises(CompositionError) as error_text:
                 outer_comp = pnl.AutodiffComposition(
                     [input_mech, input_proj, nested_comp, output_proj, output_mech], name='OUTER')
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
@@ -3886,14 +4897,16 @@ class TestMiscTrainingFunctionality:
             hidden_proj.learnable = False
             output_proj.learnable = False
             opt_params = {input_proj: 1.16, hidden_proj: 21.6, output_proj: 3.99}
-            with pytest.raises(AutodiffCompositionError) as error_text:  # Warn, since default_input is NOT set
+
+            error_msg = (
+                ".*(MappingProjection MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0])"
+                " specified in the dict.*is not enabled; check that its enable_learning_rate attribute is"
+                " set to True and its learning_rate is not False, or remove it from the dict."
+            )
+            error_re = re.sub(r'([\(\)\[\{])', r'\\\1', error_msg)
+            with pytest.raises(CompositionError, match=error_re):  # Warn, since default_input is NOT set
                 outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
-            assert ("Projection ('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') specified "
-                    "in the dict for the 'learning_rate' arg of the learn() method for 'autodiff_composition' "
-                    "is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
-                    "is not 'False', or remove it from the dict."
-                    in str(error_text.value))
             return
 
         elif condition == 'cnstr_False_lrn_val':
@@ -3963,7 +4976,7 @@ class TestMiscTrainingFunctionality:
         outer_comp.learn(inputs=inputs, targets=targets)
         if condition == 'both':
             # Should return to defaults specified in constructor (even though specified in previous call to learning)
-            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
+            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 4 # Includes Loss projections (in one group)
             assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == constructor_lr_input_proj or self.default_lr
             assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == 0.001
             assert (outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == constructor_lr_output_proj or self.default_lr)
@@ -4050,8 +5063,15 @@ class TestMiscTrainingFunctionality:
         # Check outer_comp assignments from constructor
         # BREADCRUMB
         outer_pytorch_rep = outer_comp._build_pytorch_representation()
-        outer_proj = outer_comp.nodes[-1].afferents[0]
-        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        outer_proj = outer_comp.nodes[-3].afferents[0]
+
+        assert inner_proj_1.parameters.learning_rate.get() == proj_1_lr
+        if expected_proj_1_inner == self.default and outer_comp_lr is not None:
+            expected_proj_1_outer = outer_comp_lr
+        else:
+            expected_proj_1_outer = expected_proj_1_inner
+        assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
@@ -4075,8 +5095,8 @@ class TestMiscTrainingFunctionality:
             proj_2_expected = outer_learn_lr or proj_2_lr or self.default
             outer_proj_expected = outer_learn_lr or outer_learn_lr or self.default
 
-        # BREADCRUMB
-        outer_comp.learn(inputs={inner_node_input:[[1]]},
+        outer_comp.learn(inputs={inner_node_input:[[1]],
+                                 outer_comp.target_input_mechanisms[0]:[[0]]},
                          learning_rate=learning_rate_arg)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == proj_1_expected
@@ -4087,10 +5107,11 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_inner
         assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
 
-        # BREADCRUMB
         # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg
-        outer_comp.learn(inputs={inner_node_input:[[1]]})
-        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        outer_comp.learn(inputs={inner_node_input:[[1]]},
+                         targets={outer_node:[[0]]})
+        assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
@@ -4205,10 +5226,11 @@ class TestMiscTrainingFunctionality:
         outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
         nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
         outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
-        target_mechs = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        target_mechs = outer_comp.target_input_mechanisms
 
         # Execute autodiff with learning (but not weight updates yet)
-        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
+        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim,
+                                                                   target_mechs[0]: target_stim},
                                                            execution_mode=pnl.ExecutionMode.PyTorch,
                                                            )
         # Get results after learning (with weight updates)
@@ -4222,7 +5244,7 @@ class TestMiscTrainingFunctionality:
                                    autodiff_result_before_learning, atol=1e-8)
 
         # Test of execution after backward pass (learning):
-        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses.squeeze())
+        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses)
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-8)
 
@@ -4973,7 +5995,8 @@ class TestACLogging:
                                              pathways=[outer_mech_in, inner_comp, outer_mech_out],
                                              # Note: no need to specify synch_node_values_with_torch, since default=RUN
                                              synch_node_variables_with_torch=pnl.RUN)
-        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        targets = outer_comp.target_input_mechanisms
         result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
                                           targets[0]: [[1,1,1,1,1]]},
                                   execution_mode=pnl.ExecutionMode.PyTorch)
@@ -5325,7 +6348,7 @@ def test_training_xor_with_batching(batch_size, batched_results):
               execution_mode=autodiff_mode,
               batched_results=batched_results)
 
-    np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
+    np.testing.assert_allclose(torch_losses, np.array(xor.torch_losses).flatten(), rtol=1e-5)
 
     if batched_results:
         np.testing.assert_allclose(torch_results, xor.results, rtol=1e-5)

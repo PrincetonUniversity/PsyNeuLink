@@ -1239,9 +1239,9 @@ def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
 
-    context = composition._context_for_pytorch
-    composition._build_pytorch_representation(context=context)
-    pytorch_model = composition.parameters.pytorch_representation.get(context)
+    pytorch_model = composition.parameters.pytorch_representation.get(composition._context_for_pytorch)
+    assert pytorch_model is not None, "PyTorch representation needs to be available before trying to compile Autodiff learning"
+
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 

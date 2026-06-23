@@ -18,7 +18,7 @@ jobs:
       wheel: ${{ steps.create_dist.outputs.wheel }}
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -40,7 +40,7 @@ jobs:
         echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload Python dist files
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
@@ -81,7 +81,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
@@ -116,7 +116,7 @@ jobs:
       run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
 
     - name: Get tests from the repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Run tests
       shell: bash
@@ -129,7 +129,7 @@ jobs:
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.dist }}
         path: tests_out.xml
@@ -144,7 +144,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
@@ -183,7 +183,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: psyneulink-${{ github.ref_name }}-dist
         path: dist/

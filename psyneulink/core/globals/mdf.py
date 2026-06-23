@@ -235,17 +235,19 @@ def _get_variable_parameter_name(obj):
     return MODEL_SPEC_ID_MDF_VARIABLE
 
 
-def _mdf_obj_from_dict(d):
+def _mdf_obj_from_dict(d, identifier=None):
     import modeci_mdf.mdf as mdf
 
     def _get_mdf_object(obj, cls_):
-        try:
-            model_id = obj['id']
-        except KeyError:
+        model_id = identifier
+        if model_id is None:
             try:
-                model_id = obj['metadata']['name']
+                model_id = obj['id']
             except KeyError:
-                model_id = f'{cls_.__name__}_{time.perf_counter_ns()}'
+                try:
+                    model_id = obj['metadata']['name']
+                except KeyError:
+                    model_id = f'{cls_.__name__}_{time.perf_counter_ns()}'
 
         return cls_.from_dict({model_id: obj})
 
@@ -642,7 +644,7 @@ def _generate_component_string(
         functions = component_model.functions
     except AttributeError:
         try:
-            functions = [_mdf_obj_from_dict(v) for k, v in component_model.metadata['functions'].items()]
+            functions = [_mdf_obj_from_dict(v, identifier=k) for k, v in component_model.metadata['functions'].items()]
         except KeyError:
             functions = None
         except AttributeError:

@@ -2224,7 +2224,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator._function>`
-        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
+        if its absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
         if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
@@ -2287,7 +2287,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     offset : float or 1d array
         constant value added to integral in each call to `function <DriftDiffusionIntegrator._function>`
-        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
+        if its absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
         If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
@@ -2620,7 +2620,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         builder = super()._gen_llvm_function_reset(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
-        # Return the reconstructed combination of previous value and previous tim
+        # Return the reconstructed combination of previous value and previous time
         prev_value_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
         value_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(prev_value_ptr), value_out_ptr)
@@ -3242,17 +3242,28 @@ class DriftOnASphereIntegrator(IntegratorFunction):
         if noise is None:
             noise_tan = np.zeros_like(x)
 
-        # Vector anisotropic noise in tangent coords (length d-1)
-        elif np.ndim(noise) == 1:
+        # Vector anisotropic noise in tangent coords (length d-1).
+        # Note: PsyNeuLink's parameter system can wrap a scalar `noise`
+        # in a length-1 array when the function is called through a
+        # Mechanism, even though the function itself was constructed
+        # with a Python scalar (e.g. `noise=0.075`). A length-1 array
+        # is NOT a valid per-dimension noise vector — it would crash
+        # the matmul below with "size 1 is different from d-1". The
+        # `size > 1` filter routes such broadcasted scalars to the
+        # scalar branch instead. Wrong-length vector noise is rejected
+        # earlier by `_validate_params`, so this branch only sees
+        # genuine length-(d-1) vectors.
+        elif np.ndim(noise) == 1 and np.asarray(noise).size > 1:
             noise = np.asarray(noise, dtype=float)
             eps = rng.normal(size=noise.size)
             B = self._tangent_basis(x)
             z = B @ (noise * eps)  # Convert to Cartesian tangent
             noise_tan = np.sqrt(dt) * z
 
-        # Scalar isotropic noise
+        # Scalar isotropic noise (incl. length-1 ndarray scalar coerced
+        # by PNL's parameter system — see comment on the vector branch).
         else:
-            noise = float(noise)
+            noise = float(np.asarray(noise).item() if np.ndim(noise) else noise)
             B = self._tangent_basis(x)
             eps = rng.normal(size=B.shape[1])
             z = B @ eps
@@ -3724,7 +3735,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator._function>`;
         if it is a list or array, it must be the same length as `variable <LeakyCompetingIntegrator.variable>`
-        (see `noise <Integrator.noise>` for additonal details).
+        (see `noise <Integrator.noise>` for additional details).
 
     offset : float, list or 1d array : default 0.0
         specifies a constant value added to integral in each call to `function <LeakyCompetingIntegrator._function>`;

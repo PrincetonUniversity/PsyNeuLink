@@ -25,7 +25,7 @@ Contents
 Overview
 --------
 
-A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
+A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a s and a target), compares
 them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
 *OUTCOME* `OutputPort <ComparatorMechanism.output_port>`.
 
@@ -142,6 +142,8 @@ Class Reference
 from collections.abc import Iterable
 
 import numpy as np
+import warnings
+
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union
@@ -156,7 +158,7 @@ from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.keywords import \
     COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, \
     VARIABLE, PREFERENCE_SET_NAME, Loss, SUM
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, ParameterNoValueError
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -165,6 +167,82 @@ from psyneulink.core.globals.utilities import safe_len
 
 __all__ = ['ComparatorMechanism', 'ComparatorMechanismError']
 
+
+def _sample_getter(owning_component=None, context=None)->OutputPort:
+    try:
+        if (owning_component.input_ports
+                and SAMPLE in owning_component.input_ports
+                # Check that it is already an instantiated InputPort (could still be a dict specification)
+                and isinstance(owning_component.input_ports[SAMPLE], InputPort)
+                # Only both looking for samples if the InputPort already has afferent Projections assigned to it
+                and owning_component.input_ports[SAMPLE].path_afferents):
+            afferents = owning_component.input_ports[SAMPLE].path_afferents
+            # Deal with unusual case of > 1 Projection to SAMPLE
+            if len(afferents) > 1:
+                from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                # Get senders that are not from CIM's
+                mech_senders = [afferent.sender for afferent in afferents
+                                if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Get sources of any afferents that *are* from CIM's
+                sources_for_cim_senders = [afferent.sender.owner._get_source_info_from_output_CIM(afferent.sender)[0]
+                                           for afferent in afferents
+                                           if isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
+                mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
+                if len(mech_senders) > 1:
+                    if owning_component._warned_about_more_than_one_sample is False:
+                        warnings.warn(f"'{owning_component.name}' has more than one '{SAMPLE}'; "
+                                      f"therefore, its `sample` Parameter returns a list.")
+                        owning_component._warned_about_more_than_one_sample = True
+                        return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
+                    # Return list of senders of all afferents that are not CIMs
+                    return mech_senders
+                # Return the single unique sender of the afferents
+                return mech_senders[0]
+            # Return the sender of the single afferent
+            return afferents[0].sender
+        else:
+            return None
+    except ParameterNoValueError:
+        return None
+
+def _target_getter(owning_component=None, context=None):
+    try:
+        if (owning_component.input_ports
+                and TARGET in owning_component.input_ports
+                # Check that it is already an instantiated InputPort (could still be a dict specification)
+                and isinstance(owning_component.input_ports[TARGET], InputPort)
+                # Only both looking for targets if the InputPort already has afferent Projections assigned to it
+                and owning_component.input_ports[TARGET].path_afferents):
+            afferents = owning_component.input_ports[TARGET].path_afferents
+            # Deal with unusual case of > 1 Projection to TARGET
+            if len(afferents) > 1:
+                from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                # Get senders that are not from CIM's
+                mech_senders = [afferent.sender for afferent in afferents
+                                if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Get sources of any afferents that *are* from CIM's
+                sources_for_cim_senders = [afferent.sender.owner._get_source_info_from_output_CIM(afferent.sender)[0]
+                                           for afferent in afferents
+                                           if isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
+                mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
+                if len(mech_senders) > 1:
+                    if owning_component._warned_about_more_than_one_target is False:
+                        warnings.warn(f"'{owning_component.name}' has more than one '{TARGET}'; "
+                                      f"therefore, its `target` Parameter returns a list.")
+                        owning_component._warned_about_more_than_one_target = True
+                        return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
+                    # Return list of senders of all afferents that are not CIMs
+                    return mech_senders
+                # Return the single unique sender of the afferents
+                return mech_senders[0]
+            # Return the sender of the single afferent
+            return afferents[0].sender
+        else:
+            return None
+    except ParameterNoValueError:
+        return None
 class ComparatorMechanismError(MechanismError):
     pass
 
@@ -304,8 +382,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         # By default, ComparatorMechanism compares two 1D np.array input_ports
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        sample = None
-        target = None
+        sample = Parameter(None, getter = _sample_getter, stateful=False, structural=True, fallback_value=None)
+        target = Parameter(None, getter = _target_getter, stateful=False, structural=True, fallback_value=None)
 
         output_ports = Parameter(
             [OUTCOME],
@@ -328,6 +406,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([SUM.upper(), Loss.SSE.name, Loss.MSE.name])
 
+
     @check_user_specified
     @beartype
     def __init__(self,
@@ -335,10 +414,10 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  function=None,
-                 output_ports:Optional[Union[str, Iterable]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -367,6 +446,9 @@ class ComparatorMechanism(ObjectiveMechanism):
                          prefs=prefs,
                          **kwargs
                          )
+
+        self._warned_about_more_than_one_sample = False
+        self._warned_about_more_than_one_target = False
 
         # Require Projection to TARGET InputPort (already required for SAMPLE as primary InputPort)
         self.input_ports[1].parameters.require_projection_in_composition.set(True, override=True)
@@ -441,7 +523,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     def _merge_legacy_constructor_args(self, sample, target, default_variable=None, input_ports=None):
 
-        # USE sample and target TO CREATE AN InputPort specfication dictionary for each;
+        # USE sample and target TO CREATE AN InputPort specification dictionary for each;
         # DO SAME FOR InputPorts argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
         # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputPort specifications
 

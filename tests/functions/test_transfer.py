@@ -183,7 +183,11 @@ test_data = [
                  id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR", marks=pytest.mark.llvm_not_implemented),
     pytest.param(pnl.SoftMax, test_var,
                  {kw.GAIN: RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE: kw.PROB, kw.PER_ITEM: False},
-                 [0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0],
+                 # PROB sampling returns a single chosen sample. (Earlier
+                 # versions used a cum_sum equality match that incorrectly
+                 # selected every index whose cum_sum tied the chosen value
+                 # -- common when prob_dist contains zeros.)
+                 [0.0, 0.0, 0.0, test_var[3], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                  id="SOFT_MAX MASK_THRESHOLD PROB", marks=pytest.mark.llvm_not_implemented),
     #
     # # SoftMax 2D threshold testing per-item
@@ -209,7 +213,8 @@ test_data = [
                  id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
     pytest.param(pnl.SoftMax, [test_var],
                  {kw.GAIN: RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE: kw.PROB, kw.PER_ITEM: True},
-                 [[0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]],
+                 # See note on SOFT_MAX MASK_THRESHOLD PROB above.
+                 [[0.0, 0.0, 0.0, test_var[3], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
                  id="SOFT_MAX MASK_THRESHOLD PROB 2D", marks=pytest.mark.llvm_not_implemented),
 
     # SoftMax threshold per-item with 2 elements in input
@@ -263,6 +268,58 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
         np.testing.assert_allclose(res, expected, rtol=1e-6, atol=1e-7)
     else:
         np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
+
+
+@pytest.mark.pytorch
+@pytest.mark.transfer_function
+# Validate that the PyTorch SoftMax implementation honors the same output_type behaviors
+# as the Python path on a single item (per_item=False).
+@pytest.mark.parametrize(
+    "output_type",
+    [
+        kw.ALL,
+        pnl.ARG_MAX,
+        pnl.ARG_MAX_INDICATOR,
+        kw.MAX_VAL,
+        kw.MAX_INDICATOR,
+    ],
+    ids=[
+        "ALL",
+        "ARG_MAX",
+        "ARG_MAX_INDICATOR",
+        "MAX_VAL",
+        "MAX_INDICATOR",
+    ],
+)
+def test_softmax_pytorch_output_types_1d(output_type):
+    import torch
+
+    f = pnl.SoftMax(default_variable=test_var, **{kw.GAIN: RAND1, kw.OUTPUT_TYPE: output_type, kw.PER_ITEM: False})
+    context = pnl.Context(execution_id=None)
+    # Use the canonical Python implementation as ground truth.
+    expected = f.function(variable=test_var, context=context)
+    torch_f = f._gen_pytorch_fct("cpu", context=context)
+    # Directly invoke the generated torch function (outside a Composition) and compare.
+    torch_out = torch_f(torch.tensor(test_var, dtype=torch.double)).detach().cpu().numpy()
+
+    np.testing.assert_allclose(torch_out, expected)
+
+
+@pytest.mark.pytorch
+@pytest.mark.transfer_function
+def test_softmax_pytorch_output_types_2d_per_item():
+    import torch
+
+    f = pnl.SoftMax(default_variable=[test_var], **{kw.GAIN: RAND1, kw.OUTPUT_TYPE: pnl.ARG_MAX_INDICATOR,
+                                                    kw.PER_ITEM: True})
+    # Two rows to exercise the per_item=True logic (each row handled independently).
+    input_val = np.array([test_var, test_var])
+    context = pnl.Context(execution_id=None)
+    expected = f.function(variable=input_val, context=context)
+    torch_f = f._gen_pytorch_fct("cpu", context=context)
+    torch_out = torch_f(torch.tensor(input_val, dtype=torch.double)).detach().cpu().numpy()
+
+    np.testing.assert_allclose(torch_out, expected)
 
 
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
@@ -392,7 +449,7 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
 
     f = func(default_variable=variable, **params)
-    EX = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({"derivative"}), member='derivative')
+    EX = pytest.helpers.get_func_execution(f, func_mode, tags={'derivative'}, member='derivative')
 
     res = benchmark(EX, variable)
 
