@@ -21,6 +21,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import D
     constexpr=("max_steps",),
     single_node_model_kind="ddm",
     param_alias_prefixes=("ddm", "DDM"),
+    diagnostics=("truncated",),
 )
 def ddm_integrate(
     x,
@@ -46,4 +47,5 @@ def ddm_integrate(
         updated = tl.minimum(tl.maximum(updated + offset, -threshold), threshold)
         value = tl.where(active, updated, value)
         steps += tl.where(active, 1.0, 0.0)
-    return tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size
+    truncated = tl.where(tl.abs(value) + boundary_tolerance < threshold, 1.0, 0.0)
+    return tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated

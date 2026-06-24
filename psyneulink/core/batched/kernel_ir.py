@@ -149,6 +149,21 @@ def lower_to_kernel_ir(ir: BatchedCompositionIR) -> KernelIR:
     )
 
 
+def diag_slots(kernel: KernelIR) -> tuple[tuple[str, str], ...]:
+    """Return the `(node, diagnostic_name)` for each diagnostic slot, by slot index.
+
+    These are the per-lane flags the bounded-loop ops emit through `StoreFlag`
+    (currently DDM truncation); the tuple's length is the diagnostic buffer's
+    inner width and its order matches the slot indices written by the kernel.
+    """
+
+    slots: dict[int, tuple[str, str]] = {}
+    for op in iter_kernel_ops(kernel):
+        if op.kind == "StoreFlag":
+            slots[int(op.attrs["slot"])] = (op.attrs["node"], op.attrs["name"])
+    return tuple(slots[idx] for idx in range(len(slots)))
+
+
 def iter_kernel_ops(kernel: KernelIR) -> tuple[KernelOp, ...]:
     """Return flattened KernelIR ops for tests and diagnostics."""
 
@@ -194,6 +209,7 @@ def _rng_streams(graph: BatchedGraphIR) -> tuple[KernelRngStream, ...]:
 
 def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
     ops: list[KernelOp] = []
+    diag_slot = 0
     for node_name in graph.execution_order:
         node = graph.node(node_name)
         node_input = KernelValue(f"{node.name}:input", node.input_width)
@@ -275,6 +291,9 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             }
             if rng_streams:
                 attrs["step_extent"] = rng_streams[0][1]
+            diagnostics = tuple(node.attrs.get("diagnostics", ()))
+            if diagnostics:
+                attrs["diagnostics"] = diagnostics
             ops.append(
                 KernelOp(
                     kind="CallMechanism",
@@ -287,6 +306,16 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                     attrs=attrs,
                 )
             )
+            for name in diagnostics:
+                ops.append(
+                    KernelOp(
+                        kind="StoreFlag",
+                        target=node.name,
+                        inputs=(KernelValue(f"{node.name}:diag:{name}", 1),),
+                        attrs={"node": node.name, "name": name, "slot": diag_slot},
+                    )
+                )
+                diag_slot += 1
         else:
             raise ValueError(
                 f"Batched graph node '{node.name}' has no registered batched op spec."

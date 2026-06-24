@@ -446,8 +446,23 @@ DDM and LCA integration use bounded loops:
 
 The existing LLVM/PsyNeuLink path uses mechanism/scheduler termination
 machinery. The Triton path uses caps and must be given caps large enough for
-the parameter/input regime. A future pass should report truncation or
-non-termination explicitly instead of silently returning capped trajectories.
+the parameter/input regime.
+
+**Truncation visibility (roadmap step 2 — DONE for DDM).** A bounded op may
+declare trailing diagnostic returns via `MechanismOpSpec.diagnostics` (the DDM
+body returns a `truncated` flag — still inside the boundary after `max_steps`).
+The lowering emits a `StoreFlag` KernelOp per diagnostic into a separate per-lane
+`diag` buffer (only present when a kernel has diagnostics, so the stateless
+golden is unchanged); the runtime aggregates the truncated fraction per node into
+`result.metadata["truncation"]`, **warns** by default and **raises**
+`BatchedTruncationError` under `run(..., strict_truncation=True)`. The channel is
+node-generic: when threshold-terminated LCA lands (step 5) its body returns the
+same `truncated` flag and reuses this path unchanged.
+
+Note the *cue-driven* LCA (stab-flex / CSI) cannot truncate today: `LCA_MAX_STEPS`
+is sized from the cue data (`prep.lca_max_steps` = `max(metadata, ceil(cue))`), so
+the cap is always ≥ demand. Data-dependent LCA truncation only appears with the
+general threshold-terminated LCA, which is not yet implemented.
 
 ## Contrast With LLVM/PTX
 
@@ -565,6 +580,15 @@ environments to persist results.
   (`tests/composition/pec/test_batched_kernel_source.py`,
   `golden_kernels/*.py`) guards emission.
 
+- **Truncation visibility** (roadmap step 2, DDM). Bounded ops declare trailing
+  `diagnostics` returns; a `StoreFlag` KernelOp routes them to a per-lane `diag`
+  buffer; the runtime reports the truncated fraction per node in
+  `result.metadata["truncation"]`, warns by default and raises under
+  `strict_truncation=True`. Tested on `triton_cpu`
+  (`tests/composition/pec/test_batched_truncation.py`). See "Truncation
+  visibility" above for the LCA scoping note. DDM + stateful goldens were
+  regenerated for the new `diag` arg / store.
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -574,9 +598,10 @@ steps 9-10 make the full PEC fit run on the batched path.
    `graph.py:_node_support_diagnostic` with a clear diagnostic instead of being
    silently lowered as stateless `Linear`.
 
-2. **Truncation visibility.** Bounded-loop kernels (DDM/LCA) surface a
-   truncation flag; tests/diagnostics warn or fail when `MAX_STEPS` is too low.
-   Tested via `triton_cpu` + PNL reference (no `ir_debug` mirror needed).
+2. **Truncation visibility** — DONE for DDM (see Done above). Bounded ops surface
+   a per-lane truncation flag via the `diagnostics`/`StoreFlag`/`diag` channel;
+   the runtime warns or (with `strict_truncation`) raises when `max_steps` is too
+   low. The channel is node-generic; threshold-terminated LCA reuses it at step 5.
 
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.

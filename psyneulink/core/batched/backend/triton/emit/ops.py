@@ -47,6 +47,7 @@ class OpEmitMixin:
     def _emit_ops(self, ops: tuple[KernelOp, ...]) -> None:
         self.output_cursor = 0
         self.lane_out_emitted = False
+        self.diag_lane_emitted = False
         for op in ops:
             self._emit_op(op)
 
@@ -63,6 +64,8 @@ class OpEmitMixin:
             self._emit_mechanism_call(op)
         elif op.kind == "StoreOutput":
             self._emit_store_output(op)
+        elif op.kind == "StoreFlag":
+            self._emit_store_flag(op)
         else:
             raise ValueError(f"Unsupported Triton KernelIR op '{op.kind}'.")
 
@@ -145,7 +148,17 @@ class OpEmitMixin:
         for output in op.outputs:
             output_vars.extend(self._component_vars(output.name, output.width))
 
+        diag_names = tuple(op.attrs.get("diagnostics", ()))
+        diag_vars = [
+            f"{safe_ident(node.name)}_diag_{safe_ident(name)}" for name in diag_names
+        ]
+
         if spec.triton_emit is not None:
+            if diag_names:
+                raise ValueError(
+                    f"Batched op for '{node.name}' declares diagnostics, which the "
+                    "triton_emit escape hatch does not support yet."
+                )
             values = list(
                 spec.triton_emit(
                     TritonEmitContext(self),
@@ -155,7 +168,12 @@ class OpEmitMixin:
                 )
             )
         else:
-            values = self._emit_declarative_mechanism(spec, node, input_values, output_vars)
+            values = self._emit_declarative_mechanism(
+                spec, node, input_values, output_vars, diag_vars
+            )
+
+        for name, var in zip(diag_names, diag_vars):
+            self._set_value(f"{node.name}:diag:{name}", [var])
 
         expected_width = sum(output.width for output in op.outputs)
         if len(values) != expected_width:
@@ -172,7 +190,9 @@ class OpEmitMixin:
             self._set_value(primary_value_name, self._get_value(op.outputs[0].name))
         self.builder.line()
 
-    def _emit_declarative_mechanism(self, spec, node, input_values, output_vars) -> list[str]:
+    def _emit_declarative_mechanism(
+        self, spec, node, input_values, output_vars, diag_vars=()
+    ) -> list[str]:
         if spec.states:
             raise ValueError(
                 f"Batched op for '{node.name}' declares lane state; declarative "
@@ -206,7 +226,7 @@ class OpEmitMixin:
         TritonEmitContext(self).emit_call(
             TritonOpCall(
                 template=spec.triton_template,
-                outputs=tuple(output_vars),
+                outputs=tuple(output_vars) + tuple(diag_vars),
                 args=tuple(args),
             )
         )
@@ -222,6 +242,14 @@ class OpEmitMixin:
                 f"{source_values[idx]}, mask=mask)"
             )
         self.output_cursor += op.attrs["width"]
+
+    def _emit_store_flag(self, op: KernelOp) -> None:
+        if not self.diag_lane_emitted:
+            self._emit_diag_lane()
+        value = self._get_value(op.inputs[0].name)[0]
+        self.builder.line(
+            f"tl.store(diag + diag_lane + {op.attrs['slot']}, {value}, mask=mask)"
+        )
 
     def _component_vars(self, value_name: str, width: int) -> list[str]:
         base = safe_ident(value_name)

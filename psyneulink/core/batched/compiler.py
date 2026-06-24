@@ -72,6 +72,7 @@ class BatchedSimulationPlan:
         subject_slices=None,
         seed=None,
         common_random_numbers: bool = True,
+        strict_truncation: bool = False,
     ) -> BatchedSimulationResult:
         try:
             device = _BACKEND_DEVICES[self.backend]
@@ -89,6 +90,7 @@ class BatchedSimulationPlan:
             seed=seed,
             common_random_numbers=common_random_numbers,
             device=device,
+            strict_truncation=strict_truncation,
         )
 
 

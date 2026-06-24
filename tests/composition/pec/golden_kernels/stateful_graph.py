@@ -43,7 +43,8 @@ def _pnl_triton_ddm(x, rate, noise, threshold, non_decision_time, time_step_size
         updated = tl.minimum(tl.maximum(updated + offset, -threshold), threshold)
         value = tl.where(active, updated, value)
         steps += tl.where(active, 1.0, 0.0)
-    return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size)
+    truncated = tl.where(tl.abs(value) + boundary_tolerance < threshold, 1.0, 0.0)
+    return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated)
 
 
 @triton.jit
@@ -88,6 +89,7 @@ def pnl_batched_stateful_graph_kernel(
     param_33,
     param_34,
     out,
+    diag,
     total_lanes: tl.constexpr,
     num_subjects: tl.constexpr,
     num_estimates: tl.constexpr,
@@ -220,8 +222,10 @@ def pnl_batched_stateful_graph_kernel(
 
         n_DDM_input_0 = (n_DDM_projection_0_0)
 
-        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0 = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, SEED, random_base + (2) * LCA_MAX_STEPS + (0) * MAX_STEPS, MAX_STEPS)
+        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, SEED, random_base + (2) * LCA_MAX_STEPS + (0) * MAX_STEPS, MAX_STEPS)
 
+        diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
+        tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)
         n_DECISION_GATE_projection_0_0 = _pnl_triton_projection_term(n_DDM_DECISION_OUTCOME_0, 1.0)
 
         n_DECISION_GATE_input_0 = (n_DECISION_GATE_projection_0_0)

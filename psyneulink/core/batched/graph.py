@@ -218,6 +218,7 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
             (decl.name, decl.step_extent, decl.width if decl.width is not None else output_width)
             for decl in mechanism_spec.rng
         )
+        attrs["diagnostics"] = tuple(mechanism_spec.diagnostics)
     elif specs.passthrough_spec_for(node) is not None and function_spec is not None:
         attrs["spec_kind"] = "elementwise"
         attrs["spec_key"] = function_spec.key

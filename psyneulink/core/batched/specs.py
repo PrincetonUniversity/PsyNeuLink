@@ -217,6 +217,7 @@ class MechanismOpSpec:
     triton_emit: Callable | None = None
     single_node_model_kind: str | None = None
     param_alias_prefixes: tuple[str, ...] = ()
+    diagnostics: tuple[str, ...] = ()
     key: str = ""
 
     @property
@@ -313,6 +314,7 @@ def batched_op(
     display_name: str | None = None,
     single_node_model_kind: str | None = None,
     param_alias_prefixes: tuple[str, ...] = (),
+    diagnostics: tuple[str, ...] = (),
 ):
     """Register a batched op for ``component_class`` from its kernel body.
 
@@ -329,6 +331,13 @@ def batched_op(
     Stateful mechanisms (lane-local state, custom RNG/termination) that the
     declarative form cannot express register a :class:`MechanismOpSpec` with a
     ``triton_emit`` callable directly via :func:`register_batched_op`.
+
+    ``diagnostics`` names trailing return values the body yields *after* its
+    graph outputs (e.g. a bounded integrator returning a ``"truncated"`` flag
+    when it hit ``max_steps`` without reaching threshold).  They are not graph
+    outputs; the compiler routes them to a separate per-lane diagnostic buffer
+    (a ``StoreFlag`` op) so the runtime can surface truncation without
+    perturbing the modelled outputs.
     """
 
     def decorate(body):
@@ -349,6 +358,7 @@ def batched_op(
                 display_name=display_name,
                 single_node_model_kind=single_node_model_kind,
                 param_alias_prefixes=param_alias_prefixes,
+                diagnostics=tuple(diagnostics),
             )
         return body
 
@@ -397,6 +407,7 @@ def _register_mechanism_op(
     display_name,
     single_node_model_kind,
     param_alias_prefixes,
+    diagnostics=(),
 ):
     template = pnl_triton_op(
         name=f"_pnl_triton_{mechanism_class.__name__.lower()}",
@@ -420,6 +431,7 @@ def _register_mechanism_op(
             triton_bindings=triton_bindings,
             single_node_model_kind=single_node_model_kind,
             param_alias_prefixes=tuple(param_alias_prefixes),
+            diagnostics=tuple(diagnostics),
         )
     )
 

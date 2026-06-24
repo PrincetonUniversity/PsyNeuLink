@@ -79,6 +79,14 @@ class LaneEmitMixin:
         )
         self.lane_out_emitted = True
 
+    def _emit_diag_lane(self) -> None:
+        self.builder.line(
+            "diag_lane = (((param_idx * num_subjects + subject_idx) "
+            "* num_trials + trial_idx) * "
+            f"num_estimates + estimate_idx) * {self.diag_slot_count}"
+        )
+        self.diag_lane_emitted = True
+
     def _raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
         if node_name in self.input_index:
             input_spec = self.kernel.inputs[self.input_index[node_name]]

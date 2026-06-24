@@ -16,7 +16,7 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
 )
-from psyneulink.core.batched.kernel_ir import KernelIR
+from psyneulink.core.batched.kernel_ir import KernelIR, diag_slots
 from psyneulink.core.batched.backend.triton.api import TritonOpTemplate
 from psyneulink.core.batched.backend.triton.source_builder import (
     SourceBuilder,
@@ -54,6 +54,8 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.ddm_stream_count = 0
         self.output_cursor = 0
         self.lane_out_emitted = False
+        self.diag_slot_count = len(diag_slots(kernel))
+        self.diag_lane_emitted = False
 
     def emit(self) -> str:
         specs.ensure_builtin_specs()
@@ -96,9 +98,14 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
     def _signature_args(self) -> tuple[str, ...]:
         args = [f"input_{idx}" for idx, _ in enumerate(self.kernel.inputs)]
         args.extend(f"param_{idx}" for idx, _ in enumerate(self.kernel.params))
+        args.append("out")
+        # Per-lane diagnostic buffer (e.g. DDM truncation flags); only present
+        # when the kernel emits StoreFlag ops, so diagnostic-free kernels (the
+        # stateless graph) keep their original signature.
+        if self.diag_slot_count:
+            args.append("diag")
         args.extend(
             [
-                "out",
                 "total_lanes: tl.constexpr",
                 "num_subjects: tl.constexpr",
             ]
