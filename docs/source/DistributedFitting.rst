@@ -31,18 +31,24 @@ rebuilds a serial `ParameterEstimationComposition` and its inputs. Each worker
 caches its own PEC and reuses the compiled LLVM binary across evaluations.
 PsyNeuLink must be importable in the worker environment.
 
-``distributed_options`` accepts the following keys, all optional except
-``pec_factory``:
+``distributed_options`` accepts the following keys:
 
-``pec_factory``
+* ``pec_factory`` (required)
     Worker recipe ``(data) -> (pec, inputs)``. Required for distributed fitting.
 
-``worker_cores``
+* ``worker_cores``
     LLVM threads per worker. Defaults to ``$SLURM_CPUS_PER_TASK``, otherwise to the
     available cores divided by the worker count.
 
-``max_concurrent_evaluations``
+* ``max_concurrent_evaluations``
     Candidates dispatched per ask/tell round. Defaults to the live worker count.
+
+* ``client``
+    Existing Dask ``Client`` to use instead of creating or resolving a cluster.
+
+* ``n_workers``
+    Number of workers for the automatically created single-node ``LocalCluster``.
+    Ignored when ``client`` is supplied or the SLURM launcher is used.
 
 The *live worker count* is the number of workers registered with the scheduler when
 the fit starts: ``srun`` tasks minus two with the launcher (see
