@@ -81,6 +81,7 @@ setup(
 
     extras_require={
         'cuda': get_requirements('cuda'),
+        'dask': get_requirements('dask'),
         'dev': get_requirements('dev'),
         'doc': get_requirements('doc'),
         'tutorial': get_requirements('tutorial'),

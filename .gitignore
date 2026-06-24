@@ -202,3 +202,8 @@ tests/*.pdf
 
 # VSCode settings
 .vscode/
+
+# SLURM job logs: sbatch driver output (%x_%j.out) + worker logs
+*.out
+*.err
+slurm_logs/
