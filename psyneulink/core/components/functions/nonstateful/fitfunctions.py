@@ -490,9 +490,9 @@ class PECOptimizationFunction(OptimizationFunction):
         The objective function to use for optimization. This is the function that defines the optimization problem the
         PEC is trying to solve. The function is used to evaluate the `values <Mechanism_Base.value>` of the
         `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
-        `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
-        that takes a 3d array as its only argument, the shape of which must be (**num_estimates**, **num_trials**,
-        number of **outcome_variables**).  The function should specify how to aggregate the value of each
+        `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be a ``Callable``
+        that takes a 3d array as its only argument, the shape of which must be (**num_trials**, **num_estimates**,
+        **num_outcome_variables**).  The function should specify how to aggregate the value of each
         **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
 
     max_iterations :
