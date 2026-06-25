@@ -89,6 +89,10 @@ runs:
       run: |
         pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c broken_trans_deps.txt
       env:
+        # Avoid duplicating large binary downloads in pip's HTTP cache on Linux
+        # runners, which can exhaust the available disk space during install.
+        PIP_NO_CACHE_DIR: ${{ runner.os == 'Linux' && '1' || '' }}
+
         # Setting CXXFLAGS works around a missing include that breaks the build
         # of onnx-1/17.0 on recent gcc/clang compilers.
         # This should be removed once onnx wheels for Python 3.13 are available.
