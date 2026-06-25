@@ -205,3 +205,8 @@ tests/*.pdf
 
 # asv (airspeed velocity) benchmarks
 .asv/
+
+# SLURM job logs: sbatch driver output (%x_%j.out) + worker logs
+*.out
+*.err
+slurm_logs/
