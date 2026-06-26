@@ -121,7 +121,7 @@ jobs:
         echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
     - name: Restore wheels cache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
@@ -142,7 +142,7 @@ jobs:
         features: 'dev'
 
     - name: Save wheels cache
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       if: always()
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
