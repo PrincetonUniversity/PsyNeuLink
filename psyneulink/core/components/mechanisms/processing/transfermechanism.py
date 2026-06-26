@@ -590,7 +590,7 @@ The TransferMechanism's `reset <TransferMechanism.reset>` method can be used to 
 the first 3 executions:
 
     >>> my_linear_tm.integrator_function.reset()
-    array([[[0.2]]])
+    [array([[0.2]])]
     >>> my_linear_tm.execute(0.5)
     array([[0.23]])
     >>> my_linear_tm.execute(0.5)
@@ -602,7 +602,7 @@ The `reset <TransferMechanism.reset>` method can also be used to start integrati
 it as an argument to the method::
 
     >>> my_linear_tm.integrator_function.reset([0.4])
-    array([[0.4]])
+    [array([0.4])]
     >>> my_linear_tm.execute(0.5)
     array([[0.41]])
     >>> my_linear_tm.execute(0.5)
