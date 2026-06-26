@@ -849,9 +849,18 @@ class BayesGLM(LearningFunction):
                                                          self.__class.__.__name__))
                 # allow their size to determine the size of variable
                 if isinstance(self.mu_0, (list, np.ndarray)):
-                    default_variable = [np.zeros_like(self.mu_0), np.zeros((1,1))]
+                    predictor = self.mu_0
                 else:
-                    default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
+                    predictor = self.sigma_0
+                predictor = np.zeros_like(predictor)
+
+                if predictor.ndim == 0:
+                    dependent_len = 1
+                else:
+                    dependent_len = predictor.shape[0]
+                dependent = np.zeros((1, dependent_len))
+
+                default_variable = [predictor, dependent]
 
         return super()._handle_default_variable(default_variable=default_variable, input_shapes=input_shapes)
 
