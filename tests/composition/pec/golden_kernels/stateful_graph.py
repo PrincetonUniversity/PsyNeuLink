@@ -13,39 +13,50 @@ def _pnl_triton_projection_term(x, coefficient):
 
 
 @triton.jit
-def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gain, leak, competition, self_excitation, noise, dt, lca_steps, seed, random_base, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
+def _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1):
     sqrt_dt = tl.sqrt(dt)
+    rec0 = self_excitation * act0 - competition * act1
+    rec1 = -competition * act0 + self_excitation * act1
+    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
+    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
+    act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
+    act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    return (pre0, pre1, act0, act1)
+
+
+@triton.jit
+def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gain, leak, competition, self_excitation, noise, dt, lca_steps, seed, random_base, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
     for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
         active = step < lca_steps
-        rec0 = self_excitation * act0 - competition * act1
-        rec1 = -competition * act0 + self_excitation * act1
         n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
         n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
-        upd0 = (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0
-        upd1 = (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1
-        pre0 = tl.where(active, pre0 + upd0, pre0)
-        pre1 = tl.where(active, pre1 + upd1, pre1)
-        act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
-        act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+        pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1)
     return (pre0, pre1, act0, act1)
+
+
+@triton.jit
+def _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step):
+    sqrt_dt = tl.sqrt(time_step_size)
+    thr = threshold + threshold_collapse * step
+    boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
+    active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
+    updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
+    updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
+    value = tl.where(active, updated, value)
+    steps = tl.where(active, steps + 1.0, steps)
+    finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
+    return (value, steps, finished)
 
 
 @triton.jit
 def _pnl_triton_ddm(x, rate, noise, threshold, threshold_collapse, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
     value = starting_value
     steps = tl.zeros_like(x)
-    sqrt_dt = tl.sqrt(time_step_size)
-    boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
-    thr = threshold
+    finished = tl.zeros_like(x)
     for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
-        thr = threshold + threshold_collapse * step
-        active = tl.abs(value) + boundary_tolerance < thr
         draw = tl.randn(seed, rng_base + step)
-        updated = value + rate * x * time_step_size + noise * sqrt_dt * draw
-        updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
-        value = tl.where(active, updated, value)
-        steps += tl.where(active, 1.0, 0.0)
-    truncated = tl.where(tl.abs(value) + boundary_tolerance < thr, 1.0, 0.0)
+        value, steps, finished = _pnl_triton_ddm_update(value, steps, finished, x, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step)
+    truncated = tl.where(finished == 0.0, 1.0, 0.0)
     return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated)
 
 

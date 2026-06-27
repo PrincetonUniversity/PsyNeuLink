@@ -83,6 +83,10 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         return module_builder.render()
 
     def register_template(self, template: TritonOpTemplate) -> str:
+        # Register dependencies first so their @triton.jit device functions are
+        # emitted ahead of this template (which calls them by name).
+        for dependency in template.dependencies:
+            self.register_template(dependency)
         existing = self.templates.get(template.name)
         if existing is not None and existing.source != template.source:
             raise ValueError(f"Conflicting Triton helper template '{template.name}'.")

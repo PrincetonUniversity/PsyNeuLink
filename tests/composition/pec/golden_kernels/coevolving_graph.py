@@ -13,17 +13,23 @@ def _pnl_triton_projection_term(x, coefficient):
 
 
 @triton.jit
-def _pnl_triton_lca_width2_step(input0, input1, pre0, pre1, act0, act1, finished, gain, leak, competition, self_excitation, noise, dt, seed, random_base, step, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
-    active = finished == 0.0
+def _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1):
     sqrt_dt = tl.sqrt(dt)
     rec0 = self_excitation * act0 - competition * act1
     rec1 = -competition * act0 + self_excitation * act1
-    n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
-    n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
     pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
     pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
     act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
     act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    return (pre0, pre1, act0, act1)
+
+
+@triton.jit
+def _pnl_triton_lca_width2_step(input0, input1, pre0, pre1, act0, act1, finished, gain, leak, competition, self_excitation, noise, dt, seed, random_base, step, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
+    active = finished == 0.0
+    n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
+    n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+    pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1)
     return (pre0, pre1, act0, act1)
 
 
@@ -39,18 +45,23 @@ def _pnl_triton_instance_Drift_Rate_Value(x0, x1, x2, x3, x4, x5, x6):
 
 
 @triton.jit
-def _pnl_triton_ddm_step(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, seed, rng_base, step):
+def _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step):
     sqrt_dt = tl.sqrt(time_step_size)
     thr = threshold + threshold_collapse * step
     boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
     active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
-    draw = tl.randn(seed, rng_base + step)
     updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
     updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
     value = tl.where(active, updated, value)
     steps = tl.where(active, steps + 1.0, steps)
     finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
     return (value, steps, finished)
+
+
+@triton.jit
+def _pnl_triton_ddm_step(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, seed, rng_base, step):
+    draw = tl.randn(seed, rng_base + step)
+    return _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step)
 
 
 @triton.jit

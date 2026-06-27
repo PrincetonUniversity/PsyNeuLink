@@ -13,21 +13,28 @@ def _pnl_triton_projection_term(x, coefficient):
 
 
 @triton.jit
+def _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step):
+    sqrt_dt = tl.sqrt(time_step_size)
+    thr = threshold + threshold_collapse * step
+    boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
+    active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
+    updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
+    updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
+    value = tl.where(active, updated, value)
+    steps = tl.where(active, steps + 1.0, steps)
+    finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
+    return (value, steps, finished)
+
+
+@triton.jit
 def _pnl_triton_ddm(x, rate, noise, threshold, threshold_collapse, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
     value = starting_value
     steps = tl.zeros_like(x)
-    sqrt_dt = tl.sqrt(time_step_size)
-    boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
-    thr = threshold
+    finished = tl.zeros_like(x)
     for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
-        thr = threshold + threshold_collapse * step
-        active = tl.abs(value) + boundary_tolerance < thr
         draw = tl.randn(seed, rng_base + step)
-        updated = value + rate * x * time_step_size + noise * sqrt_dt * draw
-        updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
-        value = tl.where(active, updated, value)
-        steps += tl.where(active, 1.0, 0.0)
-    truncated = tl.where(tl.abs(value) + boundary_tolerance < thr, 1.0, 0.0)
+        value, steps, finished = _pnl_triton_ddm_update(value, steps, finished, x, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step)
+    truncated = tl.where(finished == 0.0, 1.0, 0.0)
     return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated)
 
 

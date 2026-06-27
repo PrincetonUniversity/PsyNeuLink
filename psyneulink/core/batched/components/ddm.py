@@ -103,6 +103,38 @@ def ddm_threshold_collapse(ddm_node) -> float:
 
 
 @pnl_triton_op
+def _pnl_triton_ddm_update(
+    value,
+    steps,
+    finished,
+    drift,
+    rate,
+    noise,
+    threshold,
+    threshold_collapse,
+    time_step_size,
+    offset,
+    draw,
+    step,
+):
+    # The single shared DDM integration step.  Both the run-to-completion loop
+    # and the co-evolution step call this, so the accumulate/clamp/terminate math
+    # lives in one place.  Accumulate the (possibly time-varying) drift toward a
+    # (possibly collapsing) boundary; a lane that crosses it sets `finished` and
+    # freezes (`draw` is the caller-drawn noise sample).
+    sqrt_dt = tl.sqrt(time_step_size)
+    thr = threshold + threshold_collapse * step
+    boundary_tolerance = tl.maximum(1.0e-7, threshold * 1.0e-6)
+    active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
+    updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
+    updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
+    value = tl.where(active, updated, value)
+    steps = tl.where(active, steps + 1.0, steps)
+    finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
+    return value, steps, finished
+
+
+@pnl_triton_op(helpers=(_pnl_triton_ddm_update,))
 def _pnl_triton_ddm_step(
     value,
     steps,
@@ -118,20 +150,13 @@ def _pnl_triton_ddm_step(
     rng_base,
     step,
 ):
-    # One DDM integration step for the fused co-evolution loop: accumulate the
-    # (possibly time-varying) drift toward a (possibly collapsing) boundary, and
-    # raise `finished` for lanes that have crossed it.  Finished lanes freeze.
-    sqrt_dt = tl.sqrt(time_step_size)
-    thr = threshold + threshold_collapse * step
-    boundary_tolerance = tl.maximum(1.0e-7, threshold * 1.0e-6)
-    active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
+    # One DDM step for the fused co-evolution loop: draw noise, then apply the
+    # shared update.
     draw = tl.randn(seed, rng_base + step)
-    updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
-    updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
-    value = tl.where(active, updated, value)
-    steps = tl.where(active, steps + 1.0, steps)
-    finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
-    return value, steps, finished
+    return _pnl_triton_ddm_update(
+        value, steps, finished, drift, rate, noise, threshold,
+        threshold_collapse, time_step_size, offset, draw, step,
+    )
 
 
 def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
@@ -196,6 +221,7 @@ def _ddm_readout_emit(ctx, node_spec, output_vars):
         StateDecl("finished", width=1, initial=0.0),
     ),
     finished_output="finished",
+    helpers=(_pnl_triton_ddm_update,),
 )
 def ddm_integrate(
     x,
@@ -213,18 +239,16 @@ def ddm_integrate(
 ):
     value = starting_value
     steps = tl.zeros_like(x)
-    sqrt_dt = tl.sqrt(time_step_size)
+    finished = tl.zeros_like(x)
     # Boundary may collapse per step: threshold(step) = threshold + collapse*step
-    # (collapse is 0 for an ordinary fixed-threshold DDM).
-    boundary_tolerance = tl.maximum(1.0e-7, threshold * 1.0e-6)
-    thr = threshold
+    # (collapse is 0 for an ordinary fixed-threshold DDM).  A lane that crosses
+    # the boundary sets `finished` and stays decided; `truncated` flags lanes
+    # that hit max_steps without deciding.
     for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
-        thr = threshold + threshold_collapse * step
-        active = tl.abs(value) + boundary_tolerance < thr
         draw = tl.randn(seed, rng_base + step)
-        updated = value + rate * x * time_step_size + noise * sqrt_dt * draw
-        updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
-        value = tl.where(active, updated, value)
-        steps += tl.where(active, 1.0, 0.0)
-    truncated = tl.where(tl.abs(value) + boundary_tolerance < thr, 1.0, 0.0)
+        value, steps, finished = _pnl_triton_ddm_update(
+            value, steps, finished, x, rate, noise, threshold,
+            threshold_collapse, time_step_size, offset, draw, step,
+        )
+    truncated = tl.where(finished == 0.0, 1.0, 0.0)
     return tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated

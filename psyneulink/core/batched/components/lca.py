@@ -27,7 +27,43 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
 )
 
 
-@pnl_triton_op(constexpr=("stream0", "stream1", "lca_max_steps"))
+@pnl_triton_op
+def _pnl_triton_lca_width2_recurrence(
+    input0,
+    input1,
+    pre0,
+    pre1,
+    act0,
+    act1,
+    active,
+    gain,
+    leak,
+    competition,
+    self_excitation,
+    noise,
+    dt,
+    n0,
+    n1,
+):
+    # The single shared leaky-competing recurrence step (width 2).  Both the
+    # run-to-completion integrate loop and the co-evolution step call this, so
+    # the recurrence math lives in exactly one place.  `active` masks the update
+    # (lanes that are past their step budget / whose terminator finished freeze);
+    # `n0`/`n1` are the caller-drawn noise samples.
+    sqrt_dt = tl.sqrt(dt)
+    rec0 = self_excitation * act0 - competition * act1
+    rec1 = -competition * act0 + self_excitation * act1
+    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
+    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
+    act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
+    act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    return pre0, pre1, act0, act1
+
+
+@pnl_triton_op(
+    constexpr=("stream0", "stream1", "lca_max_steps"),
+    helpers=(_pnl_triton_lca_width2_recurrence,),
+)
 def _pnl_triton_lca_width2_integrate(
     input0,
     input1,
@@ -48,23 +84,21 @@ def _pnl_triton_lca_width2_integrate(
     stream1,
     lca_max_steps,
 ):
-    sqrt_dt = tl.sqrt(dt)
     for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
         active = step < lca_steps
-        rec0 = self_excitation * act0 - competition * act1
-        rec1 = -competition * act0 + self_excitation * act1
         n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
         n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
-        upd0 = (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0
-        upd1 = (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1
-        pre0 = tl.where(active, pre0 + upd0, pre0)
-        pre1 = tl.where(active, pre1 + upd1, pre1)
-        act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
-        act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+        pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
+            input0, input1, pre0, pre1, act0, act1, active,
+            gain, leak, competition, self_excitation, noise, dt, n0, n1,
+        )
     return pre0, pre1, act0, act1
 
 
-@pnl_triton_op(constexpr=("stream0", "stream1", "lca_max_steps"))
+@pnl_triton_op(
+    constexpr=("stream0", "stream1", "lca_max_steps"),
+    helpers=(_pnl_triton_lca_width2_recurrence,),
+)
 def _pnl_triton_lca_width2_step(
     input0,
     input1,
@@ -86,20 +120,16 @@ def _pnl_triton_lca_width2_step(
     stream1,
     lca_max_steps,
 ):
-    # One integration step (the body of _pnl_triton_lca_width2_integrate's loop),
-    # for the fused co-evolution loop where the LCA steps alongside a terminator.
-    # Lanes whose terminator has finished freeze, so the persisted state carried
-    # to the next trial matches when the trial actually ended.
+    # One integration step for the fused co-evolution loop where the LCA steps
+    # alongside a terminator.  Lanes whose terminator has finished freeze, so the
+    # persisted state carried to the next trial matches when the trial ended.
     active = finished == 0.0
-    sqrt_dt = tl.sqrt(dt)
-    rec0 = self_excitation * act0 - competition * act1
-    rec1 = -competition * act0 + self_excitation * act1
     n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
     n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
-    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
-    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
-    act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
-    act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
+        input0, input1, pre0, pre1, act0, act1, active,
+        gain, leak, competition, self_excitation, noise, dt, n0, n1,
+    )
     return pre0, pre1, act0, act1
 
 

@@ -24,6 +24,10 @@ class TritonOpTemplate:
     arg_names: tuple[str, ...]
     source: str
     constexpr: tuple[str, ...] = ()
+    # Other helper templates this one calls; the emitter emits them (transitively)
+    # ahead of this template so the `@triton.jit` device functions are defined
+    # before their callers.
+    dependencies: tuple["TritonOpTemplate", ...] = ()
 
 
 @dataclass(frozen=True)
@@ -106,33 +110,43 @@ def pnl_triton_op(
     *,
     name: str | None = None,
     constexpr: Iterable[str] = (),
+    helpers: Iterable["TritonOpTemplate"] = (),
 ):
     """Capture a small helper function as generated `@triton.jit` source.
 
     The decorated function body may refer to `tl` because the generated kernel
     source imports `triton.language as tl`. Other globals and closures are
-    rejected so the emitted helper remains inspectable and self-contained.
+    rejected so the emitted helper remains inspectable and self-contained —
+    except other helper templates passed via ``helpers``, which the body may
+    call by their Python name (the emitter emits those device functions ahead of
+    this one). This lets a shared recurrence live in one ``@triton.jit`` helper
+    called by both a run-to-completion loop and a single-step path.
     """
 
     def decorate(func):
-        return _template_from_function(func, name=name, constexpr=tuple(constexpr))
+        return _template_from_function(
+            func, name=name, constexpr=tuple(constexpr), helpers=tuple(helpers)
+        )
 
     if function is None:
         return decorate
     return decorate(function)
 
 
-def _template_from_function(func, *, name: str | None, constexpr: tuple[str, ...]) -> TritonOpTemplate:
+def _template_from_function(
+    func, *, name: str | None, constexpr: tuple[str, ...], helpers: tuple = ()
+) -> TritonOpTemplate:
     if not inspect.isfunction(func):
         raise TritonOpError("@pnl_triton_op can only decorate Python functions.")
     if func.__closure__:
         raise TritonOpError(f"Triton op helper '{func.__name__}' cannot close over values.")
 
+    allowed_globals = _ALLOWED_TEMPLATE_GLOBALS | {helper.name for helper in helpers}
     closure_vars = inspect.getclosurevars(func)
     unsupported_globals = sorted(
         global_name
         for global_name in closure_vars.globals
-        if global_name not in _ALLOWED_TEMPLATE_GLOBALS
+        if global_name not in allowed_globals
     )
     if closure_vars.nonlocals or unsupported_globals:
         details = ", ".join(
@@ -171,6 +185,7 @@ def _template_from_function(func, *, name: str | None, constexpr: tuple[str, ...
         arg_names=arg_names,
         source=ast.unparse(module),
         constexpr=constexpr,
+        dependencies=tuple(helpers),
     )
 
 

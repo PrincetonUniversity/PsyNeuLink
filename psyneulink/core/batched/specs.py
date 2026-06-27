@@ -389,6 +389,7 @@ def batched_op(
     readout_emit: Callable | None = None,
     trial_states: tuple[StateDecl, ...] = (),
     finished_output: str = "",
+    helpers: tuple = (),
 ):
     """Register a batched op for ``component_class`` from its kernel body.
 
@@ -437,6 +438,7 @@ def batched_op(
                 readout_emit=readout_emit,
                 trial_states=tuple(trial_states),
                 finished_output=finished_output,
+                helpers=tuple(helpers),
             )
         return body
 
@@ -573,10 +575,12 @@ def _register_mechanism_op(
     readout_emit=None,
     trial_states=(),
     finished_output="",
+    helpers=(),
 ):
     template = pnl_triton_op(
         name=f"_pnl_triton_{mechanism_class.__name__.lower()}",
         constexpr=constexpr,
+        helpers=helpers,
     )(body)
     triton_bindings, params = _bind_mechanism_args(
         template.arg_names, mechanism_class, function_class, bind
