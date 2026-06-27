@@ -15,9 +15,12 @@ from psyneulink.core.batched.specs import (
     PassthroughMechanismSpec,
     RngDecl,
     StateDecl,
+    batched_node_op,
     batched_op,
     param,
+    register_batched_instance_op,
     register_batched_op,
+    unregister_batched_instance_op,
 )
 from psyneulink.core.batched.diagnostics import (
     BatchedCapabilityReport,
@@ -63,7 +66,10 @@ __all__ = [
     "PassthroughMechanismSpec",
     "RngDecl",
     "StateDecl",
+    "batched_node_op",
     "batched_op",
     "param",
+    "register_batched_instance_op",
     "register_batched_op",
+    "unregister_batched_instance_op",
 ]

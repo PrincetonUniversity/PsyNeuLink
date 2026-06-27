@@ -301,10 +301,12 @@ integrators and are now rejected rather than silently lowered as stateless
 
 Gaps (each maps to a milestone in "Good Next Steps"):
 
-1. **Custom / UDF elementwise op** (`driftRate`, a nested-logistic over a
-   7-vector). Elementwise and expressible in `tl`, but UDFs share one class so
-   the class-keyed registry cannot bind it -> needs **instance-level / UDF op
-   registration**.
+1. **Custom / UDF reduction op** (`driftRate`, a nested-logistic reducing a
+   7-vector to a scalar) — RESOLVED (roadmap step 6). UDFs share one class so the
+   class-keyed registry could not bind it; `batched_node_op("<node name>")` now
+   registers an instance-level op whose `tl` body takes the node's whole input
+   vector. (Not strictly elementwise: it is a cross-element reduction, so it rides
+   the mechanism/`triton_emit` path, not the scalar→scalar elementwise path.)
 2. **Stateful integrating `TransferMechanism`** (`integrator_mode=True` with
    `reset_stateful_function_when=AtTrialStart`) -> needs a **stateful
    integrating-transfer op** (lane state + per-trial reset). *Near-term:* reject
@@ -603,6 +605,25 @@ environments to persist results.
   `AtPass` scheduler rejections are gone; only the node-level gaps (steps 5-8)
   remain.
 
+- **UDF / instance-level ops** (roadmap step 6). The op registry is now resolvable
+  per **node instance**, not just per component class: `specs._INSTANCE_SPECS`
+  (keyed by node name) is consulted first in `mechanism_spec_for`, so a node whose
+  class already has a class-level spec (e.g. a `ProcessingMechanism` wrapping a
+  `UserDefinedFunction`) can be given its own kernel. The new `batched_node_op(
+  "<node name>")` decorator captures a `tl` body that receives the node's **whole
+  combined input vector** (one positional arg per input component) and may reduce
+  it to the node's output — unlike the class-level `batched_op`, which is
+  element-wise scalar→scalar. Instance ops reuse the existing `MechanismOpSpec` +
+  `triton_emit` machinery (auto-generated from the body), so `kernel_ir`/`emit`
+  are unchanged (they dispatch on `spec_kind`/`spec_key`, never node class) and
+  the goldens are untouched. This clears the CSI `Drift Rate Value` (nested-logistic
+  7→1 reduction) rejection; the two `integrator_mode` transfers still block a full
+  CSI compile (step 7). Tested in `test_batched_compile.py` (numeric 2→1 reducer
+  on `triton_cpu`; instance-scoped, reversible registration) and
+  `test_batched_reference.py` (real CSI drift-rate node leaves the rejected set).
+  Binding extra `tl` args to node Parameters/RNG is a future extension
+  (input-components-only for now).
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -634,9 +655,10 @@ steps 9-10 make the full PEC fit run on the batched path.
    drop the init-`act=0` approximation so an isolated LCA matches PNL, not just
    in-context. Keep width-2 as a specialized lowering only if benchmarks justify.
 
-6. **UDF / instance-level ops** (gap 1). Let researchers register a batched op
-   for a specific function/UDF *instance* (capture its `custom_function` as a
-   `tl` body), since the registry is class-keyed and all UDFs share one class.
+6. **UDF / instance-level ops** (gap 1) — DONE (see Done above). Researchers
+   register an op for a specific node via `batched_node_op("<node name>")`; the
+   `tl` body receives the node's whole combined input vector and may reduce it.
+   Clears the CSI `Drift Rate Value` rejection.
 
 7. **Stateful integrating transfers** (gap 2). A stateful transfer/integrator op
    (Leaky/Simple integrator + function) with lane-local state and per-trial

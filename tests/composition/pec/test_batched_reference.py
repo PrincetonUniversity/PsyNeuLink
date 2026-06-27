@@ -24,7 +24,11 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.batched import BatchedCompositionCompiler
+from psyneulink.core.batched import (
+    BatchedCompositionCompiler,
+    batched_node_op,
+    unregister_batched_instance_op,
+)
 
 
 requires_triton = pytest.mark.skipif(
@@ -247,6 +251,49 @@ def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python(
     assert report.metadata["schedule_kind"] == "static_graph"
 
     _assert_matches_pnl_python(comp, inputs, max_steps=256, seed=3)
+
+
+def test_csi_drift_rate_udf_instance_op_clears_node_rejection():
+    """An instance-level op unblocks the CSI surrogate's drift-rate UDF node.
+
+    `Drift Rate Value` is a ProcessingMechanism wrapping a UserDefinedFunction
+    (a nested logistic reducing its 7-wide combined input to a scalar); the
+    class-keyed registry cannot express it.  Registering a `batched_node_op` for
+    that node removes it from the rejected set.  Only the diagnostic is checked
+    here: the two `integrator_mode` transfers still block a full compile (roadmap
+    step 7), so end-to-end CSI execution is deferred.
+    """
+
+    csi_dir = Path(__file__).resolve().parents[0]
+    sys.path.insert(0, str(csi_dir.parents[2] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0)
+
+    before = {d.component for d in BatchedCompositionCompiler.diagnose(comp).rejected_nodes}
+    assert "Drift Rate Value" in before
+
+    try:
+        # Faithful tl transcription of csi_model_surrogate.drift_rate_fct,
+        # mapping input[0][i] -> xi (no closures: sigmoids inlined).
+        @batched_node_op("Drift Rate Value")
+        def drift_rate(x0, x1, x2, x3, x4, x5, x6):
+            a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
+            b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
+            c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
+            d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
+            pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
+            neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
+            return (pos - neg) * x6
+
+        report = BatchedCompositionCompiler.diagnose(comp)
+        rejected = {d.component: d.reason for d in report.rejected_nodes}
+        assert "Drift Rate Value" not in rejected
+        # Scope check: the integrator_mode transfers still block full compile.
+        assert "integrator_mode" in rejected.get("Task Input", "")
+        assert "integrator_mode" in rejected.get("Threshold Mechanism", "")
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
 
 
 def test_ddm_stochastic_matches_pnl_python_statistics():

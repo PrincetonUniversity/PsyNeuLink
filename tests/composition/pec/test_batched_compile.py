@@ -12,6 +12,8 @@ from psyneulink.core.batched import (
     BatchedGraphIR,
     BatchedCompileError,
     BatchedCompositionCompiler,
+    batched_node_op,
+    unregister_batched_instance_op,
 )
 from psyneulink.core.batched import specs as batched_specs
 from psyneulink.core.batched.specs import BatchedOpSpecError
@@ -297,6 +299,86 @@ def test_batched_op_specs_do_not_apply_to_subclasses():
 
     assert not report.is_supported
     assert "CustomLinear" in "; ".join(report.unsupported_reasons)
+
+
+def _make_udf_reducer_comp():
+    """A->reducer<-B graph: a UDF node that reduces its 2-wide combined input.
+
+    The UDF node ('Reducer') is a ProcessingMechanism whose class already owns a
+    PassthroughMechanismSpec, so only an instance-level op can give it a kernel.
+    """
+
+    def _prod(variable):
+        v = np.asarray(variable, dtype=float).reshape(-1)
+        return v[0] * v[1] if v.size >= 2 else 0.0
+
+    a = pnl.ProcessingMechanism(input_shapes=1, name="A")
+    b = pnl.ProcessingMechanism(input_shapes=1, name="B")
+    reducer = pnl.ProcessingMechanism(
+        name="Reducer",
+        input_ports=[{pnl.NAME: "in", pnl.INPUT_SHAPES: 2, pnl.COMBINE: pnl.SUM}],
+        function=pnl.UserDefinedFunction(custom_function=_prod),
+    )
+    comp = pnl.Composition()
+    comp.add_node(a)
+    comp.add_node(b)
+    comp.add_node(reducer)
+    comp.add_projection(sender=a, receiver=reducer, projection=pnl.MappingProjection(matrix=np.array([[1.0, 0.0]])))
+    comp.add_projection(sender=b, receiver=reducer, projection=pnl.MappingProjection(matrix=np.array([[0.0, 1.0]])))
+    return comp, a, b
+
+
+@pytest.mark.composition
+@requires_triton
+def test_batched_node_op_registers_instance_level_udf_reduction():
+    # A UDF node that the class-keyed registry cannot express (all UDFs share one
+    # class) is given an instance-level op that reduces its whole input vector.
+    comp, a, b = _make_udf_reducer_comp()
+    try:
+        @batched_node_op("Reducer")
+        def reducer(x0, x1):
+            return x0 * x1  # tl arithmetic over the 2 combined input components
+
+        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+        assert report.is_supported, report.unsupported_reasons
+
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
+        result = plan.run(
+            inputs={a: np.array([[3.0]]), b: np.array([[5.0]])},
+            parameter_sets=[{}],
+            num_estimates=1,
+        )
+        # combined input is [3, 5] (SUM of the two routed projections) -> 3 * 5.
+        np.testing.assert_allclose(result.values[0, 0, 0, 0], [15.0], rtol=1e-5)
+    finally:
+        unregister_batched_instance_op("Reducer")
+
+
+@pytest.mark.composition
+def test_batched_node_op_registration_is_instance_scoped_and_reversible():
+    comp, _, _ = _make_udf_reducer_comp()
+
+    # Without a registered instance op, the UDF node is rejected.
+    rejected = BatchedCompositionCompiler.diagnose(comp)
+    assert not rejected.is_supported
+    assert "UserDefinedFunction" in "; ".join(rejected.unsupported_reasons)
+
+    try:
+        @batched_node_op("Reducer")
+        def reducer(x0, x1):
+            return x0 * x1
+
+        assert "Reducer" in batched_specs._INSTANCE_SPECS
+        key = batched_specs._INSTANCE_SPECS["Reducer"].key
+        assert key == "instance:Reducer"
+        assert key in batched_specs._SPECS_BY_KEY
+        # Instance-keyed: ProcessingMechanism as a class is unaffected.
+        assert pnl.ProcessingMechanism not in batched_specs._MECHANISM_SPECS
+    finally:
+        unregister_batched_instance_op("Reducer")
+
+    assert "Reducer" not in batched_specs._INSTANCE_SPECS
+    assert "instance:Reducer" not in batched_specs._SPECS_BY_KEY
 
 
 @pytest.mark.composition

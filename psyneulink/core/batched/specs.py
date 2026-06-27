@@ -42,7 +42,11 @@ from typing import Any, Callable, Mapping
 
 import numpy as np
 
-from psyneulink.core.batched.backend.triton.api import TritonOpTemplate, pnl_triton_op
+from psyneulink.core.batched.backend.triton.api import (
+    TritonOpCall,
+    TritonOpTemplate,
+    pnl_triton_op,
+)
 
 
 class BatchedOpSpecError(ValueError):
@@ -237,6 +241,12 @@ _FUNCTION_SPECS: dict[type, ElementwiseFunctionSpec] = {}
 _MECHANISM_SPECS: dict[type, MechanismOpSpec] = {}
 _PASSTHROUGH_SPECS: dict[type, PassthroughMechanismSpec] = {}
 _PROJECTION_SPECS: dict[type, DenseProjectionSpec] = {}
+# Instance-level ops, keyed by node *name* (not class).  A node whose class
+# already has a class-level spec (e.g. a ProcessingMechanism wrapping a
+# UserDefinedFunction) can be given its own op here; the name is the stable,
+# researcher-controlled handle (object identity is unusable because PEC rebuilds
+# the model each simulation).
+_INSTANCE_SPECS: dict[str, MechanismOpSpec] = {}
 _SPECS_BY_KEY: dict[str, Any] = {}
 
 _BUILTINS_REGISTERED = False
@@ -266,11 +276,40 @@ def register_batched_op(spec):
     return spec
 
 
+def register_batched_instance_op(node_name: str, spec: MechanismOpSpec) -> MechanismOpSpec:
+    """Register a :class:`MechanismOpSpec` for a single node, keyed by its name.
+
+    Unlike :func:`register_batched_op` (keyed by exact component class), this
+    binds the op to one specific node instance, so a node whose class already
+    has a class-level spec (e.g. a ``ProcessingMechanism`` wrapping a UDF) can be
+    given its own kernel.  The spec is kept out of ``_MECHANISM_SPECS`` so it
+    never affects other nodes of the same class.
+    """
+
+    spec = replace(spec, key=f"instance:{node_name}")
+    _INSTANCE_SPECS[node_name] = spec
+    _SPECS_BY_KEY[spec.key] = spec
+    return spec
+
+
+def unregister_batched_instance_op(node_name: str) -> None:
+    """Remove an instance-level op (and its key); a no-op if not registered."""
+
+    removed = _INSTANCE_SPECS.pop(node_name, None)
+    if removed is not None:
+        _SPECS_BY_KEY.pop(removed.key, None)
+
+
 def function_spec_for(function) -> ElementwiseFunctionSpec | None:
     return _FUNCTION_SPECS.get(type(function))
 
 
 def mechanism_spec_for(node) -> MechanismOpSpec | None:
+    # An instance-level op (keyed by node name) takes precedence over the
+    # node's class-level spec, so a single node can override its class default.
+    instance_spec = _INSTANCE_SPECS.get(getattr(node, "name", None))
+    if instance_spec is not None:
+        return instance_spec
     return _MECHANISM_SPECS.get(type(node))
 
 
@@ -363,6 +402,89 @@ def batched_op(
         return body
 
     return decorate
+
+
+def batched_node_op(
+    node_name: str,
+    *,
+    outputs=None,
+    constexpr: tuple[str, ...] = (),
+):
+    """Register a batched op for a single node, supplying a whole-input-vector body.
+
+    Unlike :func:`batched_op` (keyed by component/function class and applied
+    element-wise), this binds the op to the node named ``node_name`` and gives
+    the body its node's **entire combined input vector** — one positional
+    argument per input component — so it can compute reductions a class-level
+    elementwise op cannot.  This is how a researcher maps a model-specific
+    function (for example a ``UserDefinedFunction`` drift rate) onto the batched
+    compiler without touching PNL core classes::
+
+        from psyneulink.core.batched import batched_node_op  # body uses tl
+
+        @batched_node_op("Drift Rate Value")
+        def drift_rate(x0, x1, x2, x3, x4, x5, x6):
+            # arbitrary tl arithmetic over the 7 input components -> one scalar
+            ...
+
+    The body is written against ``triton.language`` (``tl``), captured as
+    inspectable Triton source (closures/globals are rejected), and run compiled
+    on GPU / interpreted on CPU.  Every positional argument is an input
+    component; the count must equal the node's combined input width.  ``outputs``
+    defaults to the node's own output width (the body returns that many values).
+
+    (Binding extra ``tl`` arguments to node ``Parameters`` or RNG streams is not
+    supported yet — input components only.)
+    """
+
+    def decorate(body):
+        if not inspect.isfunction(body):
+            raise BatchedOpSpecError("@batched_node_op can only decorate Python functions.")
+        arg_names = _signature_args(body)
+        reserved = [name for name in arg_names if name in _TRITON_RESERVED]
+        if reserved:
+            raise BatchedOpSpecError(
+                f"Instance batched op for '{node_name}' takes only input components; "
+                f"reserved arguments are not allowed: {', '.join(reserved)}."
+            )
+        arity = len(arg_names)
+        template = pnl_triton_op(
+            name=f"_pnl_triton_instance_{_safe_ident(node_name)}",
+            constexpr=tuple(constexpr),
+        )(body)
+
+        def _instance_triton_emit(ctx, node_spec, inputs, output_vars):
+            if len(inputs) != arity:
+                raise BatchedOpSpecError(
+                    f"Instance batched op for '{node_name}' expects {arity} input "
+                    f"component(s) but node '{node_spec.name}' has {len(inputs)}."
+                )
+            ctx.emit_call(
+                TritonOpCall(
+                    template=template,
+                    outputs=tuple(output_vars),
+                    args=tuple(inputs),
+                )
+            )
+            return tuple(output_vars)
+
+        register_batched_instance_op(
+            node_name,
+            MechanismOpSpec(
+                mechanism_class=None,
+                function_class=None,
+                display_name=node_name,
+                outputs=_normalize_outputs(outputs),
+                triton_emit=_instance_triton_emit,
+            ),
+        )
+        return body
+
+    return decorate
+
+
+def _safe_ident(name: str) -> str:
+    return "".join(ch if ch.isalnum() else "_" for ch in name)
 
 
 def _register_function_op(function_class, body, bind):
