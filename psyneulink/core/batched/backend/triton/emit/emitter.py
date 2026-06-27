@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from psyneulink.core.batched import specs
 from psyneulink.core.batched.graph import (
+    COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
@@ -32,6 +33,7 @@ _KERNEL_NAMES = {
     STATELESS_GRAPH_FUSION: "pnl_batched_stateless_graph_kernel",
     DDM_GRAPH_FUSION: "pnl_batched_ddm_graph_kernel",
     STATEFUL_GRAPH_FUSION: "pnl_batched_stateful_graph_kernel",
+    COEVOLVING_GRAPH_FUSION: "pnl_batched_coevolving_graph_kernel",
 }
 
 
@@ -111,7 +113,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             ]
         )
 
-        if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
+        if self.kernel.fusion_kind in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION):
             args.extend(
                 [
                     "num_estimates: tl.constexpr",

@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 
 from psyneulink.core.batched.graph import (
+    COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
@@ -74,6 +75,12 @@ def run_triton(
             values, truncation = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
+            )
+        elif fusion_kind == COEVOLVING_GRAPH_FUSION:
+            values, truncation = _run_stateful_graph_kernel(
+                torch, triton, module, ir, prepared_inputs, params, num_estimates,
+                seed, common_random_numbers, device, slots,
+                kernel_name="pnl_batched_coevolving_graph_kernel",
             )
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
@@ -202,6 +209,7 @@ def _run_ddm_graph_kernel(
 def _run_stateful_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
     seed, common_random_numbers, device, slots,
+    kernel_name="pnl_batched_stateful_graph_kernel",
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -217,7 +225,7 @@ def _run_stateful_graph_kernel(
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
-    module.pnl_batched_stateful_graph_kernel[grid](
+    getattr(module, kernel_name)[grid](
         *input_tensors, *param_tensors, out, *(() if diag is None else (diag,)),
         total_lanes, num_subjects, num_estimates, num_trials,
         LCA_MAX_STEPS=lca_max_steps(ir, inputs), MAX_STEPS=ir.max_steps,

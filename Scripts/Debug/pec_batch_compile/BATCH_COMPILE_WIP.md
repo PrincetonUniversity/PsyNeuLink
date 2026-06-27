@@ -319,13 +319,12 @@ see "CSI status" below). The original gaps and how each was closed:
 
 ### CSI status
 
-`make_stab_flex(iti=0)` compiles and runs end-to-end on `triton_cpu`/`triton`.
-Deterministic **decision outcomes match** PNL Python mode. **RT does not match
-exactly**: the batched width-2 LCA is a documented approximation (see "LCA
-Caveats"), so the cue-driven LCA step count — hence the DDM drift it feeds and
-the resulting DDM step count / RT — differs from PNL's real `LCAMechanism`
-dynamics. Closing that is roadmap step 5 (generalize LCA). Remaining for the
-full PEC fit: `iti>0` (`AtPass(n>0)`, rest of step 4), GPU likelihood/KDE
+`make_stab_flex(iti=0)` compiles and runs end-to-end on `triton_cpu`/`triton`,
+with **both decision outcomes and response times matching** PNL Python mode
+(RT within ~1 DDM step). This required the **co-evolution loop** (see below): the
+CSI LCA is `Always`-scheduled and its activation feeds the drift, so the LCA and
+DDM step together each timestep rather than running sequentially. Remaining for
+the full PEC fit: `iti>0` (`AtPass(n>0)`, rest of step 4), GPU likelihood/KDE
 (step 9), and PEC fit routing (step 10).
 
 ## Fusion and Lane Layout
@@ -344,9 +343,21 @@ Current fusion kinds:
   - Lane layout: `(parameter_set, subject, trial, estimate)`.
 
 - `stateful_graph`
-  - Static graph with lane-local state, currently mainly LCA plus DDM/gates.
+  - Static graph with lane-local state where the stateful ops run **sequentially**
+    to completion (e.g. a cue-terminated LCA settles, then the DDM decides — the
+    toy stab-flex model).
   - Lane layout: `(parameter_set, subject, estimate)`.
   - Trials run inside the Triton lane so LCA state persists across trials.
+
+- `coevolving_graph`
+  - Coupled stateful ops that **step together** in a single fused per-step loop
+    (the CSI surrogate: an `Always`-scheduled LCA whose activation feeds the
+    drift, co-evolving with the DDM until the DDM crosses its boundary).
+  - Lane layout: `(parameter_set, subject, estimate)` (same as `stateful_graph`).
+  - Each step, in topological order: loop-invariant ops are hoisted out once;
+    stepper ops (LCA `step_emit`, DDM `step_emit`) advance one step; lanes whose
+    terminator has `finished` freeze; the terminator's outputs are produced by a
+    `readout_emit` after the loop. See "Co-evolution loop" below.
 
 Fusion kind is a dispatch/optimization detail. It should not encode model
 architecture semantics.
@@ -658,7 +669,29 @@ environments to persist results.
   matching across in-process model rebuilds. **Completes CSI compilation**
   (`iti=0`): `test_batched_reference.py` asserts the surrogate compiles + runs
   with decision outcomes matching PNL, and that a collapsing threshold shortens
-  RT vs a fixed one. (RT itself is not asserted equal — LCA approximation.)
+  RT vs a fixed one.
+
+- **Co-evolution loop** (roadmap step 5; **CSI RT parity**). Coupled stateful
+  mechanisms now step together in a single fused per-step loop instead of running
+  sequentially. New op interface on `MechanismOpSpec`: `step_emit` (one
+  integration step), `trial_states` (per-trial reset state, e.g. DDM
+  `value`/`steps`/`finished`), `finished_output` + `readout_emit` for a
+  *terminator* op. `components/lca.py` and `components/ddm.py` provide step bodies
+  (the DDM step carries the collapsing boundary; the LCA step freezes when the
+  terminator has finished, so its persisted state carried to the next trial
+  matches when the trial actually ended). `graph.py:_is_coevolving` routes a graph
+  to `COEVOLVING_GRAPH_FUSION` when an `Always`-scheduled persistent stepper feeds
+  a stateful terminator (CSI); cue-terminated LCAs (toy stab-flex) stay
+  `stateful_graph`. `emit/ops.py` emits the loop: loop-invariant ops are hoisted
+  out once (Triton loop-body vars don't escape), stepper ops run inside, and the
+  terminator's `readout_emit` + truncation diag run after. Diagnosis showed the
+  batched LCA *recurrence is correct*; the gap was purely that the sequential path
+  gave the CSI LCA 0 steps (cue=0) while PNL's `Always` LCA co-evolves with the
+  DDM ~1:1. Result: `make_stab_flex(iti=0)` matches PNL on **decision AND RT**
+  (within ~1 DDM step), validated on interpret and GPU (`triton`); the toy
+  stab-flex stays `stateful_graph` and its golden is byte-identical. New
+  `golden_kernels/coevolving_graph.py`; `test_batched_reference.py` asserts RT
+  parity + the co-evolving fusion kind.
 
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
@@ -686,10 +719,14 @@ steps 9-10 make the full PEC fit run on the batched path.
    traces over dynamic lane-local scheduler state (which would recreate the
    LLVM/PTX overhead problem).
 
-5. **Generalize LCA.** Width-2 scalar recurrence -> width-N matrix/vector
-   recurrence (custom `triton_emit`), reading the real recurrent matrix; also
-   drop the init-`act=0` approximation so an isolated LCA matches PNL, not just
-   in-context. Keep width-2 as a specialized lowering only if benchmarks justify.
+5. **Co-evolution loop for coupled stateful mechanisms** — DONE (see Done above).
+   This was the actual blocker to CSI RT parity (not LCA *width*): the diagnosis
+   showed the batched LCA recurrence is correct, but the CSI LCA is
+   `Always`-scheduled and co-evolves with the DDM (~1:1), while the sequential
+   `stateful_graph` ran the LCA to a cue-driven step count (0 for CSI). The fused
+   co-evolution loop closes that. *Still open under "generalize LCA":* width-N /
+   arbitrary recurrent matrix, and dropping the init-`act=0` approximation for an
+   isolated LCA — neither is needed for CSI.
 
 6. **UDF / instance-level ops** (gap 1) — DONE (see Done above). Researchers
    register an op for a specific node via `batched_node_op("<node name>")`; the

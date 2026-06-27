@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from psyneulink.core.batched.graph import (
+    COEVOLVING_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
     projection_inputs,
 )
@@ -180,7 +181,7 @@ def iter_kernel_ops(kernel: KernelIR) -> tuple[KernelOp, ...]:
 
 
 def _lane_layout_for(fusion_kind: str | None) -> KernelLaneLayout:
-    if fusion_kind == STATEFUL_GRAPH_FUSION:
+    if fusion_kind in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION):
         return KernelLaneLayout(
             kind=STATEFUL_LANE_LAYOUT,
             dimensions=("parameter_set", "subject", "estimate"),

@@ -10,10 +10,11 @@ into the concrete emitter in `emitter.py`.
 from __future__ import annotations
 
 from psyneulink.core.batched import specs
-from psyneulink.core.batched.graph import STATEFUL_GRAPH_FUSION
+from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION, STATEFUL_GRAPH_FUSION
 from psyneulink.core.batched.kernel_ir import KernelOp
 from psyneulink.core.batched.backend.triton.api import TritonEmitContext, TritonOpCall
 from psyneulink.core.batched.backend.triton.emit._helpers import (
+    float_literal,
     primary_output_port_name,
     safe_ident,
     zero_vector,
@@ -32,7 +33,149 @@ class OpEmitMixin:
                     raise ValueError(f"Unsupported stateful top-level op '{op.kind}'.")
             return
 
+        if self.kernel.fusion_kind == COEVOLVING_GRAPH_FUSION:
+            for op in self.kernel.ops:
+                if op.kind == "InitializeState":
+                    self._emit_initialize_state()
+                elif op.kind == "ForTrials":
+                    self._emit_coevolving_trial_loop(tuple(op.attrs["body"]))
+                else:
+                    raise ValueError(f"Unsupported co-evolving top-level op '{op.kind}'.")
+            return
+
         self._emit_ops(self.kernel.ops)
+
+    # ---- co-evolution (fused per-step loop over coupled stateful ops) ----
+
+    def _emit_coevolving_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
+        terminator_index = self._coevolving_terminator_index(body)
+        terminator_op = body[terminator_index]
+        # In-loop ops co-evolve each step (up to and including the terminator's
+        # step); ops after the terminator depend on its final readout (gates,
+        # store-output, truncation StoreFlag) and run once after the loop.
+        in_loop_ops = body[: terminator_index + 1]
+        post_loop_ops = body[terminator_index + 1 :]
+
+        self.builder.line("trial_idx = 0")
+        with self.builder.block("while trial_idx < num_trials"):
+            self._emit_stateful_random_base()
+            self.output_cursor = 0
+            self.lane_out_emitted = False
+            self.diag_lane_emitted = False
+            self._emit_init_trial_states(terminator_op)
+            terminator_spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+            terminator_node = self.graph.node(terminator_op.target)
+            finished_var = self.state_vars[
+                (f"{terminator_node.name}.{terminator_spec.finished_output}", 0)
+            ]
+            # Hoist loop-invariant ops (constant inputs and projections that do
+            # not depend on a stepper's evolving state) out of the step loop:
+            # they are computed once, and Triton loop-body variables do not
+            # escape the loop, so post-loop ops must read them from outer scope.
+            hoisted_ops, stepping_ops = self._partition_coevolving_ops(in_loop_ops)
+            for op in hoisted_ops:
+                self._emit_op(op)
+            with self.builder.block(
+                "for step in tl.range(0, MAX_STEPS, 1, loop_unroll_factor=1)"
+            ):
+                for op in stepping_ops:
+                    self._emit_coevolving_op(op, "step", finished_var)
+            self.builder.line()
+            self._emit_terminator_readout(terminator_op)
+            for op in post_loop_ops:
+                self._emit_op(op)
+            self.builder.line("trial_idx += 1")
+        self.builder.line()
+
+    def _partition_coevolving_ops(self, in_loop_ops):
+        """Split into (hoisted, stepping): an op steps each iteration if it is a
+        stepper or transitively consumes a stepper's evolving output; everything
+        else is loop-invariant and is emitted once before the loop."""
+
+        variant: set[str] = set()
+        hoisted = []
+        stepping = []
+        for op in in_loop_ops:
+            is_stepper = (
+                op.kind == "CallMechanism"
+                and specs.lookup_spec(op.attrs["spec_key"]).can_step
+            )
+            depends_on_variant = any(inp.name in variant for inp in op.inputs)
+            if is_stepper or depends_on_variant:
+                stepping.append(op)
+                for output in op.outputs:
+                    variant.add(output.name)
+            else:
+                hoisted.append(op)
+        return hoisted, stepping
+
+    def _coevolving_terminator_index(self, body: tuple[KernelOp, ...]) -> int:
+        for index, op in enumerate(body):
+            if op.kind == "CallMechanism":
+                spec = specs.lookup_spec(op.attrs["spec_key"])
+                if spec.is_terminator:
+                    return index
+        raise ValueError("co-evolving graph has no terminator op")
+
+    def _emit_coevolving_op(self, op: KernelOp, step_var: str, finished_var: str) -> None:
+        if op.kind == "CallMechanism":
+            spec = specs.lookup_spec(op.attrs["spec_key"])
+            if spec.can_step:
+                self._emit_step_mechanism(op, spec, step_var, finished_var)
+                return
+        self._emit_op(op)
+
+    def _emit_step_mechanism(self, op: KernelOp, spec, step_var: str, finished_var: str) -> None:
+        node = self.graph.node(op.target)
+        input_values = self._get_value(op.inputs[0].name)
+        output_vars = []
+        for output in op.outputs:
+            output_vars.extend(self._component_vars(output.name, output.width))
+        result = spec.step_emit(
+            TritonEmitContext(self), node, input_values, output_vars, step_var, finished_var
+        )
+        # A non-terminator stepper (e.g. LCA) returns its current outputs; the
+        # terminator (e.g. DDM) only advances state and returns None — its
+        # outputs are produced by the readout after the loop.
+        if result is not None:
+            values = list(result)
+            cursor = 0
+            for output in op.outputs:
+                self._set_value(output.name, values[cursor : cursor + output.width])
+                cursor += output.width
+
+    def _emit_init_trial_states(self, terminator_op: KernelOp) -> None:
+        spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+        node = self.graph.node(terminator_op.target)
+        for decl in spec.trial_states:
+            state_name = f"{node.name}.{decl.name}"
+            for idx in range(decl.width or 1):
+                var = f"{safe_ident(state_name)}_{idx}"
+                self.state_vars[(state_name, idx)] = var
+                self.builder.line(
+                    f"{var} = tl.full((BLOCK,), {float_literal(decl.initial)}, tl.float32)"
+                )
+        self.builder.line()
+
+    def _emit_terminator_readout(self, terminator_op: KernelOp) -> None:
+        spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+        node = self.graph.node(terminator_op.target)
+        output_vars = []
+        for output in terminator_op.outputs:
+            output_vars.extend(self._component_vars(output.name, output.width))
+        spec.readout_emit(TritonEmitContext(self), node, output_vars)
+        cursor = 0
+        for output in terminator_op.outputs:
+            self._set_value(output.name, output_vars[cursor : cursor + output.width])
+            cursor += output.width
+        # A terminator's diagnostic (e.g. DDM "truncated") is exactly "never
+        # finished within MAX_STEPS"; route it through the existing diag channel.
+        finished_var = self.state_vars[(f"{node.name}.{spec.finished_output}", 0)]
+        for name in terminator_op.attrs.get("diagnostics", ()):
+            diag_var = f"{safe_ident(node.name)}_diag_{safe_ident(name)}"
+            self.builder.line(f"{diag_var} = tl.where({finished_var} == 0.0, 1.0, 0.0)")
+            self._set_value(f"{node.name}:diag:{name}", [diag_var])
+        self.builder.line()
 
     def _emit_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
         self.builder.line("trial_idx = 0")

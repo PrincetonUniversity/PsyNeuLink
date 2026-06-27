@@ -64,6 +64,89 @@ def _pnl_triton_lca_width2_integrate(
     return pre0, pre1, act0, act1
 
 
+@pnl_triton_op(constexpr=("stream0", "stream1", "lca_max_steps"))
+def _pnl_triton_lca_width2_step(
+    input0,
+    input1,
+    pre0,
+    pre1,
+    act0,
+    act1,
+    finished,
+    gain,
+    leak,
+    competition,
+    self_excitation,
+    noise,
+    dt,
+    seed,
+    random_base,
+    step,
+    stream0,
+    stream1,
+    lca_max_steps,
+):
+    # One integration step (the body of _pnl_triton_lca_width2_integrate's loop),
+    # for the fused co-evolution loop where the LCA steps alongside a terminator.
+    # Lanes whose terminator has finished freeze, so the persisted state carried
+    # to the next trial matches when the trial actually ended.
+    active = finished == 0.0
+    sqrt_dt = tl.sqrt(dt)
+    rec0 = self_excitation * act0 - competition * act1
+    rec1 = -competition * act0 + self_excitation * act1
+    n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
+    n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
+    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
+    act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
+    act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    return pre0, pre1, act0, act1
+
+
+def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
+    if node_spec.output_width != 2:
+        raise ValueError(
+            "Triton batched LCA step supports width 2, "
+            f"got {node_spec.output_width} for '{node_spec.name}'."
+        )
+    pre_state = f"{node_spec.name}.pre"
+    act_state = f"{node_spec.name}.act"
+    pre0 = ctx.state(pre_state, 0)
+    pre1 = ctx.state(pre_state, 1)
+    act0 = ctx.state(act_state, 0)
+    act1 = ctx.state(act_state, 1)
+    stream0 = ctx.lca_stream_index(node_spec.name)
+    stream1 = stream0 + 1
+    ctx.emit_call(
+        TritonOpCall(
+            template=_pnl_triton_lca_width2_step,
+            outputs=(pre0, pre1, act0, act1),
+            args=(
+                inputs[0],
+                inputs[1],
+                pre0,
+                pre1,
+                act0,
+                act1,
+                finished_var,
+                ctx.param(node_spec, "gain"),
+                ctx.param(node_spec, "leak"),
+                ctx.param(node_spec, "competition"),
+                ctx.param(node_spec, "self_excitation"),
+                ctx.param(node_spec, "noise"),
+                ctx.param(node_spec, "time_step_size"),
+                ctx.seed,
+                "random_base",
+                step_var,
+                str(stream0),
+                str(stream1),
+                ctx.lca_max_steps,
+            ),
+        )
+    )
+    return (act0, act1)
+
+
 def _lca_supports(node) -> BatchedDiagnostic | None:
     width = _primary_output_width(node)
     if width != 2:
@@ -204,5 +287,6 @@ register_batched_op(
         supports=_lca_supports,
         extract_attrs=_lca_extract_attrs,
         triton_emit=_lca_triton_emit,
+        step_emit=_lca_step_emit,
     )
 )

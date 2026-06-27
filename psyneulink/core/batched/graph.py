@@ -28,6 +28,7 @@ DDM_MODEL = "ddm"
 STATELESS_GRAPH_FUSION = "stateless_graph"
 DDM_GRAPH_FUSION = "ddm_graph"
 STATEFUL_GRAPH_FUSION = "stateful_graph"
+COEVOLVING_GRAPH_FUSION = "coevolving_graph"
 STATIC_GRAPH_SCHEDULE = "static_graph"
 PRECOMPUTED_TRACE_SCHEDULE = "precomputed_trace"
 DYNAMIC_LANE_LOCAL_SCHEDULE = "dynamic_lane_local"
@@ -145,7 +146,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             ),
             ops=ops,
             execution_order=execution_order,
-            fusion_kind=_fusion_kind(model_kind, nodes),
+            fusion_kind=_fusion_kind(model_kind, nodes, composition),
             metadata={
                 "composition_name": getattr(composition, "name", None),
                 "schedule_kind": schedule_kind,
@@ -409,7 +410,7 @@ def _classify_model(nodes) -> str | None:
     return None
 
 
-def _fusion_kind(model_kind: str | None, nodes) -> str | None:
+def _fusion_kind(model_kind: str | None, nodes, composition=None) -> str | None:
     executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
     if not executable_nodes:
         return None
@@ -429,9 +430,39 @@ def _fusion_kind(model_kind: str | None, nodes) -> str | None:
 
     if not mechanism_specs:
         return STATELESS_GRAPH_FUSION
+    if composition is not None and _is_coevolving(composition, executable_nodes):
+        return COEVOLVING_GRAPH_FUSION
     if any(spec.persistent_state for spec in mechanism_specs) or len(mechanism_specs) > 1:
         return STATEFUL_GRAPH_FUSION
     return DDM_GRAPH_FUSION
+
+
+def _is_coevolving(composition, executable_nodes) -> bool:
+    """A stateful terminator op (e.g. DDM, with a ``finished_output``) co-evolves
+    with an upstream persistent stateful op that runs the whole trial (scheduled
+    ``Always()``, e.g. an LCA), so they must step together in a fused loop rather
+    than run sequentially.  Cue-terminated upstream ops (the toy stab-flex LCA,
+    which settles before the DDM) are NOT ``Always`` and stay sequential.
+    """
+
+    conditions = _scheduler_conditions(composition)
+    order = {_node_name(node): idx for idx, node in enumerate(executable_nodes)}
+    terminators = [
+        node for node in executable_nodes
+        if (spec := specs.mechanism_spec_for(node)) is not None and spec.is_terminator and spec.can_step
+    ]
+    if not terminators:
+        return False
+    for node in executable_nodes:
+        spec = specs.mechanism_spec_for(node)
+        if spec is None or not (spec.can_step and spec.persistent_state):
+            continue
+        if type(conditions.get(node)).__name__ != "Always":
+            continue
+        # an Always-scheduled persistent stepper upstream of a terminator
+        if any(order[_node_name(node)] < order[_node_name(t)] for t in terminators):
+            return True
+    return False
 
 
 def _op_kind(node) -> str:

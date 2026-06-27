@@ -213,6 +213,10 @@ class MechanismOpSpec:
     display_name: str = ""
     params: tuple[ParamBinding, ...] = ()
     states: tuple[StateDecl, ...] = ()
+    # Per-trial state for the co-evolution step form: reset at the start of each
+    # trial (unlike ``states``, which persist across trials).  E.g. a DDM's
+    # accumulated value / step count / finished flag.
+    trial_states: tuple[StateDecl, ...] = ()
     rng: tuple[RngDecl, ...] = ()
     outputs: tuple[OutputDecl, ...] | None = None
     triton_template: TritonOpTemplate | None = None
@@ -220,6 +224,16 @@ class MechanismOpSpec:
     supports: Callable | None = None
     extract_attrs: Callable | None = None
     triton_emit: Callable | None = None
+    # Co-evolution: emit ONE integration step instead of running to completion,
+    # so coupled stateful mechanisms can step together in a fused per-step loop.
+    # step_emit(ctx, node, inputs, outputs, step_var) updates lane state in place
+    # and returns the step's outputs.  finished_output names a per-lane 0/1 flag
+    # (set when that lane has terminated) for an op that terminates the loop.
+    step_emit: Callable | None = None
+    # readout_emit(ctx, node, output_vars) turns the terminator's final trial
+    # state into its modeled outputs after the step loop (e.g. DDM decision/RT).
+    readout_emit: Callable | None = None
+    finished_output: str = ""
     single_node_model_kind: str | None = None
     param_alias_prefixes: tuple[str, ...] = ()
     diagnostics: tuple[str, ...] = ()
@@ -232,6 +246,14 @@ class MechanismOpSpec:
     @property
     def has_triton(self) -> bool:
         return self.triton_template is not None or self.triton_emit is not None
+
+    @property
+    def can_step(self) -> bool:
+        return self.step_emit is not None
+
+    @property
+    def is_terminator(self) -> bool:
+        return bool(self.finished_output)
 
     @property
     def label(self) -> str:
@@ -363,6 +385,10 @@ def batched_op(
     single_node_model_kind: str | None = None,
     param_alias_prefixes: tuple[str, ...] = (),
     diagnostics: tuple[str, ...] = (),
+    step_emit: Callable | None = None,
+    readout_emit: Callable | None = None,
+    trial_states: tuple[StateDecl, ...] = (),
+    finished_output: str = "",
 ):
     """Register a batched op for ``component_class`` from its kernel body.
 
@@ -407,6 +433,10 @@ def batched_op(
                 single_node_model_kind=single_node_model_kind,
                 param_alias_prefixes=param_alias_prefixes,
                 diagnostics=tuple(diagnostics),
+                step_emit=step_emit,
+                readout_emit=readout_emit,
+                trial_states=tuple(trial_states),
+                finished_output=finished_output,
             )
         return body
 
@@ -539,6 +569,10 @@ def _register_mechanism_op(
     single_node_model_kind,
     param_alias_prefixes,
     diagnostics=(),
+    step_emit=None,
+    readout_emit=None,
+    trial_states=(),
+    finished_output="",
 ):
     template = pnl_triton_op(
         name=f"_pnl_triton_{mechanism_class.__name__.lower()}",
@@ -563,6 +597,10 @@ def _register_mechanism_op(
             single_node_model_kind=single_node_model_kind,
             param_alias_prefixes=tuple(param_alias_prefixes),
             diagnostics=tuple(diagnostics),
+            step_emit=step_emit,
+            readout_emit=readout_emit,
+            trial_states=tuple(trial_states),
+            finished_output=finished_output,
         )
     )
 

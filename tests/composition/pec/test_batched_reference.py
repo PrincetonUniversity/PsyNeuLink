@@ -327,15 +327,16 @@ def _register_csi_drift_rate():
 
 def test_csi_surrogate_compiles_and_runs_end_to_end():
     """The full CSI surrogate (the north-star model) compiles and runs on the
-    batched path once its drift-rate UDF op is registered.
+    batched path once its drift-rate UDF op is registered, with both decision
+    outcomes AND response times matching PNL Python mode.
 
     This exercises every milestone together: AtPass(0) scheduling, the
-    instance-level UDF op, the fires-once integrating ``Task Input``, and the
+    instance-level UDF op, the fires-once integrating ``Task Input``, the
     collapsing-threshold control chain (``Threshold Mechanism`` absorbed into the
-    DDM boundary).  We check that it compiles, runs to finite outputs, and that
-    the deterministic *decision outcomes* match PNL Python mode.  Exact RT is NOT
-    asserted: the batched width-2 LCA is a documented approximation
-    (BATCH_COMPILE_WIP.md, "LCA Caveats"), so DDM step counts (hence RT) differ.
+    DDM boundary), and the fused **co-evolution** loop (the ``Always``-scheduled
+    LCA steps together with the DDM, as in PNL).  RT is asserted within a small
+    discretisation tolerance: the batched width-2 LCA is documented and the
+    coupled LCA/DDM boundary crossing can differ by ~1 DDM step.
     """
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
@@ -347,9 +348,11 @@ def test_csi_surrogate_compiles_and_runs_end_to_end():
                               ddm_noise=0.0, lca_noise=0.0)
         report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
         assert report.is_supported, report.unsupported_reasons
+        # The Always-LCA + DDM couple, so this lowers as a fused co-evolution loop.
+        assert report.metadata["fusion_kind"] == "coevolving_graph"
 
         inputs = _csi_inputs(comp)
-        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
         batched = plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=1)
         got = batched.values[0, 0, :, 0, :]
         assert np.all(np.isfinite(got))
@@ -357,8 +360,13 @@ def test_csi_surrogate_compiles_and_runs_end_to_end():
         decision_idx = next(
             i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper()
         )
+        rt_idx = next(
+            i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper()
+        )
         reference = _pnl_python_outcomes(comp, inputs, output_specs=plan.ir.graph.outputs)
         np.testing.assert_allclose(got[:, decision_idx], reference[:, decision_idx], atol=1e-4)
+        # RT parity: within ~2 DDM steps (0.02 s) of PNL's coupled LCA/DDM dynamics.
+        np.testing.assert_allclose(got[:, rt_idx], reference[:, rt_idx], atol=0.02)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
@@ -376,7 +384,7 @@ def test_csi_surrogate_collapsing_threshold_shortens_response_time():
         def mean_rt(collapse):
             comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=collapse,
                                   ddm_noise=0.0, lca_noise=0.0)
-            plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
+            plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
             batched = plan.run(inputs=_csi_inputs(comp), parameter_sets=[{}], num_estimates=1, seed=1)
             rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
             return float(batched.values[0, 0, :, 0, rt_idx].mean())

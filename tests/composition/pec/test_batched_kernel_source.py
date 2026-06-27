@@ -82,7 +82,38 @@ def _stateful_graph_plan():
     ],
 )
 def test_generated_kernel_source_matches_golden(name, plan_factory):
-    source = _source_for(plan_factory())
+    _assert_matches_golden(name, _source_for(plan_factory()))
+
+
+def test_coevolving_graph_source_matches_golden():
+    """The fused co-evolution loop (Always-LCA stepping with the DDM) emission."""
+
+    from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    try:
+        @batched_node_op("Drift Rate Value")
+        def drift_rate(x0, x1, x2, x3, x4, x5, x6):
+            a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
+            b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
+            c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
+            d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
+            pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
+            neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
+            return (pos - neg) * x6
+
+        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+                              ddm_noise=0.0, lca_noise=0.0)
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
+        _assert_matches_golden("coevolving_graph", _source_for(plan))
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
+
+
+def _assert_matches_golden(name, source):
     golden_path = GOLDEN_DIR / f"{name}.py"
 
     if os.environ.get("PNL_UPDATE_KERNEL_GOLDENS"):
