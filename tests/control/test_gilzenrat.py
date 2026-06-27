@@ -112,8 +112,8 @@ class TestGilzenratMechanisms:
         # increase range to 200 to match Figure 2 in Gilzenrat
         for i in range(10):
             results = F.execute(stimulus)
-            plot_v_list.append(results[0][0][0])
-            plot_w_list.append(results[1][0][0])
+            plot_v_list.append(results[0][0])
+            plot_w_list.append(results[1][0])
 
         # ** uncomment the lines below if you want to view the plot:
         # from matplotlib import pyplot as plt

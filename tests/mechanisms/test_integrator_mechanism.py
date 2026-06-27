@@ -45,29 +45,21 @@ class TestReset:
         I.reset_stateful_function_when = Never()
         I.execute(1.0)
 
-        np.testing.assert_allclose([[0.05127053]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.00279552]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.05]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
         I.function.reset(0.01, 0.02, 0.03)
 
-        np.testing.assert_allclose(0.01, I.function.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.02, I.function.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.03, I.function.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.01], [0.02], [0.03]], I.function.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.05127053]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.00279552]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.05]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.05127053]], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([0.05127053], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
         I.execute(1.0)
 
-        np.testing.assert_allclose([[0.06075727]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.02277156]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.08]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.06075727], [0.02277156], [0.08]], I.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.06075727]], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([0.06075727], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
         # I.reset(new_previous_v=0.01, new_previous_w=0.02, new_previous_time=0.03)
         I.reset(0.01, 0.02, 0.03)
@@ -467,13 +459,6 @@ class TestIntegratorFunctions:
 
         expected1 = [[0.05127053]] * 3
         expected2 = [[0.10501801629915011]] * 3
-
-        # The difference in results is caused by a shape mismatch;
-        # default output port values are 1D, giving 2D results in compiled mode
-        # in reality Python returns 2D value per output port for a 3d result
-        if mech_mode == 'Python':
-            expected1 = [[e] for e in expected1]
-            expected2 = [[e] for e in expected2]
 
         if mech_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
             tolerance = {'rtol': 1e-7, 'atol': 1e-8}

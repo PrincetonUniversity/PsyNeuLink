@@ -4886,6 +4886,20 @@ class FitzHughNagumoIntegrator(
         previous_w = self._get_current_parameter_value("previous_w", context)
         previous_time = self._get_current_parameter_value("previous_time", context)
 
+        # Conform variable to the shape of the stateful values. When this is the
+        # integrator_function of a Mechanism, variable is the Mechanism's 2d
+        # variable (num_input_ports x port_size) and so carries an extra leading
+        # (input-port) dimension relative to the 1d stateful values (previous_v,
+        # etc.). Broadcasting the 1d stateful values against that 2d variable
+        # would otherwise inflate the result with an extra dimension (e.g.
+        # (3, 1, 1) instead of (3, 1)), inconsistent with the value computed
+        # during initialization and with compiled execution (which unwraps the
+        # same dimension; see helpers.unwrap_2d_array). Standalone use with a
+        # genuinely 2d variable (matching 2d stateful values) is unaffected.
+        # reshape raises if variable and the stateful values are incompatible.
+        if np.ndim(variable) > np.ndim(previous_v):
+            variable = np.reshape(variable, np.shape(previous_v))
+
         # integration_method is a compile time parameter
         integration_method = self.parameters.integration_method.get()
         if integration_method == "RK4":
