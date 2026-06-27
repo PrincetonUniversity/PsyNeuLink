@@ -37,6 +37,7 @@ lookups - are declared explicitly through the ``bind=`` mapping with
 from __future__ import annotations
 
 import inspect
+import re
 from dataclasses import dataclass, replace
 from typing import Any, Callable, Mapping
 
@@ -307,10 +308,18 @@ def function_spec_for(function) -> ElementwiseFunctionSpec | None:
 def mechanism_spec_for(node) -> MechanismOpSpec | None:
     # An instance-level op (keyed by node name) takes precedence over the
     # node's class-level spec, so a single node can override its class default.
-    instance_spec = _INSTANCE_SPECS.get(getattr(node, "name", None))
-    if instance_spec is not None:
-        return instance_spec
+    # Rebuilding a model in one process suffixes duplicate names ("Foo" ->
+    # "Foo-1"), so match the unsuffixed name too (as parameter aliases do).
+    name = getattr(node, "name", None)
+    if name is not None:
+        instance_spec = _INSTANCE_SPECS.get(name) or _INSTANCE_SPECS.get(_unsuffixed_name(name))
+        if instance_spec is not None:
+            return instance_spec
     return _MECHANISM_SPECS.get(type(node))
+
+
+def _unsuffixed_name(name: str) -> str:
+    return re.sub(r"-\d+$", "", name)
 
 
 def passthrough_spec_for(node) -> PassthroughMechanismSpec | None:

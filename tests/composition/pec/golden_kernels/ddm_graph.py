@@ -13,19 +13,21 @@ def _pnl_triton_projection_term(x, coefficient):
 
 
 @triton.jit
-def _pnl_triton_ddm(x, rate, noise, threshold, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
+def _pnl_triton_ddm(x, rate, noise, threshold, threshold_collapse, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
     value = starting_value
     steps = tl.zeros_like(x)
     sqrt_dt = tl.sqrt(time_step_size)
     boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
+    thr = threshold
     for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
-        active = tl.abs(value) + boundary_tolerance < threshold
+        thr = threshold + threshold_collapse * step
+        active = tl.abs(value) + boundary_tolerance < thr
         draw = tl.randn(seed, rng_base + step)
         updated = value + rate * x * time_step_size + noise * sqrt_dt * draw
-        updated = tl.minimum(tl.maximum(updated + offset, -threshold), threshold)
+        updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
         value = tl.where(active, updated, value)
         steps += tl.where(active, 1.0, 0.0)
-    truncated = tl.where(tl.abs(value) + boundary_tolerance < threshold, 1.0, 0.0)
+    truncated = tl.where(tl.abs(value) + boundary_tolerance < thr, 1.0, 0.0)
     return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated)
 
 
@@ -41,6 +43,7 @@ def pnl_batched_ddm_graph_kernel(
     param_6,
     param_7,
     param_8,
+    param_9,
     out,
     diag,
     total_lanes: tl.constexpr,
@@ -67,9 +70,10 @@ def pnl_batched_ddm_graph_kernel(
     param_3_value = tl.load(param_3 + param_idx, mask=mask, other=0.0)
     param_4_value = tl.load(param_4 + param_idx, mask=mask, other=0.05)
     param_5_value = tl.load(param_5 + param_idx, mask=mask, other=0.0)
-    param_6_value = tl.load(param_6 + param_idx, mask=mask, other=0.01)
-    param_7_value = tl.load(param_7 + param_idx, mask=mask, other=0.0)
+    param_6_value = tl.load(param_6 + param_idx, mask=mask, other=0.0)
+    param_7_value = tl.load(param_7 + param_idx, mask=mask, other=0.01)
     param_8_value = tl.load(param_8 + param_idx, mask=mask, other=0.0)
+    param_9_value = tl.load(param_9 + param_idx, mask=mask, other=0.0)
 
     n_stimulus_RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
 
@@ -81,7 +85,7 @@ def pnl_batched_ddm_graph_kernel(
         random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx) * MAX_STEPS
     else:
         random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx) * MAX_STEPS
-    n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, SEED, random_base, MAX_STEPS)
+    n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, SEED, random_base, MAX_STEPS)
 
     diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
     tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)

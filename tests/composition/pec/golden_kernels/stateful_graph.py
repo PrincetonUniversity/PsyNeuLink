@@ -31,19 +31,21 @@ def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gai
 
 
 @triton.jit
-def _pnl_triton_ddm(x, rate, noise, threshold, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
+def _pnl_triton_ddm(x, rate, noise, threshold, threshold_collapse, non_decision_time, time_step_size, starting_value, offset, seed, rng_base, max_steps: tl.constexpr):
     value = starting_value
     steps = tl.zeros_like(x)
     sqrt_dt = tl.sqrt(time_step_size)
     boundary_tolerance = tl.maximum(1e-07, threshold * 1e-06)
+    thr = threshold
     for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
-        active = tl.abs(value) + boundary_tolerance < threshold
+        thr = threshold + threshold_collapse * step
+        active = tl.abs(value) + boundary_tolerance < thr
         draw = tl.randn(seed, rng_base + step)
         updated = value + rate * x * time_step_size + noise * sqrt_dt * draw
-        updated = tl.minimum(tl.maximum(updated + offset, -threshold), threshold)
+        updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
         value = tl.where(active, updated, value)
         steps += tl.where(active, 1.0, 0.0)
-    truncated = tl.where(tl.abs(value) + boundary_tolerance < threshold, 1.0, 0.0)
+    truncated = tl.where(tl.abs(value) + boundary_tolerance < thr, 1.0, 0.0)
     return (tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated)
 
 
@@ -88,6 +90,7 @@ def pnl_batched_stateful_graph_kernel(
     param_32,
     param_33,
     param_34,
+    param_35,
     out,
     diag,
     total_lanes: tl.constexpr,
@@ -134,14 +137,15 @@ def pnl_batched_stateful_graph_kernel(
     param_24_value = tl.load(param_24 + param_idx, mask=mask, other=1.0)
     param_25_value = tl.load(param_25 + param_idx, mask=mask, other=0.0)
     param_26_value = tl.load(param_26 + param_idx, mask=mask, other=0.05)
-    param_27_value = tl.load(param_27 + param_idx, mask=mask, other=0.2)
-    param_28_value = tl.load(param_28 + param_idx, mask=mask, other=0.01)
-    param_29_value = tl.load(param_29 + param_idx, mask=mask, other=0.0)
+    param_27_value = tl.load(param_27 + param_idx, mask=mask, other=0.0)
+    param_28_value = tl.load(param_28 + param_idx, mask=mask, other=0.2)
+    param_29_value = tl.load(param_29 + param_idx, mask=mask, other=0.01)
     param_30_value = tl.load(param_30 + param_idx, mask=mask, other=0.0)
-    param_31_value = tl.load(param_31 + param_idx, mask=mask, other=1.0)
-    param_32_value = tl.load(param_32 + param_idx, mask=mask, other=0.0)
-    param_33_value = tl.load(param_33 + param_idx, mask=mask, other=1.0)
-    param_34_value = tl.load(param_34 + param_idx, mask=mask, other=0.0)
+    param_31_value = tl.load(param_31 + param_idx, mask=mask, other=0.0)
+    param_32_value = tl.load(param_32 + param_idx, mask=mask, other=1.0)
+    param_33_value = tl.load(param_33 + param_idx, mask=mask, other=0.0)
+    param_34_value = tl.load(param_34 + param_idx, mask=mask, other=1.0)
+    param_35_value = tl.load(param_35 + param_idx, mask=mask, other=0.0)
 
     n_Task_Activations__Act1__Act2__pre_0 = tl.full((BLOCK,), 0.0, tl.float32)
     n_Task_Activations__Act1__Act2__pre_1 = tl.full((BLOCK,), 0.0, tl.float32)
@@ -222,7 +226,7 @@ def pnl_batched_stateful_graph_kernel(
 
         n_DDM_input_0 = (n_DDM_projection_0_0)
 
-        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, SEED, random_base + (2) * LCA_MAX_STEPS + (0) * MAX_STEPS, MAX_STEPS)
+        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, param_31_value, SEED, random_base + (2) * LCA_MAX_STEPS + (0) * MAX_STEPS, MAX_STEPS)
 
         diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
         tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)
@@ -230,13 +234,13 @@ def pnl_batched_stateful_graph_kernel(
 
         n_DECISION_GATE_input_0 = (n_DECISION_GATE_projection_0_0)
 
-        n_DECISION_GATE_OutputPort_0_0 = _pnl_triton_linear(n_DECISION_GATE_input_0, param_31_value, param_32_value)
+        n_DECISION_GATE_OutputPort_0_0 = _pnl_triton_linear(n_DECISION_GATE_input_0, param_32_value, param_33_value)
 
         n_RESPONSE_GATE_projection_0_0 = _pnl_triton_projection_term(n_DDM_RESPONSE_TIME_0, 1.0)
 
         n_RESPONSE_GATE_input_0 = (n_RESPONSE_GATE_projection_0_0)
 
-        n_RESPONSE_GATE_OutputPort_0_0 = _pnl_triton_linear(n_RESPONSE_GATE_input_0, param_33_value, param_34_value)
+        n_RESPONSE_GATE_OutputPort_0_0 = _pnl_triton_linear(n_RESPONSE_GATE_input_0, param_34_value, param_35_value)
 
         lane_out = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 2
         tl.store(out + lane_out + 0, n_DECISION_GATE_OutputPort_0_0, mask=mask)

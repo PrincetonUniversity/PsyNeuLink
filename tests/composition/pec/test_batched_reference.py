@@ -278,40 +278,110 @@ def test_csi_drift_rate_udf_instance_op_clears_node_rejection():
 
     `Drift Rate Value` is a ProcessingMechanism wrapping a UserDefinedFunction
     (a nested logistic reducing its 7-wide combined input to a scalar); the
-    class-keyed registry cannot express it.  Registering a `batched_node_op` for
-    that node removes it from the rejected set.  Only the diagnostic is checked
-    here: the two `integrator_mode` transfers still block a full compile (roadmap
-    step 7), so end-to-end CSI execution is deferred.
+    class-keyed registry cannot express it.  Without an instance op it is the
+    sole remaining node rejection for `iti=0` (Task Input and Threshold Mechanism
+    are handled by later milestones); registering one makes the whole model
+    `is_supported`.
     """
 
-    csi_dir = Path(__file__).resolve().parents[0]
-    sys.path.insert(0, str(csi_dir.parents[2] / "Scripts" / "Debug" / "pec_batch_compile"))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
     from csi_model_surrogate import make_stab_flex
 
     comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0)
 
     before = {d.component for d in BatchedCompositionCompiler.diagnose(comp).rejected_nodes}
-    assert "Drift Rate Value" in before
+    assert any("Drift Rate Value" in name for name in before)
 
     try:
-        # Faithful tl transcription of csi_model_surrogate.drift_rate_fct,
-        # mapping input[0][i] -> xi (no closures: sigmoids inlined).
-        @batched_node_op("Drift Rate Value")
-        def drift_rate(x0, x1, x2, x3, x4, x5, x6):
-            a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
-            b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
-            c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
-            d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
-            pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
-            neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
-            return (pos - neg) * x6
+        _register_csi_drift_rate()
+        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+        assert report.is_supported, report.unsupported_reasons
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
 
-        report = BatchedCompositionCompiler.diagnose(comp)
-        rejected = {d.component: d.reason for d in report.rejected_nodes}
-        assert "Drift Rate Value" not in rejected
-        # Scope check: the integrator_mode transfers still block full compile.
-        assert "integrator_mode" in rejected.get("Task Input", "")
-        assert "integrator_mode" in rejected.get("Threshold Mechanism", "")
+
+def _csi_inputs(comp):
+    import re
+    def node(base):
+        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
+    return {
+        node("Stimulus Input"): [[1, 0, 1, 0], [0, 1, 0, 1]],
+        node("Task Input"): [[1, 0], [0, 1]],
+        node("Correct Response"): [[1], [-1]],
+        node("Cue Stimulus Interval"): [[0], [0]],
+    }
+
+
+def _register_csi_drift_rate():
+    # Faithful tl transcription of csi_model_surrogate.drift_rate_fct.
+    @batched_node_op("Drift Rate Value")
+    def drift_rate(x0, x1, x2, x3, x4, x5, x6):
+        a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
+        b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
+        c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
+        d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
+        pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
+        neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
+        return (pos - neg) * x6
+
+
+def test_csi_surrogate_compiles_and_runs_end_to_end():
+    """The full CSI surrogate (the north-star model) compiles and runs on the
+    batched path once its drift-rate UDF op is registered.
+
+    This exercises every milestone together: AtPass(0) scheduling, the
+    instance-level UDF op, the fires-once integrating ``Task Input``, and the
+    collapsing-threshold control chain (``Threshold Mechanism`` absorbed into the
+    DDM boundary).  We check that it compiles, runs to finite outputs, and that
+    the deterministic *decision outcomes* match PNL Python mode.  Exact RT is NOT
+    asserted: the batched width-2 LCA is a documented approximation
+    (BATCH_COMPILE_WIP.md, "LCA Caveats"), so DDM step counts (hence RT) differ.
+    """
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    try:
+        _register_csi_drift_rate()
+        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+                              ddm_noise=0.0, lca_noise=0.0)
+        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+        assert report.is_supported, report.unsupported_reasons
+
+        inputs = _csi_inputs(comp)
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
+        batched = plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=1)
+        got = batched.values[0, 0, :, 0, :]
+        assert np.all(np.isfinite(got))
+
+        decision_idx = next(
+            i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper()
+        )
+        reference = _pnl_python_outcomes(comp, inputs, output_specs=plan.ir.graph.outputs)
+        np.testing.assert_allclose(got[:, decision_idx], reference[:, decision_idx], atol=1e-4)
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
+
+
+def test_csi_surrogate_collapsing_threshold_shortens_response_time():
+    """The absorbed collapsing-threshold chain actually drives the DDM boundary:
+    a collapsing threshold reaches a decision sooner than a fixed one."""
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    try:
+        _register_csi_drift_rate()
+
+        def mean_rt(collapse):
+            comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=collapse,
+                                  ddm_noise=0.0, lca_noise=0.0)
+            plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
+            batched = plan.run(inputs=_csi_inputs(comp), parameter_sets=[{}], num_estimates=1, seed=1)
+            rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
+            return float(batched.values[0, 0, :, 0, rt_idx].mean())
+
+        assert mean_rt(-0.001) < mean_rt(0.0)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 

@@ -54,6 +54,11 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     specs.ensure_builtin_specs()
 
     nodes = _composition_nodes(composition)
+    # Nodes absorbed into another op's kernel (e.g. a collapsing-threshold
+    # integrator folded into the DDM boundary) are not lowered as graph nodes.
+    absorbed = _absorbed_nodes(composition, nodes)
+    if absorbed:
+        nodes = [node for node in nodes if _node_name(node) not in absorbed]
     node_names = {_node_name(node) for node in nodes}
     params = _ParamBuilder()
     rejected_nodes: list[BatchedDiagnostic] = []
@@ -136,6 +141,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             scheduler=tuple(
                 BatchedSchedulerSpec(_node_name(node), type(condition).__name__)
                 for node, condition in _scheduler_conditions(composition).items()
+                if _node_name(node) in node_names
             ),
             ops=ops,
             execution_order=execution_order,
@@ -459,6 +465,10 @@ def _classify_schedule(composition, nodes) -> tuple[str, list[str], list[Batched
 
     for node, condition in conditions.items():
         node_name = _node_name(node)
+        # Skip conditions on nodes that are not lowered as graph ops (absorbed
+        # into another op's kernel); their timing is handled by that op.
+        if node_name not in node_index:
+            continue
         condition_name = type(condition).__name__
         condition_schedule_kind = _condition_schedule_kind(condition, node, node_index)
         supported.append(f"{node_name}: {condition_name}")
@@ -595,6 +605,26 @@ def _integrating_transfer_affine(node, composition) -> tuple[float, float] | Non
         offset = specs.resolve_component_param(integrator, "offset", 0.0)
         return (rate, init + offset)
     return None
+
+
+def _absorbed_nodes(composition, nodes) -> set[str]:
+    """Names of nodes folded into another op's kernel rather than lowered.
+
+    Currently: the stateful integrating transfer that drives a DDM's collapsing
+    threshold (its per-step offset is read directly into the DDM boundary, so the
+    node itself is not executed as a graph op).
+    """
+
+    from psyneulink.core.batched.components.ddm import threshold_override_collapse
+
+    absorbed: set[str] = set()
+    for node in nodes:
+        if type(node).__name__ != "DDM":
+            continue
+        chain = threshold_override_collapse(node)
+        if chain is not None:
+            absorbed.add(chain[0])
+    return absorbed
 
 
 def _combine_name(node) -> str:

@@ -602,7 +602,13 @@ def test_batched_compiler_accepts_stateless_transfer():
 
 
 @pytest.mark.composition
-def test_csi_surrogate_integrator_mode_transfers_are_rejected():
+def test_csi_surrogate_with_iti_defers_at_pass_onset():
+    # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset
+    # that is recognized but not executable yet (precomputed_trace), so the model
+    # is rejected at the scheduler level.  The integrator_mode transfers
+    # themselves are now handled -- Task Input lowers as a fires-once integrator
+    # and Threshold Mechanism is absorbed into the DDM boundary -- so they are no
+    # longer node-level rejections.
     csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
@@ -611,10 +617,14 @@ def test_csi_surrogate_integrator_mode_transfers_are_rejected():
     report = BatchedCompositionCompiler.diagnose(comp)
 
     assert not report.is_supported
-    rejected = {d.component: d.reason for d in report.rejected_nodes}
-    # The two integrator_mode=True transfers must be rejected, not silently accepted.
-    assert "integrator_mode" in rejected.get("Task Input", "")
-    assert "integrator_mode" in rejected.get("Threshold Mechanism", "")
+    assert "AtPass" in "; ".join(report.unsupported_reasons)
+    rejected_nodes = {d.component for d in report.rejected_nodes}
+    # Absorbed / handled, not rejected as integrator_mode any more.
+    assert not any("Threshold Mechanism" in name for name in rejected_nodes)
+    assert not any(
+        "Task Input" in d.component and "integrator_mode" in d.reason
+        for d in report.rejected_nodes
+    )
 
 
 @pytest.mark.composition

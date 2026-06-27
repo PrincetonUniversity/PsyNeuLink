@@ -292,39 +292,41 @@ researcher actually runs is the **CSI surrogate** stability-flexibility model in
 target for "supporting researchers' models," and the roadmap in "Good Next
 Steps" is scoped to close the gap to it.
 
-`BatchedCompositionCompiler.diagnose()` currently **rejects** it. Explicit
-rejections: the `driftRate` `UserDefinedFunction`; `AtPass` scheduler conditions
-on five nodes; and (as of roadmap step 1) `taskInput` and `thresholdMechanism`,
-which are `TransferMechanism`s with `integrator_mode=True` — these are stateful
-integrators and are now rejected rather than silently lowered as stateless
-`Linear`.
-
-Gaps (each maps to a milestone in "Good Next Steps"):
+`BatchedCompositionCompiler.diagnose()` now **accepts** the CSI surrogate (with
+`iti=0`) once its `driftRate` op is registered: `make_stab_flex(iti=0)` is
+`is_supported`, compiles, and runs (decision outcomes match PNL Python;
+see "CSI status" below). The original gaps and how each was closed:
 
 1. **Custom / UDF reduction op** (`driftRate`, a nested-logistic reducing a
-   7-vector to a scalar) — RESOLVED (roadmap step 6). UDFs share one class so the
-   class-keyed registry could not bind it; `batched_node_op("<node name>")` now
+   7-vector to a scalar) — RESOLVED (step 6). `batched_node_op("<node name>")`
    registers an instance-level op whose `tl` body takes the node's whole input
-   vector. (Not strictly elementwise: it is a cross-element reduction, so it rides
-   the mechanism/`triton_emit` path, not the scalar→scalar elementwise path.)
-2. **Stateful integrating `TransferMechanism`** (`integrator_mode=True` with
-   `reset_stateful_function_when=AtTrialStart`) -> needs a **stateful
-   integrating-transfer op** (lane state + per-trial reset). *Near-term:* reject
-   `integrator_mode=True` instead of silently mis-running it.
-3. **`AtPass` / `WhenFinished` multi-pass timing** (the CSI/ITI mechanism) ->
-   needs **scheduler-pattern recognition** mapping the idiom to the existing
-   cue-driven stateful graph (broader than `EveryNCalls` precomputed traces).
-4. **Collapsing DDM threshold** (`threshold_collapse` + a control mechanism
-   rewriting the DDM `threshold` each step) -> needs a **time-varying DDM
-   boundary** in the kernel.
-5. **Control mechanisms with transform functions** (`csiOverride`/
-   `thresholdOverride` apply a `Linear` then OVERRIDE a target param) -> needs
-   **general control-mechanism routing** (apply function; route to arbitrary
-   target parameter).
+   vector. (A cross-element reduction, so it rides the mechanism/`triton_emit`
+   path, not the scalar→scalar elementwise path.)
+2. **Stateful integrating `TransferMechanism`** (`taskInput`) — RESOLVED (step 7).
+   A fires-once (`AtPass`), reset-each-trial (`AtTrialStart`) integrator advances
+   one affine step from its initializer and lowers statelessly as
+   `function(a*input + b)`.
+3. **`AtPass` multi-pass timing** — RESOLVED (step 4, `iti=0`). `AtPass(0)` lowers
+   as a static graph; `AtPass(n>0)` (the ITI onset) is still deferred.
+4. **Collapsing DDM threshold** (`threshold_collapse`) — RESOLVED (step 8). The
+   DDM kernel boundary is now `threshold(step) = threshold + collapse*step`.
+5. **Control routing** (`csiOverride`/`thresholdOverride` OVERRIDE a target
+   param) — RESOLVED. `csiOverride` -> LCA `termination_threshold` was already
+   handled by the LCA cue extraction; `thresholdOverride` -> DDM `threshold`
+   (monitoring the `thresholdMechanism` SimpleIntegrator) is recognized in step 8
+   and the `thresholdMechanism` is **absorbed** into the DDM boundary (not lowered
+   as its own op).
 
-None are fundamentally incompatible with the batched architecture — the
-cue-driven LCA and stateful-graph lane model already point the right way — but
-together they are a multi-milestone effort.
+### CSI status
+
+`make_stab_flex(iti=0)` compiles and runs end-to-end on `triton_cpu`/`triton`.
+Deterministic **decision outcomes match** PNL Python mode. **RT does not match
+exactly**: the batched width-2 LCA is a documented approximation (see "LCA
+Caveats"), so the cue-driven LCA step count — hence the DDM drift it feeds and
+the resulting DDM step count / RT — differs from PNL's real `LCAMechanism`
+dynamics. Closing that is roadmap step 5 (generalize LCA). Remaining for the
+full PEC fit: `iti>0` (`AtPass(n>0)`, rest of step 4), GPU likelihood/KDE
+(step 9), and PEC fit routing (step 10).
 
 ## Fusion and Lane Layout
 
@@ -640,6 +642,24 @@ environments to persist results.
   `test_batched_compile.py` (fires-once accepted / no-schedule rejected) and
   `test_batched_reference.py` (Adaptive rate=0.5 + Logistic matches PNL Python).
 
+- **Collapsing DDM threshold + control routing** (roadmap step 8). The DDM kernel
+  boundary is now time-varying: `threshold(step) = threshold + threshold_collapse
+  * step` (`threshold_collapse=0` for an ordinary DDM, so its behavior — and the
+  non-CSI numerics — are unchanged; the DDM goldens were regenerated for the new
+  `threshold_collapse` arg). `components/ddm.py:threshold_override_collapse`
+  recognizes a `ControlMechanism` that OVERRIDEs the DDM `threshold` from a
+  SimpleIntegrator transfer (`Identity`/`Linear` control fn) and reads its
+  per-step `offset` as the collapse rate, bound into the kernel via
+  `param(get=ddm_threshold_collapse)`. The driving `Threshold Mechanism` is
+  **absorbed**: `graph.py:_absorbed_nodes` drops it (and its `WhenFinished`
+  schedule entry) from the lowered graph, since its effect lives entirely in the
+  DDM boundary. Instance-op matching is now suffix-insensitive
+  (`mechanism_spec_for` strips a `-\d+` rebuild suffix) so a registered op keeps
+  matching across in-process model rebuilds. **Completes CSI compilation**
+  (`iti=0`): `test_batched_reference.py` asserts the surrogate compiles + runs
+  with decision outcomes matching PNL, and that a collapsing threshold shortens
+  RT vs a fixed one. (RT itself is not asserted equal — LCA approximation.)
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -684,9 +704,11 @@ steps 9-10 make the full PEC fit run on the batched path.
    integrating transfer* (one that accumulates within a trial, e.g. the CSI
    `Threshold Mechanism`, which steps with the DDM): folded into step 8.
 
-8. **Time-varying DDM boundary + control routing** (gaps 4-5). Collapsing
-   threshold in the DDM kernel (`threshold(step)=θ₀+collapse·step`); control
-   mechanisms apply their function and route to arbitrary target parameters.
+8. **Time-varying DDM boundary + control routing** (gaps 4-5) — DONE (see Done
+   above). The DDM kernel boundary is `threshold(step)=threshold+collapse*step`;
+   a control mechanism OVERRIDE'ing the DDM `threshold` from a SimpleIntegrator
+   transfer is recognized and that transfer is absorbed into the DDM. Completes
+   CSI compilation (`iti=0`).
 
 9. **GPU likelihood/KDE.** Torch port of `fitfunctions.simulation_likelihood` so
    PEC objective aggregation runs near the GPU execution path (the current
