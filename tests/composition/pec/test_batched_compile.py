@@ -531,6 +531,37 @@ def test_batched_compiler_reports_unimplemented_precomputed_scheduler():
 
 
 @pytest.mark.composition
+def test_batched_compiler_accepts_at_pass_zero_condition():
+    # AtPass(0) ("fire only on pass 0") is the batched origin default (each node
+    # computes once per trial), so it lowers as a static graph, not a rejection.
+    mech = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear(slope=2.0), name="linear")
+    comp = pnl.Composition(pathways=mech)
+    comp.scheduler.add_condition(mech, pnl.AtPass(0))
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert report.is_supported
+    assert not report.rejected_conditions
+    assert report.metadata["schedule_kind"] == "static_graph"
+
+
+@pytest.mark.composition
+def test_batched_compiler_defers_at_pass_nonzero_condition():
+    # AtPass(n>0) is a delayed within-trial onset (e.g. ITI); it is recognized
+    # but not executable yet, and must be deferred rather than silently mis-timed
+    # as a static graph.
+    mech = pnl.TransferMechanism(input_shapes=1, name="linear")
+    comp = pnl.Composition(pathways=mech)
+    comp.scheduler.add_condition(mech, pnl.AtPass(3))
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert not report.is_supported
+    assert report.metadata["schedule_kind"] == "precomputed_trace"
+    unsupported = "; ".join(report.unsupported_reasons)
+    assert "AtPass" in unsupported
+    assert "not executable yet" in unsupported
+
+
+@pytest.mark.composition
 def test_batched_compiler_rejects_unsupported_lca_width():
     lca = pnl.LCAMechanism(input_shapes=3, name="wide_lca")
     comp = pnl.Composition(pathways=lca)

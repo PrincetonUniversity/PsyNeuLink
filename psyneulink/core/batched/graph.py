@@ -494,6 +494,20 @@ def _condition_schedule_kind(condition, node, node_index: dict[str, int]) -> str
         if node_index.get(target_name, -1) < node_index.get(_node_name(node), -1):
             return STATIC_GRAPH_SCHEDULE
         return DYNAMIC_LANE_LOCAL_SCHEDULE
+    if condition_name == "AtPass":
+        # AtPass(0) means "fire only on pass 0 of the trial".  In the batched
+        # static/stateful graph every node already computes once per trial
+        # (origins load their input once and hold it), so "fire once at trial
+        # start" is exactly the batched origin semantics -> static graph.
+        # AtPass(n>0) is a delayed within-trial onset (e.g. ITI before taskInput
+        # becomes active); modeling that requires precomputed per-pass timing,
+        # so it is recognized but not executable yet rather than silently
+        # mis-timed as static.
+        args = getattr(condition, "args", ())
+        n = args[0] if args else 0
+        if n == 0:
+            return STATIC_GRAPH_SCHEDULE
+        return PRECOMPUTED_TRACE_SCHEDULE
     if condition_name in _PRECOMPUTED_TRACE_CONDITIONS:
         return PRECOMPUTED_TRACE_SCHEDULE
     if condition_name in _DYNAMIC_LANE_LOCAL_CONDITIONS:

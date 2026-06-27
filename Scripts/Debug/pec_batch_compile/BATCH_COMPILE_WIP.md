@@ -589,6 +589,20 @@ environments to persist results.
   visibility" above for the LCA scoping note. DDM + stateful goldens were
   regenerated for the new `diag` arg / store.
 
+- **`AtPass(0)` scheduling recognition** (roadmap step 4, first increment).
+  `graph.py:_condition_schedule_kind` now recognizes `AtPass`: `AtPass(0)` ("fire
+  only on pass 0") lowers as `static_graph` — exactly the batched origin default
+  (each node computes once per trial) — so the CSI surrogate's four `AtPass(0)`
+  origins plus `csiOverride` are accepted instead of rejected. `AtPass(n>0)` (the
+  ITI-delayed `taskInput` onset) is recognized but deferred as `precomputed_trace`
+  rather than silently mis-timed as static. `schedule_kind` is informational only
+  (fusion is driven by node types), so no emit/runtime/golden changes were needed.
+  Tested in `test_batched_compile.py` (accept `AtPass(0)` / defer `AtPass(n>0)`)
+  and `test_batched_reference.py` (deterministic stab-flex with explicit
+  `AtPass(0)` origins still matches PNL Python). With `iti=0`, the CSI model's 5
+  `AtPass` scheduler rejections are gone; only the node-level gaps (steps 5-8)
+  remain.
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -606,12 +620,14 @@ steps 9-10 make the full PEC fit run on the batched path.
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.
 
-4. **Tiered scheduling** (pay only when needed). Precomputed per-trial traces for
-   `EveryNCalls`-style conditions, **plus** recognition of the `AtPass(0)`
-   origins / `Always` LCA / `WhenFinished(LCA)` idiom (gap 3) so the CSI/ITI
-   multi-pass timing lowers to the existing cue-driven stateful graph. Prefer
-   static erasure / precomputed traces over dynamic lane-local scheduler state
-   (which would recreate the LLVM/PTX overhead problem).
+4. **Tiered scheduling** (pay only when needed) — PARTIALLY DONE. Recognition of
+   the `AtPass(0)` origins / `Always` LCA / `WhenFinished(LCA)` idiom (gap 3) is
+   done (see Done above): the CSI/ITI idiom with `iti=0` now lowers to the
+   existing cue-driven stateful graph. **Remaining:** precomputed per-trial traces
+   for `EveryNCalls`-style conditions, and the `AtPass(n>0)` ITI-delayed onset
+   (currently deferred as `precomputed_trace`). Prefer static erasure / precomputed
+   traces over dynamic lane-local scheduler state (which would recreate the
+   LLVM/PTX overhead problem).
 
 5. **Generalize LCA.** Width-2 scalar recurrence -> width-N matrix/vector
    recurrence (custom `triton_emit`), reading the real recurrent matrix; also

@@ -226,6 +226,29 @@ def test_stability_flexibility_lca_deterministic_matches_pnl_python():
     _assert_matches_pnl_python(comp, inputs, max_steps=256, seed=3)
 
 
+def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python():
+    """Adding explicit ``AtPass(0)`` conditions on the origin nodes must not
+    change lowering or results.
+
+    The CSI surrogate model schedules its origins with ``AtPass(0)`` ("fire only
+    on pass 0").  That is exactly the batched origin default (each node computes
+    once per trial), so the schedule classifier accepts it as a static graph.
+    This pins the equivalence: the deterministic stab-flex model still lowers and
+    matches PNL Python mode once those explicit conditions are present.
+    """
+
+    comp, inputs = _make_stab_flex_deterministic()
+    for origin in comp.get_nodes_by_role(pnl.NodeRole.ORIGIN):
+        comp.scheduler.add_condition(origin, pnl.AtPass(0))
+
+    report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+    assert report.is_supported
+    assert not report.rejected_conditions
+    assert report.metadata["schedule_kind"] == "static_graph"
+
+    _assert_matches_pnl_python(comp, inputs, max_steps=256, seed=3)
+
+
 def test_ddm_stochastic_matches_pnl_python_statistics():
     """Zero-drift DDM: batched and PNL summary statistics agree over many samples."""
 
