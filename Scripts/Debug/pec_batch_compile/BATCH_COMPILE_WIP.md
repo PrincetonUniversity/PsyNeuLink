@@ -327,6 +327,18 @@ DDM step together each timestep rather than running sequentially. Remaining for
 the full PEC fit: `iti>0` (`AtPass(n>0)`, rest of step 4), GPU likelihood/KDE
 (step 9), and PEC fit routing (step 10).
 
+**Benchmark (vs LLVM PEC).** `csi_triton_vs_llvm.py` compares the co-evolving
+CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
+the same workload (sweeping `non_decision_time` — the DDM `threshold` is already
+controlled, so PEC cannot also modulate it; that conflict raises
+`len(mod_afferents) <= 1` in LLVM). At PEC scale (4 params x 512 estimates x 128
+trials = 262k sims, RTX 2080 Ti): **triton ~57 ms (4.6M sims/s) vs LLVM ~3.5 s
+(75k sims/s) -> ~62x**, and triton throughput rises with lane count. Note the
+checksum vs LLVM diverges mainly because PNL's **own LLVM mode disagrees with its
+Python mode** on the fresh-LCA first trial (RT 1.23 vs 0.53); the batched path
+matches PNL **Python** (the test-suite reference) trial-for-trial. asv tracks the
+co-evolving path via the `CSISurrogate` benchmark in `benchmarks/batched.py`.
+
 ## Fusion and Lane Layout
 
 Current fusion kinds:

@@ -6,7 +6,8 @@ representative models, swept over the number of estimates (GPU lanes):
 - `DDM`         — single DDM (ddm fusion)
 - `DDMGraph`    — transfer -> DDM (ddm_graph fusion)
 - `LCA`         — isolated width-2 LCA, cue-driven (stateful_graph fusion)
-- `StabilityFlexibility` — LCA + DDM graph (stateful_graph fusion)
+- `StabilityFlexibility` — toy LCA + DDM (stateful_graph fusion)
+- `CSISurrogate`  — co-evolving LCA + DDM (coevolving_graph fusion); realistic model
 
 The kernel is compiled and warmed up in `setup()`, so the timed methods measure
 only the batched simulation (not one-time compilation). Each warmup records an
@@ -25,9 +26,23 @@ import numpy as np
 
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "tests" / "composition" / "pec"))
+sys.path.insert(0, str(_REPO / "Scripts" / "Debug" / "pec_batch_compile"))
 
 import psyneulink as pnl  # noqa: E402
-from psyneulink.core.batched import BatchedCompositionCompiler  # noqa: E402
+from psyneulink.core.batched import BatchedCompositionCompiler, batched_node_op  # noqa: E402
+
+
+# The CSI surrogate's drift-rate UDF, registered as an instance op (the body uses
+# `tl`, resolved at emission). Module-level so it is registered once on import.
+@batched_node_op("Drift Rate Value")
+def _csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
+    a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
+    b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
+    c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
+    d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
+    pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
+    neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
+    return (pos - neg) * x6
 
 
 TRIALS = 128
@@ -131,6 +146,35 @@ def _build_stab_flex():
     return plan, inputs, param_sets
 
 
+def _build_csi():
+    """The CSI surrogate (co-evolving LCA+DDM): the north-star research model."""
+
+    from csi_model_surrogate import make_stab_flex
+
+    comp = make_stab_flex(
+        iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+        ddm_noise=0.1, lca_noise=0.0,
+    )
+
+    def node(base):
+        import re
+        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
+
+    half = TRIALS // 2
+    inputs = {
+        node("Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1)),
+        node("Task Input"): np.tile([[1, 0], [0, 1]], (half, 1)),
+        node("Correct Response"): np.tile([[1], [-1]], (half, 1)),
+        node("Cue Stimulus Interval"): np.zeros((TRIALS, 1)),
+    }
+    plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=512)
+    param_sets = [
+        {"DDM.threshold": 0.06, "DDM.noise": 0.1, "Task Activations [C1, C2].noise": 0.0}
+        for _ in range(PARAM_SETS)
+    ]
+    return plan, inputs, param_sets
+
+
 class _BatchedBenchmark:
     """Shared setup/run logic. Subclasses set `params`, `_seed`, and `_build`."""
 
@@ -179,3 +223,11 @@ class StabilityFlexibility(_BatchedBenchmark):
     params = STATEFUL_ESTIMATES
     _seed = 3
     _build = staticmethod(_build_stab_flex)
+
+
+class CSISurrogate(_BatchedBenchmark):
+    """Co-evolving LCA+DDM (coevolving_graph fusion) — the realistic research model."""
+
+    params = STATEFUL_ESTIMATES
+    _seed = 3
+    _build = staticmethod(_build_csi)
