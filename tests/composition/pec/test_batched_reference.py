@@ -204,6 +204,26 @@ def test_bare_lca_width2_matches_documented_recurrence():
     np.testing.assert_allclose(got, act, atol=1e-5)
 
 
+def test_fires_once_integrating_transfer_matches_pnl_python():
+    """A fires-once, reset-each-trial integrator_mode transfer lowered as a
+    stateless single affine integrator step must match PNL Python mode.
+
+    Covers a non-trivial AdaptiveIntegrator rate (0.5) and a non-identity output
+    function (Logistic), so the affine fold `function((1-rate)*init + rate*x)` is
+    actually exercised, not just identity.
+    """
+
+    mech = pnl.TransferMechanism(
+        input_shapes=2, function=pnl.Logistic(gain=1.5),
+        integrator_mode=True, integration_rate=0.5,
+        reset_stateful_function_when=pnl.AtTrialStart(), name="integ",
+    )
+    comp = pnl.Composition()
+    comp.add_node(mech)
+    comp.scheduler.add_condition(mech, pnl.AtPass(0))
+    _assert_matches_pnl_python(comp, {mech: np.array([[0.4, -0.7]])})
+
+
 def _make_stab_flex_deterministic():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from test_stab_flex_pec_fit import generate_trial_sequence, make_input_dict, make_stab_flex

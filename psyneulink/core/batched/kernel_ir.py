@@ -265,19 +265,22 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
         if spec_kind == "elementwise":
             output_port = _primary_output_port_name(node)
             output_value = KernelValue(f"{node.name}:{output_port}", node.output_width)
+            attrs = {
+                "component_type": node.component_type,
+                "function_type": node.function_type,
+                "params": dict(node.params),
+                "output_port": output_port,
+                "spec_key": node.attrs["spec_key"],
+            }
+            if "integrator_pre" in node.attrs:
+                attrs["integrator_pre"] = node.attrs["integrator_pre"]
             ops.append(
                 KernelOp(
                     kind="CallFunction",
                     target=node.name,
                     inputs=(node_input,),
                     outputs=(output_value,),
-                    attrs={
-                        "component_type": node.component_type,
-                        "function_type": node.function_type,
-                        "params": dict(node.params),
-                        "output_port": output_port,
-                        "spec_key": node.attrs["spec_key"],
-                    },
+                    attrs=attrs,
                 )
             )
         elif spec_kind == "mechanism":

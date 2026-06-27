@@ -560,6 +560,38 @@ def test_batched_compiler_rejects_integrator_mode_transfer():
 
 
 @pytest.mark.composition
+def test_batched_fires_once_integrating_transfer_is_supported():
+    # integrator_mode + per-trial reset + fires once (AtPass) -> lowerable as a
+    # stateless single-step integrator.
+    mech = pnl.TransferMechanism(
+        input_shapes=1, function=pnl.Linear(slope=2.0),
+        integrator_mode=True, integration_rate=1.0,
+        reset_stateful_function_when=pnl.AtTrialStart(), name="integ",
+    )
+    comp = pnl.Composition(pathways=mech)
+    comp.scheduler.add_condition(mech, pnl.AtPass(0))
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert report.is_supported, report.unsupported_reasons
+    assert not any("integrator_mode" in reason for reason in report.unsupported_reasons)
+
+
+@pytest.mark.composition
+def test_batched_integrating_transfer_without_fire_once_schedule_is_rejected():
+    # Reset each trial but NO fires-once schedule: it would accumulate within the
+    # trial, so the stateless fold is unsound and the node must stay rejected.
+    mech = pnl.TransferMechanism(
+        input_shapes=1, integrator_mode=True,
+        reset_stateful_function_when=pnl.AtTrialStart(), name="integ",
+    )
+    comp = pnl.Composition(pathways=mech)
+    report = BatchedCompositionCompiler.diagnose(comp)
+
+    assert not report.is_supported
+    assert "integrator_mode" in "; ".join(report.unsupported_reasons)
+
+
+@pytest.mark.composition
 def test_batched_compiler_accepts_stateless_transfer():
     mech = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear(slope=2.0), name="plain")
     comp = pnl.Composition(pathways=mech)

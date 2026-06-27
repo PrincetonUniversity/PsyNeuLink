@@ -119,6 +119,12 @@ class OpEmitMixin:
                 f"{node.function_type} on '{node.name}' has no Triton implementation."
             )
         input_values = self._get_value(op.inputs[0].name)
+        integrator_pre = op.attrs.get("integrator_pre")
+        if integrator_pre is not None:
+            # Fold a fires-once integrator's single affine step (a*input + b) in
+            # front of the function: function(a*input + b).
+            a, b = integrator_pre
+            input_values = [f"({a!r} * {value} + {b!r})" for value in input_values]
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
         param_args = tuple(
             self.param_vars[node.params[binding.arg]] for binding in spec.params

@@ -82,7 +82,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             node_specs.append(_node_spec(node, params, model_kind, composition))
             continue
 
-        diagnostic = _node_support_diagnostic(node)
+        diagnostic = _node_support_diagnostic(node, composition)
         if diagnostic is not None:
             rejected_nodes.append(diagnostic)
             continue
@@ -222,6 +222,14 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
     elif specs.passthrough_spec_for(node) is not None and function_spec is not None:
         attrs["spec_kind"] = "elementwise"
         attrs["spec_key"] = function_spec.key
+        # A fires-once, reset-each-trial integrator_mode transfer advances its
+        # integrator a single step from its initializer, which is affine in the
+        # input (integ = a*input + b).  Fold that affine step in front of the
+        # node's function so the stateless elementwise path computes
+        # function(a*input + b).
+        affine = _integrating_transfer_affine(node, composition)
+        if affine is not None:
+            attrs["integrator_pre"] = affine
         for binding in function_spec.params:
             param_map[binding.arg] = params.add(
                 f"{node_name}.{binding.arg}",
@@ -241,7 +249,7 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
     )
 
 
-def _node_support_diagnostic(node) -> BatchedDiagnostic | None:
+def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
     function = getattr(node, "function", None)
     function_type = type(function).__name__
     node_name = _node_name(node)
@@ -261,11 +269,13 @@ def _node_support_diagnostic(node) -> BatchedDiagnostic | None:
         return None
 
     if specs.passthrough_spec_for(node) is not None:
-        if _integrator_mode_enabled(node):
+        if _integrator_mode_enabled(node) and _integrating_transfer_affine(node, composition) is None:
             # A TransferMechanism with integrator_mode=True is a stateful leaky/
-            # simple integrator, not the stateless transfer the passthrough spec
-            # assumes. Reject it rather than silently lower it as a stateless
-            # function (a stateful integrating-transfer op is a future milestone).
+            # simple integrator.  We can lower it statelessly only when it fires
+            # exactly once per trial from a per-trial reset (so its integrator
+            # advances a single step from its initializer); otherwise it
+            # accumulates within the trial and must be rejected rather than
+            # silently mis-run as a stateless function.
             return BatchedDiagnostic(
                 node_name,
                 "unsupported stateful transfer (integrator_mode) for batched v2",
@@ -555,6 +565,36 @@ def _integrator_mode_enabled(node) -> bool:
         except Exception:
             pass
     return bool(getattr(getattr(node, "defaults", None), "integrator_mode", False))
+
+
+def _integrating_transfer_affine(node, composition) -> tuple[float, float] | None:
+    """Affine single-step integrator coefficients ``(a, b)`` for a stateless
+    integrating transfer (``integ = a*input + b``), or ``None`` if the node is
+    not a supported fires-once, reset-each-trial integrator_mode transfer.
+
+    Sound only when the node advances its integrator exactly one step per trial
+    from its initializer: it must reset every trial (``AtTrialStart``) and fire
+    once per trial (an ``AtPass`` schedule).  Supports the AdaptiveIntegrator
+    (``value = (1-rate)*init + rate*input``) and SimpleIntegrator
+    (``value = init + rate*input + offset``); noise is assumed 0.
+    """
+
+    if not _integrator_mode_enabled(node):
+        return None
+    if type(getattr(node, "reset_stateful_function_when", None)).__name__ != "AtTrialStart":
+        return None
+    if type(_scheduler_conditions(composition).get(node)).__name__ != "AtPass":
+        return None
+    integrator = getattr(node, "integrator_function", None)
+    integrator_type = type(integrator).__name__
+    init = specs.resolve_component_param(integrator, "initializer", 0.0)
+    rate = specs.resolve_component_param(integrator, "rate", 1.0)
+    if integrator_type == "AdaptiveIntegrator":
+        return (rate, (1.0 - rate) * init)
+    if integrator_type == "SimpleIntegrator":
+        offset = specs.resolve_component_param(integrator, "offset", 0.0)
+        return (rate, init + offset)
+    return None
 
 
 def _combine_name(node) -> str:

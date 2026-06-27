@@ -624,6 +624,22 @@ environments to persist results.
   Binding extra `tl` args to node Parameters/RNG is a future extension
   (input-components-only for now).
 
+- **Fires-once integrating transfers** (roadmap step 7). An integrator_mode
+  `TransferMechanism` that resets each trial (`reset_stateful_function_when=
+  AtTrialStart`) and fires exactly once per trial (an `AtPass` schedule) advances
+  its integrator a single step from its initializer — which is affine in the
+  input. `graph.py:_integrating_transfer_affine` returns `(a, b)` for the
+  AdaptiveIntegrator (`a=rate, b=(1-rate)*init`) and SimpleIntegrator (`a=rate,
+  b=init+offset`); the node then lowers through the **stateless elementwise
+  path** with `attrs["integrator_pre"]=(a,b)`, and `emit/ops.py:_emit_function_call`
+  prepends `function(a*input + b)`. No lane state, no trial-loop coupling. The
+  gate is sound: an integrator that is *not* fires-once (no `AtPass`, e.g. the CSI
+  `Threshold Mechanism`, which steps with the DDM) stays rejected. Clears the CSI
+  `Task Input`; the per-DDM-step `Threshold Mechanism` is step 8. Existing goldens
+  unchanged (no current golden uses an integrator transfer). Tested in
+  `test_batched_compile.py` (fires-once accepted / no-schedule rejected) and
+  `test_batched_reference.py` (Adaptive rate=0.5 + Logistic matches PNL Python).
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -660,9 +676,13 @@ steps 9-10 make the full PEC fit run on the batched path.
    `tl` body receives the node's whole combined input vector and may reduce it.
    Clears the CSI `Drift Rate Value` rejection.
 
-7. **Stateful integrating transfers** (gap 2). A stateful transfer/integrator op
-   (Leaky/Simple integrator + function) with lane-local state and per-trial
-   reset, reusing the LCA state machinery.
+7. **Fires-once integrating transfers** (gap 2) — DONE (see Done above). An
+   integrator_mode transfer that resets each trial (`AtTrialStart`) and fires
+   once per trial (`AtPass`) advances its integrator a single affine step from
+   its initializer, so it lowers *statelessly* as `function(a*input + b)` — no
+   lane state needed. Clears the CSI `Task Input`. *Remaining for a multi-step
+   integrating transfer* (one that accumulates within a trial, e.g. the CSI
+   `Threshold Mechanism`, which steps with the DDM): folded into step 8.
 
 8. **Time-varying DDM boundary + control routing** (gaps 4-5). Collapsing
    threshold in the DDM kernel (`threshold(step)=θ₀+collapse·step`); control
