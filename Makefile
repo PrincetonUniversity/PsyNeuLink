@@ -9,7 +9,7 @@ PYTHON_VENV := $(VENV_DIR)/bin/python
 JUPYTER := $(VENV_DIR)/bin/jupyter
 
 .PHONY: help venv install install-dev install-tutorial install-all \
-        jupyter marimo tutorial test clean-venv clean info
+        jupyter marimo tutorial test sync-upstream clean-venv clean info
 
 help: ## Show this help message
 	@echo "PsyNeuLink Development Makefile"
@@ -64,6 +64,11 @@ tutorial: install-tutorial ## Open the PsyNeuLink tutorial notebook
 
 test: install-dev ## Run the test suite
 	$(VENV_DIR)/bin/pytest tests/
+
+# --- Upstream sync ---
+
+sync-upstream: install-dev ## Sync jonhanke-dev with upstream devel (smoke + open PR); pass ARGS="--dry-run"
+	VENV_DIR=$(VENV_DIR) bin/sync-upstream-devel.sh $(ARGS)
 
 # --- Cleanup ---
 
