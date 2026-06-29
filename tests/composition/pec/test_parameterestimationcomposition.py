@@ -11,6 +11,7 @@ import psyneulink as pnl
 
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
+    BadLikelihoodWarning,
 )
 
 # Set the number of threads to 1 for all tests in this module, tests are often run in parallel
@@ -221,14 +222,19 @@ else:
         (optuna.samplers.RandomSampler, {'seed': 0}, [0.01],
          pytest.warns(UserWarning, match="Overriding seed passed to optuna sampler with seed passed to PEC.")),
         (optuna.samplers.RandomSampler(), None, None,
-         pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used."))
+         pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used.")),
+        (optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=0), direction="maximize"), None, [0.01], contextlib.nullcontext()),
+        (optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=0), direction="minimize"), None, None,
+         pytest.warns(UserWarning, match="The optuna study passed as method has direction")),
     ],
     ids=[
         "differential_evolution",
         "optuna_random_sampler",
         "optuna_qmc_sampler",
         "optuna_random_sampler_with_kwargs",
-        "optuna_random_sampler_no_seed"
+        "optuna_random_sampler_no_seed",
+        "optuna_study",
+        "optuna_study_bad_direction",
     ],
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expected_result, execution_context):
@@ -850,3 +856,66 @@ def test_pec_lca_num_estimates_llvm_stochasticity(func_mode):
     assert "sim_data" in captured
     # sim_data shape: (num_trials, num_estimates, num_outcomes)
     assert np.mean(np.std(captured["sim_data"], axis=1)) > 0.0
+
+
+class _RecordingConsole:
+    """Minimal stand-in for a rich Console that records everything printed."""
+
+    def __init__(self):
+        self.lines = []
+
+    def print(self, *args, **kwargs):
+        self.lines.append(" ".join(str(a) for a in args))
+
+    @property
+    def text(self):
+        return "\n".join(self.lines)
+
+
+class _FakeProgress:
+    def __init__(self):
+        self.console = _RecordingConsole()
+
+
+def _make_warn_entry(value):
+    """Build a (warning, params) tuple as accumulated by the objective-function wrapper."""
+    params = {"gain": value}
+    warning = BadLikelihoodWarning("could not perform kernel density estimate")
+    return (warning, params)
+
+
+def test_pec_degenerate_warning_summary_cleared_between_callbacks():
+    """
+    Regression test: the degenerate-likelihood summary printed by the optimizer callback
+    must only report the parameter sets that were degenerate since the previous callback,
+    not re-print every degenerate set seen since the search began.
+
+    Previously ``warns_with_params`` was never cleared, so each callback re-printed the full
+    accumulated history -- pinning the first degenerate parameter set to the top of the log
+    on every subsequent iteration even though it was not just evaluated.
+    """
+    opt_func = PECOptimizationFunction(method="differential_evolution")
+    progress = _FakeProgress()
+
+    # Simulate the first iteration: a single degenerate parameter set was accumulated.
+    warns_with_params = [_make_warn_entry(21.3)]
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+
+    # The summary reports the degenerate set, and the buffer is cleared afterwards.
+    assert "21.30000" in progress.console.text
+    assert warns_with_params == []
+
+    # Simulate the next iteration: a *different* degenerate parameter set is accumulated.
+    progress = _FakeProgress()
+    warns_with_params.append(_make_warn_entry(16.0))
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+
+    # Only the new set is reported; the stale one from the prior iteration must not reappear.
+    assert "16.00000" in progress.console.text
+    assert "21.30000" not in progress.console.text
+    assert warns_with_params == []
+
+    # An iteration with no degenerate evaluations prints nothing at all.
+    progress = _FakeProgress()
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+    assert progress.console.text == ""

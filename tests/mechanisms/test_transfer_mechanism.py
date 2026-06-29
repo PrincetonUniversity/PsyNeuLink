@@ -1830,6 +1830,37 @@ def test_integrator_mode_reset_in_composition(comp_mode):
     np.testing.assert_allclose(comp.results, [[[0.52293998, 0.40526519]], [[0.4336115, 0.46026939]]])
 
 
+def test_reset_multi_stateful_integrator_with_owner_value_output_port(comp_mode):
+    # Regression test: a TransferMechanism with a multi-stateful-attribute
+    # integrator (FitzHughNagumoIntegrator returns v, w and time) and an
+    # OutputPort that selects a non-first element of OWNER_VALUE used to raise
+    # an IndexError in Python mode when reset, because reset only kept the first
+    # stateful value (see Mechanism_Base.reset). Run across all execution modes
+    # and assert against a shared reference so Python and compiled agree.
+    inp = pnl.ProcessingMechanism(input_shapes=1)
+    lc = pnl.TransferMechanism(
+        input_shapes=1,
+        integrator_mode=True,
+        integrator_function=pnl.FitzHughNagumoIntegrator(),
+        function=pnl.Linear(),
+        output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}],
+        reset_stateful_function_when=pnl.AtTrialStart(),
+    )
+
+    comp = pnl.Composition()
+    comp.add_nodes([inp, lc])
+    comp.add_projection(sender=inp, receiver=lc)
+
+    comp.run(inputs={inp: [[1.0]]}, execution_mode=comp_mode)
+
+    # Output port selects the second FHN term (w); the result is identical in
+    # Python and compiled mode, including its shape (previously Python inflated
+    # the value to (3, 1, 1); see FitzHughNagumoIntegrator._function), so the
+    # explicit shape of the expected result also guards against that regression.
+    # Tolerance allows for reduced fp32 precision in compiled CI runs.
+    np.testing.assert_allclose(comp.results, [[[0.002795524774843733]]], rtol=1e-5, atol=1e-8)
+
+
 class TestTerminationMeasure:
     # NOTE (as in TestOnResumeIntegratorMode::test_termination_measures above):
     # '_LLVMPerNode' mode is not supported, because synchronization of compiler
