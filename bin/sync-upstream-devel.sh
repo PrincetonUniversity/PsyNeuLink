@@ -110,10 +110,13 @@ if [[ "$RUN_SMOKE" -eq 1 ]]; then
 
   say "Smoke gate"
   declare -a FAILED=()
+  # Override the repo's heavy addopts (xdist, cov, benchmark, pydocstyle,
+  # pycodestyle) — the gate checks the functionality runs, not that the tree is
+  # style-clean. Keep in sync with .github/workflows/smoke.yml.
   run_bucket() {
     local name="$1"; shift
     printf -- '--- %s\n' "$name"
-    if "$PYTEST" -q "$@"; then
+    if "$PYTEST" -o addopts="" -p no:cacheprovider -q "$@"; then
       printf -- '--- %s: PASS\n' "$name"
     else
       printf -- '--- %s: FAIL\n' "$name"
