@@ -42,6 +42,16 @@ plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=256)
 result = plan.run(inputs, parameter_sets, num_estimates, seed=11)
 ```
 
+Researcher-facing op registration (see "Code Map / specs.py"):
+
+- `@batched_op(ComponentClass)` — a class-level op (elementwise function or
+  mechanism), auto-bound from the body signature.
+- `@batched_node_op("<node name>")` — an **instance-level** op for one node
+  (keyed by name), whose `tl` body takes the node's whole combined input vector
+  and may reduce it. This is how a `UserDefinedFunction` node (all UDFs share one
+  class) gets a kernel — e.g. the CSI drift rate.  See
+  `register_batched_instance_op` / `unregister_batched_instance_op`.
+
 Supported backends (both run the *same* generated Triton kernels):
 
 - `triton_cpu`: runs the kernels through Triton's interpreter on CPU (no CUDA).
@@ -86,7 +96,8 @@ composition and does not route PEC fitting through Triton.
 
 ## Current Commit Stack
 
-The important commits on this branch are:
+The **"Milestone Roadmap → Done"** section below is the authoritative,
+up-to-date status. Foundational commits (early architecture):
 
 - `99b2313fc0` - initial opt-in Triton batched simulator for PEC models.
 - `667963121b` - generated graph compiler for DDM and stateful graph cases.
@@ -94,10 +105,17 @@ The important commits on this branch are:
   `backend/triton`.
 - `640c690a55` - component-owned Triton hooks with `@pnl_triton_op`.
 - `4fd3be6718` - remove stability-flexibility-specific compiler/runtime paths.
-- `653a57cbf9` - declarative batched op specs: replace the `_gen_triton_*`
-  monkeypatched hooks with a class-keyed spec registry and the
+- `653a57cbf9` - declarative batched op specs: class-keyed spec registry + the
   `@batched_op` auto-binding decorator; retire the monolithic DDM kernel.
 - `960d3aba6d` - CPU interpret execution + PsyNeuLink oracle (see below).
+
+Milestones toward the CSI surrogate (details in "Done" below): step 4 AtPass(0)
+scheduling; step 6 instance-level UDF ops (`batched_node_op`); step 7 fires-once
+integrating transfers; step 8 collapsing DDM threshold + control routing (CSI
+compiles); step 5 **co-evolution loop** (CSI decision **and** RT match PNL
+Python); a refactor factoring the LCA/DDM recurrence into one shared
+`@triton.jit` helper each; and a `CSISurrogate` asv benchmark + a triton-vs-LLVM
+comparison (`csi_triton_vs_llvm.py`, ~62x at PEC scale).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
@@ -160,6 +178,15 @@ CPU executor (`ir_debug`) and the per-op numpy CPU bodies (`cpu_body` /
   - Registry is keyed by **exact** component class; subclasses are not
     inherited (PNL subclasses change semantics, e.g.
     LCA < RecurrentTransfer < Transfer).
+  - **Instance-level ops** (`_INSTANCE_SPECS`, keyed by node **name**): resolved
+    ahead of the class spec in `mechanism_spec_for` (also matches the unsuffixed
+    name, so a registered op survives PNL's `-N` duplicate-name suffix on
+    in-process rebuilds). `@batched_node_op("<name>")` builds one from a
+    whole-input-vector `tl` body.
+  - **Co-evolution step interface** on `MechanismOpSpec` (for the fused loop):
+    `step_emit` (emit ONE integration step), `trial_states` (per-trial reset
+    state, e.g. DDM `value`/`steps`/`finished`), and `finished_output` +
+    `readout_emit` for a *terminator* op (produces its outputs after the loop).
   - IRs reference specs only by string `spec_key`, so `BatchedGraphIR` and
     `KernelIR` stay serializable and backend-neutral.
 
@@ -175,15 +202,24 @@ CPU executor (`ir_debug`) and the per-op numpy CPU bodies (`cpu_body` /
   - Registered on first lowering via `specs.ensure_builtin_specs()`.
   - These modules double as reference examples for researchers registering
     their own components.
+  - `ddm` and `lca` each expose **two** forms sharing one recurrence: a
+    run-to-completion body (internal loop) and a co-evolution `step_emit`, both
+    calling a single shared `@triton.jit` helper (`_pnl_triton_ddm_update` /
+    `_pnl_triton_lca_width2_recurrence`) so the math lives in one place. `ddm`
+    also carries the collapsing-threshold recognition (`threshold_override_collapse`)
+    used by `graph.py` to absorb the threshold-driving transfer.
 
 - `psyneulink/core/batched/kernel_ir.py`
   - Backend-neutral execution-level IR.
   - Converts `BatchedGraphIR` into structured execution ops:
     `LoadInput`, `CallProjection`, `CombineSum`, `CombineProduct`,
-    `CallFunction`, `CallMechanism`, `StoreOutput`, and stateful `ForTrials`.
+    `CallFunction`, `CallMechanism`, `StoreOutput`, `StoreFlag` (diagnostics),
+    and stateful `InitializeState` / `ForTrials`.
   - Dispatch is driven by `spec_kind`/`spec_key`/`rng_streams`/`op_outputs`
     node attrs written at lowering time; kernel_ir does not import the
     registry.
+  - `coevolving_graph` reuses the stateful lane layout + `ForTrials`; the fused
+    per-step loop itself is emitted by `emit/ops.py`, not a new IR op.
   - The intent is that a future MLIR backend starts here, not from generated
     Triton source.
 
@@ -210,7 +246,8 @@ psyneulink/core/batched/backend/triton/
     `device="cuda"` requires a GPU.  Guards against mixing interpret and
     compiled modes in one process.
   - Prepares Torch buffers (via `prep.py`).
-  - Dispatches to stateless graph, DDM graph, or stateful graph kernels.
+  - Dispatches to stateless graph, DDM graph, stateful graph, or **co-evolving
+    graph** kernels (the last shares the stateful runner, one kernel name apart).
   - The monolithic DDM and stability-flexibility kernel paths have been
     removed; everything goes through the generated graph kernels.
 
@@ -225,7 +262,11 @@ psyneulink/core/batched/backend/triton/
     state, `emit()` orchestration, signature/module rendering, params/state setup.
   - `lanes.py` (`LaneEmitMixin`): lane decode, RNG-base layout, raw input loads.
   - `ops.py` (`OpEmitMixin`): per-`KernelOp` emission + value table. New op kinds
-    (e.g. truncation `StoreFlag`, scheduling variants) are added here.
+    (e.g. truncation `StoreFlag`) are added here.  Also emits the **co-evolution
+    fused loop** (`_emit_coevolving_trial_loop`): hoist loop-invariant ops out
+    once (Triton loop-body vars don't escape the loop), step the stepper ops
+    inside masked by the terminator's `finished`, then run the terminator
+    `readout_emit` + post-loop ops after.
   - Spec-driven op emission (declarative elementwise/mechanism calls plus
     `triton_emit` escape hatches) resolved through `spec_key`.
 
@@ -235,7 +276,10 @@ psyneulink/core/batched/backend/triton/
   - `@pnl_triton_op` captures inspectable Python source and emits it as a
     `@triton.jit` helper without importing Triton at PsyNeuLink import time.
   - Helpers may reference `tl` (`triton.language`); other globals/closures are
-    rejected.
+    rejected — **except** helper templates passed via `helpers=`, which the body
+    may call by name (the emitter emits those device functions ahead of the
+    caller, via `TritonOpTemplate.dependencies`). This lets one shared recurrence
+    helper back both a run-to-completion loop and a single-step path.
   - `backend/triton/__init__.py` imports `runtime` lazily so importing the
     spec/registration API does not create an import cycle.
 
@@ -250,35 +294,38 @@ psyneulink/core/batched/backend/triton/
 
 Supported mechanisms:
 
-- `TransferMechanism`
-- `ProcessingMechanism`
-- `DDM`
-- `LCAMechanism`, width 2 only
+- `TransferMechanism`, `ProcessingMechanism` (stateless)
+- `TransferMechanism` with `integrator_mode=True` **when fires-once** (resets
+  each trial via `AtTrialStart`, fires once via `AtPass`) — lowered statelessly
+  as `function(a*input + b)` (Adaptive/Simple single affine step); a multi-step
+  integrating transfer is still rejected
+- `DDM` (fixed **or** collapsing boundary; a control mechanism OVERRIDE'ing the
+  threshold from a SimpleIntegrator transfer is recognized and that transfer is
+  absorbed into the DDM)
+- `LCAMechanism`, width 2 only (cue-driven, or co-evolving with a terminator)
+- `ControlMechanism` — recognized for LCA-termination and DDM-threshold OVERRIDE
+  routing; not lowered as its own executable op
 
 Supported functions:
 
-- `Linear`
-- `Logistic`
-- `DriftDiffusionIntegrator` for DDM
+- `Linear`, `Logistic`, `DriftDiffusionIntegrator` (DDM)
+- arbitrary elementwise/reduction bodies via `@batched_op` (class) or
+  `@batched_node_op` (a specific node instance, e.g. a `UserDefinedFunction`)
 
-Supported projections:
+Supported projections: dense `MappingProjection`.
 
-- dense `MappingProjection`
+Supported input combines: single input, `SUM`, `PRODUCT`.
 
-Supported input combines:
+Supported executable schedules / fusions:
 
-- single input
-- `SUM`
-- `PRODUCT`
+- `static_graph` schedule, including `AtPass(0)` origins and the `Always`-LCA /
+  `WhenFinished(LCA)` idiom.
+- Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
+  cue-terminated), `coevolving_graph` (fused per-step loop for coupled stateful
+  mechanisms). See "Fusion and Lane Layout".
 
-Supported executable schedule kind:
-
-- `static_graph`
-
-Recognized but not executable yet:
-
-- `precomputed_trace`
-- `dynamic_lane_local`
+Recognized but not executable yet: `precomputed_trace` (incl. `AtPass(n>0)` ITI
+onset, `EveryNCalls`), `dynamic_lane_local`.
 
 Unsupported scheduler conditions should return diagnostics. Do not silently
 fall back to Python or LLVM inside this stack.
@@ -376,13 +423,17 @@ architecture semantics.
 
 ## Stability-Flexibility Status
 
-Stability-flexibility is now treated as:
+The **toy** stab-flex model (cue-terminated LCA) is treated as a generic graph:
 
 ```text
 model_kind="graph"
-fusion_kind="stateful_graph"
+fusion_kind="stateful_graph"   # cue-terminated LCA settles, then the DDM decides
 schedule_kind="static_graph"
 ```
+
+The **CSI surrogate** (the realistic model, `Always`-scheduled LCA co-evolving
+with the DDM) instead lowers as `fusion_kind="coevolving_graph"` — same
+generic-graph treatment, different fusion (see "Fusion and Lane Layout").
 
 There should be no `STABILITY_FLEXIBILITY_MODEL`, no
 `stability_flexibility_roles` metadata, no forced `cue`/`correct` aliases, and
@@ -421,12 +472,17 @@ LCAMechanism
 The batched hook currently handles:
 
 - width 2 only;
-- persistent lane-local `pre` state;
-- persistent lane-local `act` state;
+- persistent lane-local `pre` and `act` state;
 - recurrent coupling via scalar `self_excitation` and `competition`;
 - Logistic activation;
 - Gaussian noise through Triton `tl.randn`;
-- a cue/termination input lowered to an LCA step count.
+- **two step-count modes**: cue-driven (a cue/termination input → a fixed step
+  count, `stateful_graph`) or **co-evolving** (steps once per fused-loop
+  iteration alongside a terminator until it finishes, `coevolving_graph`).
+
+The width-2 **recurrence itself was verified equal to PNL step-for-step** this
+session (an isolated LCA at a fixed step count matches PNL exactly); the
+"approximation" is the surrounding scope, not the math.
 
 It does not yet cover:
 
@@ -436,8 +492,9 @@ It does not yet cover:
 - generic `combination_function`;
 - learning;
 - full output-port variants;
-- full `execute_until_finished` / `WhenFinished` behavior;
-- full controller semantics.
+- threshold-terminated (convergence) LCA in isolation;
+- the init-`act=0` start (isolated LCA differs from PNL's `logistic(0)` start,
+  though this washes out in the models we run).
 
 Be careful not to describe the batched LCA hook as the authoritative
 PsyNeuLink LCA semantics. It is currently a performance-oriented lowering for a
@@ -483,13 +540,15 @@ The lowering emits a `StoreFlag` KernelOp per diagnostic into a separate per-lan
 golden is unchanged); the runtime aggregates the truncated fraction per node into
 `result.metadata["truncation"]`, **warns** by default and **raises**
 `BatchedTruncationError` under `run(..., strict_truncation=True)`. The channel is
-node-generic: when threshold-terminated LCA lands (step 5) its body returns the
-same `truncated` flag and reuses this path unchanged.
+node-generic: the **co-evolving DDM terminator** reuses it (its `truncated` flag
+is `finished == 0` after `MAX_STEPS`), and a future threshold-terminated LCA
+would too.
 
-Note the *cue-driven* LCA (stab-flex / CSI) cannot truncate today: `LCA_MAX_STEPS`
-is sized from the cue data (`prep.lca_max_steps` = `max(metadata, ceil(cue))`), so
-the cap is always ≥ demand. Data-dependent LCA truncation only appears with the
-general threshold-terminated LCA, which is not yet implemented.
+Note the *cue-driven* LCA (toy stab-flex) cannot truncate: `LCA_MAX_STEPS` is
+sized from the cue data (`prep.lca_max_steps` = `max(metadata, ceil(cue))`), so
+the cap is always ≥ demand. In the *co-evolving* graph the LCA steps once per
+loop iteration and freezes with the terminator, so its own truncation is not a
+separate concern; only the terminator (DDM) truncates.
 
 ## Contrast With LLVM/PTX
 
@@ -563,7 +622,20 @@ script supports:
 
 (`triton` and `triton_cpu` cannot be combined in one invocation.)
 
-The one-off script above gives ad-hoc triton-vs-LLVM numbers. To **track**
+For the **co-evolving CSI surrogate** specifically (not covered by
+`gpu_batch_compile_benchmark.py`), use:
+
+```bash
+PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_triton_vs_llvm.py \
+    --trials 128 --estimates 512 --param-evals 4
+```
+
+It sweeps `non_decision_time` (the DDM `threshold` is already controlled, so PEC
+cannot also modulate it → LLVM `mod_afferents<=1`). At PEC scale this was ~62x
+(triton ~57 ms vs LLVM ~3.5 s); the batched path matches PNL **Python** mode
+trial-for-trial.
+
+The one-off scripts above give ad-hoc triton-vs-LLVM numbers. To **track**
 batched-compiler performance across commits, use the asv suite in `benchmarks/`
 (see `benchmarks/README.md`). It reuses the existing venv (GPU box) and
 forward-tracks — after each commit:
@@ -705,6 +777,24 @@ environments to persist results.
   `golden_kernels/coevolving_graph.py`; `test_batched_reference.py` asserts RT
   parity + the co-evolving fusion kind.
 
+- **Shared recurrence helpers** (code-quality). The LCA and DDM each had their
+  math duplicated (a run-to-completion body and a step body); each now lives in
+  one shared `@triton.jit` helper (`_pnl_triton_lca_width2_recurrence`,
+  `_pnl_triton_ddm_update`) that both paths call. Enabled by `pnl_triton_op(
+  helpers=...)` + `TritonOpTemplate.dependencies` + recursive `register_template`
+  (a helper may call other helper templates; they're emitted ahead of the
+  caller). Numerically identical (the run-to-completion DDM now threads a
+  `finished` flag — same result for a fixed/collapsing boundary, and strictly
+  more correct for a growing one); goldens regenerated; verified on GPU.
+
+- **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
+  `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
+  compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
+  the same workload: **~62x** at PEC scale (262k sims), triton throughput rising
+  with lane count. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
+  (already controlled → `mod_afferents<=1`), so the comparison sweeps
+  `non_decision_time`; the batched path also runs a fit config LLVM can't.
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -717,7 +807,7 @@ steps 9-10 make the full PEC fit run on the batched path.
 2. **Truncation visibility** — DONE for DDM (see Done above). Bounded ops surface
    a per-lane truncation flag via the `diagnostics`/`StoreFlag`/`diag` channel;
    the runtime warns or (with `strict_truncation`) raises when `max_steps` is too
-   low. The channel is node-generic; threshold-terminated LCA reuses it at step 5.
+   low. The channel is node-generic; the co-evolving DDM terminator reuses it.
 
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.
@@ -791,7 +881,17 @@ steps 9-10 make the full PEC fit run on the batched path.
 - Parameter aliases are intentionally generic. Avoid adding model-specific
   aliases to make one example script more convenient.
 - Stability-flexibility examples depend on helper builders in
-  `tests/composition/pec/test_stab_flex_pec_fit.py`.
+  `tests/composition/pec/test_stab_flex_pec_fit.py`; the **CSI surrogate** lives
+  in `Scripts/Debug/pec_batch_compile/csi_model_surrogate.py` and needs its
+  drift-rate op registered (`batched_node_op("Drift Rate Value")`) before it
+  compiles.
+- The **co-evolution loop runs all `MAX_STEPS`** with finished lanes masked
+  (there is no early break across a lane block), so `MAX_STEPS` scales runtime
+  linearly — size it to the decision-time regime, not far above it.
+- The co-evolving **LCA RNG offset still uses the `LCA_MAX_STEPS` stride**
+  (inherited from the cue-driven form); fine while co-evolving LCAs run
+  `lca_noise=0` (CSI), but a noisy co-evolving LCA with `MAX_STEPS > LCA_MAX_STEPS`
+  would need the stride widened to `MAX_STEPS` to avoid stream overlap.
 
 ## Current Mental Model
 
