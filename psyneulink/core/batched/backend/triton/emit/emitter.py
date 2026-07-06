@@ -58,6 +58,9 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.lane_out_emitted = False
         self.diag_slot_count = len(diag_slots(kernel))
         self.diag_lane_emitted = False
+        # Warm-up steps before the co-evolving terminator begins (the ITI); 0 when
+        # there is no delayed onset.
+        self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
 
     def emit(self) -> str:
         specs.ensure_builtin_specs()

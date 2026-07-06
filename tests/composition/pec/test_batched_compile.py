@@ -602,13 +602,12 @@ def test_batched_compiler_accepts_stateless_transfer():
 
 
 @pytest.mark.composition
-def test_csi_surrogate_with_iti_defers_at_pass_onset():
-    # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset
-    # that is recognized but not executable yet (precomputed_trace), so the model
-    # is rejected at the scheduler level.  The integrator_mode transfers
-    # themselves are now handled -- Task Input lowers as a fires-once integrator
-    # and Threshold Mechanism is absorbed into the DDM boundary -- so they are no
-    # longer node-level rejections.
+def test_csi_surrogate_with_iti_accepts_at_pass_onset():
+    # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset.
+    # In the co-evolving CSI graph the fused loop gates it per step (input withheld
+    # until step iti; terminator frozen), so AtPass(n>0) is now *accepted*, not
+    # deferred. Without the drift-rate UDF op the model is still unsupported, but
+    # the ONLY blocker is that UDF -- not AtPass, Task Input, or Threshold Mechanism.
     csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
@@ -617,14 +616,16 @@ def test_csi_surrogate_with_iti_defers_at_pass_onset():
     report = BatchedCompositionCompiler.diagnose(comp)
 
     assert not report.is_supported
-    assert "AtPass" in "; ".join(report.unsupported_reasons)
-    rejected_nodes = {d.component for d in report.rejected_nodes}
-    # Absorbed / handled, not rejected as integrator_mode any more.
-    assert not any("Threshold Mechanism" in name for name in rejected_nodes)
+    assert "AtPass" not in "; ".join(report.unsupported_reasons)
+    assert not report.rejected_conditions
+    rejected = {d.component for d in report.rejected_nodes}
+    assert not any("Threshold Mechanism" in name for name in rejected)
     assert not any(
         "Task Input" in d.component and "integrator_mode" in d.reason
         for d in report.rejected_nodes
     )
+    # The sole remaining blocker is the drift-rate UDF (needs an instance op).
+    assert any("Drift Rate Value" in name for name in rejected)
 
 
 @pytest.mark.composition

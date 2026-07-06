@@ -149,14 +149,23 @@ def _pnl_triton_ddm_step(
     seed,
     rng_base,
     step,
+    start,
 ):
     # One DDM step for the fused co-evolution loop: draw noise, then apply the
-    # shared update.
+    # shared update.  `start` is the warm-up (ITI): the terminator is frozen until
+    # `step >= start`, and its own step index (for the collapsing boundary) counts
+    # from `start`, so an ITI shifts *when* the DDM runs without changing its
+    # decision dynamics.
+    active_time = step >= start
     draw = tl.randn(seed, rng_base + step)
-    return _pnl_triton_ddm_update(
+    new_value, new_steps, new_finished = _pnl_triton_ddm_update(
         value, steps, finished, drift, rate, noise, threshold,
-        threshold_collapse, time_step_size, offset, draw, step,
+        threshold_collapse, time_step_size, offset, draw, tl.maximum(step - start, 0),
     )
+    value = tl.where(active_time, new_value, value)
+    steps = tl.where(active_time, new_steps, steps)
+    finished = tl.where(active_time, new_finished, finished)
+    return value, steps, finished
 
 
 def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
@@ -182,6 +191,7 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 ctx.seed,
                 ctx.rng_base(name),
                 step_var,
+                str(ctx.coevolve_warmup()),
             ),
         )
     )

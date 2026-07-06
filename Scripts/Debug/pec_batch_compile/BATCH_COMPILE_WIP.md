@@ -320,12 +320,14 @@ Supported executable schedules / fusions:
 
 - `static_graph` schedule, including `AtPass(0)` origins and the `Always`-LCA /
   `WhenFinished(LCA)` idiom.
+- `AtPass(n>0)` delayed onset (the ITI) — executable **in a co-evolving graph**
+  (the fused loop gates it per step); still deferred in non-co-evolving graphs.
 - Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
   cue-terminated), `coevolving_graph` (fused per-step loop for coupled stateful
   mechanisms). See "Fusion and Lane Layout".
 
-Recognized but not executable yet: `precomputed_trace` (incl. `AtPass(n>0)` ITI
-onset, `EveryNCalls`), `dynamic_lane_local`.
+Recognized but not executable yet: `precomputed_trace` (`EveryNCalls`),
+`dynamic_lane_local`.
 
 Unsupported scheduler conditions should return diagnostics. Do not silently
 fall back to Python or LLVM inside this stack.
@@ -366,13 +368,14 @@ see "CSI status" below). The original gaps and how each was closed:
 
 ### CSI status
 
-`make_stab_flex(iti=0)` compiles and runs end-to-end on `triton_cpu`/`triton`,
-with **both decision outcomes and response times matching** PNL Python mode
-(RT within ~1 DDM step). This required the **co-evolution loop** (see below): the
-CSI LCA is `Always`-scheduled and its activation feeds the drift, so the LCA and
-DDM step together each timestep rather than running sequentially. Remaining for
-the full PEC fit: `iti>0` (`AtPass(n>0)`, rest of step 4), GPU likelihood/KDE
-(step 9), and PEC fit routing (step 10).
+`make_stab_flex` compiles and runs end-to-end on `triton_cpu`/`triton` for
+`iti=0` **and `iti>0`**, with **both decision outcomes and response times
+matching** PNL Python mode (RT within ~1 DDM step). This required the
+**co-evolution loop** (see below): the CSI LCA is `Always`-scheduled and its
+activation feeds the drift, so the LCA and DDM step together each timestep. For
+`iti>0` the fused loop gates the `AtPass(iti)` task-input onset per step (the LCA
+decays during the ITI, the DDM is frozen). Remaining for the full PEC fit: GPU
+likelihood/KDE (step 9) and PEC fit routing (step 10).
 
 **Benchmark (vs LLVM PEC).** `csi_triton_vs_llvm.py` compares the co-evolving
 CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
@@ -777,6 +780,23 @@ environments to persist results.
   `golden_kernels/coevolving_graph.py`; `test_batched_reference.py` asserts RT
   parity + the co-evolving fusion kind.
 
+- **`AtPass(n>0)` ITI onset in the co-evolution loop** (rest of roadmap step 4).
+  A delayed within-trial onset (`Task Input` at `AtPass(iti)`) is now executable
+  in a co-evolving graph: `graph.py` accepts `AtPass(n>0)` when `coevolving`
+  (still deferred otherwise), records `onset_step` on the node and
+  `coevolve_warmup=max(onset)` in graph metadata. In the fused loop, the onset
+  node's output is gated `where(step >= onset, val, 0)` (so the `Always`-LCA
+  integrates 0 and *decays* during the ITI), and the DDM terminator is frozen
+  until `step >= warmup` with its collapse step counting from there
+  (`_pnl_triton_ddm_step` gained a `start` arg). Onset nodes become loop-variant
+  (partition), so they + downstream run inside the loop. `make_stab_flex(iti>0)`
+  now matches PNL decision + RT (RT rises with ITI then saturates, as in PNL);
+  `csi>0` also matches (its RT contribution is the `cueStimulusInterval ->
+  responseGate` term, and the LCA-convergence effect of the extra delay is within
+  the ~1-step tolerance). Tested in `test_batched_reference.py` (iti=10 RT parity)
+  and `test_batched_compile.py` (AtPass(n>0) accepted when co-evolving, deferred
+  otherwise). Coevolving golden regenerated for the DDM step `start` arg.
+
 - **Shared recurrence helpers** (code-quality). The LCA and DDM each had their
   math duplicated (a run-to-completion body and a step body); each now lives in
   one shared `@triton.jit` helper (`_pnl_triton_lca_width2_recurrence`,
@@ -812,14 +832,13 @@ steps 9-10 make the full PEC fit run on the batched path.
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.
 
-4. **Tiered scheduling** (pay only when needed) — PARTIALLY DONE. Recognition of
-   the `AtPass(0)` origins / `Always` LCA / `WhenFinished(LCA)` idiom (gap 3) is
-   done (see Done above): the CSI/ITI idiom with `iti=0` now lowers to the
-   existing cue-driven stateful graph. **Remaining:** precomputed per-trial traces
-   for `EveryNCalls`-style conditions, and the `AtPass(n>0)` ITI-delayed onset
-   (currently deferred as `precomputed_trace`). Prefer static erasure / precomputed
-   traces over dynamic lane-local scheduler state (which would recreate the
-   LLVM/PTX overhead problem).
+4. **Tiered scheduling** (pay only when needed) — MOSTLY DONE. `AtPass(0)` origins
+   / `Always` LCA / `WhenFinished(LCA)` recognition (gap 3), plus **`AtPass(n>0)`
+   ITI-delayed onset** in the co-evolution loop (see Done above): `make_stab_flex`
+   compiles + matches PNL for `iti>0` too. **Remaining:** precomputed per-trial
+   traces for `EveryNCalls`-style conditions (no research model needs them yet).
+   Prefer static erasure / precomputed traces over dynamic lane-local scheduler
+   state (which would recreate the LLVM/PTX overhead problem).
 
 5. **Co-evolution loop for coupled stateful mechanisms** — DONE (see Done above).
    This was the actual blocker to CSI RT parity (not LCA *width*): the diagnosis

@@ -100,8 +100,11 @@ class OpEmitMixin:
                 op.kind == "CallMechanism"
                 and specs.lookup_spec(op.attrs["spec_key"]).can_step
             )
+            # A delayed-onset node's output depends on `step` (withheld until its
+            # onset), so it and everything downstream must run inside the loop.
+            has_onset = op.attrs.get("onset_step") is not None
             depends_on_variant = any(inp.name in variant for inp in op.inputs)
-            if is_stepper or depends_on_variant:
+            if is_stepper or has_onset or depends_on_variant:
                 stepping.append(op)
                 for output in op.outputs:
                     variant.add(output.name)
@@ -281,6 +284,13 @@ class OpEmitMixin:
                     args=(input_value,) + param_args,
                 )
             )
+        # Delayed within-trial onset (ITI): withhold this node's output (0) until
+        # its onset step. `step` is the fused co-evolution loop index; onset_step
+        # is only set in that context.
+        onset = op.attrs.get("onset_step")
+        if onset is not None:
+            for output_var in output_vars:
+                self.builder.line(f"{output_var} = tl.where(step >= {onset}, {output_var}, 0.0)")
         self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 

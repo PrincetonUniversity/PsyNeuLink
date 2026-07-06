@@ -95,6 +95,10 @@ class TritonEmitContext:
     def lca_max_steps(self) -> str:
         return "LCA_MAX_STEPS"
 
+    def coevolve_warmup(self) -> int:
+        """Warm-up (ITI) steps before the co-evolving terminator begins."""
+        return self._emitter.coevolve_warmup
+
     def float_literal(self, value: float) -> str:
         return repr(float(value))
 

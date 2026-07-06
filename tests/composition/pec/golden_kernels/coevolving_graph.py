@@ -59,9 +59,14 @@ def _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold
 
 
 @triton.jit
-def _pnl_triton_ddm_step(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, seed, rng_base, step):
+def _pnl_triton_ddm_step(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, seed, rng_base, step, start):
+    active_time = step >= start
     draw = tl.randn(seed, rng_base + step)
-    return _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, step)
+    new_value, new_steps, new_finished = _pnl_triton_ddm_update(value, steps, finished, drift, rate, noise, threshold, threshold_collapse, time_step_size, offset, draw, tl.maximum(step - start, 0))
+    value = tl.where(active_time, new_value, value)
+    steps = tl.where(active_time, new_steps, steps)
+    finished = tl.where(active_time, new_finished, finished)
+    return (value, steps, finished)
 
 
 @triton.jit
@@ -219,7 +224,7 @@ def pnl_batched_coevolving_graph_kernel(
 
             n_DDM_input_0 = (n_DDM_projection_0_0)
 
-            n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0 = _pnl_triton_ddm_step(n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0, n_DDM_input_0, param_14_value, param_15_value, param_16_value, param_17_value, param_19_value, param_21_value, SEED, random_base, step)
+            n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0 = _pnl_triton_ddm_step(n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0, n_DDM_input_0, param_14_value, param_15_value, param_16_value, param_17_value, param_19_value, param_21_value, SEED, random_base, step, 0)
 
         n_DDM_DECISION_OUTCOME_0 = tl.where(n_DDM_value_0 > 0.0, 1.0, 0.0)
         n_DDM_RESPONSE_TIME_0 = param_18_value + n_DDM_steps_0 * param_19_value

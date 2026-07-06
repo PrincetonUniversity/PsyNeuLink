@@ -371,6 +371,41 @@ def test_csi_surrogate_compiles_and_runs_end_to_end():
         unregister_batched_instance_op("Drift Rate Value")
 
 
+def test_csi_surrogate_iti_delayed_onset_matches_pnl():
+    """iti>0: `Task Input` fires at `AtPass(iti)`, a delayed within-trial onset.
+
+    The fused co-evolution loop gates it per step — the task input is withheld
+    (so the `Always`-LCA integrates 0 and *decays* during the ITI), and the DDM
+    terminator is frozen until step `iti`. Decision + RT must still match PNL
+    Python (the ITI shifts the LCA's state when the DDM runs, lengthening RT).
+    """
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    try:
+        _register_csi_drift_rate()
+        comp = make_stab_flex(iti=10, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+                              ddm_noise=0.0, lca_noise=0.0)
+        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+        assert report.is_supported, report.unsupported_reasons
+        assert report.metadata["fusion_kind"] == "coevolving_graph"
+
+        inputs = _csi_inputs(comp)
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
+        assert plan.ir.graph.metadata["coevolve_warmup"] == 10  # the ITI
+
+        batched = plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=1)
+        got = batched.values[0, 0, :, 0, :]
+        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
+        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
+        reference = _pnl_python_outcomes(comp, inputs, output_specs=plan.ir.graph.outputs)
+        np.testing.assert_allclose(got[:, dec_idx], reference[:, dec_idx], atol=1e-4)
+        np.testing.assert_allclose(got[:, rt_idx], reference[:, rt_idx], atol=0.02)
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
+
+
 def test_csi_surrogate_collapsing_threshold_shortens_response_time():
     """The absorbed collapsing-threshold chain actually drives the DDM boundary:
     a collapsing threshold reaches a decision sooner than a fixed one."""

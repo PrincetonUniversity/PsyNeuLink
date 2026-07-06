@@ -275,6 +275,8 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             }
             if "integrator_pre" in node.attrs:
                 attrs["integrator_pre"] = node.attrs["integrator_pre"]
+            if "onset_step" in node.attrs:
+                attrs["onset_step"] = node.attrs["onset_step"]
             ops.append(
                 KernelOp(
                     kind="CallFunction",

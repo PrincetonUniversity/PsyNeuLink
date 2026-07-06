@@ -66,7 +66,11 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     supported_nodes: list[str] = []
 
     model_kind = _classify_model(nodes)
-    schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(composition, nodes)
+    executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
+    coevolving = _is_coevolving(composition, executable_nodes)
+    schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(
+        composition, nodes, coevolving
+    )
     node_bindings = {
         _node_name(node): node
         for node in nodes
@@ -150,6 +154,12 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             metadata={
                 "composition_name": getattr(composition, "name", None),
                 "schedule_kind": schedule_kind,
+                # Warm-up steps before the co-evolving terminator begins (the ITI:
+                # the LCA decays / integrates onset inputs first). = max node
+                # onset; 0 when there is none.
+                "coevolve_warmup": max(
+                    (spec.attrs.get("onset_step", 0) for spec in node_specs), default=0
+                ),
             },
         )
 
@@ -197,6 +207,12 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
     attrs: dict[str, Any] = {
         "output_ports": tuple(port.name for port in getattr(node, "output_ports", [])),
     }
+    # A delayed within-trial onset (AtPass(n>0)): the co-evolution loop withholds
+    # this node's output until step n. Only meaningful/executable in a co-evolving
+    # graph (AtPass(n>0) is rejected at the schedule level otherwise).
+    onset = _onset_step(node, composition)
+    if onset > 0:
+        attrs["onset_step"] = onset
 
     mechanism_spec = specs.mechanism_spec_for(node)
     function_spec = specs.function_spec_for(function)
@@ -484,7 +500,7 @@ def _terminal_node_names(composition) -> list[str]:
     return terminal
 
 
-def _classify_schedule(composition, nodes) -> tuple[str, list[str], list[BatchedDiagnostic]]:
+def _classify_schedule(composition, nodes, coevolving=False) -> tuple[str, list[str], list[BatchedDiagnostic]]:
     conditions = _scheduler_conditions(composition)
     if not conditions:
         return STATIC_GRAPH_SCHEDULE, [], []
@@ -501,7 +517,7 @@ def _classify_schedule(composition, nodes) -> tuple[str, list[str], list[Batched
         if node_name not in node_index:
             continue
         condition_name = type(condition).__name__
-        condition_schedule_kind = _condition_schedule_kind(condition, node, node_index)
+        condition_schedule_kind = _condition_schedule_kind(condition, node, node_index, coevolving)
         supported.append(f"{node_name}: {condition_name}")
 
         if condition_schedule_kind == STATIC_GRAPH_SCHEDULE:
@@ -532,7 +548,7 @@ def _classify_schedule(composition, nodes) -> tuple[str, list[str], list[Batched
     return STATIC_GRAPH_SCHEDULE, supported, []
 
 
-def _condition_schedule_kind(condition, node, node_index: dict[str, int]) -> str:
+def _condition_schedule_kind(condition, node, node_index: dict[str, int], coevolving=False) -> str:
     condition_name = type(condition).__name__
     if condition_name in {"Always", "AtTrialStart"}:
         return STATIC_GRAPH_SCHEDULE
@@ -550,20 +566,30 @@ def _condition_schedule_kind(condition, node, node_index: dict[str, int]) -> str
         # static/stateful graph every node already computes once per trial
         # (origins load their input once and hold it), so "fire once at trial
         # start" is exactly the batched origin semantics -> static graph.
-        # AtPass(n>0) is a delayed within-trial onset (e.g. ITI before taskInput
-        # becomes active); modeling that requires precomputed per-pass timing,
-        # so it is recognized but not executable yet rather than silently
-        # mis-timed as static.
+        # AtPass(n>0) is a delayed within-trial onset (e.g. the ITI before
+        # taskInput becomes active).  The fused co-evolution loop can gate that
+        # per step (the input is withheld until step n, and the terminator is
+        # frozen), so it is executable there; without a per-step loop it is only
+        # recognized, not executable (`precomputed_trace`).
         args = getattr(condition, "args", ())
         n = args[0] if args else 0
         if n == 0:
             return STATIC_GRAPH_SCHEDULE
-        return PRECOMPUTED_TRACE_SCHEDULE
+        return STATIC_GRAPH_SCHEDULE if coevolving else PRECOMPUTED_TRACE_SCHEDULE
     if condition_name in _PRECOMPUTED_TRACE_CONDITIONS:
         return PRECOMPUTED_TRACE_SCHEDULE
     if condition_name in _DYNAMIC_LANE_LOCAL_CONDITIONS:
         return DYNAMIC_LANE_LOCAL_SCHEDULE
     return UNSUPPORTED_SCHEDULE
+
+
+def _onset_step(node, composition) -> int:
+    """The `AtPass(n)` onset step for `node` (0 if none / not AtPass)."""
+    condition = _scheduler_conditions(composition).get(node)
+    if type(condition).__name__ != "AtPass":
+        return 0
+    args = getattr(condition, "args", ())
+    return int(args[0]) if args else 0
 
 
 def _scheduler_conditions(composition):
