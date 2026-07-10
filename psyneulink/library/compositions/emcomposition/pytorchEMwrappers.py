@@ -50,7 +50,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         field_memory_pytorch_nodes = [v for k,v in self.nodes_map.items() if k in memory_cycle_nodes]
         set(field_memory_pytorch_nodes) == self.execution_sets[1]
         self.execution_sets.append(self.execution_sets[1])
-        field_memory_executions = [i+1 for i, exec_set in enumerate(self.execution_sets)
+        field_memory_executions = [i + 1 for i, exec_set in enumerate(self.execution_sets)
                                    if field_memory_pytorch_nodes[0] in exec_set]
         assert len(field_memory_executions) == 3
         self.field_memory_operations = {k:v for k,v in zip(field_memory_executions, [COMPUTE_SCORES, RETRIEVE, STORE])}
@@ -164,14 +164,16 @@ class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
 
     def _is_start_of_forward_pass(self):
         """True if the current execution belongs to the first sequence element of the current forward pass
-        (in non-sequence mode every forward pass is a single element, so this is True on every pass)."""
+        (in non-sequence mode every forward pass is a single element, so this is True on every pass).
+        """
         return getattr(self._top_pytorch_rep(), '_current_seq_index', 0) == 0
 
     def _warn_if_differentiable_storage_has_no_effect(self):
         """Warn (once) if differentiable_storage is used outside of full_sequence_mode, where it cannot
         have any effect: gradients can only flow through entries stored and retrieved within the *same*
         forward pass, and outside of full_sequence_mode each store's graph is severed before the entry
-        can ever be retrieved (each trial is its own forward/backward pass)."""
+        can ever be retrieved (each trial is its own forward/backward pass).
+        """
         if self._differentiable_storage_mode_warned:
             return
         if not getattr(self._top_pytorch_rep(), '_full_sequence_mode', False):
@@ -188,7 +190,8 @@ class PytorchExternalMemoryMechanismWrapper(PytorchMechanismWrapper):
         """Cut the autograd graph carried by the memory buffer (used with `differentiable_storage
         <EMComposition.differentiable_storage>` at the start of each forward pass: entries stored during one
         forward pass must not carry their graph into the next one, whose backward pass would fail because the
-        parameters producing them were modified in place by the intervening optimizer step)."""
+        parameters producing them were modified in place by the intervening optimizer step).
+        """
         pytorch_function = getattr(self.function, 'function', None)
         if pytorch_function is not None and hasattr(pytorch_function, 'set_memory'):
             pytorch_function.set_memory(pytorch_function.get_memory().detach())
