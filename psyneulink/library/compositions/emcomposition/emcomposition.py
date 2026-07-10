@@ -1202,7 +1202,11 @@ from typing import Optional, Union
 from enum import Enum
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError:
+    pass
 
 import psyneulink.core.scheduling.condition as conditions
 
