@@ -2415,7 +2415,7 @@ class MatrixMemory(TransformFunction): #
 
         decay_rate = decay_rate or 0.0
         if decay_rate == AUTO:
-            decay_rate = 1/len(memory)
+            decay_rate = 1 / len(memory)
 
         super().__init__(
             default_variable=default_variable,
@@ -2497,9 +2497,9 @@ class MatrixMemory(TransformFunction): #
 
         # Note: ACCESS_MEMORY invokes both RETRIEVE and STORE; otherwise invoke only the one called
         elif operation in {ACCESS_MEMORY, RETRIEVE, STORE}:
-            if operation in{ACCESS_MEMORY, RETRIEVE}:
+            if operation in {ACCESS_MEMORY, RETRIEVE}:
                 entry = self._retrieve_memory(query, combined_scores, context=context)
-            if operation in{ACCESS_MEMORY, STORE}:
+            if operation in {ACCESS_MEMORY, STORE}:
                 # # Store memory in place of weakest one if storage_prob > 0
                 self._store_memory(query, weakest_memory_idx, context=context)
             scores = combined_scores
@@ -2551,7 +2551,7 @@ class MatrixMemory(TransformFunction): #
         if random_state.uniform(0, 1) < storage_prob:
             decay_rate = self.parameters.decay_rate._get(context)
             if decay_rate >= 0.0:
-                memory *= (1-decay_rate)
+                memory *= (1 - decay_rate)
             memory[weakest_memory_idx] = item_to_store
             # self.parameters.memory._set(memory, context, override=True)
             self.scores_function.parameters.matrix._set(self.memory.T, context)
@@ -2619,7 +2619,7 @@ class MatrixMemory(TransformFunction): #
                     # caller is expected to run this under torch.no_grad() during learning.
                     memory = _get_memory()
                     if decay_rate >= 0.0:
-                        memory.mul_(1-decay_rate)
+                        memory.mul_(1 - decay_rate)
                     memory[weakest_memory_idx] = item_to_store
                 # self.parameters.memory._set(memory, context, override=True)
                 self.scores_function.parameters.matrix._set(memory.detach().cpu().numpy().T, context)

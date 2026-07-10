@@ -748,7 +748,7 @@ The following is a more detailed description of the operations carried out when 
   combined across fields (see `Combine scores <EMComposition_Combine_Scores>` below).
 
 .. _EMComposition_Concatenate_Queries:
-  
+
 * **Concatenate queries**. The above applies if `concatenate_queries <EMComposition.concatenate_queries>` is ``False``
   (the default).  If `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, then inputs and scoring
   are handled differently: The inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
@@ -765,8 +765,8 @@ The following is a more detailed description of the operations carried out when 
 * **Weight field scores**. If `field weights <EMComposition_Field_Weights>` are specified, then the similarity score
   vector computed for each field is multiplied by the corresponding `field_weight <EMComposition.field_weights>`
   provided by the `field_weight_node <EMComposition.field_weight_nodes>`.
-  COMMENT: 
-  BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED  
+  COMMENT:
+  BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED
   By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this
   is done using the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives
   a Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding
@@ -774,7 +774,7 @@ The following is a more detailed description of the operations carried out when 
   for that field as its  output.  However, if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>`
   is ``True``, the `field_weight_nodes` are implemented as `GatingMechanisms <GatingMechanism>`, each of which
   uses its `field weight <EMComposition.field_weights>` as a `GatingSignal <GatingSignal>` to output gate (i.e.,
-  multiplicatively modulate the output of) the corresponding `field_memory_node <EMComposition.field_memory_nodes>`. 
+  multiplicatively modulate the output of) the corresponding `field_memory_node <EMComposition.field_memory_nodes>`.
   In this case, the `weighted_scores_nodes are not implemented, and the output of the `field_memory_node
   <EMComposition.field_memory_nodes>` is passed directly to the `combined_scores_node
   <EMComposition.combined_scores_node>`.
@@ -785,7 +785,7 @@ The following is a more detailed description of the operations carried out when 
      complexity of the EMComposition, by eliminating the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`.
      However, doing to precludes the ability to learn the `field_weights <EMComposition.field_weights>`,
      since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
-     then `use_gating_for_weighting` should be set to ``False``.  
+     then `use_gating_for_weighting` should be set to ``False``.
   COMMENT
   This is done by the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives a
   Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node
@@ -1725,7 +1725,7 @@ class EMComposition(AutodiffComposition):
         (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool
-        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of key 
+        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of key
         fields, or used as absolute weighting values, during retrieval (see `normalize_field weights
         <EMComposition_Normalize_Field_Weights>` for additional details).
 
@@ -1793,11 +1793,11 @@ class EMComposition(AutodiffComposition):
     .. _EMComposition_Nodes:
 
     query_input_nodes : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive queries that are `scored for their 
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive queries that are `scored for their
         similarity <EMComposition_Compute_Similarity_Scores>` with keys in the corresponding field of `memory
         <EMComposition.memory>` to determine the retrieved value, and then are themsleves `stored in memory
         <EMComposition_Store_Values>`. By default these are assigned the name *QUERY_n_INPUT* where n is the field
-        number (starting from 0); however, if `field_names <EMComposition.field_names>` is specified, then the name 
+        number (starting from 0); however, if `field_names <EMComposition.field_names>` is specified, then the name
         of each query_input_node is assigned the corresponding field name appended with *[QUERY]*.
 
     value_input_nodes : list[ProcessingMechanism]
@@ -1822,9 +1822,9 @@ class EMComposition(AutodiffComposition):
         corresponding `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[FIELD MEMORY]*.
 
     field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
-        Nodes used to weight the similarity scores computed by the `field_memory_nodes 
-        <EMComposition.field_memory_nodes>` with the `field weight <EMComposition.field_weights>` for the 
-        corresponding `key field <EMComposition_Fields>` (see `Weight field scores <EMComposition_Weight_Fields>` 
+        Nodes used to weight the similarity scores computed by the `field_memory_nodes
+        <EMComposition.field_memory_nodes>` with the `field weight <EMComposition.field_weights>` for the
+        corresponding `key field <EMComposition_Fields>` (see `Weight field scores <EMComposition_Weight_Fields>`
         for implementation). These are named the same as the corresponding `query_input_nodes
         <EMComposition.query_input_nodes>`.
 
