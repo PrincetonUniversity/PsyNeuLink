@@ -945,6 +945,37 @@ modified, and no error signals are passed to the nodes that project to  its `que
          with cases in which EM is executed before those, as in the EGO model for *PREVIOUS STATE* and *CONTEXT*:
          <EGO Model>.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer)).
 
+  .. _EMComposition_Differentiable_Storage:
+
+  *Differentiable Storage*
+
+  By default, `memory <EMComposition.memory>` is treated as a *non-differentiable* buffer during learning: entries
+  are detached from the autograd graph when they are stored, so gradients flow only through the retrieval *query*
+  (the values projected to the `query_input_nodes <EMComposition.query_input_nodes>`) and not through the stored
+  entries themselves. This corresponds to a form of fast, one-shot episodic storage (e.g., hippocampal memory, as in
+  the EGO model; `Giallanza et al., 2024 <https://psyarxiv.com/kzvpy>`_): what is learned are the pathways that
+  *construct* the query, not the contents of memory.
+
+  If **differentiable_storage** is ``True``, entries stored during learning instead retain their autograd graph,
+  so that gradients also flow from later retrievals *back through the stored entries* to the components that
+  produced them. This is required for architectures in which the stored representations themselves must be learned
+  end-to-end -- most notably the Emergent Symbol Binding Network (ESBN; `Webb et al., 2021
+  <https://arxiv.org/abs/2012.14601>`_), in which the keys written to memory are produced by a learned pathway whose
+  *only* source of gradient is their retrieval at later time steps; with the default (non-differentiable) storage,
+  that pathway would receive no learning signal at all.
+
+  .. note::
+     `differentiable_storage <EMComposition.differentiable_storage>` is only supported in `ExecutionMode.PyTorch`,
+     and gradients can only flow through entries stored *within the same forward pass* in which they are retrieved.
+     This is meaningful when the EMComposition is executed several times before a single backward pass -- i.e., in
+     `full_sequence_mode <AutodiffComposition.full_sequence_mode>`, where an entire sequence is processed (with one
+     store per element) in one forward pass, and the loss is backpropagated through the whole sequence. Across
+     separate backward passes gradient flow through memory is not possible in principle (the parameters that
+     produced the stored entries are modified in place by each optimizer step, invalidating the stored graph), so
+     the autograd graph carried by memory is automatically severed at the start of each forward pass. If
+     **differentiable_storage** is ``True`` but the model is trained *without* ``full_sequence_mode``, a warning
+     is issued and the option has no effect.
+
 .. _EMComposition_Examples:
 
 Examples
@@ -1475,6 +1506,7 @@ class EMComposition(AutodiffComposition):
         softmax_threshold=.001,         \
         storage_prob=1.0,               \
         store_on_optimization=FIRST,    \
+        differentiable_storage=False,   \
         memory_decay_rate=AUTO,         \
         COMMENT:
         store_at=WEAKEST                \
@@ -1604,6 +1636,11 @@ class EMComposition(AutodiffComposition):
         specifies the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
 
+    differentiable_storage : bool : default False
+        specifies whether entries stored in `memory <EMComposition.memory>` during learning retain their autograd
+        graph, so that gradients flow from later retrievals back through the stored entries to the components that
+        produced them (see `Differentiable Storage <EMComposition_Differentiable_Storage>` for details).
+
     memory_decay_rate : float : AUTO
         specifies the rate at which entries in `memory <EMComposition.memory>` decay
         (see `decay memories <EMComposition_Decay_Memories>` for details).
@@ -1725,6 +1762,11 @@ class EMComposition(AutodiffComposition):
     store_on_optimization : str
         determines the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
+
+    differentiable_storage : bool
+        determines whether entries stored in `memory <EMComposition.memory>` during learning retain their autograd
+        graph, so that gradients flow from later retrievals back through the stored entries to the components that
+        produced them (see `Differentiable Storage <EMComposition_Differentiable_Storage>` for details).
 
     memory_decay_rate : float
         determines the rate at which entries in `memory <EMComposition.memory>` decay
@@ -1962,6 +2004,12 @@ class EMComposition(AutodiffComposition):
 
                     :default value: FIRST
                     :type: ``str``
+
+                differentiable_storage
+                    see `differentiable_storage <EMComposition.differentiable_storage>`
+
+                    :default value: False
+                    :type: ``bool``
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0], [0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
@@ -1979,6 +2027,7 @@ class EMComposition(AutodiffComposition):
         # store_at = Parameter(WEAKEST, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True)
         store_on_optimization = Parameter(FIRST)
+        differentiable_storage = Parameter(False, structural=True)
         memory_decay_rate = Parameter(AUTO, modulable=True)
         # purge_by_field_weights = Parameter(False, structural=True)
         target_fields = Parameter(None, read_only=True, structural=True)
@@ -2059,6 +2108,7 @@ class EMComposition(AutodiffComposition):
         storage_prob: float = 1.0,
         # store_at: Union[WEAKEST, RANDOM, CYCLE, BY_WEIGHT] = WEAKEST,
         store_on_optimization: Union[FIRST, LAST, ALL] = FIRST,
+        differentiable_storage: bool = False,
         memory_decay_rate: Union[float, AUTO] = AUTO,
         # purge_by_field_weights: bool = False,
         enable_learning: bool = True,
@@ -2129,6 +2179,7 @@ class EMComposition(AutodiffComposition):
             storage_prob=storage_prob,
             # store_at=store_at,
             store_on_optimization=store_on_optimization,
+            differentiable_storage=differentiable_storage,
             memory_decay_rate=memory_decay_rate,
             # purge_by_field_weights=purge_by_field_weights,
             enable_learning=enable_learning,

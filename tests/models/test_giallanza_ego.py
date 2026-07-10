@@ -484,7 +484,21 @@ def run_pnl_model(model, input_layer, states, num_optimization_steps, **_):
         synch_node_values_with_torch=RUN,
         synch_results_with_torch=RUN,
     )
-    return np.asarray(model.results)[::num_optimization_steps][:, 2]
+    # Extract the PREDICTION output (column 2) for the first optimization step of
+    # each trial. Coerce each cell explicitly: depending on torch global state
+    # left by earlier tests in a full-suite run, ``model.results`` cells may come
+    # back as torch tensors or as a ragged object array rather than a clean float
+    # ndarray. Going cell-by-cell (instead of ``np.asarray(model.results)`` over
+    # the whole structure) keeps this robust to that and avoids numpy trying to
+    # convert a multi-element tensor to a scalar.
+    results = model.results
+    predictions = []
+    for i in range(0, len(results), num_optimization_steps):
+        cell = results[i][2]
+        if isinstance(cell, torch.Tensor):
+            cell = cell.detach().cpu().numpy()
+        predictions.append(np.asarray(cell, dtype=float).reshape(-1))
+    return np.stack(predictions)
 
 
 # =============================================================================

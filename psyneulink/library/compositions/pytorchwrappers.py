@@ -1653,9 +1653,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         else:
             seq_indices = [0]
 
+        # Expose the mode so nested nodes can adapt their behavior to it (e.g., an EMComposition with
+        # differentiable_storage warns if it is executed outside of full_sequence_mode, where the option has no effect).
+        self._full_sequence_mode = full_sequence_mode
+
         # Process each sequence element, if not in sequence mode, we will process everything at once and this loop will
         # only run once.
         for seq_index in seq_indices:
+
+            # Expose the current sequence-element index so nested recurrent nodes (e.g. a GRU) can tell whether this is
+            # the first step of the forward pass (seed/reset their state) or a continuation step (carry their state
+            # across steps so the recurrence backpropagates through the whole sequence).
+            self._current_seq_index = seq_index
 
             # If we are in sequence mode, individual sequence elements are processed by the model one-by-one, so get
             # the correct one.
