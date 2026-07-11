@@ -1046,8 +1046,11 @@ class TestStandardOutputPorts:
 @pytest.mark.composition
 class TestRecurrentInputPort:
 
-    def test_ris_simple(self):
-        R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+    @pytest.mark.higher_dims
+    @pytest.mark.parametrize('dimensions', [2, 3, 4])
+    def test_ris_simple(self, dimensions):
+        var_shape = (1,) * (dimensions - 1) + (3,)
+        R2 = RecurrentTransferMechanism(default_variable=np.zeros(var_shape),
                                             matrix=[[1.0, 2.0, 3.0],
                                                     [2.0, 1.0, 2.0],
                                                     [3.0, 2.0, 1.0]],
@@ -1055,7 +1058,8 @@ class TestRecurrentInputPort:
         R2.execute(input=[1, 3, 2])
         c = Composition(pathways=[R2])
         c.run(inputs=[[1, 3, 2]])
-        np.testing.assert_allclose(R2.parameters.value.get(c), [[14., 12., 13.]])
+        expected = np.array([[14., 12., 13.]]).reshape(var_shape)
+        np.testing.assert_allclose(R2.parameters.value.get(c), expected)
         assert len(R2.input_ports) == 2
         assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent InputPort isn't primary
 
