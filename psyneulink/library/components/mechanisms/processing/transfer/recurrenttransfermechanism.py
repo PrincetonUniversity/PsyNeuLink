@@ -419,7 +419,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     combination_function : function : default LinearCombination
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputPorts
-        <RecurrentTransferMechanism_Structure>`; must accept a 2d array with one or two items of the same length,
+        <RecurrentTransferMechanism_Structure>`; must accept a >=2d array with one or two items of the same shape,
         and generate a result that is the same size as each of these;  default simply adds the two items.
 
     enable_learning : boolean : default False
@@ -742,8 +742,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 rows = cols = self.recurrent_size # this is a hack just to skip the tests ahead:
                 # if the matrix really is None, that is checked up ahead, in _instantiate_attributes_before_function()
             else:
-                rows = np.array(matrix).shape[0]
-                cols = np.array(matrix).shape[1]
+                rows = np.array(matrix).shape[-2]
+                cols = np.array(matrix).shape[-1]
 
             try:
                 if 'U' in repr(matrix.dtype):
@@ -997,7 +997,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def recurrent_size(self):
-        return len(self.defaults.variable[0])
+        return self.defaults.variable.shape[-1]
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1069,13 +1069,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.defaults.variable[0])
+            size = mech.defaults.variable.shape[-1]
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_port:
             # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
-            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
+            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.input_port.defaults.variable,
                                         internal_only=True)
             assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
             assert self.input_port.name != "Recurrent Input Port"

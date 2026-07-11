@@ -2184,9 +2184,12 @@ class TestGraph:
 @pytest.mark.composition
 class TestGraphCycles:
 
-    def test_recurrent_transfer_mechanisms(self):
-        R1 = RecurrentTransferMechanism(auto=1.0, name='R1')
-        R2 = RecurrentTransferMechanism(auto=1.0, function=Linear(slope=2.0), name='R2')
+    @pytest.mark.higher_dims
+    @pytest.mark.parametrize('dimensions', [2, 3, 4])
+    def test_recurrent_transfer_mechanisms(self, dimensions):
+        var_shape = (1,) * dimensions
+        R1 = RecurrentTransferMechanism(default_variable=np.zeros(var_shape), auto=1.0, name='R1')
+        R2 = RecurrentTransferMechanism(default_variable=np.zeros(var_shape), auto=1.0, function=Linear(slope=2.0), name='R2')
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[R1, R2])
         assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [R2]
@@ -2204,7 +2207,7 @@ class TestGraphCycles:
         # input to R2 = 3.0 + 8.0, output from R2 = 22.0
 
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
-        np.testing.assert_allclose(output, [np.array([22.])])
+        np.testing.assert_allclose(output, np.full(var_shape, 22.))
 
 
 @pytest.mark.composition
