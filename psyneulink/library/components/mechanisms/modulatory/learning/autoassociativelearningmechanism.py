@@ -368,10 +368,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # # MODIFIED 9/22/17 NEW: [HACK] JDC: 6/29/18 -> CAUSES DEFAULT variable [[0]] OR ANYTHING OF size=1 TO FAIL
         # if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
         # MODIFIED 6/29/18 NEWER JDC: ALLOW size=1, AND DEFER FAILURE TO LearningFunction IF enbale_learning=True
-        if np.array(variable)[0].ndim != 1 or not is_numeric(variable):
+        # if np.array(variable)[0].ndim != 1 or not is_numeric(variable):
         # MODIFIED 9/22/17 END
+        # check numeric type or numeric in ragged array in first dim only
+        if not is_numeric(variable):
             raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must be "
-                                                        "a list or 1d np.array containing only numbers".
+                                                        "an array containing only numbers".
                                                         format(self.name, variable))
         return variable
 
