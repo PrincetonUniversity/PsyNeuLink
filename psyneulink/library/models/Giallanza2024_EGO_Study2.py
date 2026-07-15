@@ -9,9 +9,9 @@ between them, without the catastrophic interference characteristic of simple fee
 The task and data simulated are based ones reported in `https://www.nature.com/articles/s44271-024-00079-4`_.
 
 .. note::
-    The term "context" is overloaded in this script. In the model, "context" refers to the internal
-    representation of the context that is a linearly integrated representation of past states.
-    In the task environment, "context" refers to the two different sets of state transitions that
+    The term "context" is used differently for the model and the task environment in this script. In the model,
+    "context" refers to the internal representation of the context that is a linearly integrated representation of
+    past states. In the task environment, "context" refers to the two different sets of state transitions that
     must be learned from experience. The context is cued by the first stimulus in each trial
     (state 9 or state 10). Beyond that, however, the model is not explicitly given a context signal;
     it must learn to use that to determine which of the two sequences will follow and use that to then
