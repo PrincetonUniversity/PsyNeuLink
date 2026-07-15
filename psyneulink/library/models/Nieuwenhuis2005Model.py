@@ -212,10 +212,10 @@ task.run(stim_list_dict, num_trials=trials)
 LC_results = LC.log.nparray()[1][1]        # get logged results
 LC_results_w = np.zeros([trials])          # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[5][i + 1][2][0][0]
+    LC_results_w[i] = LC_results[5][i + 1][2][0]
 LC_results_v = np.zeros([trials])          # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[5][i + 1][1][0][0]
+    LC_results_v[i] = LC_results[5][i + 1][1][0]
 
 
 def h_v(v, C, d):                   # Compute h(v)
