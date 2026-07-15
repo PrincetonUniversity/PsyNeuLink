@@ -9,6 +9,7 @@ ParameterEstimationComposition
        :maxdepth: 1
 
        OptimizationControlMechanism
+       DistributedFitting
 
 .. toctree::
    :maxdepth: 2

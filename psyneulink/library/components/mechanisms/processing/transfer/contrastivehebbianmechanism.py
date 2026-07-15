@@ -131,7 +131,7 @@ Structure
 *Input*
 ~~~~~~~
 
-A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <InputPort>`: 
+A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <InputPort>`:
 
     * *INPUT:* receives external input to the Mechanism;
     ..

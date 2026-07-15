@@ -748,7 +748,7 @@ The following is a more detailed description of the operations carried out when 
   combined across fields (see `Combine scores <EMComposition_Combine_Scores>` below).
 
 .. _EMComposition_Concatenate_Queries:
-  
+
 * **Concatenate queries**. The above applies if `concatenate_queries <EMComposition.concatenate_queries>` is ``False``
   (the default).  If `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, then inputs and scoring
   are handled differently: The inputs to all of the `query_input_nodes <EMComposition.query_input_nodes>`
@@ -765,8 +765,8 @@ The following is a more detailed description of the operations carried out when 
 * **Weight field scores**. If `field weights <EMComposition_Field_Weights>` are specified, then the similarity score
   vector computed for each field is multiplied by the corresponding `field_weight <EMComposition.field_weights>`
   provided by the `field_weight_node <EMComposition.field_weight_nodes>`.
-  COMMENT: 
-  BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED  
+  COMMENT:
+  BREADCRUMB REINSTATE IF/WHEN `use_gating_for_weighting IS RESTORED
   By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this
   is done using the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives
   a Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding
@@ -774,7 +774,7 @@ The following is a more detailed description of the operations carried out when 
   for that field as its  output.  However, if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>`
   is ``True``, the `field_weight_nodes` are implemented as `GatingMechanisms <GatingMechanism>`, each of which
   uses its `field weight <EMComposition.field_weights>` as a `GatingSignal <GatingSignal>` to output gate (i.e.,
-  multiplicatively modulate the output of) the corresponding `field_memory_node <EMComposition.field_memory_nodes>`. 
+  multiplicatively modulate the output of) the corresponding `field_memory_node <EMComposition.field_memory_nodes>`.
   In this case, the `weighted_scores_nodes are not implemented, and the output of the `field_memory_node
   <EMComposition.field_memory_nodes>` is passed directly to the `combined_scores_node
   <EMComposition.combined_scores_node>`.
@@ -785,7 +785,7 @@ The following is a more detailed description of the operations carried out when 
      complexity of the EMComposition, by eliminating the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`.
      However, doing to precludes the ability to learn the `field_weights <EMComposition.field_weights>`,
      since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
-     then `use_gating_for_weighting` should be set to ``False``.  
+     then `use_gating_for_weighting` should be set to ``False``.
   COMMENT
   This is done by the `weighted_scores_nodes <EMComposition.weighted_scores_nodes>`, each of which receives a
   Projection from a `field_memory_node <EMComposition.field_memory_nodes>` and the corresponding `field_weight_node
@@ -944,6 +944,37 @@ modified, and no error signals are passed to the nodes that project to  its `que
          (at the end of a full  execution of `Composition.execute` in the first optimization step), to deal
          with cases in which EM is executed before those, as in the EGO model for *PREVIOUS STATE* and *CONTEXT*:
          <EGO Model>.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer)).
+
+  .. _EMComposition_Differentiable_Storage:
+
+  *Differentiable Storage*
+
+  By default, `memory <EMComposition.memory>` is treated as a *non-differentiable* buffer during learning: entries
+  are detached from the autograd graph when they are stored, so gradients flow only through the retrieval *query*
+  (the values projected to the `query_input_nodes <EMComposition.query_input_nodes>`) and not through the stored
+  entries themselves. This corresponds to a form of fast, one-shot episodic storage (e.g., hippocampal memory, as in
+  the EGO model; `Giallanza et al., 2024 <https://psyarxiv.com/kzvpy>`_): what is learned are the pathways that
+  *construct* the query, not the contents of memory.
+
+  If **differentiable_storage** is ``True``, entries stored during learning instead retain their autograd graph,
+  so that gradients also flow from later retrievals *back through the stored entries* to the components that
+  produced them. This is required for architectures in which the stored representations themselves must be learned
+  end-to-end -- most notably the Emergent Symbol Binding Network (ESBN; `Webb et al., 2021
+  <https://arxiv.org/abs/2012.14601>`_), in which the keys written to memory are produced by a learned pathway whose
+  *only* source of gradient is their retrieval at later time steps; with the default (non-differentiable) storage,
+  that pathway would receive no learning signal at all.
+
+  .. note::
+     `differentiable_storage <EMComposition.differentiable_storage>` is only supported in `ExecutionMode.PyTorch`,
+     and gradients can only flow through entries stored *within the same forward pass* in which they are retrieved.
+     This is meaningful when the EMComposition is executed several times before a single backward pass -- i.e., in
+     `full_sequence_mode <AutodiffComposition.full_sequence_mode>`, where an entire sequence is processed (with one
+     store per element) in one forward pass, and the loss is backpropagated through the whole sequence. Across
+     separate backward passes gradient flow through memory is not possible in principle (the parameters that
+     produced the stored entries are modified in place by each optimizer step, invalidating the stored graph), so
+     the autograd graph carried by memory is automatically severed at the start of each forward pass. If
+     **differentiable_storage** is ``True`` but the model is trained *without* ``full_sequence_mode``, a warning
+     is issued and the option has no effect.
 
 .. _EMComposition_Examples:
 
@@ -1171,7 +1202,11 @@ from typing import Optional, Union
 from enum import Enum
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError:
+    pass
 
 import psyneulink.core.scheduling.condition as conditions
 
@@ -1475,6 +1510,7 @@ class EMComposition(AutodiffComposition):
         softmax_threshold=.001,         \
         storage_prob=1.0,               \
         store_on_optimization=FIRST,    \
+        differentiable_storage=False,   \
         memory_decay_rate=AUTO,         \
         COMMENT:
         store_at=WEAKEST                \
@@ -1604,6 +1640,11 @@ class EMComposition(AutodiffComposition):
         specifies the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
 
+    differentiable_storage : bool : default False
+        specifies whether entries stored in `memory <EMComposition.memory>` during learning retain their autograd
+        graph, so that gradients flow from later retrievals back through the stored entries to the components that
+        produced them (see `Differentiable Storage <EMComposition_Differentiable_Storage>` for details).
+
     memory_decay_rate : float : AUTO
         specifies the rate at which entries in `memory <EMComposition.memory>` decay
         (see `decay memories <EMComposition_Decay_Memories>` for details).
@@ -1688,7 +1729,7 @@ class EMComposition(AutodiffComposition):
         (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool
-        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of key 
+        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of key
         fields, or used as absolute weighting values, during retrieval (see `normalize_field weights
         <EMComposition_Normalize_Field_Weights>` for additional details).
 
@@ -1726,6 +1767,11 @@ class EMComposition(AutodiffComposition):
         determines the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
         learning (see `EMComposition_Storage_Learning` for details).
 
+    differentiable_storage : bool
+        determines whether entries stored in `memory <EMComposition.memory>` during learning retain their autograd
+        graph, so that gradients flow from later retrievals back through the stored entries to the components that
+        produced them (see `Differentiable Storage <EMComposition_Differentiable_Storage>` for details).
+
     memory_decay_rate : float
         determines the rate at which entries in `memory <EMComposition.memory>` decay
         (see `decay memories <EMComposition_Decay_Memories>` for details).
@@ -1751,11 +1797,11 @@ class EMComposition(AutodiffComposition):
     .. _EMComposition_Nodes:
 
     query_input_nodes : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive queries that are `scored for their 
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive queries that are `scored for their
         similarity <EMComposition_Compute_Similarity_Scores>` with keys in the corresponding field of `memory
         <EMComposition.memory>` to determine the retrieved value, and then are themsleves `stored in memory
         <EMComposition_Store_Values>`. By default these are assigned the name *QUERY_n_INPUT* where n is the field
-        number (starting from 0); however, if `field_names <EMComposition.field_names>` is specified, then the name 
+        number (starting from 0); however, if `field_names <EMComposition.field_names>` is specified, then the name
         of each query_input_node is assigned the corresponding field name appended with *[QUERY]*.
 
     value_input_nodes : list[ProcessingMechanism]
@@ -1780,9 +1826,9 @@ class EMComposition(AutodiffComposition):
         corresponding `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[FIELD MEMORY]*.
 
     field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
-        Nodes used to weight the similarity scores computed by the `field_memory_nodes 
-        <EMComposition.field_memory_nodes>` with the `field weight <EMComposition.field_weights>` for the 
-        corresponding `key field <EMComposition_Fields>` (see `Weight field scores <EMComposition_Weight_Fields>` 
+        Nodes used to weight the similarity scores computed by the `field_memory_nodes
+        <EMComposition.field_memory_nodes>` with the `field weight <EMComposition.field_weights>` for the
+        corresponding `key field <EMComposition_Fields>` (see `Weight field scores <EMComposition_Weight_Fields>`
         for implementation). These are named the same as the corresponding `query_input_nodes
         <EMComposition.query_input_nodes>`.
 
@@ -1962,6 +2008,12 @@ class EMComposition(AutodiffComposition):
 
                     :default value: FIRST
                     :type: ``str``
+
+                differentiable_storage
+                    see `differentiable_storage <EMComposition.differentiable_storage>`
+
+                    :default value: False
+                    :type: ``bool``
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0], [0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
@@ -1979,6 +2031,7 @@ class EMComposition(AutodiffComposition):
         # store_at = Parameter(WEAKEST, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True)
         store_on_optimization = Parameter(FIRST)
+        differentiable_storage = Parameter(False, structural=True)
         memory_decay_rate = Parameter(AUTO, modulable=True)
         # purge_by_field_weights = Parameter(False, structural=True)
         target_fields = Parameter(None, read_only=True, structural=True)
@@ -2059,6 +2112,7 @@ class EMComposition(AutodiffComposition):
         storage_prob: float = 1.0,
         # store_at: Union[WEAKEST, RANDOM, CYCLE, BY_WEIGHT] = WEAKEST,
         store_on_optimization: Union[FIRST, LAST, ALL] = FIRST,
+        differentiable_storage: bool = False,
         memory_decay_rate: Union[float, AUTO] = AUTO,
         # purge_by_field_weights: bool = False,
         enable_learning: bool = True,
@@ -2129,6 +2183,7 @@ class EMComposition(AutodiffComposition):
             storage_prob=storage_prob,
             # store_at=store_at,
             store_on_optimization=store_on_optimization,
+            differentiable_storage=differentiable_storage,
             memory_decay_rate=memory_decay_rate,
             # purge_by_field_weights=purge_by_field_weights,
             enable_learning=enable_learning,

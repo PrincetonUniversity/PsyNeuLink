@@ -2,37 +2,36 @@
 Implements the model used in `Giallanza et al. (2024) <https://pubmed.ncbi.nlm.nih.gov/38828434/>`_
 for Study 2 to simulate performance of a sequence learning and state space abstraction ("Coffee Shop World") task.
 
-This implements a model using the Episodic Generalization and Optimization (EGO) framework described in
+This implements a model, using the Episodic Generalization and Optimization (EGO) framework described in
 `https://pubmed.ncbi.nlm.nih.gov/38828434/`_, in which interactions between simple forms of working memory
-and episodic memory, implemented in a neural network, interact to rapidly learn sequences of states and switch
-between them,  without the catastrophic interference characteristic of simple feedforward networks.
+and episodic memory interact to rapidly learn sequences of states and switch
+between them, without the catastrophic interference characteristic of simple feedforward networks.
 The task and data simulated are based ones reported in `https://www.nature.com/articles/s44271-024-00079-4`_.
 
 .. note::
-    The term "context" is overloaded in this script. In the model, "context" refers to the internal
-    representation of the context that is a linearly integrated representation of past states.
-    In the task environment, "context" refers to the two different sets of state transitions that
+    The term "context" is used differently for the model and the task environment in this script. In the model,
+    "context" refers to the internal representation of the context that is a linearly integrated representation of
+    past states. In the task environment, "context" refers to the two different sets of state transitions that
     must be learned from experience. The context is cued by the first stimulus in each trial
     (state 9 or state 10). Beyond that, however, the model is not explicitly given a context signal;
     it must learn to use that to determine which of the two sequences will follow and use that to then
     predict each subsequent state from the current one.
 
-Differences from the Pytorch implementation described in `Giallanza et al. (2024)
-<https://pubmed.ncbi.nlm.nih.gov/38828434/>`_, and available at <BREADCRUMB GitHub REPO:>
+The following are differences from the Pytorch implementation described in `Giallanza et al. (2024)
+<https://pubmed.ncbi.nlm.nih.gov/38828434/>`_, and available at <BREADCRUMB GitHub REPO>:
+
 
 - In the original implementation, the tanh activation function is applied to the state before it is
-  passed to the context layer. Here, the tanh activation is applied to the output of the context layer.
+  passed to the context layer; here, the tanh activation is applied to the output of the context layer;
 
 - In the original implementation, the Episodic Memory (EM) module was a dynamically growing list of memories
-  initialized as an empty list. Here, the EM module is implemented using `EMComposition`, which uses a fixed-size
+  initialized as an empty list; here, the EM module is implemented using `EMComposition`, which uses a fixed-size
   memory buffer initialized with small non-zero values.
 
 Model:
-BREADCRUMB: FIGURE HERE
 
-.. figure:: _static/iallanza_2024_EGO_study_2.svg
-   :align: left
-   :alt: N-Back Model Animation
+**EGO Model**
+.. figure:: _static/Giallanza_2024_EGO_study_2.svg
 
 """
 import matplotlib.pyplot as plt

@@ -11,6 +11,7 @@ import psyneulink as pnl
 
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
+    BadLikelihoodWarning,
 )
 
 # Set the number of threads to 1 for all tests in this module, tests are often run in parallel
@@ -504,6 +505,140 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     )
 
 
+def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
+    trial_inputs = np.ones((num_trials, 1))
+    ddm_params = dict(
+        starting_value=0.0,
+        rate=0.3,
+        noise=1.0,
+        threshold=0.6,
+        non_decision_time=0.15,
+        time_step_size=0.01,
+    )
+    comp, data_to_fit = _run_ddm_with_params(**ddm_params, trial_inputs=trial_inputs)
+    decision = comp.nodes[0]
+
+    pec = pnl.ParameterEstimationComposition(
+        name="pec_log_likelihood",
+        nodes=[comp],
+        parameters={
+            ("rate", decision): np.linspace(-0.5, 0.5, 10),
+            ("threshold", decision): np.linspace(0.5, 1.0, 10),
+            ("non_decision_time", decision): np.linspace(0.0, 1.0, 10),
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data_to_fit,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=num_estimates,
+        initial_seed=42,
+    )
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    return pec, comp, trial_inputs, (0.3, 0.6, 0.15)
+
+
+@pytest.mark.composition
+def test_pec_log_likelihood_llvm_scalar_sim_data_and_input_immutability():
+    pec, comp, trial_inputs, params = _make_ddm_log_likelihood_pec()
+    inputs = {comp: trial_inputs.copy()}
+    original_inputs = inputs[comp].copy()
+
+    ll = pec.log_likelihood(*params, inputs=inputs)
+
+    assert isinstance(ll, float)
+    assert np.isfinite(ll)
+    np.testing.assert_array_equal(inputs[comp], original_inputs)
+
+    ll_with_sim_data, sim_data = pec.log_likelihood(
+        *params,
+        inputs=inputs,
+        return_sim_data=True,
+    )
+
+    assert isinstance(ll_with_sim_data, float)
+    assert np.isfinite(ll_with_sim_data)
+    assert sim_data.ndim == 3
+    assert sim_data.shape[0] == len(trial_inputs)
+    assert sim_data.shape[2] == len(pec.outcome_variables)
+
+
+@pytest.mark.composition
+def test_pec_log_likelihood_requires_llvm():
+    pec, comp, trial_inputs, params = _make_ddm_log_likelihood_pec()
+    pec.controller.parameters.comp_execution_mode.set("Python")
+
+    with pytest.raises(
+        pnl.ParameterEstimationCompositionError,
+        match="comp_execution_mode is 'LLVM'",
+    ):
+        pec.log_likelihood(*params, inputs={comp: trial_inputs})
+
+
+@pytest.mark.composition
+def test_pec_log_likelihood_depends_on_accepts_expanded_parameters():
+    num_trials = 8
+    trial_inputs = np.ones((num_trials, 1))
+    ddm_params = dict(
+        starting_value=0.0,
+        rate=0.3,
+        noise=1.0,
+        non_decision_time=0.15,
+        time_step_size=0.01,
+    )
+    comp, data_cond_a = _run_ddm_with_params(
+        **ddm_params,
+        threshold=0.7,
+        trial_inputs=trial_inputs,
+    )
+    _, data_cond_b = _run_ddm_with_params(
+        **ddm_params,
+        threshold=0.3,
+        trial_inputs=trial_inputs,
+    )
+
+    data_cond_a['condition'] = 'a'
+    data_cond_b['condition'] = 'b'
+    data_to_fit = pd.concat([data_cond_a, data_cond_b], ignore_index=True)
+    data_to_fit['decision'] = data_to_fit['decision'].astype("category")
+    data_to_fit['condition'] = data_to_fit['condition'].astype("category")
+
+    decision = comp.nodes[0]
+    pec = pnl.ParameterEstimationComposition(
+        name="pec_log_likelihood_depends_on",
+        nodes=[comp],
+        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        depends_on={("threshold", decision): 'condition'},
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data_to_fit,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=20,
+        initial_seed=42,
+    )
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+
+    ll = pec.log_likelihood(
+        0.7,
+        0.3,
+        inputs={comp: np.vstack([trial_inputs, trial_inputs])},
+    )
+
+    assert [name.split('.', 1)[1] for name in pec.controller.function.fit_param_names] == [
+        'threshold[a]',
+        'threshold[b]',
+    ]
+    assert isinstance(ll, float)
+    assert np.isfinite(ll)
+
+
 @pytest.mark.composition
 def test_pec_bad_outcome_var_spec():
     """
@@ -721,3 +856,66 @@ def test_pec_lca_num_estimates_llvm_stochasticity(func_mode):
     assert "sim_data" in captured
     # sim_data shape: (num_trials, num_estimates, num_outcomes)
     assert np.mean(np.std(captured["sim_data"], axis=1)) > 0.0
+
+
+class _RecordingConsole:
+    """Minimal stand-in for a rich Console that records everything printed."""
+
+    def __init__(self):
+        self.lines = []
+
+    def print(self, *args, **kwargs):
+        self.lines.append(" ".join(str(a) for a in args))
+
+    @property
+    def text(self):
+        return "\n".join(self.lines)
+
+
+class _FakeProgress:
+    def __init__(self):
+        self.console = _RecordingConsole()
+
+
+def _make_warn_entry(value):
+    """Build a (warning, params) tuple as accumulated by the objective-function wrapper."""
+    params = {"gain": value}
+    warning = BadLikelihoodWarning("could not perform kernel density estimate")
+    return (warning, params)
+
+
+def test_pec_degenerate_warning_summary_cleared_between_callbacks():
+    """
+    Regression test: the degenerate-likelihood summary printed by the optimizer callback
+    must only report the parameter sets that were degenerate since the previous callback,
+    not re-print every degenerate set seen since the search began.
+
+    Previously ``warns_with_params`` was never cleared, so each callback re-printed the full
+    accumulated history -- pinning the first degenerate parameter set to the top of the log
+    on every subsequent iteration even though it was not just evaluated.
+    """
+    opt_func = PECOptimizationFunction(method="differential_evolution")
+    progress = _FakeProgress()
+
+    # Simulate the first iteration: a single degenerate parameter set was accumulated.
+    warns_with_params = [_make_warn_entry(21.3)]
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+
+    # The summary reports the degenerate set, and the buffer is cleared afterwards.
+    assert "21.30000" in progress.console.text
+    assert warns_with_params == []
+
+    # Simulate the next iteration: a *different* degenerate parameter set is accumulated.
+    progress = _FakeProgress()
+    warns_with_params.append(_make_warn_entry(16.0))
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+
+    # Only the new set is reported; the stale one from the prior iteration must not reappear.
+    assert "16.00000" in progress.console.text
+    assert "21.30000" not in progress.console.text
+    assert warns_with_params == []
+
+    # An iteration with no degenerate evaluations prints nothing at all.
+    progress = _FakeProgress()
+    opt_func._report_degenerate_warnings(progress, warns_with_params)
+    assert progress.console.text == ""

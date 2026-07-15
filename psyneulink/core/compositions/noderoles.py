@@ -969,7 +969,7 @@ class NodeRolesManager(object):
                     err_msg += (f"; learning_components can only be constructed using add_linear_learning_pathway() "
                                 f"or one of its related methods, or by using an AutodiffComposition")
 
-            raise NodeRoleError(err_msg+'.')
+            raise NodeRoleError(err_msg + '.')
 
         # Look for node in Composition (at top level only if there are nested Compositions)
         if node in self.owner.nodes:

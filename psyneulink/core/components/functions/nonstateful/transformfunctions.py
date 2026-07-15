@@ -2415,7 +2415,7 @@ class MatrixMemory(TransformFunction): #
 
         decay_rate = decay_rate or 0.0
         if decay_rate == AUTO:
-            decay_rate = 1/len(memory)
+            decay_rate = 1 / len(memory)
 
         super().__init__(
             default_variable=default_variable,
@@ -2497,9 +2497,9 @@ class MatrixMemory(TransformFunction): #
 
         # Note: ACCESS_MEMORY invokes both RETRIEVE and STORE; otherwise invoke only the one called
         elif operation in {ACCESS_MEMORY, RETRIEVE, STORE}:
-            if operation in{ACCESS_MEMORY, RETRIEVE}:
+            if operation in {ACCESS_MEMORY, RETRIEVE}:
                 entry = self._retrieve_memory(query, combined_scores, context=context)
-            if operation in{ACCESS_MEMORY, STORE}:
+            if operation in {ACCESS_MEMORY, STORE}:
                 # # Store memory in place of weakest one if storage_prob > 0
                 self._store_memory(query, weakest_memory_idx, context=context)
             scores = combined_scores
@@ -2551,7 +2551,7 @@ class MatrixMemory(TransformFunction): #
         if random_state.uniform(0, 1) < storage_prob:
             decay_rate = self.parameters.decay_rate._get(context)
             if decay_rate >= 0.0:
-                memory *= (1-decay_rate)
+                memory *= (1 - decay_rate)
             memory[weakest_memory_idx] = item_to_store
             # self.parameters.memory._set(memory, context, override=True)
             self.scores_function.parameters.matrix._set(self.memory.T, context)
@@ -2571,7 +2571,8 @@ class MatrixMemory(TransformFunction): #
                 self.parameters.memory._get(context),
                 device=device,
                 dtype=torch.double,
-            )
+            ),
+            'differentiable': False,
         }
         decay_rate = self.parameters.decay_rate._get(context)
 
@@ -2580,6 +2581,9 @@ class MatrixMemory(TransformFunction): #
 
         def _set_memory(memory):
             memory_holder['memory'] = memory
+
+        def _set_differentiable(differentiable):
+            memory_holder['differentiable'] = differentiable
 
         def _compute_scores_pytorch_fct(query, context=None):
             # memory = self.parameters.memory._get(context)
@@ -2597,10 +2601,26 @@ class MatrixMemory(TransformFunction): #
             storage_prob = self._get_current_parameter_value('storage_prob', context)
             random_state = self.parameters.random_state._get(context)
             if random_state.uniform(0, 1) < storage_prob:
-                memory = _get_memory()
-                if decay_rate >= 0.0:
-                    memory.mul_(1-decay_rate)
-                memory[weakest_memory_idx] = item_to_store
+                if memory_holder['differentiable']:
+                    # Differentiable write: build a *new* memory tensor (out-of-place decay, or clone) and
+                    # write the entry into it, so the stored entry keeps its autograd graph and gradients
+                    # can flow from later retrievals back through the stored entry to whatever produced it
+                    # (see `differentiable_storage <EMComposition.differentiable_storage>`). The previous
+                    # memory tensor is left untouched, so clones of it taken by earlier reads stay valid.
+                    memory = _get_memory()
+                    if decay_rate > 0.0:
+                        memory = memory * (1 - decay_rate)
+                    else:
+                        memory = memory.clone()
+                    memory[weakest_memory_idx] = item_to_store
+                    _set_memory(memory)
+                else:
+                    # Non-differentiable (default) write: in-place update of the memory buffer;
+                    # caller is expected to run this under torch.no_grad() during learning.
+                    memory = _get_memory()
+                    if decay_rate >= 0.0:
+                        memory.mul_(1 - decay_rate)
+                    memory[weakest_memory_idx] = item_to_store
                 # self.parameters.memory._set(memory, context, override=True)
                 self.scores_function.parameters.matrix._set(memory.detach().cpu().numpy().T, context)
 
@@ -2616,9 +2636,11 @@ class MatrixMemory(TransformFunction): #
             # Store memory in place of weakest one if condition is met and storage_prob > 0
             elif operation == RETRIEVE:
                 entry = _retrieve_memory_pytorch_fct(query, combined_scores, context)
-                norms = torch.zeros(len(self.parameters.memory._get(context)),
-                                    device=entry.device,
-                                    dtype=entry.dtype)
+                # Return the actual memory norms (not zeros): downstream, the combined-scores node may
+                # re-execute after RETRIEVE (its execution is repeated to resolve the memory cycle), and its
+                # MIN_NORM_INDEX output -- consumed by the subsequent STORE to select the entry to replace --
+                # must be computed from the real norms; zeros would make every store overwrite entry 0.
+                norms = torch.linalg.norm(_get_memory().detach(), dim=1)
 
             elif operation == STORE:
                 _store_memory_pytorch_fct(query, weakest_memory_idx)
@@ -2635,6 +2657,7 @@ class MatrixMemory(TransformFunction): #
 
         func.get_memory = _get_memory
         func.set_memory = _set_memory
+        func.set_differentiable = _set_differentiable
 
         return func
 

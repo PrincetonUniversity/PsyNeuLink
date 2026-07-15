@@ -47,6 +47,13 @@ A schematic of the EGO architecture used in the simulations is shown below.
 
 PsyNeuLink Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note:
+-----
+This script implements a slightly different Figure than in the original Figure in the paper. The differences are
+explained in the comments of the code. The overall pattern of the results is the same.
+
+
 The PsyNeuLink implementation of the model used in this example is shown below.
 
 .. _ego_model:
@@ -56,16 +63,10 @@ The PsyNeuLink implementation of the model used in this example is shown below.
    :align: center
    :alt: Giallanza et al., Model graph implemented in PsyNeuLink
 
-PsyNeuLink implementation (using EMComposition):
+
+The following is the implementation (using EMComposition):
 
 .. figure:: _static/Giallanza_2024_EGO_study_2.svg
-   :align: left
-   :alt: N-Back Model Animation
-
-
-Please note:
-------------
-Note that this script implements a slightly different Figure than in the original Figure in the paper. The differences are explained in the comments of the code. The overall pattern of the results is the same.
 
 Script: :download:`Giallanza2024_ego_study2.py <../../psyneulink/library/models/Giallanza2024_ego_study2.py>`
 
