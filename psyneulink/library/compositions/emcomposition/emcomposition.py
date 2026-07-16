@@ -1484,6 +1484,7 @@ class Field:
 
 class EMCompositionError(CompositionError):
     def __init__(self, error_value):
+        super().__init__()
         self.error_value = error_value
 
     def __str__(self):

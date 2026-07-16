@@ -1152,6 +1152,7 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
 
 class EMCompositionProjError(CompositionError):
     def __init__(self, error_value):
+        super().__init__()
         self.error_value = error_value
     def __str__(self):
         return repr(self.error_value)
