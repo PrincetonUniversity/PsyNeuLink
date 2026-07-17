@@ -1136,6 +1136,12 @@ class PEC_OCM(OptimizationControlMechanism):
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
 
+        # Node-keyed copy of the raw inputs (before they are concatenated into the
+        # {model: array} form), stashed by set_pec_inputs_cache. Used by the
+        # experimental batched fit path to recover per-node stimulus without having
+        # to split concatenated columns. None until the first run.
+        self._pec_input_values_by_node = None
+
         self._pec_control_mech_indices = None
 
         if 'fit_parameters' in kwargs:
@@ -1230,6 +1236,13 @@ class PEC_OCM(OptimizationControlMechanism):
         """
 
         model = self.composition.model
+
+        # Stash a node-keyed view of the raw inputs (before any concatenation into
+        # the {model: array} form) for the experimental batched fit path.
+        if inputs_dict and not (len(inputs_dict) == 1 and model in inputs_dict):
+            self._pec_input_values_by_node = dict(inputs_dict)
+        else:
+            self._pec_input_values_by_node = None
 
         if not inputs_dict or (len(inputs_dict) == 1 and model in inputs_dict):
             pass

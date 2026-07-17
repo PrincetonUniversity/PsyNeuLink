@@ -40,6 +40,17 @@ from psyneulink.core.batched import BatchedCompositionCompiler
 report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
 plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=256)
 result = plan.run(inputs, parameter_sets, num_estimates, seed=11)
+
+# Simulate + score experimental data with the on-device histogram likelihood:
+ll = plan.log_likelihood(inputs, parameter_sets, num_estimates,
+                         data=exp_data, categorical_dims=[True, False], bins=100)
+```
+
+The PEC data-fitting objective can be routed through this path (opt-in, no silent
+fallback):
+
+```python
+pnl.PECOptimizationFunction(method=..., batched_backend="triton")
 ```
 
 Researcher-facing op registration (see "Code Map / specs.py"):
@@ -576,7 +587,8 @@ Triton batched path:
 - uses structure-of-arrays input/parameter/state/output buffers;
 - generates kernels over batches of lanes rather than compiling the full
   PsyNeuLink object model;
-- does not yet compute the full PEC likelihood/KDE on GPU;
+- computes the PEC objective on-device via a **histogram** likelihood
+  (`plan.log_likelihood`); a KDE option is not yet implemented;
 - does not aim to support arbitrary compositions in this branch.
 
 Benchmark scripts should compare Triton against the current PEC
@@ -603,6 +615,35 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/pec_grid_cor
 PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/ddm_batch_compile_smoke.py
 PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/stability_flexibility_batch_compile_smoke.py
 ```
+
+**GPU parameter recovery (steps 9 + 10 end-to-end).** `csi_batched_parameter_recovery.py`
+generates CSI experimental data at known "true" parameters, then fits them back
+through the batched path (`PECOptimizationFunction(batched_backend="triton")`,
+optuna CMA-ES, on-device histogram likelihood) and reports recovered vs. true:
+
+```bash
+PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_batched_parameter_recovery.py \
+    --trials 128 --estimates 8000 --max-iterations 400 --seed 1
+```
+
+Recovers `gain` / `csi_switch` / `non_decision_time` (the params that map cleanly
+onto the batched IR; the DDM `threshold` is left fixed — it is already driven by
+the collapse control, the same `mod_afferents<=1` conflict that blocks fitting it
+under LLVM PEC). A 128-trial x 8000-estimate x 400-iteration fit (~410M sims) runs
+in ~22 s on an RTX 2080 Ti; `non_decision_time` recovers tightly, `gain`/`csi_switch`
+within the expected identifiability of a single 128-trial data set. Use
+`--backend triton_cpu` only for a tiny interpret-mode smoke test.
+
+**Identifiability (not a bug).** With the experimental-data-anchored bins, recovery
+is stable across `num_estimates`. `non_decision_time` is strongly identified — its
+log-likelihood varies by hundreds of units across its range, so it recovers tightly
+and sharpens with more estimates. `gain` (and to a lesser degree `csi_switch`) are
+**weakly identified** in a single 128-trial data set: sweeping `gain` over 6-20
+moves the log-likelihood by only ~8 units and the surface is nearly flat/bumpy for
+`gain >= 10`, so the MLE sits ~2-3 above the true value and more estimates cannot
+create a gradient that the data does not contain. Recovering `gain`/`csi_switch`
+well needs more trials or a design that makes the LCA dynamics matter, not more
+estimates.
 
 Benchmark script:
 
@@ -815,6 +856,57 @@ environments to persist results.
   (already controlled → `mod_afferents<=1`), so the comparison sweeps
   `non_decision_time`; the batched path also runs a fit config LLVM can't.
 
+- **GPU histogram likelihood** (roadmap step 9). `batched/likelihood.py` provides
+  `histogram_likelihood` / `histogram_log_likelihood`: the histogram analogue of
+  `fitfunctions.simulation_likelihood` (KDE), computed in Torch so it runs on the
+  same device the outcomes were produced on. It is fully vectorized over
+  `[*lanes, trial, estimate, outcome]` — for each experimental trial, the density
+  is `(# sims matching the observed category AND continuous bin) / (num_sims *
+  bin_volume)` (the histogram version of the KDE's per-category-pdf-times-share
+  scaling). `BatchedSimulationPlan.log_likelihood(inputs, parameter_sets,
+  num_estimates, data, categorical_dims, ...)` simulates and scores in one call,
+  returning one total log-likelihood per parameter set; on the `triton` (GPU)
+  backend the outcome buffer stays on-device (`run_triton(...,
+  keep_device_values=True)`; the per-kernel helpers now return the device tensor
+  and `run_triton` does the host copy). Histogram (not KDE) is the intentional
+  first cut — the accuracy knob is `bins`; a KDE option can be added later.
+  **Bin range** (when not given explicitly) is anchored to the **experimental**
+  data, not the simulated data: the density is only evaluated at the experimental
+  points, so the bins must cover those, and anchoring to the fixed data keeps the
+  bins identical across every parameter set and every `num_estimates` — otherwise
+  the bins drift with the simulated spread and inject noise into the MLE objective
+  (this showed up as erratic recovery of weakly-identified parameters as
+  `num_estimates` changed).
+  Tested in `tests/composition/pec/test_batched_likelihood.py` (vs an independent
+  numpy histogram; shared bins across lanes; peak at the matching distribution;
+  `plan.log_likelihood` recovers a DDM threshold on `triton_cpu`).
+
+- **PEC fit routing** (roadmap step 10). `PECOptimizationFunction` gained an opt-in
+  `batched_backend=("triton"|"triton_cpu")` (plus `batched_bins`,
+  `batched_max_steps`, `batched_bin_range`, `batched_seed`). When set in
+  data-fitting mode, `_make_objective_func` returns a batched objective that
+  compiles the model once (cached), feeds the **raw stimulus** as batched inputs,
+  supplies the fitting parameters as **parameter sets** (the PEC's dummy
+  control mechanisms are absorbed by the compiler as OVERRIDE routing, so
+  `fit_param_names` — already `"{mech.name}.{param}"` — are exactly the batched
+  parameter keys, no mapping needed), and returns the on-device histogram total
+  log-likelihood — the *same quantity* as the default objective, so the optimizer
+  / direction handling is unchanged. It never silently falls back: an unsupported
+  model raises `OptimizationFunctionError`, and trial-conditional (`depends_on`)
+  parameters are rejected. Robustness details: batched inputs are recovered from a
+  **node-keyed** stash (`ParameterEstimationComposition._pec_input_values_by_node`,
+  saved in `set_pec_inputs_cache` before the inputs are concatenated), and matched
+  to the plan's input specs by node name — so models with **absorbed input nodes**
+  (the CSI Threshold Mechanism) or extra control-mech inputs line up correctly. The
+  data columns are matched to plan outputs by **name** (node + port, tolerating the
+  `-N` rebuild suffix), since `outcome_variable_indices` index the *composition's*
+  wider output, not the plan's. Tested in
+  `tests/composition/pec/test_batched_pec_fit.py` (the objective peaks at the
+  data-generating DDM threshold on `triton_cpu`; default path untouched when
+  `batched_backend=None`; unsupported model raises). End-to-end **GPU parameter
+  recovery** for the CSI surrogate runs via
+  `csi_batched_parameter_recovery.py` (see below).
+
 ### Planned (in execution order; scoped to close the Capability Gaps above)
 
 The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
@@ -868,12 +960,17 @@ steps 9-10 make the full PEC fit run on the batched path.
    transfer is recognized and that transfer is absorbed into the DDM. Completes
    CSI compilation (`iti=0`).
 
-9. **GPU likelihood/KDE.** Torch port of `fitfunctions.simulation_likelihood` so
-   PEC objective aggregation runs near the GPU execution path (the current
-   simulator only returns outcomes).
+9. **GPU histogram likelihood** — DONE (see Done above). `batched/likelihood.py`
+   scores experimental data with a Torch **histogram** density estimate (not KDE)
+   that runs on the same device the outcomes were produced on;
+   `plan.log_likelihood(...)` keeps GPU outcomes on-device (no host round-trip).
 
-10. **PEC fit routing.** Route the PEC objective through `BatchedSimulationPlan`,
-    guarded by `can_compile_batched`; never silently fall back.
+10. **PEC fit routing** — DONE (see Done above). `PECOptimizationFunction(
+    batched_backend=...)` routes the data-fitting objective through the batched
+    plan + histogram likelihood, guarded by the batched compiler; unsupported
+    models raise (never silently fall back). *Remaining:* a KDE option (histogram
+    only for now) and generalizing input reconstruction beyond
+    node-qualified/absorbed-control models.
 
 ### Design invariants (do not regress)
 

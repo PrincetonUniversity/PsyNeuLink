@@ -1,4 +1,5 @@
 import copy
+import re
 
 import optuna.samplers
 from fastkde import fastKDE
@@ -317,12 +318,29 @@ class PECOptimizationFunction(OptimizationFunction):
         save_values: Optional[bool] = None,
         max_iterations: int = 500,
         direction: Literal["maximize", "minimize"] = "maximize",
+        batched_backend: Optional[Literal["triton", "triton_cpu"]] = None,
+        batched_bins: int = 100,
+        batched_max_steps: Optional[int] = None,
+        batched_bin_range=None,
+        batched_seed: Optional[int] = None,
         **kwargs,
     ):
         self.method = method
         self._optuna_kwargs = {} if optuna_kwargs is None else {**optuna_kwargs}
 
         self.direction = direction
+
+        # Opt-in routing of the (data-fitting) objective through the experimental
+        # batched Triton simulator + histogram likelihood instead of the OCM's
+        # evaluate/grid machinery.  ``None`` keeps the default path unchanged.
+        # See ``_make_objective_func`` / ``_batched_objective_func``.
+        self.batched_backend = batched_backend
+        self.batched_bins = batched_bins
+        self.batched_max_steps = batched_max_steps
+        self.batched_bin_range = batched_bin_range
+        self.batched_seed = batched_seed
+        # Lazily-built, cached compiled plan (only used when batched_backend is set).
+        self._batched_plan = None
 
         # The outcome variables to select from the composition's output need to be specified. These will be
         # set automatically by the PEC when PECOptimizationFunction is passed to it.
@@ -479,6 +497,12 @@ class PECOptimizationFunction(OptimizationFunction):
         (self) has been assigned to an OptimizationControlMechanism.
         """
 
+        # Opt-in: route the whole objective (simulate + likelihood) through the
+        # batched Triton simulator, computing a histogram log-likelihood on the
+        # same device the outcomes were produced on.
+        if self.batched_backend is not None and self.data_fitting_mode:
+            return self._batched_objective_func(context=context)
+
         def objfunc(*args):
             sim_data = self._run_simulations(*args, context=context)
 
@@ -486,6 +510,145 @@ class PECOptimizationFunction(OptimizationFunction):
             sim_data = sim_data[:, :, self.outcome_variable_indices]
 
             return self._pec_objective_function(sim_data)
+
+        return objfunc
+
+    def _compile_batched_plan(self):
+        """Lazily compile (and cache) the batched simulation plan for the model.
+
+        Raises a clear error (no silent fallback) if the model is outside the
+        batched compiler's supported subset.
+        """
+        if self._batched_plan is not None:
+            return self._batched_plan
+
+        from psyneulink.core.batched import BatchedCompositionCompiler, BatchedCompileError
+
+        if self.owner.depends_on:
+            raise OptimizationFunctionError(
+                "batched_backend does not yet support trial-conditional fitting "
+                "parameters (depends_on); use the default (LLVM/Python) path for "
+                "conditional parameters."
+            )
+
+        model = self.owner.composition.model
+        try:
+            self._batched_plan = BatchedCompositionCompiler.compile(
+                model, backend=self.batched_backend, max_steps=self.batched_max_steps
+            )
+        except BatchedCompileError as error:
+            raise OptimizationFunctionError(
+                f"batched_backend={self.batched_backend!r} was requested but the model "
+                f"'{model.name}' cannot be compiled for batched simulation: {error}"
+            ) from error
+        return self._batched_plan
+
+    def _batched_stimulus_inputs(self):
+        """Raw task stimulus keyed by the model input nodes the compiled plan expects.
+
+        The PEC injects fitting parameters into the model as dummy control-mechanism
+        inputs and may also absorb helper nodes (e.g. a DDM threshold mechanism) into
+        another op; the batched plan instead takes the fitting parameters as parameter
+        sets and models neither the control mechanisms nor the absorbed nodes as
+        inputs.  So the batched inputs are just the per-node stimulus for the plan's
+        input specs, matched by node name against the node-keyed inputs the OCM
+        stashed at run time (``_pec_input_values_by_node``).
+        """
+        ocm = self.owner
+        plan = self._compile_batched_plan()
+        by_node = getattr(ocm, "_pec_input_values_by_node", None)
+
+        if by_node is None:
+            raise OptimizationFunctionError(
+                "Batched fit requires per-node inputs to reconstruct the model "
+                "stimulus. Pass inputs to run() keyed by the model's input nodes "
+                "(not a single {model: array} entry)."
+            )
+
+        # Match each plan input spec to a stashed input node by name (tolerating the
+        # numeric '-N' rebuild suffix PsyNeuLink appends to duplicate node names).
+        def _base(name):
+            return re.sub(r"-\d+$", "", str(name))
+
+        named = {}
+        for node, value in by_node.items():
+            named.setdefault(_base(getattr(node, "name", node)), value)
+
+        inputs = {}
+        for spec in plan.ir.graph.inputs:
+            key = _base(spec.node)
+            if key not in named:
+                raise OptimizationFunctionError(
+                    f"Batched fit could not find inputs for model input node "
+                    f"'{spec.node}'. Available: {sorted(named)}."
+                )
+            inputs[spec.node] = named[key]
+        return inputs
+
+    def _batched_outcome_indices(self, plan):
+        """Plan-relative indices of the PEC outcome variables, matched by name.
+
+        ``outcome_variable_indices`` are offsets into the *composition's* full output;
+        the batched plan models a (possibly narrower / reordered) subset of outputs,
+        so the columns of ``data`` must be matched to the plan outputs by name (node +
+        port), tolerating the '-N' rebuild suffix.
+        """
+        from psyneulink.core.components.ports.outputport import OutputPort
+
+        def _canon(name):
+            # Strip the '-N' rebuild suffix from the node-name segment only (not the
+            # port segment, which legitimately ends in e.g. '-0').
+            node, _, port = str(name).partition(".")
+            node = re.sub(r"-\d+$", "", node)
+            return f"{node}.{port}" if port else node
+
+        plan_names = [_canon(n) for n in plan.ir.output_names]
+        indices = []
+        for var in self.owner.composition.outcome_variables:
+            port = var if isinstance(var, OutputPort) else var.output_port
+            want = _canon(f"{port.owner.name}.{port.name}")
+            if want not in plan_names:
+                raise OptimizationFunctionError(
+                    f"Batched fit could not match outcome variable '{want}' to a plan "
+                    f"output. Plan outputs: {list(plan.ir.output_names)}."
+                )
+            indices.append(plan_names.index(want))
+        return indices
+
+    def _batched_objective_func(self, context=None):
+        """Objective closure that simulates + scores via the batched plan.
+
+        Returns the total histogram log-likelihood of the data (higher is better) —
+        the same quantity as the default data-fitting objective, so the surrounding
+        optimizer/direction handling is unchanged.
+        """
+        pec = self.owner.composition
+        exp_data = np.asarray(pec._data_numpy, dtype=float)
+        categorical_dims = pec.data_categorical_dims
+        include_mask = getattr(pec, "likelihood_include_mask", None)
+        seed = self.batched_seed
+        if seed is None:
+            seed = try_extract_0d_array_item(
+                self._get_current_parameter_value("initial_seed", context)
+            )
+
+        def objfunc(*args):
+            plan = self._compile_batched_plan()
+            inputs = self._batched_stimulus_inputs()
+            outcome_indices = self._batched_outcome_indices(plan)
+            param_set = dict(zip(self.fit_param_names, args))
+            return plan.log_likelihood(
+                inputs,
+                [param_set],
+                num_estimates=self.owner.num_estimates,
+                data=exp_data,
+                categorical_dims=categorical_dims,
+                outcome_indices=outcome_indices,
+                bins=self.batched_bins,
+                bin_range=self.batched_bin_range,
+                include_mask=include_mask,
+                seed=seed,
+            )
 
         return objfunc
 
