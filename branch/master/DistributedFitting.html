@@ -1,0 +1,471 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Distributed Fitting &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="EMComposition" href="EMComposition.html" />
+    <link rel="prev" title="ParameterEstimationComposition" href="ParameterEstimationComposition.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.18.0.0+9
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
+        
+          <li><a href="ParameterEstimationComposition.html">ParameterEstimationComposition</a> &gt;</li>
+        
+      <li>Distributed Fitting</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="distributed-fitting">
+<span id="distributedfitting"></span><h1>Distributed Fitting<a class="headerlink" href="#distributed-fitting" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a> fits can evaluate candidate parameterizations in
+parallel across a <a class="reference external" href="https://www.dask.org">Dask</a> cluster instead of serially. The
+optimizer (an optuna sampler or <code class="docutils literal notranslate"><span class="pre">differential_evolution</span></code>) runs on a driver, while
+each candidate’s log-likelihood is scored on a worker. Distributed fitting requires
+the <code class="docutils literal notranslate"><span class="pre">psyneulink[dask]</span></code> extra (see <a class="reference internal" href="#distributed-fitting-requirements"><span class="std std-ref">Requirements</span></a>), LLVM
+execution, and a single scalar objective.</p>
+<section id="enabling-distributed-fitting">
+<span id="distributed-fitting-enabling"></span><h2>Enabling distributed fitting<a class="headerlink" href="#enabling-distributed-fitting" title="Link to this heading">¶</a></h2>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">distributed=True</span></code> and a <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code> to the <code class="xref any docutils literal notranslate"><span class="pre">PECOptimizationFunction</span></code>, or
+to the <a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a>, which forwards them:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">PECOptimizationFunction</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">optuna</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">CmaEsSampler</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">popsize</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">480</span><span class="p">,</span>
+    <span class="n">distributed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">distributed_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pec_factory&quot;</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pec_factory(data)</span> <span class="pre">-&gt;</span> <span class="pre">(pec,</span> <span class="pre">inputs)</span></code> is a top-level, picklable callable that
+rebuilds a serial <a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a> and its inputs. Each worker
+caches its own PEC and reuses the compiled LLVM binary across evaluations.
+PsyNeuLink must be importable in the worker environment.</p>
+<p><code class="docutils literal notranslate"><span class="pre">distributed_options</span></code> accepts the following keys:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">pec_factory</span></code> (required)</dt><dd><p>Worker recipe <code class="docutils literal notranslate"><span class="pre">(data)</span> <span class="pre">-&gt;</span> <span class="pre">(pec,</span> <span class="pre">inputs)</span></code>. Required for distributed fitting.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">worker_cores</span></code></dt><dd><p>LLVM threads per worker. Defaults to <code class="docutils literal notranslate"><span class="pre">$SLURM_CPUS_PER_TASK</span></code>, otherwise to the
+available cores divided by the worker count.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">max_concurrent_evaluations</span></code></dt><dd><p>Candidates dispatched per ask/tell round. Defaults to the live worker count.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">client</span></code></dt><dd><p>Existing Dask <code class="docutils literal notranslate"><span class="pre">Client</span></code> to use instead of creating or resolving a cluster.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></dt><dd><p>Number of workers for the automatically created single-node <code class="docutils literal notranslate"><span class="pre">LocalCluster</span></code>.
+Ignored when <code class="docutils literal notranslate"><span class="pre">client</span></code> is supplied or the SLURM launcher is used.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The <em>live worker count</em> is the number of workers registered with the scheduler when
+the fit starts: <code class="docutils literal notranslate"><span class="pre">srun</span></code> tasks minus two with the launcher (see
+<a class="reference internal" href="#distributed-fitting-running"><span class="std std-ref">Running</span></a>), or the <code class="docutils literal notranslate"><span class="pre">LocalCluster</span></code> size on a single node.</p>
+<p>Any optuna sampler or study and <code class="docutils literal notranslate"><span class="pre">differential_evolution</span></code> are supported.</p>
+</section>
+<section id="running">
+<span id="distributed-fitting-running"></span><h2>Running<a class="headerlink" href="#running" title="Link to this heading">¶</a></h2>
+<p>To run across multiple nodes, a single SLURM <code class="docutils literal notranslate"><span class="pre">srun</span></code> step launches the cluster
+through the <code class="docutils literal notranslate"><span class="pre">psyneulink.dask_run</span></code> module, which builds the scheduler, driver, and
+workers from the SLURM tasks.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;ntasks&gt;<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>psyneulink.dask_run<span class="w"> </span>study.py
+</pre></div>
+</div>
+<p>Two of the tasks are reserved for the scheduler and the driver, so the number of
+workers is <code class="docutils literal notranslate"><span class="pre">ntasks</span> <span class="pre">-</span> <span class="pre">2</span></code>. Request the tasks the usual way in an SBATCH script (with
+<code class="docutils literal notranslate"><span class="pre">--nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">--ntasks-per-node</span></code>); the workers are spread across whatever nodes
+the allocation spans, and each uses <code class="docutils literal notranslate"><span class="pre">$SLURM_CPUS_PER_TASK</span></code> LLVM threads. For
+example, <code class="docutils literal notranslate"><span class="pre">--nodes=2</span> <span class="pre">--ntasks-per-node=5</span></code> requests 10 tasks and so runs 8 workers.</p>
+<p><a class="reference download internal" download="" href="_downloads/b8a5aecea255a446f470be739b184762/submit_dask.slurm"><code class="xref download docutils literal notranslate"><span class="pre">submit_dask.slurm</span></code></a> is a
+complete batch template, and
+<a class="reference download internal" download="" href="_downloads/d2e2ced7abc0325382e8726854c4b99e/study.py"><code class="xref download docutils literal notranslate"><span class="pre">study.py</span></code></a> is the DDM study it
+runs. A larger Stability-Flexibility example is provided as
+<a class="reference download internal" download="" href="_downloads/d7824bb4c33ae28e4d6ed2515a4c8e5b/stability_flexibility_dask.py"><code class="xref download docutils literal notranslate"><span class="pre">stability_flexibility_dask.py</span></code></a>
+and <a class="reference download internal" download="" href="_downloads/533324a742a26fe57e51d64ca55adb14/submit_stabflex_dask.slurm"><code class="xref download docutils literal notranslate"><span class="pre">submit_stabflex_dask.slurm</span></code></a>;
+its <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code> imports <code class="docutils literal notranslate"><span class="pre">make_stab_flex</span></code> from the co-located
+<code class="docutils literal notranslate"><span class="pre">stability_flexibility.py</span></code>, so the batch script adds that directory to
+<code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code>.</p>
+<p>To try a fit on a single machine, run the study script directly. It forms a
+one-node cluster automatically, with no launcher; <code class="docutils literal notranslate"><span class="pre">n_workers</span></code> in
+<code class="docutils literal notranslate"><span class="pre">distributed_options</span></code> sets how many workers it spawns.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>study.py
+</pre></div>
+</div>
+<section id="using-an-existing-cluster">
+<h3>Using an existing cluster<a class="headerlink" href="#using-an-existing-cluster" title="Link to this heading">¶</a></h3>
+<p>If you already run your own Dask cluster – for example in a notebook or outside
+SLURM – pass it as <code class="docutils literal notranslate"><span class="pre">client</span></code> and PsyNeuLink uses it instead of creating one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">&quot;tcp://scheduler-address:8786&quot;</span><span class="p">)</span>
+<span class="n">distributed_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;client&quot;</span><span class="p">:</span> <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;pec_factory&quot;</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>This is optional; the launcher above covers the usual SLURM case. PsyNeuLink does
+not shut down a client you supply.</p>
+</section>
+</section>
+<section id="reproducibility">
+<span id="distributed-fitting-reproducibility"></span><h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading">¶</a></h2>
+<p>With common random numbers – <code class="docutils literal notranslate"><span class="pre">same_seed_for_all_parameter_combinations=True</span></code> and
+a fixed <code class="docutils literal notranslate"><span class="pre">initial_seed</span></code> – every candidate is scored against identical simulation
+noise, so a distributed fit with a tell-order-independent sampler (such as
+<code class="docutils literal notranslate"><span class="pre">RandomSampler</span></code>) matches the serial fit. Stateful samplers (CMA-ES, QMC) explore
+different points under batched ask/tell and are not bit-identical to the serial
+driver. Without common random numbers the fit is still valid but not reproducible,
+and a warning is issued.</p>
+</section>
+<section id="requirements">
+<span id="distributed-fitting-requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
+<p>Install the extra with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;psyneulink[dask]&quot;</span></code>, which adds <code class="docutils literal notranslate"><span class="pre">dask</span></code>,
+<code class="docutils literal notranslate"><span class="pre">distributed</span></code>, and <code class="docutils literal notranslate"><span class="pre">dask-jobqueue</span></code>. With <code class="docutils literal notranslate"><span class="pre">distributed=False</span></code>, the default,
+Dask is never imported.</p>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="EMComposition.html" class="btn btn-neutral float-right" title="EMComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="ParameterEstimationComposition.html" class="btn btn-neutral" title="ParameterEstimationComposition" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Distributed Fitting</a><ul>
+<li><a class="reference internal" href="#enabling-distributed-fitting">Enabling distributed fitting</a></li>
+<li><a class="reference internal" href="#running">Running</a><ul>
+<li><a class="reference internal" href="#using-an-existing-cluster">Using an existing cluster</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reproducibility">Reproducibility</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

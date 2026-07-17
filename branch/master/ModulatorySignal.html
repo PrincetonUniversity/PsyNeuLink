@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatorySignal &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
+  <title>ModulatorySignal &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+6
+                  0.18.0.0+9
                 </div>
               
             
@@ -428,13 +428,13 @@ four keywords that can be used to specify generic forms of modulation supported 
 the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> specified as its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>.
 For example, if the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> (the default for most Ports), then
 the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is assigned to the function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">slope</span></code></a>
-parameter (it’s multiplicative_param), thus multiplying the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> by that
+parameter (its multiplicative_param), thus multiplying the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> by that
 amount each time the Port is executed, and assigning the result as the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p></li>
 <li><p><em>ADDITIVE_PARAM</em> - assign the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the ModulatorySignal to the parameter of the
 Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> specified as its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a>. For
 example, if the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> (the default for most Ports), then the
 ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is assigned to the function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intercept</span></code></a>
-parameter (it’s additive_param), thus adding that value to the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> each
+parameter (its additive_param), thus adding that value to the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> each
 time the Port is executed, and assigning the result as the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p></li>
 <li><p><em>OVERRIDE</em> - assign the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the ModulatorySignal directly to the Port’s
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>; in effect, this bypasses the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. Note that
@@ -459,7 +459,7 @@ the <a class="reference internal" href="MappingProjection.html"><span class="doc
 <section id="implementation-of-modulation">
 <span id="modulatorysignal-implementation"></span><h4>Implementation of Modulation<a class="headerlink" href="#implementation-of-modulation" title="Link to this heading">¶</a></h4>
 <p>Although the <a class="reference internal" href="#modulatorysignal-uses"><span class="std std-ref">purpose of a ModulatorySignal</span></a> is to modify the operation of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does not do this <em>directly</em>; rather, it does it by way of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that
-modulates the input, function parameter, or output of the Mechanism or MappingProjeciton to be regulated. More
+modulates the input, function parameter, or output of the Mechanism or MappingProjecition to be regulated. More
 specifically, a ModulatorySignal modulates the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <em>Port</em> responsible for
 generating those values, by modifying a parameter of that Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  This is shown
 in the figure below:</p>
@@ -737,7 +737,7 @@ Call _instantiate_projection_from_port to assign ModulatoryProjections to .effer
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=3e2360b9"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

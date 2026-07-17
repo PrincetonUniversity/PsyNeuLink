@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
   
 
   
@@ -34,7 +34,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GRUComposition" href="GRUComposition.html" />
-    <link rel="prev" title="ParameterEstimationComposition" href="ParameterEstimationComposition.html" /> 
+    <link rel="prev" title="Distributed Fitting" href="DistributedFitting.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+6
+                  0.18.0.0+9
                 </div>
               
             
@@ -582,8 +582,9 @@ changed to <em>WEIGHTED_AVG</em> to execute learning.</p>
 </div>
 <div class="technical-note docutils container">
 <p>The <em>WEIGHTED_AVG</em> option is passed as <em>ALL</em> to the <strong>output</strong> argument of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function, <em>ARG_MAX</em> is
-passed as <em>ARG_MAX_INDICATOR</em>; and <em>PROBALISTIC</em> is passed as <em>PROB_INDICATOR</em>; the other SoftMax options are
-not currently supported.</p>
+passed as <em>ARG_MAX_INDICATOR</em>; and <em>PROBALISTIC</em> is passed as <em>PROB_INDICATOR</em>. This mapping is honored for both
+Python execution and the PyTorch execution path (e.g., <code class="docutils literal notranslate"><span class="pre">execution_mode=ExecutionMode.PyTorch</span></code>); other SoftMax
+output types are not used by EMComposition.</p>
 </div>
 </li>
 </ul>
@@ -609,7 +610,7 @@ argument of the EMComposition’s constructor to <code class="docutils literal n
 forms of learning are enable.</p>
 <p><em>Backpropagation of error</em>.  If <strong>enable_learning</strong> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the values retrieved from <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> when the EMComposition is executed during learning can be used for error computation
 and backpropagation through the EMComposition to its inputs.  By default, the values of all of its <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a> are included. For those that do not project to an outer Composition (i.e., one in
-which the EMComposition is <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a>), a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> node is constructed
+which the EMComposition is <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a>), a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET_INPUT" title="psyneulink.core.compositions.composition.NodeRole.TARGET_INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> node is constructed
 for each, and used to compute errors that are backpropagated through the network to its <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.query_input_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.query_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">query_input_nodes</span></code></a> and <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.value_input_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.value_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value_input_nodes</span></code></a>, and on to any
 nodes that project to those from a Composition within which the EMComposition is <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a>.
 Retrieved_nodes that <em>do</em> project to an outer Composition receive their errors from those nodes, which are also
@@ -967,7 +968,7 @@ while the last two should be used as values:</p>
 <p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id9" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
-<p>Note that the figure now shows <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">&lt;QUERY&gt;</span> <span class="pre">[WEIGHT]</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>,
+<p>Note that the figure now shows <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">&lt;QUERY&gt;</span> <span class="pre">[WEIGHT]</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>,
 that are used to implement the relative contribution that each key field makes to the matching process specifed in
 <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> argument.  By default, these are equal (all assigned a value of 1),
 but different values can be used to weight the relative contribution of each key field.  The values are normalized so
@@ -986,7 +987,7 @@ with the first contributing 75% to the matching process and the second field con
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.emcomposition.emcomposition.</span></span><span class="sig-name descname"><span class="pre">EMComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[[0],</span> <span class="pre">[0]]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_on_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purge_by_field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_storage_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EM_Composition'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> that implements the functions of an <a class="reference internal" href="EpisodicMemoryMechanism.html"><span class="doc">EpisodicMemoryMechanism</span></a> in a
-differentiable form and in which it’s <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> parameter can be learned.</p>
+differentiable form and in which its <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> parameter can be learned.</p>
 <p>Takes only the following arguments, all of which are optional</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1507,7 +1508,7 @@ These are derived from the matrix parameters of the afferent Projections to the 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchEMMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_specifies_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchEMMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_specifies_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper" title="Link to this definition">¶</a></dt>
 <dd><p>Wrapper for EMStorageMechanism as a Pytorch Module</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper.store_memory">
@@ -1686,12 +1687,6 @@ value fields;</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates">
-<span class="sig-name descname"><span class="pre">_assign_learning_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates" title="Link to this definition">¶</a></dt>
-<dd><p>Override to defer population of learning_rates_dict until call to _set_learning_attributes below.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes">
 <span class="sig-name descname"><span class="pre">_set_learning_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes" title="Link to this definition">¶</a></dt>
 <dd><p>Set learning-related attributes for Node and Projections
@@ -1772,9 +1767,9 @@ assign its value to afferent weights of corresponding retrieved_node.
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_target_nodes">
-<span class="sig-name descname"><span class="pre">_identify_target_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_target_nodes" title="Link to this definition">¶</a></dt>
-<dd><p>Identify retrieval_nodes specified by <strong>target_field_weights</strong> as TARGET nodes</p>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_output_nodes">
+<span class="sig-name descname"><span class="pre">_identify_output_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_output_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>Identify retrieval_nodes specified by <strong>target_field_weights</strong> as TARGET_MECHANISMs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
@@ -1783,20 +1778,10 @@ assign its value to afferent weights of corresponding retrieved_node.
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.infer_backpropagation_learning_pathways">
-<span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
-<dd><p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
-Flattens nested compositions:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>only includes the Projections in outer Composition to/from the CIMs of the nested Composition
-(i.e., to input_CIMs and from output_CIMs) – the ones that should be learned;</p></li>
-<li><p>excludes Projections from/to CIMs in the nested Composition
-(from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
-</ul>
-<p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
-</div></blockquote>
-<p>Returns list of target nodes for each pathway</p>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._check_if_sample_is_in_learnable_pathway">
+<span class="sig-name descname"><span class="pre">_check_if_sample_is_in_learnable_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._check_if_sample_is_in_learnable_pathway" title="Link to this definition">¶</a></dt>
+<dd><p>Override to suppress error for no learnable pathways if it is for sample in EM Composition
+More informative error is generated in PytorchCompositionWrapper._assign_learning_rates()</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1844,7 +1829,7 @@ Reinitizalize minibatch_loss and minibatch_loss_count</p>
         <a href="GRUComposition.html" class="btn btn-neutral float-right" title="GRUComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="ParameterEstimationComposition.html" class="btn btn-neutral" title="ParameterEstimationComposition" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="DistributedFitting.html" class="btn btn-neutral" title="Distributed Fitting" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -1958,14 +1943,13 @@ Reinitizalize minibatch_loss and minibatch_loss_count</p>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_softmax_node"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_softmax_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_retrieved_nodes"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_retrieved_nodes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_storage_node"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_storage_node()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates"><code class="docutils literal notranslate"><span class="pre">EMComposition._assign_learning_rates()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes"><code class="docutils literal notranslate"><span class="pre">EMComposition._set_learning_attributes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._store_memory"><code class="docutils literal notranslate"><span class="pre">EMComposition._store_memory()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._encode_memory"><code class="docutils literal notranslate"><span class="pre">EMComposition._encode_memory()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn"><code class="docutils literal notranslate"><span class="pre">EMComposition.learn()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._get_execution_mode"><code class="docutils literal notranslate"><span class="pre">EMComposition._get_execution_mode()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_target_nodes"><code class="docutils literal notranslate"><span class="pre">EMComposition._identify_target_nodes()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.infer_backpropagation_learning_pathways"><code class="docutils literal notranslate"><span class="pre">EMComposition.infer_backpropagation_learning_pathways()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._identify_output_nodes"><code class="docutils literal notranslate"><span class="pre">EMComposition._identify_output_nodes()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._check_if_sample_is_in_learnable_pathway"><code class="docutils literal notranslate"><span class="pre">EMComposition._check_if_sample_is_in_learnable_pathway()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.do_gradient_optimization"><code class="docutils literal notranslate"><span class="pre">EMComposition.do_gradient_optimization()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.add_node"><code class="docutils literal notranslate"><span class="pre">EMComposition.add_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.add_projection"><code class="docutils literal notranslate"><span class="pre">EMComposition.add_projection()</span></code></a></li>
@@ -1992,7 +1976,7 @@ Reinitizalize minibatch_loss and minibatch_loss_count</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=3e2360b9"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

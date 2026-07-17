@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+6
+                  0.18.0.0+9
                 </div>
               
             
@@ -279,7 +279,7 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <span class="gp">... </span>                   <span class="n">animate</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;show_learning&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.targets" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.targets"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">targets</span></code></a> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 </section>
 <section id="learning-using-autodiffcompositions">
 <h2>Learning using AutodiffCompositions<a class="headerlink" href="#learning-using-autodiffcompositions" title="Link to this heading">¶</a></h2>
@@ -393,7 +393,7 @@ In addition, notice that the inputs to <code class="xref any docutils literal no
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=3e2360b9"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

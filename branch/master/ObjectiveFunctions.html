@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+6
+                  0.18.0.0+9
                 </div>
               
             
@@ -206,6 +206,7 @@
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Energy" title="psyneulink.core.components.functions.objectivefunctions.Energy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Energy</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Entropy" title="psyneulink.core.components.functions.objectivefunctions.Entropy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Entropy</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction" title="psyneulink.core.components.functions.objectivefunctions.LossFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LossFunction</span></code></a></p></li>
 </ul>
 <p>Functions that return a scalar evaluation of their input.</p>
 <dl class="py class">
@@ -411,7 +412,7 @@ If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">Distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="Link to this definition">¶</a></dt>
 <dd><p id="distance">Return the distance between the vectors in the two items of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span>
-<span class="pre">metric</span></code></a> specified in the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.metric" title="psyneulink.core.components.functions.objectivefunctions.Stability.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> attribute.  If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<span class="pre">metric</span></code></a> specified in the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> attribute.  If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -498,7 +499,7 @@ arguments of the constructor.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance._function">
 <span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance._function" title="Link to this definition">¶</a></dt>
-<dd><p>Calculate the distance between the two vectors in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dd><p>Calculate the distance between the two vectors in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <p>Use the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span> <span class="pre">metric</span></code></a> specified in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> to calculate the distance.
 If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is divided by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
@@ -534,7 +535,7 @@ size != len(default_value).</p></li>
 <li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, or </em><em>matrix keyword : default INVERSE_HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>transfer_fct</strong> (<em>function</em><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to the energy calculation
-(see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stablility</span></code></a> for explanation).</p></li>
+(see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> for explanation).</p></li>
 <li><p><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the energy value by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -760,6 +761,136 @@ arguments of the constructor.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">LossFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction" title="Link to this definition">¶</a></dt>
+<dd><p>Loss(                             default_variable=None,         loss=Loss.MSE                  function=None,                 normalize=False,               params=None,                   owner=None,                    prefs=None                     )</p>
+<p id="loss">Return the loss calculated for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> array (first item of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) with respect to the <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> array (second item of
+<a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, using the <a class="reference internal" href="#loss"><span class="std std-ref">Loss</span></a> specified in the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.loss"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loss</span></code></a>
+attribute. If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.normalize" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the result is normalized by the length
+of (number of elements in) the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> arrays.</p>
+<div class="technical-note docutils container">
+<p>Loss uses the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> to compute the loss where possible, using the the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.loss"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loss</span></code></a>
+attribute to specify the appropriate <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> argument of Distance.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>2d array with two items : Default class_defaults.variable</em>) – specifies the shape and default value for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">target</span></code>
+arrays; these are, respectively, the first and second items of the &lt;variable &lt;LossFunction.variable&gt;` attribute
+(variable[0] and variable[1]) used to compute the loss.</p></li>
+<li><p><strong>loss</strong> (<em>member</em><em> of </em><em>keyword in Loss enum : Default Loss.MSE</em>) – specifies the <a class="reference internal" href="#loss"><span class="std std-ref">loss</span></a> which is computed for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> array (variable[0]) with
+respect to the <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> array (variable[1]).</p></li>
+<li><p><strong>normalize</strong> (<em>bool : Default False</em>) – <dl class="simple">
+<dt>specifies whether to normalize the loss by the length of the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> and <a href="#id1"><span class="problematic" id="id2">`</span></a>target</dt><dd><p>&lt;LossFunction.target&gt;` arrays <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those
+parameters in arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="Link to this definition">¶</a></dt>
+<dd><p>contains the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> array (first item) for which the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.loss"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loss</span></code></a> is
+computed with respect to <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> array (second item).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2d array with two items</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss" title="Link to this definition">¶</a></dt>
+<dd><p>determines the <a class="reference internal" href="#loss"><span class="std std-ref">loss</span></a> computed for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> array with respect to the
+<code class="xref any docutils literal notranslate"><span class="pre">target</span></code> array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss" title="psyneulink.core.globals.keywords.Loss">Loss</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.normalize" title="Link to this definition">¶</a></dt>
+<dd><p>determines whether the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.loss"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loss</span></code></a> is normalized by the length of <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code>
+and <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> arrays in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.params" title="Link to this definition">¶</a></dt>
+<dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[param keyword: param value] : default None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.owner" title="Link to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.prefs" title="Link to this definition">¶</a></dt>
+<dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : default Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction._function" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the loss between a sample and target vector in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable" title="psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<p>Use the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span> <span class="pre">metric</span></code></a> specified in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> to calculate the distance.
+If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is divided by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li></li>
+<li><p><strong>distance</strong> (<em>scalar</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.LossFunction._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction._validate_params" title="Link to this definition">¶</a></dt>
+<dd><p>Validate that variable has two items of equal length</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -847,6 +978,17 @@ arguments of the constructor.</p>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.prefs"><code class="docutils literal notranslate"><span class="pre">Entropy.prefs</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction"><code class="docutils literal notranslate"><span class="pre">LossFunction</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.variable"><code class="docutils literal notranslate"><span class="pre">LossFunction.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.loss"><code class="docutils literal notranslate"><span class="pre">LossFunction.loss</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.normalize"><code class="docutils literal notranslate"><span class="pre">LossFunction.normalize</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.params"><code class="docutils literal notranslate"><span class="pre">LossFunction.params</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.owner"><code class="docutils literal notranslate"><span class="pre">LossFunction.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction.prefs"><code class="docutils literal notranslate"><span class="pre">LossFunction.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction._function"><code class="docutils literal notranslate"><span class="pre">LossFunction._function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.LossFunction._validate_params"><code class="docutils literal notranslate"><span class="pre">LossFunction._validate_params()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -866,7 +1008,7 @@ arguments of the constructor.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=3e2360b9"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

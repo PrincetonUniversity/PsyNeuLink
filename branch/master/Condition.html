@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.18.0.0+9.g604a47e9b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+6
+                  0.18.0.0+9
                 </div>
               
             
@@ -212,7 +212,7 @@
 <p><a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conditions</span></code></a> are used to specify when nodes are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the node
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
-<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scheduler</span></code></a> (e.g., how many <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> s have occurred in the current <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>), or the state of other
+<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scheduler</span></code></a> (e.g., how many <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> s have occurred in the current <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.TRIAL" title="psyneulink.core.compositions.composition.LearningScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>), or the state of other
 nodes in a graph (e.g., whether or how many times they have executed). This package provides a number of
 <a class="reference internal" href="#condition-pre-specified"><span class="std std-ref">pre-specified Conditions</span></a> that can be parametrized (e.g., how many times a node should
 be executed). <a class="reference internal" href="#condition-custom"><span class="std std-ref">Custom conditions</span></a> can also be created, by assigning a function to a Condition that
@@ -360,7 +360,7 @@ evaluates to <code class="xref any docutils literal notranslate"><span class="pr
 <p class="admonition-title">Note</p>
 <p>The optional <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> argument in many <a class="reference internal" href="#"><span class="doc">Conditions</span></a> specifies the unit of time over which the
 Condition operates;  the default value is <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> for all Conditions except those with “Trial”
-in their name, for which it is <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p>
+in their name, for which it is <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p>
 </div>
 <p id="conditions-generic"><strong>Generic Conditions</strong> (used to construct <a class="reference internal" href="#condition-custom"><span class="std std-ref">custom Conditions</span></a>):</p>
 <blockquote>
@@ -431,11 +431,11 @@ satisfied any time after the specified <a class="reference internal" href="Time.
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="psyneulink.core.scheduling.condition.AfterNTrials"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterNTrials</span></code></a> (int[, TimeScale])
 satisfied any time after the specified number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s has occurred.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRun" title="psyneulink.core.scheduling.condition.AtRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRun</span></code></a> (int)
-satisfied any time during the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p></li>
+satisfied any time during the specified <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterRun" title="psyneulink.core.scheduling.condition.AfterRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterRun</span></code></a> (int)
-satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> occurs.</p></li>
+satisfied any time after the specified <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> occurs.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="psyneulink.core.scheduling.condition.AfterNRuns"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterNRuns</span></code></a> (int)
-satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s has occurred.</p></li>
+satisfied any time after the specified number of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s has occurred.</p></li>
 </ul>
 </div></blockquote>
 <p id="conditions-node-based"><strong>Node-Based Conditions</strong> (based on the execution or state of other nodes):</p>
@@ -475,9 +475,9 @@ satisfied at the beginning of an <a class="reference internal" href="Time.html#p
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="psyneulink.core.scheduling.condition.AtTrialNStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtTrialNStart</span></code></a>
 satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> counted using ‘TimeScale`</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunStart" title="psyneulink.core.scheduling.condition.AtRunStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRunStart</span></code></a>
-satisfied at the beginning of an <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
+satisfied at the beginning of an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="psyneulink.core.scheduling.condition.AtRunNStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRunNStart</span></code></a>
-satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
+satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
 </ul>
 </div></blockquote>
 <p id="conditions-graph-structure"><strong>Graph Structure Conditions</strong> (used to make modifications to the
@@ -796,18 +796,18 @@ Defaults to False.</p></li>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNRuns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
+<li><p>at least n <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
+<li><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
 </ul>
 </dd></dl>
 
@@ -880,18 +880,18 @@ specified by <strong>time_scale</strong>.</p></li>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at least n+1 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
+<li><p>at least n+1 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
+<li><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
 </ul>
 </dd></dl>
 
@@ -1119,18 +1119,18 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>exactly n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
+<li><p>exactly n <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
+<li><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
 </ul>
 </dd></dl>
 
@@ -1139,13 +1139,13 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtRunNStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
+<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1160,7 +1160,7 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at the beginning of an <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
+<li><p>at the beginning of an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.LearningScale.RUN" title="psyneulink.core.compositions.composition.LearningScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -2527,7 +2527,7 @@ Defaults to False.</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=3e2360b9"></script>
+         <script src="_static/documentation_options.js?v=4a8257d5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
