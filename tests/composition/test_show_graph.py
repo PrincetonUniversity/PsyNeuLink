@@ -456,18 +456,7 @@ class TestNested:
         nested_comp = AutodiffComposition([hidden_mech_1, hidden_mech_2])
 
         # Test without **targets** specification
-        pathway_1 = [input_mech,
-                     MappingProjection(input_mech, hidden_mech_1, learnable=False),
-                     hidden_mech_1,
-                     MappingProjection(hidden_mech_1, output_mech, learnable=False),
-                     output_mech]
-        pathway_2 = [input_mech,
-                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
-                     hidden_mech_2,
-                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
-                     output_mech]
-
-        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+        AutodiffComposition(name="AUTODIFF COMP_8",
                                             pathways=[nested_comp],
                                             targets={output_mech: solo_mech})
 
