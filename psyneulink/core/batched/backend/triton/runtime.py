@@ -35,6 +35,7 @@ def run_triton(
     common_random_numbers: bool = True,
     device: str = "cuda",
     strict_truncation: bool = False,
+    keep_device_values: bool = False,
 ) -> BatchedSimulationResult:
     """Execute the generated batched kernels.
 
@@ -47,6 +48,11 @@ def run_triton(
     diagnostic buffer.  The fraction of truncated lanes per node is attached to
     the result metadata under ``"truncation"``; a nonzero fraction warns by
     default, or raises when ``strict_truncation`` is set.
+
+    When ``keep_device_values`` is set the outcome buffer is returned as the
+    on-device Torch tensor (``result.values``) instead of a host numpy array, so
+    a downstream consumer (e.g. the histogram likelihood) can run on the GPU
+    without a host round-trip.
     """
 
     interpret = device == "cpu"
@@ -86,6 +92,9 @@ def run_triton(
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
 
     _report_truncation(truncation, ir.max_steps, strict_truncation)
+
+    if not keep_device_values:
+        values = values.cpu().numpy()
 
     return BatchedSimulationResult(
         values=values,
@@ -175,7 +184,7 @@ def _run_stateless_graph_kernel(
         total_lanes, num_subjects, num_trials, num_estimates, BLOCK=block,
     )
     _sync(torch, device)
-    return out.cpu().numpy(), {}
+    return out, {}
 
 
 def _run_ddm_graph_kernel(
@@ -203,7 +212,7 @@ def _run_ddm_graph_kernel(
         SEED=0 if seed is None else int(seed), BLOCK=block,
     )
     _sync(torch, device)
-    return out.cpu().numpy(), _collect_diagnostics(diag, slots)
+    return out, _collect_diagnostics(diag, slots)
 
 
 def _run_stateful_graph_kernel(
@@ -233,7 +242,7 @@ def _run_stateful_graph_kernel(
         SEED=0 if seed is None else int(seed), BLOCK=block,
     )
     _sync(torch, device)
-    return out.cpu().numpy(), _collect_diagnostics(diag, slots)
+    return out, _collect_diagnostics(diag, slots)
 
 
 def _diag_buffer(torch, lane_shape, slots, device):

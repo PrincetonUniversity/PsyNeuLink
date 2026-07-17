@@ -73,6 +73,7 @@ class BatchedSimulationPlan:
         seed=None,
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
+        keep_device_values: bool = False,
     ) -> BatchedSimulationResult:
         try:
             device = _BACKEND_DEVICES[self.backend]
@@ -91,7 +92,91 @@ class BatchedSimulationPlan:
             common_random_numbers=common_random_numbers,
             device=device,
             strict_truncation=strict_truncation,
+            keep_device_values=keep_device_values,
         )
+
+    def log_likelihood(
+        self,
+        inputs,
+        parameter_sets,
+        num_estimates: int,
+        data,
+        categorical_dims=None,
+        *,
+        outcome_indices=None,
+        bins: int = 100,
+        bin_range=None,
+        include_mask=None,
+        subject_slices=None,
+        seed=None,
+        common_random_numbers: bool = True,
+        strict_truncation: bool = False,
+    ):
+        """Simulate and score experimental ``data`` with a histogram likelihood.
+
+        Runs the batched simulation for ``parameter_sets`` and returns the total
+        histogram log-likelihood of ``data`` per parameter set, aggregated over
+        subjects and trials.  On the ``triton`` (GPU) backend the outcomes stay
+        on the device and the likelihood is computed there (no host round-trip).
+
+        ``data`` is the experimental data shaped ``[trial, outcome]``.
+        ``outcome_indices`` selects/reorders the plan outputs to line up with the
+        columns of ``data`` (defaults to all outputs, in order).  See
+        :func:`psyneulink.core.batched.likelihood.histogram_log_likelihood` for
+        ``categorical_dims`` / ``bins`` / ``bin_range`` semantics.
+
+        Returns a scalar for a single parameter set, else one log-likelihood per
+        parameter set.
+        """
+        from psyneulink.core.batched.likelihood import histogram_log_likelihood
+
+        device = _BACKEND_DEVICES.get(self.backend)
+        keep_device = device == "cuda"
+
+        result = self.run(
+            inputs,
+            parameter_sets,
+            num_estimates,
+            subject_slices=subject_slices,
+            seed=seed,
+            common_random_numbers=common_random_numbers,
+            strict_truncation=strict_truncation,
+            keep_device_values=keep_device,
+        )
+
+        # values: [parameter_set, subject, trial, estimate, outcome].  Collapse
+        # (parameter_set, subject) into one leading "lane" axis for the likelihood
+        # and select the outcome columns that align with ``data``.
+        values = result.values
+        if outcome_indices is not None:
+            idx = list(outcome_indices)
+            values = values[..., idx] if not keep_device else values.index_select(-1, _as_long(values, idx))
+
+        n_param, n_subject = values.shape[0], values.shape[1]
+        lanes = values.reshape(n_param * n_subject, *values.shape[2:])
+
+        ll = histogram_log_likelihood(
+            lanes,
+            data,
+            categorical_dims,
+            bins=bins,
+            bin_range=bin_range,
+            include_mask=include_mask,
+        )
+        # ll is [n_param * n_subject] (or scalar for the 1x1 case); sum over
+        # subjects to get one log-likelihood per parameter set.
+        import numpy as np
+
+        ll = np.asarray(ll).reshape(n_param, n_subject).sum(axis=1)
+        if ll.shape[0] == 1:
+            return float(ll[0])
+        return ll
+
+
+def _as_long(tensor_like, idx):
+    import torch
+
+    return torch.as_tensor(idx, dtype=torch.long, device=tensor_like.device)
 
 
 def _validate_backend(backend: str) -> None:
