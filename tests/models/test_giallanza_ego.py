@@ -107,7 +107,10 @@ def set_random_seed(seed, **_):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)  # no-op if CUDA is unavailable
     if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
-        torch.mps.manual_seed(seed)
+        try:
+            torch.mps.manual_seed(seed)
+        except AttributeError:
+            pass
     np.random.seed(seed)
     random.seed(seed)
 
