@@ -123,7 +123,7 @@ jobs:
       # run only tests/. We don't care about codestyle/docstyle at this point
       timeout-minutes: 180
       run: |
-        # remove sources to prevent conflict with the isntalled package
+        # remove sources to prevent conflict with the installed package
         rm -r -f psyneulink/ docs/ bin/ Matlab/
         # run tests
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests

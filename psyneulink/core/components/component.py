@@ -2049,6 +2049,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and variable is not None:
             variable = self._validate_variable(variable, context=context)
+            assert variable is not None, f"Variable validation failed for '{self.name}'."
 
         # PARAMS ------------------------------------------------------------
 

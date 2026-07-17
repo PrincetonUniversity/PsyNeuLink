@@ -244,10 +244,9 @@ class CompositionRunner():
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                if (pytorch_rep._execute_in_additional_optimizations
-                                        and not (node in pytorch_rep._execute_in_additional_optimizations
-                                                 and optimization_num
-                                                 in pytorch_rep._execute_in_additional_optimizations[node])):
+                                if (node in pytorch_rep._execute_in_additional_optimizations
+                                        and optimization_num
+                                        not in pytorch_rep._execute_in_additional_optimizations[node]):
                                     continue
                                 node.execute(variable=variable,
                                              optimization_num=optimization_num,

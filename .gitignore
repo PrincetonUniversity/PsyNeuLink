@@ -203,10 +203,11 @@ tests/*.pdf
 # VSCode settings
 .vscode/
 
-# asv (airspeed velocity) benchmarks
+# asv (airspeed velocity) benchmark output
 .asv/
 
-# SLURM job logs: sbatch driver output (%x_%j.out) + worker logs
-*.out
-*.err
-slurm_logs/
+# Output of show_graph() calls during test runs
+pnl-show_graph-output/
+
+# Local thesis experiment scripts (not part of the test suite)
+tests/composition/thesis_code/

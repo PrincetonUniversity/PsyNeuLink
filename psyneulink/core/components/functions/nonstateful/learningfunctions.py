@@ -36,6 +36,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
+
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
 )
@@ -196,7 +197,7 @@ class EMStorage(LearningFunction):
         prefs=None)
 
     Assign an entry to a matrix with a specified probability specified by `storage_prob <EMStorage.storage_prob>.
-    Used by `EMStorageMechanism` in an `EMComposition` to
+    Used by `EMStorageMechanism` in an `EMComposition_Proj` to
     COMMENT:
     FROM CoPilot:
     implement the `Ebbinghaus illusion <https://en.wikipedia.org/wiki/Ebbinghaus_illusion>`_.

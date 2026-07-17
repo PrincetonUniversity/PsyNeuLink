@@ -283,7 +283,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                                   hetero=0.0)
     context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
 
-    em = EMComposition(name=em_name,
+    em = EMComposition_Proj(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
