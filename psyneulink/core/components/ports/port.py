@@ -782,7 +782,7 @@ from psyneulink._typing import Optional, Union, Type
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import \
-    Function, get_param_value_for_keyword, is_function_type, RandomMatrix
+    Function, get_param_value_for_keyword, is_function_type, _MatrixInitializer
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
@@ -2991,7 +2991,7 @@ def _parse_port_spec(port_type=None,
         port_specification = port_specification()
 
     # RandomMatrix (used for Projection); try to resolve to a matrix
-    if isinstance(port_specification, RandomMatrix):
+    if isinstance(port_specification, _MatrixInitializer):
         rows = len(owner.sender.value)
         cols = len(owner.receiver.value)
         port_specification = port_specification(rows,cols)
@@ -3066,6 +3066,7 @@ def _parse_port_spec(port_type=None,
         # Re-process with Projection specified
         port_dict = _parse_port_spec(port_type=port_type,
                                        owner=owner,
+                                       name=name,
                                        variable=variable,
                                        value=value,
                                        reference_value=reference_value,

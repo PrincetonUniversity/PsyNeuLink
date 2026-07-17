@@ -516,7 +516,7 @@ class TestCompositionRuntimeParams:
               runtime_params={
                   CM: {
                       CM.input_ports[SAMPLE]: {'variable':(83,AtTrial(0))}, # InputPort object outside INPUT_PORT_PARAMS
-                      'TARGET': {'value':(999, Any(AtTrial(1),AtTrial(2)))},# InputPort by name outsideINPUT_PORT_PARAMS
+                      TARGET: {'value':(999, Any(AtTrial(1),AtTrial(2)))},# InputPort by name outsideINPUT_PORT_PARAMS
                       INPUT_PORT_PARAMS: {
                           'scale': (15, AtTrial(2)),                       # all InputPorts
                           MAPPING_PROJECTION_PARAMS:{'value':(20, Any(AtTrial(3), AtTrial(4))), # all MappingProjections

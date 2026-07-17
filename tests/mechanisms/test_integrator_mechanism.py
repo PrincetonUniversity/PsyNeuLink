@@ -23,18 +23,20 @@ class TestReset:
     test_args = [pytest.param(1,                None,           id='default'),
                  pytest.param(None,             pnl.OVERRIDE,   id='OVERRRIDE')]
     @pytest.mark.parametrize('reset_default, modulation', test_args)
-    def test_reset_integrator_mechanism(self, reset_default, modulation):
+    def test_reset_integrator_mechanism(self, reset_default, modulation, comp_mode):
         input = pnl.ProcessingMechanism(name='INPUT')
-        counter = IntegratorMechanism(function=SimpleIntegrator,
-                                      default_variable=1,
-                                      reset_default=reset_default,
-                                      name='COUNTER')
+        counter = pnl.IntegratorMechanism(function=SimpleIntegrator,
+                                          default_variable=1,
+                                          reset_default=reset_default,
+                                          name='COUNTER')
         ctl = pnl.ControlMechanism(monitor_for_control=input,
                                    modulation=modulation,
                                    control=('reset', counter))
         c = Composition(nodes=[input, ctl, counter])
-        c.run(inputs={input:[0,0,1,0,0]})
+
+        c.run(inputs={input:[0,0,1,0,0]}, execution_mode=comp_mode)
         expected = [[[0.],[1.]], [[0.],[2.]], [[1.],[0.]], [[0.],[1.]], [[0.],[2.]]]
+
         np.testing.assert_allclose(c.results, expected)
 
     def test_FitzHughNagumo_valid(self):
@@ -43,29 +45,21 @@ class TestReset:
         I.reset_stateful_function_when = Never()
         I.execute(1.0)
 
-        np.testing.assert_allclose([[0.05127053]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.00279552]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.05]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
         I.function.reset(0.01, 0.02, 0.03)
 
-        np.testing.assert_allclose(0.01, I.function.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.02, I.function.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose(0.03, I.function.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.01], [0.02], [0.03]], I.function.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.05127053]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.00279552]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.05]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.05127053], [0.00279552], [0.05]], I.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.05127053]], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([0.05127053], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
         I.execute(1.0)
 
-        np.testing.assert_allclose([[0.06075727]], I.value[0], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.02277156]], I.value[1], rtol=1e-5, atol=1e-8)
-        np.testing.assert_allclose([[0.08]], I.value[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([[0.06075727], [0.02277156], [0.08]], I.value, rtol=1e-5, atol=1e-8)
 
-        np.testing.assert_allclose([[0.06075727]], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose([0.06075727], I.output_ports[0].value, rtol=1e-5, atol=1e-8)
 
         # I.reset(new_previous_v=0.01, new_previous_w=0.02, new_previous_time=0.03)
         I.reset(0.01, 0.02, 0.03)
@@ -402,68 +396,69 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_integrator_multiple_input(self, benchmark, mech_mode):
-        I = IntegratorMechanism(
-            function=Linear(slope=2.0, intercept=1.0),
-            default_variable=[[1], [2]],
-            input_ports=['a', 'b'],
-        )
-        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        I = IntegratorMechanism(function=Linear(slope=2.0, intercept=1.0),
+                                default_variable=[[1], [2]],
+                                input_ports=['a', 'b'])
 
-        val = benchmark(ex, [[1], [2]])
-        np.testing.assert_allclose(val, [[3], [3]])  # output_port values
-        np.testing.assert_allclose(I.value, [[3], [5]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([[1], [2]])
+        val2 = benchmark(ex, [[1], [2]])
+
+        np.testing.assert_array_equal(val1, [[3], [3]])  # output_port values
+        np.testing.assert_array_equal(val2, [[3], [3]])  # output_port values
+        np.testing.assert_array_equal(I.value, [[3], [5]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_multiple_output(self, benchmark, mech_mode):
-        I = IntegratorMechanism(
-            default_variable=[5],
-            output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
-        )
-        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_integrator_multiple_output(self, benchmark, mech_mode, reset):
+        I = IntegratorMechanism(default_variable=[5],
+                                reset_default=reset,
+                                output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'])
 
-        val = benchmark(ex, [5])
-        np.testing.assert_allclose(val, [[2.5], [2.5]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([5])
+        val2 = benchmark(ex, [5])
+
+        expected1 = [[0], [0]] if reset else [[2.5], [2.5]]
+        expected2 = [[0], [0]] if reset else [[3.75], [3.75]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_integrator_multiple_input_output(self, benchmark, mech_mode):
-        I = IntegratorMechanism(
-            function=Linear(slope=2.0, intercept=1.0),
-            default_variable=[[1], [2]],
-            input_ports=['a', 'b'],
-            output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
-                          {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
-        )
-        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        I = IntegratorMechanism(function=Linear(slope=2.0, intercept=1.0),
+                                default_variable=[[1], [2]],
+                                input_ports=['a', 'b'],
+                                output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
+                                              {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}])
 
-        val = benchmark(ex, [[1], [2]])
-        np.testing.assert_allclose(val, [[5], [3]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([[1], [2]])
+        val2 = benchmark(ex, [[1], [2]])
+
+        np.testing.assert_array_equal(val1, [[5], [3]])
+        np.testing.assert_array_equal(val2, [[5], [3]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_FitzHughNagumo_simple_scalar(self, benchmark, mech_mode):
         var = [1.0]
-        I = IntegratorMechanism(name="I",
-                                default_variable=[var],
-                                function=FitzHughNagumoIntegrator())
+        I = IntegratorMechanism(name="I", default_variable=[var], function=FitzHughNagumoIntegrator())
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        ex(var)
-        val = benchmark(ex, var)
+        val1 = ex(var)
+        val2 = benchmark(ex, var)
 
-        expected = [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]]
-
-        # The difference in results is caused by a shape mismatch;
-        # default output port values are 1D, giving 2D results in compiled mode
-        # in reality Python returns 2D value per output port for a 3d result
-        if mech_mode == 'Python':
-            expected = [[e] for e in expected]
+        expected1 = [[0.05127053]] * 3
+        expected2 = [[0.10501801629915011]] * 3
 
         if mech_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
             tolerance = {'rtol': 1e-7, 'atol': 1e-8}
@@ -471,20 +466,19 @@ class TestIntegratorFunctions:
         else:
             tolerance = {}
 
-        np.testing.assert_allclose(val, expected, **tolerance)
+        np.testing.assert_allclose(val1, expected1, **tolerance)
+        np.testing.assert_allclose(val2, expected2, **tolerance)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_FitzHughNagumo_simple_vector(self, benchmark, mech_mode):
         var = [1.0, 3.0]
-        I = IntegratorMechanism(name="I",
-                                default_variable=var,
-                                function=FitzHughNagumoIntegrator)
+        I = IntegratorMechanism(name="I", default_variable=var, function=FitzHughNagumoIntegrator)
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        ex(var)
-        val = benchmark(ex, var)
+        val1 = ex(var)
+        val2 = benchmark(ex, var)
 
         if mech_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
             tolerance = {'rtol': 1e-7, 'atol': 1e-8}
@@ -492,81 +486,98 @@ class TestIntegratorFunctions:
         else:
             tolerance = {}
 
-        np.testing.assert_allclose(val,
-                                   [[[0.10501801629915011, 0.3151109244983909]],
-                                    [[0.10501801629915011, 0.3151109244983909]],
-                                    [[0.10501801629915011, 0.3151109244983909]]],
-                                   **tolerance)
+        np.testing.assert_allclose(val1, [[[0.05127053, 0.15379818]]] * 3, **tolerance)
+        np.testing.assert_allclose(val2, [[[0.10501801629915011, 0.3151109244983909]]] * 3, **tolerance)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_transfer_integrator(self, benchmark, mech_mode):
-        I = IntegratorMechanism(
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=Linear(slope=5.0))
+        I = IntegratorMechanism(default_variable=[0 for i in range(VECTOR_SIZE)], function=Linear(slope=5.0))
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = benchmark(ex, [1.0 for i in range(VECTOR_SIZE)])
-        np.testing.assert_allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        val1 = ex([1.0 for i in range(VECTOR_SIZE)])
+        val2 = benchmark(ex, [1.0 for i in range(VECTOR_SIZE)])
+
+        np.testing.assert_array_equal(val1, [[5.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_array_equal(val2, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_accumulator_integrator(self):
-        I = IntegratorMechanism(
-            function=AccumulatorIntegrator(
-                initializer=10.0,
-                increment=15.0,
-            )
-        )
-        # P = Process(pathway=[I])
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_accumulator_integrator(self, mech_mode, reset):
+        I = IntegratorMechanism(function=AccumulatorIntegrator(initializer=10.0, increment=15.0), reset_default=reset)
+
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
         # accumulator integrator does not use input value (variable)
 
         # step 1:
-        val = I.execute(20000)
+        val1 = ex(20000)
         # value = 10 + 5
         # adjusted_value = 15 + 10
         # previous_value = 25
         # RETURN 25
 
         # step 2:
-        val2 = I.execute(70000)
+        val2 = ex(70000)
         # value = 25 + 5
         # adjusted_value = 30 + 10
         # previous_value = 30
         # RETURN 40
-        assert (val, val2) == (25, 40)
+
+        expected1 = [[10]] if reset else [[25]]
+        expected2 = [[10]] if reset else [[40]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_adaptive_integrator(self):
-        I = IntegratorMechanism(
-            function=AdaptiveIntegrator(
-                initializer=10.0,
-                rate=0.5,
-                offset=10,
-            )
-        )
-        # P = Process(pathway=[I])
-        # 10*0.5 + 1*0.5 + 10
-        val = I.execute(1)
-        assert val == 15.5
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_adaptive_integrator(self, mech_mode, reset):
+        I = IntegratorMechanism(function=AdaptiveIntegrator(initializer=10.0, rate=0.5, offset=10), reset_default=reset)
+
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+
+        # 10*0.5 + 1*0.5 + 10 = 15.5
+        val1 = ex(1)
+
+        # 15.5*0.5 + 1*0.5 + 10 = 18.25
+        val2 = ex(1)
+
+        expected1 = [[10]] if reset else [[15.5]]
+        expected2 = [[10]] if reset else [[18.25]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_drift_diffusion_integrator(self):
-        I = IntegratorMechanism(
-            function=DriftDiffusionIntegrator(
-                initializer=10.0,
-                rate=10,
-                time_step_size=0.5,
-                offset=10,
-            )
-        )
-        # P = Process(pathway=[I])
-        # 10 + 10*0.5 + 0 + 10 = 25
-        val = I.execute(1)
-        np.testing.assert_allclose([[25.], [0.5]], val)
+    @pytest.mark.parametrize('reset', [True, False], ids=["reset", "no-reset"])
+    def test_drift_diffusion_integrator(self, mech_mode, reset):
+        I = IntegratorMechanism(function=DriftDiffusionIntegrator(initializer=10.0,
+                                                                  rate=10,
+                                                                  time_step_size=0.5,
+                                                                  offset=10),
+                                reset_default=reset,
+
+                                # Export both values via output ports
+                                output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+                                              {pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}])
+
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+
+        # 10 + 10*1*0.5 + 0 + 10 = 25
+        val1 = ex(1)
+
+        # 25 + 10*1*0.5 + 0 + 10 = 40
+        val2 = ex(1)
+
+        expected1 = [[10], [0]] if reset else [[25.], [0.5]]
+        expected2 = [[10], [0]] if reset else [[40.], [1.0]]
+
+        np.testing.assert_array_equal(val1, expected1)
+        np.testing.assert_array_equal(val2, expected2)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -638,9 +649,11 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism()
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        ex([10])
-        val = benchmark(ex, [10])
-        np.testing.assert_allclose(val, [[7.5]])
+        val1 = ex([10])
+        val2 = benchmark(ex, [10])
+
+        np.testing.assert_array_equal(val1, [[5.0]])
+        np.testing.assert_array_equal(val2, [[7.5]])
 
 
 class TestIntegratorInputs:
@@ -683,16 +696,13 @@ class TestIntegratorInputs:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0, 0],
-            function=SimpleIntegrator(
-            )
+            function=SimpleIntegrator()
         )
         # P = Process(pathway=[I])
         val = I.execute([10.0, 5.0, 2.0, 1.0, 0.0])[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
-        for i in range(len(expected_output)):
-            v = val[i]
-            e = expected_output[i]
+        for i, (v, e) in enumerate(zip(val, expected_output)):
             np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
     # input = numpy array of length 5
@@ -704,17 +714,14 @@ class TestIntegratorInputs:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0, 0],
-            function=SimpleIntegrator(
-            )
+            function=SimpleIntegrator()
         )
         # P = Process(pathway=[I])
         input_array = np.array([10.0, 5.0, 2.0, 1.0, 0.0])
         val = I.execute(input_array)[0]
         expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
-        for i in range(len(expected_output)):
-            v = val[i]
-            e = expected_output[i]
+        for i, (v, e) in enumerate(zip(val, expected_output)):
             np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
     # Part 2: INVALID INPUT
@@ -1094,92 +1101,118 @@ class TestIntegratorNoise:
                 noise=NormalDist([[0], [0], [0]]),
             ),
         )
+
         val = I.execute([[10], [10], [10]])
 
         np.testing.assert_allclose(val, [[10.660535], [11.108879], [ 9.084011]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_simple_noise_fn_var_list(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            default_variable=[0, 0, 0, 0],
-            function=SimpleIntegrator(
-                noise=NormalDist(),
-            ),
-        )
+    def test_integrator_simple_noise_fn_var_list(self, mech_mode):
+        I = IntegratorMechanism(default_variable=[0, 0, 0, 0], function=SimpleIntegrator(noise=NormalDist()))
 
-        val = I.execute([10, 10, 10, 10])
-        np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([10, 10, 10, 10])
+        val2 = ex([10, 10, 10, 10])
+
+        np.testing.assert_allclose(val1, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
+        np.testing.assert_allclose(val2, [[20.16783126, 19.01835801, 22.30359356, 19.46525978]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_accumulator_noise_fn(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=AccumulatorIntegrator(
-                noise=NormalDist()
-            ),
-        )
+    def test_integrator_accumulator_noise_fn(self, mech_mode):
+        I = IntegratorMechanism(function=AccumulatorIntegrator(noise=NormalDist()))
 
-        val = I.execute(10)
-        np.testing.assert_allclose(val, [[1.00018]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex(10)
+        val2 = ex(10)
 
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_accumulator_noise_fn_var_list(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            default_variable=[0, 0, 0, 0],
-            function=AccumulatorIntegrator(
-                noise=NormalDist(),
-            ),
-        )
-
-        val = I.execute([10, 10, 10, 10])
-        np.testing.assert_allclose(val, [[1.10887925, -0.9159893, 0.30157835, 0.65375815]])
+        np.testing.assert_allclose(val1, [[1.00018003]])
+        np.testing.assert_allclose(val2, [[3.54987043]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_adaptive_noise_fn(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
-                noise=NormalDist()
-            ),
-        )
+    def test_integrator_accumulator_noise_fn_var_list(self, mech_mode):
+        I = IntegratorMechanism(default_variable=[0, 0, 0, 0],
+                                function=AccumulatorIntegrator(noise=NormalDist()))
 
-        val = I.execute(10)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([10, 10, 10, 10])
+        val2 = ex([10, 10, 10, 10])
 
-        np.testing.assert_allclose(val, [[11.00018002983055]])
+        if mech_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+            tolerance = {'rtol': 1e-7, 'atol': 1e-8}
 
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_adaptive_noise_fn_var_list(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            default_variable=[0, 0, 0, 0],
-            function=AdaptiveIntegrator(
-                noise=NormalDist(),
-            ),
-        )
+        else:
+            tolerance = {}
 
-        val = I.execute([10, 10, 10, 10])
-        np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
+        np.testing.assert_allclose(val1, [[1.10887925, -0.9159893, 0.30157835, 0.65375815]], **tolerance)
+        np.testing.assert_allclose(val2, [[0.16783126, -0.98164199, 2.30359356, -0.53474022]], **tolerance)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_drift_diffusion_noise_val(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=DriftDiffusionIntegrator(
-                noise=np.sqrt(5.0),
-                time_step_size=1.0,
-            ),
-        )
+    def test_integrator_adaptive_noise_fn(self, mech_mode):
+        I = IntegratorMechanism(function=AdaptiveIntegrator(noise=NormalDist()))
 
-        val = I.execute(10.0)
-        np.testing.assert_allclose(val, [[4.29013944], [ 1.        ]])
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex(10)
+        val2 = ex(10)
+
+        np.testing.assert_allclose(val1, [[11.00018002983055]])
+        np.testing.assert_allclose(val2, [[12.5496904]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_adaptive_noise_fn_var_list(self, mech_mode):
+        I = IntegratorMechanism(default_variable=[0, 0, 0, 0], function=AdaptiveIntegrator(noise=NormalDist()))
+
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex([10, 10, 10, 10])
+        val2 = ex([10, 10, 10, 10])
+
+        np.testing.assert_allclose(val1, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
+        np.testing.assert_allclose(val2, [[9.05895201, 9.93434731, 12.00201521, 8.81150163]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_drift_diffusion_noise_val(self, mech_mode):
+        I = IntegratorMechanism(function=DriftDiffusionIntegrator(noise=np.sqrt(5.0), time_step_size=1.0),
+                                # Export both values via output ports
+                                output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
+                                              {pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}])
+
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
+        val1 = ex(10.0)
+        val2 = ex(10.0)
+
+        if mech_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+            tolerance = {'rtol': 1e-6, 'atol': 1e-7}
+
+        else:
+            tolerance = {}
+
+        np.testing.assert_allclose(val1, [[4.29013944], [1.]], **tolerance)
+        np.testing.assert_allclose(val2, [[14.9673235], [2.]], **tolerance)
+
+    @pytest.mark.composition
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize(
+        "parameter, expected",
+         [('seed', [[[10.], [13.21383832]], [[20.], [15.28114669]]] * 2),
+          (pnl.DIST_MEAN, [[[10.], [11.20656132]], [[20.], [21.71995896]], [[10.], [9.57600537]], [[20.], [20.03826716]]]),
+          (pnl.STANDARD_DEVIATION, [[[10.], [27.06561325]], [[20.], [49.39917927]], [[10.], [10.76005365]], [[20.], [15.76534311]]]),
+         ])
+    def test_integrator_modulated_noise_fn(self, parameter, expected, comp_mode):
+
+        # Use higher default mean to avoid rounding issues with lower precision (fp32)
+        I = pnl.IntegratorMechanism(default_variable=[0], function=AccumulatorIntegrator(rate=0, noise=NormalDist(seed=[1], mean=15)))
+        P = pnl.ProcessingMechanism()
+        ctl = pnl.ControlMechanism(monitor_for_control=P, modulation=pnl.OVERRIDE, control=(parameter, I))
+        c = Composition(nodes=[P, ctl, I])
+
+        c.run(inputs={P:[10, 20, 10, 20]}, execution_mode=comp_mode)
+
+        np.testing.assert_allclose(c.results, expected)
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
@@ -1196,8 +1229,6 @@ class TestIntegratorNoise:
         )
 
         # val = 1.0 + 0.5 * (1.0 - 0.25 * 2.5) * 1.0 + np.sqrt(1.0 * 2.0) * np.random.normal()
-
-
         val = I.execute(2.5)
 
         # np.testing.assert_allclose(val, 4.356601554140335)

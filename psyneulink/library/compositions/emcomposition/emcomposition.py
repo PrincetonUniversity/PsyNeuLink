@@ -410,8 +410,9 @@ that is propagated through the EMComposition.
 
   .. technical_note::
      The *WEIGHTED_AVG* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
-     passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*; the other SoftMax options are
-     not currently supported.
+     passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*. This mapping is honored for both
+     Python execution and the PyTorch execution path (e.g., ``execution_mode=ExecutionMode.PyTorch``); other SoftMax
+     output types are not used by EMComposition.
 
 .. _EMComposition_Memory_Decay_Rate:
 
@@ -445,7 +446,7 @@ forms of learning are enable.
 <EMComposition.memory>` when the EMComposition is executed during learning can be used for error computation
 and backpropagation through the EMComposition to its inputs.  By default, the values of all of its `retrieved_nodes
 <EMComposition.retrieved_nodes>` are included. For those that do not project to an outer Composition (i.e., one in
-which the EMComposition is `nested <Composition_Nested>`), a `TARGET <NodeRole.TARGET>` node is constructed
+which the EMComposition is `nested <Composition_Nested>`), a `TARGET <NodeRole.TARGET_INPUT>` node is constructed
 for each, and used to compute errors that are backpropagated through the network to its `query_input_nodes
 <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and on to any
 nodes that project to those from a Composition within which the EMComposition is `nested <Composition_Nested>`.
@@ -942,7 +943,7 @@ while the last two should be used as values::
 
     **Use of field_weights to specify keys and values.**
 
-Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `nodes <Composition_Node>`,
+Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `Nodes <Composition_Nodes>`,
 that are used to implement the relative contribution that each key field makes to the matching process specifed in
 `field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
 but different values can be used to weight the relative contribution of each key field.  The values are normalized so
@@ -984,11 +985,9 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import S
 from psyneulink.core.components.functions.nonstateful.transformfunctions import (
     Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
-from psyneulink.core.compositions.composition import CompositionError, NodeRole
-from psyneulink.library.compositions.autodiffcomposition import (
-    AutodiffComposition,
-    torch_available,
-)
+from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.library.compositions.autodiffcomposition import (AutodiffComposition, torch_available)
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -1250,7 +1249,7 @@ class EMComposition(AutodiffComposition):
         )
 
     Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
-    differentiable form and in which it's `field_weights <EMComposition.field_weights>` parameter can be learned.
+    differentiable form and in which its `field_weights <EMComposition.field_weights>` parameter can be learned.
 
     Takes only the following arguments, all of which are optional
 
@@ -2669,10 +2668,6 @@ class EMComposition(AutodiffComposition):
             for field in self.fields:
                 field.storage_projection = self.storage_node.path_afferents[field.index]
 
-    def _assign_learning_rates(self, projections=None, context=None):
-        """Override to defer population of learning_rates_dict until call to _set_learning_attributes below."""
-        pass
-
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         Make exclude_fron_gradient_calc assignments to relevant Nodes
@@ -2713,7 +2708,6 @@ class EMComposition(AutodiffComposition):
                 projection.learnable = False
                 projection.learning_rate = False
 
-        constructor_learning_rate = self._optimizer_constructor_params
         learn_field_weights = self.parameters.learn_field_weights.spec
 
         if not isinstance(learn_field_weights, (list, np.ndarray)):
@@ -2735,8 +2729,11 @@ class EMComposition(AutodiffComposition):
             # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}
-            if constructor_learning_rate:
-                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate.pop(DEFAULT_LEARNING_RATE, None)
+
+            # Assuming since no context that this is meant to be used statelessly
+            constructor_learning_rate = self.parameters.learning_rate.get(None)
+            if not isinstance(constructor_learning_rate, dict):
+                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate
             for i, field in enumerate(self.fields):
                 if field.type == FieldType.KEY:
                     # Get Projection for field_weight_node
@@ -2753,8 +2750,7 @@ class EMComposition(AutodiffComposition):
                         raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
                                                  f"({learn_field_weights[i]}) is not a valid value.")
 
-        self.parameters.learning_rates_dict.set(lr_dict, context=None)
-        self._optimizer_constructor_params = lr_dict
+        self.parameters.learning_rate._set(lr_dict, context=Context(execution_id=None))
 
     def _validate_options_with_learning(self,
                                         use_gating_for_weighting,
@@ -2916,6 +2912,9 @@ class EMComposition(AutodiffComposition):
             if warning:
                 warnings.warn(warning)
 
+        if self.concatenate_queries:
+            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
+
         return super().learn(
             *args,
             context=context,
@@ -2927,15 +2926,15 @@ class EMComposition(AutodiffComposition):
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
         if execution_mode is None:
-            if self.execution_mode_warned_about_default is False:
+            if self._warned_about_default_execution_mode is False:
                 warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
                               f"ExecutionMode.PyTorch will be used by default.")
-                self.execution_mode_warned_about_default = True
+                self._warned_about_default_execution_mode = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _identify_target_nodes(self, context)->list:
-        """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
+    def _identify_output_nodes(self, context)->list:
+        """Identify retrieval_nodes specified by **target_field_weights** as TARGET_MECHANISMs"""
         target_fields = self.target_fields
         if target_fields is False:
             if self.enable_learning:
@@ -2949,13 +2948,26 @@ class EMComposition(AutodiffComposition):
         else:
             assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
                            f"is neither True, False nor a list of bools as it should be.")
-        super()._identify_target_nodes(context)
+        super()._identify_output_nodes(context)
         return target_nodes
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
-        if self.concatenate_queries:
-            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
-        return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
+    def _check_if_sample_is_in_learnable_pathway(self, *args, **kwargs):
+        """Override to suppress error for no learnable pathways if it is for sample in EM Composition
+        More informative error is generated in PytorchCompositionWrapper._assign_learning_rates()
+        """
+        if kwargs['sample_port']:
+            kwargs['action']=None
+        result = super()._check_if_sample_is_in_learnable_pathway(*args, **kwargs)
+        if not result:
+            warnings.warn(f"A pathway of '{self.name}' terminating in '{kwargs['sample_port'].owner.name}' "
+                          f"cannot be trained since it has no learnable Projections; this may be "
+                          f"because the learning_rate for the corresponding field_weight is set to False.")
+        return result
+
+    # def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
+    #     if self.concatenate_queries:
+    #         raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
+    #     return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?

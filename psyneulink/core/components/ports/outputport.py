@@ -375,7 +375,6 @@ below, starting with constraints that are given the highest precedence:
 Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
-# FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
 Mechanisms have a `standard_output_ports <Mechanism_Base.standard_output_ports>` attribute, that contains a list of
 `StandardOutputPorts`: `OutputPort specification dictionaries <OutputPort_Specification_Dictionary>` that can be
 assigned as `output_ports <Mechanism_Base.output_ports>`. There is a base set of StandardOutputPorts for all
@@ -415,10 +414,10 @@ dictionary <OutputPort_Specification_Dictionary>`, or in the variable spec (2nd)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, an OutputPort uses the first (and often only) item of the owner Mechanism's `value
-<Mechanism_Base.value>` as its `variable <OutputPort.variable>`, which usuall corresponds to the `value
+<Mechanism_Base.value>` as its `variable <OutputPort.variable>`, which usually corresponds to the `value
 <InputPort.value>` of the Mechanism's first (primary) `InputPort <InputPort_Primary>`.  However, this can be
 customized by specifying any other item of its `owner <Port.owner>`\\s `value <Mechanism_Base.value>`, the full
-`value <Mechanism_Base.value>` itself, other attributes of the `owner <Port.owner>`, or any combination of these
+`value <Mechanism_Base.value>` itself, other Parameters of the `owner <Port.owner>`, or any combination of these
 using the following:
 
     *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputPort's `owner
@@ -427,9 +426,9 @@ using the following:
     *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <Port.owner>`\\'s `value
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
-    *<attribute name>* -- the name of an attribute of the OutputPort's `owner <Port.owner>` (must be one
+    *<attribute name>* -- the name of an Parameter of the OutputPort's `owner <Port.owner>` (must be one
     in the `owner <Port.owner>`\\'s `Parameters <Mechanism.Parameters>` class); returns the value
-    of the named attribute for use in the OutputPort's `variable <OutputPort.variable>`.
+    of the named Parameter for use in the OutputPort's `variable <OutputPort.variable>`.
 
     *PARAMS_DICT* -- keyword specifying the `owner <Port.owner>` Mechanism's
     entire dictionary of Parameters, that contains its own Parameters, its
@@ -437,7 +436,7 @@ using the following:
     for the Mechanism's `input_ports <Mechanism.input_ports>`. The
     OutputPort's `function <OutputPort.function>` must be able to parse the dictionary.
     COMMENT
-    ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
+    ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? ATTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
     <obj>.parameters
     COMMENT
 
@@ -1643,7 +1642,7 @@ class StandardOutputPorts():
                 del port[INDEX]
             setattr(self.owner.__class__, port[NAME], make_readonly_property(port[NAME]))
 
-        # For each OutputPort dict with a VARIABLE entry that references it's owner's value (by index)
+        # For each OutputPort dict with a VARIABLE entry that references its owner's value (by index)
         # add <NAME_INDEX> as property of the OutputPort owner's class that returns its index.
         for port in dict_list:
             if isinstance(port[VARIABLE], tuple):

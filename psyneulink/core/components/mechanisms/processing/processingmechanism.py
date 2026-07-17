@@ -405,7 +405,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
 
         if (len(self.defaults.variable) > 1 and isinstance(self.function, TransferFunction)):
-            # More than one InputPort, and funciton is TransferFunction, so implement corresponding OutputPorts
+            # More than one InputPort, and funcition is TransferFunction, so implement corresponding OutputPorts
             output_ports = []
 
             if self.output_ports is None:

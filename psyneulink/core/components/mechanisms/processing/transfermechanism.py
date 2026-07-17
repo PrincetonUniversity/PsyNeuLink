@@ -96,7 +96,7 @@ can be used to specify any subclass of `IntegratorFunction`, so long as it can a
 itself has arguments that can be used to confifure its `integrator_function <TransferMechanism.integrator_function>`:
 **initial_value**, **integration_rate**, and **noise**.  If any of these are specified in the TransferMechanism's
 constructor, their value is used to specify the corresponding parameter of its `integrator_function
-<TransferMechanism.integrator_function>`. Additonal parameters that govern how integration occurs are described under
+<TransferMechanism.integrator_function>`. Additional parameters that govern how integration occurs are described under
 `TransferMechanism_Execution_With_Integration`.
 
 .. _TransferMechanism_Structure:
@@ -213,6 +213,8 @@ specified using the **initializer** argument of a TransferMechanism's constructo
     <TransferMechanism.integrator_function>`, the value specified for the latter takes precedence, and that value is
     assigned as the one for the `initial_value <TransferMechanism.initial_value>` of the TransferMechanism.
 
+.. _TransferMechanism__Resetting:
+
 *Resetting integration* -- in some cases, it may be useful to reset the integration to the original starting point,
 or to a new one. This can be done using the Mechanism's `reset <TransferMechanism.reset>` method. This first sets the
 `integrator_function <TransferMechanism.integrator_function>`'s `previous_value <IntegratorFunction.previous_value>`
@@ -288,7 +290,7 @@ described below (also see `examples <TransferMechanism_Examples_Termination>`).
 
 *Single step execution* -- If either `execute_until_finished <Component.execute_until_finished>` is set to False,
 or no `termination_threshold <TransferMechanism.termination_threshold>` is specified (i.e., it is None, the default),
-then only a signle step of integration is carried out each time the TransferMechanism is executed.  In this case,
+then only a single step of integration is carried out each time the TransferMechanism is executed.  In this case,
 the `num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
 since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
 `execute method <Component_Execution>` (and the termination condition does not apply or has not been specified).
@@ -455,11 +457,11 @@ each element.  This is shown below using the `NormalDist` function::
     >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=pnl.NormalDist)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.1576537 , 1.60782117, 0.75840058]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.20656132, 2.71995896, 0.57600537]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[1.03826716, 0.56148871, 0.8394907 ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[ 1.59335049,  0.61367634, -0.40574659]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[ 0.80580672, -1.88025475,  0.25268581]])
 
 Notice that each element was assigned a different random value for its noise, and that these also varied across
 executions.  Notice that since only a single function was specified, it could be the name of a class.  Functions
@@ -469,9 +471,9 @@ when used in a list, functions must be instances, as shown below::
     >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[-0.22503678,  1.36995517,  4.        ]])
+    array([[2.55612201, 1.6257203 , 4.        ]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.08371805, 1.60392004, 4.        ]])
+    array([[2.54362708, 1.06552886, 4.        ]])
 
 Notice that since noise is a `modulable Parameter <ParameterPort_Modulable_Parameters>`, assigning it a value
 after the TransferMechanism has been constructed must be done to its base value (see `ModulatorySignal_Modulation`
@@ -481,11 +483,11 @@ Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result 
 
     >>> my_linear_tm.clip = (.5, 1.2)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.5       , 1.01316799, 1.2       ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[1.2, 1.2, 1.2]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[1.2       , 1.06552886, 1.2       ]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[0.5       , 1.01316799, 1.2       ]])
+    array([[0.5, 1.2, 1.2]])
 
 Note that the range specified in **clip** applies to all elements of the result if it is an array.
 
@@ -985,7 +987,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False` (see `noise <TransferMechanism.noise>` for details).
         If **noise** is specified as a single function, it can be a reference to a Function class or an instance of one;
-        if a function is used in a list, it *must* be an instance.
+        if a function is used in a list, it *must* be an instance. See `noise <TransferMechanism.noise>` for
+        additional details.
 
     clip : tuple(float, float) or list [float, float] : default None
         specifies the allowable range for the result of `function <Mechanism_Base.function>` (see
@@ -1047,20 +1050,24 @@ class TransferMechanism(ProcessingMechanism_Base):
         value is applied to the result of `integrator_function <TransferMechanism.integrator_function>` if
         `integrator_mode <TransferMechanism.integrator_mode>` is False; otherwise it is passed as the `noise
         <IntegratorFunction.noise>` Parameter to `integrator_function <TransferMechanism.integrator_function>`. If
-        noise is a float or function, it is added to all elements of the array being transformed; if it is a function,
-        it is executed independently for each element each time the TransferMechanism is executed.  If noise is an
-        array, it is applied Hadamard (elementwise) to the array being transformed;  again, each function is executed
+        noise is a float or function, it is added to all elements of the array being transformed; if it is an
+        array, it is applied Hadamard (elementwise) to the array being transformed; again, each function is executed
         independently for each corresponding element of the array each time the Mechanism is executed.
 
         .. note::
-            If **noise** is specified as a float or function in the constructor for the TransferMechanism, the noise
-            Parameter cannot later be specified as a list or array, and vice versa.
+           If **noise** is specified as a float, a list or array of floats, of a function that returns a fixed value,
+           then noise acts as a constant across executions, until it is changed explicitly; for it to implement
+           stochasticity in such cases, it must be varied programmitically (e.g., before each call to the
+           `run <Composition.run>` or `learn <Composition.learn>` method of a `Composition <Composition>` to which
+           the Mechanism belongs. To ensure that the value varies automatically on each *execution* of the Mechanism,
+           and for every element of an array for which it is specified, a `DistributionFunction` should be used; this
+           will generate a new value on each execution of the Mechanisms, and separately for every value of a list in
+           which it is specified, generating a new value of the function for that execution (and each of the
+           corresponding elements of the array).
 
-        .. hint::
-            To generate random noise that varies for every execution and across all elements of an array, a
-            `DistributionFunction` should be used, that generates a new value on each execution. If noise is
-            specified as a float, a function with a fixed output, or an array of either of these, then noise
-            is simply an offset that is the same across all elements and executions.
+        .. note::
+           If **noise** is specified as a float or function in the constructor for the TransferMechanism,
+           the noise Parameter cannot later be specified as a list or array, and vice versa.
 
     clip : tuple(float, float)
         determines the allowable range for all elements of the result of `function <Mechanism_Base.function>`.
@@ -1412,7 +1419,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
 
-            if issubclass(transfer_function_class, Function):
+            if transfer_function_class is not None and issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
                     raise TransferError(f"Function specified as {repr(FUNCTION)} param of '{self.name}' "
                                         f"({transfer_function_class.__name__}) must be a "
@@ -1590,8 +1597,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
 
-        m_params, builder = self._gen_llvm_param_ports_for_obj(
-                self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+        m_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                               builder,
+                                                               m_base_params,
+                                                               m_state,
+                                                               m_in,
+                                                               obj=self,
+                                                               params_in=m_base_params)
 
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
         current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
@@ -1621,7 +1633,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if not is_in_params and not is_in_state:
 
-            # This can be any builtint function, but currently only max() is supported
+            # This can be any builtin function, but currently only max() is supported
             assert measure_ptrs is None
             assert self.termination_measure is max
             assert self._termination_measure_num_items_expected == 1
@@ -1683,37 +1695,72 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params,
-                                      m_state, m_in, m_val, ip_out, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self,
+                                      ctx,
+                                      builder,
+                                      m_base_params,
+                                      m_params,
+                                      m_state,
+                                      m_in,
+                                      m_val,
+                                      ip_out,
+                                      *,
+                                      tags:frozenset):
 
         if self.integrator_mode:
-            if_base_params, if_state = ctx.get_param_or_state_ptr(builder, self, "integrator_function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-            if_params, builder = self._gen_llvm_param_ports_for_obj(
-                    self.integrator_function, if_base_params, ctx, builder,
-                    m_base_params, m_state, m_in)
+            if_base_params, if_state = ctx.get_param_or_state_ptr(builder,
+                                                                  self,
+                                                                  "integrator_function",
+                                                                  param_struct_ptr=m_base_params,
+                                                                  state_struct_ptr=m_state)
 
-            mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params,
-                    if_state, ip_out, None, tags=tags)
+            if_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                    builder,
+                                                                    m_base_params,
+                                                                    m_state,
+                                                                    m_in,
+                                                                    obj=self.integrator_function,
+                                                                    params_in=if_base_params,
+                                                                    recursive=True)
+            mf_in, builder = self._gen_llvm_invoke_function(ctx,
+                                                            builder,
+                                                            self.integrator_function,
+                                                            if_params,
+                                                            if_state,
+                                                            ip_out,
+                                                            None,
+                                                            tags=tags)
         else:
             mf_in = ip_out
 
-        mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-        mf_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, mf_base_params, ctx, builder, m_base_params, m_state, m_in)
-
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
-                                                         self.function, mf_params,
-                                                         mf_state, mf_in, m_val,
+        mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder,
+                                                              self,
+                                                              "function",
+                                                              param_struct_ptr=m_base_params,
+                                                              state_struct_ptr=m_state)
+        mf_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
+                                                                builder,
+                                                                m_base_params,
+                                                                m_state,
+                                                                m_in,
+                                                                obj=self.function,
+                                                                params_in=mf_base_params,
+                                                                recursive=True)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx,
+                                                         builder,
+                                                         self.function,
+                                                         mf_params,
+                                                         mf_state,
+                                                         mf_in,
+                                                         m_val,
                                                          tags=tags)
 
         clip_ptr = ctx.get_param_or_state_ptr(builder, self, CLIP, param_struct_ptr=m_params)
         if len(clip_ptr.type.pointee) != 0:
             assert len(clip_ptr.type.pointee) == 2
-            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(0)]))
-            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(1)]))
+            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):
@@ -1765,9 +1812,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
-        if self.is_initializing:
-            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
-
         integrator_mode = self.parameters.integrator_mode._get(context)
         noise = self._get_current_parameter_value(self.parameters.noise, context)
 

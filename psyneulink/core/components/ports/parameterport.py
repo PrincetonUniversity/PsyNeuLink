@@ -86,7 +86,7 @@ COMMENT:
                     (i.e., of the arg for the parameter in the Component's constructor) but should not have a
                     ParameterPort (e.g., input_port and output_port), as otherwise the
                     specification will be interpreted as a numeric parameter (in the case of a value) or
-                    a parameter of the keyword's type, a ParameterPort will be created, and then it's value,
+                    a parameter of the keyword's type, a ParameterPort will be created, and then its value,
                     rather than the parameter's actual value, will be returned when the parameter is accessed
                     using "dot notation" (this is because the getter for an attribute's property first checks
                     to see if there is a ParameterPort for that attribute and, if so, returns the value of the

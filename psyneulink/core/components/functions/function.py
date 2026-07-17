@@ -154,7 +154,7 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -162,8 +162,8 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
-    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, Loss, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX,
+    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX, KAIMING_MATRIX, XAVIER_MATRIX, ORTHOGONAL_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified, copy_parameter_value
@@ -192,7 +192,8 @@ from psyneulink.core.globals.utilities import (
 __all__ = [
     'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
     'FunctionRegistry', 'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function',
-    'is_function_type', 'PERTINACITY', 'PROPENSITY', 'RandomMatrix'
+    'is_function_type', 'PERTINACITY', 'PROPENSITY', 'RandomMatrix', 'KaimingMatrix', 'XavierMatrix',
+    'OrthogonalMatrix',
 ]
 
 EPSILON = np.finfo(float).eps
@@ -1000,7 +1001,7 @@ class Function_Base(Function):
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
-        if isinstance(val, (str, type(None))):
+        if isinstance(val, (str, Loss, torch.nn.modules.loss._Loss, type(None))):
             return val
         elif np.isscalar(np.array(val)):
             return float(val)
@@ -1279,8 +1280,14 @@ class EVCAuxiliaryFunction(Function_Base):
                          function=function,
                          )
 
+class _MatrixInitializer:
+    """
+    Internal base class for matrix initializer functions.
+    """
 
-class RandomMatrix():
+    pass
+
+class RandomMatrix(_MatrixInitializer):
     """Function that returns matrix with random elements distributed uniformly around **center** across **range**.
 
     The **center** and **range** arguments are passed at construction, and used for all subsequent calls.
@@ -1320,6 +1327,164 @@ class RandomMatrix():
 
     def __call__(self, sender_size:int, receiver_size:int):
         return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
+
+class KaimingMatrix(_MatrixInitializer):
+    """Function that returns a matrix initialized using the Kaiming (He) initialization scheme.
+
+    This initialization preserves the variance of activations in deep networks and is
+    commonly used with ReLU or similar activation functions.
+
+    The **distribution**, **fan**, and **gain** arguments are passed at construction and used for all
+    subsequent calls. Once constructed, the function must be called with **sender_size** and
+    **receiver_size**, specifying the number of rows and columns of the matrix.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+
+    Arguments
+    ----------
+    distribution : {'normal', 'uniform'}
+        specifies the distribution used to sample the matrix elements.
+
+    fan : {'in', 'out'} or float
+        determines the fan value used for scaling the initialization.
+        If "in", the fan value is set to the sender size.
+        If "out", the fan value is set to the receiver size.
+        If a numeric value is provided, it is used directly.
+
+    gain : float
+        scaling factor applied to the initialization variance.
+
+    Attributes
+    ----------
+    distribution : {'normal', 'uniform'}
+        the distribution used to generate the matrix elements.
+
+    fan : {'in', 'out'} or float
+        the fan specification used to compute the scaling factor.
+
+    gain : float
+        the gain applied when computing the initialization scale.
+    """
+
+    def __init__(
+        self,
+        distribution: Literal["normal", "uniform"] = "normal",
+        fan: Union[Literal["in", "out"], float, int] = "in",
+        gain: float = 2.0,
+    ):
+        self.distribution = distribution
+        self.fan = fan
+        self.gain = gain
+
+    def __call__(self, sender_size, receiver_size):
+
+        if is_numeric_scalar(self.fan):
+            fan = self.fan
+        elif self.fan == "in":
+            fan = sender_size
+        elif self.fan == "out":
+            fan = receiver_size
+        else:
+            raise FunctionError(f"Invalid fan specification: {self.fan}")
+
+        std = np.sqrt(self.gain / fan)
+
+        if self.distribution == "normal":
+            return np.random.normal(0.0, std, (sender_size, receiver_size))
+        elif self.distribution == "uniform":
+            bound = np.sqrt(3.0) * std
+            return np.random.uniform(-bound, bound, (sender_size, receiver_size))
+        else:
+            raise FunctionError(f"Invalid distribution: {self.distribution}")
+
+class XavierMatrix(_MatrixInitializer):
+    """Function that returns a matrix initialized using the Xavier (Glorot) initialization scheme.
+
+    This initialization balances the variance of activations between layers and is commonly
+    used with symmetric activation functions such as tanh or logistic.
+
+    The **distribution** and **gain** arguments are passed at construction and used for all
+    subsequent calls. Once constructed, the function must be called with **sender_size** and
+    **receiver_size**, specifying the number of rows and columns of the matrix.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+
+    Arguments
+    ----------
+    distribution : {'normal', 'uniform'}
+        specifies the distribution used to sample the matrix elements.
+
+    gain : float
+        scaling factor applied to the initialization variance.
+
+    Attributes
+    ----------
+    distribution : {'normal', 'uniform'}
+        the distribution used to generate the matrix elements.
+
+    gain : float
+        the gain applied when computing the initialization scale.
+    """
+
+    def __init__(
+        self,
+        distribution: Literal["normal", "uniform"] = "normal",
+        gain: float = 1.0,
+    ):
+        self.distribution = distribution
+        self.gain = gain
+
+    def __call__(self, sender_size, receiver_size):
+
+        fan_sum = sender_size + receiver_size
+
+        if self.distribution == "normal":
+            std = np.sqrt(self.gain / fan_sum)
+            return np.random.normal(0.0, std, (sender_size, receiver_size))
+
+        else:
+            bound = np.sqrt(3.0 * self.gain / fan_sum)
+            return np.random.uniform(-bound, bound, (sender_size, receiver_size))
+
+class OrthogonalMatrix(_MatrixInitializer):
+    """Function that returns a matrix initialized using orthogonal initialization.
+
+    This initialization generates a matrix with orthogonal rows or columns using
+    QR decomposition of a randomly sampled matrix. Orthogonal initialization can
+    help preserve signal magnitude across layers and is often used for recurrent
+    or deep linear networks.
+
+    The **gain** argument is passed at construction and used for all subsequent
+    calls. Once constructed, the function must be called with **sender_size** and
+    **receiver_size**, specifying the number of rows and columns of the matrix.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a
+    `MappingProjection`.
+
+    Arguments
+    ----------
+    gain : float
+        scaling factor applied to the orthogonal matrix.
+
+    Attributes
+    ----------
+    gain : float
+        the gain applied to the generated orthogonal matrix.
+    """
+
+    def __init__(self, gain: float = 1.0):
+        self.gain = gain
+
+    def __call__(self, sender_size, receiver_size):
+        dim = max(sender_size, receiver_size)
+        a = np.random.normal(0.0, 1.0, (dim, dim))
+
+        q, r = np.linalg.qr(a)
+
+        d = np.diag(r)
+        q *= np.sign(d)
+
+        return self.gain * q[:sender_size, :receiver_size]
 
 
 def get_matrix(specification, rows=1, cols=1, context=None):
@@ -1394,8 +1559,18 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
 
+    if specification == KAIMING_MATRIX:
+        return KaimingMatrix()(rows, cols)
+
+    if specification == XAVIER_MATRIX:
+        return XavierMatrix()(rows, cols)
+
+    if specification == ORTHOGONAL_MATRIX:
+        return OrthogonalMatrix()(rows, cols)
+
+
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, (types.FunctionType, RandomMatrix)):
+    if isinstance(specification, (types.FunctionType, _MatrixInitializer)):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to

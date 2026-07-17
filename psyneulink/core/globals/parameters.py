@@ -321,6 +321,7 @@ import types
 import typing
 import weakref
 
+import numpy as np
 import toposort
 
 from psyneulink._typing import Iterable, Optional, Set, Union
@@ -1163,6 +1164,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
     def __init__(
         self,
         default_value=None,
+        *,
         name=None,
         stateful=True,
         modulable=False,
@@ -1310,7 +1312,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs)
+                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs.union(set(['_user_specified'])))
                 if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
             )
 
@@ -1502,7 +1504,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
     def _validate_method(self):
         return self._owner._get_validate_method(self.name)
 
-    def _validate(self, value):
+    def _get_validation_error_message(self, value) -> Union[str, None]:
         err_msg = None
 
         valid_types = self.valid_types
@@ -1520,7 +1522,13 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if err_msg is False:
                 err_msg = '{0} returned False'.format(validation_method)
 
+        return err_msg
+
+    def _validate(self, value):
+        err_msg = self._get_validation_error_message(value)
         if err_msg is not None:
+            if isinstance(value, str):
+                value = f"'{value}'"
             raise ParameterError(
                 "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
                     value,
@@ -1595,7 +1603,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             return fallback_value
 
     @handle_external_context()
-    def get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
+    def get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
         """
             Gets the value of this `Parameter` in the context of **context**
             If no context is specified, attributes on the associated `Component` will be used
@@ -1612,26 +1620,15 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        base_val = self._get(context, fallback_value, **kwargs)
+        base_val = self._get(context, fallback_value=fallback_value, **kwargs)
         if self._scalar_converted:
             base_val = try_extract_0d_array_item(base_val)
         if is_array_like(base_val):
             base_val = copy_parameter_value(base_val)
         return base_val
 
-    def _get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
-        if not self.stateful:
-            execution_id = None
-        else:
-            try:
-                execution_id = context.execution_id
-            except AttributeError as e:
-                raise ParameterError(
-                    '_get must pass in a Context object as the context '
-                    'argument. To get parameter values using only an '
-                    'execution id, use get.'
-                ) from e
-
+    def _get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
+        execution_id = self._get_values_key(context)
         if self.getter is not None:
             value = self._call_getter(context, **kwargs)
             if self.stateful:
@@ -1759,7 +1756,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
         value = self._parse(value, check_scalar=True)
-        value = self._set(value, context, skip_history, skip_log, **kwargs)
+        value = self._set(value, context, skip_history=skip_history, skip_log=skip_log, **kwargs)
         value_result = value
 
         value_self = getattr(value, '__self__', None)
@@ -1788,27 +1785,38 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         return value_result
 
+    def _get_values_key(self, context: Context) -> typing.Hashable:
+        if not self.stateful:
+            return None
+        else:
+            try:
+                return context.execution_id
+            except AttributeError as e:
+                try:
+                    priv_method_name = inspect.stack()[1].function
+                except (AttributeError, IndexError):
+                    # exception is unexpected. essentially an assert
+                    raise
+                typ = type(self).__name__
+                pub_method_name = priv_method_name.lstrip('_')
+                raise ParameterError(
+                    f'{typ}.{priv_method_name} must pass in a Context object as the context '
+                    f'argument. To {pub_method_name} parameter values using only an '
+                    f'execution id, use {typ}.{pub_method_name}.'
+                ) from e
+
     def _set(
         self,
         value,
         context,
+        *,
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
         compilation_sync=False,
         **kwargs,
     ):
-        if not self.stateful:
-            execution_id = None
-        else:
-            try:
-                execution_id = context.execution_id
-            except AttributeError as e:
-                raise ParameterError(
-                    '_set must pass in a Context object as the context '
-                    'argument. To set parameter values using only an '
-                    'execution id, use set.'
-                ) from e
+        execution_id = self._get_values_key(context)
 
         if self.setter is not None:
             value = self._call_setter(value, context, compilation_sync, **kwargs)
@@ -1863,8 +1871,15 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         value_updated = False
         if not compilation_sync:
+            value_for_update = value
+
+            # bools are stored as ints in compiled structs; convert here to
+            # avoid incorrectly flagging type change
+            if self._tracking_compiled_struct and isinstance(value, bool):
+                value_for_update = np.asarray(value)
+
             try:
-                update_array_in_place(self.values[execution_id], value)
+                update_array_in_place(self.values[execution_id], value_for_update)
             except (KeyError, TypeError, ValueError):
                 # no self.values for execution_id
                 # failure during attempted update
@@ -1899,7 +1914,10 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 self._tracking_compiled_struct = False
 
     @handle_external_context()
-    def delete(self, context=None):
+    def delete(self, context: Optional[Union[Context, typing.Hashable]] = None):
+        self._delete(context)
+
+    def _delete(self, context: Context):
         try:
             del self.values[context.execution_id]
         except KeyError:

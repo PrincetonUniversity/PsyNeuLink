@@ -27,6 +27,7 @@ Functions that return the sample of a variable yielding the optimized value of a
 import contextlib
 # from fractions import Fraction
 import itertools
+import math
 import warnings
 from numbers import Number
 
@@ -831,7 +832,7 @@ class OptimizationFunction(Function_Base):
         state_features = ocm.parameters.state_feature_values._get(context)
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
-        num_evals = np.prod([d._num for d in self.search_space])
+        num_evals = math.prod(d._num for d in self.search_space)
 
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)

@@ -145,7 +145,10 @@ class CompositionRunner():
             minibatch_size = np.array(minibatch_size).item()
 
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
-            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(
+                f"'{self._composition.name}': 'optimizations_per_minibatch' ({optimizations_per_minibatch}) "
+                f"and 'minimbatch_size' ({minibatch_size}) cannot both be greater than 1.")
 
         if isinstance(inputs, dict):
             inputs = self.convert_input_to_arrays(inputs, execution_mode, add_sequence_dim=True)
@@ -296,7 +299,8 @@ class CompositionRunner():
                                call_after_minibatch=None,
                                early_stopper=None,
                                execution_mode:ExecutionMode=ExecutionMode.Python,
-                               context=None) -> Generator[Tuple[np.ndarray, Optional[int]], None, None]:
+                               context=None,
+                               base_context=None) -> Generator[Tuple[np.ndarray, Optional[int]], None, None]:
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -309,7 +313,10 @@ class CompositionRunner():
             minibatch_size = np.array(minibatch_size).item()
 
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
-            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(
+                f"'{self._composition.name}': 'optimizations_per_minibatch' ({optimizations_per_minibatch}) "
+                f"and 'minimbatch_size' ({minibatch_size}) cannot both be greater than 1.")
 
         for epoch in range(epochs):
             for i in range(0, num_trials, minibatch_size):
@@ -321,10 +328,11 @@ class CompositionRunner():
                 for idx in range(i, i + minibatch_size):
                     try:
                         self._composition._stim_num = i  # For debugging
-                        input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
-                                                                                targets=None,
-                                                                                execution_mode=execution_mode,
-                                                                                context=context)
+                        input_batch, _ = self._composition._parse_learn_targets_specs(inputs=inputs(idx),
+                                                                               targets=None,
+                                                                               execution_mode=execution_mode,
+                                                                               context=context,
+                                                                               base_context=base_context)
                     except:
                         break
                     if input_batch is None:
@@ -399,9 +407,6 @@ class CompositionRunner():
                 kwargs['runtime_params'].update(runtime_params)
             else:
                 kwargs['runtime_params'] = runtime_params
-        else:
-            # This is used by local learning-related methods to override the default learning_rate set at construction.
-            self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):
@@ -435,10 +440,11 @@ class CompositionRunner():
 
             # By-pass parse learning spec if we are dealing with sequences for now
             if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
-                stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
-                                                                                      targets=stim_target,
-                                                                                      execution_mode=execution_mode,
-                                                                                      context=context)
+                stim_input, num_input_trials = self._composition._parse_learn_targets_specs(inputs=stim_input,
+                                                                                     targets=stim_target,
+                                                                                     execution_mode=execution_mode,
+                                                                                     context=context,
+                                                                                     base_context=base_context)
             else:
                 num_trials = len(stim_input)
 
@@ -449,7 +455,9 @@ class CompositionRunner():
                 minibatch_size = num_trials
 
             if minibatch_size > num_trials:
-                raise Exception("The minibatch size cannot be greater than the number of trials.")
+                from psyneulink.core.compositions.composition import CompositionError
+                raise CompositionError(f"'{self._composition.name}': 'minimbatch_size' ({minibatch_size}) "
+                                       f"cannot be greater than 'num_trials' ({num_trials}) ")
 
             early_stopper = None
             if patience is not None and not self._is_llvm_mode:
@@ -467,7 +475,8 @@ class CompositionRunner():
                                                                 call_after_minibatch=call_after_minibatch,
                                                                 early_stopper=early_stopper,
                                                                 execution_mode=execution_mode,
-                                                                context=context)
+                                                                context=context,
+                                                                base_context=base_context)
             else:
                 minibatched_input = self._batch_inputs(inputs=stim_input,
                                                        epochs=stim_epoch,

@@ -17,7 +17,7 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 # Unit tests for functions of EMComposition class that are new (not in Composition or AutodiffComposition)
 # or override functions in those classes
 #
-# TODO:
+# TODO: EM BREADCRUMB:
 #     FIX: ADD WARNING TESTS
 #     FIX: ADD ERROR TESTS
 #     FIX: ADD TESTS FOR LEARNING COMPONENTS in TestStructure
@@ -376,10 +376,13 @@ class TestConstruction:
         # Validate targets for target_fields
         np.testing.assert_allclose(em.target_fields, [True, False, False, True, True])
         learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        assert len(learning_components) == 3
-        assert 'TARGET for KEY A [RETRIEVED]' in learning_components[0].name
-        assert 'TARGET for KEY VALUE [RETRIEVED]' in learning_components[1].name
-        assert 'TARGET for VALUE LEARN [RETRIEVED]' in learning_components[2].name
+        assert len(learning_components) == 6
+        assert 'LOSS for KEY A [RETRIEVED]' in learning_components[0].name
+        assert 'LOSS for KEY VALUE [RETRIEVED]' in learning_components[1].name
+        assert 'LOSS for VALUE LEARN [RETRIEVED]' in learning_components[2].name
+        assert 'TARGET for KEY A [RETRIEVED]' in learning_components[3].name
+        assert 'TARGET for KEY VALUE [RETRIEVED]' in learning_components[4].name
+        assert 'TARGET for VALUE LEARN [RETRIEVED]' in learning_components[5].name
 
         # Validate learning specs for field weights
         # Presence or absence of field weight components based on keys vs. values:
@@ -405,15 +408,15 @@ class TestConstruction:
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
-        assert proj_KEY_A.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .5
-        assert proj_KEY_B.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .01
-        assert proj_KEY_VAL.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) is False
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_A) == .5
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_B) == .01
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_VAL) is False
         # Assert that all non-field_weight Projections are not learnable
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
             assert pytorch_rep.get_torch_learning_rate_for_projection(proj) is False
-        assert len(pytorch_rep.torch_params_to_projections()) == 23
-        assert len(pytorch_rep.projections_to_torch_params()) == 23
+        assert len(pytorch_rep.torch_params_to_projections()) == 29
+        assert len(pytorch_rep.projections_to_torch_params()) == 29
 
         # Validate _field_index_map
         assert em._field_index_map[[k for k in em._field_index_map.keys()
@@ -932,17 +935,38 @@ class TestExecution:
                                              name='OUTER COMP')
 
         input_array = [[0], [0]]
-        targets = outer_comp.get_target_nodes()
+        targets = outer_comp.target_input_mechanisms
         inputs = {external_input: input_array,
                   targets[0]: [1],
                   targets[1]: [1]}
         outer_comp.learn(inputs=inputs, epochs=1)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
-    @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
-    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
+    @pytest.mark.parametrize('exec_mode', [
+        pnl.ExecutionMode.Python,
+        pnl.ExecutionMode.PyTorch
+    ])
+    @pytest.mark.parametrize('concatenate', [
+        True,
+        False
+    ], ids=[
+        'concatenate',
+        'no_concatenate'
+    ])
+    @pytest.mark.parametrize('use_storage_node', [
+        True,
+        False
+    ], ids=[
+        'use_storage_node',
+        'no_storage_node'
+    ])
+    @pytest.mark.parametrize('learning', [
+        True,
+        False
+    ], ids=[
+        'learning',
+        'no_learning'
+    ])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
@@ -976,14 +1000,12 @@ class TestExecution:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
                 assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
-            elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
+
+            elif not learning:
                 with pytest.raises(AutodiffCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert (f"There are no learnable Projections in 'EM_Composition' nor any nested under it; "
-                        f"this is because the learning_rates for all of the Projections are set to 'False'. "
-                        f"The learning_rate for at least one Projection must be a non-False value within "
-                        f"a Composition with 'enable_learning' set to 'True' in order to execute "
-                        f"the learn() method for EM_Composition.") in str(error.value)
+                assert ("'EM_Composition' does not have any learnable pathways, "
+                        "therefore its learn() method cannot be executed." in str(error.value))
 
             else:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
@@ -991,7 +1013,8 @@ class TestExecution:
                                    [[400., 500., 600.], [444., 555., 666.]],
                                    [[25., 50., 75.], [27.75, 55.5,  83.25]],
                                    [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
-                em.learn(inputs=inputs, execution_mode=exec_mode)
+                targets = {target:target.value for target in em.target_input_mechanisms}
+                em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
@@ -1080,15 +1103,21 @@ class TestExecution:
                                        context_learning_pathway],
                                       name='EGO',
                                       learning_rate=.5,
+                                      # TEACHER_TARGET BREADCRUMB: MAKE CONDITIONAL ON TEST OF THIS NEW API
+                                      # targets={prediction_layer: state_input_layer},
+                                      targets=(prediction_layer, state_input_layer),
                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
                                       device=pnl.CPU)
 
         learning_components = EGO.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        assert len(learning_components) == 1
-        assert learning_components[0].name == 'TARGET for PREDICTION'
-        EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                 receiver=learning_components[0],
-                                                 learnable=False))
+        assert len(learning_components) == 2
+        assert learning_components[0].name == 'LOSS for PREDICTION'
+        # # TEACHER_TARGET BREADCRUMB: OLD,BUT KEEP FOR TESTING
+        # #                            configuration in which another node is assigned a projection to a TARGET_MECHANISM
+        # #                            instead of assigning that node as a target in the *targets* arg of the constructor
+        # EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
+        #                                          receiver=learning_components[1],
+        #                                          learnable=False))
 
         EGO.scheduler.add_condition(em, pnl.BeforeNodes(previous_state_layer, context_layer))
 
@@ -1143,7 +1172,9 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
-        result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
+        result = EGO.learn(inputs={'STATE':INPUTS},
+                           learning_rate=.5,
+                           execution_mode=pnl.ExecutionMode.PyTorch)
 
         if not field_weight_learning:
             expected = [
@@ -1169,3 +1200,85 @@ class TestExecution:
                  0.500546005148344, 0.5002721993254642, 0.7286589222309047, 0.5002703012614821,
                  0.5007087573384702, 0.5]]
         np.testing.assert_allclose(result, expected)
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize('reverse', [False, True], ids=['none_then_query', 'query_then_none'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch],
+                             ids=['Python', 'PyTorch'])
+    def test_field_weight_none_order_does_not_break_storage(self, reverse, exec_mode):
+        a_size = 3
+        b_size = 4
+
+        memory_template = [
+            [0] * a_size,
+            [0] * b_size,
+        ]
+
+        a_field_weight = None
+        b_field_weight = 1.0
+
+        if reverse:
+            a_field_weight = 1.0
+            b_field_weight = None
+
+        fields = {
+            'A': {
+                pnl.FIELD_WEIGHT: a_field_weight,
+                pnl.LEARN_FIELD_WEIGHT: False,
+                pnl.TARGET_FIELD: False,
+            },
+            'B': {
+                pnl.FIELD_WEIGHT: b_field_weight,
+                pnl.LEARN_FIELD_WEIGHT: False,
+                pnl.TARGET_FIELD: False,
+            },
+        }
+
+        em = pnl.EMComposition(
+            name="EM",
+            memory_template=memory_template,
+            memory_capacity=10,
+            memory_fill=0.01,
+            memory_decay_rate=0.0,
+            softmax_gain=1.0,
+            softmax_threshold=0.001,
+            fields=fields,
+            normalize_field_weights=False,
+            normalize_memories=False,
+            concatenate_queries=False,
+            enable_learning=False,
+        )
+
+        QUERY = " [QUERY]"
+        VALUE = " [VALUE]"
+
+        a_in = np.array([
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+        ])
+
+        b_in = np.array([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+        ])
+
+        a_key = 'A' + VALUE
+        b_key = 'B' + QUERY
+        if reverse:
+            a_key = 'A' + QUERY
+            b_key = 'B' + VALUE
+
+        inputs = {
+            em.nodes[a_key]: a_in,
+            em.nodes[b_key]: b_in,
+        }
+
+        # Regression test:
+        # field order should not determine whether EMComposition can run when one field
+        # is a value field (FIELD_WEIGHT=None) and the other is a query field.
+        result = em.run(
+            inputs=inputs,
+            execution_mode=exec_mode,
+        )
+
+        assert result is not None

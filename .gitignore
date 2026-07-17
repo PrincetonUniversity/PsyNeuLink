@@ -199,3 +199,14 @@ tests/*.pdf
 /tests/mdf/*.json
 /tests/mdf/*.yml
 /Scripts/ScratchPad FIGURES/
+
+# VSCode settings
+.vscode/
+
+# asv (airspeed velocity) benchmarks
+.asv/
+
+# SLURM job logs: sbatch driver output (%x_%j.out) + worker logs
+*.out
+*.err
+slurm_logs/

@@ -88,7 +88,7 @@ jobs:
     # version string from versioneer (must have history to a prior tag);
     # otherwise install fails due to circular dependency with modeci_mdf
     - name: Checkout sources
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 200
 
@@ -121,7 +121,7 @@ jobs:
         echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
     - name: Restore wheels cache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
@@ -142,26 +142,24 @@ jobs:
         features: 'dev'
 
     - name: Save wheels cache
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       if: always()
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
 
-    - name: Lint with flake8
+    - name: Lint with Ruff
       shell: bash
       run: |
-        pip install flake8 flake8-unused-arguments
+        pip install ruff
 
-        # stop build if there are unused arguments in tests (these might be fixtures)
-        flake8 tests/ --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py
+        # Run pnl configuration. This is the same as pytest -m ruff,
+        # but run it early to avoid waiting for the full test run to see lint issues.
+        ruff check
 
-        # stop the build if there are Python syntax errors or undefined names
-        # exclude F821 "unknown names" as there are quite a few of them around PNL
-        flake8 . --count --select=E9,F63,F7,F82 --extend-ignore=F821 --show-source  --extend-exclude Scripts/
+        # Print statistics of default settings, exit-zero treats all errors as warnings.
+        ruff check --isolated --exit-zero --statistics psyneulink/ tests/
 
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Print numpy info
       shell: bash
@@ -203,7 +201,7 @@ jobs:
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
         path: tests_out.xml
@@ -230,7 +228,7 @@ jobs:
         fi
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}

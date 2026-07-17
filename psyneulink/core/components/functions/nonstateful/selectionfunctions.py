@@ -434,6 +434,13 @@ class OneHot(SelectionFunction):
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
+            # The final prefix sum can drift just below 1.0 due to float
+            # rounding while the uniform() draw lives in [0, 1), so a draw in
+            # (cum_sum[-1], 1.0) misses every bucket and would otherwise leave
+            # arg_out at all zeros. Force the last iteration to win in that
+            # case by relaxing the upper bound only at the last index.
+            last_idx = ctx.int32_ty(arg_in.type.pointee.count - 1)
+
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
 
                 current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
@@ -445,8 +452,10 @@ class OneHot(SelectionFunction):
                 sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
                 b1.store(sum_new, sum_ptr)
 
+                is_last = b1.icmp_signed("==", idx, last_idx)
                 old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
-                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
+                new_above = b1.or_(b1.fcmp_ordered("<", random_draw, sum_new),
+                                   is_last)
                 cond = b1.and_(new_above, old_below)
 
                 if self.mode == PROB:
@@ -730,8 +739,17 @@ class OneHot(SelectionFunction):
             cum_sum = np.cumsum(prob_dist)
             random_state = self._get_current_parameter_value("random_state", context)
             random_value = random_state.uniform()
-            chosen_item = next(element for element in cum_sum if element > random_value)
-            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            # cum_sum[-1] can drift just under 1.0 due to float rounding (e.g.
+            # np.cumsum([0.7, 0.2, 0.1])[-1] == 0.9999999999999999), and
+            # uniform() returns from [0, 1); when random_value >= cum_sum[-1]
+            # no element is strictly greater than the draw. Use searchsorted
+            # to invert the CDF and clamp to the last index in that gap.
+            # Indexing by position also avoids a stale equality match in
+            # cum_sum when prob_dist contains zeros (which produce ties).
+            chosen_idx = min(int(np.searchsorted(cum_sum, random_value, side='right')),
+                             len(cum_sum) - 1)
+            chosen_in_cum_sum = np.zeros_like(cum_sum, dtype=int)
+            chosen_in_cum_sum[chosen_idx] = 1
             if mode == PROB:
                 result = v * chosen_in_cum_sum
             else:

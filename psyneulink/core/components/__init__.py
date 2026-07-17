@@ -146,6 +146,11 @@ register_category(entry=GatingSignal,
 # Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
+register_category(
+    entry=Projection,  # noqa: F405
+    base_class=ShellClass,  # noqa: F405
+    registry=ProjectionRegistry,  # noqa: F405
+)
 
 # MappingProjection
 register_category(entry=MappingProjection,
@@ -210,7 +215,11 @@ for port_type in PortRegistry:
 
 # Validate / assign default sender for each Projection subclass (must be a Mechanism, Port or instance of one)
 for projection_type in ProjectionRegistry:
-    projection_sender = ProjectionRegistry[projection_type].subclass.projection_sender
+    try:
+        projection_sender = ProjectionRegistry[projection_type].subclass.projection_sender
+    except AttributeError:
+        # ignore no sender, assumption is DummyProjection
+        continue
 
     # If it is a subclass of Mechanism or Port, leave it alone
     if (inspect.isclass(projection_sender) and
