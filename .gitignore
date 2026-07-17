@@ -203,6 +203,9 @@ tests/*.pdf
 # VSCode settings
 .vscode/
 
+# asv (airspeed velocity) benchmark output
+.asv/
+
 # Output of show_graph() calls during test runs
 pnl-show_graph-output/
 

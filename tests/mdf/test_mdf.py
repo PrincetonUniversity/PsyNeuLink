@@ -481,6 +481,17 @@ try:
 except ImportError:
     pass
 
+# These compositions are known not to support MDF conversion because their
+# schedulers use GraphStructureCondition.  They must be skipped rather than
+# xfailed: attempting the conversion makes dill traverse recursive WeakSet
+# state, which raises a catchable PicklingError on some platforms but causes a
+# native stack overflow (and kills the pytest-xdist worker) on Windows/Python
+# 3.8.  An xfail marker cannot intercept a process-level crash.
+_test_as_mdf_model_defaults_skipped_classes = {
+    pnl.EMComposition,
+    pnl.EMComposition_Proj,
+}
+
 
 # test for simple crashes by Components unused in sample models
 @pytest.mark.parametrize(
@@ -494,7 +505,14 @@ except ImportError:
         key=str
     )
     + [
-        pytest.param(cls_, marks=pytest.mark.xfail(reason=reason or ''))
+        pytest.param(
+            cls_,
+            marks=(
+                pytest.mark.skip(reason=reason or '')
+                if cls_ in _test_as_mdf_model_defaults_skipped_classes
+                else pytest.mark.xfail(reason=reason or '')
+            ),
+        )
         for cls_, reason in _test_as_mdf_model_defaults_excluded_classes.items()
     ],
 )

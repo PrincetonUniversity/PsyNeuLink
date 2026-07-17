@@ -552,7 +552,11 @@ def test_giallanza_ego_matches_torch_reference(em_class):
         pnl_model, input_layer = construct_pnl_model(
             **config, memory_capacity=len(states), em_class=em_class
         )
-        pnl_results = np.asarray(run_pnl_model(pnl_model, input_layer, states, **config))
+        # PsyNeuLink's input parser expects NumPy-compatible values.  In the
+        # older torch version used by the Python 3.8 jobs, NumPy cannot convert
+        # a list containing a multi-element tensor directly.
+        pnl_states = states.detach().cpu().numpy()
+        pnl_results = np.asarray(run_pnl_model(pnl_model, input_layer, pnl_states, **config))
 
         torch_results = np.asarray(run_torch_reference(states, len(states), **config))
 
