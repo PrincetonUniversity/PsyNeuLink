@@ -8,6 +8,7 @@ EMComposition
     * `AutodiffComposition`
     * `Composition_Learning`
     * `EpisodicMemoryMechanism`
+    * `ExternalMemoryMechanism`
     * `ContentAddressableMemory`
 
 .. automodule:: psyneulink.library.compositions.emcomposition.emcomposition

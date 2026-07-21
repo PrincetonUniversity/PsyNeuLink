@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.18.0.0+687.gaa62d0d14 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.18.0.0+11.g3d508d8e4 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+687
+                  0.18.0.0+11
                 </div>
               
             
@@ -1497,6 +1497,14 @@ Enforce result to be 2d, and assign to self.output</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute_function">
+<span class="sig-name descname"><span class="pre">execute_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fct_has_mult_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute_function" title="Link to this definition">¶</a></dt>
+<dd><p>Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+If fct_has_mult_args is True, treat each item in variable as an arg to the function
+If False, compute function for each item in variable and return results in a list</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values">
 <span class="sig-name descname"><span class="pre">set_pnl_variable_and_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values" title="Link to this definition">¶</a></dt>
 <dd><p>Set the state of the PytorchMechanismWrapper’s Mechanism
@@ -1584,7 +1592,7 @@ Return a list of all pathways</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._mech_is_receiver_in_learnable_pathway">
-<span class="sig-name descname"><span class="pre">_mech_is_receiver_in_learnable_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mech_output_port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._mech_is_receiver_in_learnable_pathway" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_mech_is_receiver_in_learnable_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mech_output_port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._mech_is_receiver_in_learnable_pathway" title="Link to this definition">¶</a></dt>
 <dd><p>Return True if <code class="xref any docutils literal notranslate"><span class="pre">mech</span></code> receives a Projection from any pathway that has at least one learnable Projection</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -2405,6 +2413,7 @@ this Component to execute in that Context</p>
 <li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_efferent"><code class="docutils literal notranslate"><span class="pre">AutodiffComposition.PytorchMechanismWrapper.add_efferent()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.collect_afferents"><code class="docutils literal notranslate"><span class="pre">AutodiffComposition.PytorchMechanismWrapper.collect_afferents()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute"><code class="docutils literal notranslate"><span class="pre">AutodiffComposition.PytorchMechanismWrapper.execute()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute_function"><code class="docutils literal notranslate"><span class="pre">AutodiffComposition.PytorchMechanismWrapper.execute_function()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values"><code class="docutils literal notranslate"><span class="pre">AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values()</span></code></a></li>
 </ul>
 </li>
@@ -2474,7 +2483,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=ef1f8aca"></script>
+         <script src="_static/documentation_options.js?v=8f898576"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
