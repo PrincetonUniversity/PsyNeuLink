@@ -1,0 +1,184 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psyneulink"
+description = "A block modeling system for cognitive neuroscience"
+readme = "README.rst"
+authors = [
+    { name = "Jonathan Cohen, Princeton University", email = "jdc@princeton.edu" },
+]
+keywords = ["cognitive modeling"]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/PrincetonUniversity/PsyNeuLink"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies.cuda = { file = ["cuda_requirements.txt"] }
+optional-dependencies.dask = { file = ["dask_requirements.txt"] }
+optional-dependencies.dev = { file = ["dev_requirements.txt"] }
+optional-dependencies.doc = { file = ["doc_requirements.txt"] }
+optional-dependencies.tutorial = { file = ["tutorial_requirements.txt"] }
+
+[tool.setuptools]
+include-package-data = true
+license-files = ["LICENSE.txt"]
+
+[tool.setuptools.packages.find]
+include = ["psyneulink*"]
+namespaces = true
+
+[tool.setuptools_scm]
+version_file = "psyneulink/_version.py"
+
+[tool.distutils.bdist_wheel]
+python_tag = "py3"
+
+[tool.pytest.ini_options]
+addopts = [
+    "-s",
+    "-vv",
+    "-n", "auto",
+    "--dist", "worksteal",
+    "--benchmark-disable",
+    "--benchmark-disable-gc",
+    "--benchmark-warmup=on",
+    "--benchmark-warmup-iterations=2",
+    "--cov-config", "pyproject.toml",
+    "--pycodestyle",
+    "--ruff",
+    "--strict-markers",
+    "--strict-config",
+    "--ignore=Scripts",
+]
+
+markers = [
+    "stress: Long running tests, skipped by defaults",
+    "autodiff_constructor",
+    "acmisc",
+    "accorrectness",
+    "actime",
+    "acidenticalness",
+    "aclogging",
+    "acnested",
+    "composition: PsyNeuLink Composition tests",
+    "llvm: Tests using LLVM runtime compiler",
+    "llvm_not_implemented: Tests that should use LLVM runtime compiler but the functionality is not yet implemented",
+    "cuda: Tests using LLVM runtime compiler and CUDA GPGPU backend",
+    "control: Tests including control mechanism and/or control projection",
+    "state_features: Tests for OptimizationControlMechanism state_features specifications",
+    "pathways: Tests for pathway arg of Composition constructor and node Roles",
+    "projection",
+    "nested: Tests including nested compositions",
+    "function: Tests of Function classes",
+    "combination_function",
+    "distance_function",
+    "fitzHughNagumo_integrator_function",
+    "identity_function",
+    "integrator_function",
+    "memory_function",
+    "optimization_function",
+    "stability_function",
+    "transfer_function",
+    "multirun: Tests running multiple execution IDs",
+    "mechanism: Tests of Mechanism classes",
+    "control_mechanism",
+    "ddm_mechanism",
+    "integrator_mechanism",
+    "lca_mechanism",
+    "objective_mechanism",
+    "recurrent_transfer_mechanism",
+    "transfer_mechanism",
+    "mimo: Tests using multiple inputs and outputs",
+    "model: Tests based on existing models",
+    "pytorch: Tests using Torch",
+]
+
+# These are needed for test fixtures or default parameters
+required_plugins = "pytest-benchmark pytest-cov pytest-helpers-namespace pytest-pycodestyle pytest-ruff pytest-xdist"
+
+xfail_strict = true
+
+filterwarnings = [
+    "error::SyntaxWarning",
+    "error:Creating an ndarray from ragged nested sequences \\(which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes\\) is deprecated.*",
+    "error:Invalid escape sequence",
+    "error:the matrix subclass is not the recommended way to represent matrices or deal with linear algebra",
+    "error:Passing (type, 1) or '1type' as a synonym of type is deprecated",
+    "error:A builtin ctypes object gave a PEP3118:RuntimeWarning",
+    "error:Pickle, copy, and deepcopy support will be removed from itertools:DeprecationWarning",
+    "error:Benchmark fixture was not used at all in this test!",
+    "ignore:.*is not an MDF standard function, this is likely to produce an incompatible model.:UserWarning",
+]
+
+[tool.coverage.run]
+branch = true
+concurrency = ["multiprocessing"]
+source = ["psyneulink/"]
+
+[tool.coverage.report]
+fail_under = 75
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    "if .*dump.* in .*debug_env:",
+    "if .*compile.* in .*debug_env:",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise .*Error",
+    "assert False.*",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    "Scripts",
+    "__pytest__",
+    "docs",
+    "bin",
+    ".venv",
+    # generated by protobuf compiler
+    "psyneulink/core/rpc/graph_pb2.py",
+]
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "W"]
+ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D200", "D202", "D203", "D204", "D205", "D207", "D208", "D211", "D212", "D213", "D214", "D215", "D300", "D301", "D400", "D401", "D402", "D403", "D404", "D405", "D406", "D407", "D409", "D410", "D411", "D412", "D413", "D415", "D416", "D417",
+    "E501", "E713", "E721", "E722", "E731", "E741",
+    "F401", "F403", "F405", "F521", "F523", "F524", "F525", "F541", "F601", "F602", "F722", "F811", "F821", "F841",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore documentation errors outside psyneulink source
+"!psyneulink/*" = ["D"]
+
+# Ignore documentation errors in models
+"psyneulink/library/models/*" = ["D"]
+
+# Ignore whitespace errors outside codebase and tests
+"!{psyneulink,tests}/*" = ["W"]

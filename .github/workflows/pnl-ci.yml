@@ -85,7 +85,7 @@ jobs:
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
-    # version string from versioneer (must have history to a prior tag);
+    # version string from setuptools-scm (must have history to a prior tag);
     # otherwise install fails due to circular dependency with modeci_mdf
     - name: Checkout sources
       uses: actions/checkout@v7
