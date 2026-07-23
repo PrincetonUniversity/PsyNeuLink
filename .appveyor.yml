@@ -4,7 +4,8 @@ branches:
   - gh-pages
 skip_tags: true
 skip_branch_with_pr: true
-clone_depth: 15
+# Deep enough for setuptools-scm to reach a release tag when computing the version
+clone_depth: 200
 image: Ubuntu2004
 environment:
   PIP_PROGRESS_BAR: off
