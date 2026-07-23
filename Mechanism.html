@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.18.0.0 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.19.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0
+                  0.19.0.0
                 </div>
               
             
@@ -467,7 +467,7 @@ The <a class="reference internal" href="InputPort.html#psyneulink.core.component
 <p>These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. Usually, a Mechanism has only one (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>,
 identified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_port</span></code></a> attribute. However some Mechanisms have more than one
-InputPort. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one InputPort for its <strong>SAMPLE</strong> and another for its <strong>TARGET</strong>
+InputPort. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one InputPort for its <em>SAMPLE</em> and another for its <em>TARGET</em>
 input. All of the Mechanism’s InputPorts (including its primary InputPort &lt;InputPort_Primary&gt;` are listed in its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute (note the plural).</p>
 <div class="technical-note docutils container">
@@ -783,7 +783,7 @@ value that would have been valid in that position of the input dictionary.</p>
 </div>
 <p>The same general rules apply when using labels to specify <code class="xref any docutils literal notranslate"><span class="pre">target</span> <span class="pre">values</span></code> for a pathway with learning.
 With target values, however, the labels must be included in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_labels_dict</span></code></a>
-of the Mechanism that projects to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
+of the Mechanism that projects to the <code class="xref any docutils literal notranslate"><span class="pre">TARGET</span></code> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
 other words, the last Mechanism in a <a class="reference internal" href="LearningMechanism.html#learningmechanism-multilayer-learning"><span class="std std-ref">learning pathway</span></a>. This is the same
 Mechanism used to specify target values for a particular learning pathway in the <code class="xref any docutils literal notranslate"><span class="pre">targets</span> <span class="pre">dictionary</span></code>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_labels_dict_M1</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]],</span>
@@ -976,9 +976,9 @@ Projections will not be executed (see <a class="reference internal" href="Compon
 <li><p>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a Port is specified, <em>neither</em> its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a>
 nor it <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> will be executed.</p></li>
 <li><p>If the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> and/or <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is specified for <em>all</em> of the
-OutputPorts of a Mechanism, then it’s function will not be executed, and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
+OutputPorts of a Mechanism, then its function will not be executed, and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
 will retain its previous value (again in accord with <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), though its
-OutputPorts <em>will</em> be executed using the assigned values, and it’s <a class="reference internal" href="Component.html#component-execution-count"><span class="std std-ref">execution_count</span></a>
+OutputPorts <em>will</em> be executed using the assigned values, and its <a class="reference internal" href="Component.html#component-execution-count"><span class="std std-ref">execution_count</span></a>
 and <a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes will be incremented (since the OutputPorts –
 Components of the Mechanism – executed).</p></li>
 <li><p>As expected, specifying <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> supersedes any specification of <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> or of the parameters of its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
@@ -1857,6 +1857,12 @@ For each type-specific sub-dict,</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable">
+<span class="sig-name descname"><span class="pre">_gen_llvm_output_port_parse_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Create output port variable based on the variable specification.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function">
 <span class="sig-name descname"><span class="pre">_gen_llvm_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function" title="Link to this definition">¶</a></dt>
 <dd><p>Overloaded main function LLVM generation method.</p>
@@ -2333,6 +2339,7 @@ this Component to execute in that Context</p>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_output_ports"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._update_output_ports()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.initialize"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base.initialize()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._parse_runtime_params"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._parse_runtime_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_output_port_parse_variable()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_function()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function_body"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_function_body()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._show_structure"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._show_structure()</span></code></a></li>
@@ -2377,7 +2384,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=938f80f1"></script>
+         <script src="_static/documentation_options.js?v=6effbfb7"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

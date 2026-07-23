@@ -96,5 +96,5 @@ Core
    - `Report`
    - `Log`
    - `mdf`
-   - `Thread configuration <threads.rst>`_
-   - :py:module:`Graph`
+   - :doc:`Thread configuration <threads>`
+   - `Graph`

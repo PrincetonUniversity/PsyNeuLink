@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningMechanism &mdash; PsyNeuLink 0.18.0.0 documentation</title>
+  <title>LearningMechanism &mdash; PsyNeuLink 0.19.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0
+                  0.19.0.0
                 </div>
               
             
@@ -600,7 +600,7 @@ and functions diagrammed.</span><a class="headerlink" href="#id2" title="Link to
 </figcaption>
 </figure>
 </div></blockquote>
-<p id="learningmechanism-targets"><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is implemented
+<p id="learningmechanism-targets"><code class="xref any docutils literal notranslate"><span class="pre">TARGET</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is implemented
 using one of a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning pathway methods</span></a>, it automatically creates a
 number of  <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning-related Components</span></a>.  This includes a <code class="xref any docutils literal notranslate"><span class="pre">TARGET_MECHANISM</span></code>, that
 receives the target stimulus specifed in the <strong>inputs</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
@@ -659,7 +659,7 @@ for additional details).</p></li>
 <li><p><strong>error_sources</strong> (<a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism"><em>ComparatorMechanism</em></a><em>, </em><a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism"><em>LearningMechanism</em></a><em>, </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>list</em><em> of </em><em>them</em>) – specifies the source(s) of the error signal(s) used by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  Each must be a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> for <a class="reference internal" href="#learningmechanism-single-layer-learning"><span class="std std-ref">single layer learning</span></a>, or for the last <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> in a learning pathway in
 <a class="reference internal" href="#learningmechanism-multilayer-learning"><span class="std std-ref">multilayer learning</span></a>;  otherwise they must be a <a class="reference internal" href="#"><span class="doc">LearningMechanism</span></a>
 or the <em>ERROR_SIGNAL</em> OutputPort of one.</p></li>
-<li><p><strong>function</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em> or </em><em>function : default BackPropagation</em>) – specifies the function used to calculate the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> attributes.  It’s
+<li><p><strong>function</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em> or </em><em>function : default BackPropagation</em>) – specifies the function used to calculate the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> attributes.  its
 <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> must have three items, each of which must be a list or 1d array of
 numeric values, corresponding to values provided by the LearningMechanism’s <em>ACTIVATION_INPUT</em>,
 <em>ACTIVATION_OUTPUT</em>, and <em>ERROR_SOURCES</em> InputPorts, respectively (see <code class="xref any docutils literal notranslate"><span class="pre">LearningMechanism_InputPorts</span>
@@ -1175,7 +1175,7 @@ Sum the learning_signal and error_signal values received from each execution</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=938f80f1"></script>
+         <script src="_static/documentation_options.js?v=6effbfb7"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.18.0.0 documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.19.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.18.0.0
+                  0.19.0.0
                 </div>
               
             
@@ -426,7 +426,26 @@ with the highest values.</p>
 </dl>
 <dl class="simple" id="max-vs-avg">
 <dt><em>MAX_VS_AVG</em><span class="classifier">float</span></dt><dd><p>the difference between the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
-and the average of all of the other elements.</p>
+with the highest value and the average of all of the other elements.</p>
+</dd>
+</dl>
+<dl class="simple" id="decision-index">
+<dt><em>DECISION_INDEX</em><span class="classifier">int</span></dt><dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">execute_until_finished</span></code> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, this indicates the
+index of the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> that had when <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> was reached;  otherwise, it is the index of the element with the highest
+value when the LCAMechanism was last executed.</p>
+</dd>
+</dl>
+<dl class="simple" id="decision-steps">
+<dt><em>DECISION_STEPS</em><span class="classifier">int</span></dt><dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">execute_until_finished</span></code> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, this indicates the number of
+executions taken to reach the <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code>; otherwise, it is the number of
+times the LCAMechanism has executed since being <a class="reference internal" href="TransferMechanism.html#transfermechanism-resetting"><span class="std std-ref">reset</span></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="decision-time">
+<dt><em>DECISION_TIME</em><span class="classifier">float</span></dt><dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">execute_until_finished</span></code> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, this indicates the time
+(computed as <a class="reference internal" href="#decision-steps"><span class="std std-ref">DECISION_STEPS</span></a> * <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step_size</span></code></a>) taken to reach the
+<code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code>; otherwise, it is the number of times the LCAMechanism has executed
+since being <a class="reference internal" href="TransferMechanism.html#transfermechanism-resetting"><span class="std std-ref">reset</span></a> * <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.time_step_size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step_size</span></code></a>.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
@@ -451,7 +470,7 @@ and the average of all of the other elements.</p>
 <p>These are translated into the appropriate specifications for the termination_threshold, termination_measure,
 and termination_comparison_op for TransferMechanism.</p>
 <p>Note:  specifying (threshold and termination_threshold) and/or (threshold and
-threshold_criterion and termination_measure) causes an error.</p>
+threshold_criterion and termination_measure) raises an error.</p>
 </dd></dl>
 
 </dd></dl>
@@ -547,7 +566,7 @@ threshold_criterion and termination_measure) causes an error.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=938f80f1"></script>
+         <script src="_static/documentation_options.js?v=6effbfb7"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

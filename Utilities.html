@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.18.0.0 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.19.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0
+                  0.19.0.0
                 </div>
               
             
@@ -223,8 +223,9 @@ are not constrained to be used by PsyNeuLink objects</p>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">parameter_spec</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">optional_parameter_spec</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">all_within_range</span></code></p></li>
-<li><p><a href="#id1"><span class="problematic" id="id2">`</span></a>is_matrix</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">is_matrix</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">is_matrix_spec</span></code></p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">is_identity_matrix</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">is_numeric</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">is_numeric_or_none</span></code></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.globals.utilities.is_iterable" title="psyneulink.core.globals.utilities.is_iterable"><code class="xref any py py-func docutils literal notranslate"><span class="pre">is_iterable</span></code></a></p></li>
@@ -268,7 +269,7 @@ are not constrained to be used by PsyNeuLink objects</p>
 <h3><em>LIST MANAGEMENT</em><a class="headerlink" href="#list-management" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">insert_list</span></code></p></li>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">convert_to_list</span></code></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_list" title="psyneulink.core.globals.utilities.convert_to_list"><code class="xref any py py-func docutils literal notranslate"><span class="pre">convert_to_list</span></code></a></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">flatten_list</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">nesting_depth</span></code></p></li>
 </ul>
@@ -477,8 +478,8 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id3">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">key_values</span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">key_values</span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd><p>Return list of <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the keyed attribute of components in the list.
 :returns: <strong>key_values</strong> – list of the values of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">keyed</span></code></a> attributes of components in the list.
 :rtype: list</p>
@@ -501,8 +502,8 @@ parameter of components in the list.
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id4">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd><p>Return list of values of components in the list.
 :returns: <strong>values</strong> – list of the values of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attributes of components in the list.
 :rtype: list</p>
@@ -539,6 +540,16 @@ parameter of components in the list.
 :rtype: list</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psyneulink.core.globals.utilities.convert_to_list">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.utilities.</span></span><span class="sig-name descname"><span class="pre">convert_to_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.convert_to_list" title="Link to this definition">¶</a></dt>
+<dd><p>Enclose l in a list if it is not one already
+If it is a single item or tuple, place in list
+If it is a numpy array of dimension &gt; 0, convert to list
+If it is a dict, convert to list of tuples
+If it is None, return None</p>
 </dd></dl>
 
 <dl class="py function">
@@ -717,14 +728,15 @@ From: <a class="reference external" href="https://stackoverflow.com/questions/32
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.values"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.values</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.clear"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.clear()</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.names</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.key_values</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.key_values</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.get_key_values"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.get_key_values()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.values</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.values</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.get_values"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.get_values()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.values_as_lists"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.values_as_lists</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.get_values_as_lists"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.get_values_as_lists()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_list"><code class="docutils literal notranslate"><span class="pre">convert_to_list()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_np_array"><code class="docutils literal notranslate"><span class="pre">convert_to_np_array()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.get_value_from_array"><code class="docutils literal notranslate"><span class="pre">get_value_from_array()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_iterable"><code class="docutils literal notranslate"><span class="pre">is_iterable()</span></code></a></li>
@@ -759,7 +771,7 @@ From: <a class="reference external" href="https://stackoverflow.com/questions/32
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=938f80f1"></script>
+         <script src="_static/documentation_options.js?v=6effbfb7"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

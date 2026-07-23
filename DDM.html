@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.18.0.0 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.19.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.18.0.0
+                  0.19.0.0
                 </div>
               
             
@@ -276,7 +276,7 @@ argument. The function selection can be simply the name of a DDM function:</p>
 <span id="ddm-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Link to this heading">¶</a></h3>
 <p>The input to the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> of a DDM Mechanism is always a scalar, irrespective of <a class="reference internal" href="#ddm-modes"><span class="std std-ref">type of function</span></a> that is used.  Accordingly, the default <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> for a DDM takes a single scalar value as its input,
 that represents the stimulus for the decision process.  However, this can be configured using the <strong>input_format</strong>
-argument of the DDM’s consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
+argument of the DDM’s constructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
 (e.g., representing the stimuli associated with each of the two choices). By default, the <strong>input_format</strong> is
 <em>SCALAR</em>.  However, if it is specified as <em>ARRAY</em>, the DDM’s InputPort is configured to accept a 1d 2-item vector,
 and to use <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.Reduce" title="psyneulink.core.components.functions.transformfunctions.Reduce"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reduce</span></code></a> as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
@@ -422,7 +422,7 @@ mode, only the <a class="reference internal" href="#ddm-decision-variable"><span
 The returned values are determined entirely by the set of parameters passed to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <p>When the <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path integration</span></a>, function is selected, a single step of integration is conducted each
 time the Mechanism is executed. The returned values accumulate on every execution.</p>
-<p>The analytic functions return a final positon and time of the model, along with other statistics, where as the path
+<p>The analytic functions return a final position and time of the model, along with other statistics, where as the path
 integration function returns intermediate position and time values. The two types of functions can be thought of as
 happening on different time scales: trial (analytic) and time step (path integration).</p>
 <p class="rubric">References</p>
@@ -1004,7 +1004,7 @@ execution of one or more other Components on a Component.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=938f80f1"></script>
+         <script src="_static/documentation_options.js?v=6effbfb7"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
