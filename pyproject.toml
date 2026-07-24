@@ -49,8 +49,10 @@ namespaces = true
 [tool.setuptools_scm]
 version_file = "psyneulink/_version.py"
 # Guarantee an installable version even when SCM info is unavailable
-# (shallow clones without a reachable tag, git-archive tarballs, etc.)
-fallback_version = "0.0.0"
+# (shallow clones without a reachable tag, git-archive tarballs, etc.).
+# Matches the runtime fallback in psyneulink/__init__.py and the value
+# versioneer previously reported when the version could not be determined.
+fallback_version = "0+unknown"
 
 [tool.distutils.bdist_wheel]
 python_tag = "py3"
