@@ -77,7 +77,9 @@ author = u'Jonathan D. Cohen'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = getattr(psyneulink, "__version__", "0+unknown")
+# PNL_DOCS_VERSION lets CI pin the documented version to a fixed value so that
+# it doesn't pollute the docs comparison diff on pull requests.
+release = os.environ.get('PNL_DOCS_VERSION') or getattr(psyneulink, "__version__", "0+unknown")
 # The short X.Y version.
 version = '.'.join(release.split('.')[:4])
 
