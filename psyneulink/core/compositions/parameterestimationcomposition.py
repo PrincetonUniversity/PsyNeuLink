@@ -42,7 +42,8 @@ A `ParameterEstimationComposition` is a subclass of `Composition` that estimates
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition. It can
 fit the `outputs <ParameterEstimationComposition.outcome_variables>` of the `model
 <ParameterEstimationComposition.model>` to empirical data (`ParameterEstimationComposition_Data_Fitting`) by maximizing
-likelihood using kernel density estimation (KDE), or it can optimize a user-provided scalar `objective_function`
+likelihood using kernel density estimation (KDE) by default or an opt-in histogram estimator, or it can optimize a
+user-provided scalar `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is
 `run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it sets its
 `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>` attribute to the parameter
@@ -105,9 +106,9 @@ specified:
       DDM), then it should be specified as a pandas Categorical variable.
 
     * **objective_function** - A function that computes the sum of the log likelihood of the data is automatically
-      assigned for data fitting purposes and should not need to be specified. This function uses a kernel density
-      estimation of the data to compute the likelihood of the data given the model. If you would like to use your own
-      estimation of the likelihood, see `ParameterEstimationComposition_Optimization` below.
+      assigned for data fitting purposes and should not need to be specified. This function uses kernel density
+      estimation by default, with an opt-in histogram estimator, to compute the likelihood of the data given the
+      model. If you would like to use your own likelihood, see `ParameterEstimationComposition_Optimization` below.
 
     .. warning::
        The **objective_function** argument should NOT be specified for data fitting; specifying both the
@@ -363,6 +364,20 @@ class ParameterEstimationComposition(Composition):
         treated as a categorical variable (e.g. a decision value in a two-alternative forced choice task modeled by a
         DDM), then it should be specified as a pandas Categorical variable.
 
+    likelihood_estimator : {"kde", "histogram"} : default "kde"
+        specifies how the simulation likelihood is estimated in data-fitting mode. ``"kde"`` retains the
+        existing kernel-density estimator. ``"histogram"`` opts into a binned density estimator configured by
+        **likelihood_estimator_kwargs**.
+
+    likelihood_estimator_kwargs : Mapping : default None
+        specifies options for the histogram likelihood estimator: ``bins``, ``pseudocount``, ``zero_prob``,
+        ``range_pad``, ``histogram_backend`` (``"auto"``, ``"numpy"``, or ``"boost"``), ``threads``, and
+        ``vectorized``. The optional ``boost_histogram`` package is used by the ``"auto"`` backend when available;
+        otherwise NumPy is used. Local mode chooses continuous bin edges separately for each trial and category.
+        ``vectorized=True`` pools simulations across all trials and categories to choose shared continuous edges,
+        and then fills explicit trial and category axes in one call; its estimates can therefore differ from local
+        mode when local ranges differ.
+
     data_categorical_dims : Union[Iterable] : default None
         specifies the dimensions of the data that are categorical. If a list of boolean values is provided, it is
         assumed to be a mask for the categorical data dimensions and must have the same length as columns in data. If
@@ -586,7 +601,7 @@ class ParameterEstimationComposition(Composition):
             Literal["grid_search"],
         ],
         model: Optional[Composition] = None,
-        data: Optional[pd.DataFrame] = None,
+        data: Optional[Union[pd.DataFrame, np.ndarray]] = None,
         likelihood_include_mask: Optional[np.ndarray] = None,
         data_categorical_dims=None,
         objective_function: Optional[Callable] = None,
@@ -599,6 +614,8 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
+        likelihood_estimator: Literal["kde", "histogram"] = "kde",
+        likelihood_estimator_kwargs: Optional[Mapping] = None,
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC
@@ -673,6 +690,10 @@ class ParameterEstimationComposition(Composition):
         # Store the data used to fit the model, None if in OptimizationMode (the default)
         self.data = data
         self.data_categorical_dims = data_categorical_dims
+        self.likelihood_estimator = likelihood_estimator
+        self.likelihood_estimator_kwargs = (
+            {} if likelihood_estimator_kwargs is None else dict(likelihood_estimator_kwargs)
+        )
 
         if not isinstance(self.nodes[0], Composition):
             raise ValueError(
@@ -758,6 +779,8 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            likelihood_estimator=self.likelihood_estimator,
+            likelihood_estimator_kwargs=self.likelihood_estimator_kwargs,
             distributed=distributed,
             distributed_options=distributed_options,
             context=context,
@@ -846,11 +869,30 @@ class ParameterEstimationComposition(Composition):
             else:
                 # If the user specified a list of categorical dimensions, turn it into a mask
                 x = np.array(self.data_categorical_dims)
-                if x.dtype == int:
-                    self.data_categorical_dims = np.arange(self.data.shape[1]).astype(
-                        bool
+                if x.ndim != 1:
+                    raise ValueError(
+                        "data_categorical_dims must be a one-dimensional boolean mask "
+                        "or sequence of integer indices."
                     )
-                    self.data_categorical_dims[x] = True
+                if np.issubdtype(x.dtype, np.bool_):
+                    if len(x) != self.data.shape[1]:
+                        raise ValueError(
+                            "A boolean data_categorical_dims mask must have one entry "
+                            "per data column."
+                        )
+                    self.data_categorical_dims = x.astype(bool, copy=False)
+                elif np.issubdtype(x.dtype, np.integer):
+                    if np.any(x < 0) or np.any(x >= self.data.shape[1]):
+                        raise ValueError(
+                            "data_categorical_dims indices must refer to existing data columns."
+                        )
+                    mask = np.zeros(self.data.shape[1], dtype=bool)
+                    mask[x] = True
+                    self.data_categorical_dims = mask
+                else:
+                    raise TypeError(
+                        "data_categorical_dims must contain only booleans or integer indices."
+                    )
 
         else:
             raise ValueError(
@@ -919,6 +961,12 @@ class ParameterEstimationComposition(Composition):
                 f"('data' for fitting or 'objective_function' for optimization)."
             )
 
+        if args["likelihood_estimator"] not in {"kde", "histogram"}:
+            raise ValueError(
+                f"Unknown likelihood_estimator {args['likelihood_estimator']!r}; "
+                "expected 'kde' or 'histogram'."
+            )
+
     def _instantiate_ocm(
         self,
         agent_rep,
@@ -931,6 +979,8 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
+        likelihood_estimator,
+        likelihood_estimator_kwargs,
         distributed=False,
         distributed_options=None,
         context=None,
@@ -938,8 +988,8 @@ class ParameterEstimationComposition(Composition):
 
         # For the PEC, the objective mechanism is not needed because in context of optimization of data fitting
         # we require all trials (and number of estimates) to compute the scalar objective value. In data fitting
-        # this is usually and likelihood estimated by kernel density estimation using the simulated data and the
-        # user provided data. For optimization, it is computed arbitrarily by the user provided objective_function
+        # this is usually a likelihood estimated from the simulated data and the user provided data. For optimization,
+        # it is computed arbitrarily by the user provided objective_function
         # to the PEC. Either way, the objective_mechanism is not the appropriate place because it gets
         # executed on each trial's execution.
         objective_mechanism = None
@@ -954,6 +1004,8 @@ class ParameterEstimationComposition(Composition):
                     sim_data=sim_data,
                     exp_data=self._data_numpy,
                     categorical_dims=self.data_categorical_dims,
+                    estimator=likelihood_estimator,
+                    estimator_kwargs=likelihood_estimator_kwargs,
                 )
 
                 return np.sum(np.log(like[self.likelihood_include_mask]))

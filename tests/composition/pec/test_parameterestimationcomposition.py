@@ -5,6 +5,7 @@ import pytest
 import scipy
 import contextlib
 
+from beartype.roar import BeartypeCallHintParamViolation
 from packaging import version as pversion
 
 import psyneulink as pnl
@@ -12,6 +13,7 @@ import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
     BadLikelihoodWarning,
+    simulation_likelihood,
 )
 
 # Set the number of threads to 1 for all tests in this module, tests are often run in parallel
@@ -505,7 +507,210 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     )
 
 
-def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
+@pytest.fixture
+def histogram_likelihood_data():
+    category_0 = np.column_stack((np.zeros(10), np.linspace(0.0, 0.9, 10)))
+    category_1 = np.column_stack((np.ones(10), np.linspace(0.0, 0.9, 10)))
+    sim_data = np.concatenate((category_0, category_1))[None, :, :]
+    exp_data = np.array([[0.0, 0.25], [1.0, 0.25]])
+    categorical_dims = np.array([True, False])
+    return sim_data, exp_data, categorical_dims
+
+
+@pytest.mark.composition
+def test_simulation_likelihood_default_is_kde():
+    rng = np.random.default_rng(0)
+    categories = np.repeat([0.0, 1.0], 30)
+    continuous = np.concatenate((
+        rng.normal(0.25, 0.05, 30),
+        rng.normal(0.75, 0.05, 30),
+    ))
+    sim_data = np.column_stack((categories, continuous))[None, :, :]
+    exp_data = np.array([[0.0, 0.25], [1.0, 0.75]])
+    categorical_dims = np.array([True, False])
+
+    default_like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+    )
+    explicit_like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+        estimator="kde",
+    )
+
+    np.testing.assert_allclose(default_like, explicit_like)
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize("vectorized", [False, True], ids=["local", "vectorized"])
+def test_simulation_likelihood_histogram_matches_hand_computed(
+    histogram_likelihood_data,
+    vectorized,
+):
+    sim_data, exp_data, categorical_dims = histogram_likelihood_data
+
+    like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+        estimator="histogram",
+        estimator_kwargs={
+            "histogram_backend": "numpy",
+            "bins": 2,
+            "range_pad": 0.0,
+            "vectorized": vectorized,
+        },
+    )
+
+    # Each observed category has probability 0.5. The observed continuous
+    # value falls in a bin containing 5/10 matching samples with width 0.45.
+    expected = np.array([0.5 * (5 / (10 * 0.45)), 0.5 * (5 / (10 * 0.45))])
+    np.testing.assert_allclose(like, expected)
+
+
+@pytest.mark.composition
+def test_simulation_likelihood_vectorized_histogram_all_categorical():
+    sim_data = np.array([
+        [[0, 0], [0, 0], [0, 0], [1, 1]],
+        [[0, 1], [0, 1], [1, 0], [1, 0]],
+    ])
+    exp_data = np.array([[0, 0], [1, 0]])
+
+    like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=[True, True],
+        estimator="histogram",
+        estimator_kwargs={
+            "histogram_backend": "numpy",
+            "vectorized": True,
+        },
+    )
+
+    np.testing.assert_allclose(like, [0.75, 0.5])
+
+
+@pytest.mark.composition
+def test_simulation_likelihood_vectorized_histogram_uses_shared_edges():
+    sim_data = np.array([
+        np.linspace(0.0, 0.9, 10),
+        np.linspace(10.0, 10.9, 10),
+    ])[:, :, None]
+    exp_data = np.array([[0.25], [10.25]])
+    common_kwargs = {
+        "histogram_backend": "numpy",
+        "bins": 2,
+        "range_pad": 0.0,
+    }
+
+    local = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=[False],
+        estimator="histogram",
+        estimator_kwargs=common_kwargs,
+    )
+    vectorized = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=[False],
+        estimator="histogram",
+        estimator_kwargs={**common_kwargs, "vectorized": True},
+    )
+
+    np.testing.assert_allclose(local, [5 / (10 * 0.45)] * 2)
+    np.testing.assert_allclose(vectorized, [10 / (10 * 5.45)] * 2)
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize("vectorized", [False, True], ids=["local", "vectorized"])
+def test_simulation_likelihood_histogram_boost_falls_back_to_numpy(
+    monkeypatch,
+    histogram_likelihood_data,
+    vectorized,
+):
+    import builtins
+
+    sim_data, exp_data, categorical_dims = histogram_likelihood_data
+    real_import = builtins.__import__
+
+    def import_hook(name, *args, **kwargs):
+        if name == "boost_histogram":
+            raise ImportError
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", import_hook)
+    like = simulation_likelihood(
+        sim_data,
+        exp_data=exp_data,
+        categorical_dims=categorical_dims,
+        estimator="histogram",
+        estimator_kwargs={
+            "histogram_backend": "boost",
+            "bins": 2,
+            "vectorized": vectorized,
+        },
+    )
+
+    assert np.all(np.isfinite(like))
+
+
+@pytest.mark.composition
+def test_simulation_likelihood_histogram_validates_arguments(histogram_likelihood_data):
+    sim_data, exp_data, categorical_dims = histogram_likelihood_data
+
+    with pytest.raises(ValueError, match="Unknown likelihood estimator"):
+        simulation_likelihood(sim_data, estimator="not-an-estimator")
+
+    with pytest.raises(ValueError, match="Unknown histogram_backend"):
+        simulation_likelihood(
+            sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            estimator="histogram",
+            estimator_kwargs={"histogram_backend": "not-a-backend"},
+        )
+
+    with pytest.raises(ValueError, match="bins must be a positive integer"):
+        simulation_likelihood(
+            sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            estimator="histogram",
+            estimator_kwargs={"bins": 0},
+        )
+
+    with pytest.raises(ValueError, match="categorical_dims mask must have length 2"):
+        simulation_likelihood(
+            sim_data,
+            exp_data=exp_data,
+            categorical_dims=[True],
+            estimator="histogram",
+        )
+
+
+@pytest.mark.composition
+def test_pec_rejects_unknown_likelihood_estimator():
+    with pytest.raises(BeartypeCallHintParamViolation, match="likelihood_estimator"):
+        pnl.ParameterEstimationComposition(
+            model=model,
+            parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
+            outcome_variables=output_node,
+            objective_function=lambda x: np.sum(x),
+            optimization_function=PECOptimizationFunction(method="differential_evolution"),
+            likelihood_estimator="not-an-estimator",
+        )
+
+
+def _make_ddm_log_likelihood_pec(
+    num_trials=12,
+    num_estimates=20,
+    likelihood_estimator="kde",
+    likelihood_estimator_kwargs=None,
+):
     trial_inputs = np.ones((num_trials, 1))
     ddm_params = dict(
         starting_value=0.0,
@@ -531,6 +736,8 @@ def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
+        likelihood_estimator=likelihood_estimator,
+        likelihood_estimator_kwargs=likelihood_estimator_kwargs,
         optimization_function=PECOptimizationFunction(
             method="differential_evolution", max_iterations=1
         ),
@@ -564,6 +771,65 @@ def test_pec_log_likelihood_llvm_scalar_sim_data_and_input_immutability():
     assert sim_data.ndim == 3
     assert sim_data.shape[0] == len(trial_inputs)
     assert sim_data.shape[2] == len(pec.outcome_variables)
+
+
+@pytest.mark.composition
+def test_pec_log_likelihood_histogram_returns_finite_scalar_and_sim_data():
+    pec, comp, trial_inputs, params = _make_ddm_log_likelihood_pec(
+        likelihood_estimator="histogram",
+        likelihood_estimator_kwargs={"histogram_backend": "numpy", "bins": 8},
+    )
+
+    ll, sim_data = pec.log_likelihood(
+        *params,
+        inputs={comp: trial_inputs},
+        return_sim_data=True,
+    )
+
+    assert pec.likelihood_estimator == "histogram"
+    assert isinstance(ll, float)
+    assert np.isfinite(ll)
+    assert sim_data.ndim == 3
+    assert sim_data.shape[0] == len(trial_inputs)
+    assert sim_data.shape[2] == len(pec.outcome_variables)
+
+
+@pytest.mark.composition
+def test_pec_numpy_data_categorical_indices_form_correct_mask():
+    trial_inputs = np.ones((4, 1))
+    model, data_frame = _run_ddm_with_params(
+        starting_value=0.0,
+        rate=0.3,
+        noise=1.0,
+        threshold=0.6,
+        non_decision_time=0.15,
+        time_step_size=0.01,
+        trial_inputs=trial_inputs,
+    )
+    data = data_frame.to_numpy(float)
+    decision = model.nodes["DDM"]
+
+    indexed = pnl.ParameterEstimationComposition(
+        name="pec_categorical_index_mask",
+        nodes=[model],
+        parameters={
+            ("rate", decision): np.linspace(-0.5, 0.5, 10),
+            ("threshold", decision): np.linspace(0.5, 1.0, 10),
+            ("non_decision_time", decision): np.linspace(0.0, 1.0, 10),
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        data_categorical_dims=[0],
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=20,
+    )
+
+    np.testing.assert_array_equal(indexed.data_categorical_dims, [True, False])
 
 
 @pytest.mark.composition

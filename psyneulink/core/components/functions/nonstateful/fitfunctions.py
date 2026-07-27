@@ -86,14 +86,619 @@ class BadLikelihoodWarning(PECObjectiveFuncWarning):
     pass
 
 
+def _categorical_dims_to_mask(categorical_dims, num_dims):
+    """Return a validated boolean mask for categorical outcome dimensions."""
+    if categorical_dims is None:
+        return np.zeros(num_dims, dtype=bool)
+
+    categorical_dims = np.asarray(categorical_dims)
+    if categorical_dims.ndim != 1:
+        raise ValueError("categorical_dims must be a one-dimensional mask or sequence of indices.")
+
+    # NumPy gives an untyped empty sequence a floating dtype; it still
+    # unambiguously means that no dimensions are categorical.
+    if categorical_dims.size == 0:
+        return np.zeros(num_dims, dtype=bool)
+
+    if np.issubdtype(categorical_dims.dtype, np.bool_):
+        if len(categorical_dims) != num_dims:
+            raise ValueError(
+                f"categorical_dims mask must have length {num_dims}; got {len(categorical_dims)}."
+            )
+        return categorical_dims.astype(bool, copy=False)
+
+    if not np.issubdtype(categorical_dims.dtype, np.integer):
+        raise TypeError("categorical_dims must contain only booleans or integer indices.")
+
+    if np.any(categorical_dims < 0) or np.any(categorical_dims >= num_dims):
+        raise ValueError(
+            f"categorical_dims indices must be between 0 and {num_dims - 1}; "
+            f"got {categorical_dims.tolist()}."
+        )
+
+    mask = np.zeros(num_dims, dtype=bool)
+    mask[categorical_dims] = True
+    return mask
+
+
+def _histogram_categories(cat_sim_data):
+    if cat_sim_data.shape[-1] == 0:
+        return [None]
+
+    if cat_sim_data.shape[-1] == 1:
+        return np.unique(cat_sim_data[..., 0])
+
+    categories = np.unique(
+        cat_sim_data.reshape((-1, cat_sim_data.shape[-1])),
+        axis=0,
+    )
+    return [tuple(category) for category in categories]
+
+
+def _category_mask(cat_values, category):
+    if cat_values.shape[-1] == 0:
+        return np.ones(cat_values.shape[0], dtype=bool)
+
+    if cat_values.shape[-1] == 1:
+        return cat_values[:, 0] == category
+
+    return np.all(cat_values == np.asarray(category), axis=1)
+
+
+def _experimental_category(exp_trial_cat):
+    if len(exp_trial_cat) == 0:
+        return None
+    if len(exp_trial_cat) == 1:
+        return exp_trial_cat[0]
+    return tuple(exp_trial_cat)
+
+
+def _histogram_category_key(category):
+    if category is None:
+        return None
+    if isinstance(category, tuple):
+        return category
+
+    category = np.asarray(category)
+    if category.ndim == 0:
+        return category.item()
+    return tuple(category.tolist())
+
+
+def _histogram_category_ids(cat_sim_data):
+    if cat_sim_data.shape[-1] == 0:
+        category_ids = np.zeros(cat_sim_data.shape[:2], dtype=int)
+        return [None], {None: 0}, category_ids
+
+    if cat_sim_data.shape[-1] == 1:
+        categories, inverse = np.unique(
+            cat_sim_data[..., 0].reshape(-1), return_inverse=True
+        )
+        categories = [_histogram_category_key(category) for category in categories]
+    else:
+        categories_arr, inverse = np.unique(
+            cat_sim_data.reshape((-1, cat_sim_data.shape[-1])),
+            axis=0,
+            return_inverse=True,
+        )
+        categories = [_histogram_category_key(category) for category in categories_arr]
+
+    category_ids = inverse.reshape(cat_sim_data.shape[:2])
+    return categories, {category: i for i, category in enumerate(categories)}, category_ids
+
+
+def _validate_histogram_options(
+    bins,
+    pseudocount,
+    zero_prob,
+    range_pad,
+    histogram_backend,
+    threads,
+    vectorized,
+):
+    if (
+        not isinstance(histogram_backend, str)
+        or histogram_backend not in {"auto", "numpy", "boost"}
+    ):
+        raise ValueError(
+            f"Unknown histogram_backend {histogram_backend!r}; expected 'auto', 'numpy', or 'boost'."
+        )
+
+    if isinstance(bins, (bool, np.bool_)):
+        raise ValueError("bins must be a positive integer or a sequence of positive integers.")
+    if np.isscalar(bins):
+        if not isinstance(bins, (int, np.integer)) or bins <= 0:
+            raise ValueError("bins must be a positive integer or a sequence of positive integers.")
+    else:
+        try:
+            bins_array = np.asarray(bins)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "bins must be a positive integer or a sequence of positive integers."
+            ) from error
+        if (
+            bins_array.ndim != 1
+            or not np.issubdtype(bins_array.dtype, np.integer)
+            or np.any(bins_array <= 0)
+        ):
+            raise ValueError("bins must be a positive integer or a sequence of positive integers.")
+
+    def is_finite_scalar(value):
+        if isinstance(value, (bool, np.bool_)) or not np.isscalar(value):
+            return False
+        try:
+            return bool(np.isfinite(value))
+        except TypeError:
+            return False
+
+    if not is_finite_scalar(pseudocount) or pseudocount < 0:
+        raise ValueError("pseudocount must be a finite, nonnegative scalar.")
+    if not is_finite_scalar(zero_prob) or zero_prob <= 0:
+        raise ValueError("zero_prob must be a finite, positive scalar.")
+    if not is_finite_scalar(range_pad) or range_pad < 0:
+        raise ValueError("range_pad must be a finite, nonnegative scalar.")
+    if (
+        isinstance(threads, (bool, np.bool_))
+        or not isinstance(threads, (int, np.integer))
+        or threads < 1
+    ):
+        raise ValueError("threads must be a positive integer.")
+    if not isinstance(vectorized, (bool, np.bool_)):
+        raise TypeError("vectorized must be a boolean.")
+
+
+def _prepare_histogram_data(sim_data, exp_data, categorical_dims, combine_trials):
+    if exp_data is None:
+        raise ValueError("The histogram estimator requires exp_data.")
+
+    sim_data = np.asarray(sim_data)
+    exp_data = np.asarray(exp_data)
+    if sim_data.ndim not in {2, 3}:
+        raise ValueError("sim_data must be a two- or three-dimensional array.")
+    if exp_data.ndim != 2:
+        raise ValueError("exp_data must be a two-dimensional array.")
+    if sim_data.shape[-1] != exp_data.shape[-1]:
+        raise ValueError(
+            "sim_data and exp_data must have the same number of outcome dimensions; "
+            f"got {sim_data.shape[-1]} and {exp_data.shape[-1]}."
+        )
+    if sim_data.size == 0 or exp_data.shape[0] == 0:
+        raise ValueError("sim_data and exp_data must not be empty.")
+    if not isinstance(combine_trials, (bool, np.bool_)):
+        raise TypeError("combine_trials must be a boolean.")
+
+    if sim_data.ndim == 2:
+        sim_data = sim_data[None, :, :]
+
+    if combine_trials and sim_data.shape[0] > 1:
+        sim_data = sim_data.reshape(
+            (1, sim_data.shape[0] * sim_data.shape[1], sim_data.shape[2])
+        )
+
+    if sim_data.shape[0] not in {1, exp_data.shape[0]}:
+        raise ValueError(
+            "The histogram estimator requires one simulation trial (shared by all experimental "
+            "trials) or one simulation trial per experimental trial; got "
+            f"{sim_data.shape[0]} and {exp_data.shape[0]}."
+        )
+
+    categorical_mask = _categorical_dims_to_mask(categorical_dims, sim_data.shape[-1])
+    return sim_data, exp_data, categorical_mask
+
+
+def _regular_histogram_edges(dsub, bins, range_pad):
+    if dsub.ndim == 1:
+        dsub = dsub[:, None]
+
+    num_dims = dsub.shape[1]
+    bins = [int(bins)] * num_dims if np.isscalar(bins) else [int(b) for b in bins]
+    if len(bins) != num_dims:
+        raise ValueError(f"bins must be scalar or have length {num_dims}; got {bins}.")
+
+    ranges = []
+    for dim in range(num_dims):
+        values = dsub[:, dim]
+        if not np.all(np.isfinite(values)):
+            raise ValueError("Continuous simulation dimensions must contain only finite values.")
+        low = float(np.min(values))
+        high = float(np.max(values))
+        span = high - low
+        if span <= 0:
+            return None, None
+        pad = max(float(range_pad), span * float(range_pad))
+        ranges.append((low - pad, high + pad))
+
+    edges = [
+        np.linspace(low, high, bins[dim] + 1)
+        for dim, (low, high) in enumerate(ranges)
+    ]
+    return bins, edges
+
+
+def _histogram_counts_numpy(dsub, bins, edges):
+    ranges = [(edge[0], edge[-1]) for edge in edges]
+    counts, edges = np.histogramdd(dsub, bins=bins, range=ranges)
+    return counts, edges
+
+
+def _histogram_counts_boost(dsub, bins, edges, threads):
+    try:
+        import boost_histogram as bh
+    except ImportError:
+        return _histogram_counts_numpy(dsub, bins, edges), "numpy"
+
+    axes = [
+        bh.axis.Regular(
+            bins[dim],
+            edges[dim][0],
+            edges[dim][-1],
+            underflow=False,
+            overflow=False,
+        )
+        for dim in range(len(bins))
+    ]
+    hist = bh.Histogram(*axes, storage=bh.storage.Double())
+    hist.fill(*(dsub[:, dim] for dim in range(dsub.shape[1])), threads=int(threads))
+    return (hist.values(), [np.asarray(axis.edges) for axis in hist.axes]), "boost"
+
+
+def _histogram_counts(dsub, bins, edges, backend, threads):
+    if backend in {"auto", "boost"}:
+        return _histogram_counts_boost(dsub, bins, edges, threads)[0]
+    return _histogram_counts_numpy(dsub, bins, edges)
+
+
+def _histogram_counts_vectorized_numpy(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+):
+    samples = [trial_ids, category_ids]
+    samples.extend(con_data[:, dim] for dim in range(con_data.shape[1]))
+    samples = np.column_stack(samples)
+
+    hist_bins = [num_trials, num_categories] + list(bins)
+    hist_ranges = [(0, num_trials), (0, num_categories)]
+    hist_ranges.extend((edge[0], edge[-1]) for edge in edges)
+    counts, _ = np.histogramdd(samples, bins=hist_bins, range=hist_ranges)
+    return counts
+
+
+def _histogram_counts_vectorized_boost(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+    threads,
+):
+    try:
+        import boost_histogram as bh
+    except ImportError:
+        return _histogram_counts_vectorized_numpy(
+            trial_ids,
+            category_ids,
+            con_data,
+            num_trials,
+            num_categories,
+            bins,
+            edges,
+        ), "numpy"
+
+    axes = [
+        bh.axis.Integer(0, num_trials, underflow=False, overflow=False),
+        bh.axis.Integer(0, num_categories, underflow=False, overflow=False),
+    ]
+    axes.extend(
+        bh.axis.Regular(
+            bins[dim],
+            edges[dim][0],
+            edges[dim][-1],
+            underflow=False,
+            overflow=False,
+        )
+        for dim in range(len(bins))
+    )
+    hist = bh.Histogram(*axes, storage=bh.storage.Double())
+    hist.fill(
+        trial_ids,
+        category_ids,
+        *(con_data[:, dim] for dim in range(con_data.shape[1])),
+        threads=int(threads),
+    )
+    return hist.values(), "boost"
+
+
+def _histogram_counts_vectorized(
+    trial_ids,
+    category_ids,
+    con_data,
+    num_trials,
+    num_categories,
+    bins,
+    edges,
+    backend,
+    threads,
+):
+    if backend in {"auto", "boost"}:
+        return _histogram_counts_vectorized_boost(
+            trial_ids,
+            category_ids,
+            con_data,
+            num_trials,
+            num_categories,
+            bins,
+            edges,
+            threads,
+        )[0]
+    return _histogram_counts_vectorized_numpy(
+        trial_ids,
+        category_ids,
+        con_data,
+        num_trials,
+        num_categories,
+        bins,
+        edges,
+    )
+
+
+def _warn_if_all_histogram_likelihoods_are_zero(likelihoods, zero_prob):
+    if np.all(likelihoods == zero_prob):
+        warnings.warn(
+            BadLikelihoodWarning(
+                "Evaluating likelihood generated by simulation data resulted in zero values for all trials "
+                "of experimental data. This means the model is not generating data similar to your "
+                "experimental data. If you have categorical dimensions, make sure values match exactly to "
+                "output values of the composition. Also make sure parameter ranges you are searching over "
+                "are reasonable for your data."
+            )
+        )
+
+
+def _simulation_likelihood_histogram_vectorized(
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    bins=32,
+    pseudocount=0.0,
+    zero_prob=1e-10,
+    range_pad=1e-9,
+    histogram_backend="auto",
+    threads=1,
+):
+    sim_data, exp_data, categorical_dims = _prepare_histogram_data(
+        sim_data, exp_data, categorical_dims, combine_trials
+    )
+    con_sim_data = sim_data[:, :, ~categorical_dims]
+    cat_sim_data = sim_data[:, :, categorical_dims]
+    categories, category_to_index, category_ids = _histogram_category_ids(cat_sim_data)
+
+    num_trials, num_estimates, num_con_dims = con_sim_data.shape
+    likelihoods = np.zeros(len(exp_data))
+    # Spell out both dimensions: reshape((-1, 0)) cannot infer the first
+    # dimension when every outcome is categorical.
+    con_flat = con_sim_data.reshape((num_trials * num_estimates, num_con_dims))
+
+    if num_con_dims:
+        bins_for_dims, edges = _regular_histogram_edges(con_flat, bins, range_pad)
+        if edges is None:
+            warnings.warn(
+                BadLikelihoodWarning(
+                    "Could not perform histogram likelihood estimate. Range of simulation data was 0 "
+                    "for at least one dimension."
+                )
+            )
+            likelihoods[:] = zero_prob
+            return likelihoods
+    else:
+        bins_for_dims = []
+        edges = []
+
+    trial_ids = np.repeat(np.arange(num_trials), num_estimates)
+    counts = _histogram_counts_vectorized(
+        trial_ids,
+        category_ids.reshape(-1),
+        con_flat,
+        num_trials,
+        len(categories),
+        bins_for_dims,
+        edges,
+        histogram_backend,
+        threads,
+    )
+
+    for trial in range(len(exp_data)):
+        hist_trial = 0 if num_trials == 1 else trial
+        exp_trial_cat = _histogram_category_key(
+            _experimental_category(exp_data[trial, categorical_dims])
+        )
+        exp_trial_con = exp_data[trial, ~categorical_dims]
+        category_index = category_to_index.get(exp_trial_cat)
+
+        if category_index is None:
+            likelihoods[trial] = zero_prob
+            continue
+
+        category_counts = counts[hist_trial, category_index]
+        category_count = float(np.sum(category_counts))
+        category_prob = category_count / num_estimates
+
+        if num_con_dims == 0:
+            likelihoods[trial] = max(zero_prob, category_prob)
+            continue
+
+        idx = []
+        widths = []
+        for dim, edge in enumerate(edges):
+            bin_idx = np.searchsorted(edge, exp_trial_con[dim], side="right") - 1
+            if bin_idx == len(edge) - 1 and exp_trial_con[dim] == edge[-1]:
+                bin_idx -= 1
+            if bin_idx < 0 or bin_idx >= len(edge) - 1:
+                break
+            idx.append(bin_idx)
+            widths.append(edge[bin_idx + 1] - edge[bin_idx])
+        else:
+            num_cells = category_counts.size
+            denom = (category_count + pseudocount * num_cells) * float(np.prod(widths))
+            if denom > 0:
+                density = (category_counts[tuple(idx)] + pseudocount) / denom
+                likelihoods[trial] = max(zero_prob, density * category_prob)
+                continue
+
+        likelihoods[trial] = zero_prob
+
+    _warn_if_all_histogram_likelihoods_are_zero(likelihoods, zero_prob)
+    return likelihoods
+
+
+def _simulation_likelihood_histogram(
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    bins=32,
+    pseudocount=0.0,
+    zero_prob=1e-10,
+    range_pad=1e-9,
+    histogram_backend="auto",
+    threads=1,
+    vectorized=False,
+):
+    _validate_histogram_options(
+        bins,
+        pseudocount,
+        zero_prob,
+        range_pad,
+        histogram_backend,
+        threads,
+        vectorized,
+    )
+
+    if vectorized:
+        return _simulation_likelihood_histogram_vectorized(
+            sim_data=sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            combine_trials=combine_trials,
+            bins=bins,
+            pseudocount=pseudocount,
+            zero_prob=zero_prob,
+            range_pad=range_pad,
+            histogram_backend=histogram_backend,
+            threads=threads,
+        )
+
+    sim_data, exp_data, categorical_dims = _prepare_histogram_data(
+        sim_data, exp_data, categorical_dims, combine_trials
+    )
+    con_sim_data = sim_data[:, :, ~categorical_dims]
+    cat_sim_data = sim_data[:, :, categorical_dims]
+    categories = _histogram_categories(cat_sim_data)
+
+    likelihoods = np.zeros(len(exp_data))
+    histogram_cache = []
+    for trial in range(len(con_sim_data)):
+        continuous_trial = con_sim_data[trial]
+        category_histograms = {}
+        for category in categories:
+            category_member = _category_mask(cat_sim_data[trial], category)
+            dsub = continuous_trial[category_member]
+            category_prob = len(dsub) / len(continuous_trial)
+
+            # A purely categorical likelihood is just the empirical joint
+            # category probability and does not need a minimum sample count.
+            if continuous_trial.shape[1] == 0:
+                category_histograms[category] = (None, None, category_prob)
+                continue
+
+            # Match the existing KDE guard: very small category subsets do not
+            # provide a useful conditional continuous density estimate.
+            if len(dsub) < 10:
+                category_histograms[category] = (None, None, 0.0)
+                continue
+
+            bins_for_dims, edges = _regular_histogram_edges(dsub, bins, range_pad)
+            if edges is None:
+                category_histograms[category] = (None, None, 0.0)
+                warnings.warn(
+                    BadLikelihoodWarning(
+                        "Could not perform histogram likelihood estimate. Range of simulation data was 0 "
+                        "for at least one dimension."
+                    )
+                )
+                continue
+
+            counts, edges = _histogram_counts(
+                dsub,
+                bins_for_dims,
+                edges,
+                histogram_backend,
+                threads,
+            )
+            category_histograms[category] = (counts, edges, category_prob)
+        histogram_cache.append(category_histograms)
+
+    for trial in range(len(exp_data)):
+        exp_trial_cat = _histogram_category_key(
+            _experimental_category(exp_data[trial, categorical_dims])
+        )
+        exp_trial_con = exp_data[trial, ~categorical_dims]
+        hist_trial = 0 if len(histogram_cache) == 1 else trial
+        counts, edges, category_prob = histogram_cache[hist_trial].get(
+            exp_trial_cat, (None, None, 0.0)
+        )
+
+        if counts is None and edges is None:
+            likelihoods[trial] = max(zero_prob, category_prob)
+            continue
+
+        idx = []
+        widths = []
+        for dim, edge in enumerate(edges):
+            bin_idx = np.searchsorted(edge, exp_trial_con[dim], side="right") - 1
+            if bin_idx == len(edge) - 1 and exp_trial_con[dim] == edge[-1]:
+                bin_idx -= 1
+            if bin_idx < 0 or bin_idx >= len(edge) - 1:
+                break
+            idx.append(bin_idx)
+            widths.append(edge[bin_idx + 1] - edge[bin_idx])
+        else:
+            num_cells = counts.size
+            bin_volume = float(np.prod(widths))
+            denom = (np.sum(counts) + pseudocount * num_cells) * bin_volume
+            if denom > 0:
+                density = (counts[tuple(idx)] + pseudocount) / denom
+                likelihoods[trial] = max(zero_prob, category_prob * density)
+                continue
+
+        likelihoods[trial] = zero_prob
+
+    _warn_if_all_histogram_likelihoods_are_zero(likelihoods, zero_prob)
+    return likelihoods
+
+
 def simulation_likelihood(
-    sim_data, exp_data=None, categorical_dims=None, combine_trials=False
+    sim_data,
+    exp_data=None,
+    categorical_dims=None,
+    combine_trials=False,
+    estimator="kde",
+    estimator_kwargs=None,
+    histogram_backend="auto",
 ):
     """
     Compute the likelihood of a simulation dataset (or the parameters that generated it) conditional
-    on a set of experimental data. This function essentially just computes the kernel density estimate (KDE)
-    of the simulation data at the experimental data points. If no experimental data is provided just return
-    the KDE evaluated at default points provided by the fastkde library.
+    on a set of experimental data. By default, this function computes the kernel density estimate (KDE)
+    of the simulation data at the experimental data points. It can also compute an approximate per-trial
+    histogram likelihood. If no experimental data is provided for KDE, return the KDE evaluated at default
+    points provided by the fastkde library.
 
     Some related work:
 
@@ -134,6 +739,21 @@ def simulation_likelihood(
     combine_trials: Combine data across all trials into a single likelihood estimate, this assumes
         that the parameters of the simulations are identical across trials.
 
+    estimator: Estimator used to compute likelihoods. Supported values are ``"kde"`` and ``"histogram"``.
+        The default is ``"kde"`` and follows the original KDE path unchanged.
+
+    estimator_kwargs: Optional keyword arguments passed to the histogram estimator. Supported keys are ``bins``,
+        ``pseudocount``, ``zero_prob``, ``range_pad``, ``histogram_backend``, ``threads``, and ``vectorized``.
+
+    histogram_backend: Histogram backend used when **estimator** is ``"histogram"``. Supported values are
+        ``"auto"``, ``"numpy"``, and ``"boost"``. ``"auto"`` uses the optional ``boost_histogram`` package when
+        available and otherwise falls back to NumPy.
+
+        The local histogram mode (the default) chooses continuous bin edges independently for every trial and
+        category. Passing ``vectorized=True`` in **estimator_kwargs** instead pools all simulated trials and
+        categories to choose one shared set of continuous edges, then uses explicit trial and category axes for a
+        single histogram fill. Consequently, vectorized and local estimates can differ when their local ranges differ.
+
     Returns
     -------
     The pdf of simulation data (or in other words, the generating parameters) conditioned on the
@@ -141,7 +761,33 @@ def simulation_likelihood(
 
     """
 
-    # Add a singleton dimension for trials if needed.
+    if not isinstance(estimator, str):
+        raise TypeError("estimator must be 'kde' or 'histogram'.")
+    estimator = estimator.lower()
+    if estimator_kwargs is None:
+        estimator_kwargs = {}
+    else:
+        try:
+            estimator_kwargs = dict(estimator_kwargs)
+        except (TypeError, ValueError) as error:
+            raise TypeError("estimator_kwargs must be a mapping or None.") from error
+
+    if estimator == "histogram":
+        estimator_kwargs.setdefault("histogram_backend", histogram_backend)
+        return _simulation_likelihood_histogram(
+            sim_data=sim_data,
+            exp_data=exp_data,
+            categorical_dims=categorical_dims,
+            combine_trials=combine_trials,
+            **estimator_kwargs,
+        )
+    if estimator != "kde":
+        raise ValueError(
+            f"Unknown likelihood estimator {estimator!r}; expected 'kde' or 'histogram'."
+        )
+
+    # Add a singleton dimension for trials if needed. Keep this KDE path unchanged
+    # so omitting estimator is backward compatible.
     if sim_data.ndim == 2:
         sim_data = sim_data[None, :, :]
 
