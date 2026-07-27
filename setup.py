@@ -84,6 +84,7 @@ setup(
         'dask': get_requirements('dask'),
         'dev': get_requirements('dev'),
         'doc': get_requirements('doc'),
+        'histogram': get_requirements('histogram'),
         'tutorial': get_requirements('tutorial'),
     }
 )
