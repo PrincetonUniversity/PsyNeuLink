@@ -1,12 +1,14 @@
 """Neural (MNLE-style) likelihood for the two-boundary DDM used in the hierarchical PEC study.
 
 A mixture density network learns p(choice, rt | drift, threshold) from simulated trials, giving a
-fast differentiable-free surrogate for the KDE simulation likelihood. Matches the PsyNeuLink
-process exactly: X0 = 0, symmetric bounds +/-threshold, drift = rate * stimulus, unit noise,
-Euler-Maruyama with dt = 0.01, rt = non_decision_time + first-passage time, decision 1 = upper.
+fast differentiable-free surrogate for the KDE simulation likelihood. Its training simulator matches
+the benchmark's PsyNeuLink process settings: X0 = 0, symmetric bounds +/-threshold,
+drift = rate * stimulus, unit noise, Euler-Maruyama with dt = 0.01,
+rt = non_decision_time + first-passage time, decision 1 = upper.
 
-Also provides the exact Navarro-Fuss (2009) analytical density as ground truth for validating
-both the neural and the KDE likelihoods.
+Also provides a fixed finite-series numerical approximation to the Navarro-Fuss (2009) density
+for the corresponding continuous-time DDM. It is a smooth analytical reference, not a numerically
+exact or DGP-matched oracle for the discretized Euler first-passage generator.
 """
 
 import numpy as np
@@ -181,7 +183,7 @@ class NeuralGroupLikelihood:
         return float(lp.sum())
 
 
-# --- exact analytical reference (Navarro & Fuss 2009) ----------------------------------------
+# --- continuous-time analytical reference (Navarro & Fuss 2009) ------------------------------
 
 def _ftt01w(tt, w, err=1e-10):
     """Standardized first-passage density at the lower bound of [0, 1], drift 0, start w."""
@@ -202,7 +204,7 @@ def _ftt01w(tt, w, err=1e-10):
 
 
 def wfpt_logpdf(rt, choice, drift, threshold, ndt=NDT):
-    """Exact log density of (choice, rt) for the symmetric-bound DDM (unit noise)."""
+    """Finite-series continuous-time WFPT log-density reference (unit-noise symmetric DDM)."""
     rt = np.asarray(rt, float)
     choice = np.asarray(choice, int)
     drift = np.broadcast_to(np.asarray(drift, float), rt.shape).copy()

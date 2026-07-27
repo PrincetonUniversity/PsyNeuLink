@@ -40,26 +40,38 @@ def transform():
     return BoundedTransform(lower, upper)
 
 
-def _build_ddm(rate, threshold):
+def _build_ddm(rate, threshold, *, seed=None):
+    fixed = dict(FIXED_DDM)
+    if seed is not None:
+        fixed["seed"] = int(seed)
     decision = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(rate=rate, threshold=threshold, **FIXED_DDM),
+        function=pnl.DriftDiffusionIntegrator(rate=rate, threshold=threshold, **fixed),
         output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
         name="DDM",
     )
     return pnl.Composition(pathways=decision)
 
 
-def simulate_subject(theta, trial_inputs, seed):
+def simulate_subject(theta, trial_inputs, seed, *, return_composition=False):
     """Simulate one subject's DDM data at natural parameters ``theta`` -> DataFrame."""
     rate, threshold = float(theta[0]), float(theta[1])
-    comp = _build_ddm(rate, threshold)
+    seed = int(seed) % (2 ** 32)
+    comp = _build_ddm(rate, threshold, seed=seed)
     comp.run(inputs={comp.nodes[0]: trial_inputs}, context=f"sim_{seed}")
     data = pd.DataFrame(np.squeeze(np.array(comp.results)), columns=["decision", "response_time"])
     data["decision"] = data["decision"].astype("category")
+    if return_composition:
+        return data, comp
     return data
 
 
-def make_subject_pec(data, num_estimates=100, initial_seed=0):
+def make_subject_pec(
+    data,
+    num_estimates=100,
+    initial_seed=0,
+    likelihood_estimator="kde",
+    likelihood_estimator_kwargs=None,
+):
     """Build a serial LLVM PEC that scores ``data`` for the two fit parameters."""
     comp = _build_ddm(rate=0.0, threshold=0.9)
     decision = comp.nodes[0]
@@ -81,6 +93,8 @@ def make_subject_pec(data, num_estimates=100, initial_seed=0):
         num_estimates=num_estimates,
         initial_seed=initial_seed,
         same_seed_for_all_parameter_combinations=True,
+        likelihood_estimator=likelihood_estimator,
+        likelihood_estimator_kwargs=likelihood_estimator_kwargs,
     )
     pec.controller.parameters.comp_execution_mode.set("LLVM")
     return pec, comp
@@ -103,7 +117,11 @@ def trial_inputs_for(num_trials):
 def ddm_pec_factory(payload):
     """Top-level, picklable factory: subject payload -> (pec, inputs) for a worker."""
     pec, comp = make_subject_pec(
-        payload["data"], num_estimates=payload["num_estimates"], initial_seed=payload["seed"]
+        payload["data"],
+        num_estimates=payload["num_estimates"],
+        initial_seed=payload["seed"],
+        likelihood_estimator=payload.get("likelihood_estimator", "kde"),
+        likelihood_estimator_kwargs=payload.get("likelihood_estimator_kwargs"),
     )
     return pec, {comp: trial_inputs_for(payload["num_trials"])}
 
@@ -113,7 +131,16 @@ def build_serial_subjects(payloads):
     return [dict(zip(("pec", "inputs"), ddm_pec_factory(p))) for p in payloads]
 
 
-def generate_group_data(n_subjects, beta_z, sigma_z, num_trials, rng, num_estimates=100):
+def generate_group_data(
+    n_subjects,
+    beta_z,
+    sigma_z,
+    num_trials,
+    rng,
+    num_estimates=100,
+    likelihood_estimator="kde",
+    likelihood_estimator_kwargs=None,
+):
     """Draw subject parameters from the group and simulate per-subject data.
 
     Returns serializable per-subject payloads (no PECs built here) plus the true z/theta.
@@ -131,6 +158,12 @@ def generate_group_data(n_subjects, beta_z, sigma_z, num_trials, rng, num_estima
         payloads.append({
             "data": data, "seed": 100 + s,
             "num_estimates": num_estimates, "num_trials": num_trials,
+            "likelihood_estimator": likelihood_estimator,
+            "likelihood_estimator_kwargs": (
+                None
+                if likelihood_estimator_kwargs is None
+                else dict(likelihood_estimator_kwargs)
+            ),
         })
 
     return {
