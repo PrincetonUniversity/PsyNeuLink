@@ -1,0 +1,145 @@
+{
+  "generated_utc": "2026-07-27T20:29:31.365962+00:00",
+  "host": "della-h12n18",
+  "outputs": [
+    {
+      "bytes": 187881,
+      "path": "01_ddm_recovery_clean.png",
+      "sha256": "dce6061b23da1686d2ea5952dc47035c6c0efe56a6d85076bcd233c942086907"
+    },
+    {
+      "bytes": 90455,
+      "path": "01_ddm_recovery_clean.svg",
+      "sha256": "03cddb6aa3ffe453361f00d988e189d7ad72cd808cdb2df703640666c57e3f73"
+    },
+    {
+      "bytes": 168281,
+      "path": "02_ddm_accuracy_cost_clean.png",
+      "sha256": "3dae5babd5de5825677fe88212fd36a3a743999eeb01a0c076096cdb813505b4"
+    },
+    {
+      "bytes": 73524,
+      "path": "02_ddm_accuracy_cost_clean.svg",
+      "sha256": "254785a6908a6c75ba8bff05ea368f17c76d7629676c2a9a7b63a1da12380d8e"
+    },
+    {
+      "bytes": 359651,
+      "path": "03_kde_holes_clean.png",
+      "sha256": "0c3ce002c68c1cdf897147eb238e64c272da3a43b9415457963981f87f7f6b33"
+    },
+    {
+      "bytes": 117216,
+      "path": "03_kde_holes_clean.svg",
+      "sha256": "92459b646c0aad03458ab7b4a570e7d08c398bc94e866b08a0666176259592d6"
+    },
+    {
+      "bytes": 132006,
+      "path": "04_simulator_agreement_clean.png",
+      "sha256": "9775481ec6b04262cedd3b1f0c1227b36fd0414f00728ffdea5b42fcc61544dc"
+    },
+    {
+      "bytes": 57079,
+      "path": "04_simulator_agreement_clean.svg",
+      "sha256": "9e014e8e66cabd15fe7354ca313700f42d55ffaf9ac768d327ebd98b8f7273c5"
+    },
+    {
+      "bytes": 245330,
+      "path": "05_stabflex_rmse_clean.png",
+      "sha256": "77237f299cb80c47fc2d28aae333d5f9bab09f01a276f2c8bb6dca6422f12fce"
+    },
+    {
+      "bytes": 111465,
+      "path": "05_stabflex_rmse_clean.svg",
+      "sha256": "d424592a5098e770d5b0398114c9a189b26d88bfe75ef8821647f996c28668ea"
+    },
+    {
+      "bytes": 525270,
+      "path": "06_stabflex_curves_clean.png",
+      "sha256": "f49ed84f125f3ff4d9178b297966b602146cfe87df3cd0b65a5c8147976cb0a3"
+    },
+    {
+      "bytes": 132620,
+      "path": "06_stabflex_curves_clean.svg",
+      "sha256": "7e07659aa4d0a65c5ee5f259c16e53ade65268cf5608d25c67ac65fd4cc6b1d7"
+    },
+    {
+      "bytes": 256486,
+      "path": "07_stabflex_slope_clean.png",
+      "sha256": "e8f55bac2b9c152d5d55ccde0fa2e8044a35f2c431a916c536cabe82154d797b"
+    },
+    {
+      "bytes": 118161,
+      "path": "07_stabflex_slope_clean.svg",
+      "sha256": "da715826f7ba0f738e0653bf42f3073973b586557b5cc8a9bd3e667927266cc3"
+    },
+    {
+      "bytes": 2103,
+      "path": "README.md",
+      "sha256": "4b5af46b870fb3212d92d1930f969138ba9ceda1e88dd390cd45b65fe21a25e7"
+    }
+  ],
+  "purpose": "clean presentation figures; descriptive evidence",
+  "schema_version": 1,
+  "slurm": {
+    "job_id": "11679376",
+    "job_name": "pec-clean-fig",
+    "node_list": "della-h12n18"
+  },
+  "sources": [
+    {
+      "bytes": 28552,
+      "path": "/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/figures/make_clean_results_figures.py",
+      "sha256": "0a0d2b730bbc9abd11f5d3a7e14fae19aedea2cd3a6b4bea490779845c227df1"
+    },
+    {
+      "bytes": 883,
+      "path": "/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/figures/submit_clean_results_figures.slurm",
+      "sha256": "b4f827c6ee7b9d1875d4a247cb19fc01e4b70223c86cd16a8374d15d1e1e5440"
+    },
+    {
+      "bytes": 3301,
+      "path": "/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/figures/final_results_20260726/ddm_recovery_summary.csv",
+      "sha256": "1b785622f6027c2e14309889be6b46e6583ef98ccd83b7c8b698b22d3ede4016"
+    },
+    {
+      "bytes": 1669,
+      "path": "/scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/figures/final_results_20260726/ddm_accuracy_cost_points.csv",
+      "sha256": "8bf2d3a1f58047fd18e557e66ebc6b166077f06af2c3936b9a6786fefeb1f1bd"
+    },
+    {
+      "bytes": 306400013,
+      "path": "/scratch/gpfs/JDC/ap9344/pec_hierarchical_benchmark/full_20260722T154626Z_590e46cb_872992/analysis/surface_surface_points.csv",
+      "sha256": "a0848906bb84c9a23d3abc62d99ee2486a7a713adea382163085234e53a08925"
+    },
+    {
+      "bytes": 180909,
+      "path": "/scratch/gpfs/JDC/ap9344/pec_hierarchical_benchmark/full_20260722T154626Z_590e46cb_872992/simulator_validation/equivalence_cells.csv",
+      "sha256": "4b4e66b24f75e9fca17aeb9c9f0e14cc6f5d26eacfb3f31d36d00766eea92838"
+    },
+    {
+      "bytes": 130067,
+      "path": "/scratch/gpfs/JDC/ap9344/stabflex_big/study_data.pkl",
+      "sha256": "88d55171c680c35af498a4e954279080e2e6eeab1402355d84028db2bdda1a13"
+    },
+    {
+      "bytes": 1664,
+      "path": "/scratch/gpfs/JDC/ap9344/stabflex_big/theta_mle.npy",
+      "sha256": "6e01f82fc6264f164071869171a1f6f903bd8c52f1ed82afe7070adb7314323e"
+    },
+    {
+      "bytes": 1664,
+      "path": "/scratch/gpfs/JDC/ap9344/stabflex_big/theta_kde_em.npy",
+      "sha256": "5de37a3f99a199201fdc7a77c131c32ff1cc7a0c89549c571189886bf96da699"
+    },
+    {
+      "bytes": 1664,
+      "path": "/scratch/gpfs/JDC/ap9344/stabflex_big/theta_neural_em.npy",
+      "sha256": "7fe112874a4b3d7e2da709bbd6f09248b5d289a3b74f702a7e10fd7b60c40d2e"
+    },
+    {
+      "bytes": 1042,
+      "path": "/scratch/gpfs/JDC/ap9344/stabflex_nle/ll_information.npz",
+      "sha256": "749614d848cf9d51df23488d4ef11dba5fd0074545c9fa5ec593ff79ac6d65ec"
+    }
+  ]
+}
