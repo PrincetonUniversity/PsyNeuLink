@@ -15,7 +15,7 @@ cd /scratch/gpfs/JDC/ap9344/PsyNeuLink/Scripts/Debug/pec_hierarchical/stabflex
 /scratch/gpfs/JDC/ap9344/PsyNeuLink/.venv/bin/python -u stabflex_recovery.py \
     --n_subjects 48 \
     --num_trials 250 \
-    --num_estimates 2500 \
+    --num_estimates 10000 \
     --max_em_iterations 12 \
     --n_workers 48 \
     --worker_cores 4 \

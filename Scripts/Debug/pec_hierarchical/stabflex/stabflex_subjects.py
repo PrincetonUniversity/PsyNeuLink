@@ -62,8 +62,10 @@ def _trial_sequence(num_trials):
     return task[:num_trials], stim[:num_trials], cue[:num_trials], correct[:num_trials]
 
 
-def input_dict(comp, num_trials):
+def input_dict(comp, num_trials, cue_steps=None):
     task, stim, cue, correct = _trial_sequence(num_trials)
+    if cue_steps is not None:
+        cue = list(np.asarray(cue_steps, float))  # per-trial CSI override (in model time steps)
     return {
         get_node(comp, "Task Input [I1, I2]"): [[np.array(task[i])] for i in range(num_trials)],
         get_node(comp, "Stimulus Input [S1, S2]"): [[np.array(stim[i])] for i in range(num_trials)],
