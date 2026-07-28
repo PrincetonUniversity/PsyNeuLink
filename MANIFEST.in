@@ -1,23 +1,12 @@
-# setuptools-scm's file finder includes ALL git-tracked files in the sdist by
-# default. Prune content that isn't needed to build, install, or test the
-# installed package so the sdist stays lean (see below for what this removes).
+include *.md
+include *requirements.txt
 
-# Large documentation assets (multi-MB images/PDFs/GIFs). The .rst sources and
-# docs config are kept; these binaries are only needed to *build* the docs,
-# which is done from a checkout, not from the sdist.
-prune docs/source/_static
+recursive-include docs *.rst
+include docs/Makefile
 
-# Development, example, and CI material that is not part of the distribution.
-prune Scripts
-prune Matlab
-prune bin
-prune benchmarks
-prune .github
-prune test_results
+recursive-include tests *.py
+recursive-include tutorial *.ipynb
+include versioneer.py
+include psyneulink/_version.py
 
-# Stray top-level files not needed in the sdist.
-exclude .travis.yml
-exclude postBuild
-exclude broken_trans_deps.txt
-exclude autodiff_composition_matrix_wts.pnl
-exclude .python-version
+include psyneulink/library/models/results/*.json

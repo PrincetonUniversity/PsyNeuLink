@@ -19,13 +19,6 @@ jobs:
     steps:
     - name: Checkout sources
       uses: actions/checkout@v7
-      # setuptools-scm needs the release tag (and enough history to reach it)
-      # to determine the version. This workflow only runs on tag pushes, so a
-      # bounded depth is plenty; full history is ~1.5GB. fetch-tags ensures the
-      # tag object is present when fetch-depth is limited.
-      with:
-        fetch-depth: 1000
-        fetch-tags: true
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7

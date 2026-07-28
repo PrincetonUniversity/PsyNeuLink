@@ -89,26 +89,21 @@ jobs:
         features: 'doc'
 
     - name: Add git tag
-      # The generated docs include the PNL version, which is pinned to a fixed
-      # value on pull requests to prevent polluting the docs comparison diff.
-      # This tag pins the version only where it is resolved live from git, i.e.
-      # the 'base' build, which checks out the base branch. It must be created
-      # after installing PNL to not interfere with dependency resolution.
-      # Once the base branch supports PNL_DOCS_VERSION (see below), this step
-      # and its cleanup below become redundant and can be removed.
+      # The generated docs include PNL version,
+      # set it to a fixed value to prevent polluting the diff
+      # This needs to be done after installing PNL
+      # to not interfere with dependency resolution
       id: add_zero_tag
       if: github.event_name == 'pull_request'
       run: git tag --force 'v0.0.0.0'
 
     - name: Build Documentation
-      # PNL_DOCS_VERSION pins the version for builds where it is resolved at
-      # install time rather than live from git, which the tag above cannot
-      # affect. Read by docs/source/conf.py.
-      env:
-        PNL_DOCS_VERSION: ${{ github.event_name == 'pull_request' && '0.0.0.0' || '' }}
       run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
     - name: Remove git tag
+      # The generated docs include PNL version,
+      # A special tag was set to a fixed value
+      # to prevent polluting the diff
       if: steps.add_zero_tag.outcome != 'skipped'
       run: git tag -d 'v0.0.0.0'
 

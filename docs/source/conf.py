@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath('../../psyneulink/globals/'))
 # adding this path to enable enable technical_note sphinx extension
 sys.path.insert(0, os.path.abspath('./_ext'))
 
-import psyneulink
+import psyneulink._version
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -77,9 +77,7 @@ author = u'Jonathan D. Cohen'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-# PNL_DOCS_VERSION lets CI pin the documented version to a fixed value so that
-# it doesn't pollute the docs comparison diff on pull requests.
-release = os.environ.get('PNL_DOCS_VERSION') or psyneulink.__version__
+release = psyneulink._version.get_versions()['version']
 # The short X.Y version.
 version = '.'.join(release.split('.')[:4])
 

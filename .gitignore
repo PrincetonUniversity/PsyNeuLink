@@ -155,9 +155,6 @@ target/
 # pyenv
 .python-version
 
-# version file generated at build time by setuptools-scm
-psyneulink/_version.py
-
 # celery beat schedule file
 celerybeat-schedule
 
