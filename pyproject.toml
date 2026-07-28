@@ -1,5 +1,7 @@
 [build-system]
-requires = ["setuptools", "versioneer"]
+# versioneer[toml] pulls tomli on Python < 3.11 so versioneer can read its
+# [tool.versioneer] config from pyproject.toml below.
+requires = ["setuptools", "versioneer[toml]"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -45,6 +47,14 @@ license-files = ["LICENSE.txt"]
 [tool.setuptools.packages.find]
 include = ["psyneulink*"]
 namespaces = true
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "psyneulink/_version.py"
+versionfile_build = "psyneulink/_version.py"
+tag_prefix = "v"
+parentdir_prefix = "psyneulink-"
 
 [tool.distutils.bdist_wheel]
 python_tag = "py3"
