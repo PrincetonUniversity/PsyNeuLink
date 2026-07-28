@@ -12547,7 +12547,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 report_num=report_num,
                                                 **kwargs
                                                 )
-                except BaseException as _debugger_exc:
+                except Exception as _debugger_exc:
                     _debugger.step(
                         _debugger.BreakpointCategory.EXCEPTION,
                         lambda exc=_debugger_exc, t=trial_num: {
