@@ -1,25 +1,53 @@
-"""Does hierarchical EM survive when subjects are NOT drawn from its assumed prior?
+"""What happens to hierarchical fitting when its assumption about the group is wrong?
 
-Our recovery studies draw subjects from N(beta, sigma) and then fit a model that ASSUMES
-N(beta, sigma).  That is a perfectly-specified prior -- the friendliest possible world for
-shrinkage, which is provably optimal exactly there.  This study breaks that assumption and
-measures what happens.
+Fitting many participants together assumes they are all drawn from one bell-shaped
+distribution, and each participant's estimate is pulled toward the group average by an
+amount based on that assumption. Recovery studies normally generate participants from a
+bell curve too, which is the case this method handles best. This study generates them from
+other population shapes instead and measures the damage.
 
-Truth shapes (all matched to the SAME total between-subject variance, so only SHAPE differs):
-  matched       z ~ N(beta, s)                        <- the usual assumption
-  bimodal       two subgroups at beta +/- 0.8s
-  heavy         t(3), rescaled                        <- outliers
-  contaminated  90% N(beta, a) + 10% N(beta, 3a)
-  uniform       U(beta +/- sqrt(3) s)                 <- no central tendency
+Population shapes (all given the SAME total spread, so only the shape differs):
+  matched       one bell curve                    <- what the fitter assumes
+  bimodal       two separate subgroups
+  heavy         bell curve with heavy tails       <- produces outliers
+  contaminated  mostly one bell curve, 10% much more spread out
+  uniform       flat, no central tendency
 
-Methods:
-  nopool        weak-prior per-subject fit (no borrowing)
-  hier_k1       standard hierarchical EM, single Gaussian prior
-  hier_k2       hierarchical EM with a 2-component MIXTURE prior, clusters discovered
-                automatically (no knowledge of which subject belongs to which subgroup)
+Methods compared:
+  nopool        each participant fitted alone, no borrowing between them
+  hier_k1       standard version: one bell curve shared by everyone
+  hier_k2       models the group as two bell curves and tries to find the subgroups
+                without being told which participant belongs to which
 
-Headline metric is not just average RMSE -- it is per-subject error as a function of how
-ATYPICAL the subject is, because averages hide harm done to the outliers.
+Average error is reported, but the more informative measure is error split by how unusual
+each participant is, because an average hides damage done to the unusual ones.
+
+FINDINGS (8 datasets, 24 participants, 30 trials each; see summary.csv):
+
+  - Pooling only does real work when each participant's own data is weak. At 250 trials
+    per participant the estimates barely moved (spread preserved to within 2%) and the
+    population shape made no measurable difference. At 30 trials the pull toward the group
+    average is real and the comparison becomes meaningful. Results below are the 30-trial
+    case.
+
+  - Getting the shape wrong does not break the method on average. Fitting participants
+    together beat fitting them separately by 11-13% for every shape tested, including the
+    ones that violate the assumption most.
+
+  - The cost lands on the unusual participants instead. With heavy tails or a contaminated
+    population, participants far from the group average had ~26% more error than typical
+    ones, against ~5% when the assumption held. Average error hides this completely: the
+    heavy-tailed case had the LOWEST average error of any shape while carrying the worst
+    penalty for its outliers. Even so, those participants were still better off than being
+    fitted alone.
+
+  - Automatic subgroup discovery did NOT work here and should not be relied on. Where two
+    subgroups genuinely existed, the two-component version found roughly the right gap
+    between them on average but varied wildly run to run, and it reported a comparable gap
+    on populations with no subgroups at all. BIC preferred the single-group model in every
+    condition, including the one with real subgroups, so there was no reliable signal for
+    when to use it. It slightly improved accuracy on genuinely split populations and
+    slightly worsened it everywhere else. Treat it as an unvalidated prototype.
 """
 import argparse
 import json
