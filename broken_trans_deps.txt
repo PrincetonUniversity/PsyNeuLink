@@ -41,3 +41,7 @@ numpy < 2; platform_system == 'Darwin' and platform_machine == 'x86_64'
 # mistune-3.3.1 is broken on Python 3.8
 # https://github.com/lepture/mistune/issues/455
 mistune != 3.3.1; python_version == '3.8'
+
+# fastjsonschema-2.22.1 is broken on python 3.8/3.9
+# https://github.com/horejsek/python-fastjsonschema/issues/216
+fastjsonschema != 2.22.1; python_version == '3.9' or python_version == '3.8'
