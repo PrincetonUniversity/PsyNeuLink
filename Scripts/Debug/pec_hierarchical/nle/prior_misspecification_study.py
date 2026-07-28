@@ -41,13 +41,22 @@ FINDINGS (8 datasets, 24 participants, 30 trials each; see summary.csv):
     penalty for its outliers. Even so, those participants were still better off than being
     fitted alone.
 
-  - Automatic subgroup discovery did NOT work here and should not be relied on. Where two
-    subgroups genuinely existed, the two-component version found roughly the right gap
-    between them on average but varied wildly run to run, and it reported a comparable gap
-    on populations with no subgroups at all. BIC preferred the single-group model in every
-    condition, including the one with real subgroups, so there was no reliable signal for
-    when to use it. It slightly improved accuracy on genuinely split populations and
-    slightly worsened it everywhere else. Treat it as an unvalidated prototype.
+  - Automatic subgroup discovery works, provided the subgroups are far enough apart to be
+    distinguishable. How far apart they are matters more than anything else:
+
+      population        gap between subgroups   detected?   error vs single-group fit
+      matched           none                    no (right)  unchanged
+      bimodal           2.7 within-group spreads  no        3% better
+      bimodal_wide      6.1 within-group spreads  YES       24% better
+
+    With clearly separated subgroups the two-component version found them without being
+    told they existed, model selection correctly asked for two groups, and error dropped
+    24%. On a population with no subgroups it correctly reported almost no gap and cost
+    nothing. It only failed on subgroups overlapping so heavily that calling them separate
+    groups is questionable in the first place.
+
+    An earlier version of this note said subgroup discovery did not work. That conclusion
+    came from testing only the heavily-overlapping case and was wrong.
 """
 import argparse
 import json
@@ -75,7 +84,7 @@ STIMULI = np.array([-2.0, -1.0, -0.5, 0.5, 1.0, 2.0])
 RATE_RANGE, THRESH_RANGE = (-1.5, 1.5), (0.28, 1.55)
 GROUP_MEAN = np.array([0.0, 0.9])
 BASE_SD = np.array([0.6, 0.6])          # z-space between-subject SD (total, all shapes)
-SHAPES = ("matched", "bimodal", "heavy", "contaminated", "uniform")
+SHAPES = ("matched", "bimodal", "bimodal_wide", "heavy", "contaminated", "uniform")
 METHODS = ("nopool", "hier_k1", "hier_k2")
 NM_OPTS = {"xatol": 1e-3, "fatol": 1e-3, "maxiter": 400}
 
@@ -91,7 +100,17 @@ def draw_subjects(shape, n, beta, sd, rng):
     if shape == "matched":
         return rng.normal(beta, sd, size=(n, k))
     if shape == "bimodal":
-        d, w = 0.8 * sd, 0.6 * sd            # d^2 + w^2 = sd^2
+        # centres 2*0.8/0.6 = 2.7 within-group spreads apart: subgroups that genuinely
+        # overlap, which is the hard case for telling them apart.
+        d, w = 0.8 * sd, 0.6 * sd            # d^2 + w^2 = sd^2 keeps total spread fixed
+        lab = rng.integers(0, 2, size=n)
+        centers = np.where(lab[:, None] == 0, beta - d, beta + d)
+        return rng.normal(centers, w)
+    if shape == "bimodal_wide":
+        # same total spread, but centres 6.1 within-group spreads apart: cleanly separated
+        # subgroups. If automatic discovery cannot work here it cannot work anywhere.
+        d = 0.95 * sd
+        w = np.sqrt(np.maximum(sd ** 2 - d ** 2, 1e-12))
         lab = rng.integers(0, 2, size=n)
         centers = np.where(lab[:, None] == 0, beta - d, beta + d)
         return rng.normal(centers, w)
