@@ -142,7 +142,7 @@ def test_ddm_behind_transfer_deterministic_matches_pnl_python():
     _assert_matches_pnl_python(comp, {source: np.array([[1.0], [-1.0]])}, max_steps=64)
 
 
-def _make_bare_lca(*, leak, competition, self_excitation, gain, dt, cue):
+def _make_bare_lca(*, leak, competition, self_excitation, gain, dt):
     """An isolated width-2 LCA driven by a cue (-> step count), read out by an
     identity transfer (the LCA is a stateful intermediate node, never terminal).
     """
@@ -182,7 +182,7 @@ def test_bare_lca_width2_matches_documented_recurrence():
 
     leak, competition, self_excitation, gain, dt, cue = 0.5, 1.0, 0.0, 1.0, 0.1, 5.0
     comp, task, cue_in = _make_bare_lca(
-        leak=leak, competition=competition, self_excitation=self_excitation, gain=gain, dt=dt, cue=cue,
+        leak=leak, competition=competition, self_excitation=self_excitation, gain=gain, dt=dt,
     )
     batched = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64).run(
         inputs={task: np.array([[1.0, 0.0]]), cue_in: np.array([[cue]])},
