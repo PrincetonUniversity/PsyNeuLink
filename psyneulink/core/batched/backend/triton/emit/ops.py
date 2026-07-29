@@ -90,7 +90,8 @@ class OpEmitMixin:
     def _partition_coevolving_ops(self, in_loop_ops):
         """Split into (hoisted, stepping): an op steps each iteration if it is a
         stepper or transitively consumes a stepper's evolving output; everything
-        else is loop-invariant and is emitted once before the loop."""
+        else is loop-invariant and is emitted once before the loop.
+        """
 
         variant: set[str] = set()
         hoisted = []
