@@ -2388,7 +2388,19 @@ class Mechanism_Base(Mechanism):
                 )
 
             if self.parameters.integrator_mode._get(context) or force:
-                new_input = self.integrator_function.reset(*args, **kwargs, context=context)[0]
+                # reset returns a list with one entry per stateful_attribute of
+                # the integrator_function (e.g. previous_v, previous_w and
+                # previous_time for FitzHughNagumoIntegrator).  For integrators
+                # with a single stateful_attribute (the common case), unwrap the
+                # list so the function operates on that value directly.  For
+                # integrators with multiple stateful_attributes, pass all of them
+                # so the resulting value matches the multi-element value produced
+                # during normal execution (see _parse_function_variable).
+                reset_value = self.integrator_function.reset(*args, **kwargs, context=context)
+                if len(reset_value) == 1:
+                    new_input = reset_value[0]
+                else:
+                    new_input = convert_all_elements_to_np_array(reset_value)
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,

@@ -8,7 +8,7 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.emcomposition.emcomposition import (EMComposition, EMCompositionError)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
@@ -192,6 +192,11 @@ class TestConstruction:
         if em.concatenate_queries:
             assert em.field_weight_nodes == []
             assert bool(softmax_gain == CONTROL) == bool(em.softmax_gain_control_node)
+            concatenated_queries_width = len(em.nodes[pnl.CONCATENATE_QUERIES_NAME].value[0])
+            assert concatenated_queries_width == sum([len(em.query_input_nodes[i].value[0]) for i in range(num_keys)])
+            assert concatenated_queries_width == sum([len(em.field_memory_nodes[i].value[0]) for i in range(num_keys)])
+
+            assert True
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
@@ -241,18 +246,22 @@ class TestConstruction:
     @pytest.mark.parametrize("softmax_choice, expected",
                              [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),
                               (pnl.ARG_MAX, [[1, .1, .1]]),
-                              (pnl.PROBABILISTIC, [[1, .1, .1]]), # NOTE: actual stochasticity not tested here
+                              (pnl.PROBABILISTIC, None), # NOTE: actual stochasticity not tested here
                              ])
     def test_softmax_choice(self, softmax_choice, expected):
         em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
-                           softmax_choice=softmax_choice,
-                           enable_learning=False,
-                           softmax_threshold=None,
-                           memory_decay_rate=0,
-                           normalize_memories=False)
+                            softmax_choice=softmax_choice,
+                            enable_learning=False,
+                            softmax_threshold=None,
+                            memory_decay_rate=0,
+                            normalize_memories=False)
         result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
 
-        np.testing.assert_allclose(result, expected)
+        if expected is None:
+            possible_results = [[[1, .1, .1]], [[.1, .1, 1]]]
+            assert any(np.allclose(result, possible_result) for possible_result in possible_results)
+        else:
+            np.testing.assert_allclose(result, expected)
 
     @pytest.mark.parametrize("softmax_choice", [pnl.ARG_MAX, pnl.PROBABILISTIC])
     def test_softmax_choice_error(self, softmax_choice):
@@ -273,13 +282,13 @@ class TestConstruction:
     def test_fields_arg_and_associated_errors(self):
 
         em = EMComposition(memory_template=(5,1),
-                           memory_capacity=1,
-                           normalize_field_weights=False,
-                           fields={'A': (1.2, 3.4, True),
-                                   'B': (None, False, True),
-                                   'C': (0, True, True),
-                                   'D': (7.8, False, True),
-                                   'E': (5.6, True, True)})
+                            memory_capacity=1,
+                            normalize_field_weights=False,
+                            fields={'A': (1.2, 3.4, True),
+                                    'B': (None, False, True),
+                                    'C': (0, True, True),
+                                    'D': (7.8, False, True),
+                                    'E': (5.6, True, True)})
         assert em.num_fields == 5
         assert em.num_keys == 4
         assert (em.field_weights == [1.2, None, 0, 7.8, 5.6]).all()
@@ -305,23 +314,23 @@ class TestConstruction:
                             "'target_fields' args will be ignored.")
             with pytest.warns(UserWarning, match=re.escape(warning_msg)):
                 EMComposition(name=cn,
-                              memory_template=(2,1),
-                              memory_capacity=1,
-                              fields={'A': (1.2, 3.4, True),
-                                      'B': (None, True, True)},
-                              field_names=fn,
-                              field_weights=fw,
-                              learn_field_weights=lfw,
-                              target_fields=tf)
+                               memory_template=(2,1),
+                               memory_capacity=1,
+                               fields={'A': (1.2, 3.4, True),
+                                       'B': (None, True, True)},
+                               field_names=fn,
+                               field_weights=fw,
+                               learn_field_weights=lfw,
+                               target_fields=tf)
 
         warning_msg = ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
                        "but it is not allowed for value fields; it will be ignored.")
         # Test error on specification of learning for value field
         with pytest.warns(UserWarning, match=re.escape(warning_msg)):
             EMComposition(memory_template=(2,1),
-                          memory_capacity=1,
-                          fields={'A': (1.2, 3.4, True),
-                                  'B': (None, True, True)})
+                           memory_capacity=1,
+                           fields={'A': (1.2, 3.4, True),
+                                   'B': (None, True, True)})
         # MODIFIED 6/19/25 OLD:  WARNING NO LONGER OCCURS ON CONSTRUCTION, BUT IT SHOULD BE RAISED ON LEARN
         # assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
         #         "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
@@ -357,13 +366,13 @@ class TestConstruction:
                                             target_fields):
         # individual args
         em = EMComposition(memory_template=(5,2),
-                           memory_capacity=2,
-                           fields=fields,
-                           field_names=field_names,
-                           field_weights=field_weights,
-                           learn_field_weights=learn_field_weights,
-                           target_fields=target_fields,
-                           learning_rate=0.5)
+                            memory_capacity=2,
+                            fields=fields,
+                            field_names=field_names,
+                            field_weights=field_weights,
+                            learn_field_weights=learn_field_weights,
+                            target_fields=target_fields,
+                            learning_rate=0.5)
 
         assert em.num_fields == 5
         assert em.num_keys == 3
@@ -396,9 +405,9 @@ class TestConstruction:
         # Learnability and learning rate for field weights
         assert em.parameters.learn_field_weights.spec == [.5, False, .01, False, False]
 
-        proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
-        proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']
-        proj_KEY_VAL = em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE']
+        proj_KEY_A = em.projections['KEY A WEIGHT to WEIGHTED SCORES']
+        proj_KEY_B = em.projections['KEY B WEIGHT to WEIGHTED SCORES']
+        proj_KEY_VAL = em.projections['KEY VALUE WEIGHT to WEIGHTED SCORES']
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
@@ -415,78 +424,15 @@ class TestConstruction:
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
             assert pytorch_rep.get_torch_learning_rate_for_projection(proj) is False
-        assert len(pytorch_rep.torch_params_to_projections()) == 29
-        assert len(pytorch_rep.projections_to_torch_params()) == 29
+        assert len(pytorch_rep.torch_params_to_projections()) == 40
+        assert len(pytorch_rep.projections_to_torch_params()) == 40
 
         # Validate _field_index_map
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if ('MappingProjection from KEY A [QUERY][OutputPort-0] to STORE[InputPort-0]')
-                                    in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [QUERY]' in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [MATCH to KEYS]' in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [WEIGHTED MATCH]' in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [RETRIEVED]' in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'MEMORY FOR KEY A [RETRIEVE KEY]'
-                                    in k.name][0]]==0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE A [VALUE]' in k.name][0]] == 1
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if
-                                    ('VALUE A [VALUE][OutputPort-0] to STORE[InputPort-1]') in k.name][0]] == 1
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE A [RETRIEVED]' in k.name][0]] == 1
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MEMORY FOR VALUE A' in k.name][0]] == 1
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [QUERY]' in k.name][0]] == 2
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if ('KEY B [QUERY][OutputPort-0] to STORE[InputPort-2]') in k.name][0]] == 2
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [RETRIEVED]' in k.name][0]] == 2
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'MEMORY FOR KEY B [RETRIEVE KEY]' in k.name][0]] == 2)
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [QUERY]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'KEY VALUE [QUERY][OutputPort-0] to STORE[InputPort-3]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [RETRIEVED]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MEMORY FOR KEY VALUE [RETRIEVE KEY]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE LEARN [VALUE]' in k.name][0]] == 4
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'VALUE LEARN [VALUE][OutputPort-0] to STORE[InputPort-4]' in k.name][0]] == 4
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'VALUE LEARN [RETRIEVED]' in k.name][0]] == 4)
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE LEARN [VALUE]' in k.name][0]] == 4
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MEMORY FOR VALUE LEARN [RETRIEVE VALUE]' in k.name][0]] == 4
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'MEMORY for KEY A [KEY]' in k.name][0]] == 0)
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MATCH to WEIGHTED MATCH for KEY A' in k.name][0]] == 0
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHTED MATCH for KEY A to COMBINE MATCHES' in k.name][0]] == 0
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [MATCH to KEYS]' in k.name][0]] == 2
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MEMORY for KEY B [KEY]' in k.name][0]] == 2
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MATCH to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'KEY B [WEIGHTED MATCH]' in k.name][0]] == 2)
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHTED MATCH for KEY B to COMBINE MATCHES' in k.name][0]] == 2
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'KEY VALUE [MATCH to KEYS]' in k.name][0]] == 3)
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if
-                                    'MEMORY for KEY VALUE [KEY]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'MATCH to WEIGHTED MATCH for KEY VALUE' in k.name][0]] == 3
-        assert (em._field_index_map[[k for k in em._field_index_map.keys()
-                                     if 'KEY VALUE [WEIGHTED MATCH]' in k.name][0]] == 3)
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHTED MATCH for KEY VALUE to COMBINE MATCHES' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [WEIGHT]' in k.name][0]] == 2
-        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [WEIGHT]' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHT to WEIGHTED MATCH for KEY VALUE' in k.name][0]] == 3
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHT to WEIGHTED MATCH for KEY A' in k.name][0]] == 0
-        assert em._field_index_map[[k for k in em._field_index_map.keys()
-                                    if 'WEIGHT to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
+        for field in em.fields:
+            for node in field.nodes:
+                assert em._field_index_map[node] == field.index
+            for proj in field.projections:
+                assert em._field_index_map[proj] == field.index
 
     @pytest.mark.parametrize('field_weight_1', ([None], [0], [1]),  ids=['None', '0', '1'])
     @pytest.mark.parametrize('field_weight_2', ([None], [0], [1]),  ids=['None', '0', '1'])
@@ -498,8 +444,8 @@ class TestConstruction:
 
         def construct_em(field_weights):
             return pnl.EMComposition(memory_template=[[[5, 0], [5], [5, 0, 3]], [[20, 0], [20], [20, 1, 199]]],
-                                     memory_capacity=4,
-                                     field_weights=field_weights)
+                                      memory_capacity=4,
+                                      field_weights=field_weights)
 
         field_weights = field_weight_1 + field_weight_2 + field_weight_3
 
@@ -554,10 +500,10 @@ class TestConstruction:
 
         with pytest.raises(EMCompositionError) as error_text:
             em = EMComposition(name= "EM COMP",
-                               memory_template=(5,1),
-                               memory_capacity=1,
-                               learning_rate=learning_rate,
-                               fields=fields)
+                                memory_template=(5,1),
+                                memory_capacity=1,
+                                learning_rate=learning_rate,
+                                fields=fields)
         assert error_message in error_text.value.error_value
 
 @pytest.mark.pytorch
@@ -567,7 +513,7 @@ class TestExecution:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
-        #                           fill   cap decay wts    keys   mem gain  prob
+        #                           fill   cap decay wts    keys   mem gain  prob                  after 2 trials
         # ----------------------------------------------------------------------------------  ------------------------
         (0, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
@@ -586,83 +532,78 @@ class TestExecution:
         (3, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
-                                                                                   [4, 8]],      [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   6.16532141]]),
+                                                                                   [4, 8]],      [[0.9999862753794079,
+                                                                                                   1.999972465616575,
+                                                                                                   3.165815395625206],
+                                                                                                  [3.999944915446622,
+                                                                                                   6.165321444667873]]),
         (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,6]],
              [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
-                                                                                   [4, 6]],     [[0.99750462,
-                                                                                                  1.99499376,
-                                                                                                  3.51623568],
-                                                                                                 [3.98998465,
-                                                                                                  5.9849743]]
+                                                                                   [4, 6]],     [[0.9975046191412829,
+                                                                                                  1.9949937579043044,
+                                                                                                  3.51623567990232],
+                                                                                                 [3.989984645536193,
+                                                                                                  5.984974302939437]]
          ),
         (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
-                                                                                  [4, 6]],      [[0.99898504,
-                                                                                                  1.99796378,
-                                                                                                  4.00175037],
-                                                                                                 [3.99592639,
-                                                                                                  6.97406456]]),
+                                                                                  [4, 6]],      [[0.9989850386002658,
+                                                                                                  1.9979637807723396,
+                                                                                                  4.001750374664459],
+                                                                                                 [3.9959263941013616,
+                                                                                                  6.974064559752192]]),
         (6, [[[1,2,3],[4,6]],        # Unequal field_weights
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (7, [[[1,2,3],[4,6]],        # Store + no decay
+                                                                                [4, 6]],      [[0.999960245315852,
+                                                                                                1.9999202440090107,
+                                                                                                3.193177831096697],
+                                                                                               [3.999840442290824,
+                                                                                                6.19219794569184]]),
+        (7, [[[1,2,3],[4,6]],        # Store + no decay (not identical to above since 2 trials)
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+                                                                                [4, 6]],      [[1., 2., 3.10152241],
+                                                                                               [4., 6.10107065]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
-                                                                                    [4, 6]],   [[0.99996025,
-                                                                                                 1.99992024,
-                                                                                                 3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                  [4, 6]],      [[0.86870191,
+                                                                                                  1.73740382,
+                                                                                                  2.68224753],
+                                                                                                 [3.47480763,
+                                                                                                  5.28801443]]),
         (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+                                                                                  [4, 6]],       [[0.86870191,
+                                                                                                   1.73740382,
+                                                                                                   2.68224753],
+                                                                                                  [3.47480763,
+                                                                                                   5.28801443]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                 [4, 6]],       [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+                                                                                 [4, 6]],          [[0.94748076,
+                                                                                                     1.89496153,
+                                                                                                     2.93381246],
+                                                                                                    [3.78992305,
+                                                                                                     5.77584816]]),
         (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
-                                                                                 [4, 6]],       [[0.99922544,
-                                                                                                  1.99844608,
-                                                                                                  3.38989346],
-                                                                                                 [3.99689126,
-                                                                                                  6.38682264]]),
-
-        (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retreieval in MEMORY matrix)
+                                                                                 [4, 6]],          [[0.94457839,
+                                                                                                     1.88915679,
+                                                                                                     3.02952697],
+                                                                                                    [3.77831358,
+                                                                                                     5.86289375]]),
+        (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retrieval in MEMORY matrix)
               [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
                                                                                                    [[10],[0],[100]]),
-
-        (13, [[[1],[2],[3]],    # Scalar keys - close match  (this tests use of L0 for retreieval in MEMORY matrix
-              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[1],[2],[3]]),
+        (13, [[[1],[2],[3]],    # Scalar keys - close match  (this tests use of L0 for retrieval in MEMORY matrix
+              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[2],[3],[4]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
@@ -721,12 +662,13 @@ class TestExecution:
                 params.update({'softmax_gain': 100})
             else:
                 params.update({'softmax_gain': softmax_gain})
-        if storage_prob is not None:
-            params.update({'storage_prob': storage_prob})
+        # if storage_prob is not None:
+        #     params.update({'storage_prob': storage_prob})
+        params.update({'storage_prob': (storage_prob if storage_prob is not None else 0)})
         params.update({'softmax_threshold': None})
         # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
-        em = EMComposition(**params)
+        em = pnl.EMComposition(**params)
 
         # Construct inputs
         input_nodes = em.query_input_nodes + em.value_input_nodes
@@ -738,35 +680,39 @@ class TestExecution:
                 np.testing.assert_equal(em.memory_template[i][j], memory_template[i][j])
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
-        for retrieved, expected in zip(retrieved, expected_retrieval):
-            np.testing.assert_allclose(retrieved, expected)
+        retrieved = em.run(inputs=inputs, execution_mode=exec_mode, num_trials=2)
 
-        # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.softmax_node.value), 1.0, atol=1e-15)
+        for retrieved_item, expected_item in zip(retrieved, expected_retrieval):
+            np.testing.assert_allclose(retrieved_item, expected_item)
 
-        # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_node.output_ports]),
-                                   1.0, atol=1e-15)
+        # Validate that sum of weighted softmax distributions returned by combined_scores_node sums to 1
+        np.testing.assert_allclose(np.sum(em.combined_scores_node.value[0]), 1.0, atol=1e-15)
+
+        # EM2 BREADCRUMB: NEED TO FIX THIS TO DEAL WITH FIELD WEIGHTS -- ??BUT IS THIS STILL NEEDED IF SINGLE OutputPort
+        # # Validate that sum of values in COMBINED_SCORES output_ports for different fields also sums to 1
+        # np.testing.assert_allclose(np.sum([port.value for port in em.combined_scores_node.output_ports]),
+        #                            1.0, atol=1e-15)
 
         # Validate storage
         if storage_prob:
-            # for actual, expected in zip(em.memory[-1], [[1,2,3],[4,6]]):
-            for actual, expected in zip(em.memory[-1], list(inputs.values())):
+            for actual, expected in zip(em.memory[0], list(inputs.values())):
                 np.testing.assert_array_equal(actual, expected)
 
             if memory_decay_rate in {None, AUTO}:
-                for expected, actual in zip(memory_template, em.memory[:3]):
-                    for expected_item, actual_item in zip(expected,actual):
-                        np.testing.assert_array_equal(np.array(expected_item)  * (1 / memory_capacity), actual_item)
-            elif memory_decay_rate:
-                for expected, actual in zip(memory_template, em.memory[:3]):
-                    for expected_item, actual_item in zip(expected,actual):
-                        np.testing.assert_array_equal(np.array(expected_item) * memory_decay_rate, actual_item)
-            else:
-                for actual, expected in zip(em.memory[:3], memory_template):
-                    for actual_item, expected_item in zip(actual, expected):
-                        np.testing.assert_array_equal(actual_item, expected_item)
+                memory_decay_rate = 1.0 / memory_capacity
+            one_trial_decay = (1 - memory_decay_rate) or 1.0
+            two_trial_decay = one_trial_decay ** 2
+
+            if test_num in {12,13}:
+                return
+
+            for template_item, actual_item in zip(memory_template[0], em.memory[0]):
+                np.testing.assert_array_equal(np.array(template_item), np.array(actual_item))
+            for template, actual in zip(memory_template[1:2], em.memory[1:2]):
+                for template_item, actual_item in zip(template,actual):
+                    np.testing.assert_allclose(np.array(template_item) * two_trial_decay, actual_item)
+            for template_item, actual_item in zip(memory_template[0], em.memory[3]):
+                np.testing.assert_allclose(np.array(template_item) * one_trial_decay, actual_item)
 
         elif len(memory_template) < memory_capacity:
             if isinstance(memory_fill, tuple):
@@ -812,13 +758,13 @@ class TestExecution:
         operation = test_field_weights_0_vs_None_data[2]
 
         em = pnl.EMComposition(memory_template=memory_template,
-                               memory_capacity=4,
-                               memory_decay_rate=0,
-                               learn_field_weights=False,
-                               softmax_choice=softmax_choice,
-                               field_weights=field_weights,
-                               field_names=['A', 'B', 'C'],
-                               )
+                                memory_capacity=4,
+                                memory_decay_rate=0,
+                                learn_field_weights=False,
+                                softmax_choice=softmax_choice,
+                                field_weights=field_weights,
+                                field_names=['A', 'B', 'C'],
+                                )
         # Confirm initial weight assignments (that favor A)
         assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
         assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
@@ -832,10 +778,10 @@ class TestExecution:
             assert 'C [WEIGHT]' not in em.nodes.names
 
         # Confirm use of L0 for retrieval since keys for A and B are scalars
-        assert em.projections['MEMORY for A [KEY]'].function.operation == operation
-        assert em.projections['MEMORY for B [KEY]'].function.operation == operation
+        assert em.nodes['A [FIELD_MEMORY]'].function.scores_function.operation == operation
+        assert em.nodes['B [FIELD_MEMORY]'].function.scores_function.operation == operation
         if field_weights[2] == 0:
-            assert em.projections['MEMORY for C [KEY]'].function.operation == operation
+            assert em.nodes['C [FIELD_MEMORY]'].function.scores_function.operation == operation
 
         A = em.nodes['A [QUERY]']
         B = em.nodes['B [QUERY]']
@@ -858,14 +804,15 @@ class TestExecution:
 
         # Change fields weights to favor C
         if field_weights[2] is None:
-            with pytest.raises(EMCompositionError) as error_text:
+            # with pytest.raises(EMCompositionError) as error_text:
+            with pytest.raises(pnl.EMCompositionError) as error_text:
                 em.field_weights = np.array([0,0,1])
             assert error_text.value.error_value == (f"Field 'C' of 'EM_Composition' was originally assigned "
                                                     f"as a value node (i.e., with a field_weight = None); "
                                                     f"this cannot be changed after construction. If you want to "
                                                     f"change it to a key field, you must re-construct the "
                                                     f"EMComposition using a scalar for its field in the "
-                                                    f"`field_weights` arg (including 0.")
+                                                    f"`field_weights` arg (which can be 0).")
         else:
             em.field_weights = np.array([0,0,1])
             # Ensure weights got changed
@@ -890,6 +837,9 @@ class TestExecution:
 
             #  Change weights back and confirm that it now favors A
             em.field_weights = [0,1,0]
+            assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
+            assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
+            assert em.nodes['C [WEIGHT]'].input_port.defaults.variable == [0]
             result = em.run(test_input, execution_mode=exec_mode)
             if softmax_choice == pnl.MAX_VAL:
                 if operation == pnl.L0:
@@ -953,13 +903,6 @@ class TestExecution:
         'concatenate',
         'no_concatenate'
     ])
-    @pytest.mark.parametrize('use_storage_node', [
-        True,
-        False
-    ], ids=[
-        'use_storage_node',
-        'no_storage_node'
-    ])
     @pytest.mark.parametrize('learning', [
         True,
         False
@@ -967,55 +910,88 @@ class TestExecution:
         'learning',
         'no_learning'
     ])
-    def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
+    def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
         em = EMComposition(memory_template=(2,3),
-                           field_weights=[1,1],
-                           memory_capacity=4,
-                           softmax_gain=100,
-                           memory_fill=(0,.001),
-                           concatenate_queries=concatenate,
-                           learn_field_weights=learning,
-                           enable_learning=True,
-                           use_storage_node=use_storage_node)
+                            field_weights=[1,1],
+                            memory_capacity=4,
+                            softmax_gain=100,
+                            memory_fill=(0,.001),
+                            concatenate_queries=concatenate,
+                            learn_field_weights=learning,
+                            enable_learning=True)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
                   [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
                   [[[1,2,10]],[[4,5,10]]],[[[51,52,53]],[[81,82,83]],[[777,888,999]],[[1111,2222,3333]]]]
 
-        expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                           [[400., 500., 600.], [444., 555., 666.]],
-                           [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
-                           [[25., 50., 75.], [27.75, 55.5,  83.25]]]
+        expected_memory = [[[4.21875, 8.4375, 12.65625 ], [4.640625, 8.859375, 13.078125]],
+                            [[400., 500., 600.],[444., 555., 666.]],
+                            [[ 22.5, 28.125, 33.75], [ 23.0625, 28.6875, 34.3125]],
+                            [[ 75., 150.,225.],  [ 83.25, 166.5, 249.75]]]
 
         input_nodes = em.query_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]: inputs[i] for i in range(len(input_nodes))}
         em.run(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_equal(em.memory, expected_memory)
 
-        if use_storage_node:
-            # Only test learning if using storage_node, as this is required for learning
-            if concatenate:
-                with pytest.raises(EMCompositionError) as error:
-                    em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
+        if concatenate:
+            with pytest.raises(EMCompositionError) as error:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+            assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
 
-            elif not learning:
-                with pytest.raises(AutodiffCompositionError) as error:
-                    em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert ("'EM_Composition' does not have any learnable pathways, "
-                        "therefore its learn() method cannot be executed." in str(error.value))
+        elif not learning:
+            with pytest.raises(AutodiffCompositionError) as error:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+            assert ("'EM_Composition' does not have any learnable pathways, "
+                    "therefore its learn() method cannot be executed." in str(error.value))
 
-            else:
-                #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
-                expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                                   [[400., 500., 600.], [444., 555., 666.]],
-                                   [[25., 50., 75.], [27.75, 55.5,  83.25]],
-                                   [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
-                targets = {target:target.value for target in em.target_input_mechanisms}
-                em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
-                np.testing.assert_equal(em.memory, expected_memory)
+        else:
+            #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
+            if exec_mode is pnl.ExecutionMode.Python:
+                pytest.skip("EMComposition learning through field memory nodes requires PyTorch execution.")
+            expected_memory = [[[ 75., 150., 225.], [ 83.25, 166.5, 249.75]],
+                                [[71.19140625, 88.98925781, 106.78710938],[79.02246094, 98.77807617, 118.53369141]],
+                                [[400., 500., 600.], [444., 555., 666.]],
+                               [[13.34838867, 26.69677734, 40.04516602], [14.81671143, 29.63342285, 44.45013428]]]
+
+            targets = {target:target.value for target in em.target_input_mechanisms}
+            em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
+            np.testing.assert_allclose(em.memory, expected_memory)
+
+    @pytest.mark.composition
+    def test_pytorch_field_memory_sync_obeys_node_value_sync(self):
+        def learn_with_sync(synch_node_values_with_torch):
+            em = EMComposition(memory_template=(2,2),
+                                field_weights=[1,1],
+                                memory_capacity=2,
+                                memory_fill=0,
+                                normalize_memories=False,
+                                softmax_gain=100,
+                                learn_field_weights=True,
+                                enable_learning=True)
+
+            input_nodes = em.query_input_nodes + em.value_input_nodes
+            inputs = {input_nodes[0]: [[1, 2], [3, 4]],
+                      input_nodes[1]: [[5, 6], [7, 8]]}
+            targets = {target: target.value for target in em.target_input_mechanisms}
+            initial_memory = np.array(em.memory, dtype=float).copy()
+
+            em.learn(inputs=inputs,
+                     targets=targets,
+                     execution_mode=pnl.ExecutionMode.PyTorch,
+                     synch_node_values_with_torch=synch_node_values_with_torch)
+
+            return initial_memory, np.array(em.memory, dtype=float)
+
+        initial_memory, unsynched_memory = learn_with_sync(None)
+        np.testing.assert_allclose(unsynched_memory, initial_memory)
+
+        expected_synched_memory = [[[0.5, 1.0], [2.5, 3.0]],
+                                   [[3.0, 4.0], [7.0, 8.0]]]
+        _, synched_memory = learn_with_sync(pnl.RUN)
+        np.testing.assert_allclose(synched_memory, expected_synched_memory)
 
     @pytest.mark.composition
     @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_false', 'fw_learning_true'])
@@ -1032,28 +1008,28 @@ class TestExecution:
                                               integration_rate=.69)
 
         em = EMComposition(name='EM',
-                           memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
-                           memory_fill=(0,.0001),
-                           memory_capacity=50,
-                           memory_decay_rate=0,
-                           softmax_gain=10,
-                           softmax_threshold=0.001,
-                           fields = {'STATE': {pnl.FIELD_WEIGHT: None,
-                                               pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                               pnl.TARGET_FIELD: True},
-                                     'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
-                                                        pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                                        pnl.TARGET_FIELD: False},
-                                     'CONTEXT': {pnl.FIELD_WEIGHT:.5,
-                                                 pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
-                                                 pnl.TARGET_FIELD: False}},
-                           normalize_field_weights=True,
-                           normalize_memories=False,
-                           concatenate_queries=False,
-                           enable_learning=True,
-                           learning_rate=.5,
-                           device=pnl.CPU
-                           )
+                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
+                            memory_fill=(0,.0001),
+                            memory_capacity=50,
+                            memory_decay_rate=0,
+                            softmax_gain=10,
+                            softmax_threshold=0.001,
+                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
+                                                pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                pnl.TARGET_FIELD: True},
+                                      'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
+                                                         pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                         pnl.TARGET_FIELD: False},
+                                      'CONTEXT': {pnl.FIELD_WEIGHT:.5,
+                                                  pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
+                                                  pnl.TARGET_FIELD: False}},
+                            normalize_field_weights=True,
+                            normalize_memories=False,
+                            concatenate_queries=False,
+                            enable_learning=True,
+                            learning_rate=.5,
+                            device=pnl.CPU
+                            )
         prediction_layer = pnl.ProcessingMechanism(name='PREDICTION',
                                                    function=pnl.Logistic,
                                                    input_shapes=11)

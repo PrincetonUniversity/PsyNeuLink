@@ -33,6 +33,7 @@ from collections import defaultdict
 
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.stateful import StatefulFunction
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, MatrixMemory
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -71,7 +72,7 @@ from psyneulink.core.globals.keywords import (
     TARGETS,
     TARGET_MECHANISM,
     SAMPLE_VALUES,
-    Loss,
+    Loss, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION,
 )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
@@ -1616,7 +1617,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
                 full_sequence_mode, sequence_lengths, context=None)->dict:
-        # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
         """
@@ -1657,9 +1657,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         else:
             seq_indices = [0]
 
+        # Expose the mode so nested nodes can adapt their behavior to it (e.g., an EMComposition with
+        # differentiable_storage warns if it is executed outside of full_sequence_mode, where the option has no effect).
+        self._full_sequence_mode = full_sequence_mode
+
         # Process each sequence element, if not in sequence mode, we will process everything at once and this loop will
         # only run once.
         for seq_index in seq_indices:
+
+            # Expose the current sequence-element index so nested recurrent nodes (e.g. a GRU) can tell whether this is
+            # the first step of the forward pass (seed/reset their state) or a continuation step (carry their state
+            # across steps so the recurrence backpropagates through the whole sequence).
+            self._current_seq_index = seq_index
 
             # If we are in sequence mode, individual sequence elements are processed by the model one-by-one, so get
             # the correct one.
@@ -1673,6 +1682,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 inputs_to_run = inputs
 
             # Execute nodes
+            self.execution_set_num = 0
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
 
@@ -1776,7 +1786,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
-                    assert 'DEBUGGING BREAKPOINT' # INPUTS TO NODE
+                    assert 'DEBUGGING BREAK POINT' # INPUTS TO NODE
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
@@ -1801,12 +1811,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                  synch_with_pnl_options=synch_with_pnl_options,
                                  sequence_lengths=sequence_lengths,
                                  context=context)
-                    assert 'DEBUGGING BREAKPOINT' # NODE EXECUTED
+                    assert 'DEBUGGING BREAK POINT' # NODE EXECUTED
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+                self.execution_set_num += 1
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -2124,6 +2135,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
         self.composition = composition
         self.torch_dtype = dtype
+        self.device = device
 
         self.input = None
         self.output = None
@@ -2249,7 +2261,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         return res
 
     def execute_input_ports(self, variable):
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 
         if not isinstance(variable, torch.Tensor):
             try:
@@ -2298,56 +2309,58 @@ class PytorchMechanismWrapper(torch.nn.Module):
         """Execute Mechanism's _gen_pytorch version of function on variable.
         Enforce result to be 2d, and assign to self.output
         """
-        def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
-            If fct_has_mult_args is True, treat each item in variable as an arg to the function
-            If False, compute function for each item in variable and return results in a list
-            """
-            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-
-            # items of variable should be treated as separate arguments
-            if fct_has_mult_args:
-                res = function(*variable)
-
-            # variable is ragged
-            elif isinstance(variable, list):
-                res = []
-                for inp_i in range(len(variable[0][0])):
-                    inp_t = torch.stack([torch.stack([s[inp_i] for s in b]) for b in variable])
-                    inp_res = function(inp_t)
-                    res.append(inp_res)
-
-                # Reshape to batch dimension first
-                batch_size = res[0].shape[0]
-                seq_size = res[0].shape[1]
-                res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
-
-            else:
-                # Functions handle batch dimensions, just run the
-                # function with the variable and get back a tensor.
-                res = function(variable)
-
-            # TransformFunction can reduce output to single item from multi-item input
-            if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(2)
-
-            return res
 
         # If mechanism has an integrator_function and integrator_mode is True,
         #   execute it first and use result as input to the main function;
         #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
         if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function,
-                                        [self.integrator_previous_value, variable],
-                                        fct_has_mult_args=True)
+            variable = self.execute_function(self.integrator_function,
+                                             [self.integrator_previous_value, variable],
+                                             fct_has_mult_args=True)
             # Keep track of previous value in Pytorch node for use in next forward pass
             self.integrator_previous_value = variable
 
         self.input = variable
 
         # Compute main function of mechanism and return result
-        self.output = execute_function(self.function, variable)
+        self.output = self.execute_function(self.function, variable)
         return self.output
+
+    def execute_function(self, function, variable, fct_has_mult_args=False):
+        """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+        If fct_has_mult_args is True, treat each item in variable as an arg to the function
+        If False, compute function for each item in variable and return results in a list
+        """
+
+        # items of variable should be treated as separate arguments
+        if fct_has_mult_args:
+            res = function(*variable)
+
+        # variable is ragged
+        elif isinstance(variable, list):
+            res = []
+            for inp_i in range(len(variable[0][0])):
+                inp_t = torch.stack([torch.stack([s[inp_i] for s in b]) for b in variable])
+                inp_res = function(inp_t)
+                res.append(inp_res)
+
+            # Reshape to batch dimension first
+            batch_size = res[0].shape[0]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
+
+        else:
+            # Functions handle batch dimensions, just run the
+            # function with the variable and get back a tensor.
+            res = function(variable)
+
+        # TransformFunction can reduce output to single item from multi-item input
+        if (isinstance(function._pnl_function, TransformFunction)
+                and not isinstance(function._pnl_function, MatrixMemory)
+                and isinstance(res, torch.Tensor)):
+            res = res.unsqueeze(2)
+
+        return res
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -2614,16 +2627,31 @@ class PytorchProjectionWrapper():
         else:
             self.default_value = projection.defaults.value
 
-        # Get item of value corresponding to OutputPort that is Projection's sender
+        # Get index of item in value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
+        # # MODIFIED EM2 OLD:
+        # if context.composition and LEARNING in self._use:
+        #     for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
+        #         if all(p in context.composition.projections for p in output_port.efferents):
+        #             if self._pnl_proj in output_port.efferents:
+        #                 self._value_idx = i
+        #                 break
+        #             i += 1
+        # MODIFIED EM2 NEW:
         if context.composition and LEARNING in self._use:
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
-                if all(p in context.composition.projections for p in output_port.efferents):
-                    if self._pnl_proj in output_port.efferents:
-                        self._value_idx = i
+                for p in output_port.efferents:
+                    if p is self._pnl_proj and p in context.composition._get_all_projections():
+                        owner_value_index = output_port.owner_value_index
+                        self._value_idx = (
+                            owner_value_index
+                            if isinstance(owner_value_index, (int, np.integer))
+                            else i
+                        )
                         break
-                    i += 1
+                i += 1
+        # MODIFIED EM2 END
 
         # Create a Pytorch Parameter for the matrix
         matrix = projection.parameters.matrix.get(context=context)

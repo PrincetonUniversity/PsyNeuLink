@@ -2396,7 +2396,7 @@ setting the ``PNL_LLVM_DEBUG`` environment variable to ``nocuda``.
 
 *Results*
 
-Executing a Composition returns the results of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
+Executing a Composition returns the result of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
 <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` executed
 are available in the Composition's `results <Composition.results>` attribute.  More specifically, at the end of a
 `TRIAL <TimeScale, a Composition's `output_values <Composition.output_values>` (a list of the `output_values
@@ -6518,6 +6518,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
                     # FIX: ??DEAL WITH WHETHER IT IS IN OR OUTSIDE OF COMPOSITION??
+                    # FIX: ALLOW LEGITIMATE MULTIPLE PROJECTIONS
                     projection = existing_projections[-1]
 
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
@@ -7085,7 +7086,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Mechanism):
                 for proj in [p for p in node.projections if p not in self.projections]:
                     # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
-                    #     (e.g., EMComposition.storage_node)
+                    #     (e.g., EMComposition_Proj.storage_node)
                     if (isinstance(proj, LearningProjection)
                             and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                             and proj.receiver.owner in self.projections):
@@ -7185,9 +7186,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
         existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
         # Ensure that there is only a *single* existing Projection (if any) in the current Composition
-        assert len(existing_projections_in_composition) <= 1, \
-            f"PROGRAM ERROR: More than one identical projection found " \
-            f"in {self.name}: {existing_projections_in_composition}."
+        # # MODIFIED EM2 OLD:
+        #
+        # assert len(existing_projections_in_composition) <= 1, \
+        #     f"PROGRAM ERROR: More than one identical projection found " \
+        #     f"in {self.name}: {existing_projections_in_composition}."
+        # MODIFIED EM2 NEW:
+        # Ensure that Projections within the same COmpostion to/and from the same Nodes are not identical
+        #    (i.e., to the same InputPorts and OutputPorts)
+        if len(existing_projections_in_composition) > 1:
+            duplicates = False
+            for proj in existing_projections_in_composition:
+                duplicates = next((dup for dup in existing_projections_in_composition
+                                   if dup is not proj and dup.sender is proj.sender and dup.receiver is proj.receiver),
+                                  None)
+                if duplicates:
+                    break
+            assert not duplicates, f"PROGRAM ERROR: More than one identical projection found " \
+                                   f"in {self.name}: {existing_projections_in_composition}."
+
+        # MODIFIED EM2 END
+
+
         # Return existing Projection only if it is in the current Composition and there are no others
         if in_composition is ONLY:
             if existing_projections_in_composition and not existing_projections_not_in_composition:
@@ -8777,7 +8797,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
         # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
-        #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+        #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition_Proj)
         if isinstance(input_source, Composition):
             _, input_source, _ = \
                 input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
@@ -8930,7 +8950,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Learning in Python mode does not currently support nested Compositions;  "
                                        f"try using an AutodiffComposition with ExecutionMode.PyTorch.")
             # FIX: NOTE: THIS ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
-            #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+            #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition_Proj)
             if isinstance(input_source, Composition):
                 _, input_source, _ = \
                     input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
@@ -10064,7 +10084,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"This projection will be deactivated until '{errant_node_name}' is added to '{self.name}' "
                         f"or a composition nested within it.")
                 # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
-                #     (e.g., EMComposition.storage_node)
+                #     (e.g., EMComposition_Proj.storage_node)
                 elif not (isinstance(proj, LearningProjection)
                         and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                         and receiver in self.projections):
@@ -10637,7 +10657,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get all TARGET_MECHANISMs and OUTPUT Nodes from input dicts (they are allowed as target specifications),
         #   excluding any SINGLETONs and Compositions or RecurrentTransferMechanisms as OUTPUT Nodes:
         #   - exclude Compositions and RecurrentTransferMechanisms as OUTPUTs because, although they may be learnable
-        #       (e.g., Autoassociative Mechanism, GRUComposition or EMComposition), they are not allowed as TARGETs
+        #       (e.g., Autoassociative Mechanism, GRUComposition or EMComposition_Proj), they are not allowed as TARGETs
         #   - exclude Mechanisms that are SINGLETONs because they are not trainable (no learnable Projections)
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET_INPUT))
         # non_comp_or_recurrent_output_nodes = set([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
@@ -11577,7 +11597,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications for "
                            f"InputPorts or Mechanisms nested in the following Compositions: {', '.join(bad_entries)}")
 
-    def _instantiate_input_dict(self, inputs):
+    def _instantiate_input_dict(self, inputs:dict)->dict:
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.
@@ -12654,7 +12674,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 report_num=report_num,
                                                 **kwargs
                                                 )
-                except BaseException as _debugger_exc:
+                except Exception as _debugger_exc:
                     _debugger.step(
                         _debugger.BreakpointCategory.EXCEPTION,
                         lambda exc=_debugger_exc, t=trial_num: {

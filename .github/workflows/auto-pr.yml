@@ -1,0 +1,41 @@
+name: Create PR to master
+
+on:
+  schedule:
+    - cron: "29 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  create-pr:
+    name: Create PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set PR head from dispatch value or default
+        id: get_refs
+        env:
+          BASE_REF: master
+          DEFAULT_HEAD_REF: devel
+        # github.ref_name should be empty for cron runs
+        run: |
+          echo "base_ref=${{ env.BASE_REF }}" >> "$GITHUB_OUTPUT"
+          if [[ -z ${{ github.ref_name }} ]] || [[ ${{ github.ref_name }} == ${{ env.BASE_REF }} ]]; then
+            echo "head_ref=${{ env.DEFAULT_HEAD_REF }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "head_ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      # NOTE: this step would allow the same user to dispatch and then approve a PR.
+      # Our main purpose for requiring approval was to prevent accidental merges to master.
+      - name: Set PR creator to github-actions[bot]
+        run: git config --local user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Make PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="[auto] ${{ steps.get_refs.outputs.head_ref }} -> ${{ steps.get_refs.outputs.base_ref }}"
+          BODY="Automatically created by workflow ($GITHUB_WORKFLOW)"
+          gh pr create -B ${{ steps.get_refs.outputs.base_ref }} -H ${{ steps.get_refs.outputs.head_ref }} --title "$TITLE" --body "$BODY"

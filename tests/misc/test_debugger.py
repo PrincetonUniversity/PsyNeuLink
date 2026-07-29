@@ -124,51 +124,7 @@ def test_categories_fire_during_composition_run():
         elif cat is BreakpointCategory.INPUTS_TO_NODE:
             assert {"node", "execution_set", "scheduler", "context"} <= locs.keys()
         elif cat is BreakpointCategory.NODE_EXECUTION:
-            assert {"node", "execution_set", "scheduler", "context",
-                    "output_port_element_names"} <= locs.keys()
-
-
-def test_node_execution_carries_element_names_when_set(capsys):
-    """#13: NODE_EXECUTION snapshot exposes each output port's element_names
-    (Layer 1 labels from PsyNeuLink#11). When unset → list of Nones; when
-    set via constructor → list of label lists in port-index order."""
-    captured = {}
-
-    def listener(category, locals_provider):
-        if category is BreakpointCategory.NODE_EXECUTION:
-            locs = locals_provider()
-            captured.setdefault(locs["node"].name, []).append(locs)
-
-    labeled = pnl.TransferMechanism(
-        input_shapes=[2],
-        name="labeled",
-        element_names=["red", "green"],
-    )
-    plain = pnl.TransferMechanism(input_shapes=[2], name="plain")
-    comp = pnl.Composition(name="comp_element_names")
-    comp.add_node(labeled)
-    comp.add_node(plain)
-
-    _debugger.set_listener(listener)
-    try:
-        comp.run(inputs={labeled: [[1.0, 2.0]], plain: [[3.0, 4.0]]}, num_trials=1)
-    finally:
-        _debugger.set_listener(None)
-
-    assert "labeled" in captured and captured["labeled"], "expected NODE_EXECUTION for labeled"
-    assert "plain" in captured and captured["plain"], "expected NODE_EXECUTION for plain"
-
-    labeled_locs = captured["labeled"][0]
-    assert labeled_locs["output_port_element_names"] == [["red", "green"]], (
-        f"labeled mechanism should surface its element_names per output port; "
-        f"got {labeled_locs['output_port_element_names']}"
-    )
-
-    plain_locs = captured["plain"][0]
-    assert plain_locs["output_port_element_names"] == [None], (
-        f"plain mechanism should surface None per output port; "
-        f"got {plain_locs['output_port_element_names']}"
-    )
+            assert {"node", "execution_set", "scheduler", "context"} <= locs.keys()
 
 
 def test_run_level_categories_fire_once_per_run():
@@ -314,3 +270,166 @@ def test_run_results_unchanged_with_recording_listener():
         _debugger.set_listener(None)
 
     assert baseline == with_listener
+
+
+# ---------------------------------------------------------------------------
+# Extended coverage: real execution topologies and execution-mode boundaries.
+#
+# The fine-grained per-node hooks live in the Python execution loop. Compiled
+# (LLVM) and PyTorch execution bypass that loop, so they fire only run-level
+# bookends, PARAMETER_SETTING, and (for PyTorch) PYTORCH_STEP. These tests pin
+# both the "works in real topologies" behavior and that documented boundary.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.composition
+def test_nested_composition_fires_hooks_for_inner_nodes():
+    """Nodes inside a nested Composition emit NODE_EXECUTION like top-level ones."""
+    inner = pnl.Composition(name="inner")
+    a = pnl.TransferMechanism(name="inner_a")
+    b = pnl.TransferMechanism(name="inner_b")
+    inner.add_linear_processing_pathway([a, b])
+
+    outer = pnl.Composition(name="outer")
+    c = pnl.TransferMechanism(name="outer_c")
+    outer.add_linear_processing_pathway([inner, c])
+
+    executed = []
+
+    def listener(category, locals_provider):
+        if category is BreakpointCategory.NODE_EXECUTION:
+            executed.append(locals_provider()["node"])
+
+    _debugger.set_listener(listener)
+    outer.run(inputs={inner: [[1.0]]}, num_trials=1)
+
+    names = {getattr(n, "name", n) for n in executed}
+    assert {"inner_a", "inner_b", "outer_c"} <= names, \
+        f"expected inner + outer nodes to fire NODE_EXECUTION, got {names}"
+
+
+@pytest.mark.composition
+def test_multi_node_execution_set_fires_per_node():
+    """When several nodes run in one execution set, each fires its own NODE_EXECUTION."""
+    m1 = pnl.TransferMechanism(name="par_m1")
+    m2 = pnl.TransferMechanism(name="par_m2")
+    comp = pnl.Composition(name="parallel", nodes=[m1, m2])
+
+    executed = []
+
+    def listener(category, locals_provider):
+        if category is BreakpointCategory.NODE_EXECUTION:
+            executed.append(locals_provider()["node"])
+
+    _debugger.set_listener(listener)
+    comp.run(inputs={m1: [[1.0]], m2: [[2.0]]}, num_trials=1)
+
+    names = {getattr(n, "name", n) for n in executed}
+    assert {"par_m1", "par_m2"} <= names
+
+
+@pytest.mark.composition
+def test_parameter_setting_fires_with_documented_payload():
+    """PARAMETER_SETTING fires during a run and carries parameter/owner/value/context."""
+    captured = []
+
+    def listener(category, locals_provider):
+        if category is BreakpointCategory.PARAMETER_SETTING and not captured:
+            captured.append(locals_provider())
+
+    m = pnl.TransferMechanism(name="ps_probe")
+    comp = pnl.Composition(name="ps_comp", nodes=[m])
+    _debugger.set_listener(listener)
+    comp.run(inputs={m: [[1.0]]}, num_trials=1)
+
+    assert captured, "PARAMETER_SETTING should fire during a run"
+    assert {"parameter", "owner", "value", "context"} <= captured[0].keys()
+
+
+@pytest.mark.llvm
+@pytest.mark.composition
+def test_compiled_mode_bypasses_python_execution_hooks():
+    """Compiled (LLVM) execution skips the Python scheduler loop, so the
+    fine-grained per-node hooks do not fire. Documents the hook's scope."""
+    pytest.importorskip("llvmlite")
+    m = pnl.TransferMechanism(name="llvm_m")
+    comp = pnl.Composition(name="llvm_comp", nodes=[m])
+
+    fired = []
+    _debugger.set_listener(lambda c, lp: fired.append(c))
+    try:
+        comp.run(inputs={m: [[1.0]]}, num_trials=1,
+                 execution_mode=pnl.ExecutionMode.LLVMRun)
+    except Exception:
+        pytest.skip("LLVM backend not runnable in this environment")
+
+    assert BreakpointCategory.NODE_EXECUTION not in fired, \
+        "compiled mode must not fire the Python per-node execution hook"
+    assert BreakpointCategory.EXECUTION_SET not in fired
+
+
+@pytest.mark.pytorch
+def test_pytorch_mode_fires_pytorch_step_not_python_node_hooks():
+    """AutodiffComposition.learn in PyTorch mode fires PYTORCH_STEP but bypasses
+    the Python per-node execution hooks."""
+    pytest.importorskip("torch")
+    i = pnl.TransferMechanism(name="ad_i")
+    o = pnl.TransferMechanism(name="ad_o")
+    ac = pnl.AutodiffComposition(name="ad_comp")
+    ac.add_linear_processing_pathway([i, o])
+
+    fired = []
+    _debugger.set_listener(lambda c, lp: fired.append(c))
+    ac.learn(
+        inputs={"inputs": {i: [[1.0]]}, "targets": {o: [[1.0]]}},
+        execution_mode=pnl.ExecutionMode.PyTorch,
+        epochs=1,
+    )
+
+    assert BreakpointCategory.PYTORCH_STEP in fired
+    assert BreakpointCategory.NODE_EXECUTION not in fired
+
+
+def test_node_execution_carries_element_names_when_set(capsys):
+    """#13: NODE_EXECUTION snapshot exposes each output port's element_names
+    (Layer 1 labels from PsyNeuLink#11). When unset → list of Nones; when
+    set via constructor → list of label lists in port-index order."""
+    captured = {}
+
+    def listener(category, locals_provider):
+        if category is BreakpointCategory.NODE_EXECUTION:
+            locs = locals_provider()
+            captured.setdefault(locs["node"].name, []).append(locs)
+
+    labeled = pnl.TransferMechanism(
+        input_shapes=[2],
+        name="labeled",
+        element_names=["red", "green"],
+    )
+    plain = pnl.TransferMechanism(input_shapes=[2], name="plain")
+    comp = pnl.Composition(name="comp_element_names")
+    comp.add_node(labeled)
+    comp.add_node(plain)
+
+    _debugger.set_listener(listener)
+    try:
+        comp.run(inputs={labeled: [[1.0, 2.0]], plain: [[3.0, 4.0]]}, num_trials=1)
+    finally:
+        _debugger.set_listener(None)
+
+    assert "labeled" in captured and captured["labeled"], "expected NODE_EXECUTION for labeled"
+    assert "plain" in captured and captured["plain"], "expected NODE_EXECUTION for plain"
+
+    labeled_locs = captured["labeled"][0]
+    assert labeled_locs["output_port_element_names"] == [["red", "green"]], (
+        f"labeled mechanism should surface its element_names per output port; "
+        f"got {labeled_locs['output_port_element_names']}"
+    )
+
+    plain_locs = captured["plain"][0]
+    assert plain_locs["output_port_element_names"] == [None], (
+        f"plain mechanism should surface None per output port; "
+        f"got {plain_locs['output_port_element_names']}"
+    )
+
+

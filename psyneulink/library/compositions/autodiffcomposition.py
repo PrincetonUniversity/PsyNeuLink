@@ -1654,7 +1654,15 @@ class AutodiffComposition(Composition):
             return [e if isinstance(e, MappingProjection) else e[0].owner for e in pathway]
 
         # breadth-first search starting with input node
+        _num_iter = 0
+        _max_iter = 1000
         while len(queue) > 0:
+            _num_iter += 1
+            if _num_iter >= _max_iter:
+                raise AutodiffCompositionError(f"There appears to be a cycle in the graph for '{self.name}'"
+                                               f"(maximum iterations exceeded in _get_pytorch_backprop_pathway()); "
+                                               f"to break a cycle, specify `feedback=True` in the constructor for "
+                                               f"one the MappingProjections that form the cycle.")
             node, afferent_proj, current_comp = queue.popleft()
 
             # node is nested Composition that is an INPUT node of the immediate outer Composition,
@@ -1692,6 +1700,10 @@ class AutodiffComposition(Composition):
                 #   or are ModulatoryProjections (i.e., including LearningProjections)
                 # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
                 if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
+                    continue
+
+                # EM2 BREADCRUMB: NEED TO DEAL WITH THIS
+                if efferent_proj.feedback:
                     continue
 
                 # Deal with Projections to/from CIMs since nested comps can be learned in PyTorch mode
@@ -1783,8 +1795,14 @@ class AutodiffComposition(Composition):
     def _has_learnable_pathways(self):
         return any(self._mech_is_receiver_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
 
-    def _mech_is_receiver_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
+    def _mech_is_receiver_in_learnable_pathway(self, mech_output_port: OutputPort, visited=None) -> bool:
         """Return True if `mech` receives a Projection from any pathway that has at least one learnable Projection"""
+        if visited is None:
+            visited = set()
+        if mech_output_port in visited:
+            return False
+        visited.add(mech_output_port)
+
         mech = mech_output_port.owner
         if isinstance(mech, CompositionInterfaceMechanism):
             # Restrict search to afferent of input_port paired with mech_output_port
@@ -1794,7 +1812,7 @@ class AutodiffComposition(Composition):
         for afferent in afferents:
             if afferent.learnable:
                 return True
-            check_afferent_pathway = self._mech_is_receiver_in_learnable_pathway(afferent.sender)
+            check_afferent_pathway = self._mech_is_receiver_in_learnable_pathway(afferent.sender, visited)
             if check_afferent_pathway:
                 return True
         return False

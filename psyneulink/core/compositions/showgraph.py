@@ -21,7 +21,7 @@ of the Composition and, optionally, any `nested Compositions <Composition_Nested
 them as edges.
 
 .. technical_note::
-    Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
+    Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing emshowgraph.py module.
     The `show_graph <ShowGraph.show_graph>` method of a Composition directly calls the `show_graph
     <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
     `show_graph`.
@@ -2699,8 +2699,184 @@ class ShowGraph():
                             return i
                     else:
                         assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
-                elif 'subgraph' in item and node_type in {COMPOSITION}:
+                elif (node_type in {COMPOSITION}
+                      and item.lstrip().startswith('subgraph ')
+                      and f'cluster_{node.name}' in item):
                     return i
+
+        def get_node_id_in_G_body(node):
+            """Get the Graphviz node identifier used for node in G.body."""
+            i = get_index_of_node_in_G_body(node, MECHANISM)
+            if i is None:
+                return None
+            item = G.body[i].strip()
+            quoted_items = item.split('"')[1::2]
+            if quoted_items:
+                return quoted_items[0]
+            return item.split(' [', 1)[0]
+
+        def add_role_rank_constraints():
+            """Constrain role-specific display layers at the bottom and top of the graph."""
+            input_node_ids = []
+            output_node_ids = []
+            learning_objective_node_ids = []
+            nested_composition_node_ids = []
+            nested_composition_node_ids_by_comp = {}
+            non_input_node_ids = []
+            non_output_node_ids = []
+            non_learning_objective_node_ids = []
+            non_output_or_learning_objective_node_ids = []
+
+            def add_nested_composition_node_ids(nested_composition):
+                """Collect rendered node ids for a nested Composition in the outermost graph."""
+                nested_node_ids = []
+                nested_composition_node_id = get_node_id_in_G_body(nested_composition)
+                if nested_composition_node_id is not None:
+                    nested_node_ids.append(nested_composition_node_id)
+                    nested_composition_node_ids_by_comp[nested_composition] = nested_node_ids
+                    nested_composition_node_ids.extend(nested_node_ids)
+                    return nested_node_ids
+
+                # Expanded nested Compositions are rendered as clusters, which do not have
+                # node ids usable in rank constraints.  Constrain their visible contents.
+                for nested_node in nested_composition._get_all_nodes(include_cims=True, include_compositions=True):
+                    nested_node_id = get_node_id_in_G_body(nested_node)
+                    if nested_node_id is not None and nested_node_id not in nested_node_ids:
+                        nested_node_ids.append(nested_node_id)
+                nested_composition_node_ids_by_comp[nested_composition] = nested_node_ids
+                nested_composition_node_ids.extend([
+                    node_id for node_id in nested_node_ids if node_id not in nested_composition_node_ids
+                ])
+                return nested_node_ids
+
+            for node in nodes:
+                if isinstance(node, Composition):
+                    if enclosing_comp is None:
+                        add_nested_composition_node_ids(node)
+                    continue
+                roles = self._get_roles_by_node(node)
+                node_id = get_node_id_in_G_body(node)
+                if node_id is None:
+                    continue
+                if NodeRole.LEARNING_OBJECTIVE in roles:
+                    learning_objective_node_ids.append(node_id)
+                elif NodeRole.OUTPUT in roles:
+                    output_node_ids.append(node_id)
+                elif NodeRole.INPUT in roles:
+                    input_node_ids.append(node_id)
+                if NodeRole.INPUT not in roles:
+                    non_input_node_ids.append(node_id)
+                if NodeRole.OUTPUT not in roles:
+                    non_output_node_ids.append(node_id)
+                if NodeRole.LEARNING_OBJECTIVE not in roles:
+                    non_learning_objective_node_ids.append(node_id)
+                if NodeRole.OUTPUT not in roles and NodeRole.LEARNING_OBJECTIVE not in roles:
+                    non_output_or_learning_objective_node_ids.append(node_id)
+
+            # Use Graphviz's exclusive rank variants for the default bottom/top ranks,
+            # so unrelated isolated nodes are not allowed to share those ranks.
+            input_rank = 'source' if self.input_rank in {'min', 'source'} else self.input_rank
+            top_rank = 'sink' if self.output_rank in {'max', 'sink'} else self.output_rank
+            output_rank = 'same' if learning_objective_node_ids else top_rank
+
+            for rank, node_ids in ((input_rank, input_node_ids),
+                                   (output_rank, output_node_ids),
+                                   (top_rank, learning_objective_node_ids)):
+                if not node_ids:
+                    continue
+                with G.subgraph() as rank_subgraph:
+                    rank_subgraph.attr(rank=rank)
+                    for node_id in node_ids:
+                        rank_subgraph.node(node_id)
+
+            invisible_edge_attrs = {
+                'arrowhead': 'none',
+                'constraint': 'true',
+                'style': 'invis',
+                'weight': '100',
+            }
+            invisible_order_edge_attrs = dict(invisible_edge_attrs, constraint='false')
+
+            def add_rank_subgraph(node_ids):
+                if not node_ids:
+                    return
+                with G.subgraph() as rank_subgraph:
+                    rank_subgraph.attr(rank='same')
+                    for node_id in node_ids:
+                        rank_subgraph.node(node_id)
+
+            def add_ordering_edges(node_ids):
+                for i in range(len(node_ids) - 1):
+                    G.edge(node_ids[i], node_ids[i + 1], **invisible_order_edge_attrs)
+
+            nested_rank_constraint_specs = []
+            sender_band_node_id_groups = []
+            receiver_band_node_id_groups = []
+            if nested_composition_node_ids_by_comp:
+                outer_nodes = set(node for node in nodes if not isinstance(node, Composition))
+                for nested_composition, nested_node_ids in nested_composition_node_ids_by_comp.items():
+                    nested_nodes = set(nested_composition._get_all_nodes(include_cims=True,
+                                                                         include_compositions=True))
+                    nested_nodes.add(nested_composition)
+                    outer_senders_to_nested = set()
+                    outer_receivers_from_nested = set()
+                    for proj in projections:
+                        sender = proj.sender.owner
+                        receiver = proj.receiver.owner
+                        sender_node_id = get_node_id_in_G_body(sender)
+                        receiver_node_id = get_node_id_in_G_body(receiver)
+                        if sender in outer_nodes and receiver in nested_nodes and sender_node_id is not None:
+                            outer_senders_to_nested.add(sender_node_id)
+                        if sender in nested_nodes and receiver in outer_nodes and receiver_node_id is not None:
+                            outer_receivers_from_nested.add(receiver_node_id)
+                    ambiguous_node_ids = outer_senders_to_nested & outer_receivers_from_nested
+                    sender_node_ids = sorted(outer_senders_to_nested - ambiguous_node_ids)
+                    receiver_node_ids = sorted(outer_receivers_from_nested - ambiguous_node_ids)
+                    if sender_node_ids:
+                        sender_band_node_id_groups.append(set(sender_node_ids))
+                    if receiver_node_ids:
+                        receiver_band_node_id_groups.append(set(receiver_node_ids))
+                    nested_rank_constraint_specs.append((nested_node_ids, sender_node_ids, receiver_node_ids))
+
+            input_node_id_set = set(input_node_ids)
+            output_or_learning_objective_node_id_set = set(output_node_ids + learning_objective_node_ids)
+
+            if input_node_ids:
+                input_anchor = input_node_ids[0]
+                for node_id in non_input_node_ids:
+                    if any(node_id in group and group & input_node_id_set
+                           for group in sender_band_node_id_groups):
+                        continue
+                    G.edge(input_anchor, node_id, **invisible_edge_attrs)
+            if output_node_ids:
+                output_anchor = output_node_ids[0]
+                lower_node_ids = (non_output_or_learning_objective_node_ids
+                                  if learning_objective_node_ids else non_output_node_ids)
+                lower_node_ids = list(lower_node_ids) + [
+                    node_id for node_id in nested_composition_node_ids
+                    if node_id not in output_node_ids and node_id not in learning_objective_node_ids
+                ]
+                for node_id in lower_node_ids:
+                    if any(node_id in group and group & output_or_learning_objective_node_id_set
+                           for group in receiver_band_node_id_groups):
+                        continue
+                    G.edge(node_id, output_anchor, **invisible_edge_attrs)
+            for nested_node_ids, sender_node_ids, receiver_node_ids in nested_rank_constraint_specs:
+                add_rank_subgraph(sender_node_ids)
+                add_rank_subgraph(receiver_node_ids)
+                add_ordering_edges(sender_node_ids)
+                add_ordering_edges(receiver_node_ids)
+                for sender_node_id in sender_node_ids:
+                    for nested_node_id in nested_node_ids:
+                        G.edge(sender_node_id, nested_node_id, **invisible_edge_attrs)
+                for receiver_node_id in receiver_node_ids:
+                    for nested_node_id in nested_node_ids:
+                        G.edge(nested_node_id, receiver_node_id, **invisible_edge_attrs)
+            if learning_objective_node_ids:
+                learning_objective_anchor = learning_objective_node_ids[0]
+                lower_node_ids = output_node_ids or non_learning_objective_node_ids
+                for node_id in lower_node_ids:
+                    G.edge(node_id, learning_objective_anchor, **invisible_edge_attrs)
 
         for node in nodes:
             if isinstance(node, Composition):
@@ -2730,6 +2906,8 @@ class ShowGraph():
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
+
+        add_role_rank_constraints()
 
         # Put controller of Composition, except for nested Composition(s)
         if composition.controller and show_controller:
