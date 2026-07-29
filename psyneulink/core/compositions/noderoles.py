@@ -43,6 +43,8 @@ from copy import copy
 from collections import OrderedDict, deque
 from typing import List, Union, Literal
 
+from IPython.terminal.shortcuts import previous_history_or_previous_completion
+
 from psyneulink._typing import Literal, Optional
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -927,8 +929,47 @@ class NodeRolesManager(object):
             plural = len(prohibited_roles) > 1
             s = 's' if plural else ''
             are_is = 'are' if plural else 'is'
-            raise NodeRoleError(f"Attempt to {modification} the following NodeRole{s} for '{node.name}' (in "
-                                f"'{self.name}') that cannot be modified by user: {', '.join(prohibited_roles)}.")
+            err_msg = (f"Attempt to {modification} the following NodeRole{s} for '{node.name}' (in "
+                       f"'{self.name}') that cannot be modified by user: {', '.join(prohibited_roles)}")
+
+            # Customize error message for common / non-intuitive cases
+            if modification == 'require':
+
+                # ORIGIN or TERMINAL
+                origin_or_terminal = next((role for role in prohibited_roles
+                               if role in ["'ORIGIN'", "'TERMINAL'"]), None)
+                if origin_or_terminal:
+                    terminus_type = 'INPUT' if origin_or_terminal == "'ORIGIN'" else 'OUTPUT'
+                    send_receive = 'receives' if origin_or_terminal == "'ORIGIN'" else 'sends'
+                    to_from = 'from' if origin_or_terminal == "'ORIGIN'" else 'to'
+                    node_role = "NodeRole." + terminus_type.replace("'",'')
+                    err_msg += (f"; {origin_or_terminal} is reserved for the scheduler, however a Node can be "
+                                f"coerced to be an {terminus_type} Node (that {send_receive} {terminus_type.lower()} "
+                                f"{to_from} outside the Composition) by assigning it {node_role}")
+
+                # FEEDBACK
+                feedback = next((role for role in prohibited_roles
+                               if role in ["'FEEDBACK_SENDER'", "'FEEDBACK_RECEIVER'"]), None)
+                if feedback:
+                    proj_type = 'efferent' if feedback == "'FEEDBACK_SENDER'" else 'afferent'
+                    plural = len(node.efferents) > 1 if proj_type == 'efferent' else len(node.afferents) > 1
+                    s = 's' if plural else ''
+                    multiple_projs = 'its relevant' if plural else 'its'
+                    err_msg += (f"; to make '{node.name}' a {feedback}, specify 'feedback=True' in the constructor "
+                                f"for {multiple_projs} {proj_type} MappingProjection{s}")
+
+                # CYCLE
+                if "'CYCLE'" in prohibited_roles:
+                    err_msg += (f"; to make '{node.name}' a CYCLE, add one or more MappingProjections "
+                                f"that place it in a cycle with other Nodes in the Composition")
+
+                # LEARNING
+                # Customize error message for attempts to specify CYCLE NodeRole
+                if "'LEARNING'" in prohibited_roles:
+                    err_msg += (f"; learning_components can only be constructed using add_linear_learning_pathway() "
+                                f"or one of its related methods, or by using an AutodiffComposition")
+
+            raise NodeRoleError(err_msg + '.')
 
         # Look for node in Composition (at top level only if there are nested Compositions)
         if node in self.owner.nodes:

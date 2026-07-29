@@ -29,6 +29,7 @@ Contents
   * `ParameterEstimationComposition_Data_Fitting`
   * `ParameterEstimationComposition_Optimization`
   * `ParameterEstimationComposition_Supported_Optimizers`
+  * `ParameterEstimationComposition_Examples`
   * `ParameterEstimationComposition_Class_Reference`
 
 
@@ -37,19 +38,18 @@ Contents
 Overview
 --------
 
-A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate specified `parameters
-<ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition,
-in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
-of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`)
-via likelihood maximization using kernel density estimation (KDE), or to optimize a user provided scalar
-`objective_function` (`ParameterEstimationComposition_Optimization`). In either case, when the
-ParameterEstimationComposition is `run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`,
-it returns the set of parameter values in its `optimized_parameter_values
-<ParameterEstimationComposition.optimized_parameter_values>` attribute that it estimates best satisfy either of those
-conditions. The `results <ParameterEstimationComposition.results>` attribute are also set to the optimal parameter
-values.  The arguments below are used to configure a ParameterEstimationComposition for either
-`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by sections
-that describe arguments specific to each.
+A `ParameterEstimationComposition` is a subclass of `Composition` that estimates specified `parameters
+<ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition. It can
+fit the `outputs <ParameterEstimationComposition.outcome_variables>` of the `model
+<ParameterEstimationComposition.model>` to empirical data (`ParameterEstimationComposition_Data_Fitting`) by maximizing
+likelihood using kernel density estimation (KDE), or it can optimize a user-provided scalar `objective_function`
+(`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is
+`run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it sets its
+`optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>` attribute to the parameter
+values that best satisfy the fitting or optimization objective. The `results <ParameterEstimationComposition.results>`
+attribute is also set to the optimal parameter values. The arguments below configure a ParameterEstimationComposition
+for either `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`; later
+sections describe arguments specific to each mode.
 
     .. _ParameterEstimationComposition_Model:
 
@@ -72,8 +72,9 @@ that describe arguments specific to each.
       must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s terminal Mechanism.
 
     * **optimization_function** - specifies the function used to search over the combinations of `parameter
-      <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
-      `PECOptimizationFunction` or a string name of one of the supported optimizers.
+      <ParameterEstimationComposition.parameters>` values to be estimated. This is usually a ``PECOptimizationFunction``,
+      which supports SciPy differential evolution and Optuna samplers or studies. Passing ``"differential_evolution"``
+      is a shorthand for ``PECOptimizationFunction(method="differential_evolution")``.
 
     * **num_estimates** - specifies the number of independent samples that are estimated for a given combination of
       `parameter <ParameterEstimationComposition.parameters>` values.
@@ -101,13 +102,12 @@ specified:
       pandas DataFrame where each column corresponds to one of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`. If one of the outcome variables should be
       treated as a categorical variable (e.g. a decision value in a two-alternative forced choice task modeled by a
-      DDM), the it should be specified as a pandas Categorical variable.
+      DDM), then it should be specified as a pandas Categorical variable.
 
-    .. technical_note::
     * **objective_function** - A function that computes the sum of the log likelihood of the data is automatically
       assigned for data fitting purposes and should not need to be specified. This function uses a kernel density
       estimation of the data to compute the likelihood of the data given the model. If you would like to use your own
-      estimation of the likelhood, see `ParameterEstimationComposition_Optimization` below.
+      estimation of the likelihood, see `ParameterEstimationComposition_Optimization` below.
 
     .. warning::
        The **objective_function** argument should NOT be specified for data fitting; specifying both the
@@ -127,8 +127,8 @@ requires that the **objective_function** argument be specified:
 
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
-      `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
-      that takes a 3d array as its only argument, the shape of which will be (**num_estimates**, **num_trials**,
+      `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be a ``Callable``
+      that takes a 3d array as its only argument, the shape of which will be (**num_trials**, **num_estimates**,
       number of **outcome_variables**).  The function should specify how to aggregate the value of each
       **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
 
@@ -141,7 +141,105 @@ requires that the **objective_function** argument be specified:
 Supported Optimizers
 --------------------
 
-- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html>`_
+A ParameterEstimationComposition uses ``PECOptimizationFunction`` to search candidate parameter values. The search method
+is configured by the ``method`` argument of ``PECOptimizationFunction``; it is separate
+from the `objective_function <ParameterEstimationComposition.objective_function>` that scores each candidate.
+
+Supported ``PECOptimizationFunction`` methods include:
+
+* ``"differential_evolution"``
+  `Differential evolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html>`_
+  as implemented by SciPy.
+* Optuna sampler instances, such as ``optuna.samplers.RandomSampler(seed=0)`` or
+  ``optuna.samplers.CmaEsSampler(seed=0)``.
+* Optuna sampler classes, such as ``optuna.samplers.TPESampler``. In this form, keyword arguments for the sampler can
+  be passed using ``optuna_kwargs``.
+* Optuna `Study <https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html>`_ objects.
+
+The ``max_iterations`` argument specifies the number of generations for
+``"differential_evolution"`` and the number of trials for Optuna methods. The
+``direction`` argument controls whether the objective is minimized or maximized.
+
+For Dask/SLURM execution of data-fitting runs, pass ``distributed=True`` to either ``ParameterEstimationComposition`` or
+``PECOptimizationFunction``; see :ref:`Distributed Fitting <DistributedFitting>`.
+
+.. _ParameterEstimationComposition_Examples:
+
+Usage Examples
+--------------
+
+The examples below show the PEC-specific configuration. They assume that ``comp`` is the ``Composition`` being fit,
+``decision`` is an output ``Mechanism``, ``trial_inputs`` contains the inputs used to run the model, and ``data_to_fit``
+is a pandas DataFrame with columns matching the requested outcome variables.
+
+Data fitting with SciPy differential evolution::
+
+    import numpy as np
+    import psyneulink as pnl
+
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data_to_fit,
+        optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution",
+            max_iterations=20,
+        ),
+        num_estimates=100,
+        initial_seed=0,
+        same_seed_for_all_parameter_combinations=True,
+    )
+    pec.run(inputs={comp: trial_inputs})
+
+Parameter optimization with an Optuna sampler::
+
+    import numpy as np
+    import optuna
+    import psyneulink as pnl
+
+    def reward_rate(sim_data):
+        return np.mean(sim_data[:, :, 0] / sim_data[:, :, 1])
+
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        objective_function=reward_rate,
+        optimization_function=pnl.PECOptimizationFunction(
+            method=optuna.samplers.TPESampler,
+            optuna_kwargs={"seed": 0},
+            max_iterations=50,
+            direction="maximize",
+        ),
+        num_estimates=100,
+    )
+    pec.run(inputs={comp: trial_inputs})
+
+Using an existing Optuna study::
+
+    import optuna
+    import psyneulink as pnl
+
+    study = optuna.create_study(
+        sampler=optuna.samplers.RandomSampler(seed=0),
+        direction="maximize",
+    )
+
+    optimizer = pnl.PECOptimizationFunction(
+        method=study,
+        max_iterations=50,
+        direction="maximize",
+    )
+
+The resulting ``optimizer`` can be supplied as the **optimization_function** argument to
+``ParameterEstimationComposition``.
 
 Structure
 ---------
@@ -263,7 +361,7 @@ class ParameterEstimationComposition(Composition):
         pandas DataFrame where each column corresponds to one of the
         `outcome_variables <ParameterEstimationComposition.outcome_variables>`. If one of the outcome variables should be
         treated as a categorical variable (e.g. a decision value in a two-alternative forced choice task modeled by a
-        DDM), the it should be specified as a pandas Categorical variable.
+        DDM), then it should be specified as a pandas Categorical variable.
 
     data_categorical_dims : Union[Iterable] : default None
         specifies the dimensions of the data that are categorical. If a list of boolean values is provided, it is
@@ -279,10 +377,11 @@ class ParameterEstimationComposition(Composition):
         array containing the `value <OutputPort.value>` of the OutputPort corresponding to each item specified in
         `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
-    optimization_function : OptimizationFunction, function or method : default or MaximumLikelihood or GridSearch
+    optimization_function : PECOptimizationFunction or str : default None
         specifies the function used to search over the combinations of `parameter
-        <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
-        `PECOptimizationFunction` or a string name of one of the supported optimizers.
+        <ParameterEstimationComposition.parameters>` values to be estimated. This is usually a ``PECOptimizationFunction``,
+        which supports SciPy differential evolution and Optuna sampler instances, sampler classes, or studies. Passing
+        ``"differential_evolution"`` is a shorthand for ``PECOptimizationFunction(method="differential_evolution")``.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -306,6 +405,19 @@ class ParameterEstimationComposition(Composition):
         combination of `parameter <ParameterEstimationComposition.parameters>` values; it is passed to the
         ParameterEstimationComposition's `controller <Composition.controller>` to set its
         `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
+
+    distributed : bool : default False
+        specifies whether to evaluate candidate parameterizations in parallel across a Dask cluster during fitting;
+        forwarded to the ``PECOptimizationFunction`` (a ``PECOptimizationFunction`` passed explicitly as
+        **optimization_function** with its own ``distributed`` setting takes precedence). See
+        ``distributed`` and :ref:`Distributed Fitting <DistributedFitting>` for details;
+        requires the ``psyneulink[dask]`` extra and LLVM execution.
+
+    distributed_options : Mapping : default None
+        specifies options for distributed fitting (used only when **distributed** is True); forwarded to the
+        ``PECOptimizationFunction``. Must include a ``"pec_factory"`` callable; see
+        ``distributed_options`` and :ref:`Distributed Fitting <DistributedFitting>` for the full
+        set of keys.
 
 
     Attributes
@@ -350,7 +462,7 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.parameters>` values.  It is passed to the ParameterEstimationComposition's
         `OptimizationControlMechanism` as the function of its `objective_mechanism
         <ControlMechanism.objective_mechanism>`, that is used to compute the `net_outcome
-        <ControlMechanism.net_outcome>` for of the `model <ParameterEstimationComposition.model>` each time it is
+        <ControlMechanism.net_outcome>` for the `model <ParameterEstimationComposition.model>` each time it is
         `run <Composition.run>` (see `objective_function <ParameterEstimationComposition_Objective_Function>`
         for additional details).
 
@@ -358,7 +470,7 @@ class ParameterEstimationComposition(Composition):
         determines the function used to estimate the parameters of the `model <ParameterEstimationComposition.model>`
         that either best fit the `data <ParameterEstimationComposition.data>` when the ParameterEstimationComposition
         is used for `ParameterEstimationComposition_Data_Fitting`, or that achieve some maximum or minimum value of
-        the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+        the `objective_function <ParameterEstimationComposition.objective_function>` when the
         ParameterEstimationComposition is used for `ParameterEstimationComposition_Optimization`.  This is assigned as
         the `function <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
@@ -395,7 +507,7 @@ class ParameterEstimationComposition(Composition):
         contains the setting for determining whether the random number generator used to select seeds for each
         estimate of the `model <ParameterEstimationComposition.model>`\\'s `net_outcome
         <ControlMechanism.net_outcome>` is re-initialized to the same value for each combination of `parameter
-        <ParameterEstimationComposition>` values evaluated.  Its values is stored on the
+        <ParameterEstimationComposition>` values evaluated. Its value is stored on the
         ParameterEstimationComposition's `controller <Composition.controller>`, and setting it sets the value
         of that Parameter (see `same_seed_for_all_allocations
         <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional details).
@@ -405,7 +517,7 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.model>` that best fit the `data <ParameterEstimationComposition.data>` when
         the ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`,
         or that optimize performance of the `model <ParameterEstimationComposition.model>` according to the
-        `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+        `objective_function <ParameterEstimationComposition.objective_function>` when the
         ParameterEstimationComposition is used for `ParameterEstimationComposition_Optimization`.  If `parameter values
         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
         each item of `optimized_parameter_values` is the optimized value of the corresponding `parameter
@@ -485,6 +597,8 @@ class ParameterEstimationComposition(Composition):
         depends_on: Optional[Mapping] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
+        distributed: bool = False,
+        distributed_options: Optional[Mapping] = None,
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC
@@ -644,6 +758,8 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            distributed=distributed,
+            distributed_options=distributed_options,
             context=context,
         )
         self.add_controller(ocm, context)
@@ -815,6 +931,8 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
+        distributed=False,
+        distributed_options=None,
         context=None,
     ):
 
@@ -861,6 +979,15 @@ class ParameterEstimationComposition(Composition):
             )
         else:
             optimization_function.set_pec_objective_function(objective_function)
+
+        optimization_function._pec_initial_seed_user_specified = initial_seed is not None
+
+        # Forward PEC-level distributed settings, unless the optimization function
+        # already enabled distributed itself (its own options take precedence).
+        if distributed and not optimization_function.distributed:
+            optimization_function.distributed = True
+            if distributed_options is not None:
+                optimization_function._distributed_options = dict(distributed_options)
 
         if data is not None:
             optimization_function.data_fitting_mode = True
@@ -914,59 +1041,13 @@ class ParameterEstimationComposition(Composition):
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
 
-        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
-        if inputs:
-
-            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
-            # cached on the PEC controller.
-            if ContextFlags.PROCESSING not in context.flags:
-                self.controller.check_pec_inputs(inputs)
-
-            # Copy the inputs so we don't modify the original dict, note, we can't copy the keys because they
-            # are object\mechanisms that are in the underlying composition.
-            inputs = {k: v.copy() for k, v in inputs.items()}
-
-            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
-            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
-            # have been added by the PEC for the fitting parameters.
-            if self.model in inputs and len(inputs) == 1:
-                full_inputs = inputs
-            else:
-                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
-
-            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
-            # we just use a dummy value here for now (the first value in the range of the parameter)
-            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
-            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
-
-        self.controller.set_pec_inputs_cache(full_inputs)
-
-        # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
-        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
-        # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
-        # dict has the inputs specified in the same order as the state features (i.e., as specified by
-        # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
-        inputs_dict = self.controller.parameters.state_feature_values._get(context)
-
-        if len(inputs_dict) == 0:
-            raise ValueError("No inputs were specified for the PEC.")
-
-        for state_input_port, value in zip(
-            self.controller.state_input_ports, inputs_dict.values()
-        ):
-            value = convert_all_elements_to_np_array(value)
-            state_input_port.parameters.value._set(value, context)
+        self._prepare_pec_inputs_for_simulation(inputs, context)
 
         kwargs.pop("inputs", None)
 
         # Turn off warnings about no inputs the PEC. This is because the PEC doesn't have any inputs itself, it
         # caches the inputs passed to it and passes them along to the inner composition during simulation.
         self.warned_about_run_with_no_inputs = True
-
-        num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
-        self.controller.parameters.num_trials_per_estimate.set(
-            num_trials_per_estimate, context=context
-        )
 
         # Run the composition as normal, if we are in Python execution mode
         if self.controller.parameters.comp_execution_mode.get(context) == 'Python':
@@ -978,9 +1059,12 @@ class ParameterEstimationComposition(Composition):
         # run() method is executed in Python mode, unecessarily slowing down the overall execution since the
         # controller has already done all the work in LLVM mode.
         else:
+            execution_phase_at_entry = context.execution_phase
             context.execution_phase = ContextFlags.PROCESSING
-            self.controller.execute(context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            try:
+                self.controller.execute(context=context)
+            finally:
+                context.execution_phase = execution_phase_at_entry
 
             results = self.parameters.results._get(context)
 
@@ -996,7 +1080,7 @@ class ParameterEstimationComposition(Composition):
         return results
 
     @handle_external_context()
-    def log_likelihood(self, *args, inputs=None, context=None) -> float:
+    def log_likelihood(self, *args, inputs=None, return_sim_data=False, context=None) -> Union[float, tuple]:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
 
@@ -1006,9 +1090,13 @@ class ParameterEstimationComposition(Composition):
             Positional args, one for each paramter of the model. These must correspond directly to the parameters that
             have been specified in the `parameters` argument of the constructor.
 
+        return_sim_data : bool
+            If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
+
         Returns
         -------
-        The sum of the log-likelihoods of the data given the specified parameters of the model.
+        The sum of the log-likelihoods of the data given the specified parameters of the model, or
+        `(log_likelihood, sim_data)` when `return_sim_data` is True.
 
         """
 
@@ -1031,11 +1119,12 @@ class ParameterEstimationComposition(Composition):
                 f"has not been defined. Cannot compute log-likelihood."
             )
 
-        if len(args) != len(self.fit_parameters):
+        fit_param_names = self.controller.function.fit_param_names
+        if len(args) != len(fit_param_names):
             raise ParameterEstimationCompositionError(
-                f"The number of parameters specified in the call to "
-                f"log_likelihood does not match the number of parameters "
-                f"specified in the constructor of ParameterEstimationComposition."
+                f"The number of parameters specified in the call to log_likelihood ({len(args)}) "
+                f"does not match the number of parameters being fit ({len(fit_param_names)}): "
+                f"{fit_param_names}."
             )
 
         if not hasattr(self.controller.function, "log_likelihood"):
@@ -1046,15 +1135,81 @@ class ParameterEstimationComposition(Composition):
                 f"have a log_likelihood function."
             )
 
+        comp_execution_mode = self.controller.parameters.comp_execution_mode.get(context)
+        if comp_execution_mode is None:
+            self.controller.parameters.comp_execution_mode.set("LLVM", context=context)
+        elif comp_execution_mode != "LLVM":
+            raise ParameterEstimationCompositionError(
+                f"Cannot compute log_likelihood for ParameterEstimationComposition {self.name} "
+                f"unless its controller comp_execution_mode is 'LLVM'; got {comp_execution_mode!r}."
+            )
+
+        # Unlike run(), no pnllvm.cleanup() here: log_likelihood re-scores one fixed
+        # PEC repeatedly and must reuse the compiled binary.
         context.composition = self
 
-        # Capture the inputs and pass it on to the OCM
         assert self.controller is not None
-        self.controller.set_pec_inputs_cache(inputs)
+        self._prepare_pec_inputs_for_simulation(inputs, context)
 
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
-        return self.controller.function.log_likelihood(*args, context=context)
+        return self.controller.function.log_likelihood(
+            *args,
+            return_sim_data=return_sim_data,
+            context=context
+        )
+
+    def _prepare_pec_inputs_for_simulation(self, inputs, context):
+        """Normalize, cache, and assign inputs used by PEC optimization and likelihood simulations."""
+        if inputs is None:
+            self.controller.set_pec_inputs_cache(inputs)
+        else:
+            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
+            # cached on the PEC controller.
+            if ContextFlags.PROCESSING not in context.flags:
+                self.controller.check_pec_inputs(inputs)
+
+            # Copy the inputs so we don't modify the original dict, note, we can't copy the keys because they
+            # are object\mechanisms that are in the underlying composition.
+            inputs = {k: v.copy() for k, v in inputs.items()}
+
+            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
+            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
+            # have been added by the PEC for the fitting parameters.
+            if self.model in inputs and len(inputs) == 1:
+                full_inputs = inputs
+            else:
+                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
+
+            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
+            # we just use a dummy value here for now (the first value in the range of the parameter)
+            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
+            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
+
+            self.controller.set_pec_inputs_cache(full_inputs)
+
+        # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
+        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
+        # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
+        # dict has the inputs specified in the same order as the state features (i.e., as specified by
+        # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
+        inputs_dict = self.controller.parameters.state_feature_values._get(context)
+
+        if len(inputs_dict) == 0:
+            raise ValueError("No inputs were specified for the PEC.")
+
+        for state_input_port, value in zip(
+            self.controller.state_input_ports, inputs_dict.values()
+        ):
+            value = convert_all_elements_to_np_array(value)
+            state_input_port.parameters.value._set(value, context)
+
+        num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
+        self.controller.parameters.num_trials_per_estimate.set(
+            num_trials_per_estimate, context=context
+        )
+
+        return inputs_dict
 
     def can_compile_batched(self, inputs=None, backend="triton"):
         """

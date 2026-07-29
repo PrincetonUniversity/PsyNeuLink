@@ -37,3 +37,11 @@ coverage != 7.6.5
 # https://pypi.org/project/torch/2.3.0/#files
 # the last available version (2.2.2) doesn't work with Numpy2.0
 numpy < 2; platform_system == 'Darwin' and platform_machine == 'x86_64'
+
+# mistune-3.3.1 is broken on Python 3.8
+# https://github.com/lepture/mistune/issues/455
+mistune != 3.3.1; python_version == '3.8'
+
+# fastjsonschema-2.22.1 is broken on python 3.8/3.9
+# https://github.com/horejsek/python-fastjsonschema/issues/216
+fastjsonschema != 2.22.1; python_version == '3.9' or python_version == '3.8'

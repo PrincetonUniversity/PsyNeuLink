@@ -431,7 +431,9 @@ from psyneulink.core.globals.parameters import (
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import deprecation_warning, convert_all_elements_to_np_array
 
-__all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
+__all__ = ['EpisodicMemoryMechanism',
+           'EpisodicMemoryMechanismError',
+           'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
 
 KEY_INPUT = 'KEY_INPUT'
 VALUE_INPUT = 'VALUE_INPUT'

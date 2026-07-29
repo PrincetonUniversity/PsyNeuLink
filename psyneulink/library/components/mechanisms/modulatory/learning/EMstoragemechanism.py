@@ -28,44 +28,44 @@ Contents
 Overview
 --------
 
-An EMStorageMechanism is a subclass of `LearningMechanism`, modified for use in an `EMComposition` to store a new
-entry in its `memory <EMComposition.memory>` attribute each time it executes.
+An EMStorageMechanism is a subclass of `LearningMechanism`, modified for use in an `EMComposition_Proj` to store a new
+entry in its `memory <EMComposition_Proj.memory>` attribute each time it executes.
 
 .. _EMStorageMechanism_Memory:
 
 # FIX: NEEDS EDITING:
 
-* **Memory** -- the `memory <EMComposition.memory>` attribute of an `EMComposition` is a list of entries, each of
+* **Memory** -- the `memory <EMComposition_Proj.memory>` attribute of an `EMComposition_Proj` is a list of entries, each of
     which is a 2d np.array with a shape that corresponds to the `memory_matrix <EMStorageMechanism.memory_matrix>`
-    attribute of the EMStorageMechanism that stores it.  Each entry is stored in the `memory <EMComposition.memory>`
-    attribute of the EMComposition as a row or column of the `matrix <MappingProjection.matrix>` parameter of the
+    attribute of the EMStorageMechanism that stores it.  Each entry is stored in the `memory <EMComposition_Proj.memory>`
+    attribute of the EMComposition_Proj as a row or column of the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjections <MappingProjection>` to which the `LearningProjections <LearningProjection>` of the
-    EMStorageMechanism project.  The `memory <EMComposition.memory>` attribute of the EMComposition is used by its
-    `controller <EMComposition.controller>` to generate the `memory <EMMemoryMechanism.memory>` attribute of an
-    `EMMemoryMechanism` that is used to retrieve entries from the `memory <EMComposition.memory>` attribute of the
-    EMComposition.
+    EMStorageMechanism project.  The `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj is used by its
+    `controller <EMComposition_Proj.controller>` to generate the `memory <EMMemoryMechanism.memory>` attribute of an
+    `EMMemoryMechanism` that is used to retrieve entries from the `memory <EMComposition_Proj.memory>` attribute of the
+    EMComposition_Proj.
 
 .. _EMStorageMechanism_Entry:
 
 * **Entry** -- an entry is a 2d np.array with a shape that corresponds to the `memory_matrix
     <EMStorageMechanism.memory_matrix>` attribute of the EMStorageMechanism that stores it.  Each entry is stored in the
-    `memory <EMComposition.memory>` attribute of the EMComposition as a row or column of the `matrix
+    `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj as a row or column of the `matrix
     <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` to which the
     `LearningProjections <LearningProjection>` of the EMStorageMechanism project.  The `memory
-    <EMComposition.memory>` attribute of the EMComposition is used by its `controller <EMComposition.controller>` to
+    <EMComposition_Proj.memory>` attribute of the EMComposition_Proj is used by its `controller <EMComposition_Proj.controller>` to
     generate the `memory <EMMemoryMechanism.memory>` attribute of an `EMMemoryMechanism` that is used to retrieve
-    entries from the `memory <EMComposition.memory>` attribute of the EMComposition.
+    entries from the `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj.
 
 .. _EMStorageMechanism_Fields:
 
 * **Fields** -- an entry is composed of one or more fields, each of which is a 1d np.array with a length that
     corresponds to the number of `fields <EMStorageMechanism_Fields>` of the EMStorageMechanism that stores it.  Each
-    field is stored in the `memory <EMComposition.memory>` attribute of the EMComposition as a row or column of the
+    field is stored in the `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj as a row or column of the
     `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` to which the
     `LearningProjections <LearningProjection>` of the EMStorageMechanism project.  The `memory
-    <EMComposition.memory>` attribute of the EMComposition is used by its `controller <EMComposition.controller>` to
+    <EMComposition_Proj.memory>` attribute of the EMComposition_Proj is used by its `controller <EMComposition_Proj.controller>` to
     generate the `memory <EMMemoryMechanism.memory>` attribute of an `EMMemoryMechanism` that is used to retrieve
-    entries from the `memory <EMComposition.memory>` attribute of the EMComposition.
+    entries from the `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj.
 
 .. _EMStorageMechanism_Creation:
 
@@ -73,8 +73,8 @@ Creating an EMStorageMechanism
 --------------------------------------------
 
 An EMStorageMechanism can be created directly by calling its constructor, but most commonly it is created
-automatically when an `EMComposition` is created, as its `learning_mechanism <EMComposition.learning_mechanism>`
-used to store entries in its `memory <EMComposition.memory>` of the EMComposition. The `memory_matrix` must be
+automatically when an `EMComposition_Proj` is created, as its `learning_mechanism <EMComposition_Proj.learning_mechanism>`
+used to store entries in its `memory <EMComposition_Proj.memory>` of the EMComposition_Proj. The `memory_matrix` must be
 specified (as a template for the shape of the entries to be stored, and of the `matrix <MappingProjection.matrix>`
 parameters to which they are assigned. It must also have at least one, and usually several `fields
 <EMStorageMechanism.fields>` specifications that identify the `OutputPort`\\s of the `ProcessingMechanism`\\s from
@@ -141,7 +141,7 @@ An EMStorageMechanism differs from a standard `LearningMechanism` in the followi
 Execution
 ---------
 
-An EMStorageMechanism executes after all of the other Mechanisms in the `EMComposition` to which it belongs have
+An EMStorageMechanism executes after all of the other Mechanisms in the `EMComposition_Proj` to which it belongs have
 executed.  It executes in the same manner as standard `LearningMechanism`, however instead of modulating
 the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection`, it replaces a row or column in each of
 the `matrix <MappingProjection.matrix>` Parameters of the `MappingProjections <MappingProjection>` to which its
@@ -199,7 +199,7 @@ FIELD_TYPES = 'field_types'
 def _memory_matrix_getter(owning_component=None, context=None) -> list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
-    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
+    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition_Proj.retrieved_nodes>`.
     """
     if owning_component.is_initializing:
         try:

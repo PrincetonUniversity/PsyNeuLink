@@ -206,3 +206,9 @@ tests/*.pdf
 # asv benchmark environments and generated dashboard (results/ is tracked)
 .asv/env/
 .asv/html/
+
+# Output of show_graph() calls during test runs
+pnl-show_graph-output/
+
+# Local thesis experiment scripts (not part of the test suite)
+tests/composition/thesis_code/

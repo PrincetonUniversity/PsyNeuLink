@@ -1419,7 +1419,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
 
-            if issubclass(transfer_function_class, Function):
+            if transfer_function_class is not None and issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
                     raise TransferError(f"Function specified as {repr(FUNCTION)} param of '{self.name}' "
                                         f"({transfer_function_class.__name__}) must be a "
