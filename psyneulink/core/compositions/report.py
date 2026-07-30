@@ -462,7 +462,7 @@ class ReportError(Exception):
         return repr(self.error_value)
 
 
-class OutputReport():
+class OutputReport:
     """
     Object used to package Progress reporting for a call to the `run <Composition.run>` or `learn
     <Composition.learn>` methods of a `Composition`.

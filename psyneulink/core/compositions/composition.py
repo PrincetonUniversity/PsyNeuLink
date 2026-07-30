@@ -3318,7 +3318,7 @@ LearningRateArg = Union[LearningRate, Dict[Union[Component, str], LearningRate]]
 CompositionRegistry = {}
 
 
-class SamplesAndTargets():
+class SamplesAndTargets:
     # Specifications for SAMPLE_MECHANISMs and TARGET_MECHANISMs in **targets** dict
     #    (used to keep track of original specifications for warnings or errors)
     Spec = (collections.namedtuple(

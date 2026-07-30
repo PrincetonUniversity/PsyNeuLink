@@ -34,7 +34,7 @@ def inf_yield_val(val=None):
     while True:
         yield val
 
-class CompositionRunner():
+class CompositionRunner:
 
     def __init__(self, compostion: Composition):
         self._composition = compostion

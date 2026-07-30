@@ -395,7 +395,7 @@ __device__ int64_t __pnl_builtin_get_printf_address() {{ return 0; }}
 
 
 class ptx_jit_engine(jit_engine):
-    class cuda_engine():
+    class cuda_engine:
         def __init__(self, tm):
             self._modules = {}
             self._target_machine = tm

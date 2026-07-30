@@ -3,7 +3,7 @@ from psyneulink.library.compositions.pytorchllvmhelper import *
 
 __all__ = ['AdamOptimizer', 'SGDOptimizer']
 
-class Optimizer():
+class Optimizer:
 
     def __init__(self, pytorch_model):
         self._pytorch_model = pytorch_model
