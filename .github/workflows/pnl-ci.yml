@@ -210,6 +210,20 @@ jobs:
         New-Item -ItemType Directory -Force -Path C:\dumps | Out-Null
         procdump -accepteula -ma -i C:\dumps
 
+    # DIAGNOSTIC (do not merge to devel): route core dumps to files so a
+    # segfaulting worker leaves a core for post-mortem. The RLIMIT_CORE soft
+    # limit is raised per-process in conftest.py; here we just set the pattern
+    # and make sure gdb is available for on-runner backtrace extraction.
+    - name: Arm core-dump capture (linux, diagnostic)
+      shell: bash
+      if: ${{ matrix.os == 'ubuntu' }}
+      run: |
+        sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+        sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p.%t'
+        command -v gdb >/dev/null || sudo apt-get install -y --no-install-recommends gdb
+        ulimit -c unlimited || true
+        echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
@@ -230,6 +244,42 @@ jobs:
       with:
         name: crash-dumps-${{ matrix.os }}-${{ matrix.python-version }}
         path: C:\dumps
+        if-no-files-found: ignore
+        retention-days: 5
+
+    # DIAGNOSTIC (do not merge to devel): extract native backtraces from any
+    # cores on the runner (where the exact binary + libs are present to
+    # symbolize), then upload both the backtraces and the raw cores.
+    - name: Collect core dumps (linux, diagnostic)
+      if: ${{ always() && matrix.os == 'ubuntu' }}
+      shell: bash
+      run: |
+        shopt -s nullglob
+        cores=(/tmp/cores/core.*)
+        BT=/tmp/cores/backtraces.txt
+        echo "Found ${#cores[@]} core(s)." | tee "$BT"
+        if [ ${#cores[@]} -eq 0 ]; then exit 0; fi
+        PYBIN="$(python -c 'import sys; print(sys.executable)')"
+        echo "python: $PYBIN" | tee -a "$BT"
+        for c in "${cores[@]}"; do
+          echo "===================== $c =====================" | tee -a "$BT"
+          gdb -q -batch -nx \
+            -ex "thread apply all bt" \
+            -ex "printf \"\n---- faulting thread registers ----\n\"" \
+            -ex "info registers rip rsp rbp" \
+            -ex "printf \"\n---- disassembly around pc ----\n\"" \
+            -ex "x/16i \$pc" \
+            -ex "printf \"\n---- symbol at pc / mappings ----\n\"" \
+            -ex "info symbol \$pc" \
+            "$PYBIN" "$c" 2>&1 | tee -a "$BT"
+        done
+
+    - name: Upload core dumps + backtraces (linux, diagnostic)
+      if: ${{ always() && matrix.os == 'ubuntu' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: core-dumps-${{ matrix.os }}-${{ matrix.python-version }}${{ matrix.extra-args != '' && '-x' || '' }}
+        path: /tmp/cores
         if-no-files-found: ignore
         retention-days: 5
 

@@ -22,6 +22,20 @@ else:
     # Check that torch is usable if installed
     assert torch_available, "Torch module is available, but not usable by PNL"
 
+# DIAGNOSTIC (do not merge to devel): raise the core-dump size limit so that a
+# native crash (the intermittent access-violation/segfault in the JIT-compiled
+# path, e.g. test_greedy_agent::test_predator_prey[..._LLVMPerNode]) leaves a
+# core file for post-mortem analysis. This runs in the pytest master and in
+# every xdist worker (each imports conftest), so all test processes are covered.
+import sys as _sys
+if _sys.platform.startswith("linux"):
+    try:
+        import resource as _resource
+        _resource.setrlimit(_resource.RLIMIT_CORE,
+                            (_resource.RLIM_INFINITY, _resource.RLIM_INFINITY))
+    except Exception:
+        pass
+
 # def pytest_addoption(parser):
 #     parser.addoption(
 #         '--pnl-seed',
