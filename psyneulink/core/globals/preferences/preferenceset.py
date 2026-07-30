@@ -222,7 +222,7 @@ class PreferenceSetError(Exception):
 
 
 @abc.abstractmethod
-class PreferenceSet(object):
+class PreferenceSet:
     """Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings
 
     COMMENT:
