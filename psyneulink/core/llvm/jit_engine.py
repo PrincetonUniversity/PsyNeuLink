@@ -188,19 +188,13 @@ def _ptx_jit_constructor():
     ptx_target_machine = ptx_target.create_target_machine(cpu=ptx_sm, opt=opt_level, features=use_ptx)
 
     # The threshold of '64' is empirically selected on GF 3050
-    extra_opts = {'size_level' : 1, 'inlining_threshold': 64}
+    extra_opts = {'inlining_threshold': 64}
 
     if __gpu_use_new_pass_manager:
         # Inlining threshold is not supported until llvmlite-0.45.0
         # [1] https://github.com/numba/llvmlite/commit/ccfbf78bd838fef886a1ec9fc4a353ec952fa035
         if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
             extra_opts.pop('inlining_threshold', None)
-
-        # size_level check is mismatched between Python and C++ until 0.46 [1]
-        # even then size_level is only allowed for opt_level==2
-        # [1] https://github.com/numba/llvmlite/issues/1306
-        if version.parse(llvmlite.__version__) < version.parse('0.46.0') or opt_level != 2:
-            extra_opts.pop('size_level', None)
 
         ptx_pass_builder = _new_pass_builder(ptx_target_machine, opt_level, extra_opts)
         ptx_pass_manager = None
