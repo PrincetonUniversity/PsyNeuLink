@@ -736,8 +736,8 @@ class Report:
                 warnings.warn("'pnl_view' not yet supported as an option for report_progress of Composition.run()")
 
             cls._instance.output_reports = {}
-            cls._instance._recorded_reports = str()
-            cls._instance._rich_diverted_reports = str()
+            cls._instance._recorded_reports = ''
+            cls._instance._rich_diverted_reports = ''
 
             cls._instance._ref_count = 0
 
