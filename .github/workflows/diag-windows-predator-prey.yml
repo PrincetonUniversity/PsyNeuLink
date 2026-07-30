@@ -137,3 +137,67 @@ jobs:
           diag_out.xml
         if-no-files-found: ignore
         retention-days: 5
+
+  # Capture the generated LLVM IR / machine asm for the failing parametrization
+  # so, if opt=0 turns out to eliminate the crash, the optimized-vs-unoptimized
+  # codegen for the controller node is already in hand to diff and inspect.
+  dump-codegen:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        opt: ['default', '0']
+    env:
+      PYTHONFAULTHANDLER: '1'
+      # dump-llvm-gen  -> *.generated.ll / *.linked.ll   (IR before optimization)
+      # dump-llvm-opt  -> *.opt.ll                        (IR after optimization passes)
+      # dump-asm       -> *.S                             (final machine asm fed to the JIT)
+      # opt=0 leg disables optimization/vectorization; default leg keeps opt=2 (matches CI).
+      PNL_LLVM_DEBUG: ${{ matrix.opt == '0' && 'dump-llvm-gen;dump-llvm-opt;dump-asm;opt=0' || 'dump-llvm-gen;dump-llvm-opt;dump-asm' }}
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 200
+
+    - name: Checkout tags
+      run: git fetch --tags origin master
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+
+    - name: Install PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'dev'
+
+    - name: Run failing parametrization once (with codegen dumps)
+      continue-on-error: true
+      timeout-minutes: 60
+      shell: bash
+      run: |
+        # Single run of the exact crashing case; no --count. Dumps land in the repo root.
+        pytest "tests/models/test_greedy_agent.py::test_predator_prey" \
+          -k "DoubleType-Default-2 and _LLVMPerNode" \
+          --verbosity=0 -n0 --capture=sys -o console_output_style=count \
+          || echo "PYTEST_EXIT=$?"
+
+    - name: Collect codegen dumps
+      if: always()
+      shell: bash
+      run: |
+        mkdir -p codegen-dumps
+        mv *.generated.ll *.linked.ll *.opt.ll *.S codegen-dumps/ 2>/dev/null || true
+        echo "Collected files:"; ls -la codegen-dumps/ || true
+
+    - name: Upload codegen dumps
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: codegen-dumps-opt-${{ matrix.opt }}
+        path: codegen-dumps
+        if-no-files-found: warn
+        retention-days: 5
