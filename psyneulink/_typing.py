@@ -1,9 +1,4 @@
-from sys import version_info
-
-if version_info < (3, 8):
-    from typing_extensions import Literal
-else:
-    from typing import Literal
+from typing import Literal
 
 from beartype.typing import (
     Union as Union,
