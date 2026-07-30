@@ -196,9 +196,42 @@ jobs:
       run: |
           choco install --no-progress -y sumatrapdf.install
 
+    # DIAGNOSTIC (do not merge to devel): arm full crash-dump capture for the
+    # intermittent Windows access-violation crash in the JIT-compiled path
+    # (e.g. tests/models/test_greedy_agent.py::test_predator_prey[..._LLVMPerNode]).
+    # procdump is registered as the post-mortem (AeDebug) debugger, so any test
+    # worker that hits an unhandled access violation auto-dumps a full dump to
+    # C:\dumps; the dumps are uploaded as an artifact after the test step.
+    - name: Arm crash-dump capture (windows, diagnostic)
+      shell: pwsh
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+        choco install --no-progress -y procdump
+        New-Item -ItemType Directory -Force -Path C:\dumps | Out-Null
+        procdump -accepteula -ma -i C:\dumps
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
+
+    # DIAGNOSTIC (do not merge to devel): collect + upload any crash dumps.
+    - name: Collect crash dumps (windows, diagnostic)
+      if: ${{ always() && matrix.os == 'windows' }}
+      shell: pwsh
+      run: |
+        procdump -u 2>$null
+        $d = Get-ChildItem C:\dumps -Filter *.dmp -ErrorAction SilentlyContinue
+        if ($d) { Write-Host "Captured $($d.Count) crash dump(s):"; $d | ForEach-Object { Write-Host " $($_.FullName)" } }
+        else { Write-Host "No crash dumps produced." }
+
+    - name: Upload crash dumps (windows, diagnostic)
+      if: ${{ always() && matrix.os == 'windows' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: crash-dumps-${{ matrix.os }}-${{ matrix.python-version }}
+        path: C:\dumps
+        if-no-files-found: ignore
+        retention-days: 5
 
     - name: Upload test results
       uses: actions/upload-artifact@v7
