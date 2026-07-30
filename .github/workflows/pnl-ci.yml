@@ -206,9 +206,21 @@ jobs:
       shell: pwsh
       if: ${{ matrix.os == 'windows' }}
       run: |
-        choco install --no-progress -y procdump
         New-Item -ItemType Directory -Force -Path C:\dumps | Out-Null
-        procdump -accepteula -ma -i C:\dumps
+        # Configure Windows Error Reporting LocalDumps: WerFault writes a full
+        # dump for ANY crashing process (including xdist worker children) to
+        # C:\dumps. More reliable than procdump's AeDebug (-i) registration,
+        # which did NOT fire for the faulthandler-handled access violation.
+        $key = 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+        New-Item -Path $key -Force | Out-Null
+        New-ItemProperty -Path $key -Name DumpFolder -PropertyType ExpandString -Value 'C:\dumps' -Force | Out-Null
+        New-ItemProperty -Path $key -Name DumpType   -PropertyType DWord -Value 2  -Force | Out-Null
+        New-ItemProperty -Path $key -Name DumpCount  -PropertyType DWord -Value 20 -Force | Out-Null
+        # Ensure WER is enabled and runs headless (Session 0).
+        $wer = 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting'
+        New-ItemProperty -Path $wer -Name Disabled   -PropertyType DWord -Value 0 -Force | Out-Null
+        New-ItemProperty -Path $wer -Name DontShowUI -PropertyType DWord -Value 1 -Force | Out-Null
+        Write-Host "WER LocalDumps configured -> C:\dumps"
 
     # DIAGNOSTIC (do not merge to devel): route core dumps to files so a
     # segfaulting worker leaves a core for post-mortem. The RLIMIT_CORE soft
@@ -233,10 +245,19 @@ jobs:
       if: ${{ always() && matrix.os == 'windows' }}
       shell: pwsh
       run: |
-        procdump -u 2>$null
         $d = Get-ChildItem C:\dumps -Filter *.dmp -ErrorAction SilentlyContinue
-        if ($d) { Write-Host "Captured $($d.Count) crash dump(s):"; $d | ForEach-Object { Write-Host " $($_.FullName)" } }
-        else { Write-Host "No crash dumps produced." }
+        if (-not $d) { Write-Host "No crash dumps produced."; exit 0 }
+        Write-Host "Captured $($d.Count) crash dump(s):"; $d | ForEach-Object { Write-Host " $($_.FullName)" }
+        # Best-effort: extract native backtrace with cdb if a Windows SDK debugger is present.
+        $cdb = Get-ChildItem "C:\Program Files*\Windows Kits\10\Debuggers\x64\cdb.exe","C:\Program Files*\Windows Kits\*\Debuggers\x64\cdb.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($cdb) {
+          foreach ($dump in $d) {
+            Write-Host "=== cdb !analyze -v: $($dump.Name) ==="
+            & $cdb.FullName -z $dump.FullName -c "!analyze -v; ~*k; q" | Tee-Object -FilePath "$($dump.FullName).analysis.txt"
+          }
+        } else {
+          Write-Host "cdb not found; upload dump and analyze offline in WinDbg."
+        }
 
     - name: Upload crash dumps (windows, diagnostic)
       if: ${{ always() && matrix.os == 'windows' }}
