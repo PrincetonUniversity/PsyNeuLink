@@ -14,6 +14,7 @@ import enum
 import functools
 import inspect
 from llvmlite import ir
+import llvmlite.binding as binding
 import numpy as np
 import os
 import re
@@ -37,6 +38,28 @@ __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
 _modules: Set[ir.Module] = set()
 _all_modules: Set[ir.Module] = set()
 _struct_count = 0
+
+
+@functools.lru_cache(maxsize=1)
+def _cpu_target_ir_config():
+    """Return (triple, data_layout) of the CPU JIT target machine.
+
+    Generated modules are tagged with these so the optimization/codegen passes
+    see the same target the MCJIT engine uses (see jit_engine._cpu_jit_constructor).
+    The MCJIT engine already applies this data layout at run time, so this does
+    not change struct/ctypes layout; it only gives the optimizer correct target
+    info (notably the S128 stack-alignment spec) at build time.
+    """
+    # Imported lazily: jit_engine imports this module, so a top-level import
+    # would be circular.
+    from . import jit_engine
+    jit_engine._binding_initialize()
+    triple = binding.get_process_triple()
+    target_machine = binding.Target.from_triple(triple).create_target_machine(
+        cpu=binding.get_host_cpu_name(),
+        features=binding.get_host_cpu_features().flatten(),
+        reloc='static')
+    return triple, str(target_machine.target_data)
 
 
 @atexit.register
@@ -121,6 +144,15 @@ class LLVMBuilderContext:
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
+        # Tag generated modules with the CPU JIT target's triple and data layout.
+        # Without these, optimization/vectorization passes run with an empty data
+        # layout and can miscompile the stack alignment of AVX code (emitting a
+        # 32-byte-aligned ymm spill into a stack frame that is only realigned to
+        # 16 bytes), producing an intermittent SIGSEGV/access-violation on
+        # vmovapd. See _cpu_target_ir_config().
+        triple, data_layout = _cpu_target_ir_config()
+        module.triple = triple
+        module.data_layout = data_layout
         self._modules.append(module)
         LLVMBuilderContext._llvm_generation += 1
         return self
