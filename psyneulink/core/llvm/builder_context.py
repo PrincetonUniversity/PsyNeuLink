@@ -144,15 +144,16 @@ class LLVMBuilderContext:
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
-        # Tag generated modules with the CPU JIT target's triple and data layout.
-        # Without these, optimization/vectorization passes run with an empty data
-        # layout and can miscompile the stack alignment of AVX code (emitting a
-        # 32-byte-aligned ymm spill into a stack frame that is only realigned to
-        # 16 bytes), producing an intermittent SIGSEGV/access-violation on
-        # vmovapd. See _cpu_target_ir_config().
+        # DIAGNOSTIC (triple-only test, do not merge): set ONLY the target triple
+        # and deliberately leave the data layout empty. This tests the hypothesis
+        # that the triple alone does NOT carry the S128 (16-byte) stack-alignment
+        # spec, so it should not prevent the 32-byte-aligned ymm stack spills that
+        # cause the intermittent crash. If this reproduces the crash in CI while
+        # setting the data layout does not, the data layout is the essential half
+        # of the fix. See _cpu_target_ir_config().
         triple, data_layout = _cpu_target_ir_config()
         module.triple = triple
-        module.data_layout = data_layout
+        # module.data_layout = data_layout  # intentionally omitted for this test
         self._modules.append(module)
         LLVMBuilderContext._llvm_generation += 1
         return self
