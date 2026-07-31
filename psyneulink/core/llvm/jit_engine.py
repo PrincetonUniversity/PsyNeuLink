@@ -89,29 +89,36 @@ def _binding_initialize():
         __initialized = True
 
 
-def _new_pass_builder(target_machine, opt_level, extra_opts = dict()):
+def _new_pass_builder(target_machine, opt_level, extra_opts=dict()):
     pto = binding.create_pipeline_tuning_options(speed_level=opt_level)
-    pto.loop_vectorization = opt_level != 0
-    pto.slp_vectorization = opt_level != 0
 
-    assert set(extra_opts.keys()).issubset(dir(pto)), dir(pto)
+    opts = {'loop_vectorization': opt_level != 0,
+            'slp_vectorization': opt_level != 0,
+            **extra_opts,
+           }
 
-    for key, value in extra_opts.items():
+    assert set(opts.keys()).issubset(dir(pto)), "Unsupported opt: {}".format(opts.keys().difference(dir(pto)))
+
+    for key, value in opts.items():
         setattr(pto, key, value)
 
     pass_builder = binding.create_pass_builder(target_machine, pto)
 
     return pass_builder
 
-def _old_pass_manager(target_machine, opt_level, extra_opts = dict()):
+def _old_pass_manager(target_machine, opt_level, extra_opts=dict()):
     pass_manager_builder = binding.PassManagerBuilder()
-    pass_manager_builder.loop_vectorize = opt_level != 0
-    pass_manager_builder.slp_vectorize = opt_level != 0
-    pass_manager_builder.opt_level = opt_level
 
-    assert set(extra_opts.keys()).issubset(dir(pass_manager_builder))
+    opts = {'loop_vectorize': opt_level != 0,
+            'slp_vectorize': opt_level != 0,
+            'opt_level': opt_level,
+            **extra_opts,
+           }
 
-    for key, value in extra_opts.items():
+    assert set(opts.keys()).issubset(dir(pass_manager_builder)), \
+        "Unsupported opt: {}".format(opts.keys().difference(dir(pass_manager_builder)))
+
+    for key, value in opts.items():
         setattr(pass_manager_builder, key, value)
 
     # Create module pass manager and populate it with analysis and opt passes
@@ -181,19 +188,13 @@ def _ptx_jit_constructor():
     ptx_target_machine = ptx_target.create_target_machine(cpu=ptx_sm, opt=opt_level, features=use_ptx)
 
     # The threshold of '64' is empirically selected on GF 3050
-    extra_opts = {'size_level' : 1, 'inlining_threshold': 64}
+    extra_opts = {'inlining_threshold': 64}
 
     if __gpu_use_new_pass_manager:
         # Inlining threshold is not supported until llvmlite-0.45.0
         # [1] https://github.com/numba/llvmlite/commit/ccfbf78bd838fef886a1ec9fc4a353ec952fa035
         if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
             extra_opts.pop('inlining_threshold', None)
-
-        # size_level check is mismatched between Python and C++ until 0.46 [1]
-        # even then size_level is only allowed for opt_level==2
-        # [1] https://github.com/numba/llvmlite/issues/1306
-        if version.parse(llvmlite.__version__) < version.parse('0.46.0') or opt_level != 2:
-            extra_opts.pop('size_level', None)
 
         ptx_pass_builder = _new_pass_builder(ptx_target_machine, opt_level, extra_opts)
         ptx_pass_manager = None
