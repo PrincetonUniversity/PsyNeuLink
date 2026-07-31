@@ -19,7 +19,7 @@ test_data = [
 GROUP_PREFIX="SelectionFunction "
 
 
-def _assert_tolerance(mode):
+def _tolerance_kwargs(mode):
     # Compiled fp32 execution accumulates rounding error well beyond the default
     # rtol=1e-7 (which is ~= float32 epsilon), so a single-ULP difference -- e.g.
     # from a codegen change -- is enough to fail the default comparison. Relax
@@ -40,7 +40,7 @@ def test_basic(loss, variable, normalize, expected, benchmark, func_mode):
     res = benchmark(EX, variable)
 
     expected = expected if not do_normalize else expected / SIZE
-    np.testing.assert_allclose(res, expected, **_assert_tolerance(func_mode))
+    np.testing.assert_allclose(res, expected, **_tolerance_kwargs(func_mode))
 
 @pytest.mark.mechanism
 @pytest.mark.benchmark
@@ -55,4 +55,4 @@ def test_in_mechanism(loss, variable, normalize, expected, benchmark, mech_mode)
     res = benchmark(EX, variable)
 
     expected = expected if not do_normalize else expected / SIZE
-    np.testing.assert_allclose(res, expected, **_assert_tolerance(mech_mode))
+    np.testing.assert_allclose(res, expected, **_tolerance_kwargs(mech_mode))
