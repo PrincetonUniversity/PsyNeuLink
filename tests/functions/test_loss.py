@@ -24,7 +24,7 @@ def _tolerance_kwargs(mode):
     # rtol=1e-7 (which is ~= float32 epsilon), so a single-ULP difference -- e.g.
     # from a codegen change -- is enough to fail the default comparison. Relax
     # the tolerance for compiled fp32 runs; Python and fp64 keep the default.
-    if mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+    if mode in ('LLVM', 'PTX') and pytest.helpers.llvm_current_fp_precision() == 'fp32':
         return {'rtol': 1e-5, 'atol': 1e-8}
     return {}
 

@@ -254,15 +254,10 @@ class jit_engine:
             print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
-        # Tag the module with this engine's target triple and data layout before
-        # optimizing. Generated modules carry no data layout of their own, so
-        # without this the optimizer/vectorizer runs with an empty data layout
-        # and can miscompile stack alignment of vectorized (AVX) code -- emitting
-        # a 32-byte-aligned ymm spill (vmovapd) into a stack frame that is only
-        # realigned to the ABI's 16 bytes, an intermittent SIGSEGV/access
-        # violation. Doing this per engine (rather than on the shared IR module)
-        # keeps the CPU and PTX targets from clobbering each other's layout.
-        module.triple = self._target_triple
+        # Tag the module with this engine's target before optimizing. Done per
+        # engine (rather than on the shared IR module) so the CPU and PTX targets
+        # don't clobber each other's triple/layout.
+        module.triple = self._target_machine.triple
         module.data_layout = str(self._target_machine.target_data)
 
         start = time.perf_counter()
@@ -380,9 +375,6 @@ class jit_engine:
 
 class cpu_jit_engine(jit_engine):
 
-    # Triple of the current process, matching _cpu_jit_constructor's target machine.
-    _target_triple = binding.get_process_triple()
-
     def __init__(self, object_cache=None):
         super().__init__()
         self._object_cache = object_cache
@@ -410,9 +402,6 @@ __device__ int64_t __pnl_builtin_get_printf_address() {{ return 0; }}
 
 
 class ptx_jit_engine(jit_engine):
-
-    # Matches _ptx_jit_constructor's target machine triple.
-    _target_triple = "nvptx64-nvidia-cuda"
 
     class cuda_engine():
         def __init__(self, tm):
