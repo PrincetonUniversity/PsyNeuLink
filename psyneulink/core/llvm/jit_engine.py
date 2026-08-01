@@ -254,6 +254,12 @@ class jit_engine:
             print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
+        # Tag the module with this engine's target before optimizing. Done per
+        # engine (rather than on the shared IR module) so the CPU and PTX targets
+        # don't clobber each other's triple/layout.
+        module.triple = self._target_machine.triple
+        module.data_layout = str(self._target_machine.target_data)
+
         start = time.perf_counter()
         self._pass_manager.run(module, self._pass_builder)
         finish = time.perf_counter()
@@ -396,6 +402,7 @@ __device__ int64_t __pnl_builtin_get_printf_address() {{ return 0; }}
 
 
 class ptx_jit_engine(jit_engine):
+
     class cuda_engine():
         def __init__(self, tm):
             self._modules = {}
