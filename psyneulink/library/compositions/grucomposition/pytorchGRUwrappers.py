@@ -552,8 +552,20 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         self.input = variable
 
-        hidden_state = self.composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
-        self.hidden_state = torch.tensor(hidden_state).unsqueeze(1)
+        # Determine whether this is the first sequence element of the current forward pass. In
+        # ``full_sequence_mode`` the GRU is executed once per sequence element within a single forward pass, but the
+        # cached HIDDEN_LAYER node value is only synchronized between forward passes, not between those elements. So
+        # only (re)seed the hidden state from the cached node value at the first element (and in non-sequence mode,
+        # where each forward pass is a single element -- preserving cross-trial state carrying); for subsequent
+        # elements carry the live hidden-state tensor from the previous element, so the recurrence backpropagates
+        # through the entire sequence (BPTT) rather than being severed (and reset to the stale node value) each step.
+        top_rep = self.composition.pytorch_representation
+        while getattr(top_rep, 'outer_creator', None) is not None:
+            top_rep = top_rep.outer_creator
+        seq_index = getattr(top_rep, '_current_seq_index', 0)
+        if seq_index == 0:
+            hidden_state = self.composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
+            self.hidden_state = torch.tensor(hidden_state).unsqueeze(1)
         # Save starting hidden_state for re-computing current values in _copy_pytorch_node_outputs_to_pnl_values()
         self.previous_hidden_state = self.hidden_state.detach()
 

@@ -79,8 +79,8 @@ runs:
       id: dist
       shell: bash
       run: |
-        pip install setuptools wheel
-        python setup.py sdist bdist_wheel
+        pip install build
+        python -m build
         echo "wheel=$(ls dist/*.whl)" | tee -a "$GITHUB_OUTPUT"
         echo "sdist=$(ls dist/*.tar.gz)" | tee -a "$GITHUB_OUTPUT"
 

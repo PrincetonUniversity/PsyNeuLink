@@ -1463,7 +1463,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         ---------
 
         variable : list or 2d array : default class_defaults.variable
-           used to retrieve an entry from `memory <ContentAddressableMemory.memory>`, and then stored there.
+           query, used to retrieve an entry from `memory <ContentAddressableMemory.memory>`, and then stored there.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the

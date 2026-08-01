@@ -1,26 +1,37 @@
 """
-Implements the model of `Giallanza et al. (2024) <https://pubmed.ncbi.nlm.nih.gov/38828434/>`_
-for Study 2.
+Implements the model used in `Giallanza et al. (2024) <https://pubmed.ncbi.nlm.nih.gov/38828434/>`_
+for Study 2 to simulate performance of a sequence learning and state space abstraction ("Coffee Shop World") task.
 
-Note:
-The word "context" is overloaded in this script. In the model, "context" refers to the internal representation
-of the context that is mainly an integrated representation of the past states.
+This implements a model, using the Episodic Generalization and Optimization (EGO) framework described in
+`https://pubmed.ncbi.nlm.nih.gov/38828434/`_, in which interactions between simple forms of working memory
+and episodic memory interact to rapidly learn sequences of states and switch
+between them, without the catastrophic interference characteristic of simple feedforward networks.
+The task and data simulated are based ones reported in `https://www.nature.com/articles/s44271-024-00079-4`_.
 
-In the task environment, "context" refers to the two different sets of state transitions that the model has to learn.
-The context is cued by the first stimulus in each trial (state 9 or state 10). However, the model is not
-explicitly given a context signal, it is given a sequence of states that it has to learn to predict.
+.. note::
+    The term "context" is used differently for the model and the task environment in this script. In the model,
+    "context" refers to the internal representation of the context that is a linearly integrated representation of
+    past states. In the task environment, "context" refers to the two different sets of state transitions that
+    must be learned from experience. The context is cued by the first stimulus in each trial
+    (state 9 or state 10). Beyond that, however, the model is not explicitly given a context signal;
+    it must learn to use that to determine which of the two sequences will follow and use that to then
+    predict each subsequent state from the current one.
 
-Differences from the original paper
------------------------------------
+The following are differences from the Pytorch implementation described in `Giallanza et al. (2024)
+<https://pubmed.ncbi.nlm.nih.gov/38828434/>`_, and available at <BREADCRUMB GitHub REPO>:
 
-- In the original implementation, the tanh activation function is applied to the
-  state before it is passed to the context layer. In this implementation, the
-  tanh activation is applied to the output of the context layer instead.
 
-- The Episodic Memory (EM) module in the original paper is implemented as a
-  dynamically growing list of memories initialized as an empty list. Here, the
-  EM module is implemented as a fixed-size memory buffer initialized with a
-  small non-zero value.
+- In the original implementation, the tanh activation function is applied to the state before it is
+  passed to the context layer; here, the tanh activation is applied to the output of the context layer;
+
+- In the original implementation, the Episodic Memory (EM) module was a dynamically growing list of memories
+  initialized as an empty list; here, the EM module is implemented using `EMComposition`, which uses a fixed-size
+  memory buffer initialized with small non-zero values.
+
+Model:
+
+**EGO Model**
+.. figure:: _static/Giallanza_2024_EGO_study_2.svg
 
 """
 import matplotlib.pyplot as plt
@@ -221,6 +232,7 @@ def construct_model(
                   context_learning_pathway],
         learning_rate=learning_rate,
         loss_spec=loss_spec,
+        targets=(prediction_layer, state_input_layer),
         execute_in_additional_optimizations={
             context_layer: pnl.LAST,
             previous_state_layer: pnl.LAST
@@ -243,10 +255,7 @@ def construct_model(
     )
 
     # add a learning projection
-    learning_components = EGO_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-    EGO_comp.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                  receiver=learning_components[0],
-                                                  learnable=False))
+    EGO_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
     # here we add the scheduling:
     # Each trial, we follow this sequence of operations:

@@ -2,6 +2,7 @@ from .regressioncfa import *
 from .compositionrunner import *
 from .autodiffcomposition import *
 from .emcomposition import *
+from .emcomposition import *
 from psyneulink.library.compositions.emcomposition.emcomposition import *
 __all__ = list(regressioncfa.__all__)
 __all__.extend(compositionrunner.__all__)

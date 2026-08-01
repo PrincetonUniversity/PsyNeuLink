@@ -80,7 +80,7 @@ no_key = 0
 # X, Y, Door states, Key states, Holding Key, Key Color
 # DX, DY, Open, Pickup
 
-instruct_em = EMComposition(name="instruct_em", memory_template=[[0], [0], [0]*num_doors, [0]*num_keys, [0], [0],
+instruct_em = EMComposition_Proj(name="instruct_em", memory_template=[[0], [0], [0]*num_doors, [0]*num_keys, [0], [0],
                                                                  [0], [0], [0], [0]],
                             memory_capacity=50,
                             memory_decay_rate=0, memory_fill=0.001,

@@ -53,7 +53,7 @@ def construct_model(
                                            function=Normalize(),
                                            )
 
-    em = EMComposition(
+    em = EMComposition_Proj(
         name=em_name,
         memory_template=[[0] * state_size,  # state
                          [0] * state_size,  # previous state
