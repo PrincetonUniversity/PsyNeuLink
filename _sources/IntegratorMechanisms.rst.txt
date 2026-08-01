@@ -12,4 +12,5 @@ IntegratorMechanisms
 
    DDM
    EpisodicMemoryMechanism
+   ExternalMemoryMechanism
    TimerMechanism
