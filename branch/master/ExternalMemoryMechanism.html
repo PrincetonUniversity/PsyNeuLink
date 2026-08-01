@@ -1,0 +1,501 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ExternalMemoryMechanism &mdash; PsyNeuLink 0.19.0.0+10.ge7d0b8901 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="TimerMechanism" href="TimerMechanism.html" />
+    <link rel="prev" title="EpisodicMemoryMechanism" href="EpisodicMemoryMechanism.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.19.0.0+10
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Components.html">Components</a> &gt;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &gt;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &gt;</li>
+        
+          <li><a href="IntegratorMechanisms.html">IntegratorMechanisms</a> &gt;</li>
+        
+      <li>ExternalMemoryMechanism</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="module-psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism">
+<span id="externalmemorymechanism"></span><h1>ExternalMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism" title="Link to this heading">¶</a></h1>
+<p>Subclass of EpisodicMemoryMechanism customized for EMComposition.</p>
+<p>It is a field-local that uses MatrixMemory as its function, which supports only a single field of memory.</p>
+<p>It has QUERY and COMBINED_SCORES InputPorts
+If it is constructed with FieldType.KEY:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>it has RETRIEVED, SCORES and NORMS OutputPorts</p></li>
+<li><dl class="simple">
+<dt>SCORES and NORMS are used by combined_scores_node of emcomposition</dt><dd><p>to combine then for retrieval (SCORES) and storage (NORMS)</p>
+</dd>
+</dl>
+</li>
+<li><p>function computes match scores between query and each entry in memory, reported in its SCORES OutputPort</p></li>
+</ul>
+</div></blockquote>
+<dl>
+<dt>If it is constructed with FieldType.VALUE:</dt><dd><ul class="simple">
+<li><p>it has only RETRIEVED and NORMS OutputPorts
+- no SCORES OutputPort, since by definition those are not computed for VALUES
+- has NORMS, since the value is included in the NORMS calculation jused to determine where to store</p></li>
+<li><p>it does not compute match scores, but does report retrieved value based on COMBINED_SCORES input</p></li>
+</ul>
+</dd>
+<dt>It has an access_condition, assigned by emcomposition, that is used to determine when to retrieve and when to store:</dt><dd><ol class="loweralpha simple">
+<li><p>if access_condition is NOT satisfied:
+- _execute() is called with runtime_params[OPERATION: COMPUTE_SCORES]</p></li>
+<li><p>if access_condition is satisfied:
+- _execute() is called with runtime_params[OPERATION: ACCESS_MEMORY]</p></li>
+</ol>
+<ul class="simple">
+<li><p>it is assumed that (a) always occurs before (b) in execution of emcompostion2</p></li>
+</ul>
+</dd>
+</dl>
+<p>EM2 BREADCRUMB: GET DOCSTRING FROM COMBINATION OF EpisodicMemoryMechanism and EMStorageMechanism</p>
+<dl class="simple">
+<dt>IMPLEMENTATION NOTE:</dt><dd><p>emcompositon2 uses one ExternalMemoryMechanism per memory field
+instead of using EMStorageMechanism to update MappingProjection matrices.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.</span></span><span class="sig-name descname"><span class="pre">ExternalMemoryMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism" title="Link to this definition">¶</a></dt>
+<dd><p>EM2 BREADCRUMB: REVISE THE FOLLOWING TO BE CONSISTENT WITH UPDATES IN MODULE DOCSTRING</p>
+<dl class="simple">
+<dt>A field-local EpisodicMemoryMechanism used by EMComposition, that:</dt><dd><ul class="simple">
+<li><p>is restricted to use of MatrixMemory as it function</p></li>
+<li><p>uses access_condition to enforce that storage occurs after retrieval</p></li>
+<li><p>has two InputPorts:
+- QUERY used to compute field-specific SCORES
+- COMBINED_SCORES used for retrieval from memory</p></li>
+<li><p>has two OutputPorts:
+- SCORES reports field-specific match weights for QUERY against memory
+- RETRIEVED used to report COMBINED_SCORES-weighted retrieval from memory</p></li>
+</ul>
+</dd>
+<dt>MatrixMemory:</dt><dd><ul class="simple">
+<li><p>supports only a single field</p></li>
+<li><p>is used to store the Mechanisms’ memory</p></li>
+<li><p>returns scores for match of query to each entry in memory</p></li>
+<li><p>takes <strong>scores</strong> argument (received on Mechanism’s COMBINED_SCORES InputPort) as argument used for retrieval</p></li>
+</ul>
+</dd>
+<dt>IMPLEMENTATION NOTE:  This is in distinction to the original EMComposition_Proj, in which each field’s memory</dt><dd><p>was stored in Projection matrices managed by EMStorageMechanism.</p>
+</dd>
+</dl>
+<section id="ports">
+<h2>Ports<a class="headerlink" href="#ports" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>input_port[QUERY]</dt><dd><p>Current vector for this field.  Used for score computation and storage.</p>
+</dd>
+<dt>output_port[SCORES]</dt><dd><p>Match-weight vector between QUERY and every row in field_memory,
+passed to <code class="xref any docutils literal notranslate"><span class="pre">ContentAddressableField</span></code> Function for retrieval</p>
+</dd>
+<dt>input_port[COMBINED_SCORES]</dt><dd><p>Combined retrieval weights, usually the softmax-normalized aggregate of all key-field SCORES.</p>
+</dd>
+<dt>output_port[RETRIEVED]</dt><dd><p>Dot product of COMBINED_SCORES with field_memory.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._handle_default_variable">
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._handle_default_variable" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Override to initialize or validate default_variable based on _memory_init or function.memory</dt><dd><ul class="simple">
+<li><p>if memory argument for Mechanism is specified and default_variable is not, use former to specify latter;</p></li>
+<li><p>if both are specified, validate that they are the same shape;</p></li>
+<li><p>if function.memory is specified and default_variable is not, use former to specify latter;</p></li>
+<li><p>if both are specified, validate that they are the same shape;</p></li>
+<li><dl class="simple">
+<dt>if default_variable is specified and neither memory arg of Mechanism nor function.memory is specified,</dt><dd><p>use default_variable to specify function.memory.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>Note: handling this here insures that input_ports are specified/validated using correct default_variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._instantiate_input_ports">
+<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._instantiate_input_ports" title="Link to this definition">¶</a></dt>
+<dd><p>Override to assign default names to input_ports</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._validate_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Convert variable to 2D np.array: one 1D value for each InputPort</p>
+<p># VARIABLE SPECIFICATION:                                        ENCODING:
+# Simple value variable:                                         0 -&gt; [array([0])]
+# Single port array (vector) variable:                         [0, 1] -&gt; [array([0, 1])
+# Multiple port variables, each with a single value variable:  [[0], [0]] -&gt; [array[0], array[0]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong></p></li>
+<li><p><strong>context</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism.Parameters</span> <span class="pre">object&gt;</span> <span class="pre">:</span> <span class="pre">(</span> <span class="pre">	access_condition</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='access_condition'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	decay_rate</span> <span class="pre">=</span> <span class="pre">FunctionParameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		attribute_name='function'</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array(0.)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		function_name='function'</span> <span class="pre">		function_parameter_name='decay_rate'</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_SharedParameter_default_getter&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		modulable=True</span> <span class="pre">		modulation_combination_function=None</span> <span class="pre">		name='decay_rate'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		primary=True</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_SharedParameter_default_setter&gt;</span> <span class="pre">		shared_parameter_name='decay_rate'</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execute_until_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execute_until_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execution_count</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value='default'</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execution_count'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	function</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=&lt;class</span> <span class="pre">'psyneulink.core.components.functions.nonstateful.transformfunctions.MatrixMemory'&gt;</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='function'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	has_initializers</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='has_initializers'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_has_initializers_setter&gt;</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	input_labels_dict</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value={}</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='input_labels_dict'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	input_ports</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='input_ports'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=True</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	is_finished_flag</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='is_finished_flag'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	max_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array(1000)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='max_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	memory</span> <span class="pre">=</span> <span class="pre">FunctionParameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		attribute_name='function'</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		function_name='function'</span> <span class="pre">		function_parameter_name='initializer'</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_SharedParameter_default_getter&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='memory'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		primary=True</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_SharedParameter_default_setter&gt;</span> <span class="pre">		shared_parameter_name='initializer'</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	normalize_memories</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='normalize_memories'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=Time(run:</span> <span class="pre">0,</span> <span class="pre">trial:</span> <span class="pre">0,</span> <span class="pre">pass:</span> <span class="pre">0,</span> <span class="pre">time_step:</span> <span class="pre">0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value='default'</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	output_labels_dict</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value={}</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='output_labels_dict'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	output_ports</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='output_ports'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=True</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	scores_metric</span> <span class="pre">=</span> <span class="pre">FunctionParameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		attribute_name='function'</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value='dot_product'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		function_name='function'</span> <span class="pre">		function_parameter_name='scores_metric'</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_SharedParameter_default_getter&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='scores_metric'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		primary=True</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_SharedParameter_default_setter&gt;</span> <span class="pre">		shared_parameter_name='scores_metric'</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	storage_prob</span> <span class="pre">=</span> <span class="pre">FunctionParameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		attribute_name='function'</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array(1.)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		function_name='function'</span> <span class="pre">		function_parameter_name='storage_prob'</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_SharedParameter_default_getter&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		modulable=True</span> <span class="pre">		modulation_combination_function=None</span> <span class="pre">		name='storage_prob'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		primary=True</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_SharedParameter_default_setter&gt;</span> <span class="pre">		shared_parameter_name='storage_prob'</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	value</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		default_value=array([[0]])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='value'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	variable</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		_user_specified=False</span> <span class="pre">		bool_as_number=True</span> <span class="pre">		constructor_argument='default_variable'</span> <span class="pre">		default_value=array([[0,</span> <span class="pre">0]])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='variable'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">)</span></em><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanismError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.</span></span><span class="sig-name descname"><span class="pre">ExternalMemoryMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanismError" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="TimerMechanism.html" class="btn btn-neutral float-right" title="TimerMechanism" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="EpisodicMemoryMechanism.html" class="btn btn-neutral" title="EpisodicMemoryMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">ExternalMemoryMechanism</a><ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanism</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._handle_default_variable"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanism._handle_default_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._instantiate_input_ports"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanism._instantiate_input_ports()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism._validate_variable"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanism._validate_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanism.parameters"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanism.parameters</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.externalmemorymechanism.ExternalMemoryMechanismError"><code class="docutils literal notranslate"><span class="pre">ExternalMemoryMechanismError</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=741cf751"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
