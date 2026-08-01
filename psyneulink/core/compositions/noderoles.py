@@ -253,7 +253,7 @@ unmodifiable_node_roles = {
     NodeRole.LEARNING_OBJECTIVE
 }
 
-class NodeRolesManager(object):
+class NodeRolesManager:
     """Manage association of nodes with roles
     Used by graphs for different kinds of representations (e.g., graph_processing.dependency_dict for `Composition`
     and processing_graph for `AutodiffComposition.pytorch_representation`).

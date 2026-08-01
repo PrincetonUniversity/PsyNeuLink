@@ -269,7 +269,7 @@ RUN_MODE_FLAGS = {
 }
 
 
-class Context():
+class Context:
     """Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
     call of a method;  also used to specify and identify `conditions <Log_Conditions>` for `logging <Log>`.
 

@@ -386,7 +386,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         return predicted_outcome
 
 
-    class PredictionVector():
+    class PredictionVector:
         """Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
         `specified_terms <PredictionVector.specified_terms>`.
 

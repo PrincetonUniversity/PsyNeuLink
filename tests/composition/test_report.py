@@ -13,7 +13,7 @@ TERMINAL_WIDTH = 80
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
-class TestReport():
+class TestReport:
     @pytest.fixture(autouse=True)
     def set_terminal_width(self):
         cols = 'COLUMNS'

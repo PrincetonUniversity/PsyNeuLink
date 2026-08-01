@@ -70,7 +70,7 @@ class EdgeType(enum.Enum):
             return True
 
 
-class Vertex(object):
+class Vertex:
     """
         Stores a Component for use with a :py:class:`Graph`
 
@@ -132,7 +132,7 @@ class Vertex(object):
             self._feedback = EdgeType.from_any(value)
 
 
-class Graph(object):
+class Graph:
     """A Graph of vertices and edges.
 
     Attributes

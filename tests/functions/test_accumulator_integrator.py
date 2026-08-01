@@ -9,7 +9,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import MATRIX
 
 
-class TestAccumulator():
+class TestAccumulator:
 
     def test_accumulator_standalone(self):
         A = AccumulatorIntegrator()
