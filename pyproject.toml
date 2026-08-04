@@ -12,16 +12,13 @@ authors = [
     { name = "Jonathan Cohen, Princeton University", email = "jdc@princeton.edu" },
 ]
 keywords = ["cognitive modeling"]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Build Tools",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -184,6 +181,10 @@ ignore = [
     "E501", "E713", "E721", "E722", "E731", "E741",
     "F401", "F403", "F405", "F521", "F523", "F524", "F525", "F541", "F601", "F602", "F722", "F811", "F821", "F841",
     "UP006", "UP008", "UP009", "UP015", "UP030", "UP032", "UP034",
+    # Raising requires-python to 3.11 raises ruff's inferred target-version,
+    # which activates these rules across the whole codebase. Deferred to a
+    # separate modernization pass to keep this change reviewable.
+    "UP007", "UP035", "UP042", "UP045",
 ]
 
 [tool.ruff.lint.per-file-ignores]
