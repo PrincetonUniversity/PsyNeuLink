@@ -196,6 +196,17 @@ jobs:
       run: |
           choco install --no-progress -y sumatrapdf.install
 
+    # Route core dumps to files so a segfaulting test worker leaves a core for
+    # post-mortem. Near-zero cost on clean runs; RLIMIT_CORE is raised per
+    # process in conftest.py. Linux only.
+    - name: Arm core-dump capture
+      shell: bash
+      if: ${{ matrix.os == 'ubuntu' }}
+      run: |
+        sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+        sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p.%t'
+        command -v gdb >/dev/null || sudo apt-get install -y --no-install-recommends gdb
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
@@ -207,6 +218,87 @@ jobs:
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
+
+    # Extract a native backtrace from any core. Sets crashed=true ONLY when a
+    # core exists, so the steps below do nothing on the (common) clean runs.
+    - name: Collect core dumps
+      id: cores
+      if: ${{ always() && matrix.os == 'ubuntu' }}
+      shell: bash
+      run: |
+        shopt -s nullglob
+        cores=(/tmp/cores/core.*)
+        if [ ${#cores[@]} -eq 0 ]; then
+          echo "No cores produced."
+          echo "crashed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "crashed=true" >> "$GITHUB_OUTPUT"
+        BT=/tmp/cores/backtraces.txt
+        PYBIN="$(python -c 'import sys; print(sys.executable)')"
+        echo "Captured ${#cores[@]} core(s). python: $PYBIN" | tee "$BT"
+        for c in "${cores[@]}"; do
+          echo "===================== $c =====================" | tee -a "$BT"
+          gdb -q -batch -nx \
+            -ex "thread apply all bt" \
+            -ex "printf \"\n---- registers ----\n\"" \
+            -ex "info registers" \
+            -ex "printf \"\n---- disassembly around pc ----\n\"" \
+            -ex "x/24i \$pc-0x30" \
+            -ex "printf \"\n---- symbol at pc ----\n\"" \
+            -ex "info symbol \$pc" \
+            "$PYBIN" "$c" 2>&1 | tee -a "$BT"
+        done
+
+    # Only on an actual crash: upload just the small backtrace text (not the
+    # multi-GB raw core -- the gdb dump above already has the fault site).
+    - name: Upload crash backtrace
+      if: ${{ steps.cores.outputs.crashed == 'true' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: crash-backtrace-${{ matrix.os }}-${{ matrix.python-version }}-job${{ strategy.job-index }}
+        path: /tmp/cores/backtraces.txt
+        retention-days: 14
+
+    # Only on an actual crash: add a comment to a single tracking issue (found
+    # by title, created once if missing) so occurrences accumulate in one place
+    # instead of spawning a new issue each time. Best-effort: the default token
+    # lacks issues:write on fork PRs, so this no-ops there (the artifact remains).
+    - name: Report crash on tracking issue
+      if: ${{ steps.cores.outputs.crashed == 'true' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TRACKING_TITLE: "[ci] Intermittent LLVM JIT crash — captured cores"
+      run: |
+        {
+          echo "Native core captured for the intermittent JIT segfault."
+          echo
+          echo "Run:  ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "Leg:  ${{ matrix.os }} py${{ matrix.python-version }} job${{ strategy.job-index }} ${{ matrix.extra-args }}"
+          echo "Commit: ${GITHUB_SHA}"
+          echo
+          echo "Backtrace excerpt (full text in the crash-backtrace artifact):"
+          echo '```'
+          head -c 5000 /tmp/cores/backtraces.txt
+          echo
+          echo '```'
+        } > /tmp/issue_body.md
+
+        num="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+                 --search "in:title \"$TRACKING_TITLE\"" --json number --jq '.[0].number // empty')"
+        if [ -z "$num" ]; then
+          url="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$TRACKING_TITLE" \
+                   --body 'Tracking issue for automatically-captured cores of the intermittent LLVM JIT crash. Each occurrence is posted as a comment below.' \
+                 || true)"
+          num="$(basename "$url" 2>/dev/null || true)"
+        fi
+        if [ -n "$num" ]; then
+          gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body-file /tmp/issue_body.md \
+            || echo "issue comment failed (token perms?)"
+        else
+          echo "No tracking issue number resolved (token may lack issues:write on this event)."
+        fi
 
     - name: Check that PyTorch wasn't transitively included
       if: ${{ matrix.torch == 'notorch' }}
