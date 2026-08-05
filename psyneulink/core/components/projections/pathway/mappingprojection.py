@@ -559,6 +559,10 @@ class MappingProjection(PathwayProjection_Base):
         new_variable = copy.deepcopy(self._parameter_ports[MATRIX].defaults.value)
         initial_rate = new_variable * 0.0
 
+        # _instantiate_parameter_ports is now called before and after function, so don't reinstantiate.
+        # NOTE: the function is documented as being configurable by the user;
+        # consider if it should actually be and if so, if that behavior should
+        # be generalized
         if not isinstance(self._parameter_ports[MATRIX].function, AccumulatorIntegrator):
             # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
             # new defaults get set properly

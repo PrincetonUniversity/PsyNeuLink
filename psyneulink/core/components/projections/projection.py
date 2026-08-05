@@ -977,6 +977,7 @@ class Projection_Base(Projection):
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.ports.parameterport import _instantiate_parameter_port
         self._instantiate_receiver(context=context)
+        self._instantiate_parameter_ports(context=context)
         # instantiate parameter ports from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params

@@ -92,6 +92,25 @@ class TestParameterPorts:
         assert 'ParameterPorts are not allowed to have \'efferents\' ' \
                '(assignment attempted for TransferMechanism-0[slope]).' in str(error.value)
 
+    @pytest.mark.parametrize(
+        'mech_type, mech_kwargs, param',
+        [
+            *(
+                (
+                    pnl.ExternalMemoryMechanism,
+                    {'field_type': pnl.FieldType.KEY, 'field_shape': 2, 'field_memory': [[0, 0]]},
+                    p,
+                )
+                for p in ['matrix', 'decay_rate']
+            ),
+        ],
+    )
+    def test_created_after_function(self, mech_type, mech_kwargs, param):
+        m = mech_type(**mech_kwargs)
+        param = getattr(m.parameters, param, param)
+        assert param in m.parameter_ports
+
+
 class TestConfigurableParameters:
     def test_configurable_params(self):
         old_value = 0.2
