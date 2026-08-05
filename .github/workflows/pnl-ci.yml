@@ -37,51 +37,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.11', '3.12', '3.13', '3.14']
-        extra-args: ['']
-        os: [ubuntu, macos, windows]
+        # DIAGNOSTIC (do not merge): windows/macos legs replaced with extra
+        # ubuntu legs to reproduce the intermittent JIT segfault and capture a
+        # native core. A SIGSEGV reliably writes a core on linux (RLIMIT_CORE in
+        # conftest + file core_pattern, set up below); spend the whole matrix on
+        # parallel ubuntu attempts across both fp precisions to catch one/push.
+        python-version: ['3.8', '3.10', '3.11', '3.12', '3.13', '3.14']
+        extra-args: ['', '--fp-precision=fp32']
+        os: [ubuntu]
         version-restrict: ['']
         torch: ['']
-        include:
-          # --forked run of python only tests
-          # Python tests are enough to test potential naming issues
-          - python-version: '3.9'
-            os: ubuntu
-            extra-args: '--forked -m "not llvm"'
-
-          # --benchmark-enable run on macos python 3.9
-          - python-version: '3.9'
-            os: macos
-            # pytest needs both '--benchmark-only' and '-m benchmark'
-            # The former fails the test if benchmarks cannot be enabled
-            # (e.g. due to --dist setting)
-            # The latter works around a crash in pytest when collecting tests:
-            # https://github.com/ionelmc/pytest-benchmark/issues/243
-            extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
-
-          # fp32 run on linux python 3.10
-          - python-version: '3.10'
-            os: ubuntu
-            extra-args: '--fp-precision=fp32'
-
-          # code-coverage run on macos python 3.10
-          - python-version: '3.10'
-            os: macos
-            extra-args: '--cov=psyneulink'
-
-          # run without pytorch on windows python 3.10
-          - python-version: '3.10'
-            os: windows
-            torch: 'notorch'
-
-          # add python 3.8 with deps restricted to min supported package versions
-          - python-version: '3.8'
-            os: macos
-            version-restrict: 'min'
-
-        exclude:
-          - python-version: '3.8'
-            os: macos
+        # Bump this list (e.g. [1, 2, 3, 4]) to multiply parallel attempts/push.
+        attempt: [1, 2]
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
@@ -196,6 +163,17 @@ jobs:
       run: |
           choco install --no-progress -y sumatrapdf.install
 
+    # DIAGNOSTIC (do not merge): route core dumps to files so a segfaulting
+    # worker leaves a core. RLIMIT_CORE is raised per-process in conftest.py.
+    - name: Arm core-dump capture (linux, diagnostic)
+      shell: bash
+      if: ${{ matrix.os == 'ubuntu' }}
+      run: |
+        sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+        sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p.%t'
+        command -v gdb >/dev/null || sudo apt-get install -y --no-install-recommends gdb
+        echo "core_pattern=$(cat /proc/sys/kernel/core_pattern)"
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
@@ -203,10 +181,44 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v7
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
+        name: test-results-${{ matrix.python-version }}-job${{ strategy.job-index }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
+
+    # DIAGNOSTIC (do not merge): extract native backtraces from any cores on the
+    # runner (where the exact binary + libs are present), then upload the
+    # backtraces and the raw cores.
+    - name: Collect core dumps (linux, diagnostic)
+      if: ${{ always() && matrix.os == 'ubuntu' }}
+      shell: bash
+      run: |
+        shopt -s nullglob
+        cores=(/tmp/cores/core.*)
+        BT=/tmp/cores/backtraces.txt
+        echo "Found ${#cores[@]} core(s)." | tee "$BT"
+        if [ ${#cores[@]} -eq 0 ]; then exit 0; fi
+        PYBIN="$(python -c 'import sys; print(sys.executable)')"
+        echo "python: $PYBIN" | tee -a "$BT"
+        for c in "${cores[@]}"; do
+          echo "===================== $c =====================" | tee -a "$BT"
+          gdb -q -batch -nx \
+            -ex "thread apply all bt" \
+            -ex "printf \"\n---- faulting thread registers ----\n\"" \
+            -ex "info registers rip rsp rbp" \
+            -ex "printf \"\n---- disassembly around pc ----\n\"" \
+            -ex "x/16i \$pc" \
+            "$PYBIN" "$c" 2>&1 | tee -a "$BT"
+        done
+
+    - name: Upload core dumps + backtraces (linux, diagnostic)
+      if: ${{ always() && matrix.os == 'ubuntu' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: core-dumps-${{ matrix.python-version }}-job${{ strategy.job-index }}${{ matrix.extra-args != '' && '-fp32' || '' }}
+        path: /tmp/cores
+        if-no-files-found: ignore
+        retention-days: 5
 
     - name: Check that PyTorch wasn't transitively included
       if: ${{ matrix.torch == 'notorch' }}
@@ -231,7 +243,7 @@ jobs:
       uses: actions/upload-artifact@v7
       if: matrix.version-restrict == ''
       with:
-        name: dist-${{ matrix.os }}-${{ matrix.python-version }}
+        name: dist-${{ matrix.python-version }}-job${{ strategy.job-index }}
         path: |
           ${{ steps.install.outputs.wheel }}
           ${{ steps.install.outputs.sdist }}
