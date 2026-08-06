@@ -8,6 +8,7 @@ PsyNeuLink nor a cluster, so it runs under a plain ``[dev]`` install.
 from dataclasses import FrozenInstanceError, dataclass
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from psyneulink.core.compositions.hierarchical.laplaceem import (
@@ -20,6 +21,11 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     log_gauss_diag,
     make_inprocess_estep_runner,
     subject_map_estep,
+)
+from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+    PECFactorySubjectLikelihood,
+    SubjectLikelihoodProvider,
+    split_stacked_data,
 )
 from psyneulink.core.compositions.hierarchical.transforms import (
     BoundedTransform,
@@ -310,6 +316,7 @@ def test_em_recovers_ground_truth():
 
 
 def test_em_objective_nondecreasing():
+    # Holds for an exact E-step; not guaranteed for an approximate one.
     model = _make_toy(seed=6, n_subjects=100)
     result = _fit_toy(model, max_iterations=100)
     obj = np.array([h["objective"] for h in result.history])
@@ -380,3 +387,181 @@ def test_em_rejects_mismatched_design_matrix():
     with pytest.raises(ValueError, match="one row per participant"):
         fit_laplace_em(runner, model.n_subjects, model.n_params,
                        design_matrix=np.ones((3, 1)), max_iterations=1)
+
+
+# ===========================================================================
+# The seam between the driver and real models
+# ===========================================================================
+class _StubOptimizationFunction:
+    def __init__(self, names, bounds):
+        self.fit_param_names = list(names)
+        self.fit_param_bounds = {n: (lo, hi, 0.1) for n, (lo, hi) in zip(names, bounds)}
+
+
+class _StubController:
+    def __init__(self, names, bounds):
+        self.function = _StubOptimizationFunction(names, bounds)
+
+
+class _StubPEC:
+    """Stands in for a ParameterEstimationComposition: just enough surface for the seam."""
+
+    def __init__(self, names, bounds, value=-1.0):
+        self.controller = _StubController(names, bounds)
+        self._value = value
+        self.calls = []
+
+    def log_likelihood(self, *theta, inputs=None):
+        self.calls.append(np.asarray(theta, dtype=float))
+        return self._value
+
+
+def _stacked_frame():
+    return pd.DataFrame({
+        "subject": ["b", "b", "a", "a", "a", "c"],
+        "decision": [1, 0, 1, 1, 0, 0],
+        "response_time": [0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    })
+
+
+def test_split_orders_participants_by_first_appearance():
+    # Not sorted: sorting would silently reorder results if participants were relabelled.
+    split = split_stacked_data(_stacked_frame(), "subject")
+    assert split.labels == ("b", "a", "c")
+    assert split.n_subjects == 3
+
+
+def test_split_gives_each_participant_their_own_rows():
+    split = split_stacked_data(_stacked_frame(), "subject")
+    assert [len(f) for f in split.frames] == [2, 3, 1]
+    assert list(split.frames[1]["response_time"]) == [0.6, 0.7, 0.8]
+
+
+def test_split_drops_the_participant_column_and_resets_the_index():
+    split = split_stacked_data(_stacked_frame(), "subject")
+    for frame in split.frames:
+        assert "subject" not in frame.columns
+        assert list(frame.index) == list(range(len(frame)))
+
+
+def test_split_preserves_categorical_columns():
+    data = _stacked_frame()
+    data["decision"] = data["decision"].astype("category")
+    split = split_stacked_data(data, "subject")
+    assert all(isinstance(f["decision"].dtype, pd.CategoricalDtype) for f in split.frames)
+
+
+def test_split_rejects_unusable_data():
+    with pytest.raises(ValueError, match="pandas DataFrame"):
+        split_stacked_data(np.zeros((4, 2)), "subject")
+    with pytest.raises(ValueError, match="not a column of data"):
+        split_stacked_data(_stacked_frame(), "participant")
+    with pytest.raises(ValueError, match="at least two participants"):
+        split_stacked_data(pd.DataFrame({"subject": ["a", "a"], "rt": [0.1, 0.2]}), "subject")
+
+
+def test_provider_reads_names_and_bounds_from_the_model():
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    factory = lambda data, subject_index=None: (  # noqa: E731
+        _StubPEC(["rate", "threshold"], [(-1.5, 1.5), (0.3, 1.5)]), None
+    )
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    assert provider.fit_param_names == ("rate", "threshold")
+    assert provider.n_params == 2 and provider.n_subjects == 3
+    lower, upper = provider.bounds
+    assert np.allclose(lower, [-1.5, 0.3]) and np.allclose(upper, [1.5, 1.5])
+    assert np.allclose(provider.transform.to_natural([0.0, 0.0]), [0.0, 0.9])
+
+
+def test_provider_builds_each_model_once_and_routes_by_participant():
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    built = []
+
+    def factory(data, subject_index=None):
+        pec = _StubPEC(["rate"], [(-1.0, 1.0)], value=float(subject_index))
+        built.append((subject_index, len(data)))
+        return pec, None
+
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    for _ in range(3):
+        assert provider.log_likelihood([0.1], 1) == 1.0
+    assert provider.log_likelihood([0.1], 2) == 2.0
+    # One build per participant used, regardless of how many evaluations they receive.
+    assert sorted(built) == [(1, 3), (2, 1)]
+
+
+def test_provider_passes_the_participants_own_rows_to_the_factory():
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    seen = {}
+
+    def factory(data, subject_index=None):
+        seen[subject_index] = list(data["response_time"])
+        return _StubPEC(["rate"], [(-1.0, 1.0)]), None
+
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    provider.log_likelihood([0.0], 1)
+    assert seen[1] == [0.6, 0.7, 0.8]
+
+
+def test_provider_rejects_models_that_disagree_about_the_search_range():
+    # The group prior is defined in terms of these ranges, so they cannot vary by participant.
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+
+    def factory(data, subject_index=None):
+        bounds = [(-1.0, 1.0)] if subject_index == 0 else [(-2.0, 2.0)]
+        return _StubPEC(["rate"], bounds), None
+
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    provider.log_likelihood([0.0], 0)
+    with pytest.raises(ValueError, match="searches ranges"):
+        provider.log_likelihood([0.0], 1)
+
+
+def test_provider_tolerates_per_instance_parameter_names():
+    # A model reports parameters as "<mechanism>.<parameter>", and the mechanism carries a
+    # number assigned in construction order. Building one model per participant therefore
+    # yields DDM-6.rate for one and DDM-7.rate for the next, for the same parameter.
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+
+    def factory(data, subject_index=None):
+        prefix = f"DDM-{6 + subject_index}"
+        names = [f"{prefix}.rate", f"{prefix}.threshold"]
+        return _StubPEC(names, [(-1.5, 1.5), (0.3, 1.5)]), None
+
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    for s in range(3):
+        provider.log_likelihood([0.0, 0.9], s)
+    # Reported without the instance qualifier, which is meaningless across participants.
+    assert provider.fit_param_names == ("rate", "threshold")
+
+
+def test_provider_rejects_models_that_disagree_about_the_parameters():
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+
+    def factory(data, subject_index=None):
+        names = ["rate"] if subject_index == 0 else ["threshold"]
+        return _StubPEC(names, [(-1.0, 1.0)]), None
+
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    provider.log_likelihood([0.0], 0)
+    with pytest.raises(ValueError, match="must fit the same"):
+        provider.log_likelihood([0.0], 1)
+
+
+def test_driver_fits_through_the_provider_interface_alone():
+    # The driver reaches the model only through log_likelihood, so a provider backed by
+    # something other than a composition drives it unchanged.
+    model = _make_toy(seed=11, n_subjects=20)
+
+    class _ToyProvider(SubjectLikelihoodProvider):
+        n_subjects = model.n_subjects
+        n_params = model.n_params
+        fit_param_names = ("a", "b")
+
+        def log_likelihood(self, theta, subject_index):
+            return model.log_likelihood_s(theta, subject_index)
+
+    provider = _ToyProvider()
+    runner = make_inprocess_estep_runner(provider.log_likelihood, IdentityTransform())
+    result = fit_laplace_em(runner, provider.n_subjects, provider.n_params, max_iterations=25)
+    assert np.allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=0.05)
