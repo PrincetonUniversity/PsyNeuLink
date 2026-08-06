@@ -22,6 +22,8 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     make_inprocess_estep_runner,
     subject_map_estep,
 )
+from psyneulink.core.components.functions.nonstateful import fitfunctions
+from psyneulink.core.compositions.hierarchical import distributedestep
 from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
@@ -639,3 +641,104 @@ def test_results_repr_surfaces_non_convergence():
     res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
     text = repr(res)
     assert "did NOT converge" in text and "participant fit(s) did not converge" in text
+
+
+# ===========================================================================
+# The distributed E-step's worker task, exercised in this process.
+#
+# The task falls back to a module-level cache when there is no Dask worker
+# context, so its caching, locking and thread setup can be checked without a
+# cluster. The cluster itself is covered by the integration tests.
+# ===========================================================================
+@pytest.fixture
+def clear_subject_cache():
+    distributedestep._SUBJECT_FALLBACK_CACHE.clear()
+    yield
+    distributedestep._SUBJECT_FALLBACK_CACHE.clear()
+
+
+def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, sigma=None):
+    sigma = np.array([1.0]) if sigma is None else sigma
+    return distributedestep._dask_subject_estep(
+        factory, subject_index, data, np.zeros(1), sigma,
+        np.array([-1.0]), np.array([1.0]), np.zeros(1), worker_cores, fit_id, EStepConfig(),
+    )
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_builds_each_participant_once_per_fit():
+    builds = []
+
+    def factory(data, subject_index=None):
+        builds.append(subject_index)
+        return _StubPEC(["rate"], [(-1.0, 1.0)]), None
+
+    frame = pd.DataFrame({"rt": [0.1]})
+    for _ in range(3):
+        _dask_task(factory, 0, frame, "fit-a")
+    assert builds == [0]
+    # A different participant is a different model.
+    _dask_task(factory, 1, frame, "fit-a")
+    assert builds == [0, 1]
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_rebuilds_for_a_new_fit():
+    builds = []
+
+    def factory(data, subject_index=None):
+        builds.append(subject_index)
+        return _StubPEC(["rate"], [(-1.0, 1.0)]), None
+
+    frame = pd.DataFrame({"rt": [0.1]})
+    _dask_task(factory, 0, frame, "fit-a")
+    _dask_task(factory, 0, frame, "fit-a")
+    _dask_task(factory, 0, frame, "fit-b")
+    assert builds == [0, 0]
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_sets_thread_count_before_building(monkeypatch):
+    seen = []
+    import psyneulink.core.globals.threads as threads_module
+    monkeypatch.setattr(threads_module, "set_num_threads", lambda n: seen.append(n))
+
+    factory = lambda data, subject_index=None: (_StubPEC(["rate"], [(-1.0, 1.0)]), None)  # noqa: E731
+    _dask_task(factory, 0, pd.DataFrame({"rt": [0.1]}), "fit-a", worker_cores=3)
+    assert seen == [3]
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_holds_the_evaluation_lock_for_the_whole_call(monkeypatch):
+    # Two compiled models driven at once in one process is what the lock prevents,
+    # so it must cover the fit, not only the model construction.
+    events = []
+
+    class _RecordingLock:
+        def __enter__(self):
+            events.append("enter")
+
+        def __exit__(self, *exc):
+            events.append("exit")
+            return False
+
+    monkeypatch.setattr(fitfunctions, "_PEC_EVALUATION_LOCK", _RecordingLock())
+
+    def factory(data, subject_index=None):
+        events.append("build")
+        return _StubPEC(["rate"], [(-1.0, 1.0)]), None
+
+    _dask_task(factory, 0, pd.DataFrame({"rt": [0.1]}), "fit-a")
+    assert events[0] == "enter" and events[-1] == "exit"
+    assert "build" in events
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_returns_the_participant_index_and_posterior():
+    factory = lambda data, subject_index=None: (_StubPEC(["rate"], [(-1.0, 1.0)]), None)  # noqa: E731
+    index, post, address = _dask_task(factory, 4, pd.DataFrame({"rt": [0.1]}), "fit-a")
+    assert index == 4
+    assert isinstance(post.success, bool)
+    assert post.z_hat.shape == (1,)
+    # No worker context in-process, so no address to pin to.
+    assert address is None
