@@ -36,11 +36,11 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
 )
 
-# This module imports without Dask installed: the helper/driver/forwarding tests
-# below use fakes (or the ImportError fallback in _dask_evaluate_loglik) and run
-# under a plain [dev] install, so they are exercised in CI. Only the parts that need
-# a real cluster -- the cluster_client fixture and the _require_dask-present test --
-# skip when dask.distributed is absent.
+# This module imports without Dask installed: the helper, driver, and
+# forwarding tests use fakes (or the ImportError fallback in
+# _dask_evaluate_loglik), so they run under a plain [dev] install. The
+# integration tests need a real cluster and skip via the cluster_client
+# fixture when dask.distributed is absent.
 
 
 # ---------------------------------------------------------------------------
@@ -300,11 +300,6 @@ def test_dask_evaluate_loglik_de_sign():
     assert _dask_evaluate_loglik_de(factory, None, "D", "maximize", "fit-a", [0.0]) == -5.0
     fitfunctions._PEC_FALLBACK_CACHE.clear()
     assert _dask_evaluate_loglik_de(factory, None, "D", "minimize", "fit-a", [0.0]) == 5.0
-
-
-def test_require_dask_present_returns_module():
-    dd = pytest.importorskip("dask.distributed")
-    assert _require_dask() is dd
 
 
 def test_require_dask_missing_raises(monkeypatch):
