@@ -42,6 +42,7 @@ jobs:
         os: [ubuntu, macos, windows]
         version-restrict: ['']
         torch: ['']
+        extra-features: ['']
         include:
           # --forked run of python only tests
           # Python tests are enough to test potential naming issues
@@ -78,6 +79,15 @@ jobs:
           - python-version: '3.8'
             os: macos
             version-restrict: 'min'
+
+          # distributed (Dask) fitting tests; installs the 'dask' extra.
+          # Only the single-node LocalCluster path is exercised here: the
+          # multi-node launcher (psyneulink.dask_run) needs an MPI-style
+          # allocation that GitHub runners cannot provide.
+          - python-version: '3.12'
+            os: ubuntu
+            extra-features: ',dask'
+            extra-args: 'tests/composition/pec/test_pec_dask.py'
 
         exclude:
           - python-version: '3.8'
@@ -139,7 +149,7 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        features: 'dev'
+        features: 'dev${{ matrix.extra-features }}'
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
