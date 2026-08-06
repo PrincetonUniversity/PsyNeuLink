@@ -13,8 +13,12 @@ import pytest
 from psyneulink.core.compositions.hierarchical.laplaceem import (
     DEFAULT_HESSIAN_STEP_SCALE,
     EStepConfig,
+    EStepResult,
+    HierarchicalEMWarning,
     diagonal_hessian,
+    fit_laplace_em,
     log_gauss_diag,
+    make_inprocess_estep_runner,
     subject_map_estep,
 )
 from psyneulink.core.compositions.hierarchical.transforms import (
@@ -253,3 +257,126 @@ def test_estep_config_is_immutable():
     config = EStepConfig()
     with pytest.raises(FrozenInstanceError):
         config.variance_floor = 1.0
+
+
+# ===========================================================================
+# EM driver
+# ===========================================================================
+def _closed_form_em(model, max_iter=500, tol=1e-12):
+    """Exact EM for the toy model, using its conjugate posterior instead of an optimizer."""
+    beta = np.zeros(model.n_params)
+    sigma = np.ones(model.n_params)
+    for _ in range(max_iter):
+        mu = np.tile(beta, (model.n_subjects, 1))
+        z_hat, variance = model.closed_form_posterior(mu, sigma)
+        beta_new = z_hat.mean(axis=0)
+        sigma_new = np.mean((z_hat - beta_new) ** 2 + variance, axis=0)
+        converged = max(
+            np.max(np.abs(beta_new - beta)), np.max(np.abs(sigma_new - sigma))
+        ) < tol
+        beta, sigma = beta_new, sigma_new
+        if converged:
+            break
+    return beta, sigma
+
+
+def _fit_toy(model, **kwargs):
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    kwargs.setdefault("max_iterations", 300)
+    kwargs.setdefault("tol", 1e-8)
+    return fit_laplace_em(runner, model.n_subjects, model.n_params, **kwargs)
+
+
+def test_em_matches_closed_form_em():
+    model = _make_toy(seed=3, n_subjects=120)
+    beta_cf, sigma_cf = _closed_form_em(model)
+    result = _fit_toy(model)
+    assert np.allclose(result.beta.ravel(), beta_cf, atol=5e-3)
+    assert np.allclose(result.sigma, sigma_cf, atol=5e-3)
+
+
+def test_em_beta_equals_mean_ybar_at_convergence():
+    # With an intercept-only design the group mean is the mean of the per-participant data means.
+    model = _make_toy(seed=4, n_subjects=150)
+    result = _fit_toy(model)
+    assert np.allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=5e-3)
+
+
+def test_em_recovers_ground_truth():
+    model = _make_toy(seed=5, n_subjects=400, n_obs=40)
+    result = _fit_toy(model, tol=1e-7)
+    assert np.allclose(result.beta.ravel(), [0.5, -1.0], atol=0.15)
+    assert np.allclose(result.sigma, [0.4, 0.9], atol=0.2)
+
+
+def test_em_objective_nondecreasing():
+    model = _make_toy(seed=6, n_subjects=100)
+    result = _fit_toy(model, max_iterations=100)
+    obj = np.array([h["objective"] for h in result.history])
+    assert np.all(np.diff(obj) > -1e-6)
+
+
+def test_em_history_pairs_each_objective_with_the_estimate_that_produced_it():
+    # A history entry must describe one consistent state: the group estimate used for
+    # that iteration's E-step, and the objective that E-step returned. The first entry
+    # therefore carries the initial estimate, not the result of the first update.
+    model = _make_toy(seed=7, n_subjects=40)
+    init_beta = np.array([[0.11, -0.22]])
+    init_sigma = np.array([0.7, 1.3])
+    result = _fit_toy(model, max_iterations=3, tol=0.0,
+                      init_beta=init_beta, init_sigma=init_sigma)
+
+    assert np.allclose(result.history[0]["beta"], init_beta)
+    assert np.allclose(result.history[0]["sigma"], init_sigma)
+    # Each subsequent entry carries the estimate the previous entry's update produced.
+    assert not np.allclose(result.history[1]["beta"], init_beta)
+
+
+def test_em_result_describes_the_group_estimate_it_returns():
+    # The participant-level results must correspond to the returned group estimate,
+    # not to the one from the iteration before it.
+    model = _make_toy(seed=8, n_subjects=30)
+    result = _fit_toy(model, max_iterations=4, tol=0.0)
+
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    recomputed = runner(
+        np.ones((model.n_subjects, 1)) @ result.beta, result.sigma, result.z_hat, True
+    )
+    assert np.allclose(recomputed.z_hat, result.z_hat, atol=1e-6)
+    assert np.isclose(recomputed.objective, result.objective, rtol=1e-10)
+
+
+def test_em_warns_and_records_when_a_participant_fails():
+    model = _make_toy(seed=9, n_subjects=6)
+    base = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+
+    def failing_runner(mu, sigma, prev_z, warm_start):
+        out = base(mu, sigma, prev_z, warm_start)
+        out.success[1] = False
+        out.messages = ((1, "did not converge"),)
+        return out
+
+    with pytest.warns(HierarchicalEMWarning, match="did not converge"):
+        result = fit_laplace_em(failing_runner, model.n_subjects, model.n_params,
+                                max_iterations=2, tol=0.0)
+
+    assert result.subject_converged[1] is np.False_ or not result.subject_converged[1]
+    assert result.history[0]["n_subject_failures"] == 1
+
+
+def test_em_objective_is_summed_in_participant_order():
+    # Independent of completion order, so an in-process and a distributed E-step agree.
+    r = EStepResult(
+        z_hat=np.zeros((3, 2)), variance=np.ones((3, 2)), curvature=np.ones((3, 2)),
+        hessian_step=np.ones((3, 2)), subject_objective=np.array([1.5, -2.0, 0.25]),
+        success=np.ones(3, dtype=bool), messages=(),
+    )
+    assert np.isclose(r.objective, float(np.sum(np.array([1.5, -2.0, 0.25]))))
+
+
+def test_em_rejects_mismatched_design_matrix():
+    model = _make_toy(seed=10, n_subjects=8)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    with pytest.raises(ValueError, match="one row per participant"):
+        fit_laplace_em(runner, model.n_subjects, model.n_params,
+                       design_matrix=np.ones((3, 1)), max_iterations=1)
