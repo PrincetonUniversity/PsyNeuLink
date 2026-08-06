@@ -22,6 +22,9 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     make_inprocess_estep_runner,
     subject_map_estep,
 )
+from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
+    HierarchicalPECResults,
+)
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
     SubjectLikelihoodProvider,
@@ -565,3 +568,74 @@ def test_driver_fits_through_the_provider_interface_alone():
     runner = make_inprocess_estep_runner(provider.log_likelihood, IdentityTransform())
     result = fit_laplace_em(runner, provider.n_subjects, provider.n_params, max_iterations=25)
     assert np.allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=0.05)
+
+
+# ===========================================================================
+# Results in the model's own units
+# ===========================================================================
+def _fit_toy_for_results(n_subjects=12, seed=21):
+    model = _make_toy(seed=seed, n_subjects=n_subjects)
+    transform = BoundedTransform(lower=[-4.0, -4.0], upper=[4.0, 4.0])
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, transform)
+    em = fit_laplace_em(runner, model.n_subjects, model.n_params, max_iterations=15)
+    labels = [f"S{i:02d}" for i in range(model.n_subjects)]
+    return em, transform, labels
+
+
+def test_results_shapes_and_labels():
+    em, transform, labels = _fit_toy_for_results()
+    res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
+    assert res.fit_param_names == ("a", "b")
+    assert res.subject_labels == tuple(labels)
+    assert res.subject_parameters.shape == (len(labels), 2)
+    assert list(res.subject_parameters.index) == labels
+    assert len(res.subject_posteriors) == len(labels) * 2
+    assert list(res.group_parameters.index) == ["a", "b"]
+
+
+def test_results_convert_estimates_into_the_models_units():
+    em, transform, labels = _fit_toy_for_results()
+    res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
+    expected = np.vstack([transform.to_natural(z) for z in res.z_hat])
+    assert np.allclose(res.subject_parameters.to_numpy(), expected)
+    # The group value is the transformed group mean, i.e. a median (see module docstring).
+    assert np.allclose(res.group_parameters["value"].to_numpy(), transform.to_natural(res.beta[0]))
+
+
+def test_results_uncertainty_uses_the_delta_method():
+    em, transform, labels = _fit_toy_for_results()
+    res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
+    slope = np.vstack([transform.dtheta_dz(z) for z in res.z_hat])
+    expected = np.abs(slope) * np.sqrt(res.posterior_variance)
+    got = res.subject_posteriors["theta_sd"].to_numpy().reshape(len(labels), 2)
+    assert np.allclose(got, expected)
+
+
+def test_results_history_pairs_objective_with_its_own_estimate():
+    em, transform, labels = _fit_toy_for_results()
+    res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
+    assert list(res.em_history["iter"]) == list(range(len(em.history)))
+    assert {"objective", "delta", "n_subject_failures", "beta_a", "sigma_b"} <= set(
+        res.em_history.columns
+    )
+    # The first row holds the starting estimate, not the one the first update produced.
+    assert np.isclose(res.em_history["beta_a"].iloc[0], em.history[0]["beta"][0][0])
+
+
+def test_results_record_the_transform_and_settings():
+    em, transform, labels = _fit_toy_for_results()
+    res = HierarchicalPECResults.from_em(
+        em, transform, ("a", "b"), labels, settings={"max_iterations": 15}
+    )
+    assert res.transform_metadata["kind"] == "BoundedTransform"
+    assert res.transform_metadata["lower"] == [-4.0, -4.0]
+    assert res.settings["max_iterations"] == 15
+
+
+def test_results_repr_surfaces_non_convergence():
+    em, transform, labels = _fit_toy_for_results()
+    em.converged = False
+    em.subject_converged = np.zeros(len(labels), dtype=bool)
+    res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
+    text = repr(res)
+    assert "did NOT converge" in text and "participant fit(s) did not converge" in text
