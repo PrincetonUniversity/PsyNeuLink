@@ -3195,7 +3195,6 @@ import itertools
 import logging
 import pathlib
 import sys
-import typing
 import warnings
 import weakref
 from copy import deepcopy, copy
@@ -3210,7 +3209,7 @@ from PIL import Image
 from beartype import beartype
 
 import psyneulink
-from psyneulink._typing import Any, Callable, Dict, Literal, List, Mapping, Optional, Set, Tuple, Type, Union
+from psyneulink._typing import Any, Callable, Dict, Hashable, Iterable, Literal, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
@@ -3575,7 +3574,7 @@ class OptimizerParams(types.SimpleNamespace):
     def __init__(self, learning_rate: LearningRateArg):
         self._init_params(learning_rate=learning_rate)
 
-    def __iter__(self) -> typing.Iterable[OptParam]:
+    def __iter__(self) -> Iterable[OptParam]:
         return (getattr(self, p) for p in OptimizerParams.__annotations__)
 
     def _init_params(self, **kwargs: LearningRateArg):
@@ -10025,7 +10024,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_optimizer_param_value(
         self,
         param: str,
-        context: Optional[Union[Context, typing.Hashable]] = None,
+        context: Optional[Union[Context, Hashable]] = None,
         projection: Optional[Projection] = None,
     ):
         return self._get_optimizer_param_value(param, context, projection)
@@ -11986,9 +11985,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             log=False,
             scheduler=None,
-            scheduling_mode: typing.Optional[SchedulingMode] = None,
+            scheduling_mode: Optional[SchedulingMode] = None,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-            default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
+            default_absolute_time_unit: Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
             **kwargs
@@ -15002,7 +15001,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _controls_optimization_for_projection(
         self,
         projection: Projection,
-        nested_comps: Optional[typing.Iterable['Composition']] = None,
+        nested_comps: Optional[Iterable['Composition']] = None,
     ) -> bool:
         if nested_comps is None:
             nested_comps = self._get_nested_compositions()

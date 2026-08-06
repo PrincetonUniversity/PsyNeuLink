@@ -1,10 +1,10 @@
 import contextlib
-from typing import Dict, Optional
 import numpy as np
 import pytest
 import re
 
 import psyneulink as pnl
+from psyneulink._typing import Dict, Optional
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator, FitzHughNagumoIntegrator, SimpleIntegrator

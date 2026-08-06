@@ -1,7 +1,7 @@
-from typing import Any, Dict, Set, Union
 import pytest
 
 import psyneulink as pnl
+from psyneulink._typing import Any, Dict, Set, Union
 
 
 def _get_expected_instances(names: Union[None, str, Set[str]], _locals: Dict[str, Any]):

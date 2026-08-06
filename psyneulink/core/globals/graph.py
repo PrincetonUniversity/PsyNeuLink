@@ -1,11 +1,9 @@
 import collections
 import enum
 import logging
-import typing
-
 import networkx
 
-from psyneulink._typing import Union
+from psyneulink._typing import Optional, Union
 from psyneulink.core.globals.keywords import MAYBE
 
 __all__ = [
@@ -382,7 +380,7 @@ class Graph:
 
     def get_strongly_connected_components(
         self,
-        nx_graph: typing.Optional[networkx.DiGraph] = None
+        nx_graph: Optional[networkx.DiGraph] = None
     ):
         if nx_graph is None:
             nx_graph = self._generate_networkx_graph()

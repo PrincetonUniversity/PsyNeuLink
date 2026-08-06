@@ -511,7 +511,6 @@ import logging
 import numbers
 import re
 import types
-import typing
 import warnings
 import weakref
 from abc import ABCMeta
@@ -4083,8 +4082,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def all_dependent_parameters(
         self,
-        filter_name: typing.Union[str, typing.Iterable[str]] = None,
-        filter_regex: typing.Union[str, typing.Iterable[str]] = None,
+        filter_name: Union[str, Iterable[str]] = None,
+        filter_regex: Union[str, Iterable[str]] = None,
     ):
         """Dictionary of Parameters of this Component and its \
         `_dependent_components` filtered by **filter_name** and \

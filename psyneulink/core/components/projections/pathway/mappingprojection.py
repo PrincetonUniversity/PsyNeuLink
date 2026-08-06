@@ -294,7 +294,7 @@ import copy
 import weakref
 
 import numpy as np
-from typing import Union
+
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords

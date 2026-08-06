@@ -9,14 +9,13 @@
 # ********************************************* Scheduler **************************************************************
 import copy
 import logging
-import typing
-from typing import Hashable
 
 import graph_scheduler
 import pint
 
 import psyneulink as pnl
 from psyneulink import _unit_registry
+from psyneulink._typing import Hashable, Union
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.utilities import parse_valid_identifier
@@ -40,7 +39,7 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
         termination_conds=None,
         default_execution_id=None,
         mode: SchedulingMode = SchedulingMode.STANDARD,
-        default_absolute_time_unit: typing.Union[str, pint.Quantity] = 1 * _unit_registry.ms,
+        default_absolute_time_unit: Union[str, pint.Quantity] = 1 * _unit_registry.ms,
         **kwargs
     ):
         """

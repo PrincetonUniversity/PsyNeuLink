@@ -41,11 +41,10 @@ import enum
 import toposort
 from copy import copy
 from collections import OrderedDict, deque
-from typing import List, Union, Literal
 
 from IPython.terminal.shortcuts import previous_history_or_previous_completion
 
-from psyneulink._typing import Literal, Optional
+from psyneulink._typing import List, Literal, Optional, Union
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
