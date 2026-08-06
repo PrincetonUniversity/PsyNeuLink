@@ -683,6 +683,7 @@ class ParameterEstimationComposition(Composition):
         # Kept on the composition rather than read back off the optimization function, which only
         # receives them when `distributed` is set; a hierarchical fit needs the factory either way.
         self._pec_distributed_options = dict(distributed_options or {})
+        self._pec_distributed = bool(distributed)
         self._subject_split = None
         self.hierarchical_data = None
         self.fit_results = None
@@ -875,6 +876,9 @@ class ParameterEstimationComposition(Composition):
         )
 
         options = self._hierarchical_options
+        # Participants are fitted independently within an iteration, so `distributed` sends one
+        # per task; the group update stays here either way. The provider is built regardless,
+        # since the parameter names and search range come from a participant's model.
         provider = PECFactorySubjectLikelihood(
             self._resolve_pec_factory(), self._subject_split.frames
         )
@@ -885,17 +889,42 @@ class ParameterEstimationComposition(Composition):
             optimizer_options=options["estep_options"],
         )
         transform = provider.transform
-        runner = make_inprocess_estep_runner(provider.log_likelihood, transform, config)
 
-        em = fit_laplace_em(
-            runner,
-            provider.n_subjects,
-            provider.n_params,
+        fit_kwargs = dict(
             estep_config=config,
             max_iterations=options["max_iterations"],
             tol=options["tol"],
             damping=options["damping"],
         )
+        if self._pec_distributed:
+            from psyneulink.core.components.functions.nonstateful.fitfunctions import (
+                _dask_client,
+                _resolve_worker_cores,
+            )
+            from psyneulink.core.compositions.hierarchical.distributedestep import (
+                make_distributed_estep_runner,
+            )
+
+            client, close_client = _dask_client(self._pec_distributed_options)
+            try:
+                runner = make_distributed_estep_runner(
+                    client,
+                    self._resolve_pec_factory(),
+                    self._subject_split.frames,
+                    provider.bounds,
+                    config=config,
+                    worker_cores=_resolve_worker_cores(self._pec_distributed_options),
+                    fit_id=self._pec_distributed_options.get("fit_id"),
+                )
+                em = fit_laplace_em(
+                    runner, provider.n_subjects, provider.n_params, **fit_kwargs
+                )
+            finally:
+                if close_client is not None:
+                    close_client()
+        else:
+            runner = make_inprocess_estep_runner(provider.log_likelihood, transform, config)
+            em = fit_laplace_em(runner, provider.n_subjects, provider.n_params, **fit_kwargs)
 
         self.fit_results = HierarchicalPECResults.from_em(
             em, transform, provider.fit_param_names, self._subject_split.labels,
