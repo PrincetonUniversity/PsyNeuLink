@@ -839,3 +839,52 @@ def test_pec_log_likelihood_refuses_in_hierarchical_mode():
     pec = _build_group_pec()
     with pytest.raises(Exception, match="no single"):
         pec.log_likelihood(0.3)
+
+
+@pytest.mark.composition
+def test_pec_uses_the_cluster_when_distributed(monkeypatch):
+    # `distributed` selects where participants are fitted; the group update is unaffected.
+    pytest.importorskip("dask.distributed")
+    from psyneulink.core.compositions.hierarchical import distributedestep
+
+    calls = {"distributed": 0}
+    real = distributedestep.make_distributed_estep_runner
+
+    def spy(*args, **kwargs):
+        calls["distributed"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(distributedestep, "make_distributed_estep_runner", spy)
+
+    def factory(data, subject_index=None):
+        return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None
+
+    pec = _build_group_pec(
+        distributed=True,
+        distributed_options={"pec_factory": factory, "n_workers": 1},
+        hierarchical_options={"subject_id": "subject", "max_iterations": 1},
+    )
+    pec.run()
+    assert calls["distributed"] == 1
+
+
+@pytest.mark.composition
+def test_pec_stays_in_process_by_default():
+    from psyneulink.core.compositions.hierarchical import distributedestep
+
+    def factory(data, subject_index=None):
+        return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None
+
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": factory},
+        hierarchical_options={"subject_id": "subject", "max_iterations": 1},
+    )
+    called = []
+    original = distributedestep.make_distributed_estep_runner
+    distributedestep.make_distributed_estep_runner = lambda *a, **k: called.append(1)
+    try:
+        results = pec.run()
+    finally:
+        distributedestep.make_distributed_estep_runner = original
+    assert called == []
+    assert results.subject_parameters.shape[0] == 3
