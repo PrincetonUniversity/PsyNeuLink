@@ -136,7 +136,7 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        features: 'dev'
+        features: 'dev,dask'
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
