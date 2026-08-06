@@ -23,6 +23,7 @@ The likelihood is reached only through the E-step runner passed to `fit_laplace_
 independent of how participants are fitted or where.
 """
 
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
@@ -32,9 +33,15 @@ from psyneulink._typing import Mapping, Optional, Union
 
 __all__ = [
     "EStepConfig",
+    "EStepResult",
+    "HierarchicalEMWarning",
+    "LaplaceEMResult",
     "SubjectPosterior",
     "diagonal_hessian",
+    "fit_laplace_em",
     "log_gauss_diag",
+    "make_inprocess_estep_runner",
+    "subject_laplace_objective",
     "subject_map_estep",
 ]
 
@@ -223,4 +230,275 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
         success=bool(result.success),
         message=str(getattr(result, "message", "")),
         hessian_step=step,
+    )
+
+
+class HierarchicalEMWarning(UserWarning):
+    """Raised when an EM iteration completes but something about it warrants attention."""
+
+
+def subject_laplace_objective(neg_log_post, variance, n_params):
+    """One participant's contribution to the Laplace marginal log-likelihood.
+
+    The quantity EM is really maximizing: the log-likelihood of the participant's data with their
+    parameters integrated out, under the Gaussian approximation to their posterior.
+    """
+    return -neg_log_post + 0.5 * n_params * LOG_2PI + 0.5 * float(np.sum(np.log(variance)))
+
+
+@dataclass
+class EStepResult:
+    """Every participant's posterior for one EM iteration.
+
+    Arrays are indexed by participant in a fixed order, so that a distributed E-step and an
+    in-process one produce identical results rather than depending on completion order.
+    """
+
+    z_hat: np.ndarray             # (n_subjects, n_params) modes
+    variance: np.ndarray          # (n_subjects, n_params) posterior variances
+    curvature: np.ndarray         # (n_subjects, n_params)
+    hessian_step: np.ndarray      # (n_subjects, n_params) steps used
+    subject_objective: np.ndarray  # (n_subjects,) per-participant Laplace marginal
+    success: np.ndarray           # (n_subjects,) bool
+    messages: tuple               # (index, message) for participants that did not converge
+
+    @property
+    def objective(self):
+        """Total Laplace marginal log-likelihood, summed in participant order."""
+        return float(np.sum(self.subject_objective))
+
+
+def make_inprocess_estep_runner(log_likelihood, transform, config=None):
+    """Build an E-step that fits each participant in turn, in this process.
+
+    Arguments
+    ---------
+
+    log_likelihood : callable
+        ``log_likelihood(theta, subject_index) -> float``, the log-likelihood of one participant's
+        data at parameters `theta`, in the model's own units.
+
+    transform : BoundedTransform or IdentityTransform
+        Maps between the unconstrained space the group model lives in and the model's units.
+
+    config : EStepConfig : default None
+        Settings for each participant's optimization.
+
+    Returns
+    -------
+
+    A callable ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``.
+    """
+    config = config if config is not None else EStepConfig()
+
+    def runner(mu, sigma, prev_z, warm_start):
+        n_subjects, n_params = mu.shape
+        z_hat = np.empty((n_subjects, n_params))
+        variance = np.empty((n_subjects, n_params))
+        curvature = np.empty((n_subjects, n_params))
+        steps = np.empty((n_subjects, n_params))
+        subject_objective = np.empty(n_subjects)
+        success = np.empty(n_subjects, dtype=bool)
+        messages = []
+
+        for s in range(n_subjects):
+            mu_s = mu[s]
+
+            def neg_log_post(z, s=s, mu_s=mu_s):
+                theta = transform.to_natural(z)
+                return -float(log_likelihood(theta, s)) - log_gauss_diag(z, mu_s, sigma)
+
+            post = subject_map_estep(
+                neg_log_post,
+                z0=prev_z[s] if warm_start else mu_s,
+                prior_variance=sigma,
+                config=config,
+            )
+            z_hat[s] = post.z_hat
+            variance[s] = post.variance
+            curvature[s] = post.curvature
+            steps[s] = post.hessian_step
+            subject_objective[s] = subject_laplace_objective(
+                post.neg_log_post, post.variance, n_params
+            )
+            success[s] = post.success
+            if not post.success:
+                messages.append((s, post.message))
+
+        return EStepResult(
+            z_hat=z_hat,
+            variance=variance,
+            curvature=curvature,
+            hessian_step=steps,
+            subject_objective=subject_objective,
+            success=success,
+            messages=tuple(messages),
+        )
+
+    return runner
+
+
+@dataclass
+class LaplaceEMResult:
+    """Outcome of a hierarchical fit, in unconstrained units.
+
+    Conversion to the model's own units belongs to the caller, which owns the transform.
+    """
+
+    beta: np.ndarray          # (n_predictors, n_params) group means
+    sigma: np.ndarray         # (n_params,) group variances
+    z_hat: np.ndarray         # (n_subjects, n_params) participant modes
+    variance: np.ndarray      # (n_subjects, n_params) participant posterior variances
+    objective: float          # Laplace marginal log-likelihood at the returned beta and sigma
+    n_iter: int
+    converged: bool
+    subject_converged: np.ndarray  # (n_subjects,) bool, from the final E-step
+    history: list             # one entry per iteration; see `fit_laplace_em`
+    hessian_step: np.ndarray  # (n_subjects, n_params) steps used in the final E-step
+
+
+def fit_laplace_em(
+    estep_runner,
+    n_subjects,
+    n_params,
+    *,
+    design_matrix=None,
+    estep_config=None,
+    max_iterations=50,
+    tol=1e-4,
+    damping=0.0,
+    init_beta=None,
+    init_sigma=None,
+    warm_start=True,
+    final_estep=True,
+):
+    """Fit a hierarchical model by empirical-Bayes Laplace EM.
+
+    Alternates between estimating each participant's posterior given the group (the E-step, supplied
+    as `estep_runner`) and re-estimating the group from those posteriors (the M-step, here).  The
+    group model is ``z_s ~ N(X_s beta, diag(sigma))``.
+
+    The likelihood is reached only through `estep_runner`, so the same driver fits a closed-form test
+    model and a simulation-backed one without change.
+
+    Arguments
+    ---------
+
+    estep_runner : callable
+        ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``.
+
+    n_subjects, n_params : int
+        Shape of the problem.
+
+    design_matrix : array-like : default None
+        ``(n_subjects, n_predictors)`` of participant-level predictors.  Defaults to an intercept.
+
+    estep_config : EStepConfig : default None
+        Used here only for `variance_floor`; the runner holds its own copy for the E-step.
+
+    max_iterations, tol : int, float
+        Stop after this many iterations, or once no group parameter moves by more than `tol`.
+
+    damping : float
+        Fraction of the previous group estimate to retain each M-step.  Slows the fit but steadies
+        it when participant posteriors are noisy.
+
+    init_beta, init_sigma : array-like : default None
+        Starting group estimates; zeros and ones respectively by default.
+
+    warm_start : bool
+        Start each participant from their previous mode rather than from the group prediction.
+
+    final_estep : bool
+        Run one more E-step at the returned group estimate, so that the participant-level results
+        describe the group estimate actually reported.  Without it they lag by one M-step.
+
+    Returns
+    -------
+
+    A `LaplaceEMResult`.  Each entry of its `history` records an iteration's group estimate together
+    with the objective computed under *that* estimate, so the two can be read side by side.
+
+    Convergence is judged by how far the group estimate moves, not by the objective, which is not
+    monotone under an approximate E-step.
+    """
+    X = np.ones((n_subjects, 1)) if design_matrix is None else np.asarray(design_matrix, float)
+    if X.shape[0] != n_subjects:
+        raise ValueError(
+            f"design_matrix must have one row per participant; got {X.shape[0]} rows "
+            f"for {n_subjects} participants"
+        )
+    n_predictors = X.shape[1]
+    variance_floor = (estep_config or EStepConfig()).variance_floor
+
+    beta = np.zeros((n_predictors, n_params)) if init_beta is None else np.array(init_beta, float)
+    sigma = np.ones(n_params) if init_sigma is None else np.array(init_sigma, float)
+
+    prev_z = X @ beta
+    history = []
+    converged = False
+    estep = None
+
+    for iteration in range(max_iterations):
+        mu = X @ beta
+        estep = estep_runner(mu, sigma, prev_z, warm_start)
+        prev_z = estep.z_hat
+
+        if not np.all(estep.success):
+            failed = np.flatnonzero(~estep.success)
+            warnings.warn(
+                f"EM iteration {iteration}: {failed.size} of {n_subjects} participants did not "
+                f"converge (indices {failed[:3].tolist()}"
+                f"{', ...' if failed.size > 3 else ''}). Their estimates still contribute to the "
+                f"group update; check subject_converged on the result.",
+                HierarchicalEMWarning,
+                stacklevel=2,
+            )
+
+        # M-step: group means by least squares on the participant modes, group variances from the
+        # posterior second moments. The posterior variances are added so that participants whose
+        # parameters are poorly determined widen the group variance rather than shrinking it.
+        beta_new = np.linalg.lstsq(X, estep.z_hat, rcond=None)[0]
+        resid = estep.z_hat - X @ beta_new
+        sigma_new = np.maximum(np.mean(resid ** 2 + estep.variance, axis=0), variance_floor)
+
+        if damping > 0.0:
+            beta_new = (1.0 - damping) * beta_new + damping * beta
+            sigma_new = (1.0 - damping) * sigma_new + damping * sigma
+
+        delta = max(
+            float(np.max(np.abs(beta_new - beta))),
+            float(np.max(np.abs(sigma_new - sigma))),
+        )
+
+        # The objective was computed under the group estimate that produced it, so record them
+        # together; the update that follows belongs to the next entry.
+        history.append({
+            "iter": iteration,
+            "objective": estep.objective,
+            "beta": beta.copy(),
+            "sigma": sigma.copy(),
+            "delta": delta,
+            "n_subject_failures": int(np.count_nonzero(~estep.success)),
+        })
+
+        beta, sigma = beta_new, sigma_new
+        if delta < tol:
+            converged = True
+            break
+
+    if final_estep and estep is not None:
+        estep = estep_runner(X @ beta, sigma, prev_z, warm_start)
+
+    return LaplaceEMResult(
+        beta=beta,
+        sigma=sigma,
+        z_hat=estep.z_hat,
+        variance=estep.variance,
+        objective=estep.objective,
+        n_iter=len(history),
+        converged=converged,
+        subject_converged=estep.success,
+        history=history,
+        hessian_step=estep.hessian_step,
     )
