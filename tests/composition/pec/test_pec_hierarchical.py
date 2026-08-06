@@ -742,3 +742,100 @@ def test_worker_returns_the_participant_index_and_posterior():
     assert post.z_hat.shape == (1,)
     # No worker context in-process, so no address to pin to.
     assert address is None
+
+
+# ===========================================================================
+# Configuring a hierarchical fit on ParameterEstimationComposition
+# ===========================================================================
+def _group_frame(n_subjects=3, n_trials=4):
+    rows = []
+    for s in range(n_subjects):
+        for t in range(n_trials):
+            rows.append({"subject": f"S{s}", "decision": t % 2, "response_time": 0.4 + 0.01 * t})
+    return pd.DataFrame(rows)
+
+
+def _build_group_pec(**overrides):
+    """A PEC configured for hierarchical fitting, without running it."""
+    import psyneulink as pnl
+    from psyneulink.core.components.functions.nonstateful.fitfunctions import (
+        PECOptimizationFunction,
+    )
+
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
+            non_decision_time=0.15, time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    kwargs = dict(
+        name="group_pec",
+        nodes=[comp],
+        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000)},
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=_group_frame(),
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1),
+        fit_method="hierarchical",
+        hierarchical_options={"subject_id": "subject"},
+    )
+    kwargs.update(overrides)
+    return pnl.ParameterEstimationComposition(**kwargs)
+
+
+@pytest.mark.composition
+def test_pec_splits_participants_and_hides_the_column():
+    pec = _build_group_pec()
+    # The remaining columns are the outcome variables, which is what the existing
+    # data validation expects.
+    assert list(pec.data.columns) == ["decision", "response_time"]
+    assert list(pec.hierarchical_data.columns) == ["subject", "decision", "response_time"]
+    assert pec._subject_split.labels == ("S0", "S1", "S2")
+
+
+@pytest.mark.composition
+def test_pec_rejects_unknown_hierarchical_options():
+    with pytest.raises(Exception, match="unknown hierarchical_options"):
+        _build_group_pec(hierarchical_options={"subject_id": "subject", "max_iters": 5})
+
+
+@pytest.mark.composition
+def test_pec_requires_a_subject_column():
+    with pytest.raises(Exception, match="subject_id"):
+        _build_group_pec(hierarchical_options={})
+    with pytest.raises(Exception, match="not a column of data"):
+        _build_group_pec(hierarchical_options={"subject_id": "participant"})
+
+
+@pytest.mark.composition
+def test_pec_rejects_out_of_range_hierarchical_options():
+    for opts, match in [
+        ({"subject_id": "subject", "max_iterations": 0}, "max_iterations"),
+        ({"subject_id": "subject", "tol": 0.0}, "tol"),
+        ({"subject_id": "subject", "damping": 1.0}, "damping"),
+        ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
+    ]:
+        with pytest.raises(Exception, match=match):
+            _build_group_pec(hierarchical_options=opts)
+
+
+@pytest.mark.composition
+def test_pec_requires_a_factory_to_run():
+    # A Composition cannot be copied, so each participant's model has to be built.
+    pec = _build_group_pec()
+    with pytest.raises(Exception, match="pec_factory"):
+        pec.run()
+
+
+@pytest.mark.composition
+def test_pec_log_likelihood_refuses_in_hierarchical_mode():
+    # Scoring the stacked table as one participant would silently pool it.
+    pec = _build_group_pec()
+    with pytest.raises(Exception, match="no single"):
+        pec.log_likelihood(0.3)
