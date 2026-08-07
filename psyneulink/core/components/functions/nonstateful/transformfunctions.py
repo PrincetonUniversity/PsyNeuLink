@@ -2568,7 +2568,8 @@ class MatrixMemory(TransformFunction): #
 
         # If this is an initialization run, just return query and zeros for score and norms
         if self.is_initializing:
-            scores_template = norms_template = np.zeros(len(memory))
+            scores_template = np.zeros(len(memory))
+            norms_template = np.zeros(len(memory))
             return scores_template, norms_template
 
         scores = self.scores_function(query, context)
