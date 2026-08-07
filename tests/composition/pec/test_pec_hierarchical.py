@@ -640,7 +640,8 @@ def test_results_repr_surfaces_non_convergence():
     em.subject_converged = np.zeros(len(labels), dtype=bool)
     res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
     text = repr(res)
-    assert "did NOT converge" in text and "participant fit(s) did not converge" in text
+    assert "stopped at the iteration limit" in text
+    assert "participant fit(s) did not converge" in text
 
 
 # ===========================================================================
