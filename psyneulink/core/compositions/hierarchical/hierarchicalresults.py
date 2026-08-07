@@ -213,11 +213,11 @@ class HierarchicalPECResults:
         )
 
     def __repr__(self):
-        status = "converged" if self.converged else f"did NOT converge in {self.n_iter}"
+        status = "converged" if self.converged else "stopped at the iteration limit"
         failures = int(np.count_nonzero(~self.subject_converged))
         note = f", {failures} participant fit(s) did not converge" if failures else ""
         return (
             f"<HierarchicalPECResults: {len(self.subject_labels)} participants, "
-            f"{len(self.fit_param_names)} parameters, {status} in {self.n_iter} iterations, "
-            f"objective {self.objective:.4f}{note}>"
+            f"{len(self.fit_param_names)} parameters, {status} after {self.n_iter} "
+            f"iterations, objective {self.objective:.4f}{note}>"
         )
