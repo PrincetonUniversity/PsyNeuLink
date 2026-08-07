@@ -906,7 +906,7 @@ import numpy as np
 from packaging import version
 from pathlib import Path, PosixPath
 from collections import deque
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Set, Tuple, Union
+from typing import TYPE_CHECKING
 
 try:
     import torch
@@ -918,7 +918,7 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
-from psyneulink._typing import Iterable, Mapping, Optional, Literal
+from psyneulink._typing import Any, Dict, Hashable, Iterable, List, Literal, Mapping, Optional, Set, Tuple, Union
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import (

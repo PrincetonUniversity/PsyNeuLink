@@ -113,11 +113,10 @@ import warnings
 import weakref
 import toposort
 import types
-import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple, Iterable
+from psyneulink._typing import Any, Callable, Dict, Hashable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -2168,7 +2167,7 @@ def create_union_set(*args) -> set:
     return result
 
 
-def merge_dictionaries(a: dict, b: dict) -> typing.Tuple[dict, bool]:
+def merge_dictionaries(a: dict, b: dict) -> Tuple[dict, bool]:
     """
         Returns: a tuple containing:
             - a ``dict`` containing each key-value pair in **a** and
@@ -2210,7 +2209,7 @@ def gen_friendly_comma_str(items):
 
 def contains_type(
     arr: collections.abc.Iterable,
-    typ: typing.Union[type, typing.Tuple[type, ...]]
+    typ: Union[type, Tuple[type, ...]]
 ) -> bool:
     """
         Returns:
@@ -2261,7 +2260,7 @@ def _is_module_class(class_: type, module: types.ModuleType) -> bool:
 
 
 def get_function_sig_default_value(
-    function: typing.Union[types.FunctionType, types.MethodType],
+    function: Union[types.FunctionType, types.MethodType],
     parameter: str
 ):
     """
@@ -2278,19 +2277,18 @@ def get_function_sig_default_value(
 
 
 def toposort_key(
-    dependency_dict: typing.Dict[typing.Hashable, typing.Iterable[typing.Any]]
-) -> typing.Callable[[typing.Any], int]:
+    dependency_dict: Dict[Hashable, Iterable[Any]]
+) -> Callable[[Any], int]:
     """
     Creates a key function for python sorting that causes all items in
     **dependency_dict** to be sorted after their dependencies
 
     Args:
-        dependency_dict (typing.Dict[typing.Hashable, typing.Iterable[typing.Any]]):
+        dependency_dict (Dict[Hashable, Iterable[Any]]):
         a dictionary where values are the dependencies of keys
 
     Returns:
-        typing.Callable[[typing.Any], int]: a key function for python
-        sorting
+        Callable[[Any], int]: a key function for Python sorting
     """
     topo_ordering = list(toposort.toposort(dependency_dict))
     topo_ordering = list(itertools.chain.from_iterable(topo_ordering))

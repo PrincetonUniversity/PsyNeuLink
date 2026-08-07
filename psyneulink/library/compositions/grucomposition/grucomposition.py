@@ -298,11 +298,10 @@ Class Reference
 """
 import numpy as np
 import warnings
-from typing import Set, Union
-# from sympy.stats import Logistic
 from collections import deque
 
 import psyneulink.core.scheduling.condition as conditions
+from psyneulink._typing import Set, Union
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
 from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform

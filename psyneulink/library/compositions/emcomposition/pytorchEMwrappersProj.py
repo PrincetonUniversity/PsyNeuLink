@@ -15,11 +15,10 @@ try:
 except (ImportError, ModuleNotFoundError):
     torch = None
 
-from typing import Optional
 from collections import defaultdict
 
-from psyneulink.library.compositions.pytorchwrappers import (
-    PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchLossMechanismWrapper)
+from psyneulink._typing import Optional
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchLossMechanismWrapper
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST

@@ -16,7 +16,6 @@ from inspect import isgenerator
 import os
 import sys
 import time
-from typing import Callable, Optional
 import weakref
 
 from psyneulink.core import llvm as pnlvm
