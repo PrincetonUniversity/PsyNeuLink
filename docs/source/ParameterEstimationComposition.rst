@@ -10,6 +10,7 @@ ParameterEstimationComposition
 
        OptimizationControlMechanism
        DistributedFitting
+       HierarchicalFitting
 
 .. toctree::
    :maxdepth: 2
