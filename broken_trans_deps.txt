@@ -21,10 +21,6 @@ torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platfor
 # https://github.com/python-attrs/cattrs/issues/453
 cattrs != 23.2.1, != 23.2.2
 
-# beartype 0.17.1 is broken on older releases of python3.9
-# https://github.com/beartype/beartype/issues/324
-beartype != 0.17.1; python_version == '3.9'
-
 # coverage 7.6.5 is broken
 # https://github.com/nedbat/coveragepy/issues/1891
 coverage != 7.6.5
@@ -33,7 +29,3 @@ coverage != 7.6.5
 # https://pypi.org/project/torch/2.3.0/#files
 # the last available version (2.2.2) doesn't work with Numpy2.0
 numpy < 2; platform_system == 'Darwin' and platform_machine == 'x86_64'
-
-# fastjsonschema-2.22.1 is broken on python 3.9
-# https://github.com/horejsek/python-fastjsonschema/issues/216
-fastjsonschema != 2.22.1; python_version == '3.9'
