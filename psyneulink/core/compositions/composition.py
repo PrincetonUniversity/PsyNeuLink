@@ -3318,7 +3318,7 @@ LearningRateArg = Union[LearningRate, Dict[Union[Component, str], LearningRate]]
 CompositionRegistry = {}
 
 
-class SamplesAndTargets():
+class SamplesAndTargets:
     # Specifications for SAMPLE_MECHANISMs and TARGET_MECHANISMs in **targets** dict
     #    (used to keep track of original specifications for warnings or errors)
     Spec = (collections.namedtuple(
@@ -14956,8 +14956,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _all_nodes(self):
-        for n in self.nodes:
-            yield n
+        yield from self.nodes
         yield self.input_CIM
         yield self.output_CIM
         yield self.parameter_CIM

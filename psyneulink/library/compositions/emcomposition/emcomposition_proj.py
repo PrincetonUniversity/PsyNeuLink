@@ -1158,7 +1158,7 @@ class EMCompositionProjError(CompositionError):
         return repr(self.error_value)
 
 
-class Field():
+class Field:
     """Object that contains information about a field in an EMComposition_Proj's `memory <EMComposition_Proj.memory>`.
     """
     name = None

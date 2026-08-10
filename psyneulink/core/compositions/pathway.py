@@ -453,7 +453,7 @@ class PathwayRole(Enum):
     LEARNING = 8
 
 
-class Pathway(object, metaclass=UsesParametersMeta):
+class Pathway(metaclass=UsesParametersMeta):
     """
     Pathway(                       \
         pathway,                   \

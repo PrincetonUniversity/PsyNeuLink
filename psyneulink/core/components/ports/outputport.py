@@ -1512,7 +1512,7 @@ class StandardOutputPortsError(Exception):
         return repr(self.error_value)
 
 
-class StandardOutputPorts():
+class StandardOutputPorts:
     """Collection of OutputPort specification dicts for `standard OutputPorts <OutputPort_Standard>` of a class.
 
     Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.

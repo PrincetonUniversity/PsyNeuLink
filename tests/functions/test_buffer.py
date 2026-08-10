@@ -7,7 +7,7 @@ from psyneulink.core.components.functions.stateful.memoryfunctions import Buffer
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.scheduling.condition import Never
 
-class TestBuffer():
+class TestBuffer:
 
     def test_buffer_standalone(self):
         B = Buffer()

@@ -4,7 +4,7 @@ from psyneulink.library.compositions.pytorchllvmhelper import *
 __all__ = ['MSELoss', "CROSS_ENTROPYLoss"]
 
 
-class Loss():
+class Loss:
 
     def __init__(self):
         self._DELTA_W_NUM = 0

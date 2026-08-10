@@ -2501,7 +2501,7 @@ class TestTrainingCorrectness:
 
 @pytest.mark.pytorch
 @pytest.mark.acidenticalness
-class TestTrainingIdenticalness():
+class TestTrainingIdenticalness:
 
     @pytest.mark.parametrize(
         'eps, opt', [
