@@ -75,17 +75,37 @@ class OpEmitMixin:
             hoisted_ops, stepping_ops = self._partition_coevolving_ops(in_loop_ops)
             for op in hoisted_ops:
                 self._emit_op(op)
+            # Early exit: every stepper freezes once the terminator reports
+            # `finished` (that is the `step_emit` contract), so iterations after
+            # the last active lane finishes are no-ops.  Stop the block as soon
+            # as none are left rather than always running MAX_STEPS, which
+            # otherwise makes runtime scale with the cap instead of with the
+            # decision times.  Lanes past `total_lanes` are excluded: they carry
+            # default parameters, never finish, and would pin the loop open.
+            self.builder.line("step = 0")
             with self.builder.block(
-                "for step in tl.range(0, MAX_STEPS, 1, loop_unroll_factor=1)"
+                f"while (step < MAX_STEPS) & ({self._any_running_expr(finished_var)})"
             ):
                 for op in stepping_ops:
                     self._emit_coevolving_op(op, "step", finished_var)
+                self.builder.line("step += 1")
             self.builder.line()
             self._emit_terminator_readout(terminator_op)
             for op in post_loop_ops:
                 self._emit_op(op)
             self.builder.line("trial_idx += 1")
         self.builder.line()
+
+    @staticmethod
+    def _any_running_expr(finished_var: str) -> str:
+        """Block-wide scalar test: does any in-range lane still have work to do?
+
+        Reduces to a scalar so it can drive a Triton `while` condition; the
+        exit is per lane *block*, so a block runs until its slowest lane
+        finishes (not until its own lane does).
+        """
+
+        return f"tl.max(tl.where(mask & ({finished_var} == 0.0), 1, 0)) > 0"
 
     def _partition_coevolving_ops(self, in_loop_ops):
         """Split into (hoisted, stepping): an op steps each iteration if it is a
@@ -378,6 +398,8 @@ class OpEmitMixin:
                 args.append(self._rng_base(node.name))
             elif binding.role == "max_steps":
                 args.append("MAX_STEPS")
+            elif binding.role == "lane_mask":
+                args.append("mask")
             else:
                 raise ValueError(
                     f"Batched op for '{node.name}' has an unsupported Triton arg "

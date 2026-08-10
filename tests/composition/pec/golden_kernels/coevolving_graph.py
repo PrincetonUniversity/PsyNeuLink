@@ -200,7 +200,8 @@ def pnl_batched_coevolving_graph_kernel(
         n_Drift_Rate_Value_projection_1_5 = tl.zeros((BLOCK,), dtype=tl.float32)
         n_Drift_Rate_Value_projection_1_6 = _pnl_triton_projection_term(n_Correct_Response_OutputPort_0_0, 1.0)
 
-        for step in tl.range(0, MAX_STEPS, 1, loop_unroll_factor=1):
+        step = 0
+        while (step < MAX_STEPS) & (tl.max(tl.where(mask & (n_DDM_finished_0 == 0.0), 1, 0)) > 0):
             n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1 = _pnl_triton_lca_width2_step(n_Task_Activations__C1__C2__input_0, n_Task_Activations__C1__C2__input_1, n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1, n_DDM_finished_0, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, SEED, random_base, step, 0, 1, LCA_MAX_STEPS)
             n_Drift_Rate_Value_projection_2_0 = tl.zeros((BLOCK,), dtype=tl.float32)
             n_Drift_Rate_Value_projection_2_1 = tl.zeros((BLOCK,), dtype=tl.float32)
@@ -225,6 +226,7 @@ def pnl_batched_coevolving_graph_kernel(
             n_DDM_input_0 = (n_DDM_projection_0_0)
 
             n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0 = _pnl_triton_ddm_step(n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0, n_DDM_input_0, param_14_value, param_15_value, param_16_value, param_17_value, param_19_value, param_21_value, SEED, random_base, step, 0)
+            step += 1
 
         n_DDM_DECISION_OUTCOME_0 = tl.where(n_DDM_value_0 > 0.0, 1.0, 0.0)
         n_DDM_RESPONSE_TIME_0 = param_18_value + n_DDM_steps_0 * param_19_value

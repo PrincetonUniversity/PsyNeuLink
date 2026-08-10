@@ -246,6 +246,7 @@ def ddm_integrate(
     seed,
     rng_base,
     max_steps,
+    lane_mask,
 ):
     value = starting_value
     steps = tl.zeros_like(x)
@@ -254,11 +255,19 @@ def ddm_integrate(
     # (collapse is 0 for an ordinary fixed-threshold DDM).  A lane that crosses
     # the boundary sets `finished` and stays decided; `truncated` flags lanes
     # that hit max_steps without deciding.
-    for step in tl.range(0, max_steps, 1, loop_unroll_factor=1):
+    #
+    # A decided lane is frozen by the update, so the loop stops as soon as every
+    # in-range lane of the block has decided rather than always running
+    # max_steps -- otherwise runtime scales with the cap instead of with the
+    # decision times.  Lanes past the end of the batch (`lane_mask` false) carry
+    # default parameters and never decide, so they are excluded from the test.
+    step = 0
+    while (step < max_steps) & (tl.max(tl.where(lane_mask & (finished == 0.0), 1, 0)) > 0):
         draw = tl.randn(seed, rng_base + step)
         value, steps, finished = _pnl_triton_ddm_update(
             value, steps, finished, x, rate, noise, threshold,
             threshold_collapse, time_step_size, offset, draw, step,
         )
+        step += 1
     truncated = tl.where(finished == 0.0, 1.0, 0.0)
     return tl.where(value > 0.0, 1.0, 0.0), non_decision_time + steps * time_step_size, truncated

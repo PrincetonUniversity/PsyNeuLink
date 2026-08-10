@@ -177,7 +177,9 @@ CPU executor (`ir_debug`) and the per-op numpy CPU bodies (`cpu_body` /
   - Declarative batched op specs and the researcher-facing registration API.
   - `@batched_op(ComponentClass)` introspects the decorated kernel body's
     signature and auto-binds argument names against PNL `Parameters` metadata.
-    Reserved names: `x`, `seed`/`rng_base`, `max_steps`.  Irregular bindings
+    Reserved names: `x`, `seed`/`rng_base`, `max_steps`, `lane_mask` (which
+    lanes of the block are in range — for bounded loops that exit early).
+    Irregular bindings
     use `bind={...}` with `specs.param(...)`.  The decorated body is the single
     kernel body (written against `triton.language`, `tl.*`), captured as Triton
     source.
@@ -546,6 +548,50 @@ The existing LLVM/PsyNeuLink path uses mechanism/scheduler termination
 machinery. The Triton path uses caps and must be given caps large enough for
 the parameter/input regime.
 
+### Bounded-loop early exit
+
+Both bounded loops — the run-to-completion DDM body (`components/ddm.py`) and
+the fused co-evolution loop (`emit/ops.py`) — stop as soon as every in-range
+lane of the **block** has finished, instead of always running to the cap:
+
+```python
+step = 0
+while (step < MAX_STEPS) & (tl.max(tl.where(mask & (finished == 0.0), 1, 0)) > 0):
+    ...
+    step += 1
+```
+
+This is a pure optimization: a finished lane is already frozen by the op
+(`_pnl_triton_ddm_update` gates on `finished`, and freezing on the terminator's
+`finished` is the `step_emit` contract), so the skipped iterations were no-ops.
+RNG streams are indexed by absolute `step`, so skipping does not shift draws.
+Results are unchanged — checksums are identical before/after at every cap.
+
+Two things the test must get right, and both are easy to get wrong:
+
+- **Exclude out-of-range lanes.** Lanes past `total_lanes` load default
+  parameters (drift 0, noise 0), never finish, and would pin every partial
+  block open to the cap. Hence the `mask &`. A body that wants this needs the
+  reserved `lane_mask` argument (see `specs.py`).
+- **The exit is per block, not per lane.** A block runs until its *slowest*
+  lane finishes, so the win tracks `max` over the block, not the mean.
+
+Consequence: **`MAX_STEPS` is now nearly free to set generously.** Sizing it to
+the tail of the decision-time distribution costs almost nothing, so prefer a
+cap that avoids truncation over one tuned for speed. Measured on an RTX 2080 Ti:
+
+| workload | cap | before | after |
+| --- | --- | --- | --- |
+| CSI co-evolving (4x512x128, 262k sims) | 512 | 58.8 ms | 13.9 ms |
+| CSI co-evolving | 1024 | 106.7 ms | 14.1 ms |
+| `ddm_graph` (8x32x8192, 2.1M lanes) | 256 | 17.9 ms | 12.2 ms |
+| `ddm_graph` | 1024 | 44.9 ms | 10.0 ms |
+
+Runtime is now flat in the cap rather than linear. End-to-end, the CSI GPU
+parameter recovery (128 trials x 4000 estimates x 150 iterations) went 9.4 s ->
+5.3 s with identical recovered parameters and log-likelihood. The `triton_cpu`
+interpret test suite also roughly halved (569 s -> 321 s).
+
 **Truncation visibility (roadmap step 2 — DONE for DDM).** A bounded op may
 declare trailing diagnostic returns via `MechanismOpSpec.diagnostics` (the DDM
 body returns a `truncated` flag — still inside the boundary after `max_steps`).
@@ -848,6 +894,15 @@ environments to persist results.
   `finished` flag — same result for a fixed/collapsing boundary, and strictly
   more correct for a growing one); goldens regenerated; verified on GPU.
 
+- **Bounded-loop early exit** (performance). Both bounded loops stop once every
+  in-range lane of the block has finished instead of always running to the cap,
+  so runtime tracks decision times rather than `MAX_STEPS` (details, caveats,
+  and measurements under "Bounded-loop early exit"). Semantics are unchanged —
+  finished lanes were already frozen, so the skipped iterations were no-ops, and
+  checksums are identical before/after at every cap. Adds the reserved
+  `lane_mask` body argument so a kernel body can exclude out-of-range lanes from
+  the exit test. Goldens regenerated for all three affected kernels.
+
 - **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
   `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
   compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
@@ -1001,9 +1056,10 @@ steps 9-10 make the full PEC fit run on the batched path.
   in `Scripts/Debug/pec_batch_compile/csi_model_surrogate.py` and needs its
   drift-rate op registered (`batched_node_op("Drift Rate Value")`) before it
   compiles.
-- The **co-evolution loop runs all `MAX_STEPS`** with finished lanes masked
-  (there is no early break across a lane block), so `MAX_STEPS` scales runtime
-  linearly — size it to the decision-time regime, not far above it.
+- Bounded loops now **exit early per lane block** (see "Bounded-loop early
+  exit"), so `MAX_STEPS` no longer scales runtime — but the exit is per *block*,
+  so a block costs its slowest lane. A single pathological lane still holds its
+  block (127 others) open to the cap.
 - The co-evolving **LCA RNG offset still uses the `LCA_MAX_STEPS` stride**
   (inherited from the cue-driven form); fine while co-evolving LCAs run
   `lca_noise=0` (CSI), but a noisy co-evolving LCA with `MAX_STEPS > LCA_MAX_STEPS`

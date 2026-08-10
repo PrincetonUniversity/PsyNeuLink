@@ -26,6 +26,10 @@ Reserved argument names carry roles instead of binding to parameters:
 - ``seed`` / ``rng_base``: the RNG seed and per-lane stream offset (Triton
   bodies only); a CPU ``rng`` argument corresponds to the Triton pair.
 - ``max_steps``: the bounded-loop step cap (``tl.constexpr`` on Triton).
+- ``lane_mask``: which lanes of the block are in range.  A body that runs a
+  bounded loop uses it to exit as soon as every in-range lane has finished,
+  instead of always running to ``max_steps``; out-of-range lanes carry default
+  parameters and never finish, so they must be excluded from that test.
 
 Every other argument name must resolve to a ``Parameter`` on the component
 class (for mechanisms, the required function class is searched first).  Names
@@ -59,15 +63,16 @@ INPUT_ARG = "x"
 SEED_ARG = "seed"
 RNG_BASE_ARG = "rng_base"
 MAX_STEPS_ARG = "max_steps"
+LANE_MASK_ARG = "lane_mask"
 
-_TRITON_RESERVED = {INPUT_ARG, SEED_ARG, RNG_BASE_ARG, MAX_STEPS_ARG}
+_TRITON_RESERVED = {INPUT_ARG, SEED_ARG, RNG_BASE_ARG, MAX_STEPS_ARG, LANE_MASK_ARG}
 
 
 @dataclass(frozen=True)
 class ArgBinding:
     """How one body argument is supplied at execution/emission time."""
 
-    role: str  # "input" | "param" | "seed" | "rng_base" | "max_steps"
+    role: str  # "input" | "param" | "seed" | "rng_base" | "max_steps" | "lane_mask"
     name: str = ""
 
 
@@ -621,6 +626,8 @@ def _bind_mechanism_args(arg_names, mechanism_class, function_class, bind):
             bindings.append(ArgBinding(role="seed"))
         elif name == RNG_BASE_ARG:
             bindings.append(ArgBinding(role="rng_base"))
+        elif name == LANE_MASK_ARG:
+            bindings.append(ArgBinding(role="lane_mask"))
         elif name in _TRITON_RESERVED:
             raise BatchedOpSpecError(
                 f"Batched op for '{mechanism_class.__name__}': reserved argument "
