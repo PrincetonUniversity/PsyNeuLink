@@ -148,10 +148,12 @@ class StateDecl:
 class RngDecl:
     """A lane-local random stream owned by a mechanism op.
 
-    ``step_extent`` is the symbolic per-step extent of the stream and must be
-    one of the kernel step caps (currently ``"MAX_STEPS"`` or
-    ``"LCA_MAX_STEPS"``).  ``width=None`` resolves to the node's primary
-    output width.
+    ``step_extent`` names the kernel step cap that bounds how many draws the
+    stream consumes (currently ``"MAX_STEPS"`` or ``"LCA_MAX_STEPS"``).  It no
+    longer determines *where* the stream lives: every stream is allocated a
+    fixed ``RNG_STREAM_STRIDE`` of Philox counter space, so draws do not shift
+    when a cap changes.  It is checked against that stride at launch.
+    ``width=None`` resolves to the node's primary output width.
     """
 
     name: str

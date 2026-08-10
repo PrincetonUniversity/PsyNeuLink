@@ -91,9 +91,9 @@ def pnl_batched_ddm_graph_kernel(
     n_DDM_input_0 = (n_DDM_projection_0_0)
 
     if COMMON_RANDOM:
-        random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx) * MAX_STEPS
+        random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
     else:
-        random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx) * MAX_STEPS
+        random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
     n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, SEED, random_base, MAX_STEPS, mask)
 
     diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1

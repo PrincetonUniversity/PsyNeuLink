@@ -73,8 +73,14 @@ class TritonEmitContext:
     def rng_base(self, node_name: str) -> str:
         return self._emitter.rng_base(node_name)
 
-    def lca_stream_index(self, node_name: str) -> int:
-        return self._emitter.lca_stream_index[node_name]
+    def rng_stream_offset(self, node_name: str, component_idx: int = 0) -> int:
+        """Absolute Philox offset of one of a node's RNG streams.
+
+        Add it to `rng_base`; the step index goes in the low bits.  Each stream
+        owns a full 2**32 counter space, so this does not depend on any cap.
+        """
+
+        return self._emitter.rng_stream_offset(node_name, component_idx)
 
     def emit_trial_random_base_if_needed(self) -> None:
         self._emitter.emit_trial_random_base_if_needed()

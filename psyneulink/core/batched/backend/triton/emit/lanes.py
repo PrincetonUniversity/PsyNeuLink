@@ -13,6 +13,18 @@ from psyneulink.core.batched.graph import (
 )
 from psyneulink.core.batched.backend.triton.emit._helpers import primary_output_port_name
 
+# Philox counter space reserved per RNG stream.  Stream identity is packed into
+# the high 32 bits of the offset and the step index into the low 32, which
+# `randint4x` splits back into two counter words.  The point of a fixed stride
+# is that offsets -- and so the draws -- do not depend on MAX_STEPS or
+# LCA_MAX_STEPS: raising a step cap for safety no longer changes results.
+#
+# The base must be built inside the kernel from constants and lane arithmetic.
+# Passing a precomputed 64-bit base as a runtime kernel argument silently drops
+# the high word on the GPU (the offset stays 32-bit), which collapses every
+# stream onto the same draws.
+RNG_STREAM_STRIDE = 1 << 32
+
 
 class LaneEmitMixin:
     def _emit_lane_decode(self) -> None:
@@ -33,39 +45,40 @@ class LaneEmitMixin:
         self.builder.line("param_idx = tmp // num_subjects")
         self.builder.line()
 
-    def _emit_stateful_random_base(self) -> None:
-        random_stride = (
-            f"({self.lca_stream_count}) * LCA_MAX_STEPS "
-            f"+ ({self.ddm_stream_count}) * MAX_STEPS"
-        )
-        self.builder.line(f"random_stride = {random_stride}")
+    @property
+    def _lane_rng_stride(self) -> int:
+        """Philox counter space reserved per lane: one stride per stream it owns."""
+
+        return max(1, self.rng_stream_count) * RNG_STREAM_STRIDE
+
+    def _emit_random_base(self) -> None:
+        """Emit `random_base`, the lane's 64-bit Philox offset origin.
+
+        The lane index is widened before scaling: it is int32 arithmetic, and
+        the stride is far past int32.
+        """
+
+        stride = self._lane_rng_stride
         with self.builder.block("if COMMON_RANDOM"):
             self.builder.line(
                 "random_base = ((subject_idx * num_estimates + estimate_idx) "
-                "* num_trials + trial_idx) * random_stride"
+                f"* num_trials + trial_idx).to(tl.int64) * {stride}"
             )
         with self.builder.block("else"):
             self.builder.line(
                 "random_base = (((param_idx * num_subjects + subject_idx) "
-                "* num_estimates + estimate_idx) * num_trials + trial_idx) "
-                "* random_stride"
+                "* num_estimates + estimate_idx) * num_trials + trial_idx)"
+                f".to(tl.int64) * {stride}"
             )
+
+    def _emit_stateful_random_base(self) -> None:
+        self._emit_random_base()
         self.builder.line()
 
     def _emit_trial_random_base_if_needed(self) -> None:
         if self.kernel.fusion_kind != DDM_GRAPH_FUSION:
             return
-        with self.builder.block("if COMMON_RANDOM"):
-            self.builder.line(
-                "random_base = ((subject_idx * num_estimates + estimate_idx) "
-                "* num_trials + trial_idx) * MAX_STEPS"
-            )
-        with self.builder.block("else"):
-            self.builder.line(
-                "random_base = (((param_idx * num_subjects + subject_idx) "
-                "* num_estimates + estimate_idx) * num_trials + trial_idx) "
-                "* MAX_STEPS"
-            )
+        self._emit_random_base()
 
     def emit_trial_random_base_if_needed(self) -> None:
         self._emit_trial_random_base_if_needed()
@@ -101,22 +114,24 @@ class LaneEmitMixin:
     def raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
         return self._raw_input_value(node_name, component_idx)
 
+    def _rng_stream_offset(self, node_name: str, component_idx: int = 0) -> int:
+        """Absolute Philox offset of one of a node's streams, from its lane base."""
+
+        return (self.rng_stream_slot[node_name] + component_idx) * RNG_STREAM_STRIDE
+
+    def rng_stream_offset(self, node_name: str, component_idx: int = 0) -> int:
+        return self._rng_stream_offset(node_name, component_idx)
+
     def _rng_base(self, node_name: str) -> str:
-        if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
-            return (
-                f"random_base + ({self.lca_stream_count}) * LCA_MAX_STEPS "
-                f"+ ({self.ddm_stream_index[node_name]}) * MAX_STEPS"
-            )
-        return "random_base"
+        offset = self._rng_stream_offset(node_name)
+        return "random_base" if offset == 0 else f"random_base + {offset}"
 
     def rng_base(self, node_name: str) -> str:
         return self._rng_base(node_name)
 
     def _index_rng_streams(self) -> None:
+        # One flat pool: every stream gets the same stride, so which step cap
+        # bounds a stream no longer affects where it lives.
         for stream in self.kernel.rng_streams:
-            if stream.step_extent == "LCA_MAX_STEPS":
-                self.lca_stream_index[stream.node] = self.lca_stream_count
-                self.lca_stream_count += stream.width
-            elif stream.step_extent == "MAX_STEPS":
-                self.ddm_stream_index[stream.node] = self.ddm_stream_count
-                self.ddm_stream_count += stream.width
+            self.rng_stream_slot[stream.node] = self.rng_stream_count
+            self.rng_stream_count += stream.width

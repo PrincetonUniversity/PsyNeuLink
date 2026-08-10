@@ -28,8 +28,8 @@ def _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, ac
 def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gain, leak, competition, self_excitation, noise, dt, lca_steps, seed, random_base, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
     for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
         active = step < lca_steps
-        n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
-        n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+        n0 = tl.randn(seed, random_base + stream0 + step)
+        n1 = tl.randn(seed, random_base + stream1 + step)
         pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1)
     return (pre0, pre1, act0, act1)
 
@@ -167,11 +167,10 @@ def pnl_batched_stateful_graph_kernel(
 
     trial_idx = 0
     while trial_idx < num_trials:
-        random_stride = (2) * LCA_MAX_STEPS + (1) * MAX_STEPS
         if COMMON_RANDOM:
-            random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx) * random_stride
+            random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
         else:
-            random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx) * random_stride
+            random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
 
         n_Task_Input__I1__I2__RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
         n_Task_Input__I1__I2__RESULT_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
@@ -190,7 +189,7 @@ def pnl_batched_stateful_graph_kernel(
         n_Task_Activations__Act1__Act2__input_1 = (n_Task_Activations__Act1__Act2__projection_0_1)
 
         n_Task_Activations__Act1__Act2__lca_steps = tl.minimum(tl.maximum(tl.ceil(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0)), 0.0), LCA_MAX_STEPS)
-        n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1 = _pnl_triton_lca_width2_integrate(n_Task_Activations__Act1__Act2__input_0, n_Task_Activations__Act1__Act2__input_1, n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n_Task_Activations__Act1__Act2__lca_steps, SEED, random_base, 0, 1, LCA_MAX_STEPS)
+        n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1 = _pnl_triton_lca_width2_integrate(n_Task_Activations__Act1__Act2__input_0, n_Task_Activations__Act1__Act2__input_1, n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n_Task_Activations__Act1__Act2__lca_steps, SEED, random_base, 0, 4294967296, LCA_MAX_STEPS)
 
         n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_0 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_0, 1.0)
         n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_1 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_1, 1.0)
@@ -239,7 +238,7 @@ def pnl_batched_stateful_graph_kernel(
 
         n_DDM_input_0 = (n_DDM_projection_0_0)
 
-        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, param_31_value, SEED, random_base + (2) * LCA_MAX_STEPS + (0) * MAX_STEPS, MAX_STEPS, mask)
+        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, param_31_value, SEED, random_base + 8589934592, MAX_STEPS, mask)
 
         diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
         tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)

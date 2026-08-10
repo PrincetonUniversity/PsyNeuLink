@@ -23,6 +23,23 @@ from psyneulink.core.batched.backend.triton.cache import (
     load_triton_kernel_module,
 )
 from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
+from psyneulink.core.batched.backend.triton.emit.lanes import RNG_STREAM_STRIDE
+
+
+def _check_step_caps(**caps):
+    """Guard the RNG layout invariant: a stream must not outrun its counter space.
+
+    Each stream owns `RNG_STREAM_STRIDE` Philox offsets, indexed by step.  A cap
+    above that would walk a lane into the next stream and silently correlate
+    draws.  The stride is 2**32, so this is a sanity bound, not a real limit.
+    """
+
+    for name, value in caps.items():
+        if value > RNG_STREAM_STRIDE:
+            raise ValueError(
+                f"{name}={value} exceeds the per-stream RNG counter space "
+                f"({RNG_STREAM_STRIDE}); draws would overlap between streams."
+            )
 
 
 def run_triton(
@@ -203,6 +220,7 @@ def _run_ddm_graph_kernel(
         dtype=torch.float32, device=device,
     )
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
+    _check_step_caps(max_steps=ir.max_steps)
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
     module.pnl_batched_ddm_graph_kernel[grid](
@@ -232,12 +250,14 @@ def _run_stateful_graph_kernel(
         dtype=torch.float32, device=device,
     )
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
+    lca_steps = lca_max_steps(ir, inputs)
+    _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
     getattr(module, kernel_name)[grid](
         *input_tensors, *param_tensors, out, *(() if diag is None else (diag,)),
         total_lanes, num_subjects, num_estimates, num_trials,
-        LCA_MAX_STEPS=lca_max_steps(ir, inputs), MAX_STEPS=ir.max_steps,
+        LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed), BLOCK=block,
     )

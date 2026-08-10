@@ -50,10 +50,8 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.param_vars: dict[str, str] = {}
         self.state_vars: dict[tuple[str, int], str] = {}
         self.value_vars: dict[str, list[str]] = {}
-        self.lca_stream_index: dict[str, int] = {}
-        self.ddm_stream_index: dict[str, int] = {}
-        self.lca_stream_count = 0
-        self.ddm_stream_count = 0
+        self.rng_stream_slot: dict[str, int] = {}
+        self.rng_stream_count = 0
         self.output_cursor = 0
         self.lane_out_emitted = False
         self.diag_slot_count = len(diag_slots(kernel))

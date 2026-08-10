@@ -274,6 +274,8 @@ psyneulink/core/batched/backend/triton/
   - `emitter.py`: `TritonGraphEmitter` (composed from the mixins below) — shared
     state, `emit()` orchestration, signature/module rendering, params/state setup.
   - `lanes.py` (`LaneEmitMixin`): lane decode, RNG-base layout, raw input loads.
+    Owns `RNG_STREAM_STRIDE` and the fixed-stride stream allocation (see "Stream
+    layout") — the reason offsets do not depend on the step caps.
   - `ops.py` (`OpEmitMixin`): per-`KernelOp` emission + value table. New op kinds
     (e.g. truncation `StoreFlag`) are added here.  Also emits the **co-evolution
     fused loop** (`_emit_coevolving_trial_loop`): hoist loop-invariant ops out
@@ -521,6 +523,46 @@ small supported subset.
 The Triton backend uses `tl.randn` in component helpers. RNG offsets are derived
 from lane indices and stream layout.
 
+### Stream layout
+
+Every RNG stream owns a fixed `RNG_STREAM_STRIDE` (2**32) of Philox counter
+space (`emit/lanes.py`). Stream identity goes in the high 32 bits of the offset
+and the step index in the low 32, which `randint4x` splits into two counter
+words:
+
+```text
+random_base = lane_index * (n_streams * RNG_STREAM_STRIDE)   # int64
+stream_off  = random_base + slot * RNG_STREAM_STRIDE
+draw(step)  = tl.randn(SEED, stream_off + step)
+```
+
+**Offsets do not depend on any step cap.** That is the point: `MAX_STEPS` and
+`LCA_MAX_STEPS` are safety bounds, and raising one must not change results.
+Streams used to be packed by cap (`n_lca*LCA_MAX_STEPS + n_ddm*MAX_STEPS`), which
+had two consequences, both now gone:
+
+- Changing a cap changed every downstream offset, so simulations silently
+  produced different draws — even when nothing truncated. Bumping a cap for
+  safety looked like a bug and broke reproducibility against recorded numbers.
+- A stream could **run off its own end**. The co-evolving LCA steps up to
+  `MAX_STEPS` times but was strided by `LCA_MAX_STEPS`, so with
+  `MAX_STEPS > LCA_MAX_STEPS` and `lca_noise > 0` its two units drew the same
+  sequence time-shifted, and then collided with the DDM's stream. Observable as
+  a decision rate that drifted with the cap (0.781 / 0.773 / 0.769 at
+  `MAX_STEPS` 128 / 256 / 512); it is now 0.82294 at all three.
+
+Two constraints worth knowing before touching this:
+
+- The 64-bit base must be built **inside** the kernel from constants and lane
+  arithmetic. Passing a precomputed 64-bit base as a runtime kernel argument
+  silently drops the high word on the GPU (the offset stays 32-bit) and
+  collapses every stream onto the same draws — it fails quietly, not loudly.
+- The lane index is int32; widen it (`.to(tl.int64)`) *before* scaling by the
+  stride.
+
+`runtime._check_step_caps` guards the invariant that a cap never exceeds the
+per-stream space. At a 2**32 stride that is a sanity bound, not a real limit.
+
 Common random numbers:
 
 - `common_random_numbers=True`
@@ -576,9 +618,10 @@ Two things the test must get right, and both are easy to get wrong:
 - **The exit is per block, not per lane.** A block runs until its *slowest*
   lane finishes, so the win tracks `max` over the block, not the mean.
 
-Consequence: **`MAX_STEPS` is now nearly free to set generously.** Sizing it to
-the tail of the decision-time distribution costs almost nothing, so prefer a
-cap that avoids truncation over one tuned for speed. Measured on an RTX 2080 Ti:
+Consequence: **`MAX_STEPS` is now free to set generously** — in both senses.
+Raising it costs almost nothing (this section), and it does not change your
+draws (see "Stream layout"; before that change it did). So prefer a cap that
+avoids truncation over one tuned for speed. Measured on an RTX 2080 Ti:
 
 | workload | cap | before | after |
 | --- | --- | --- | --- |
@@ -894,6 +937,17 @@ environments to persist results.
   `finished` flag — same result for a fixed/collapsing boundary, and strictly
   more correct for a growing one); goldens regenerated; verified on GPU.
 
+- **Cap-independent RNG stream layout** (correctness). Streams are allocated a
+  fixed `RNG_STREAM_STRIDE` of Philox counter space instead of being packed by
+  `MAX_STEPS`/`LCA_MAX_STEPS` (details under "Stream layout"). Results no longer
+  move when a step cap changes — the CSI surrogate now checksums identically at
+  caps 256/512/1024, where it previously differed at each — which is what makes
+  the early exit's "set the cap generously" advice actually safe. Also fixes the
+  co-evolving LCA stream-overlap bug that corrupted a noisy co-evolving LCA.
+  Adds `runtime._check_step_caps`. This changes the draws, so stochastic results
+  and recorded checksums shift (statistics are unchanged: decision rate, RT
+  mean/std and percentiles, and cross-lane independence all match).
+
 - **Bounded-loop early exit** (performance). Both bounded loops stop once every
   in-range lane of the block has finished instead of always running to the cap,
   so runtime tracks decision times rather than `MAX_STEPS` (details, caveats,
@@ -1060,10 +1114,10 @@ steps 9-10 make the full PEC fit run on the batched path.
   exit"), so `MAX_STEPS` no longer scales runtime — but the exit is per *block*,
   so a block costs its slowest lane. A single pathological lane still holds its
   block (127 others) open to the cap.
-- The co-evolving **LCA RNG offset still uses the `LCA_MAX_STEPS` stride**
-  (inherited from the cue-driven form); fine while co-evolving LCAs run
-  `lca_noise=0` (CSI), but a noisy co-evolving LCA with `MAX_STEPS > LCA_MAX_STEPS`
-  would need the stride widened to `MAX_STEPS` to avoid stream overlap.
+- RNG streams are addressed by a fixed stride, not by the step caps (see "Stream
+  layout"). Do not reintroduce a cap into an RNG offset: it makes results depend
+  on a bound that is supposed to be a don't-care, and it can let a stream run
+  into its neighbour.
 
 ## Current Mental Model
 

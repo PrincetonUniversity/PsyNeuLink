@@ -84,10 +84,13 @@ def _pnl_triton_lca_width2_integrate(
     stream1,
     lca_max_steps,
 ):
+    # `stream0`/`stream1` are absolute Philox offsets from the lane's base, one
+    # full counter space each, so the step index just adds into the low bits and
+    # the draws do not depend on `lca_max_steps` (which is only the loop cap).
     for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
         active = step < lca_steps
-        n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
-        n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+        n0 = tl.randn(seed, random_base + stream0 + step)
+        n1 = tl.randn(seed, random_base + stream1 + step)
         pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
             input0, input1, pre0, pre1, act0, act1, active,
             gain, leak, competition, self_excitation, noise, dt, n0, n1,
@@ -96,7 +99,7 @@ def _pnl_triton_lca_width2_integrate(
 
 
 @pnl_triton_op(
-    constexpr=("stream0", "stream1", "lca_max_steps"),
+    constexpr=("stream0", "stream1"),
     helpers=(_pnl_triton_lca_width2_recurrence,),
 )
 def _pnl_triton_lca_width2_step(
@@ -118,14 +121,18 @@ def _pnl_triton_lca_width2_step(
     step,
     stream0,
     stream1,
-    lca_max_steps,
 ):
     # One integration step for the fused co-evolution loop where the LCA steps
     # alongside a terminator.  Lanes whose terminator has finished freeze, so the
     # persisted state carried to the next trial matches when the trial ended.
+    #
+    # A co-evolving LCA steps up to MAX_STEPS times, not LCA_MAX_STEPS.  Its
+    # stream owns a full counter space, so that is fine -- when the stride was
+    # LCA_MAX_STEPS this path could run off the end of its own stream and into
+    # the next one.
     active = finished == 0.0
-    n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
-    n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+    n0 = tl.randn(seed, random_base + stream0 + step)
+    n1 = tl.randn(seed, random_base + stream1 + step)
     pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
         input0, input1, pre0, pre1, act0, act1, active,
         gain, leak, competition, self_excitation, noise, dt, n0, n1,
@@ -145,8 +152,8 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     pre1 = ctx.state(pre_state, 1)
     act0 = ctx.state(act_state, 0)
     act1 = ctx.state(act_state, 1)
-    stream0 = ctx.lca_stream_index(node_spec.name)
-    stream1 = stream0 + 1
+    stream0 = ctx.rng_stream_offset(node_spec.name, 0)
+    stream1 = ctx.rng_stream_offset(node_spec.name, 1)
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_lca_width2_step,
@@ -170,7 +177,6 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 step_var,
                 str(stream0),
                 str(stream1),
-                ctx.lca_max_steps,
             ),
         )
     )
@@ -219,8 +225,8 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     else:
         cue_value = ctx.float_literal(node_spec.attrs.get("termination_threshold", 1.0))
     steps_var = f"n_{_safe_ident(node_spec.name)}_lca_steps"
-    stream0 = ctx.lca_stream_index(node_spec.name)
-    stream1 = stream0 + 1
+    stream0 = ctx.rng_stream_offset(node_spec.name, 0)
+    stream1 = ctx.rng_stream_offset(node_spec.name, 1)
 
     ctx.line(
         f"{steps_var} = tl.minimum(tl.maximum(tl.ceil({cue_value}), 0.0), "

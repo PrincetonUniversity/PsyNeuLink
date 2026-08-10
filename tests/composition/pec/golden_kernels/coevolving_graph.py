@@ -25,10 +25,10 @@ def _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, ac
 
 
 @triton.jit
-def _pnl_triton_lca_width2_step(input0, input1, pre0, pre1, act0, act1, finished, gain, leak, competition, self_excitation, noise, dt, seed, random_base, step, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
+def _pnl_triton_lca_width2_step(input0, input1, pre0, pre1, act0, act1, finished, gain, leak, competition, self_excitation, noise, dt, seed, random_base, step, stream0: tl.constexpr, stream1: tl.constexpr):
     active = finished == 0.0
-    n0 = tl.randn(seed, random_base + stream0 * lca_max_steps + step)
-    n1 = tl.randn(seed, random_base + stream1 * lca_max_steps + step)
+    n0 = tl.randn(seed, random_base + stream0 + step)
+    n1 = tl.randn(seed, random_base + stream1 + step)
     pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1)
     return (pre0, pre1, act0, act1)
 
@@ -156,11 +156,10 @@ def pnl_batched_coevolving_graph_kernel(
 
     trial_idx = 0
     while trial_idx < num_trials:
-        random_stride = (2) * LCA_MAX_STEPS + (1) * MAX_STEPS
         if COMMON_RANDOM:
-            random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx) * random_stride
+            random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
         else:
-            random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx) * random_stride
+            random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
 
         n_DDM_value_0 = tl.full((BLOCK,), 0.0, tl.float32)
         n_DDM_steps_0 = tl.full((BLOCK,), 0.0, tl.float32)
@@ -202,7 +201,7 @@ def pnl_batched_coevolving_graph_kernel(
 
         step = 0
         while (step < MAX_STEPS) & (tl.max(tl.where(mask & (n_DDM_finished_0 == 0.0), 1, 0)) > 0):
-            n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1 = _pnl_triton_lca_width2_step(n_Task_Activations__C1__C2__input_0, n_Task_Activations__C1__C2__input_1, n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1, n_DDM_finished_0, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, SEED, random_base, step, 0, 1, LCA_MAX_STEPS)
+            n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1 = _pnl_triton_lca_width2_step(n_Task_Activations__C1__C2__input_0, n_Task_Activations__C1__C2__input_1, n_Task_Activations__C1__C2__pre_0, n_Task_Activations__C1__C2__pre_1, n_Task_Activations__C1__C2__act_0, n_Task_Activations__C1__C2__act_1, n_DDM_finished_0, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, SEED, random_base, step, 0, 4294967296)
             n_Drift_Rate_Value_projection_2_0 = tl.zeros((BLOCK,), dtype=tl.float32)
             n_Drift_Rate_Value_projection_2_1 = tl.zeros((BLOCK,), dtype=tl.float32)
             n_Drift_Rate_Value_projection_2_2 = tl.zeros((BLOCK,), dtype=tl.float32)
@@ -225,7 +224,7 @@ def pnl_batched_coevolving_graph_kernel(
 
             n_DDM_input_0 = (n_DDM_projection_0_0)
 
-            n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0 = _pnl_triton_ddm_step(n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0, n_DDM_input_0, param_14_value, param_15_value, param_16_value, param_17_value, param_19_value, param_21_value, SEED, random_base, step, 0)
+            n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0 = _pnl_triton_ddm_step(n_DDM_value_0, n_DDM_steps_0, n_DDM_finished_0, n_DDM_input_0, param_14_value, param_15_value, param_16_value, param_17_value, param_19_value, param_21_value, SEED, random_base + 8589934592, step, 0)
             step += 1
 
         n_DDM_DECISION_OUTCOME_0 = tl.where(n_DDM_value_0 > 0.0, 1.0, 0.0)
