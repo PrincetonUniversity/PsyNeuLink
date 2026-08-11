@@ -1,5 +1,4 @@
 import argparse
-import copy
 import sys
 import warnings
 from pathlib import Path
@@ -75,14 +74,14 @@ def _make_pec_grid_ddm(noise, trials, estimates):
         initial_seed=42,
     )
     pec.controller.parameters.comp_execution_mode.set("LLVM")
-    pec.controller.function.set_pec_objective_function(lambda sim_data: (float(np.sum(sim_data)), sim_data))
+    pec.controller.function.set_pec_objective_function(lambda sim_data: float(np.sum(sim_data)))
     return pec, comp, decision
 
 
 def _pec_grid_ddm_values(noise, trials, estimates, stimulus, rate, threshold):
     pec, comp, _ = _make_pec_grid_ddm(noise, trials, estimates)
     pec.controller.function._ll_func = None
-    _, sim_data = pec.log_likelihood(rate, threshold, inputs={comp: stimulus})
+    _, sim_data = pec.log_likelihood(rate, threshold, inputs={comp: stimulus}, return_sim_data=True)
     return np.asarray(sim_data, dtype=np.float32)[None, None, :, :, :]
 
 
@@ -129,7 +128,7 @@ def _make_pec_grid_sf(noise, trials, estimates):
         initial_seed=42,
     )
     pec.controller.parameters.comp_execution_mode.set("LLVM")
-    pec.controller.function.set_pec_objective_function(lambda sim_data: (float(np.sum(sim_data)), sim_data))
+    pec.controller.function.set_pec_objective_function(lambda sim_data: float(np.sum(sim_data)))
     return pec, comp
 
 
@@ -142,11 +141,13 @@ def _sf_inputs(comp, trials, seed=4):
 def _pec_grid_sf_values(noise, trials, estimates, threshold):
     pec, comp = _make_pec_grid_sf(noise, trials, estimates)
     inputs = _sf_inputs(comp, trials)
-    input_copy = {key: copy.deepcopy(value) for key, value in inputs.items()}
-    pec_inputs, _ = comp._parse_input_dict(input_copy, pnl.Context(composition=pec))
-    pec.controller.set_parameters_in_inputs([0.01], pec_inputs)
+    # Hand PEC the raw per-node stimulus.  `_prepare_pec_inputs_for_simulation`
+    # does the expansion itself (`_parse_input_dict` + `set_parameters_in_inputs`
+    # for the dummy control mechanisms).  Doing it here as well produced a dict
+    # that already contained the control nodes, which is not the shape
+    # `check_pec_inputs` validates against.
     pec.controller.function._ll_func = None
-    _, sim_data = pec.log_likelihood(threshold, inputs=pec_inputs)
+    _, sim_data = pec.log_likelihood(threshold, inputs=inputs, return_sim_data=True)
     return np.asarray(sim_data, dtype=np.float32)[None, None, :, :, :]
 
 

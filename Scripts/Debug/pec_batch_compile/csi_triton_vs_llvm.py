@@ -12,7 +12,6 @@ threshold DDM).  The swept parameter is ``non_decision_time`` (the DDM
 Requires CUDA + triton for the Triton path; LLVM is CPU.
 """
 import argparse
-import copy
 import re
 import time
 import warnings
@@ -90,16 +89,19 @@ def run_llvm(trials, estimates, param_evals, seed, noise=0.1):
         optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=1),
         num_estimates=estimates, initial_seed=seed)
     pec.controller.parameters.comp_execution_mode.set("LLVM")
-    pec.controller.function.set_pec_objective_function(lambda s: (float(np.sum(s)), s))
-    ic = {k: copy.deepcopy(v) for k, v in inputs.items()}
-    pec_inputs, _ = comp._parse_input_dict(ic, pnl.Context(composition=pec))
-    dummy = [v[0] for v in pec.controller.function.fit_param_bounds.values()]
-    pec.controller.set_parameters_in_inputs(dummy, pec_inputs)
+    pec.controller.function.set_pec_objective_function(lambda s: float(np.sum(s)))
+    # PEC expands the raw per-node stimulus itself (`_parse_input_dict` +
+    # `set_parameters_in_inputs`), so pass it through unexpanded.  It does
+    # require an entry for *every* model INPUT node, including the Threshold
+    # Mechanism -- the batched compiler absorbs that one into the DDM boundary
+    # and so does not need it, but the LLVM baseline runs the real model.
+    pec_inputs = dict(inputs)
+    pec_inputs[_node(comp, "Threshold Mechanism")] = np.zeros((trials, 1))
     t = time.perf_counter()
     total = 0.0
     for v in _ndt_values(param_evals):
         pec.controller.function._ll_func = None
-        _, sim = pec.log_likelihood(float(v), inputs=pec_inputs)
+        _, sim = pec.log_likelihood(float(v), inputs=pec_inputs, return_sim_data=True)
         total += float(np.sum(np.asarray(sim)))
     return time.perf_counter() - t, total
 

@@ -1,5 +1,4 @@
 import argparse
-import copy
 import gc
 import statistics
 import sys
@@ -67,7 +66,7 @@ class _PECGridDDMPlan:
         )
         self.pec.controller.parameters.comp_execution_mode.set(execution_mode)
         self.pec.controller.function.set_pec_objective_function(
-            lambda sim_data: (float(np.sum(sim_data)), sim_data)
+            lambda sim_data: float(np.sum(sim_data))
         )
 
     def run(
@@ -91,6 +90,7 @@ class _PECGridDDMPlan:
                 param["rate"],
                 param["threshold"],
                 inputs=pec_inputs,
+                return_sim_data=True,
             )
             parameter_values.append(np.asarray(sim_data, dtype=np.float32))
 
@@ -129,7 +129,7 @@ class _PECGridDDMGraphPlan:
         )
         self.pec.controller.parameters.comp_execution_mode.set(execution_mode)
         self.pec.controller.function.set_pec_objective_function(
-            lambda sim_data: (float(np.sum(sim_data)), sim_data)
+            lambda sim_data: float(np.sum(sim_data))
         )
 
     def run(
@@ -153,6 +153,7 @@ class _PECGridDDMGraphPlan:
                 param["rate"],
                 param["threshold"],
                 inputs=pec_inputs,
+                return_sim_data=True,
             )
             parameter_values.append(np.asarray(sim_data, dtype=np.float32))
 
@@ -193,7 +194,7 @@ class _PECGridStabilityFlexibilityPlan:
         )
         self.pec.controller.parameters.comp_execution_mode.set(execution_mode)
         self.pec.controller.function.set_pec_objective_function(
-            lambda sim_data: (float(np.sum(sim_data)), sim_data)
+            lambda sim_data: float(np.sum(sim_data))
         )
 
     def run(
@@ -207,15 +208,14 @@ class _PECGridStabilityFlexibilityPlan:
         if subject_slices is not None:
             raise ValueError("PEC grid stability-flexibility benchmark supports one unsliced subject.")
 
-        input_copy = {key: copy.deepcopy(value) for key, value in inputs.items()}
-        pec_inputs, _ = self.comp._parse_input_dict(input_copy, pnl.Context(composition=self.pec))
-        dummy_params = [value[0] for value in self.pec.controller.function.fit_param_bounds.values()]
-        self.pec.controller.set_parameters_in_inputs(dummy_params, pec_inputs)
+        # Raw per-node stimulus: PEC expands it internally (see the note in
+        # pec_grid_correctness_check._pec_grid_sf_values).
+        pec_inputs = inputs
 
         parameter_values = []
         for param in parameter_sets:
             self.pec.controller.function._ll_func = None
-            _, sim_data = self.pec.log_likelihood(param["DDM.threshold"], inputs=pec_inputs)
+            _, sim_data = self.pec.log_likelihood(param["DDM.threshold"], inputs=pec_inputs, return_sim_data=True)
             parameter_values.append(np.asarray(sim_data, dtype=np.float32))
 
         return _BatchedResultAdapter(np.asarray(parameter_values, dtype=np.float32)[:, None, :, :, :])
