@@ -8,6 +8,7 @@ into the concrete emitter in `emitter.py`.
 from __future__ import annotations
 
 from psyneulink.core.batched.graph import (
+    COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
 )
@@ -33,7 +34,12 @@ class LaneEmitMixin:
         self.builder.line("estimate_idx = offsets % num_estimates")
         self.builder.line("tmp = offsets // num_estimates")
 
-        if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
+        # Lane-persistent fusions loop trials *inside* the lane, so their lane
+        # space is (parameter_set, subject, estimate) -- no trial axis.  This
+        # must match how the runtime sizes `total_lanes`, or the decode divides
+        # by the wrong extents and folds several parameter sets onto param 0
+        # (leaving the rest of the output buffer untouched).
+        if self.kernel.fusion_kind in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION):
             self.builder.line("subject_idx = tmp % num_subjects")
             self.builder.line("param_idx = tmp // num_subjects")
             self.builder.line()

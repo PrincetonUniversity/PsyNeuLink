@@ -117,8 +117,6 @@ def pnl_batched_coevolving_graph_kernel(
     mask = offsets < total_lanes
     estimate_idx = offsets % num_estimates
     tmp = offsets // num_estimates
-    trial_idx = tmp % num_trials
-    tmp = tmp // num_trials
     subject_idx = tmp % num_subjects
     param_idx = tmp // num_subjects
 
