@@ -126,7 +126,7 @@ integrating transfers; step 8 collapsing DDM threshold + control routing (CSI
 compiles); step 5 **co-evolution loop** (CSI decision **and** RT match PNL
 Python); a refactor factoring the LCA/DDM recurrence into one shared
 `@triton.jit` helper each; and a `CSISurrogate` asv benchmark + a triton-vs-LLVM
-comparison (`csi_triton_vs_llvm.py`, ~62x at PEC scale).
+comparison (`csi_triton_vs_llvm.py`, ~288x at PEC scale).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
@@ -397,11 +397,23 @@ CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
 the same workload (sweeping `non_decision_time` — the DDM `threshold` is already
 controlled, so PEC cannot also modulate it; that conflict raises
 `len(mod_afferents) <= 1` in LLVM). At PEC scale (4 params x 512 estimates x 128
-trials = 262k sims, RTX 2080 Ti): **triton ~57 ms (4.6M sims/s) vs LLVM ~3.5 s
-(75k sims/s) -> ~62x**, and triton throughput rises with lane count. Note the
-checksum vs LLVM diverges mainly because PNL's **own LLVM mode disagrees with its
-Python mode** on the fresh-LCA first trial (RT 1.23 vs 0.53); the batched path
-matches PNL **Python** (the test-suite reference) trial-for-trial. asv tracks the
+trials = 262k sims, RTX 2080 Ti): **triton ~14 ms (18.8M sims/s) vs LLVM ~4.0 s
+(65k sims/s) -> ~288x**, and triton throughput rises with lane count.
+
+The two sides now agree to **0.26%** on the checksum (339233 vs 340103). The
+residual is PNL's **own LLVM mode disagreeing with its Python mode** on the
+fresh-LCA first trial (RT 1.23 vs 0.53); the batched path matches PNL **Python**
+(the test-suite reference) trial-for-trial.
+
+> Earlier revisions of this file reported ~62x here with a large unexplained
+> checksum gap. Both were artifacts of the co-evolving parameter-set bug (see
+> "Done"): with `--param-evals 4`, triton computed only parameter set 0 while
+> LLVM evaluated all four, so it was timed on a quarter of the work and its
+> checksum summed three buffers of uninitialized memory. Fixing it *raised* the
+> speedup — the GPU was nowhere near saturated at 262k lanes — and collapsed the
+> checksum gap. Treat any pre-fix co-evolving multi-parameter number as void.
+
+asv tracks the
 co-evolving path via the `CSISurrogate` benchmark in `benchmarks/batched.py`.
 
 ## Fusion and Lane Layout
@@ -764,7 +776,7 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_triton_v
 ```
 
 It sweeps `non_decision_time` (the DDM `threshold` is already controlled, so PEC
-cannot also modulate it → LLVM `mod_afferents<=1`). At PEC scale this was ~62x
+cannot also modulate it → LLVM `mod_afferents<=1`). At PEC scale this is ~288x
 (triton ~57 ms vs LLVM ~3.5 s); the batched path matches PNL **Python** mode
 trial-for-trial.
 
@@ -937,6 +949,21 @@ environments to persist results.
   `finished` flag — same result for a fixed/collapsing boundary, and strictly
   more correct for a growing one); goldens regenerated; verified on GPU.
 
+- **Co-evolving multi-parameter-set fix** (correctness). `_emit_lane_decode`
+  special-cased only `STATEFUL_GRAPH_FUSION`, so co-evolving kernels got the 4-D
+  (trial-inclusive) lane decode while their runtime sized the launch with the 3-D
+  lane-persistent layout. Every lane collapsed onto `param_idx 0`: with N
+  parameter sets, only set 0 was computed and sets 1..N-1 came back as
+  uninitialized buffer. It hid well — set 0 is correct, the result has the right
+  shape, `trial_idx` is reassigned to 0 right after the decode so trials still
+  worked, and nothing asserts across parameter sets on this path.
+  **Any pre-fix co-evolving number with >1 parameter set is void**, including the
+  triton-vs-LLVM CSI speedup and the recorded asv `CSISurrogate` timings and
+  checksums (`PARAM_SETS = 8`). `ddm_graph` and `stateful_graph` were verified
+  unaffected, as is PEC fit routing (its objective passes one parameter set per
+  call). Add a regression test before trusting this path again — the gap that let
+  this through is that no test varies parameter sets on a co-evolving model.
+
 - **Cap-independent RNG stream layout** (correctness). Streams are allocated a
   fixed `RNG_STREAM_STRIDE` of Philox counter space instead of being packed by
   `MAX_STEPS`/`LCA_MAX_STEPS` (details under "Stream layout"). Results no longer
@@ -960,7 +987,7 @@ environments to persist results.
 - **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
   `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
   compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
-  the same workload: **~62x** at PEC scale (262k sims), triton throughput rising
+  the same workload: **~288x** at PEC scale (262k sims), triton throughput rising
   with lane count. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
   (already controlled → `mod_afferents<=1`), so the comparison sweeps
   `non_decision_time`; the batched path also runs a fit config LLVM can't.

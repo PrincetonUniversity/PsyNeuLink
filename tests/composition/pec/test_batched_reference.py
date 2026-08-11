@@ -462,3 +462,55 @@ def test_ddm_stochastic_matches_pnl_python_statistics():
     assert abs(bvals[:, 0].mean() - ref[:, 0].mean()) < 0.12
     assert abs(bvals[:, 1].mean() - ref[:, 1].mean()) < 0.1
     assert np.all(np.isfinite(bvals))
+
+
+def test_csi_surrogate_all_parameter_sets_are_evaluated():
+    """Every parameter set of a co-evolving graph must actually be computed.
+
+    Regression test.  The co-evolving kernel used the trial-inclusive lane
+    decode while its runtime sized the launch with the lane-persistent
+    (parameter_set, subject, estimate) layout, so every lane collapsed onto
+    parameter set 0.  Sets 1..N-1 were never written and came back as whatever
+    the output buffer happened to hold.
+
+    It went unnoticed because every other co-evolving test runs a single
+    parameter set, and set 0 is correct.  Sweeping `non_decision_time` makes the
+    failure unmissable and is a sharp check on its own: it shifts response time
+    by exactly its own amount and cannot touch the decision at all.
+    """
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    try:
+        _register_csi_drift_rate()
+        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+                              ddm_noise=0.0, lca_noise=0.0)
+        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
+        assert plan.ir.graph.fusion_kind == "coevolving_graph"
+
+        offsets = [0.0, 0.1, 0.25]
+        batched = plan.run(
+            inputs=_csi_inputs(comp),
+            parameter_sets=[{"DDM.non_decision_time": ndt} for ndt in offsets],
+            num_estimates=1,
+            seed=1,
+        )
+        values = batched.values
+        assert values.shape[0] == len(offsets)
+
+        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
+        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
+
+        base = values[0, 0, :, 0, :]
+        assert np.all(np.isfinite(values)), "un-evaluated parameter sets leave garbage behind"
+        for i, ndt in enumerate(offsets):
+            got = values[i, 0, :, 0, :]
+            # A skipped set shows up as an all-zero slice; a real one never is.
+            assert np.any(got != 0.0), f"parameter set {i} (ndt={ndt}) was not evaluated"
+            # non_decision_time cannot affect which boundary is crossed ...
+            np.testing.assert_allclose(got[:, dec_idx], base[:, dec_idx], atol=1e-6)
+            # ... and shifts response time by exactly itself.
+            np.testing.assert_allclose(got[:, rt_idx], base[:, rt_idx] + ndt, atol=1e-5)
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
