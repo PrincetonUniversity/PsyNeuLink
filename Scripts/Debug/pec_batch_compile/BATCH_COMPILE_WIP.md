@@ -134,8 +134,7 @@ integrating transfers; step 8 collapsing DDM threshold + control routing (CSI
 compiles); step 5 **co-evolution loop** (CSI decision **and** RT match PNL
 Python); a refactor factoring the LCA/DDM recurrence into one shared
 `@triton.jit` helper each; and a `CSISurrogate` asv benchmark + a triton-vs-LLVM
-comparison (`csi_triton_vs_llvm.py`; ~90x steady state — see
-"Benchmark (vs LLVM PEC)" for why its printed ~288x is not like for like).
+comparison (`csi_triton_vs_llvm.py`; ~100x steady state, ~1.3x cold one-shot).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
@@ -413,18 +412,19 @@ trials = 262k sims, RTX 2080 Ti), **quote the steady-state figure**:
 | LLVM | ~2.9 s | ~322 ms |
 | triton | ~3.2 s (cold kernel cache) | ~3.6 ms |
 
-- **Steady state, ~90x.** Four warm parameter evals: LLVM ~1290 ms vs triton
-  ~14 ms. This is the number that matters for fitting, where one compile is
+- **Steady state, ~100x.** Four warm parameter evals: LLVM ~1470 ms vs triton
+  ~14.4 ms. This is the number that matters for fitting, where one compile is
   amortised over hundreds of objective evaluations.
 - **Cold one-shot, ~1.3x.** A single 4-point sweep including compilation: LLVM
-  ~4.2 s vs triton ~3.2 s. Compilation costs are near-identical, so a one-off
-  job is close to a wash.
+  ~3.9 s vs triton ~3.0 s. Compilation costs are near-identical, so a one-off
+  job is close to a wash. This one depends on Triton's on-disk kernel cache:
+  with it already warm the compile drops to ~1.6 s and the ratio reads ~2.3x, so
+  use `TRITON_CACHE_DIR` pointed at an empty directory for a true cold number.
 
-> `csi_triton_vs_llvm.py` currently prints ~288x, which is **not** like for
-> like: it warms triton up before starting its timer but starts LLVM's timer
-> before LLVM's first (compiling) call. That single asymmetry is the whole
-> difference between 288x and ~90x. Read its output with that in mind until the
-> script is fixed to report warm and cold separately.
+`csi_triton_vs_llvm.py` reports all of this directly — compile, warm sweep and
+cold total per side, then both speedups. (It previously printed a single ~288x,
+timing triton warm against LLVM cold; that asymmetry alone was the whole
+difference between 288x and ~100x.)
 
 **Accuracy.** The script's "checksum" is `np.sum` over every decision and
 response time — 262k lanes collapsed to one scalar, mixing two quantities, so a
@@ -881,9 +881,9 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_triton_v
 ```
 
 It sweeps `non_decision_time` (the DDM `threshold` is already controlled, so PEC
-cannot also modulate it → LLVM `mod_afferents<=1`). Its printed speedup times
-warm triton against cold LLVM and reads ~3x high; the steady-state figure is
-~90x. See "Benchmark (vs LLVM PEC)" and "Benchmarking Methodology".
+cannot also modulate it → LLVM `mod_afferents<=1`). It reports compile, warm
+sweep and cold total per side: ~100x steady state, ~1.3x cold one-shot. See
+"Benchmark (vs LLVM PEC)" and "Benchmarking Methodology".
 
 The one-off scripts above give ad-hoc triton-vs-LLVM numbers. To **track**
 batched-compiler performance across commits, use the asv suite in `benchmarks/`
@@ -1120,9 +1120,8 @@ environments to persist results.
 - **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
   `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
   compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
-  the same workload — **~90x** steady state at PEC scale (262k sims), triton
-  throughput rising with lane count; the ~288x it prints charges LLVM for
-  compilation and triton not at all. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
+  the same workload — **~100x** steady state at PEC scale (262k sims), triton
+  throughput rising with lane count. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
   (already controlled → `mod_afferents<=1`), so the comparison sweeps
   `non_decision_time`; the batched path also runs a fit config LLVM can't.
 
@@ -1283,9 +1282,11 @@ steps 9-10 make the full PEC fit run on the batched path.
   perfectly credible. Read "Benchmarking Methodology" before quoting one, and
   distrust any figure that does not say whether it is warm or cold, how many
   lanes it ran, and whether the case had the process to itself.
-- The `csi_triton_vs_llvm.py` speedup line is still warm-triton against
-  cold-LLVM and reads ~3x high; the componentwise accuracy comparison it does
-  *not* print is in "Benchmark (vs LLVM PEC)".
+- `csi_triton_vs_llvm.py` reports timings honestly (compile / warm / cold), but
+  its **checksum** still sums decisions and response times into one scalar, so
+  errors in one can cancel the other. It is a smoke test. The componentwise
+  comparison is in "Benchmark (vs LLVM PEC)", and the real accuracy check is the
+  noise-free elementwise test.
 - Stochastic agreement with LLVM is capped by LLVM itself: its PEC grid results
   are not reproducible run to run despite a fixed `initial_seed`, while the
   batched path is bit-identical. Use the noise-free elementwise test for
