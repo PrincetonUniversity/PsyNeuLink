@@ -514,3 +514,139 @@ def test_csi_surrogate_all_parameter_sets_are_evaluated():
             np.testing.assert_allclose(got[:, rt_idx], base[:, rt_idx] + ndt, atol=1e-5)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
+
+
+def zero_all_noise(comp):
+    """Zero every noise source in ``comp``, making the model fully deterministic.
+
+    Model builders do not consistently expose their noise sources as constructor
+    arguments, and a `noise` Parameter can live in three places: on the mechanism
+    itself, on its primary function, or on its integrator function.  Walk the
+    composition (descending into nested ones) and zero all of them, so a test can
+    take *any* model and compare execution paths elementwise instead of
+    statistically.  Returns the list of owners it zeroed, so a caller can assert
+    it actually found something.
+    """
+
+    zeroed = []
+    stack = list(getattr(comp, "nodes", []))
+    while stack:
+        node = stack.pop()
+        if hasattr(node, "nodes"):          # nested Composition
+            stack.extend(node.nodes)
+            continue
+        owners = [node]
+        for attr in ("function", "integrator_function"):
+            owner = getattr(node, attr, None)
+            # A Function's own `.function` is a method, not a component.
+            if owner is not None and hasattr(owner, "parameters"):
+                owners.append(owner)
+        for owner in owners:
+            if not hasattr(getattr(owner, "parameters", None), "noise"):
+                continue
+            owner.parameters.noise.set(0.0, None)
+            zeroed.append(f"{getattr(node, 'name', node)}::{type(owner).__name__}")
+    return zeroed
+
+
+def _csi_inputs_n(comp, trials):
+    import re
+
+    def node(base):
+        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
+
+    half = (trials + 1) // 2
+    return {
+        node("Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1))[:trials],
+        node("Task Input"): np.tile([[1, 0], [0, 1]], (half, 1))[:trials],
+        node("Correct Response"): np.tile([[1], [-1]], (half, 1))[:trials],
+        node("Cue Stimulus Interval"): np.zeros((trials, 1)),
+    }
+
+
+def _pnl_gate_outcomes(comp, inputs, execution_mode):
+    """[trial, (decision, response_time)] from the CSI surrogate's gate nodes."""
+
+    comp.run(inputs=inputs, execution_mode=execution_mode)
+    names = [op.name for op in comp.output_CIM.output_ports]
+    per_port = {
+        nm: np.array([float(np.asarray(comp.results[t][i]).reshape(-1)[0])
+                      for t in range(len(comp.results))])
+        for i, nm in enumerate(names)
+    }
+    return np.stack([
+        next(v for k, v in per_port.items() if "DECISION_GATE" in k),
+        next(v for k, v in per_port.items() if "RESPONSE_GATE" in k),
+    ], axis=1)
+
+
+@pytest.mark.parametrize("iti,collapse", [(0, 0.0), (0, -0.001), (10, 0.0), (10, -0.001)])
+@pytest.mark.parametrize(
+    "execution_mode",
+    [pnl.ExecutionMode.Python, pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)],
+)
+def test_csi_surrogate_noise_free_matches_pnl_elementwise(iti, collapse, execution_mode):
+    """With noise removed, the batched path must agree with PNL *elementwise*.
+
+    The stochastic comparisons elsewhere can only check summary statistics, which
+    tolerates a lot: a systematic drift hides inside a distribution that still
+    looks right.  Zeroing every noise source makes all three execution paths
+    deterministic, so the residual can be characterised exactly instead.
+
+    Empirically that residual is tightly bounded, and this test pins it there:
+
+    * decision outcomes are **exactly** equal, in every configuration;
+    * response times differ by **either zero or exactly one DDM time step**,
+      never a fraction of one and never two.
+
+    That is a much stronger statement than a loose tolerance.  A one-step
+    difference is boundary-crossing discretisation -- the batched LCA starts from
+    ``act=0`` where PNL starts from ``logistic(0)``, so a near-tie crossing can
+    land on either side of a step.  An ITI or a collapsing threshold makes
+    near-ties more common (both bring the accumulator closer to the boundary at
+    the moment it crosses), which is why the *number* of affected trials varies
+    by configuration while the *size* of the error never does.  Anything that
+    accumulates, scales, or drifts would break the one-step bound immediately.
+    """
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+    from csi_model_surrogate import make_stab_flex
+
+    trials = 8
+    try:
+        _register_csi_drift_rate()
+        # Build the model *with* noise, then strip it, so the helper is doing the
+        # work rather than the builder's own noise arguments.
+        kwargs = dict(iti=iti, csi_repeat=0, csi_switch=0, threshold_collapse=collapse,
+                      ddm_noise=0.35, lca_noise=0.25)
+
+        comp_batched = make_stab_flex(**kwargs)
+        assert zero_all_noise(comp_batched), "no noise sources found to zero"
+        plan = BatchedCompositionCompiler.compile(comp_batched, backend="triton_cpu", max_steps=800)
+        batched = plan.run(inputs=_csi_inputs_n(comp_batched, trials), parameter_sets=[{}],
+                           num_estimates=1, seed=1).values[0, 0, :, 0, :]
+        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
+        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
+
+        comp_ref = make_stab_flex(**kwargs)
+        zero_all_noise(comp_ref)
+        reference = _pnl_gate_outcomes(comp_ref, _csi_inputs_n(comp_ref, trials), execution_mode)
+
+        dt = float(np.asarray(
+            next(n for n in comp_ref.nodes if n.name.startswith("DDM"))
+            .function.parameters.time_step_size.get(None)
+        ).reshape(-1)[0])
+
+        np.testing.assert_allclose(batched[:, dec_idx], reference[:, 0], atol=1e-6,
+                                   err_msg="decision outcomes must match exactly without noise")
+
+        rt_diff = np.abs(batched[:, rt_idx] - reference[:, 1])
+        assert rt_diff.max() <= dt + 1e-6, (
+            f"response times differ by more than one DDM step ({dt}): {rt_diff}"
+        )
+        # Every nonzero difference must be a *whole* step, not a fraction of one.
+        off = rt_diff[rt_diff > 1e-6]
+        np.testing.assert_allclose(off, np.full(off.shape, dt), atol=1e-5,
+                                   err_msg=f"non-integral step differences: {off}")
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
