@@ -91,6 +91,14 @@ PsyNeuLink itself is the correctness oracle, not a hand-written twin:
 - Unit tests (`tests/composition/pec/test_batched_reference.py`) compare the
   batched backend against real PNL **Python-mode** execution — deterministic
   (noise=0) cases exactly, stochastic cases by summary statistics.
+- **Prefer a deterministic comparison where one is possible.** `zero_all_noise(
+  comp)` strips every noise source from any model, so paths can be compared
+  elementwise rather than by distribution — which is what catches a systematic
+  drift, since a drifting model still produces a distribution that looks
+  reasonable. Noise-free, PNL Python and LLVM agree *exactly* with each other,
+  and the batched CSI surrogate matches both to within one DDM step. The
+  stochastic tests remain necessary: zeroing noise exercises none of the RNG
+  machinery (stream layout, Philox draws, lane independence).
 - PEC-scale / GPU-compiled validation lives in
   `pec_grid_correctness_check.py`, which uses PNL **LLVM** grid evaluation as
   the reference (separate process from interpret-mode tests).
@@ -126,7 +134,8 @@ integrating transfers; step 8 collapsing DDM threshold + control routing (CSI
 compiles); step 5 **co-evolution loop** (CSI decision **and** RT match PNL
 Python); a refactor factoring the LCA/DDM recurrence into one shared
 `@triton.jit` helper each; and a `CSISurrogate` asv benchmark + a triton-vs-LLVM
-comparison (`csi_triton_vs_llvm.py`, ~288x at PEC scale).
+comparison (`csi_triton_vs_llvm.py`; ~90x steady state — see
+"Benchmark (vs LLVM PEC)" for why its printed ~288x is not like for like).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
@@ -397,13 +406,38 @@ CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
 the same workload (sweeping `non_decision_time` — the DDM `threshold` is already
 controlled, so PEC cannot also modulate it; that conflict raises
 `len(mod_afferents) <= 1` in LLVM). At PEC scale (4 params x 512 estimates x 128
-trials = 262k sims, RTX 2080 Ti): **triton ~14 ms (18.8M sims/s) vs LLVM ~4.0 s
-(65k sims/s) -> ~288x**, and triton throughput rises with lane count.
+trials = 262k sims, RTX 2080 Ti), **quote the steady-state figure**:
 
-The two sides now agree to **0.26%** on the checksum (339233 vs 340103). The
-residual is PNL's **own LLVM mode disagreeing with its Python mode** on the
-fresh-LCA first trial (RT 1.23 vs 0.53); the batched path matches PNL **Python**
-(the test-suite reference) trial-for-trial.
+| | cold compile (one-time) | steady state, per parameter eval |
+| --- | --- | --- |
+| LLVM | ~2.9 s | ~322 ms |
+| triton | ~3.2 s (cold kernel cache) | ~3.6 ms |
+
+- **Steady state, ~90x.** Four warm parameter evals: LLVM ~1290 ms vs triton
+  ~14 ms. This is the number that matters for fitting, where one compile is
+  amortised over hundreds of objective evaluations.
+- **Cold one-shot, ~1.3x.** A single 4-point sweep including compilation: LLVM
+  ~4.2 s vs triton ~3.2 s. Compilation costs are near-identical, so a one-off
+  job is close to a wash.
+
+> `csi_triton_vs_llvm.py` currently prints ~288x, which is **not** like for
+> like: it warms triton up before starting its timer but starts LLVM's timer
+> before LLVM's first (compiling) call. That single asymmetry is the whole
+> difference between 288x and ~90x. Read its output with that in mind until the
+> script is fixed to report warm and cold separately.
+
+**Accuracy.** The script's "checksum" is `np.sum` over every decision and
+response time — 262k lanes collapsed to one scalar, mixing two quantities, so a
+decision rate that is too high can cancel response times that are too short.
+Componentwise the two paths agree far better than that number conveys: decision
+rate to 0.2%, RT quantiles exactly, and — once trial 0 is excluded — RT mean and
+standard deviation to ~0.1% (e.g. 0.4449/0.0952 vs 0.4444/0.0951). Trial 0 is
+the entire residual, and only under noise: **noise-free, PNL Python and LLVM
+agree exactly, and the batched path matches both to within one DDM step** (see
+`test_csi_surrogate_noise_free_matches_pnl_elementwise`). Note also that the
+LLVM baseline is not reproducible run to run despite a fixed `initial_seed`,
+while the batched path is bit-identical — which is why the deterministic test,
+not the checksum, is the real accuracy check.
 
 > Earlier revisions of this file reported ~62x here with a large unexplained
 > checksum gap. Both were artifacts of the co-evolving parameter-set bug (see
@@ -415,6 +449,7 @@ fresh-LCA first trial (RT 1.23 vs 0.53); the batched path matches PNL **Python**
 
 asv tracks the
 co-evolving path via the `CSISurrogate` benchmark in `benchmarks/batched.py`.
+Its recorded results predate the parameter-set fix and are void (`PARAM_SETS = 8`).
 
 ## Fusion and Lane Layout
 
@@ -746,6 +781,75 @@ create a gradient that the data does not contain. Recovering `gain`/`csi_switch`
 well needs more trials or a design that makes the LCA dynamics matter, not more
 estimates.
 
+## Benchmarking Methodology
+
+Every trap below produced a number that looked entirely credible — tight spread,
+plausible magnitude, reproducible on re-run — and was wrong by 2.5x to 30x. Check
+all four before quoting anything.
+
+**1. Time warm against warm.** Both backends compile, and the costs are
+comparable: ~3.2 s for triton against a cold kernel cache, ~2.9 s for LLVM on its
+first evaluation. Warming one side and not the other is worth ~2.5x on the CSI
+comparison alone. Decide which question is being asked and be explicit:
+
+- *fitting* (hundreds of objective evals, compile amortised) → steady state;
+- *one-shot* (a single sweep) → include compilation for both.
+
+`gpu_batch_compile_benchmark.py` gets this right — its `median_ms` excludes the
+first call and `first_ms` reports it separately. `csi_triton_vs_llvm.py` does
+not (see "Benchmark (vs LLVM PEC)").
+
+Triton compilation has three regimes, so say which one a number reflects: cold
+kernel cache ~3.2 s, warm cache in a fresh process ~1.7 s, same process ~14 ms.
+`TRITON_CACHE_DIR` pointed at a scratch directory gives a genuine cold measure
+without disturbing the real cache.
+
+**2. One process per case.** Cases measured in the same process contaminate each
+other through accumulated allocations, kernel-cache state and clock/thermal
+history. A model benchmarked after two others reported **33 ms where the same
+case alone reported 14 ms** — and both readings were internally tight (32.9-33.7
+vs 13.5-14.1), so the spread gave no warning at all. This is the default now
+(`--no-isolate` restores the old behaviour); `first_ms` is not comparable across
+isolated rows because each pays a fresh compile.
+
+**3. Size the case past the launch-bound region.** Below roughly 8k lanes the GPU
+is idle and the clock is measuring fixed overhead, not the kernel. CSI throughput
+against lane count (RTX 2080 Ti, BLOCK=128):
+
+| lanes | sims | time | throughput |
+| --- | --- | --- | --- |
+| 512 | 65,536 | 14.9 ms | 4.4M/s |
+| 2,048 | 262,144 | 14.1 ms | 18.6M/s |
+| 8,192 | 1,048,576 | 13.8 ms | 75.7M/s |
+| 32,768 | 4,194,304 | 35.2 ms | 119.0M/s |
+| 131,072 | 16,777,216 | 126.3 ms | 132.8M/s |
+
+16x the work for the same wall clock, from 512 to 8,192 lanes. A 512-lane case is
+4 thread blocks on 68 SMs. Speedups measured there are meaningless in *both*
+directions — LLVM has large per-call overhead at small sizes too.
+
+**4. Do not compare `sims/s` across models.** A "sim" is a trial, and trials
+differ enormously: a toy stab-flex trial runs 1200 LCA steps then a DDM, a CSI
+trial co-evolves ~44. That is ~27x, so cross-model throughput says nothing.
+Speedup *ratios* remain comparable.
+
+Applying all of this — isolated, warm, matched at 65,536 lanes:
+
+| model | LLVM | triton | speedup | checksum agreement |
+| --- | --- | --- | --- | --- |
+| `ddm` | 218.7 ms | 1.94 ms | 113x | 0.30% |
+| `ddm_graph` | 257.8 ms | 2.35 ms | 110x | 0.30% |
+| `stability_flexibility` | 780.7 ms | 13.59 ms | 57x | 0.13% |
+
+An earlier revision reported 9.1x for stability-flexibility, which prompted this
+section: a 512-lane case measured in a contaminated process. It is not the
+outlier it appeared to be.
+
+**Machine note.** These were taken under WSL2, which shares the GPU with the
+Windows host — 5-24% background load and SM clocks idling at 330-435 MHz of 2100.
+Absolute figures are therefore conservative, and the GPU should be checked
+(`nvidia-smi`) before a measurement run.
+
 Benchmark script:
 
 ```bash
@@ -763,6 +867,7 @@ script supports:
 --ddm-case PARAMSxTRIALSxESTIMATES
 --ddm-graph-case PARAMSxTRIALSxESTIMATES
 --sf-case PARAMSxTRIALSxESTIMATES
+--no-isolate            # measure every case in one process (see "2." above)
 ```
 
 (`triton` and `triton_cpu` cannot be combined in one invocation.)
@@ -776,9 +881,9 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_triton_v
 ```
 
 It sweeps `non_decision_time` (the DDM `threshold` is already controlled, so PEC
-cannot also modulate it → LLVM `mod_afferents<=1`). At PEC scale this is ~288x
-(triton ~57 ms vs LLVM ~3.5 s); the batched path matches PNL **Python** mode
-trial-for-trial.
+cannot also modulate it → LLVM `mod_afferents<=1`). Its printed speedup times
+warm triton against cold LLVM and reads ~3x high; the steady-state figure is
+~90x. See "Benchmark (vs LLVM PEC)" and "Benchmarking Methodology".
 
 The one-off scripts above give ad-hoc triton-vs-LLVM numbers. To **track**
 batched-compiler performance across commits, use the asv suite in `benchmarks/`
@@ -949,6 +1054,34 @@ environments to persist results.
   `finished` flag — same result for a fixed/collapsing boundary, and strictly
   more correct for a growing one); goldens regenerated; verified on GPU.
 
+- **Demand-bounded stateful LCA + per-process benchmark isolation.** The
+  `stateful_graph` LCA looped to `lca_max_steps` — the largest cue anywhere in
+  the data — with `active = step < lca_steps` masking, so every trial paid the
+  worst cue in the dataset. It now computes the block's stopping point once
+  before the loop. Note the asymmetry with the DDM: an LCA's settling length is
+  cue-driven and known up front, so a *precomputed bound* is right, whereas a
+  per-step block reduction (the DDM's form) measured ~24% **slower** than the
+  original masking when cues are uniform — the reduction costs more than it
+  saves. Varying cues (mean 493 against a cap of 1200): 16.4 -> 11.0 ms; uniform
+  cues within noise; checksums identical. This is free in the current benchmark,
+  whose cue is a constant 1200 (`generate_trial_sequence` has eight CSI branches
+  all hardcoded to `[1200]`, which reads like it was meant to vary by condition
+  and was later collapsed) — varying CSIs are what exposes it.
+  `gpu_batch_compile_benchmark.py` now runs each (model, case, backend) in its
+  own subprocess by default; see "Benchmarking Methodology" for why.
+
+- **Noise-free elementwise accuracy test.** `zero_all_noise(comp)` in
+  `tests/composition/pec/test_batched_reference.py` walks a composition and zeros
+  every `noise` Parameter (they live on the mechanism, its function, *and* its
+  integrator function), making any model deterministic so execution paths can be
+  compared elementwise instead of statistically. The CSI surrogate is checked
+  across four configurations x Python/LLVM: decisions match **exactly**, and RTs
+  differ by **either zero or exactly one DDM step** — a structural assertion, not
+  a tolerance, so drift or scaling breaks it immediately. Two limits by
+  construction: it exercises none of the RNG machinery, and RT is quantised to
+  steps (~50/trial), so errors below ~2% hide inside the one-step allowance (a
+  10% drift error fails the test, a 1% one does not).
+
 - **Co-evolving multi-parameter-set fix** (correctness). `_emit_lane_decode`
   special-cased only `STATEFUL_GRAPH_FUSION`, so co-evolving kernels got the 4-D
   (trial-inclusive) lane decode while their runtime sized the launch with the 3-D
@@ -987,8 +1120,9 @@ environments to persist results.
 - **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
   `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
   compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
-  the same workload: **~288x** at PEC scale (262k sims), triton throughput rising
-  with lane count. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
+  the same workload — **~90x** steady state at PEC scale (262k sims), triton
+  throughput rising with lane count; the ~288x it prints charges LLVM for
+  compilation and triton not at all. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
   (already controlled → `mod_afferents<=1`), so the comparison sweeps
   `non_decision_time`; the batched path also runs a fit config LLVM can't.
 
@@ -1145,6 +1279,17 @@ steps 9-10 make the full PEC fit run on the batched path.
   layout"). Do not reintroduce a cap into an RNG offset: it makes results depend
   on a bound that is supposed to be a don't-care, and it can let a stream run
   into its neighbour.
+- Benchmark numbers on this stack have been wrong by 2.5x to 30x while looking
+  perfectly credible. Read "Benchmarking Methodology" before quoting one, and
+  distrust any figure that does not say whether it is warm or cold, how many
+  lanes it ran, and whether the case had the process to itself.
+- The `csi_triton_vs_llvm.py` speedup line is still warm-triton against
+  cold-LLVM and reads ~3x high; the componentwise accuracy comparison it does
+  *not* print is in "Benchmark (vs LLVM PEC)".
+- Stochastic agreement with LLVM is capped by LLVM itself: its PEC grid results
+  are not reproducible run to run despite a fixed `initial_seed`, while the
+  batched path is bit-identical. Use the noise-free elementwise test for
+  accuracy, not checksums.
 
 ## Current Mental Model
 
