@@ -25,12 +25,15 @@ def _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, ac
 
 
 @triton.jit
-def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gain, leak, competition, self_excitation, noise, dt, lca_steps, seed, random_base, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr):
-    for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
+def _pnl_triton_lca_width2_integrate(input0, input1, pre0, pre1, act0, act1, gain, leak, competition, self_excitation, noise, dt, lca_steps, seed, random_base, stream0: tl.constexpr, stream1: tl.constexpr, lca_max_steps: tl.constexpr, lane_mask):
+    block_steps = tl.minimum(tl.max(tl.where(lane_mask, lca_steps, 0.0)), lca_max_steps)
+    step = 0
+    while step < block_steps:
         active = step < lca_steps
         n0 = tl.randn(seed, random_base + stream0 + step)
         n1 = tl.randn(seed, random_base + stream1 + step)
         pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(input0, input1, pre0, pre1, act0, act1, active, gain, leak, competition, self_excitation, noise, dt, n0, n1)
+        step += 1
     return (pre0, pre1, act0, act1)
 
 
@@ -189,7 +192,7 @@ def pnl_batched_stateful_graph_kernel(
         n_Task_Activations__Act1__Act2__input_1 = (n_Task_Activations__Act1__Act2__projection_0_1)
 
         n_Task_Activations__Act1__Act2__lca_steps = tl.minimum(tl.maximum(tl.ceil(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0)), 0.0), LCA_MAX_STEPS)
-        n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1 = _pnl_triton_lca_width2_integrate(n_Task_Activations__Act1__Act2__input_0, n_Task_Activations__Act1__Act2__input_1, n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n_Task_Activations__Act1__Act2__lca_steps, SEED, random_base, 0, 4294967296, LCA_MAX_STEPS)
+        n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1 = _pnl_triton_lca_width2_integrate(n_Task_Activations__Act1__Act2__input_0, n_Task_Activations__Act1__Act2__input_1, n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n_Task_Activations__Act1__Act2__lca_steps, SEED, random_base, 0, 4294967296, LCA_MAX_STEPS, mask)
 
         n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_0 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_0, 1.0)
         n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_1 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_1, 1.0)

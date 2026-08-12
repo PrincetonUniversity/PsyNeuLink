@@ -83,11 +83,25 @@ def _pnl_triton_lca_width2_integrate(
     stream0,
     stream1,
     lca_max_steps,
+    lane_mask,
 ):
     # `stream0`/`stream1` are absolute Philox offsets from the lane's base, one
     # full counter space each, so the step index just adds into the low bits and
     # the draws do not depend on `lca_max_steps` (which is only the loop cap).
-    for step in tl.range(0, lca_max_steps, 1, loop_unroll_factor=1):
+    #
+    # `lca_max_steps` is the cap over *every* trial (the largest cue anywhere in
+    # the data), while `lca_steps` is what this trial actually demands -- so
+    # masking through to the cap makes every trial pay the worst one.
+    #
+    # Unlike a DDM, this settling length is known up front (it is cue-driven, not
+    # data-dependent), so the stopping point is computed once rather than tested
+    # each iteration: a per-step block reduction here costs more than it saves
+    # whenever the cues happen to be uniform.  Out-of-range lanes are excluded --
+    # when the cue is a constant rather than an input they look active and would
+    # hold the bound at the cap.
+    block_steps = tl.minimum(tl.max(tl.where(lane_mask, lca_steps, 0.0)), lca_max_steps)
+    step = 0
+    while step < block_steps:
         active = step < lca_steps
         n0 = tl.randn(seed, random_base + stream0 + step)
         n1 = tl.randn(seed, random_base + stream1 + step)
@@ -95,6 +109,7 @@ def _pnl_triton_lca_width2_integrate(
             input0, input1, pre0, pre1, act0, act1, active,
             gain, leak, competition, self_excitation, noise, dt, n0, n1,
         )
+        step += 1
     return pre0, pre1, act0, act1
 
 
@@ -255,6 +270,7 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
                 str(stream0),
                 str(stream1),
                 ctx.lca_max_steps,
+                "mask",
             ),
         )
     )

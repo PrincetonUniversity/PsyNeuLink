@@ -1,6 +1,7 @@
 import argparse
 import gc
 import statistics
+import subprocess
 import sys
 import time
 import warnings
@@ -530,6 +531,14 @@ def _parse_args():
     parser.add_argument("--skip-ddm", action="store_true")
     parser.add_argument("--skip-ddm-graph", action="store_true")
     parser.add_argument("--skip-sf", action="store_true")
+    parser.add_argument(
+        "--no-isolate",
+        action="store_true",
+        help=(
+            "Measure every case in this process instead of one subprocess each. "
+            "Faster, but cases contaminate each other -- see _run_isolated."
+        ),
+    )
     args = parser.parse_args()
     args.backends = args.backends or ["triton"]
     args.ddm_cases = args.ddm_cases or [(1, 128, 1024), (8, 128, 1024), (16, 128, 4096)]
@@ -538,9 +547,59 @@ def _parse_args():
     return args
 
 
+_MODEL_FLAGS = {"ddm": "ddm", "ddm_graph": "ddm-graph", "stability_flexibility": "sf"}
+_MODEL_CASES = {"ddm": "ddm_cases", "ddm_graph": "ddm_graph_cases",
+                "stability_flexibility": "sf_cases"}
+
+
+def _run_isolated(args):
+    """Measure each (model, case, backend) in its own subprocess.
+
+    Cases measured in one process contaminate each other: a model benchmarked
+    after two others has been seen to report 33 ms where the same case alone
+    reports 14 ms, with both readings internally tight, so the spread gives no
+    warning that anything is wrong.  Accumulated GPU allocations, kernel-cache
+    state and clock/thermal history all persist across cases in a process.
+
+    A subprocess per case pays a fresh interpreter and recompile each time --
+    which is why the `first_ms` column is not comparable across isolated rows --
+    but makes `median_ms` mean what it says.
+    """
+
+    script = str(Path(__file__).resolve())
+    for model, flag in _MODEL_FLAGS.items():
+        if getattr(args, f"skip_{'sf' if model == 'stability_flexibility' else model}"):
+            continue
+        for params_count, trials, estimates in getattr(args, _MODEL_CASES[model]):
+            for backend in args.backends:
+                argv = [
+                    sys.executable, script, "--no-isolate",
+                    "--backend", backend,
+                    f"--{flag}-case", f"{params_count}x{trials}x{estimates}",
+                    "--repeats", str(args.repeats), "--warmups", str(args.warmups),
+                    "--seed", str(args.seed),
+                    "--ddm-max-steps", str(args.ddm_max_steps),
+                    "--sf-max-steps", str(args.sf_max_steps),
+                ]
+                argv += [f"--skip-{other}" for other in ("ddm", "ddm-graph", "sf")
+                         if other != flag]
+                completed = subprocess.run(argv, capture_output=True, text=True)
+                for line in completed.stdout.splitlines():
+                    # Child re-prints the CSV header; keep only its data rows.
+                    if line.strip() and not line.startswith("model,backend,"):
+                        print(line, flush=True)
+                if completed.returncode != 0:
+                    tail = completed.stderr.strip().splitlines()[-1:] or ["(no stderr)"]
+                    print(f"{model},{backend},SKIP,subprocess exit "
+                          f"{completed.returncode}: {tail[0]}", flush=True)
+
+
 def main():
     args = _parse_args()
     _print_header()
+    if not args.no_isolate:
+        _run_isolated(args)
+        return
     if not args.skip_ddm:
         _run_ddm(args)
     if not args.skip_ddm_graph:
