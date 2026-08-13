@@ -3,10 +3,12 @@
 These pin the *exact* emitted kernel source for representative fixtures. They are
 the acceptance criterion for refactors that must not change emission (e.g.
 splitting `graph_emit.py` into the `emit/` package): the generated source must
-stay byte-identical to the committed goldens in `golden_kernels/`.
+match the committed goldens in `golden_kernels/`.
 
 Emission is deterministic (fixed op order, insertion-ordered template/param
-dicts), so byte-equality is stable across runs.
+dicts), so this is stable across runs. Both sides are re-rendered through the
+running interpreter's unparser before comparison, because `ast.unparse`
+formatting differs between Python versions -- see `_normalized`.
 
 To regenerate after an *intentional* emission change:
 
@@ -14,6 +16,7 @@ To regenerate after an *intentional* emission change:
         tests/composition/pec/test_batched_kernel_source.py -q -n 0
 """
 
+import ast
 import os
 import sys
 from pathlib import Path
@@ -113,6 +116,24 @@ def test_coevolving_graph_source_matches_golden():
         unregister_batched_instance_op("Drift Rate Value")
 
 
+def _normalized(source, name):
+    """Re-render `source` through this interpreter's own unparser.
+
+    Component helper bodies are emitted with `ast.unparse`, whose formatting is
+    not stable across Python versions -- 3.10 renders a tuple assignment target
+    as `(a, b) = f()` where later versions emit `a, b = f()`. Comparing raw text
+    therefore fails on whichever version did not write the golden (this showed up
+    in CI as three golden mismatches on 3.10, on every platform).
+
+    Round-tripping both sides through the *running* interpreter removes that
+    difference without weakening the check: the comparison is still over complete
+    source text, so any real emission change -- a renamed variable, a reordered
+    op, a changed constant -- still fails.
+    """
+
+    return ast.unparse(ast.parse(source, filename=f"<{name}>"))
+
+
 def _assert_matches_golden(name, source):
     golden_path = GOLDEN_DIR / f"{name}.py"
 
@@ -120,7 +141,7 @@ def _assert_matches_golden(name, source):
         golden_path.write_text(source, encoding="utf-8")
 
     golden = golden_path.read_text(encoding="utf-8")
-    assert source == golden, (
+    assert _normalized(source, name) == _normalized(golden, f"{name}-golden"), (
         f"Generated kernel source for '{name}' differs from the golden snapshot. "
         "If this change is intentional, regenerate with "
         "PNL_UPDATE_KERNEL_GOLDENS=1."
