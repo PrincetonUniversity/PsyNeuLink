@@ -219,8 +219,6 @@ import pathlib
 import site
 import warnings
 
-from psyneulink._typing import Union
-
 import numpy as np
 from beartype import beartype
 

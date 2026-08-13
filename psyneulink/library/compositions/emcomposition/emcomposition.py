@@ -1198,7 +1198,6 @@ Class Reference
 
 import copy
 import warnings
-from typing import Optional, Union
 from enum import Enum
 
 import numpy as np
@@ -1210,6 +1209,7 @@ except ImportError:
 
 import psyneulink.core.scheduling.condition as conditions
 
+from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate, LinearCombination

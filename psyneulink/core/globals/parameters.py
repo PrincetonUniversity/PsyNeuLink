@@ -318,13 +318,12 @@ import inspect
 import itertools
 import logging
 import types
-import typing
 import weakref
 
 import numpy as np
 import toposort
 
-from psyneulink._typing import Iterable, Optional, Set, Union
+from psyneulink._typing import Any, Hashable, Iterable, List, Optional, Set, Union
 from psyneulink import _debugger
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
@@ -596,7 +595,7 @@ def check_user_specified(func):
     return check_user_specified_wrapper
 
 
-def is_array_like(obj: typing.Any) -> bool:
+def is_array_like(obj: Any) -> bool:
     """
     Returns:
         bool: True if **obj** is a numpy-array-like object. False
@@ -1786,7 +1785,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         return value_result
 
-    def _get_values_key(self, context: Context) -> typing.Hashable:
+    def _get_values_key(self, context: Context) -> Hashable:
         if not self.stateful:
             return None
         else:
@@ -1920,7 +1919,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 self._tracking_compiled_struct = False
 
     @handle_external_context()
-    def delete(self, context: Optional[Union[Context, typing.Hashable]] = None):
+    def delete(self, context: Optional[Union[Context, Hashable]] = None):
         self._delete(context)
 
     def _delete(self, context: Context):
@@ -2071,7 +2070,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
     def clear_history(
         self,
-        contexts: typing.Union[Context, typing.List[Context]] = NotImplemented
+        contexts: Union[Context, List[Context]] = NotImplemented
     ):
         """
             Clears the history of this Parameter for every context in

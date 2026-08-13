@@ -13,8 +13,8 @@ import itertools
 import re
 import weakref
 from collections import defaultdict, namedtuple
-from typing import Any, Dict, Optional, Set, Tuple, Union
 
+from psyneulink._typing import Any, Dict, Optional, Set, Tuple, Union
 from psyneulink.core.globals.keywords import \
     CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_PORT, MAPPING_PROJECTION, OUTPUT_PORT, \
     FUNCTION_COMPONENT_CATEGORY, COMPONENT_PREFERENCE_SET, MECHANISM_COMPONENT_CATEGORY, \

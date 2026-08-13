@@ -8,11 +8,9 @@
 
 # ********************************************* AutodiffComposition *************************************************
 
-from typing import Generator, Hashable, Union
-
 import numpy as np
 
-from psyneulink._typing import Mapping, Optional, Tuple
+from psyneulink._typing import Generator, Hashable, Mapping, Optional, Tuple, Union
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition, LearningScale
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
