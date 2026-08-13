@@ -125,8 +125,8 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}
 
     - name: Drop PyTorch requirement
       if: ${{ matrix.torch == 'notorch' }}
@@ -140,14 +140,19 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        features: 'dev'
+        # 'triton' installs upstream Triton on Linux and triton-windows on
+        # Windows, so the batched-compiler tests exercise both.  Its markers
+        # select nothing on macOS, where no wheels exist and those tests skip.
+        # Linux already got Triton transitively via torch; naming it here makes
+        # that explicit and version-bounded.
+        features: 'dev,triton'
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
       if: always()
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
 
     - name: Lint with Ruff
       shell: bash

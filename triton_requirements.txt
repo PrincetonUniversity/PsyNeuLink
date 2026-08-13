@@ -1,1 +1,8 @@
+# Upstream Triton publishes Linux wheels only.  triton-windows is the community
+# Windows build of the same project (github.com/triton-lang/triton-windows); it
+# installs as the `triton` package, so nothing downstream needs to know which one
+# is present.  Versions track upstream with a `.postN` suffix (3.7.1.post27
+# corresponds to 3.7.1), which stays inside the same `>=3.5,<4` range.
+# No macOS wheels exist for either, so the batched tests skip there.
 triton>=3.5,<4; platform_system == 'Linux' and platform_machine == 'x86_64'
+triton-windows>=3.5,<4; platform_system == 'Windows' and platform_machine == 'AMD64'
