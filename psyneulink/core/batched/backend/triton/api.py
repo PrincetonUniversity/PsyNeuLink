@@ -3,8 +3,8 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence
 
 
 class TritonOpError(RuntimeError):
@@ -27,7 +27,7 @@ class TritonOpTemplate:
     # Other helper templates this one calls; the emitter emits them (transitively)
     # ahead of this template so the `@triton.jit` device functions are defined
     # before their callers.
-    dependencies: tuple["TritonOpTemplate", ...] = ()
+    dependencies: tuple[TritonOpTemplate, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -120,7 +120,7 @@ def pnl_triton_op(
     *,
     name: str | None = None,
     constexpr: Iterable[str] = (),
-    helpers: Iterable["TritonOpTemplate"] = (),
+    helpers: Iterable[TritonOpTemplate] = (),
 ):
     """Capture a small helper function as generated `@triton.jit` source.
 

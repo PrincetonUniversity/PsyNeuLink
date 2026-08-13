@@ -32,7 +32,7 @@ of the simulations).
 
 from __future__ import annotations
 
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -69,8 +69,8 @@ def histogram_likelihood(
     categorical_dims=None,
     *,
     bins: int = 100,
-    bin_range: Optional[Sequence] = None,
-    device: Optional[str] = None,
+    bin_range: Sequence | None = None,
+    device: str | None = None,
 ):
     """Per-trial histogram likelihood of ``exp_data`` under ``sim_outcomes``.
 
@@ -175,10 +175,10 @@ def histogram_log_likelihood(
     categorical_dims=None,
     *,
     bins: int = 100,
-    bin_range: Optional[Sequence] = None,
-    include_mask: Optional[np.ndarray] = None,
-    device: Optional[str] = None,
-) -> Union[float, np.ndarray]:
+    bin_range: Sequence | None = None,
+    include_mask: np.ndarray | None = None,
+    device: str | None = None,
+) -> float | np.ndarray:
     """Total histogram log-likelihood per lane (``sum_t log p(exp_t)``).
 
     Convenience wrapper over :func:`histogram_likelihood` that applies the log,

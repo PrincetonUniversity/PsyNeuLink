@@ -42,8 +42,9 @@ from __future__ import annotations
 
 import inspect
 import re
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import numpy as np
 

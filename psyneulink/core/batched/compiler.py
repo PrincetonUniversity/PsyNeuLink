@@ -35,7 +35,7 @@ class BatchedCompositionCompiler:
         return report
 
     @staticmethod
-    def compile(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> "BatchedSimulationPlan":
+    def compile(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedSimulationPlan:
         _validate_backend(backend)
         report, ir, bindings = analyze_composition(
             composition,
