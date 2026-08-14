@@ -39,11 +39,17 @@ IR layers
 
 ``BatchedGraphIR`` is the backend-neutral semantic graph.  Component, port,
 projection, parameter, state, and RNG identities belong here.  It records
-exact routing plus the scheduler, reset, control, and absorption semantics of
-the currently supported subset.  Unrepresented variants fail closed.  Generic
-scheduler predicates, reset events, control edges, and a complete absorption
-ledger remain incremental IR work.  Display names are diagnostic labels, not
-identity.
+exact routing plus data-only declarations for scheduler regions, predicates,
+predicate dependencies, ordered consideration sets, finished values, and
+retained-state reset policies.  Effective implicit scheduler predicates are
+snapshotted as well as supported explicit predicates; the declarations retain
+neither live PsyNeuLink components nor ``Condition`` objects.  An
+``executable`` flag distinguishes a graph whose current operations preserve all
+of those semantics from a graph retained only for inspection and subsequent IR
+work.  Exactly validated control paths absorbed by existing operations carry
+explicit metadata, but generic control/modulation operations and a complete
+absorption ledger remain incremental work.  Unrepresented variants fail
+closed.  Display names are diagnostic labels, not identity.
 
 Composition lowering assigns nonnegative numeric IDs in deterministic
 dependency order and carries them through ``KernelIR`` operations.  Input and
@@ -70,12 +76,98 @@ PsyNeuLink's automatically suffixed names are already distinguished by IDs.
 
 ``KernelIR`` is the backend-neutral executable program.  It currently makes
 projection, port combination, function, state, trial-loop, and output-store
-operations explicit.  Generic scheduler predicates, conditional pass regions,
-and finished/control values are not explicit yet; models that need them are
-rejected.  Parameter/subject/trial/estimate lane layout and fusion are lowering
-and optimization choices; they must not determine model semantics.  A backend
-emitter translates ``KernelIR`` and does not infer new behavior from the live
-Composition.
+operations explicit and carries the graph's scheduler, consideration-set,
+finished-value, and reset declarations forward.  When a model needs pass-wise
+predicate evaluation, lowering wraps its trial body in ``ForPasses``.  At this
+checkpoint every ``ForPasses`` is declaration-only: its attributes describe
+the required region, but it does not authorize sequential execution or define
+conditional behavior.  The corresponding ``KernelIR`` is non-executable, and
+the Triton emitter refuses it before generating source.  Accepted one-pass
+static graphs retain their flat executable operation sequence.  Parameter,
+subject, trial, and estimate lane layout and fusion are lowering and
+optimization choices; they must not determine model semantics.  A backend
+emitter translates executable ``KernelIR`` and does not infer new behavior from
+the live Composition.
+
+Current scheduler and control boundary
+--------------------------------------
+
+The semantic declarations are intentionally broader than the executable
+subset:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 39 43
+
+   * - Area
+     - Represented in IR
+     - Current execution boundary
+   * - Predicates
+     - Exact ``Always``, ``AtTrialStart``, ``AtPass``, and ``WhenFinished``
+       predicates are typed.  ``AtPass`` requires one nonnegative integer at
+       ``ENVIRONMENT_STATE_UPDATE``.  Effective implicit ``Always``,
+       ``EveryNCalls(..., 1)``, and ``AllEveryNCalls(..., 1)`` predicates are
+       also snapshotted.
+     - One-pass cases execute when they are equivalent to the existing static
+       order: ``Always``, first-pass predicates, and ``WhenFinished`` on a
+       producer in an earlier consideration set.  Delayed ``AtPass`` and
+       same-set or backward ``WhenFinished`` need a pass executor and therefore
+       remain fail-closed.  Unsupported condition types, subclasses, malformed
+       arguments, structural scheduler conditions, and other time scales are
+       rejected before a complete graph is produced.
+   * - Consideration sets
+     - The scheduler's ordered consideration queue is stored with numeric set
+       and component IDs.  Each set declares the PsyNeuLink frozen-input
+       contract, and predicate dependencies use those identities rather than
+       display-name order.
+     - The sets currently establish static-order equivalence and expose the
+       requirements of future pass execution.  There is no generic executor
+       for repeatedly evaluating consideration sets yet.
+   * - Pass regions
+     - Trial and nested pass regions, finished-value identities, and the
+       predicate data needed by ``ForPasses`` are explicit.
+     - ``ForPasses`` is declaration-only.  A graph that requires it has
+       ``KernelIR.executable == False``; direct Triton emission raises rather
+       than translating or approximating that program.
+   * - Resets
+     - Retained graph state has typed reset declarations referencing numeric
+       state IDs; the schema distinguishes exact ``Never`` and
+       ``AtTrialStart`` policies.  DDM trial-local storage is still private to
+       its mechanism operation rather than represented by these reset records.
+     - The exact LCA subset currently executes only with ``Never``.  An ordinary
+       DDM requires exact ``AtTrialStart`` and resets its trial-local state.  A
+       validated fires-once integrating TransferMechanism may fold its
+       ``AtTrialStart`` reset into one stateless affine step.  Other reset
+       semantics fail closed.
+   * - Control
+     - Control component identity and its scheduler predicate can be retained
+       in a declaration-only graph even when execution is rejected.  Exactly
+       absorbed controls record source, target, parameter, and ``OVERRIDE``
+       modulation metadata; generic effective-parameter operations are not in
+       ``KernelIR`` yet.
+     - Executable control is limited to validated absorbed paths, including the
+       narrow scalar identity cue to LCA termination-threshold ``OVERRIDE`` and
+       the existing affine DDM threshold-collapse chain.  Generic control and
+       co-evolving LCA termination control remain fail-closed.
+   * - Stepwise DDM
+     - A DDM with ``execute_until_finished=False`` is structurally admitted
+       only as the typed ``Always`` persistent-stepper / ``WhenFinished``
+       terminator pattern, so its required dependencies and finished value can
+       be declared.  An orphan stepwise DDM is rejected.
+     - Ordinary ``execute_until_finished=True`` DDM execution uses its existing
+       bounded inner loop.  The co-evolving stepwise form produces
+       declaration-only ``ForPasses`` and is not executable yet.
+   * - CSI
+     - General constituent pieces already represented include exact port and
+       rectangular-matrix routing, the registered nested-logistic drift UDF,
+       the narrow deterministic width-two LCA subset, and typed declarations of
+       the full scheduler topology.  CSI is not assigned a special model type or
+       recognizer.
+     - The full surrogate remains unsupported because its co-evolving
+       ``Always``/``WhenFinished`` pass execution and controlled LCA finished
+       transition are not executable.  Compilation fails explicitly; CSI
+       likelihood and fitting support therefore remain a later acceptance
+       gate.
 
 Persistent state can be initialized either from typed constants or by applying
 a registered elementwise function to an initializer with the lane's effective

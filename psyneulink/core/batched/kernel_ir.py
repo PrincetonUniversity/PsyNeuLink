@@ -12,10 +12,15 @@ from psyneulink.core.batched.graph import (
 )
 from psyneulink.core.batched.ir import (
     BatchedCompositionIR,
+    BatchedConsiderationSetSpec,
+    BatchedFinishedValueSpec,
     BatchedGraphIR,
     BatchedInputSpec,
     BatchedOutputSpec,
     BatchedParamSpec,
+    BatchedResetSpec,
+    BatchedScheduleRegionSpec,
+    BatchedSchedulerSpec,
     BatchedStateSpec,
 )
 from psyneulink.core.batched.specs import (
@@ -266,7 +271,13 @@ class KernelIR:
     max_steps: int
     graph: BatchedGraphIR
     op_specs: BatchedOpSpecSnapshot
+    executable: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    scheduler: tuple[BatchedSchedulerSpec, ...] = ()
+    schedule_regions: tuple[BatchedScheduleRegionSpec, ...] = ()
+    consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
+    finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
+    resets: tuple[BatchedResetSpec, ...] = ()
 
 
 def lower_to_kernel_ir(
@@ -291,6 +302,36 @@ def lower_to_kernel_ir(
     lane_layout = _lane_layout_for(graph.fusion_kind)
     rng_streams = _rng_streams(graph)
     trial_ops = _trial_body_ops(graph)
+    scheduled_trial_ops = trial_ops
+    if _requires_pass_region(graph):
+        pass_region = next(
+            (
+                region
+                for region in graph.schedule_regions
+                if region.kind == "pass"
+            ),
+            None,
+        )
+        scheduled_trial_ops = (
+            KernelOp(
+                kind="ForPasses",
+                target="passes",
+                attrs={
+                    "region": pass_region,
+                    "conditions": graph.scheduler,
+                    "consideration_sets": graph.consideration_sets,
+                    "finished_values": tuple(
+                        KernelValue(value.name, value.width, value.dtype)
+                        for value in graph.finished_values
+                    ),
+                    "body": trial_ops,
+                    # No backend may treat this declaration as sequential
+                    # execution.  The next checkpoint replaces this marker with
+                    # executable predicate/conditional-region lowering.
+                    "declaration_only": True,
+                },
+            ),
+        )
     if lane_layout.kind == STATEFUL_LANE_LAYOUT:
         state_slots: dict[int, int] = {}
         initial_state_values = []
@@ -313,11 +354,11 @@ def lower_to_kernel_ir(
             KernelOp(
                 kind="ForTrials",
                 target="trials",
-                attrs={"body": trial_ops},
+                attrs={"body": scheduled_trial_ops},
             ),
         )
     else:
-        ops = trial_ops
+        ops = scheduled_trial_ops
 
     return KernelIR(
         model_kind=ir.model_kind,
@@ -333,12 +374,60 @@ def lower_to_kernel_ir(
         max_steps=ir.max_steps,
         graph=graph,
         op_specs=op_specs,
+        executable=graph.executable,
         metadata={
             "composition_name": ir.metadata.get("composition_name"),
             "fusion_kind": graph.fusion_kind,
             **graph.metadata,
         },
+        scheduler=graph.scheduler,
+        schedule_regions=graph.schedule_regions,
+        consideration_sets=graph.consideration_sets,
+        finished_values=graph.finished_values,
+        resets=graph.resets,
     )
+
+
+def _requires_pass_region(graph: BatchedGraphIR) -> bool:
+    """Whether scheduler predicates require an explicit per-trial pass loop."""
+
+    if not graph.executable:
+        return True
+    if graph.metadata.get("scheduler_requires_pass_region", False):
+        return True
+    if graph.fusion_kind == COEVOLVING_GRAPH_FUSION:
+        return True
+
+    consideration_set_ids = {
+        component_id: consideration_set.consideration_set_id
+        for consideration_set in graph.consideration_sets
+        for component_id in consideration_set.component_ids
+    }
+    for condition in graph.scheduler:
+        if condition.condition_type == "AtPass":
+            if (
+                condition.attrs.get("pass_index") != 0
+                or condition.attrs.get("time_scale")
+                != "ENVIRONMENT_STATE_UPDATE"
+            ):
+                return True
+        elif condition.condition_type == "WhenFinished":
+            target_set = condition.consideration_set_id
+            if any(
+                consideration_set_ids.get(component_id, target_set) >= target_set
+                for component_id in condition.dependency_component_ids
+            ):
+                return True
+        elif condition.condition_type in {"EveryNCalls", "AllEveryNCalls"}:
+            target_set = condition.consideration_set_id
+            if any(
+                consideration_set_ids.get(component_id, target_set) >= target_set
+                for component_id in condition.dependency_component_ids
+            ):
+                return True
+        elif condition.condition_type not in {"Always", "AtTrialStart"}:
+            return True
+    return False
 
 
 def _graph_spec_keys(graph: BatchedGraphIR) -> tuple[str, ...]:

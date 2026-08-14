@@ -24,7 +24,7 @@ def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, 
         for d in lowering.rejected_conditions
     ]
 
-    if lowering.graph is None and not rejected_nodes:
+    if lowering.graph is None and not rejected_nodes and not rejected_conditions:
         rejected_nodes.append(
             BatchedDiagnostic(
                 component=getattr(composition, "name", type(composition).__name__),
@@ -245,6 +245,7 @@ def _normalize_model_diagnostic(
         kind = "node"
     elif reason in {
         "unsupported scheduler condition for static batched graph",
+        "unsupported structural scheduler condition for batched v2",
         "unsupported absorbed control scheduler condition for batched v2",
     }:
         code = BatchedDiagnosticCode.MODEL_SCHEDULER_CONDITION_UNSUPPORTED

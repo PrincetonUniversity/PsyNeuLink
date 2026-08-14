@@ -12,6 +12,8 @@ from psyneulink.core.batched import specs
 from psyneulink.core.batched.bindings import BatchedComponentBindings, projection_binding_key
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import (
+    BatchedConsiderationSetSpec,
+    BatchedFinishedValueSpec,
     BatchedGraphIR,
     BatchedInputSpec,
     BatchedNodeSpec,
@@ -19,10 +21,19 @@ from psyneulink.core.batched.ir import (
     BatchedOutputSpec,
     BatchedParamSpec,
     BatchedProjectionSpec,
+    BatchedResetSpec,
     BatchedRngStreamSpec,
+    BatchedScheduleRegionSpec,
     BatchedSchedulerSpec,
     BatchedStateFunctionInitializer,
     BatchedStateSpec,
+)
+from psyneulink.core.scheduling.condition import (
+    Always,
+    AtPass,
+    AtTrialStart,
+    Never,
+    WhenFinished,
 )
 
 
@@ -69,7 +80,6 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         for component_id, node in enumerate(topological_nodes)
     }
     port_ids, ports_by_id = _port_identity_maps(topological_nodes)
-    node_names = {_node_name(node) for node in topological_nodes}
     params = _ParamBuilder()
     rejected_nodes: list[BatchedDiagnostic] = [
         BatchedDiagnostic(
@@ -79,6 +89,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         )
     ] if cyclic_nodes else []
     rejected_nodes.extend(_duplicate_node_name_diagnostics(composition, topological_nodes))
+    graph_blockers = list(rejected_nodes)
     supported_nodes: list[str] = []
 
     model_kind = _classify_model(nodes)
@@ -88,8 +99,28 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         if type(node).__name__ != "ControlMechanism"
     ]
     coevolving = _is_coevolving(composition, executable_nodes)
+    (
+        scheduler_specs,
+        schedule_regions,
+        consideration_sets,
+        finished_values,
+        scheduler_declarations_complete,
+    ) = _scheduler_ir_specs(
+        composition,
+        topological_nodes,
+        component_ids,
+    )
+    consideration_set_ids = {
+        component_id: consideration_set.consideration_set_id
+        for consideration_set in consideration_sets
+        for component_id in consideration_set.component_ids
+    }
     schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(
-        composition, topological_nodes, coevolving
+        composition,
+        topological_nodes,
+        component_ids,
+        consideration_set_ids,
+        coevolving,
     )
     node_bindings = {
         _node_name(node): node
@@ -109,8 +140,12 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             diagnostic = _control_support_diagnostic(node, composition)
             if diagnostic is not None:
                 rejected_nodes.append(diagnostic)
-                continue
-            supported_nodes.append(node_name)
+            else:
+                supported_nodes.append(node_name)
+            # Control execution is still fail-closed, but retain the component's
+            # stable identity and scheduler predicate in declaration-only IR.
+            # ControlMechanisms are not part of ``execution_order`` until their
+            # dataflow/modulation semantics have executable KernelIR ops.
             node_specs.append(
                 _node_spec(
                     node,
@@ -126,6 +161,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         diagnostic = _node_support_diagnostic(node, composition)
         if diagnostic is not None:
             rejected_nodes.append(diagnostic)
+            graph_blockers.append(diagnostic)
             continue
 
         supported_nodes.append(node_name)
@@ -160,13 +196,13 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                             if function_spec is None
                             else f"missing parameters={missing_params!r}"
                         )
-                        rejected_nodes.append(
-                            BatchedDiagnostic(
-                                node_name,
-                                "unsupported state function initializer for batched v2",
-                                detail,
-                            )
+                        diagnostic = BatchedDiagnostic(
+                            node_name,
+                            "unsupported state function initializer for batched v2",
+                            detail,
                         )
+                        rejected_nodes.append(diagnostic)
+                        graph_blockers.append(diagnostic)
                         continue
                     function_initializer = BatchedStateFunctionInitializer(
                         spec_key=function_spec.key,
@@ -220,17 +256,35 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         port_ids,
     )
     rejected_nodes.extend(projection_rejections)
-    rejected_nodes.extend(_output_support_diagnostics(outputs, nodes))
+    graph_blockers.extend(projection_rejections)
+    output_rejections = _output_support_diagnostics(outputs, nodes)
+    rejected_nodes.extend(output_rejections)
+    graph_blockers.extend(output_rejections)
     inputs = _input_specs(
         topological_nodes,
         projections,
         component_ids,
         port_ids,
     )
-    rejected_nodes.extend(_external_input_support_diagnostics(inputs))
+    input_rejections = _external_input_support_diagnostics(inputs)
+    rejected_nodes.extend(input_rejections)
+    graph_blockers.extend(input_rejections)
+    reset_specs, reset_declarations_complete = _reset_ir_specs(
+        topological_nodes,
+        state_specs,
+        component_ids,
+    )
 
     graph = None
-    if not rejected_nodes and not rejected_conditions:
+    # Recognized scheduler semantics are useful semantic IR even before a
+    # backend can execute them.  Keep such graphs inspectable while capability
+    # analysis continues to fail closed on ``rejected_conditions``.  Conditions
+    # without a typed declaration still prevent graph construction.
+    if (
+        not graph_blockers
+        and scheduler_declarations_complete
+        and reset_declarations_complete
+    ):
         outputs = _output_specs(
             composition,
             outputs,
@@ -261,18 +315,20 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             projections=tuple(projections),
             outputs=tuple(outputs),
             states=tuple(state_specs),
-            scheduler=tuple(
-                BatchedSchedulerSpec(_node_name(node), type(condition).__name__)
-                for node, condition in _scheduler_conditions(composition).items()
-                if _node_name(node) in node_names
-                and type(node).__name__ != "ControlMechanism"
-            ),
+            scheduler=scheduler_specs,
             ops=ops,
             execution_order=execution_order,
             fusion_kind=_fusion_kind(model_kind, nodes, composition),
+            executable=not rejected_nodes and not rejected_conditions,
             metadata={
                 "composition_name": getattr(composition, "name", None),
                 "schedule_kind": schedule_kind,
+                "scheduler_executable": not rejected_nodes and not rejected_conditions,
+                "scheduler_requires_pass_region": (
+                    bool(rejected_nodes)
+                    or coevolving
+                    or schedule_kind != STATIC_GRAPH_SCHEDULE
+                ),
                 # Warm-up steps before the co-evolving terminator begins (the ITI:
                 # the LCA decays / integrates onset inputs first). = max node
                 # onset; 0 when there is none.
@@ -281,6 +337,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 ),
             },
             rng_streams=_rng_stream_specs(node_specs),
+            schedule_regions=schedule_regions,
+            consideration_sets=consideration_sets,
+            finished_values=finished_values,
+            resets=reset_specs,
         )
 
     return LoweringResult(
@@ -634,6 +694,20 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
             )
         if mechanism_spec.supports is not None:
             diagnostic = mechanism_spec.supports(node)
+            if diagnostic is not None:
+                return diagnostic
+        if (
+            type(node).__name__ == "DDM"
+            and type(getattr(node, "reset_stateful_function_when", None))
+            is not AtTrialStart
+        ):
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported DDM reset policy for batched v2",
+                type(getattr(node, "reset_stateful_function_when", None)).__name__,
+            )
+        if type(node).__name__ == "DDM":
+            diagnostic = _ddm_execution_support_diagnostic(node, composition)
             if diagnostic is not None:
                 return diagnostic
         if type(node).__name__ == "LCAMechanism":
@@ -1042,9 +1116,9 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         )
 
     condition = _scheduler_conditions(composition).get(node)
-    stepwise = type(condition).__name__ == "Always" and any(
+    stepwise = type(condition) is Always and any(
         type(candidate).__name__ == "DDM"
-        and type(candidate_condition).__name__ == "WhenFinished"
+        and type(candidate_condition) is WhenFinished
         and tuple(getattr(candidate_condition, "args", ())) == (node,)
         for candidate, candidate_condition in _scheduler_conditions(composition).items()
     )
@@ -1055,6 +1129,37 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         _node_name(node),
         "unsupported LCA execution mode for batched v2",
         "execute_until_finished must be False only for an Always/WhenFinished stepwise pair",
+    )
+
+
+def _ddm_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
+    """Require stepwise DDM execution to belong to a typed coevolution pair."""
+
+    execute_until_finished = _parameter_value(
+        node,
+        "execute_until_finished",
+        True,
+    )
+    if bool(execute_until_finished):
+        return None
+
+    condition = _scheduler_conditions(composition).get(node)
+    args = tuple(getattr(condition, "args", ()))
+    stepper = args[0] if type(condition) is WhenFinished and len(args) == 1 else None
+    stepper_spec = specs.mechanism_spec_for(stepper) if stepper is not None else None
+    stepper_condition = _scheduler_conditions(composition).get(stepper)
+    if (
+        stepper_spec is not None
+        and stepper_spec.can_step
+        and stepper_spec.persistent_state
+        and type(stepper_condition) is Always
+    ):
+        return None
+    return BatchedDiagnostic(
+        _node_name(node),
+        "unsupported DDM execution mode for batched v2",
+        "execute_until_finished=False requires a typed Always/WhenFinished "
+        "coevolving stepper/terminator pair",
     )
 
 
@@ -1457,7 +1562,7 @@ def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
     """
 
     conditions = _scheduler_conditions(composition)
-    if type(conditions.get(lca)).__name__ != "Always":
+    if type(conditions.get(lca)) is not Always:
         return False
     for node, condition in conditions.items():
         mechanism_spec = specs.mechanism_spec_for(node)
@@ -1564,7 +1669,7 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
         return False
     if not _is_zero(_parameter_value(integrator, "noise", 0.0)) or not _is_zero(_parameter_value(integrator, "initializer", 0.0)):
         return False
-    if type(getattr(source, "reset_stateful_function_when", None)).__name__ != "AtTrialStart":
+    if type(getattr(source, "reset_stateful_function_when", None)) is not AtTrialStart:
         return False
     if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
         return False
@@ -1978,7 +2083,7 @@ def _coevolving_stepper(composition, executable_nodes):
         spec = specs.mechanism_spec_for(node)
         if spec is None or not (spec.can_step and spec.persistent_state):
             continue
-        if type(conditions.get(node)).__name__ != "Always":
+        if type(conditions.get(node)) is not Always:
             continue
         # An Always-scheduled persistent stepper must be a semantic ancestor of
         # the terminator.  Merely appearing before an unrelated terminator in
@@ -1993,7 +2098,11 @@ def _coevolving_stepper(composition, executable_nodes):
 
 
 def _processing_depends_on(composition, node, dependency) -> bool:
-    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    dependency_dict = getattr(
+        getattr(composition, "scheduler", None),
+        "dependency_dict",
+        {},
+    )
     pending = list(dependency_dict.get(node, ()))
     visited = set()
     while pending:
@@ -2009,7 +2118,7 @@ def _processing_depends_on(composition, node, dependency) -> bool:
 
 def _when_finished_depends_on(condition, dependency) -> bool:
     return (
-        type(condition).__name__ == "WhenFinished"
+        type(condition) is WhenFinished
         and tuple(getattr(condition, "args", ())) == (dependency,)
     )
 
@@ -2033,37 +2142,316 @@ def _terminal_node_names(composition) -> list[str]:
     return terminal
 
 
-def _classify_schedule(composition, nodes, coevolving=False) -> tuple[str, list[str], list[BatchedDiagnostic]]:
+def _scheduler_ir_specs(composition, nodes, component_ids):
+    """Lower typed explicit predicates and the scheduler's implicit defaults.
+
+    This is semantic declaration only: whether a backend can execute the
+    resulting pass region remains a separate capability decision.  In
+    particular, no live Condition objects or component objects are retained.
+    """
+
+    regions = (
+        BatchedScheduleRegionSpec(
+            name="trial",
+            kind="trial",
+            time_scale="ENVIRONMENT_STATE_UPDATE",
+        ),
+        BatchedScheduleRegionSpec(
+            name="pass",
+            kind="pass",
+            time_scale="PASS",
+            parent="trial",
+        ),
+    )
     conditions = _scheduler_conditions(composition)
+    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    consideration_sets, consideration_set_ids, queue_complete = (
+        _scheduler_consideration_set_specs(composition, nodes, component_ids)
+    )
+    declared = []
+    finished_dependencies = {}
+    complete = queue_complete and not _scheduler_structural_conditions(composition)
+
+    # Use dependency order rather than condition insertion order so component,
+    # predicate, and finished-value IDs are deterministic across equivalent
+    # Composition construction sequences.
+    for node in nodes:
+        condition = conditions.get(node)
+        implicit = condition is None
+        if implicit:
+            # graph-scheduler supplies Always() for an origin with no explicit
+            # condition, EveryNCalls(parent, 1) for one dependency, and an All
+            # of those predicates for multiple dependencies.  Snapshot that
+            # effective default; a future pass executor must not interpret an
+            # absent predicate as unconditional execution.
+            implicit_dependencies = tuple(sorted(
+                (
+                    dependency
+                    for dependency in dependency_dict.get(node, ())
+                    if id(dependency) in component_ids and dependency is not node
+                ),
+                key=lambda dependency: component_ids[id(dependency)],
+            ))
+            if not implicit_dependencies:
+                condition_type = "Always"
+            elif len(implicit_dependencies) == 1:
+                condition_type = "EveryNCalls"
+            else:
+                condition_type = "AllEveryNCalls"
+        else:
+            condition_type = _supported_scheduler_condition_name(condition)
+            if condition_type is None:
+                complete = False
+                continue
+        component_id = component_ids[id(node)]
+        consideration_set_id = consideration_set_ids.get(component_id, -1)
+        if consideration_set_id < 0:
+            complete = False
+            continue
+        dependencies = (
+            tuple(_node_name(dependency) for dependency in implicit_dependencies)
+            if implicit
+            else ()
+        )
+        dependency_component_ids = (
+            tuple(component_ids[id(dependency)] for dependency in implicit_dependencies)
+            if implicit
+            else ()
+        )
+        attrs = {"implicit": True} if implicit else {}
+        region = "pass"
+
+        if condition_type == "Always":
+            pass
+        elif condition_type in {"EveryNCalls", "AllEveryNCalls"}:
+            attrs = {
+                "implicit": True,
+                "calls": 1,
+                "time_scale": "ENVIRONMENT_STATE_UPDATE",
+            }
+        elif condition_type == "AtTrialStart":
+            # AtTrialStart is evaluated in the first pass.  Trial-scoped state
+            # reset is represented independently by BatchedResetSpec.
+            attrs = {
+                "pass_index": 0,
+                "time_scale": "ENVIRONMENT_STATE_UPDATE",
+            }
+        elif condition_type == "AtPass":
+            at_pass = _at_pass_spec(condition)
+            if at_pass is None:
+                complete = False
+                continue
+            pass_index, time_scale = at_pass
+            if time_scale != "ENVIRONMENT_STATE_UPDATE":
+                complete = False
+                continue
+            attrs = {
+                "pass_index": pass_index,
+                "time_scale": time_scale,
+            }
+        elif condition_type == "WhenFinished":
+            args = tuple(getattr(condition, "args", ()))
+            if len(args) != 1 or id(args[0]) not in component_ids:
+                complete = False
+                continue
+            dependency = args[0]
+            dependency_component_id = component_ids[id(dependency)]
+            dependencies = (_node_name(dependency),)
+            dependency_component_ids = (dependency_component_id,)
+            finished_dependencies[dependency_component_id] = dependency
+            attrs = {"predicate": "is_finished"}
+        else:
+            complete = False
+            continue
+
+        declared.append(
+            BatchedSchedulerSpec(
+                node=_node_name(node),
+                condition_type=condition_type,
+                dependencies=dependencies,
+                attrs=attrs,
+                component_id=component_id,
+                dependency_component_ids=dependency_component_ids,
+                region=region,
+                consideration_set_id=consideration_set_id,
+            )
+        )
+
+    finished_values = tuple(
+        BatchedFinishedValueSpec(
+            name=f"{_node_name(dependency)}.is_finished",
+            node=_node_name(dependency),
+            component_id=component_id,
+            value_id=value_id,
+            producer_consideration_set_id=consideration_set_ids[component_id],
+        )
+        for value_id, (component_id, dependency) in enumerate(
+            sorted(finished_dependencies.items())
+        )
+    )
+    finished_value_ids = {
+        value.component_id: value.value_id
+        for value in finished_values
+    }
+    declared = tuple(
+        replace(
+            condition,
+            finished_value_ids=tuple(
+                finished_value_ids[component_id]
+                for component_id in condition.dependency_component_ids
+            ) if condition.condition_type == "WhenFinished" else (),
+        )
+        for condition in declared
+    )
+    return declared, regions, consideration_sets, finished_values, complete
+
+
+def _scheduler_consideration_set_specs(composition, nodes, component_ids):
+    """Snapshot the scheduler's ordered consideration queue without live objects."""
+
+    scheduler = getattr(composition, "scheduler", None)
+    queue = getattr(scheduler, "consideration_queue", None)
+    if queue is None:
+        return (), {}, False
+
+    lowered_component_ids = set(component_ids.values())
+    seen = set()
+    declarations = []
+    consideration_set_ids = {}
+    for live_set in queue:
+        members = sorted(
+            (
+                (component_ids[id(node)], _node_name(node))
+                for node in live_set
+                if id(node) in component_ids
+            ),
+            key=lambda item: item[0],
+        )
+        if not members:
+            continue
+        consideration_set_id = len(declarations)
+        component_id_tuple = tuple(component_id for component_id, _ in members)
+        declarations.append(
+            BatchedConsiderationSetSpec(
+                consideration_set_id=consideration_set_id,
+                nodes=tuple(name for _, name in members),
+                component_ids=component_id_tuple,
+            )
+        )
+        for component_id in component_id_tuple:
+            # A scheduler node belongs to exactly one consideration set.  Treat
+            # malformed queues as an incomplete declaration rather than
+            # choosing one occurrence.
+            if component_id in seen:
+                return tuple(declarations), consideration_set_ids, False
+            seen.add(component_id)
+            consideration_set_ids[component_id] = consideration_set_id
+
+    return (
+        tuple(declarations),
+        consideration_set_ids,
+        seen == lowered_component_ids,
+    )
+
+
+def _reset_ir_specs(nodes, states, component_ids):
+    """Declare reset policies for state retained in ``BatchedGraphIR``.
+
+    Optimized-away per-trial state (currently the affine one-step integrating
+    TransferMechanism path) has no state identity and therefore needs no reset
+    event.  Trial-local mechanism-op storage is not yet part of GraphIR; moving
+    that storage out of emitter-private declarations is the next reset slice.
+    """
+
+    states_by_component = {}
+    for state in states:
+        states_by_component.setdefault(state.component_id, []).append(state)
+
+    declarations = []
+    complete = True
+    for node in nodes:
+        component_id = component_ids[id(node)]
+        component_states = states_by_component.get(component_id, ())
+        if not component_states:
+            continue
+        reset_condition = getattr(node, "reset_stateful_function_when", None)
+        if type(reset_condition) is AtTrialStart:
+            condition_type = "AtTrialStart"
+        elif type(reset_condition) is Never:
+            condition_type = "Never"
+        else:
+            complete = False
+            continue
+        declarations.append(
+            BatchedResetSpec(
+                node=_node_name(node),
+                condition_type=condition_type,
+                state_ids=tuple(state.state_id for state in component_states),
+                component_id=component_id,
+            )
+        )
+    return tuple(declarations), complete
+
+
+def _classify_schedule(
+    composition,
+    nodes,
+    component_ids,
+    consideration_set_ids,
+    coevolving=False,
+) -> tuple[str, list[str], list[BatchedDiagnostic]]:
+    conditions = _scheduler_conditions(composition)
+    structural_conditions = _scheduler_structural_conditions(composition)
+    structural_rejections = [
+        BatchedDiagnostic(
+            component=_node_name(node),
+            reason="unsupported structural scheduler condition for batched v2",
+            detail=type(condition).__name__,
+        )
+        for node, node_conditions in structural_conditions.items()
+        for condition in node_conditions
+    ]
     if not conditions:
+        if structural_rejections:
+            return UNSUPPORTED_SCHEDULE, [], structural_rejections
         return STATIC_GRAPH_SCHEDULE, [], []
 
-    node_index = {_node_name(node): idx for idx, node in enumerate(nodes)}
+    node_consideration_set = {
+        id(node): consideration_set_ids.get(component_ids[id(node)], -1)
+        for node in nodes
+    }
     supported: list[str] = []
-    rejected: list[BatchedDiagnostic] = []
-    required_schedule_kind = STATIC_GRAPH_SCHEDULE
+    rejected: list[BatchedDiagnostic] = structural_rejections
+    required_schedule_kind = (
+        UNSUPPORTED_SCHEDULE if structural_rejections else STATIC_GRAPH_SCHEDULE
+    )
 
     for node, condition in conditions.items():
         node_name = _node_name(node)
         # Skip conditions on nodes that are not lowered as graph ops (absorbed
         # into another op's kernel); their timing is handled by that op.
-        if node_name not in node_index or type(node).__name__ == "ControlMechanism":
+        if id(node) not in component_ids or type(node).__name__ == "ControlMechanism":
             continue
         condition_name = type(condition).__name__
-        condition_schedule_kind = _condition_schedule_kind(condition, node, node_index, coevolving)
-        supported.append(f"{node_name}: {condition_name}")
-
-        if condition_schedule_kind == STATIC_GRAPH_SCHEDULE:
-            continue
+        condition_schedule_kind = _condition_schedule_kind(
+            condition,
+            node,
+            node_consideration_set,
+            coevolving,
+        )
         if condition_schedule_kind == UNSUPPORTED_SCHEDULE:
             rejected.append(
                 BatchedDiagnostic(
                     component=node_name,
                     reason="unsupported scheduler condition for static batched graph",
-                    detail=condition_name,
+                    detail=_unsupported_scheduler_condition_detail(condition),
                 )
             )
             required_schedule_kind = UNSUPPORTED_SCHEDULE
+            continue
+
+        supported.append(f"{node_name}: {condition_name}")
+        if condition_schedule_kind == STATIC_GRAPH_SCHEDULE:
             continue
 
         if required_schedule_kind != UNSUPPORTED_SCHEDULE:
@@ -2081,8 +2469,20 @@ def _classify_schedule(composition, nodes, coevolving=False) -> tuple[str, list[
     return STATIC_GRAPH_SCHEDULE, supported, []
 
 
-def _condition_schedule_kind(condition, node, node_index: dict[str, int], coevolving=False) -> str:
-    condition_name = type(condition).__name__
+def _condition_schedule_kind(
+    condition,
+    node,
+    node_consideration_set: dict[int, int],
+    coevolving=False,
+) -> str:
+    condition_name = _supported_scheduler_condition_name(condition)
+    if condition_name is None:
+        deferred_name = type(condition).__name__
+        if deferred_name in _PRECOMPUTED_TRACE_CONDITIONS:
+            return PRECOMPUTED_TRACE_SCHEDULE
+        if deferred_name in _DYNAMIC_LANE_LOCAL_CONDITIONS:
+            return DYNAMIC_LANE_LOCAL_SCHEDULE
+        return UNSUPPORTED_SCHEDULE
     if condition_name in {"Always", "AtTrialStart"}:
         return STATIC_GRAPH_SCHEDULE
     if condition_name == "WhenFinished":
@@ -2090,8 +2490,9 @@ def _condition_schedule_kind(condition, node, node_index: dict[str, int], coevol
         if len(args) != 1:
             return DYNAMIC_LANE_LOCAL_SCHEDULE
         target = args[0]
-        target_name = _node_name(target)
-        if node_index.get(target_name, -1) < node_index.get(_node_name(node), -1):
+        target_set = node_consideration_set.get(id(target), -1)
+        receiver_set = node_consideration_set.get(id(node), -1)
+        if target_set >= 0 and target_set < receiver_set:
             return STATIC_GRAPH_SCHEDULE
         return DYNAMIC_LANE_LOCAL_SCHEDULE
     if condition_name == "AtPass":
@@ -2104,25 +2505,69 @@ def _condition_schedule_kind(condition, node, node_index: dict[str, int], coevol
         # per step (the input is withheld until step n, and the terminator is
         # frozen), so it is executable there; without a per-step loop it is only
         # recognized, not executable (`precomputed_trace`).
-        args = getattr(condition, "args", ())
-        n = args[0] if args else 0
+        at_pass = _at_pass_spec(condition)
+        if at_pass is None:
+            return UNSUPPORTED_SCHEDULE
+        n, time_scale = at_pass
+        if time_scale != "ENVIRONMENT_STATE_UPDATE":
+            return UNSUPPORTED_SCHEDULE
         if n == 0:
             return STATIC_GRAPH_SCHEDULE
         return STATIC_GRAPH_SCHEDULE if coevolving else PRECOMPUTED_TRACE_SCHEDULE
-    if condition_name in _PRECOMPUTED_TRACE_CONDITIONS:
-        return PRECOMPUTED_TRACE_SCHEDULE
-    if condition_name in _DYNAMIC_LANE_LOCAL_CONDITIONS:
-        return DYNAMIC_LANE_LOCAL_SCHEDULE
     return UNSUPPORTED_SCHEDULE
 
 
 def _onset_step(node, composition) -> int:
     """The `AtPass(n)` onset step for `node` (0 if none / not AtPass)."""
     condition = _scheduler_conditions(composition).get(node)
-    if type(condition).__name__ != "AtPass":
+    at_pass = _at_pass_spec(condition)
+    if at_pass is None or at_pass[1] != "ENVIRONMENT_STATE_UPDATE":
         return 0
-    args = getattr(condition, "args", ())
-    return int(args[0]) if args else 0
+    return at_pass[0]
+
+
+_SUPPORTED_SCHEDULER_CONDITION_TYPES = {
+    Always: "Always",
+    AtPass: "AtPass",
+    AtTrialStart: "AtTrialStart",
+    WhenFinished: "WhenFinished",
+}
+
+
+def _supported_scheduler_condition_name(condition) -> str | None:
+    """Name an exact supported PNL condition class; subclasses fail closed."""
+
+    return _SUPPORTED_SCHEDULER_CONDITION_TYPES.get(type(condition))
+
+
+def _at_pass_spec(condition) -> tuple[int, str] | None:
+    """Validate and snapshot an exact PNL ``AtPass`` predicate."""
+
+    if type(condition) is not AtPass:
+        return None
+    args = tuple(getattr(condition, "args", ()))
+    if len(args) != 1 or isinstance(args[0], (bool, np.bool_)):
+        return None
+    try:
+        pass_index = int(args[0])
+        exact_integer = bool(args[0] == pass_index)
+    except (TypeError, ValueError):
+        return None
+    time_scale = _condition_time_scale_name(condition)
+    if not exact_integer or pass_index < 0 or time_scale is None:
+        return None
+    return pass_index, time_scale
+
+
+def _unsupported_scheduler_condition_detail(condition) -> str:
+    if type(condition) is not AtPass:
+        return type(condition).__name__
+    return (
+        "AtPass requires one non-negative non-bool integer index at "
+        "time_scale=ENVIRONMENT_STATE_UPDATE; "
+        f"args={tuple(getattr(condition, 'args', ()))!r}, "
+        f"time_scale={_condition_time_scale_name(condition) or 'unknown'}"
+    )
 
 
 def _scheduler_conditions(composition):
@@ -2134,6 +2579,17 @@ def _scheduler_conditions(composition):
     if not hasattr(conditions_basic, "items"):
         return {}
     return conditions_basic
+
+
+def _scheduler_structural_conditions(composition):
+    scheduler = getattr(composition, "scheduler", None)
+    if scheduler is None:
+        return {}
+    condition_set = getattr(scheduler, "conditions", None)
+    conditions_structural = getattr(condition_set, "conditions_structural", {})
+    if not hasattr(conditions_structural, "items"):
+        return {}
+    return conditions_structural
 
 
 def _dependency_topological_order(composition, nodes):
@@ -2240,9 +2696,10 @@ def _integrating_transfer_affine(node, composition) -> tuple[float, float] | Non
 
     if not _integrator_mode_enabled(node):
         return None
-    if type(getattr(node, "reset_stateful_function_when", None)).__name__ != "AtTrialStart":
+    if type(getattr(node, "reset_stateful_function_when", None)) is not AtTrialStart:
         return None
-    if type(_scheduler_conditions(composition).get(node)).__name__ != "AtPass":
+    at_pass = _at_pass_spec(_scheduler_conditions(composition).get(node))
+    if at_pass is None or at_pass[1] != "ENVIRONMENT_STATE_UPDATE":
         return None
     integrator = getattr(node, "integrator_function", None)
     integrator_type = type(integrator).__name__
