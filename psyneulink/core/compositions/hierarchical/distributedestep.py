@@ -16,13 +16,16 @@ summary.  The M-step stays on the driver, so this runner is interchangeable with
 Building a participant's model constructs a composition and compiles it, so each worker caches the
 models it builds.  That only pays off if a participant keeps landing on the same worker, hence the
 pinning after the first iteration; otherwise every worker ends up holding a model for every
-participant, which is how a large fit exhausts memory.
+participant, which is how a large fit exhausts memory.  For the same reason the cache is keyed by
+fit and emptied of that fit's entries at the end, since a cluster the caller supplied outlives any
+one fit run against it.
 
 Dask is imported inside the functions that need it, so this module can be imported, and its worker
 task exercised, without it.
 """
 
 import uuid
+import warnings
 
 import numpy as np
 
@@ -34,6 +37,7 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     subject_laplace_objective,
     subject_map_estep,
 )
+from psyneulink.core.compositions.hierarchical.subjectlikelihood import ParameterSchema
 from psyneulink.core.compositions.hierarchical.transforms import BoundedTransform
 
 __all__ = ["make_distributed_estep_runner"]
@@ -43,7 +47,7 @@ __all__ = ["make_distributed_estep_runner"]
 _SUBJECT_FALLBACK_CACHE = {}
 
 
-def _worker_subject_cache(fit_id):
+def _worker_subject_cache():
     """Return the cache dict for this worker, creating it if needed."""
     try:
         from dask.distributed import get_worker
@@ -57,8 +61,25 @@ def _worker_subject_cache(fit_id):
     return cache
 
 
+def _worker_address():
+    """This worker's address, or None when not running on one."""
+    try:
+        from dask.distributed import get_worker
+        return get_worker().address
+    except (ImportError, ValueError):
+        # No worker context: either Dask is absent, or this is running on the driver.
+        return None
+
+
+def _release_fit_models(fit_id):
+    """Drop the models built for one fit.  Run on every worker once the fit is over."""
+    cache = _worker_subject_cache()
+    for key in [k for k in cache if k[0] == fit_id]:
+        del cache[key]
+
+
 def _dask_subject_estep(
-    pec_factory, subject_index, data_slice, mu_s, sigma, lower, upper, z0, worker_cores,
+    pec_factory, subject_index, data_slice, mu_s, sigma, schema, z0, worker_cores,
     fit_id, config,
 ):
     """Fit one participant on a worker and return their posterior summary.
@@ -67,16 +88,22 @@ def _dask_subject_estep(
     driven at once in a single process is what the lock exists to prevent.
     """
     with _fitfunctions._PEC_EVALUATION_LOCK:
-        cache = _worker_subject_cache(fit_id)
+        cache = _worker_subject_cache()
         key = (fit_id, subject_index)
         if key not in cache:
             from psyneulink.core.globals.threads import set_num_threads
             if worker_cores is not None:
                 set_num_threads(worker_cores)
-            cache[key] = pec_factory(data_slice, subject_index)
+            pec, inputs = pec_factory(data_slice, subject_index)
+            # Checked here rather than on the driver so that a model fitting the wrong parameters
+            # fails before it is scored, instead of being handed `theta` in someone else's order.
+            schema.check_matches(ParameterSchema.from_pec(
+                pec, source=f"the model built for participant {subject_index}"
+            ))
+            cache[key] = (pec, inputs)
         pec, inputs = cache[key]
 
-        transform = BoundedTransform(lower=lower, upper=upper)
+        transform = BoundedTransform(lower=schema.lower, upper=schema.upper)
         sigma = np.asarray(sigma, dtype=float)
         mu_s = np.asarray(mu_s, dtype=float)
 
@@ -86,18 +113,11 @@ def _dask_subject_estep(
 
         post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)
 
-        worker_address = None
-        try:
-            from dask.distributed import get_worker
-            worker_address = get_worker().address
-        except (ImportError, ValueError):
-            pass
-
-        return subject_index, post, worker_address
+        return subject_index, post, _worker_address()
 
 
 def make_distributed_estep_runner(
-    client, pec_factory, data_slices, bounds, *, config=None, worker_cores=None, fit_id=None,
+    client, pec_factory, data_slices, schema, *, config=None, worker_cores=None, fit_id=None,
 ):
     """Build an E-step that fits every participant at once, across a cluster.
 
@@ -115,8 +135,9 @@ def make_distributed_estep_runner(
         One participant's trials each, in participant order.  Only the relevant slice is sent to
         each task.
 
-    bounds : tuple
-        ``(lower, upper)`` arrays of the search range, shared by every participant.
+    schema : ParameterSchema
+        What every participant's model is required to fit, and the search range shared by all of
+        them.  Each worker checks the model it builds against this.
 
     config : EStepConfig : default None
         Settings for each participant's optimization.
@@ -132,11 +153,11 @@ def make_distributed_estep_runner(
     -------
 
     A callable ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``, interchangeable with the
-    in-process runner.
+    in-process runner.  It carries a ``release()`` that drops the models this fit left on the
+    workers; a fit that does not call it leaves them there for the life of the cluster.
     """
     config = config if config is not None else EStepConfig()
     fit_id = fit_id or uuid.uuid4().hex
-    lower, upper = (np.asarray(b, dtype=float) for b in bounds)
     data_slices = list(data_slices)
     # Filled in after the first iteration, so each participant returns to the worker holding
     # their model instead of being rebuilt somewhere else.
@@ -154,7 +175,7 @@ def make_distributed_estep_runner(
                 submit_kwargs.update(workers=[home[s]], allow_other_workers=True)
             futures.append(client.submit(
                 _dask_subject_estep, pec_factory, s, data_slices[s], mu[s], sigma,
-                lower, upper, z0, worker_cores, fit_id, config, **submit_kwargs,
+                schema, z0, worker_cores, fit_id, config, **submit_kwargs,
             ))
 
         z_hat = np.empty((n_subjects, n_params))
@@ -191,4 +212,21 @@ def make_distributed_estep_runner(
             messages=tuple(messages),
         )
 
+    def release():
+        """Drop this fit's models from every worker.
+
+        Reports rather than raises: this runs after the fit is over, and a cluster that has lost a
+        worker should not turn a finished fit into an error.
+        """
+        try:
+            client.run(_release_fit_models, fit_id)
+        except Exception as error:
+            warnings.warn(
+                f"could not release the models this fit left on the workers ({error}); they will "
+                f"be held until the cluster is shut down.",
+                ResourceWarning,
+                stacklevel=2,
+            )
+
+    runner.release = release
     return runner
