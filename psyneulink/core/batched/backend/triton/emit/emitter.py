@@ -17,7 +17,11 @@ from psyneulink.core.batched.graph import (
     STATELESS_GRAPH_FUSION,
 )
 from psyneulink.core.batched.kernel_ir import KernelIR, component_symbol, diag_slots
-from psyneulink.core.batched.backend.triton.api import TritonOpTemplate
+from psyneulink.core.batched.backend.triton.api import (
+    TritonEmitContext,
+    TritonOpCall,
+    TritonOpTemplate,
+)
 from psyneulink.core.batched.backend.triton.source_builder import (
     SourceBuilder,
     emit_triton_function_header,
@@ -26,6 +30,7 @@ from psyneulink.core.batched.backend.triton.source_builder import (
 from psyneulink.core.batched.backend.triton.emit._helpers import float_literal
 from psyneulink.core.batched.backend.triton.emit.lanes import LaneEmitMixin
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
+from psyneulink.core.batched.specs import ElementwiseFunctionSpec
 
 
 _KERNEL_NAMES = {
@@ -175,11 +180,48 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             for idx, value in enumerate(state.initial_value):
                 var = f"{state_symbol}_{idx}"
                 self.state_vars[(state.name, idx)] = var
-                self.builder.line(
-                    f"{var} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
-                )
+                initializer = state.function_initializer
+                if initializer is None:
+                    self.builder.line(
+                        f"{var} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
+                    )
+                    continue
+                self._emit_state_function_initializer(initializer, idx, var)
         if self.kernel.states:
             self.builder.line()
+
+    def _emit_state_function_initializer(self, initializer, index: int, output: str) -> None:
+        spec = self.kernel.op_specs.lookup_spec(initializer.spec_key)
+        if not isinstance(spec, ElementwiseFunctionSpec) or spec.triton_template is None:
+            raise ValueError(
+                "Batched state function initializer requires a registered "
+                f"elementwise Triton implementation, got '{initializer.spec_key}'."
+            )
+        if len(initializer.input_value) <= index:
+            raise ValueError(
+                "Batched state function initializer input width does not match "
+                "its state width."
+            )
+        args = [
+            "tl.full((BLOCK,), "
+            f"{float_literal(initializer.input_value[index])}, tl.float32)"
+        ]
+        for binding in spec.params:
+            try:
+                public_name = initializer.params[binding.arg]
+                args.append(self.param_vars[public_name])
+            except KeyError as error:
+                raise ValueError(
+                    "Batched state function initializer has no parameter binding "
+                    f"for '{binding.arg}'."
+                ) from error
+        TritonEmitContext(self).emit_call(
+            TritonOpCall(
+                template=spec.triton_template,
+                outputs=(output,),
+                args=tuple(args),
+            )
+        )
 
     def component_symbol(self, node_spec) -> str:
         return component_symbol(self.graph, node_spec)

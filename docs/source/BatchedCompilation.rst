@@ -58,6 +58,12 @@ are lowering and optimization choices; they must not determine model
 semantics.  A backend emitter translates ``KernelIR`` and does not infer new
 behavior from the live Composition.
 
+Persistent state can be initialized either from typed constants or by applying
+a registered elementwise function to an initializer with the lane's effective
+parameters.  The latter reuses the same decorated implementation as ordinary
+execution; it is needed for recurrent sender state whose PsyNeuLink initial
+value is the mechanism function applied to its integrator initializer.
+
 Extension API
 -------------
 

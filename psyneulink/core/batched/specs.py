@@ -138,12 +138,16 @@ class StateDecl:
 
     ``width=None`` resolves to the node's primary output width at lowering.
     Declared states persist across trials, which selects the stateful lane
-    layout for the containing graph.
+    layout for the containing graph. ``initialize_with_function`` means the
+    registered primary elementwise function is applied to ``initial`` using
+    the lane's effective parameters; this represents initialized recurrent
+    sender values without embedding that function's formula in a backend.
     """
 
     name: str
     width: int | None = None
     initial: float = 0.0
+    initialize_with_function: bool = False
 
 
 @dataclass(frozen=True)

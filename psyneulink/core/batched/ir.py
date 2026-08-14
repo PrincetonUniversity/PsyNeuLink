@@ -95,6 +95,20 @@ class BatchedNodeSpec:
 
 
 @dataclass(frozen=True)
+class BatchedStateFunctionInitializer:
+    """Initialize state by applying a registered elementwise function.
+
+    ``input_value`` is the function input before lane-specific parameters are
+    applied. ``params`` maps the function implementation's argument names to
+    stable public parameter names in :class:`BatchedCompositionIR`.
+    """
+
+    spec_key: str
+    input_value: tuple[float, ...]
+    params: Mapping[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class BatchedStateSpec:
     name: str
     node: str
@@ -102,6 +116,7 @@ class BatchedStateSpec:
     initial_value: tuple[float, ...]
     component_id: int = -1
     state_id: int = -1
+    function_initializer: BatchedStateFunctionInitializer | None = None
 
 
 @dataclass(frozen=True)

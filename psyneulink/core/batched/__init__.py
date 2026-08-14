@@ -43,6 +43,7 @@ from psyneulink.core.batched.ir import (
     BatchedRngStreamSpec,
     BatchedSchedulerSpec,
     BatchedSimulationResult,
+    BatchedStateFunctionInitializer,
     BatchedStateSpec,
 )
 
@@ -65,6 +66,7 @@ __all__ = [
     "BatchedSchedulerSpec",
     "BatchedSimulationPlan",
     "BatchedSimulationResult",
+    "BatchedStateFunctionInitializer",
     "BatchedStateSpec",
     "DenseProjectionSpec",
     "ElementwiseFunctionSpec",
