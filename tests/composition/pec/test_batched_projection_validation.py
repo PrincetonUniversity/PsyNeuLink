@@ -117,6 +117,20 @@ def test_unmodeled_mapping_projection_function_semantics_are_rejected(
     assert expected in diagnostic.detail
 
 
+@pytest.mark.parametrize("parameter_name", ("weight", "exponent"))
+def test_unmodeled_mapping_projection_weighting_is_rejected(parameter_name):
+    composition, _, receiver, projection = _projection_model()
+    getattr(projection.parameters, parameter_name).set(2.0, None)
+
+    diagnostic = _assert_projection_rejected(
+        composition,
+        receiver,
+        projection,
+        "unsupported MappingProjection function for batched v2",
+    )
+    assert f"{parameter_name}=2.0" in diagnostic.detail
+
+
 @pytest.mark.parametrize(
     "matrix, expected_dtype",
     [

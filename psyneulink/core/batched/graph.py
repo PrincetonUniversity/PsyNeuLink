@@ -1444,10 +1444,14 @@ def _mapping_projection_support_diagnostic(projection) -> BatchedDiagnostic | No
     function = getattr(projection, "function", None)
     operation = _parameter_value(function, "operation", None)
     normalize = _parameter_value(function, "normalize", False)
+    weight = _parameter_value(projection, "weight", None)
+    exponent = _parameter_value(projection, "exponent", None)
     if (
         type(function).__name__ != "MatrixTransform"
         or operation != "dot_product"
         or not _numeric_exact(normalize, False)
+        or weight is not None
+        or exponent is not None
     ):
         return BatchedDiagnostic(
             projection_name,
@@ -1455,7 +1459,7 @@ def _mapping_projection_support_diagnostic(projection) -> BatchedDiagnostic | No
             (
                 "requires MatrixTransform(operation=DOT_PRODUCT, normalize=False); "
                 f"got {type(function).__name__}(operation={operation!r}, "
-                f"normalize={normalize!r})"
+                f"normalize={normalize!r}, weight={weight!r}, exponent={exponent!r})"
             ),
         )
 
