@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 import psyneulink as pnl
@@ -24,12 +23,43 @@ def _reasons(composition, outputs=None):
         (pnl.Logistic(offset=0.25), "offset"),
     ],
 )
-def test_rejects_unlowered_transfer_function_parameters(function, parameter):
+def test_accepts_fully_lowered_transfer_function_parameters(function, parameter):
     node = pnl.TransferMechanism(input_shapes=1, function=function, name="node")
-    reasons = _reasons(pnl.Composition(pathways=node))
+    result = lower_composition(pnl.Composition(pathways=node))
 
-    assert f"unsupported {type(function).__name__} parameter" in reasons
-    assert parameter in reasons
+    assert not result.rejected_nodes
+    assert parameter in result.graph.node(node.name).params
+
+
+@pytest.mark.composition
+def test_accepts_broadcast_scalar_transfer_function_parameter():
+    node = pnl.TransferMechanism(
+        input_shapes=3,
+        function=pnl.Linear(slope=[2.0, 2.0, 2.0]),
+        name="node",
+    )
+    result = lower_composition(pnl.Composition(pathways=node))
+
+    assert not result.rejected_nodes
+
+
+@pytest.mark.composition
+def test_rejects_elementwise_transfer_function_parameter_until_vector_abi_lands():
+    node = pnl.TransferMechanism(
+        input_shapes=3,
+        function=pnl.Linear(slope=[1.0, 2.0, 3.0]),
+        name="node",
+    )
+    result = lower_composition(pnl.Composition(pathways=node))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported non-scalar Linear parameter for batched v2"
+    )
+    assert diagnostic.component == node.name
+    assert diagnostic.detail == "slope shape=(3,)"
 
 
 @pytest.mark.composition
@@ -85,6 +115,24 @@ def test_rejects_lca_configurations_not_represented_by_width2_op(kwargs, expecte
     lca = pnl.LCAMechanism(input_shapes=2, name="lca", **kwargs)
 
     assert expected in _reasons(pnl.Composition(pathways=lca))
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize("parameter", ["bias", "x_0", "scale", "offset"])
+def test_full_logistic_transfer_support_does_not_relax_lca_contract(parameter):
+    defaults = {"bias": 0.0, "x_0": 0.0, "scale": 1.0, "offset": 0.0}
+    defaults[parameter] += 0.25
+    lca = pnl.LCAMechanism(
+        input_shapes=2,
+        function=pnl.Logistic(**defaults),
+        termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=2,
+        name="lca",
+    )
+
+    reasons = _reasons(pnl.Composition(pathways=lca))
+    assert "unsupported LCA Logistic parameter" in reasons
+    assert parameter in reasons
 
 
 @pytest.mark.composition

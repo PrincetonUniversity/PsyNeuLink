@@ -5,5 +5,5 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 
 
 @batched_op(Linear)
-def linear(x, slope, intercept):
-    return slope * x + intercept
+def linear(x, slope, intercept, scale, offset):
+    return scale * (x * slope + intercept) + offset

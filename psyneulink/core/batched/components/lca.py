@@ -223,6 +223,36 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
     if not _numeric_array_matches(_raw_parameter(node, "initial_value", 0.0), 0.0):
         return BatchedDiagnostic(name, "unsupported LCA initial_value for batched v2", "requires zero")
 
+    # The current LCA op has its own Logistic implementation and binds only
+    # ``gain``.  Full Logistic support for passthrough TransferMechanisms must
+    # not make these other behavior-affecting parameters look supported here.
+    function = getattr(node, "function", None)
+    logistic_defaults = {
+        "gain": 1.0,
+        "bias": 0.0,
+        "x_0": 0.0,
+        "scale": 1.0,
+        "offset": 0.0,
+    }
+    for parameter_name, expected in logistic_defaults.items():
+        value = np.asarray(_raw_parameter(function, parameter_name, expected))
+        if (
+            value.size == 0
+            or value.dtype.kind not in "biufc"
+            or not np.allclose(value, value.reshape(-1)[0])
+        ):
+            return BatchedDiagnostic(
+                name,
+                "unsupported non-scalar LCA Logistic parameter for batched v2",
+                parameter_name,
+            )
+        if parameter_name != "gain" and not np.allclose(value, expected):
+            return BatchedDiagnostic(
+                name,
+                "unsupported LCA Logistic parameter for batched v2",
+                f"{parameter_name}={value.reshape(-1)[0]!r} (requires {expected!r})",
+            )
+
     scalar_names = ("leak", "competition", "self_excitation", "noise", "time_step_size")
     values = {}
     for parameter_name in scalar_names:

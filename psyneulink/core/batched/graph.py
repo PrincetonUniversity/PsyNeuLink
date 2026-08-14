@@ -414,10 +414,41 @@ def _single_input_support_diagnostic(node) -> BatchedDiagnostic | None:
 
 def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagnostic | None:
     function_type = type(function).__name__
-    unsupported_defaults = {
-        "Linear": {"scale": 1.0, "offset": 0.0},
-        "Logistic": {"bias": 0.0, "x_0": 0.0, "scale": 1.0, "offset": 0.0},
+    semantic_defaults = {
+        "Linear": {"slope": 1.0, "intercept": 0.0, "scale": 1.0, "offset": 0.0},
+        "Logistic": {
+            "gain": 1.0,
+            "bias": 0.0,
+            "x_0": 0.0,
+            "scale": 1.0,
+            "offset": 0.0,
+        },
     }.get(function_type, {})
+    function_spec = specs.function_spec_for(function)
+    modeled_parameters = (
+        set()
+        if function_spec is None
+        else {binding.pnl_name or binding.arg for binding in function_spec.params}
+    )
+    for parameter_name in semantic_defaults:
+        if parameter_name not in modeled_parameters:
+            continue
+        value = _parameter_value(
+            function,
+            parameter_name,
+            semantic_defaults[parameter_name],
+        )
+        if not _is_scalar_or_broadcast_scalar(value):
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported non-scalar {function_type} parameter for batched v2",
+                f"{parameter_name} shape={np.asarray(value).shape}",
+            )
+    unsupported_defaults = {
+        name: default
+        for name, default in semantic_defaults.items()
+        if name not in modeled_parameters
+    }
     for parameter_name, expected in unsupported_defaults.items():
         value = _parameter_value(function, parameter_name, expected)
         if not _numeric_equal(value, expected):
@@ -476,6 +507,18 @@ def _numeric_equal(value, expected) -> bool:
     try:
         array = np.asarray(value)
         return array.dtype.kind in "biufc" and bool(np.allclose(array, expected))
+    except Exception:
+        return False
+
+
+def _is_scalar_or_broadcast_scalar(value) -> bool:
+    """Whether scalar parameter-buffer lowering preserves ``value`` exactly."""
+
+    try:
+        array = np.asarray(value)
+        if array.size == 0 or array.dtype.kind not in "biufc":
+            return False
+        return bool(np.allclose(array, array.reshape(-1)[0]))
     except Exception:
         return False
 

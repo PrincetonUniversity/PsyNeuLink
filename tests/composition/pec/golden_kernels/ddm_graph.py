@@ -3,8 +3,8 @@ import triton.language as tl
 
 
 @triton.jit
-def _pnl_triton_linear(x, slope, intercept):
-    return slope * x + intercept
+def _pnl_triton_linear(x, slope, intercept, scale, offset):
+    return scale * (x * slope + intercept) + offset
 
 
 @triton.jit
@@ -53,6 +53,8 @@ def pnl_batched_ddm_graph_kernel(
     param_7,
     param_8,
     param_9,
+    param_10,
+    param_11,
     out,
     diag,
     total_lanes: tl.constexpr,
@@ -77,14 +79,16 @@ def pnl_batched_ddm_graph_kernel(
     param_1_value = tl.load(param_1 + param_idx, mask=mask, other=0.0)
     param_2_value = tl.load(param_2 + param_idx, mask=mask, other=1.0)
     param_3_value = tl.load(param_3 + param_idx, mask=mask, other=0.0)
-    param_4_value = tl.load(param_4 + param_idx, mask=mask, other=0.05)
+    param_4_value = tl.load(param_4 + param_idx, mask=mask, other=1.0)
     param_5_value = tl.load(param_5 + param_idx, mask=mask, other=0.0)
-    param_6_value = tl.load(param_6 + param_idx, mask=mask, other=0.0)
-    param_7_value = tl.load(param_7 + param_idx, mask=mask, other=0.01)
+    param_6_value = tl.load(param_6 + param_idx, mask=mask, other=0.05)
+    param_7_value = tl.load(param_7 + param_idx, mask=mask, other=0.0)
     param_8_value = tl.load(param_8 + param_idx, mask=mask, other=0.0)
-    param_9_value = tl.load(param_9 + param_idx, mask=mask, other=0.0)
+    param_9_value = tl.load(param_9 + param_idx, mask=mask, other=0.01)
+    param_10_value = tl.load(param_10 + param_idx, mask=mask, other=0.0)
+    param_11_value = tl.load(param_11 + param_idx, mask=mask, other=0.0)
 
-    n_n0_output_0_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
+    n_n0_output_0_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_0_value, param_1_value, param_2_value, param_3_value)
 
     n_n1_projection_0_0 = _pnl_triton_projection_term(n_n0_output_0_0, 1.0)
 
@@ -94,7 +98,7 @@ def pnl_batched_ddm_graph_kernel(
         random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
     else:
         random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
-    n_n1_output_0_0, n_n1_output_1_0, n_n1_diagnostic_0_0 = _pnl_triton_ddm(n_n1_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, SEED, random_base, MAX_STEPS, mask)
+    n_n1_output_0_0, n_n1_output_1_0, n_n1_diagnostic_0_0 = _pnl_triton_ddm(n_n1_input_0, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, param_10_value, param_11_value, SEED, random_base, MAX_STEPS, mask)
 
     diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
     tl.store(diag + diag_lane + 0, n_n1_diagnostic_0_0, mask=mask)
