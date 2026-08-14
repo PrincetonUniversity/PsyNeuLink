@@ -40,16 +40,16 @@ IR layers
 ``BatchedGraphIR`` is the backend-neutral semantic graph.  Component, port,
 projection, parameter, state, and RNG identities belong here.  It records
 exact routing plus data-only declarations for scheduler regions, predicates,
-predicate dependencies, ordered consideration sets, finished values, and
-retained-state reset policies.  Effective implicit scheduler predicates are
-snapshotted as well as supported explicit predicates; the declarations retain
-neither live PsyNeuLink components nor ``Condition`` objects.  An
-``executable`` flag distinguishes a graph whose current operations preserve all
-of those semantics from a graph retained only for inspection and subsequent IR
-work.  Exactly validated control paths absorbed by existing operations carry
-explicit metadata, but generic control/modulation operations and a complete
-absorption ledger remain incremental work.  Unrepresented variants fail
-closed.  Display names are diagnostic labels, not identity.
+predicate dependencies, ordered consideration sets, termination, finished
+values, and retained-state reset policies.  Effective implicit scheduler
+predicates are snapshotted as well as supported explicit predicates; the
+declarations retain neither live PsyNeuLink components nor ``Condition``
+objects.  An ``executable`` flag distinguishes a graph whose current operations
+preserve all of those semantics from a graph retained only for inspection and
+subsequent IR work.  Exactly validated control paths absorbed by existing
+operations carry explicit metadata, but generic control/modulation operations
+and a complete absorption ledger remain incremental work.  Unrepresented
+variants fail closed.  Display names are diagnostic labels, not identity.
 
 Composition lowering assigns nonnegative numeric IDs in deterministic
 dependency order and carries them through ``KernelIR`` operations.  Input and
@@ -77,23 +77,32 @@ PsyNeuLink's automatically suffixed names are already distinguished by IDs.
 ``KernelIR`` is the backend-neutral executable program.  It currently makes
 projection, port combination, function, state, trial-loop, and output-store
 operations explicit and carries the graph's scheduler, consideration-set,
-finished-value, and reset declarations forward.  When a model needs pass-wise
-predicate evaluation, lowering wraps its trial body in ``ForPasses``.  At this
-checkpoint every ``ForPasses`` is declaration-only: its attributes describe
-the required region, but it does not authorize sequential execution or define
-conditional behavior.  The corresponding ``KernelIR`` is non-executable, and
-the Triton emitter refuses it before generating source.  Accepted one-pass
-static graphs retain their flat executable operation sequence.  Parameter,
-subject, trial, and estimate lane layout and fusion are lowering and
-optimization choices; they must not determine model semantics.  A backend
-emitter translates executable ``KernelIR`` and does not infer new behavior from
-the live Composition.
+termination, finished-value, and reset declarations forward.  For the exact
+stateless boundary described below, a backend-neutral host planner consumes
+only those typed declarations and produces a finite one-trial
+``BatchedScheduleTraceSpec``.  Kernel lowering expands the trace into an
+executable ``ForPasses`` containing typed ``ExecuteConsiderationSet`` regions,
+followed by one output-store epilogue.  Each trial lane executes that same trace
+independently, including trial-local predicate and usable-call-count resets.
+
+Pass-wise programs outside that finite stateless boundary remain
+declaration-only.  Their ``ForPasses`` attributes describe the required region
+but do not authorize sequential execution or define conditional behavior; the
+corresponding ``KernelIR`` is non-executable and the Triton emitter refuses it
+before generating source.  Accepted one-pass static graphs retain their flat
+executable operation sequence.  Parameter, subject, trial, and estimate lane
+layout and fusion are lowering and optimization choices; they must not
+determine model semantics.  After semantic declarations have been snapshotted,
+neither the host trace planner nor a backend emitter interprets the live
+Composition, scheduler, components, or ``Condition`` objects.
 
 Current scheduler and control boundary
 --------------------------------------
 
 The semantic declarations are intentionally broader than the executable
-subset:
+subset.  The finite precomputed path does not enable stateful pass schedules,
+``WhenFinished``-driven pass loops, generic control, or CSI; those remain
+fail-closed:
 
 .. list-table::
    :header-rows: 1
@@ -110,25 +119,53 @@ subset:
        also snapshotted.
      - One-pass cases execute when they are equivalent to the existing static
        order: ``Always``, first-pass predicates, and ``WhenFinished`` on a
-       producer in an earlier consideration set.  Delayed ``AtPass`` and
-       same-set or backward ``WhenFinished`` need a pass executor and therefore
-       remain fail-closed.  Unsupported condition types, subclasses, malformed
-       arguments, structural scheduler conditions, and other time scales are
-       rejected before a complete graph is produced.
+       producer in an earlier consideration set.  Delayed ``AtPass(n)`` also
+       executes when the complete graph qualifies for the stateless
+       precomputed-trace boundary.  Within such a trace, ``Always`` may execute
+       on each pass, ``AtTrialStart`` and ``AtPass`` use absolute pass indices,
+       and the implicit one-call predicates consume trial-local usable counts.
+       There is no generic or dynamic ``WhenFinished`` executor; only its
+       already validated one-pass static equivalent remains admitted.
+       Explicit call-count predicates, unsupported condition types or
+       subclasses, malformed arguments, structural scheduler conditions, and
+       other time scales remain fail-closed.
    * - Consideration sets
      - The scheduler's ordered consideration queue is stored with numeric set
        and component IDs.  Each set declares the PsyNeuLink frozen-input
        contract, and predicate dependencies use those identities rather than
        display-name order.
-     - The sets currently establish static-order equivalence and expose the
-       requirements of future pass execution.  There is no generic executor
-       for repeatedly evaluating consideration sets yet.
+     - The host planner evaluates the typed sets in order for the stateless
+       precomputed subset.  It selects every member of a set from one
+       beginning-of-set predicate snapshot, consumes and publishes usable call
+       counts between sets, and checks termination between sets.  Empty visits
+       are omitted from the trace while absolute pass and consideration-set
+       indices are retained.  Dynamic or lane-varying consideration-set
+       evaluation is not implemented.
    * - Pass regions
      - Trial and nested pass regions, finished-value identities, and the
        predicate data needed by ``ForPasses`` are explicit.
-     - ``ForPasses`` is declaration-only.  A graph that requires it has
-       ``KernelIR.executable == False``; direct Triton emission raises rather
-       than translating or approximating that program.
+     - A delayed-``AtPass`` graph gets executable ``ForPasses`` only when it is
+       a stateless trial-lane graph with no retained state, RNG stream, reset,
+       finished-value dependency, or scheduler component lacking a lowered
+       body.  Data projections must run sender-before-receiver in the current
+       trial; a receiver that would read a previous trial's held sender value
+       is rejected.  Projection edges within one consideration set are also
+       rejected until current/next value banks can preserve frozen inputs.
+       Nontermination, invalid dependency order, malformed declarations, and
+       component- or weighted-operation expansion beyond the compiler budgets
+       fail closed.  Other required pass regions remain declaration-only with
+       ``KernelIR.executable == False``.
+   * - Termination
+     - The exact default trial ``AllHaveRun()`` predicate is expanded to every
+       lowered scheduler component ID, and the environment-sequence
+       ``Never()`` predicate is typed independently from node predicates.
+     - All configurations admitted through the current Composition compiler,
+       including precomputed traces, require that exact default contract:
+       ``AllHaveRun`` must use ``ENVIRONMENT_STATE_UPDATE`` with no explicit
+       component operands, and sequence termination must be ``Never``.
+       Subsets, custom predicates, nondefault internal time scales, malformed
+       maps, and name-equivalent impostors are structured rejections rather
+       than silently changing trace length.
    * - Resets
      - Retained graph state has typed reset declarations referencing numeric
        state IDs; the schema distinguishes exact ``Never`` and
@@ -224,6 +261,13 @@ batched adapter builds independent Python and batched Compositions, expands
 the additional batch axes, and compares every lane to Python through exact
 component and OutputPort bindings.  LLVM is a secondary oracle for selected
 complex deterministic cases.
+
+The executable precomputed-schedule corpus covers delayed senders with
+implicit receivers, an ``Always`` sender with a delayed receiver, and delayed
+multi-origin fan-in with implicit ``SUM`` combination.  Each case spans
+multiple trials, asserts the exact typed trace, and compares both Triton
+interpreter and compiled-GPU results directly with a freshly constructed
+Python Composition.
 
 Device buffers and current Triton kernels use fp32. Discrete outcomes and
 execution counts compare exactly. The exact LCA semantic cases compare
