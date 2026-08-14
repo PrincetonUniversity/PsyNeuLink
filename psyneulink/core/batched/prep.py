@@ -33,7 +33,9 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
                 for idx in range(next(iter(lengths))):
                     row = dict(defaults)
                     for key, value in parameter_sets.items():
-                        row[_normalize_param_key(key)] = float(np.asarray(value).reshape(-1)[idx])
+                        row[_normalize_param_key(key)] = _as_scalar(
+                            np.asarray(value).reshape(-1)[idx]
+                        )
                     rows.append(_canonicalize_param_set(row, ir))
                 return rows
 
@@ -217,11 +219,11 @@ def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> 
         candidate_names = (spec.name,) + spec.aliases
         for name in candidate_names:
             if name in row:
-                canonical[spec.name] = float(row[name])
+                canonical[spec.name] = _as_scalar(row[name])
                 matched.add(name)
         for name, value in row.items():
             if isinstance(name, str) and any(name.endswith(f".{candidate}") for candidate in candidate_names):
-                canonical[spec.name] = float(value)
+                canonical[spec.name] = _as_scalar(value)
                 matched.add(name)
     unknown = sorted(
         str(name)
@@ -254,4 +256,18 @@ def _is_vector_value(value) -> bool:
 
 
 def _as_scalar(value) -> float:
-    return float(np.asarray(value, dtype=float).reshape(-1)[0])
+    array = np.asarray(value)
+    if array.size != 1:
+        raise ValueError(
+            "Each batched parameter value must be scalar within one parameter row."
+        )
+    if array.dtype.kind not in "biuf":
+        raise ValueError(
+            f"Batched parameter values must be real numeric scalars; got dtype {array.dtype}."
+        )
+    scalar = float(array.reshape(-1)[0])
+    if not np.isfinite(scalar):
+        raise ValueError("Batched parameter values must be finite.")
+    if abs(scalar) > np.finfo(np.float32).max:
+        raise ValueError("Batched parameter values must be representable as float32.")
+    return scalar
