@@ -139,10 +139,13 @@ def _extract_bound_input(
 
     expected_node = component_bindings.nodes.get(input_spec.node)
     expected_ports = ()
-    if expected_node is not None:
-        # Multi-port origins are rejected during semantic lowering for now, so
-        # accepting the primary InputPort identity is exact and unambiguous.
-        expected_ports = tuple(getattr(expected_node, "input_ports", ()))[:1]
+    expected_port = component_bindings.ports_by_id.get(input_spec.port_id)
+    if expected_port is not None:
+        # The GraphIR binding identifies the exact external InputPort.  This is
+        # important for a receiver that has an internally projected port and a
+        # different externally supplied port: selecting the node's first port
+        # would silently route the value to the wrong mechanism variable slot.
+        expected_ports = (expected_port,)
 
     matches = []
     for key, value in inputs.items():
