@@ -10,4 +10,5 @@ Services
    Preferences
    json
    Compilation
+   BatchedCompilation
    Graph
