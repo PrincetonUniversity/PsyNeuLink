@@ -971,7 +971,6 @@ REJECTION_CASES = (
             BatchedDiagnosticCode.MODEL_SCHEDULER_CONDITION_UNSUPPORTED,
         )
         for role, condition, condition_label in (
-            ("source", pnl.Always(), "Always"),
             ("controller", pnl.Never(), "Never"),
             (
                 "target",
@@ -989,6 +988,33 @@ REJECTION_CASES = (
         )
     ),
 )
+
+
+def test_absorbed_control_source_explicit_always_is_the_implicit_default():
+    composition, controller = _controlled_lca_schedule_model("source", pnl.Always())
+    source = controller.input_ports[0].path_afferents[0].sender.owner
+
+    lowering = lower_composition(composition)
+    report = BatchedCompositionCompiler.diagnose(
+        composition,
+        backend="triton_cpu",
+    )
+
+    assert lowering.graph is not None
+    source_component_id = next(
+        component_id
+        for component_id, component in lowering.bindings.nodes_by_id.items()
+        if component is source
+    )
+    source_condition = next(
+        condition
+        for condition in lowering.graph.scheduler
+        if condition.component_id == source_component_id
+    )
+    assert source_condition.condition_type == "Always"
+    assert source_condition.attrs == {"implicit": True}
+    assert not lowering.rejected_conditions
+    assert report.model_supported
 
 
 @pytest.mark.parametrize("case", REJECTION_CASES, ids=lambda case: case.name)
