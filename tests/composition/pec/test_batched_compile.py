@@ -653,7 +653,10 @@ def test_batched_compiler_reports_unimplemented_precomputed_scheduler():
     source = pnl.TransferMechanism(input_shapes=1, name="source")
     target = pnl.TransferMechanism(input_shapes=1, name="target")
     comp = pnl.Composition(pathways=[[source, target]])
-    comp.scheduler.add_condition(target, pnl.EveryNCalls(source, 1))
+    # EveryNCalls(source, 1) is exactly the scheduler's implicit processing-edge
+    # default and is therefore executable as an ordinary static graph.  A
+    # two-call predicate genuinely requires a precomputed/dynamic schedule.
+    comp.scheduler.add_condition(target, pnl.EveryNCalls(source, 2))
 
     report = BatchedCompositionCompiler.diagnose(comp)
 
