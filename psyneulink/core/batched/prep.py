@@ -236,7 +236,26 @@ def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> 
             "Unknown batched parameter(s): "
             f"{', '.join(unknown)}. Available parameters: {', '.join(available)}"
         )
+    for spec in ir.params:
+        _validate_parameter_constraints(spec, canonical[spec.name])
     return canonical
+
+
+def _validate_parameter_constraints(spec, value: float) -> None:
+    if spec.minimum is not None:
+        valid = value >= spec.minimum if spec.minimum_inclusive else value > spec.minimum
+        if not valid:
+            relation = ">=" if spec.minimum_inclusive else ">"
+            raise ValueError(
+                f"Batched parameter '{spec.name}' must be {relation} {spec.minimum}."
+            )
+    if spec.maximum is not None:
+        valid = value <= spec.maximum if spec.maximum_inclusive else value < spec.maximum
+        if not valid:
+            relation = "<=" if spec.maximum_inclusive else "<"
+            raise ValueError(
+                f"Batched parameter '{spec.name}' must be {relation} {spec.maximum}."
+            )
 
 
 def _normalize_param_key(key) -> str:

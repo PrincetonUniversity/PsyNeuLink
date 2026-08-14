@@ -291,6 +291,10 @@ class _ParamBuilder:
         aliases: Iterable[str] = (),
         *,
         parameter=None,
+        minimum: float | None = None,
+        minimum_inclusive: bool = True,
+        maximum: float | None = None,
+        maximum_inclusive: bool = True,
     ) -> str:
         if name in self._names:
             return name
@@ -302,6 +306,10 @@ class _ParamBuilder:
                 float(default),
                 tuple(aliases),
                 parameter_id=parameter_id,
+                minimum=minimum,
+                minimum_inclusive=minimum_inclusive,
+                maximum=maximum,
+                maximum_inclusive=maximum_inclusive,
             )
         )
         if parameter is not None:
@@ -428,6 +436,10 @@ def _node_spec(
                 binding.resolve(node),
                 aliases=aliases,
                 parameter=_bound_parameter(binding, node),
+                minimum=binding.minimum,
+                minimum_inclusive=binding.minimum_inclusive,
+                maximum=binding.maximum,
+                maximum_inclusive=binding.maximum_inclusive,
             )
         if mechanism_spec.extract_attrs is not None:
             attrs.update(mechanism_spec.extract_attrs(node, composition))
@@ -469,6 +481,10 @@ def _node_spec(
                 binding.resolve(function),
                 aliases=_node_param_aliases(node_name, binding.arg),
                 parameter=_bound_parameter(binding, function),
+                minimum=binding.minimum,
+                minimum_inclusive=binding.minimum_inclusive,
+                maximum=binding.maximum,
+                maximum_inclusive=binding.maximum_inclusive,
             )
 
     return BatchedNodeSpec(

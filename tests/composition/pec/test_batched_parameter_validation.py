@@ -1,5 +1,7 @@
 """Validation for scalar values crossing the fp32 parameter-row ABI."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -32,6 +34,21 @@ def _linear_ir():
     return ir, graph.node(mechanism.name).params["slope"]
 
 
+def _constrained_linear_ir():
+    ir, slope = _linear_ir()
+    constrained = tuple(
+        replace(
+            spec,
+            minimum=0.0,
+            minimum_inclusive=False,
+        )
+        if spec.name == slope
+        else spec
+        for spec in ir.params
+    )
+    return replace(ir, params=constrained), slope
+
+
 @pytest.mark.parametrize(
     "value, message",
     [
@@ -56,3 +73,11 @@ def test_vectorized_mapping_remains_an_explicit_parameter_lane_shorthand():
     rows = normalize_parameter_sets({slope: np.asarray([1.0, 2.0])}, ir)
 
     assert [row[slope] for row in rows] == [1.0, 2.0]
+
+
+@pytest.mark.parametrize("value", (0.0, -0.01))
+def test_runtime_parameter_respects_declared_exclusive_minimum(value):
+    ir, parameter = _constrained_linear_ir()
+
+    with pytest.raises(ValueError, match=r"must be > 0\.0"):
+        normalize_parameter_sets([{parameter: value}], ir)

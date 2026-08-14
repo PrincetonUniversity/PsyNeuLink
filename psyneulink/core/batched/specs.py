@@ -85,6 +85,8 @@ class ParamBinding:
     ``resolve`` reads the live value from a node at lowering time.  ``scope``
     selects whether the parameter lives on the mechanism or on its primary
     function; ``get`` overrides resolution entirely for irregular bindings.
+    Optional inclusive or exclusive bounds are copied into the immutable IR
+    and enforced for every runtime parameter row before device conversion.
     """
 
     arg: str
@@ -93,6 +95,10 @@ class ParamBinding:
     default: float = 0.0
     scope: str = "function"  # "function" | "mechanism"
     get: Callable[[Any], float] | None = None
+    minimum: float | None = None
+    minimum_inclusive: bool = True
+    maximum: float | None = None
+    maximum_inclusive: bool = True
 
     def resolve(self, component) -> float:
         if self.get is not None:
@@ -118,6 +124,10 @@ def param(
     default: float = 0.0,
     scope: str = "function",
     get: Callable[[Any], float] | None = None,
+    minimum: float | None = None,
+    minimum_inclusive: bool = True,
+    maximum: float | None = None,
+    maximum_inclusive: bool = True,
 ) -> ParamBinding:
     """Explicit ``bind=`` override for one body argument."""
 
@@ -129,6 +139,10 @@ def param(
         default=default,
         scope=scope,
         get=get,
+        minimum=minimum,
+        minimum_inclusive=minimum_inclusive,
+        maximum=maximum,
+        maximum_inclusive=maximum_inclusive,
     )
 
 

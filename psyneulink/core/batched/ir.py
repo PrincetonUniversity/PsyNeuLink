@@ -11,6 +11,10 @@ class BatchedParamSpec:
     default: float
     aliases: tuple[str, ...] = ()
     parameter_id: int = -1
+    minimum: float | None = None
+    minimum_inclusive: bool = True
+    maximum: float | None = None
+    maximum_inclusive: bool = True
 
 
 @dataclass(frozen=True)
