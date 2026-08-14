@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from psyneulink.core.batched.bindings import (
     EMPTY_COMPONENT_BINDINGS,
@@ -8,6 +8,7 @@ from psyneulink.core.batched.bindings import (
 )
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
+from psyneulink.core.batched.kernel_ir import KernelIR, lower_to_kernel_ir
 from psyneulink.core.batched.registry import analyze_composition
 
 
@@ -70,6 +71,13 @@ class BatchedSimulationPlan:
     backend: str
     capability_report: BatchedCapabilityReport
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
+    kernel_ir: KernelIR = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        # Lower exactly once while compiling the plan. KernelIR owns an
+        # immutable snapshot of every resolved batched op implementation, so a
+        # later decorator registration cannot change this plan's code.
+        object.__setattr__(self, "kernel_ir", lower_to_kernel_ir(self.ir))
 
     def run(
         self,

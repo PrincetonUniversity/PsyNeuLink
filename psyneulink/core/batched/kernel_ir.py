@@ -17,6 +17,10 @@ from psyneulink.core.batched.ir import (
     BatchedParamSpec,
     BatchedStateSpec,
 )
+from psyneulink.core.batched.specs import (
+    BatchedOpSpecSnapshot,
+    snapshot_batched_op_specs,
+)
 
 
 TRIAL_LANE_LAYOUT = "trial"
@@ -83,7 +87,9 @@ class KernelIR:
 
     Triton and the CPU debug executor both consume this IR.  A future MLIR
     backend should lower from this representation rather than re-discovering
-    semantics from generated Triton source.
+    semantics from generated Triton source. ``op_specs`` is an immutable
+    lowering-environment sidecar: it fixes the registered implementations used
+    by this plan without putting implementation objects in individual op attrs.
     """
 
     model_kind: str
@@ -98,15 +104,28 @@ class KernelIR:
     output_names: tuple[str, ...]
     max_steps: int
     graph: BatchedGraphIR
+    op_specs: BatchedOpSpecSnapshot
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
 
-def lower_to_kernel_ir(ir: BatchedCompositionIR) -> KernelIR:
-    """Lower semantic BatchedGraphIR to backend-neutral KernelIR."""
+def lower_to_kernel_ir(
+    ir: BatchedCompositionIR,
+    *,
+    op_specs: BatchedOpSpecSnapshot | None = None,
+) -> KernelIR:
+    """Lower semantic BatchedGraphIR and freeze its resolved op specs.
+
+    Supplying ``op_specs`` lets a caller retain an earlier compilation
+    snapshot. Direct IR callers remain supported and capture the registry as it
+    exists at lowering time.
+    """
 
     graph = ir.graph
     if graph is None:
         raise ValueError("KernelIR lowering requires a batched graph IR.")
+
+    if op_specs is None:
+        op_specs = snapshot_batched_op_specs(_graph_spec_keys(graph))
 
     lane_layout = _lane_layout_for(graph.fusion_kind)
     rng_streams = _rng_streams(graph)
@@ -143,12 +162,28 @@ def lower_to_kernel_ir(ir: BatchedCompositionIR) -> KernelIR:
         output_names=ir.output_names,
         max_steps=ir.max_steps,
         graph=graph,
+        op_specs=op_specs,
         metadata={
             "composition_name": ir.metadata.get("composition_name"),
             "fusion_kind": graph.fusion_kind,
             **graph.metadata,
         },
     )
+
+
+def _graph_spec_keys(graph: BatchedGraphIR) -> tuple[str, ...]:
+    """Return each registry key referenced by ``graph``, in graph order."""
+
+    keys = [
+        graph.node(node_name).attrs["spec_key"]
+        for node_name in graph.execution_order
+    ]
+    keys.extend(
+        projection.spec_key
+        for projection in graph.projections
+        if projection.spec_key
+    )
+    return tuple(dict.fromkeys(keys))
 
 
 def diag_slots(kernel: KernelIR) -> tuple[tuple[str, str], ...]:
@@ -242,6 +277,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                             "receiver_port": projection.receiver_port,
                             "matrix": projection.matrix,
                             "projection_type": "MappingProjection",
+                            "spec_key": projection.spec_key,
                         },
                     )
                 )

@@ -44,6 +44,7 @@ import inspect
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from types import MappingProxyType
 from typing import Any
 
 import numpy as np
@@ -281,6 +282,50 @@ _INSTANCE_SPECS: dict[str, MechanismOpSpec] = {}
 _SPECS_BY_KEY: dict[str, Any] = {}
 
 _BUILTINS_REGISTERED = False
+
+
+@dataclass(frozen=True)
+class BatchedOpSpecSnapshot:
+    """Immutable op implementations resolved for one compiled graph.
+
+    Registration remains process-global so the decorator APIs stay convenient,
+    but compilation captures the exact frozen spec objects its graph references.
+    Emission can therefore never observe a later replacement or removal from
+    the global registry.
+    """
+
+    specs_by_key: Mapping[str, Any]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "specs_by_key",
+            MappingProxyType(dict(self.specs_by_key)),
+        )
+
+    def lookup_spec(self, key: str):
+        try:
+            return self.specs_by_key[key]
+        except KeyError as error:
+            raise BatchedOpSpecError(
+                f"Compiled batched plan has no op spec for key '{key}'."
+            ) from error
+
+
+def snapshot_batched_op_specs(keys) -> BatchedOpSpecSnapshot:
+    """Resolve ``keys`` once and return an immutable per-plan registry view."""
+
+    ensure_builtin_specs()
+    registry = _SPECS_BY_KEY.copy()
+    resolved = {}
+    for key in keys:
+        try:
+            resolved[key] = registry[key]
+        except KeyError as error:
+            raise BatchedOpSpecError(
+                f"No registered batched op spec for key '{key}'."
+            ) from error
+    return BatchedOpSpecSnapshot(resolved)
 
 
 def spec_key(component_class: type) -> str:

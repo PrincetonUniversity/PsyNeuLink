@@ -9,7 +9,6 @@ into the concrete emitter in `emitter.py`.
 
 from __future__ import annotations
 
-from psyneulink.core.batched import specs
 from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION, STATEFUL_GRAPH_FUSION
 from psyneulink.core.batched.kernel_ir import KernelOp
 from psyneulink.core.batched.backend.triton.api import TritonEmitContext, TritonOpCall
@@ -63,7 +62,7 @@ class OpEmitMixin:
             self.lane_out_emitted = False
             self.diag_lane_emitted = False
             self._emit_init_trial_states(terminator_op)
-            terminator_spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+            terminator_spec = self._spec_for_op(terminator_op)
             terminator_node = self.graph.node(terminator_op.target)
             finished_var = self.state_vars[
                 (f"{terminator_node.name}.{terminator_spec.finished_output}", 0)
@@ -119,7 +118,7 @@ class OpEmitMixin:
         for op in in_loop_ops:
             is_stepper = (
                 op.kind == "CallMechanism"
-                and specs.lookup_spec(op.attrs["spec_key"]).can_step
+                and self._spec_for_op(op).can_step
             )
             # A delayed-onset node's output depends on `step` (withheld until its
             # onset), so it and everything downstream must run inside the loop.
@@ -136,14 +135,14 @@ class OpEmitMixin:
     def _coevolving_terminator_index(self, body: tuple[KernelOp, ...]) -> int:
         for index, op in enumerate(body):
             if op.kind == "CallMechanism":
-                spec = specs.lookup_spec(op.attrs["spec_key"])
+                spec = self._spec_for_op(op)
                 if spec.is_terminator:
                     return index
         raise ValueError("co-evolving graph has no terminator op")
 
     def _emit_coevolving_op(self, op: KernelOp, step_var: str, finished_var: str) -> None:
         if op.kind == "CallMechanism":
-            spec = specs.lookup_spec(op.attrs["spec_key"])
+            spec = self._spec_for_op(op)
             if spec.can_step:
                 self._emit_step_mechanism(op, spec, step_var, finished_var)
                 return
@@ -169,7 +168,7 @@ class OpEmitMixin:
                 cursor += output.width
 
     def _emit_init_trial_states(self, terminator_op: KernelOp) -> None:
-        spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+        spec = self._spec_for_op(terminator_op)
         node = self.graph.node(terminator_op.target)
         for decl in spec.trial_states:
             state_name = f"{node.name}.{decl.name}"
@@ -182,7 +181,7 @@ class OpEmitMixin:
         self.builder.line()
 
     def _emit_terminator_readout(self, terminator_op: KernelOp) -> None:
-        spec = specs.lookup_spec(terminator_op.attrs["spec_key"])
+        spec = self._spec_for_op(terminator_op)
         node = self.graph.node(terminator_op.target)
         output_vars = []
         for output in terminator_op.outputs:
@@ -247,7 +246,7 @@ class OpEmitMixin:
 
     def _emit_projection_call(self, op: KernelOp) -> None:
         projection_spec = self._projection_spec_for_op(op)
-        spec = specs.lookup_spec(projection_spec.spec_key)
+        spec = self._spec_for_op(op)
         if spec.triton_emit is None:
             raise ValueError(
                 "Batched op spec for projection "
@@ -279,7 +278,7 @@ class OpEmitMixin:
 
     def _emit_function_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
-        spec = specs.lookup_spec(op.attrs["spec_key"])
+        spec = self._spec_for_op(op)
         if spec.triton_template is None:
             raise ValueError(
                 "Batched op spec for function "
@@ -317,7 +316,7 @@ class OpEmitMixin:
 
     def _emit_mechanism_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
-        spec = specs.lookup_spec(op.attrs["spec_key"])
+        spec = self._spec_for_op(op)
         if not spec.has_triton:
             raise ValueError(
                 "Batched op spec for mechanism "
@@ -445,6 +444,9 @@ class OpEmitMixin:
             return self.value_vars[name]
         except KeyError as error:
             raise ValueError(f"Triton graph emitter has no value for '{name}'.") from error
+
+    def _spec_for_op(self, op: KernelOp):
+        return self.kernel.op_specs.lookup_spec(op.attrs["spec_key"])
 
     def _projection_spec_for_op(self, op: KernelOp):
         for projection in self.graph.projections:

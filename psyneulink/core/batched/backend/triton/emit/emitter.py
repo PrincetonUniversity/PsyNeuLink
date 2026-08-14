@@ -4,13 +4,12 @@ The emitter is intentionally Triton-specific; KernelIR stays free of `tl.*`
 syntax and source fragments so another backend can lower the same ops.  The
 class is split across mixins for maintainability (`LaneEmitMixin` in `lanes.py`,
 `OpEmitMixin` in `ops.py`); they share this class's mutable state.  Component
-implementations are resolved from the batched op spec registry via the
+implementations are resolved from the immutable per-plan spec snapshot via the
 `spec_key` op attributes.
 """
 
 from __future__ import annotations
 
-from psyneulink.core.batched import specs
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
@@ -61,7 +60,6 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
 
     def emit(self) -> str:
-        specs.ensure_builtin_specs()
         self._index_rng_streams()
         with self.builder.indent():
             self._emit_lane_decode()
