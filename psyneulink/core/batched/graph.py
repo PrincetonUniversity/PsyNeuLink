@@ -29,9 +29,11 @@ from psyneulink.core.batched.ir import (
     BatchedStateSpec,
 )
 from psyneulink.core.scheduling.condition import (
+    All,
     Always,
     AtPass,
     AtTrialStart,
+    EveryNCalls,
     Never,
     WhenFinished,
 )
@@ -1115,12 +1117,16 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
             projection_diagnostic.detail,
         )
 
-    condition = _scheduler_conditions(composition).get(node)
-    stepwise = type(condition) is Always and any(
+    conditions = _scheduler_conditions(composition)
+    stepwise = _scheduler_condition_is_effective_always(
+        composition,
+        node,
+        conditions,
+    ) and any(
         type(candidate).__name__ == "DDM"
         and type(candidate_condition) is WhenFinished
         and tuple(getattr(candidate_condition, "args", ())) == (node,)
-        for candidate, candidate_condition in _scheduler_conditions(composition).items()
+        for candidate, candidate_condition in conditions.items()
     )
     execute_until_finished = bool(_parameter_value(node, "execute_until_finished", True))
     if execute_until_finished == (not stepwise):
@@ -1147,12 +1153,14 @@ def _ddm_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
     args = tuple(getattr(condition, "args", ()))
     stepper = args[0] if type(condition) is WhenFinished and len(args) == 1 else None
     stepper_spec = specs.mechanism_spec_for(stepper) if stepper is not None else None
-    stepper_condition = _scheduler_conditions(composition).get(stepper)
     if (
         stepper_spec is not None
         and stepper_spec.can_step
         and stepper_spec.persistent_state
-        and type(stepper_condition) is Always
+        and _scheduler_condition_is_effective_always(
+            composition,
+            stepper,
+        )
     ):
         return None
     return BatchedDiagnostic(
@@ -1562,7 +1570,11 @@ def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
     """
 
     conditions = _scheduler_conditions(composition)
-    if type(conditions.get(lca)) is not Always:
+    if not _scheduler_condition_is_effective_always(
+        composition,
+        lca,
+        conditions,
+    ):
         return False
     for node, condition in conditions.items():
         mechanism_spec = specs.mechanism_spec_for(node)
@@ -2083,7 +2095,11 @@ def _coevolving_stepper(composition, executable_nodes):
         spec = specs.mechanism_spec_for(node)
         if spec is None or not (spec.can_step and spec.persistent_state):
             continue
-        if type(conditions.get(node)) is not Always:
+        if not _scheduler_condition_is_effective_always(
+            composition,
+            node,
+            conditions,
+        ):
             continue
         # An Always-scheduled persistent stepper must be a semantic ancestor of
         # the terminator.  Merely appearing before an unrelated terminator in
@@ -2575,32 +2591,90 @@ def _scheduler_conditions(composition):
     if scheduler is None:
         return {}
     # ``Scheduler.run`` materializes graph-scheduler's implicit defaults into
-    # ``scheduler.conditions``.  Those generated Always/EveryNCalls predicates
-    # are lowered independently from the dependency graph above; treating them
-    # as explicit conditions makes compiler support depend on whether the same
-    # Composition has already executed.  PsyNeuLink retains the user's actual
-    # condition set separately across scheduler rebuilds, so prefer that source
-    # and use the live set only for older/custom scheduler implementations.
-    condition_set = getattr(scheduler, "_user_specified_conds", None)
-    if condition_set is None:
-        condition_set = getattr(scheduler, "conditions", None)
+    # the live condition set, while ``Scheduler.remove_condition`` can leave
+    # its user-provenance sidecar stale.  The live set is the semantic truth:
+    # filter only predicates exactly equivalent to the scheduler default, then
+    # lower those defaults independently from the dependency graph above.
+    condition_set = getattr(scheduler, "conditions", None)
     conditions_basic = getattr(condition_set, "conditions_basic", {})
     if not hasattr(conditions_basic, "items"):
         return {}
-    return conditions_basic
+    dependency_dict = getattr(scheduler, "dependency_dict", {})
+    return {
+        node: condition
+        for node, condition in conditions_basic.items()
+        if not _is_implicit_scheduler_default(
+            condition,
+            tuple(dependency_dict.get(node, ())),
+        )
+    }
+
+
+def _scheduler_condition_is_effective_always(
+    composition,
+    node,
+    conditions=None,
+) -> bool:
+    """Whether a node's explicit or dependency-derived predicate is Always."""
+
+    if node is None:
+        return False
+    if conditions is None:
+        conditions = _scheduler_conditions(composition)
+    condition = conditions.get(node)
+    if condition is not None:
+        return type(condition) is Always
+    dependency_dict = getattr(
+        getattr(composition, "scheduler", None),
+        "dependency_dict",
+        {},
+    )
+    return not tuple(dependency_dict.get(node, ()))
 
 
 def _scheduler_structural_conditions(composition):
     scheduler = getattr(composition, "scheduler", None)
     if scheduler is None:
         return {}
-    condition_set = getattr(scheduler, "_user_specified_conds", None)
-    if condition_set is None:
-        condition_set = getattr(scheduler, "conditions", None)
+    condition_set = getattr(scheduler, "conditions", None)
     conditions_structural = getattr(condition_set, "conditions_structural", {})
     if not hasattr(conditions_structural, "items"):
         return {}
     return conditions_structural
+
+
+def _is_implicit_scheduler_default(condition, dependencies) -> bool:
+    """Whether ``condition`` is exactly graph-scheduler's generated default."""
+
+    dependencies = tuple(dependencies)
+    if not dependencies:
+        return type(condition) is Always and not tuple(condition.args)
+    if len(dependencies) == 1:
+        return _is_default_every_n_calls(condition, dependencies[0])
+    if type(condition) is not All:
+        return False
+    operands = tuple(getattr(condition, "args", ()))
+    if len(operands) != len(dependencies):
+        return False
+    operand_dependencies = []
+    for operand in operands:
+        args = tuple(getattr(operand, "args", ()))
+        if type(operand) is not EveryNCalls or len(args) != 2 or args[1] != 1:
+            return False
+        operand_dependencies.append(args[0])
+    return {id(item) for item in operand_dependencies} == {
+        id(item) for item in dependencies
+    }
+
+
+def _is_default_every_n_calls(condition, dependency) -> bool:
+    args = tuple(getattr(condition, "args", ()))
+    return (
+        type(condition) is EveryNCalls
+        and len(args) == 2
+        and args[0] is dependency
+        and args[1] == 1
+    )
 
 
 def _dependency_topological_order(composition, nodes):

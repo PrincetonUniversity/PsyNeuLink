@@ -482,6 +482,28 @@ def test_materialized_implicit_conditions_do_not_change_lowering():
     assert after.graph.executable
 
 
+def test_removed_user_condition_does_not_survive_in_compiler_provenance():
+    mechanism = pnl.TransferMechanism(input_shapes=1, name="removed onset")
+    composition = pnl.Composition(pathways=mechanism)
+    composition.scheduler.add_condition(mechanism, pnl.AtPass(3))
+    composition.scheduler.remove_condition(mechanism)
+
+    # PsyNeuLink's provenance sidecar currently retains the removed object,
+    # while the live Scheduler correctly regenerates its implicit Always.
+    assert composition.scheduler._user_specified_conds.conditions_basic
+    list(composition.scheduler.run())
+    assert type(composition.scheduler.conditions[mechanism]) is pnl.Always
+
+    lowering = lower_composition(composition)
+    assert lowering.graph is not None
+    assert lowering.schedule_kind == "static_graph"
+    assert not lowering.rejected_conditions
+    condition = lowering.graph.scheduler[0]
+    assert condition.condition_type == "Always"
+    assert condition.attrs == {"implicit": True}
+    assert lowering.graph.executable
+
+
 def _coevolving_model():
     stepper = pnl.LCAMechanism(
         input_shapes=2,
