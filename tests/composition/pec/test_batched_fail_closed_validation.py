@@ -148,4 +148,5 @@ def test_exact_scalar_lca_termination_override_remains_explicitly_absorbed():
         "parameter": "termination_threshold",
         "modulation": "OVERRIDE",
     }
+    assert result.graph.node("lca").attrs["termination_input_node"] == "cue"
     assert all(projection.receiver != "controller" for projection in result.graph.projections)

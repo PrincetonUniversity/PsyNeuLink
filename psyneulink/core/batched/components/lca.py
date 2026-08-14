@@ -382,15 +382,21 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
 
 
 def _control_monitor_source_for(composition, controlled_node):
-    deps = getattr(composition.graph_processing, "dependency_dict", {}).get(controlled_node, [])
-    for dependency in deps:
-        if type(dependency).__name__ != "ControlMechanism":
-            continue
-        for input_port in getattr(dependency, "input_ports", []):
-            for projection in getattr(input_port, "path_afferents", []):
-                sender = getattr(getattr(projection, "sender", None), "owner", None)
-                if sender is not None:
-                    return sender
+    del composition  # The semantic edge lives on the controlled ParameterPort.
+    for parameter_port in getattr(controlled_node, "parameter_ports", ()):
+        for control_projection in getattr(parameter_port, "mod_afferents", ()):
+            control = getattr(getattr(control_projection, "sender", None), "owner", None)
+            if type(control).__name__ != "ControlMechanism":
+                continue
+            for input_port in getattr(control, "input_ports", ()):
+                for monitor_projection in getattr(input_port, "path_afferents", ()):
+                    source = getattr(
+                        getattr(monitor_projection, "sender", None),
+                        "owner",
+                        None,
+                    )
+                    if source is not None:
+                        return source
     return None
 
 
