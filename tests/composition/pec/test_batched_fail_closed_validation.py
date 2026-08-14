@@ -119,19 +119,6 @@ def test_rejects_non_primary_output_port_routing():
 
 
 @pytest.mark.composition
-def test_rejects_non_topological_node_emission_order():
-    source = pnl.TransferMechanism(input_shapes=1, name="source")
-    target = pnl.TransferMechanism(input_shapes=1, name="target")
-    composition = pnl.Composition()
-    composition.add_nodes([target, source])
-    composition.add_projection(sender=source, receiver=target)
-
-    reasons = _reasons(composition)
-    assert "non-topological graph emission order" in reasons
-    assert "source->target" in reasons
-
-
-@pytest.mark.composition
 def test_exact_scalar_lca_termination_override_remains_explicitly_absorbed():
     task = pnl.TransferMechanism(input_shapes=2, name="task")
     cue = pnl.TransferMechanism(input_shapes=1, name="cue")

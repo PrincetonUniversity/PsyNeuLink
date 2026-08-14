@@ -60,16 +60,23 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     absorbed = _absorbed_nodes(composition, nodes)
     if absorbed:
         nodes = [node for node in nodes if _node_name(node) not in absorbed]
+    topological_nodes, cyclic_nodes = _dependency_topological_order(composition, nodes)
     node_names = {_node_name(node) for node in nodes}
     params = _ParamBuilder()
-    rejected_nodes: list[BatchedDiagnostic] = []
+    rejected_nodes: list[BatchedDiagnostic] = [
+        BatchedDiagnostic(
+            getattr(composition, "name", "Composition"),
+            "cyclic processing dependencies are unsupported for batched v2",
+            ", ".join(_node_name(node) for node in cyclic_nodes),
+        )
+    ] if cyclic_nodes else []
     supported_nodes: list[str] = []
 
     model_kind = _classify_model(nodes)
     executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
     coevolving = _is_coevolving(composition, executable_nodes)
     schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(
-        composition, nodes, coevolving
+        composition, topological_nodes, coevolving
     )
     node_bindings = {
         _node_name(node): node
@@ -127,12 +134,12 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         outputs = _output_specs(composition, outputs, nodes)
         execution_order = tuple(
             _node_name(node)
-            for node in nodes
+            for node in topological_nodes
             if type(node).__name__ != "ControlMechanism"
         )
         ops = tuple(
             BatchedOp(kind=_op_kind(node), target=_node_name(node))
-            for node in nodes
+            for node in topological_nodes
             if type(node).__name__ != "ControlMechanism"
         ) + tuple(
             BatchedOp(
@@ -152,6 +159,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 BatchedSchedulerSpec(_node_name(node), type(condition).__name__)
                 for node, condition in _scheduler_conditions(composition).items()
                 if _node_name(node) in node_names
+                and type(node).__name__ != "ControlMechanism"
             ),
             ops=ops,
             execution_order=execution_order,
@@ -704,14 +712,7 @@ def _projection_specs(
     projections: list[BatchedProjectionSpec] = []
     rejected: list[BatchedDiagnostic] = []
     bindings: dict[str, object] = {}
-    node_by_name = {_node_name(node): node for node in nodes}
-    node_names = set(node_by_name)
-    executable_order = {
-        _node_name(node): index
-        for index, node in enumerate(
-            node for node in nodes if type(node).__name__ != "ControlMechanism"
-        )
-    }
+    node_names = {_node_name(node) for node in nodes}
     for node in _composition_nodes(composition):
         for input_port in getattr(node, "input_ports", []):
             for projection in getattr(input_port, "path_afferents", []):
@@ -760,15 +761,6 @@ def _projection_specs(
                             getattr(projection, "name", projection_type),
                             "unsupported multi-port projection routing for batched v2",
                             f"{sender_name}.{sender_port}->{receiver_name}.{receiver_port}",
-                        )
-                    )
-                    continue
-                if executable_order[sender_name] >= executable_order[receiver_name]:
-                    rejected.append(
-                        BatchedDiagnostic(
-                            getattr(projection, "name", projection_type),
-                            "non-topological graph emission order for batched v2",
-                            f"{sender_name}->{receiver_name}",
                         )
                     )
                     continue
@@ -887,7 +879,6 @@ def _is_coevolving(composition, executable_nodes) -> bool:
     """
 
     conditions = _scheduler_conditions(composition)
-    order = {_node_name(node): idx for idx, node in enumerate(executable_nodes)}
     terminators = [
         node for node in executable_nodes
         if (spec := specs.mechanism_spec_for(node)) is not None and spec.is_terminator and spec.can_step
@@ -900,10 +891,38 @@ def _is_coevolving(composition, executable_nodes) -> bool:
             continue
         if type(conditions.get(node)).__name__ != "Always":
             continue
-        # an Always-scheduled persistent stepper upstream of a terminator
-        if any(order[_node_name(node)] < order[_node_name(t)] for t in terminators):
+        # An Always-scheduled persistent stepper must be a semantic ancestor of
+        # the terminator.  Merely appearing before an unrelated terminator in
+        # Composition.nodes is not a co-evolution relationship.
+        if any(
+            _processing_depends_on(composition, terminator, node)
+            or _when_finished_depends_on(conditions.get(terminator), node)
+            for terminator in terminators
+        ):
             return True
     return False
+
+
+def _processing_depends_on(composition, node, dependency) -> bool:
+    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    pending = list(dependency_dict.get(node, ()))
+    visited = set()
+    while pending:
+        candidate = pending.pop()
+        if candidate is dependency:
+            return True
+        if candidate in visited:
+            continue
+        visited.add(candidate)
+        pending.extend(dependency_dict.get(candidate, ()))
+    return False
+
+
+def _when_finished_depends_on(condition, dependency) -> bool:
+    return (
+        type(condition).__name__ == "WhenFinished"
+        and tuple(getattr(condition, "args", ())) == (dependency,)
+    )
 
 
 def _op_kind(node) -> str:
@@ -939,7 +958,7 @@ def _classify_schedule(composition, nodes, coevolving=False) -> tuple[str, list[
         node_name = _node_name(node)
         # Skip conditions on nodes that are not lowered as graph ops (absorbed
         # into another op's kernel); their timing is handled by that op.
-        if node_name not in node_index:
+        if node_name not in node_index or type(node).__name__ == "ControlMechanism":
             continue
         condition_name = type(condition).__name__
         condition_schedule_kind = _condition_schedule_kind(condition, node, node_index, coevolving)
@@ -1026,6 +1045,47 @@ def _scheduler_conditions(composition):
     if not hasattr(conditions_basic, "items"):
         return {}
     return conditions_basic
+
+
+def _dependency_topological_order(composition, nodes):
+    """Return a deterministic dependency order and any nodes in dependency cycles.
+
+    PsyNeuLink's processing dependency graph is authoritative for execution
+    precedence.  Self dependencies represent recurrent state (for example an
+    LCA's AutoAssociativeProjection) and do not constrain within-pass emission.
+    Nodes at the same topological level are ordered by their stable PNL names so
+    disconnected components do not inherit Composition insertion order.
+    """
+
+    node_set = set(nodes)
+    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    dependencies = {
+        node: {
+            dependency
+            for dependency in dependency_dict.get(node, ())
+            if dependency in node_set and dependency is not node
+        }
+        for node in nodes
+    }
+    dependents = {node: set() for node in nodes}
+    for node, node_dependencies in dependencies.items():
+        for dependency in node_dependencies:
+            dependents[dependency].add(node)
+
+    key = lambda node: (_node_name(node), type(node).__module__, type(node).__qualname__)
+    ready = sorted((node for node in nodes if not dependencies[node]), key=key)
+    ordered = []
+    while ready:
+        node = ready.pop(0)
+        ordered.append(node)
+        for dependent in sorted(dependents[node], key=key):
+            dependencies[dependent].discard(node)
+            if not dependencies[dependent] and dependent not in ordered and dependent not in ready:
+                ready.append(dependent)
+        ready.sort(key=key)
+
+    cyclic = tuple(sorted((node for node in nodes if node not in ordered), key=key))
+    return ordered + list(cyclic), cyclic
 
 
 def _composition_nodes(composition) -> list[Any]:

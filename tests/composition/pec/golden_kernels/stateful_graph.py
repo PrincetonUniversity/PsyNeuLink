@@ -175,15 +175,24 @@ def pnl_batched_stateful_graph_kernel(
         else:
             random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
 
-        n_Task_Input__I1__I2__RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
-        n_Task_Input__I1__I2__RESULT_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
+        n_Correct_Response_Info_RESULT_0 = _pnl_triton_linear(tl.load(input_3 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_6_value, param_7_value)
+
+        n_Cue_Stimulus_Interval_RESULT_0 = _pnl_triton_linear(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_4_value, param_5_value)
 
         n_Stimulus_Input__S1__S2__RESULT_0 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_2_value, param_3_value)
         n_Stimulus_Input__S1__S2__RESULT_1 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_2_value, param_3_value)
 
-        n_Cue_Stimulus_Interval_RESULT_0 = _pnl_triton_linear(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_4_value, param_5_value)
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_0, 1.0)
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_1, 1.0)
 
-        n_Correct_Response_Info_RESULT_0 = _pnl_triton_linear(tl.load(input_3 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_6_value, param_7_value)
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0)
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1)
+
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_0 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0, param_16_value, param_17_value)
+        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_1 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1, param_16_value, param_17_value)
+
+        n_Task_Input__I1__I2__RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
+        n_Task_Input__I1__I2__RESULT_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
 
         n_Task_Activations__Act1__Act2__projection_0_0 = _pnl_triton_projection_term(n_Task_Input__I1__I2__RESULT_0, 1.0)
         n_Task_Activations__Act1__Act2__projection_0_1 = _pnl_triton_projection_term(n_Task_Input__I1__I2__RESULT_1, 1.0)
@@ -205,15 +214,6 @@ def pnl_batched_stateful_graph_kernel(
 
         n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_0 = _pnl_triton_linear(n_Non_Automatic_Component__S1_Act1__S2_Act2__input_0, param_14_value, param_15_value)
         n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_1 = _pnl_triton_linear(n_Non_Automatic_Component__S1_Act1__S2_Act2__input_1, param_14_value, param_15_value)
-
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_0, 1.0)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_1, 1.0)
-
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1)
-
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_0 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0, param_16_value, param_17_value)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_1 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1, param_16_value, param_17_value)
 
         n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__projection_0_0 = _pnl_triton_projection_term(n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_0, 1.0) + _pnl_triton_projection_term(n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_1, 1.0)
 
