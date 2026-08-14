@@ -5,6 +5,7 @@ from psyneulink.core.batched.compiler import (
     BatchedCompositionCompiler,
     BatchedSimulationPlan,
 )
+from psyneulink.core.batched.errors import BatchedNumericalError
 from psyneulink.core.batched.specs import (
     BatchedOpSpecError,
     DenseProjectionSpec,
@@ -57,6 +58,7 @@ __all__ = [
     "BatchedGraphIR",
     "BatchedInputSpec",
     "BatchedNodeSpec",
+    "BatchedNumericalError",
     "BatchedOp",
     "BatchedOpSpecError",
     "BatchedOutputSpec",

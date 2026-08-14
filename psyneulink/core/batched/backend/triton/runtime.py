@@ -15,6 +15,7 @@ from psyneulink.core.batched.graph import (
     STATELESS_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
 )
+from psyneulink.core.batched.errors import BatchedNumericalError
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
 from psyneulink.core.batched.prep import (
     lca_max_steps,
@@ -121,6 +122,7 @@ def run_triton(
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
 
+    _raise_on_nonfinite(values, torch, device)
     _report_truncation(truncation, ir.max_steps, strict_truncation)
 
     if not keep_device_values:
@@ -136,6 +138,20 @@ def run_triton(
 
 class BatchedTruncationError(RuntimeError):
     """Raised when bounded-loop truncation occurs under ``strict_truncation``."""
+
+
+def _raise_on_nonfinite(values, torch, device: str) -> None:
+    """Reject invalid outcomes before host conversion or device-side scoring."""
+
+    nonfinite = ~torch.isfinite(values)
+    count = int(nonfinite.sum().item())
+    if count == 0:
+        return
+    backend = "triton" if device == "cuda" else "triton_cpu"
+    raise BatchedNumericalError(
+        f"Batched simulation produced {count} NaN or infinite outcome value(s) "
+        f"on backend '{backend}'."
+    )
 
 
 def _report_truncation(truncation: dict, max_steps: int, strict: bool) -> None:
