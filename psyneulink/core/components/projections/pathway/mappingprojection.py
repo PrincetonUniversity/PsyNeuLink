@@ -513,7 +513,6 @@ class MappingProjection(PathwayProjection_Base):
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
-                 context=None,
                  **kwargs):
 
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -545,11 +544,6 @@ class MappingProjection(PathwayProjection_Base):
                          name=name,
                          prefs=prefs,
                          **kwargs)
-
-        try:
-            self._parameter_ports[MATRIX].function.reset(context=context)
-        except AttributeError:
-            pass
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
