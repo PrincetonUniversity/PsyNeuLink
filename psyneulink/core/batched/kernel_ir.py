@@ -65,6 +65,7 @@ class KernelRngStream:
     width: int
     step_extent: str
     component_id: int = -1
+    stream_id: int = -1
 
 
 @dataclass(frozen=True)
@@ -360,6 +361,19 @@ def _lane_layout_for(fusion_kind: str | None) -> KernelLaneLayout:
 
 
 def _rng_streams(graph: BatchedGraphIR) -> tuple[KernelRngStream, ...]:
+    if graph.rng_streams:
+        return tuple(
+            KernelRngStream(
+                name=stream.name,
+                node=stream.node,
+                width=stream.width,
+                step_extent=stream.step_extent,
+                component_id=stream.component_id,
+                stream_id=stream.stream_id,
+            )
+            for stream in graph.rng_streams
+        )
+
     streams = []
     for node_name in graph.execution_order:
         node = graph.node(node_name)
@@ -371,6 +385,7 @@ def _rng_streams(graph: BatchedGraphIR) -> tuple[KernelRngStream, ...]:
                     width=int(width),
                     step_extent=step_extent,
                     component_id=_component_id(graph, node),
+                    stream_id=len(streams),
                 )
             )
     return tuple(streams)
@@ -468,6 +483,11 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                             "sender_port": projection.sender_port,
                             "receiver": projection.receiver,
                             "receiver_port": projection.receiver_port,
+                            "projection_id": projection.projection_id,
+                            "sender_component_id": projection.sender_component_id,
+                            "sender_port_id": projection.sender_port_id,
+                            "receiver_component_id": projection.receiver_component_id,
+                            "receiver_port_id": projection.receiver_port_id,
                             "matrix": projection.matrix,
                             "projection_type": "MappingProjection",
                             "spec_key": projection.spec_key,
@@ -480,6 +500,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                     target=node.name,
                     inputs=tuple(projected_values),
                     outputs=(node_input,),
+                    attrs={"component_id": node.component_id},
                 )
             )
         else:
@@ -488,7 +509,22 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                     kind="LoadInput",
                     target=node.name,
                     outputs=(node_input,),
-                    attrs={"node": node.name, "width": node.input_width},
+                    attrs={
+                        "node": node.name,
+                        "width": node.input_width,
+                        "component_id": node.component_id,
+                        "port_id": next(
+                            (
+                                input_spec.port_id
+                                for input_spec in graph.inputs
+                                if (
+                                    input_spec.component_id == node.component_id
+                                    or input_spec.node == node.name
+                                )
+                            ),
+                            -1,
+                        ),
+                    },
                 )
             )
 
@@ -525,6 +561,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             attrs = {
                 "component_type": node.component_type,
                 "function_type": node.function_type,
+                "component_id": node.component_id,
                 "params": dict(node.params),
                 "output_port": output_port,
                 "spec_key": node.attrs["spec_key"],
@@ -559,6 +596,7 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             attrs = {
                 "component_type": node.component_type,
                 "function_type": node.function_type,
+                "component_id": node.component_id,
                 "params": dict(node.params),
                 "spec_key": node.attrs["spec_key"],
             }
@@ -625,6 +663,10 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                     "node": output.node,
                     "port": output.port,
                     "width": output.width,
+                    "component_id": output.component_id,
+                    "port_id": output.port_id,
+                    "flat_start": output.flat_start,
+                    "flat_stop": output.flat_stop,
                 },
             )
         )

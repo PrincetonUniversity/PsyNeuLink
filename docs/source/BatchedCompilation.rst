@@ -42,6 +42,15 @@ exact routing, scheduler and reset semantics, control/modulation edges, and
 every graph element that lowering intentionally absorbs.  Display names are
 diagnostic labels, not identity.
 
+Composition lowering assigns nonnegative numeric IDs in deterministic
+dependency order and carries them through ``KernelIR`` operations.  Input and
+output specs bind exact live ports, projection specs bind both endpoint ports,
+and each output owns an explicit flattened result slice.  The compiled plan
+keeps a sidecar from those IDs to the live PsyNeuLink objects; generated code
+does not use sanitized display names as identity.  These IDs are currently
+lowering-local.  A serializable structural fingerprint for reconstructed
+distributed models remains future work.
+
 ``KernelIR`` is the backend-neutral executable program.  It makes projection,
 port combination, function, state, condition, loop, and output-store
 operations explicit.  Parameter/subject/trial/estimate lane layout and fusion

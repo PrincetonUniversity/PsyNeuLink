@@ -18,6 +18,7 @@ from psyneulink.core.batched.ir import (
     BatchedOutputSpec,
     BatchedParamSpec,
     BatchedProjectionSpec,
+    BatchedRngStreamSpec,
     BatchedSchedulerSpec,
     BatchedStateSpec,
 )
@@ -65,7 +66,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         id(node): component_id
         for component_id, node in enumerate(topological_nodes)
     }
-    node_names = {_node_name(node) for node in nodes}
+    port_ids, ports_by_id = _port_identity_maps(topological_nodes)
+    node_names = {_node_name(node) for node in topological_nodes}
     params = _ParamBuilder()
     rejected_nodes: list[BatchedDiagnostic] = [
         BatchedDiagnostic(
@@ -77,25 +79,27 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     supported_nodes: list[str] = []
 
     model_kind = _classify_model(nodes)
-    executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
+    executable_nodes = [
+        node
+        for node in topological_nodes
+        if type(node).__name__ != "ControlMechanism"
+    ]
     coevolving = _is_coevolving(composition, executable_nodes)
     schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(
         composition, topological_nodes, coevolving
     )
     node_bindings = {
         _node_name(node): node
-        for node in nodes
-        if type(node).__name__ != "ControlMechanism"
+        for node in topological_nodes
     }
     function_bindings = {
         _node_name(node): getattr(node, "function", None)
-        for node in nodes
-        if type(node).__name__ != "ControlMechanism"
+        for node in topological_nodes
     }
     node_specs = []
     state_specs = []
 
-    for node in nodes:
+    for node in topological_nodes:
         component_type = type(node).__name__
         node_name = _node_name(node)
         if component_type == "ControlMechanism":
@@ -140,17 +144,39 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                         width=width,
                         initial_value=tuple([state_decl.initial] * width),
                         component_id=node_spec.component_id,
+                        state_id=len(state_specs),
                     )
                 )
 
-    projections, projection_rejections, projection_bindings = _projection_specs(composition, nodes)
+    (
+        projections,
+        projection_rejections,
+        projection_bindings,
+        projection_bindings_by_id,
+    ) = _projection_specs(
+        composition,
+        topological_nodes,
+        component_ids,
+        port_ids,
+    )
     rejected_nodes.extend(projection_rejections)
     rejected_nodes.extend(_output_support_diagnostics(outputs, nodes))
 
     graph = None
     if not rejected_nodes and not rejected_conditions:
-        inputs = _input_specs(nodes, projections)
-        outputs = _output_specs(composition, outputs, nodes)
+        inputs = _input_specs(
+            topological_nodes,
+            projections,
+            component_ids,
+            port_ids,
+        )
+        outputs = _output_specs(
+            composition,
+            outputs,
+            topological_nodes,
+            component_ids,
+            port_ids,
+        )
         execution_order = tuple(
             _node_name(node)
             for node in topological_nodes
@@ -193,6 +219,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     (spec.attrs.get("onset_step", 0) for spec in node_specs), default=0
                 ),
             },
+            rng_streams=_rng_stream_specs(node_specs),
         )
 
     return LoweringResult(
@@ -202,6 +229,17 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             nodes=node_bindings,
             functions=function_bindings,
             projections=projection_bindings,
+            nodes_by_id={
+                component_ids[id(node)]: node
+                for node in topological_nodes
+            },
+            functions_by_id={
+                component_ids[id(node)]: getattr(node, "function", None)
+                for node in topological_nodes
+            },
+            parameters_by_id=params.bindings_by_id,
+            ports_by_id=ports_by_id,
+            projections_by_id=projection_bindings_by_id,
         ),
         model_kind=model_kind,
         schedule_kind=schedule_kind,
@@ -220,13 +258,101 @@ class _ParamBuilder:
     def __init__(self):
         self.specs: list[BatchedParamSpec] = []
         self._names: set[str] = set()
+        self.bindings_by_id: dict[int, object] = {}
 
-    def add(self, name: str, default: float, aliases: Iterable[str] = ()) -> str:
+    def add(
+        self,
+        name: str,
+        default: float,
+        aliases: Iterable[str] = (),
+        *,
+        parameter=None,
+    ) -> str:
         if name in self._names:
             return name
         self._names.add(name)
-        self.specs.append(BatchedParamSpec(name, float(default), tuple(aliases)))
+        parameter_id = len(self.specs)
+        self.specs.append(
+            BatchedParamSpec(
+                name,
+                float(default),
+                tuple(aliases),
+                parameter_id=parameter_id,
+            )
+        )
+        if parameter is not None:
+            self.bindings_by_id[parameter_id] = parameter
         return name
+
+
+def _bound_parameter(binding, component):
+    """Return the live PNL Parameter behind a signature binding when unique.
+
+    A ``get=`` binding may still name its canonical live Parameter (for example
+    LCA ``leak`` with an integrator fallback).  Truly derived values such as a
+    collapsed DDM threshold have no matching Parameter and intentionally remain
+    absent from the live-object sidecar while retaining an IR ``parameter_id``.
+    """
+
+    owners = []
+    if binding.scope == "function":
+        function = getattr(component, "function", None)
+        if function is not None and hasattr(function, "parameters"):
+            owners.append(function)
+    owners.extend(
+        (
+            component,
+            getattr(component, "integrator_function", None),
+            getattr(component, "function", None),
+        )
+    )
+    seen = set()
+    for owner in owners:
+        if owner is None or id(owner) in seen:
+            continue
+        seen.add(id(owner))
+        parameters = getattr(owner, "parameters", None)
+        if parameters is None:
+            continue
+        for name in (binding.pnl_name or binding.arg,) + binding.fallbacks:
+            parameter = getattr(parameters, name, None)
+            if parameter is not None:
+                return parameter
+    return None
+
+
+def _port_identity_maps(nodes):
+    """Assign deterministic lowering-local IDs to every port on each node."""
+
+    port_ids: dict[int, int] = {}
+    ports_by_id: dict[int, object] = {}
+    for node in nodes:
+        for collection_name in ("input_ports", "output_ports", "parameter_ports"):
+            for port in tuple(getattr(node, collection_name, ())):
+                object_id = id(port)
+                if object_id in port_ids:
+                    continue
+                port_id = len(port_ids)
+                port_ids[object_id] = port_id
+                ports_by_id[port_id] = port
+    return port_ids, ports_by_id
+
+
+def _rng_stream_specs(nodes: list[BatchedNodeSpec]) -> tuple[BatchedRngStreamSpec, ...]:
+    streams = []
+    for node in nodes:
+        for name, step_extent, width in node.attrs.get("rng_streams", ()):
+            streams.append(
+                BatchedRngStreamSpec(
+                    name=f"{node.name}.{name}",
+                    node=node.name,
+                    width=int(width),
+                    step_extent=step_extent,
+                    component_id=node.component_id,
+                    stream_id=len(streams),
+                )
+            )
+    return tuple(streams)
 
 
 def _node_spec(
@@ -270,7 +396,12 @@ def _node_spec(
             aliases = tuple(
                 f"{prefix}.{binding.arg}" for prefix in mechanism_spec.param_alias_prefixes
             ) + _node_param_aliases(node_name, binding.arg)
-            param_map[binding.arg] = params.add(public_name, binding.resolve(node), aliases=aliases)
+            param_map[binding.arg] = params.add(
+                public_name,
+                binding.resolve(node),
+                aliases=aliases,
+                parameter=_bound_parameter(binding, node),
+            )
         if mechanism_spec.extract_attrs is not None:
             attrs.update(mechanism_spec.extract_attrs(node, composition))
         if mechanism_spec.outputs is not None:
@@ -306,6 +437,7 @@ def _node_spec(
                 f"{node_name}.{binding.arg}",
                 binding.resolve(function),
                 aliases=_node_param_aliases(node_name, binding.arg),
+                parameter=_bound_parameter(binding, function),
             )
 
     return BatchedNodeSpec(
@@ -875,14 +1007,35 @@ def _same_condition(left, right) -> bool:
 def _projection_specs(
     composition,
     nodes,
-) -> tuple[list[BatchedProjectionSpec], list[BatchedDiagnostic], dict[str, object]]:
+    component_ids,
+    port_ids,
+) -> tuple[
+    list[BatchedProjectionSpec],
+    list[BatchedDiagnostic],
+    dict[str, object],
+    dict[int, object],
+]:
     projections: list[BatchedProjectionSpec] = []
     rejected: list[BatchedDiagnostic] = []
     bindings: dict[str, object] = {}
+    bindings_by_id: dict[int, object] = {}
     node_names = {_node_name(node) for node in nodes}
-    for node in _composition_nodes(composition):
+    for node in nodes:
         for input_port in getattr(node, "input_ports", []):
-            for projection in getattr(input_port, "path_afferents", []):
+            afferents = sorted(
+                getattr(input_port, "path_afferents", []),
+                key=lambda projection: (
+                    component_ids.get(
+                        id(getattr(getattr(projection, "sender", None), "owner", None)),
+                        len(component_ids),
+                    ),
+                    port_ids.get(id(getattr(projection, "sender", None)), len(port_ids)),
+                    type(projection).__module__,
+                    type(projection).__qualname__,
+                    getattr(projection, "name", ""),
+                ),
+            )
+            for projection in afferents:
                 projection_type = type(projection).__name__
                 sender = getattr(getattr(projection, "sender", None), "owner", None)
                 receiver = getattr(getattr(projection, "receiver", None), "owner", None)
@@ -939,15 +1092,27 @@ def _projection_specs(
                         receiver_port=receiver_port,
                         matrix=np.asarray(_get_matrix(projection), dtype=np.float32),
                         spec_key=projection_spec.key,
+                        projection_id=len(projections),
+                        sender_component_id=component_ids[id(sender)],
+                        sender_port_id=port_ids[id(projection.sender)],
+                        receiver_component_id=component_ids[id(receiver)],
+                        receiver_port_id=port_ids[id(projection.receiver)],
                     )
                 )
+                projection_id = projections[-1].projection_id
                 bindings[
                     projection_binding_key(sender_name, sender_port, receiver_name, receiver_port)
                 ] = projection
-    return projections, rejected, bindings
+                bindings_by_id[projection_id] = projection
+    return projections, rejected, bindings, bindings_by_id
 
 
-def _input_specs(nodes, projections: list[BatchedProjectionSpec]) -> list[BatchedInputSpec]:
+def _input_specs(
+    nodes,
+    projections: list[BatchedProjectionSpec],
+    component_ids,
+    port_ids,
+) -> list[BatchedInputSpec]:
     receiver_names = {projection.receiver for projection in projections}
     specs_out = []
     for node in nodes:
@@ -957,18 +1122,40 @@ def _input_specs(nodes, projections: list[BatchedProjectionSpec]) -> list[Batche
             continue
         if node_name in receiver_names:
             continue
-        specs_out.append(BatchedInputSpec(name=node_name, node=node_name, width=_input_width(node)))
+        input_port = tuple(getattr(node, "input_ports", ()))[0]
+        specs_out.append(
+            BatchedInputSpec(
+                name=node_name,
+                node=node_name,
+                width=_input_width(node),
+                component_id=component_ids[id(node)],
+                port_id=port_ids[id(input_port)],
+                port=input_port.name,
+            )
+        )
     return specs_out
 
 
-def _output_specs(composition, outputs, nodes) -> list[BatchedOutputSpec]:
+def _output_specs(
+    composition,
+    outputs,
+    nodes,
+    component_ids,
+    port_ids,
+) -> list[BatchedOutputSpec]:
     if outputs is not None:
-        return [_output_spec_from_port(output) if not isinstance(output, str) else _output_spec_from_name(output, nodes) for output in outputs]
+        selected = [
+            output
+            if not isinstance(output, str)
+            else _output_port_from_name(output, nodes)
+            for output in outputs
+        ]
+        return _assign_output_specs(selected, component_ids, port_ids)
 
     terminal_names = _terminal_node_names(composition)
     if not terminal_names:
         terminal_names = [_node_name(nodes[-1])] if nodes else []
-    specs_out = []
+    selected_ports = []
     for node in nodes:
         if _node_name(node) not in terminal_names or type(node).__name__ == "ControlMechanism":
             continue
@@ -979,23 +1166,51 @@ def _output_specs(composition, outputs, nodes) -> list[BatchedOutputSpec]:
             selected = [port for port in output_ports if port.name in wanted]
         else:
             selected = [output_ports[0]] if output_ports else []
-        for port in selected:
-            specs_out.append(_output_spec_from_port(port))
+        selected_ports.extend(selected)
+    return _assign_output_specs(selected_ports, component_ids, port_ids)
+
+
+def _assign_output_specs(ports, component_ids, port_ids) -> list[BatchedOutputSpec]:
+    specs_out = []
+    flat_start = 0
+    for port in ports:
+        output = _output_spec_from_port(
+            port,
+            component_ids,
+            port_ids,
+            flat_start=flat_start,
+        )
+        specs_out.append(output)
+        flat_start = output.flat_stop
     return specs_out
 
 
-def _output_spec_from_port(port) -> BatchedOutputSpec:
+def _output_spec_from_port(
+    port,
+    component_ids,
+    port_ids,
+    *,
+    flat_start: int,
+) -> BatchedOutputSpec:
     owner = getattr(port, "owner", None)
     node_name = _node_name(owner)
     width = int(np.asarray(getattr(port, "value", [0.0])).reshape(-1).size)
-    return BatchedOutputSpec(name=f"{node_name}.{port.name}", node=node_name, port=port.name, width=width)
+    return BatchedOutputSpec(
+        name=f"{node_name}.{port.name}",
+        node=node_name,
+        port=port.name,
+        width=width,
+        component_id=component_ids[id(owner)],
+        port_id=port_ids[id(port)],
+        flat_start=flat_start,
+        flat_stop=flat_start + width,
+    )
 
 
-def _output_spec_from_name(name: str, nodes) -> BatchedOutputSpec:
+def _output_port_from_name(name: str, nodes):
     for node in nodes:
         if _node_name(node) == name:
-            port = getattr(node, "output_ports", [])[0]
-            return _output_spec_from_port(port)
+            return getattr(node, "output_ports", [])[0]
     raise KeyError(f"Could not resolve batched output '{name}'.")
 
 

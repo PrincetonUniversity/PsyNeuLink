@@ -463,12 +463,15 @@ class OpEmitMixin:
         if not self.lane_out_emitted:
             self._emit_lane_out()
         source_values = self._get_value(op.inputs[0].name)
+        flat_start = int(op.attrs.get("flat_start", -1))
+        if flat_start < 0:
+            flat_start = self.output_cursor
         for idx in range(op.attrs["width"]):
             self.builder.line(
-                f"tl.store(out + lane_out + {self.output_cursor + idx}, "
+                f"tl.store(out + lane_out + {flat_start + idx}, "
                 f"{source_values[idx]}, mask=mask)"
             )
-        self.output_cursor += op.attrs["width"]
+        self.output_cursor = max(self.output_cursor, flat_start + op.attrs["width"])
 
     def _emit_store_flag(self, op: KernelOp) -> None:
         if not self.diag_lane_emitted:
@@ -495,6 +498,15 @@ class OpEmitMixin:
         return self.kernel.op_specs.lookup_spec(op.attrs["spec_key"])
 
     def _projection_spec_for_op(self, op: KernelOp):
+        projection_id = int(op.attrs.get("projection_id", -1))
+        if projection_id >= 0:
+            for projection in self.graph.projections:
+                if projection.projection_id == projection_id:
+                    return projection
+            raise ValueError(
+                "Triton graph emitter could not resolve projection id "
+                f"{projection_id}."
+            )
         for projection in self.graph.projections:
             if (
                 projection.sender == op.attrs["sender"]
