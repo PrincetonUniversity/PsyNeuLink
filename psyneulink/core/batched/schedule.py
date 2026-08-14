@@ -12,6 +12,7 @@ from collections.abc import Iterable, Mapping
 
 from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
+    BatchedFinishedValueSpec,
     BatchedProjectionSpec,
     BatchedScheduleTraceSpec,
     BatchedScheduleTraceStepSpec,
@@ -29,6 +30,7 @@ _SUPPORTED_CONDITIONS = {
     "AtTrialStart",
     "EveryNCalls",
     "AllEveryNCalls",
+    "WhenFinished",
 }
 
 
@@ -60,13 +62,16 @@ def plan_precomputed_schedule_trace(
     termination: Iterable[BatchedTerminationSpec],
     expansion_budget: int,
     projections: Iterable[BatchedProjectionSpec],
+    finished_values: Iterable[BatchedFinishedValueSpec] = (),
 ) -> BatchedScheduleTraceSpec:
     """Plan one trial of an exact, lane-invariant scheduler subset.
 
     Supported execution predicates are ``Always``, ``AtPass(n)`` and
     ``AtTrialStart``, plus the implicit one-call dependency predicates emitted
-    for ordinary processing edges.  Only the default ``AllHaveRun`` trial and
-    ``Never`` sequence termination contract is accepted.
+    for ordinary processing edges. ``WhenFinished`` is supported only when its
+    typed finished value is exactly a compile-time positive threshold over the
+    producer's trial-local execution count. Only the default ``AllHaveRun``
+    trial and ``Never`` sequence termination contract is accepted.
 
     Conditions for every member of a consideration set are evaluated against a
     single beginning-of-set usable-count snapshot.  Counts are consumed when
@@ -103,16 +108,27 @@ def plan_precomputed_schedule_trace(
         BatchedProjectionSpec,
         "projections",
     )
+    finished_values = _typed_tuple(
+        finished_values,
+        BatchedFinishedValueSpec,
+        "finished_values",
+    )
 
     (
         ordered_sets,
         component_set_ids,
         component_names,
     ) = _validate_consideration_sets(consideration_sets)
-    conditions = _validate_scheduler(
+    finished_values_by_id = _validate_finished_values(
+        finished_values,
+        component_set_ids,
+        component_names,
+    )
+    conditions, finished_predicates = _validate_scheduler(
         scheduler,
         component_set_ids,
         component_names,
+        finished_values_by_id,
     )
     terminating_components = _validate_termination(
         termination,
@@ -128,8 +144,10 @@ def plan_precomputed_schedule_trace(
     usable_counts = {
         (dependency_id, component_id): 0
         for component_id, condition in conditions.items()
+        if condition.condition_type in {"EveryNCalls", "AllEveryNCalls"}
         for dependency_id in condition.dependency_component_ids
     }
+    execution_counts = dict.fromkeys(conditions, 0)
     executed_this_trial: set[int] = set()
     trace_steps: list[BatchedScheduleTraceStepSpec] = []
     component_execution_count = 0
@@ -151,6 +169,7 @@ def plan_precomputed_schedule_trace(
             # Select the entire set against one snapshot.  Do not let an
             # earlier member's count update make a later member eligible.
             usable_snapshot = dict(usable_counts)
+            execution_count_snapshot = dict(execution_counts)
             selected = tuple(
                 component_id
                 for component_id in consideration_set.component_ids
@@ -158,6 +177,8 @@ def plan_precomputed_schedule_trace(
                     conditions[component_id],
                     pass_index,
                     usable_snapshot,
+                    execution_count_snapshot,
+                    finished_predicates,
                 )
             )
             if not selected:
@@ -200,6 +221,8 @@ def plan_precomputed_schedule_trace(
             for producer_id, consumer_id in usable_counts:
                 if producer_id in selected_set:
                     usable_counts[(producer_id, consumer_id)] += 1
+            for component_id in selected:
+                execution_counts[component_id] += 1
             executed_this_trial.update(selected_set)
 
         if terminating_components.issubset(executed_this_trial):
@@ -335,8 +358,91 @@ def _validate_consideration_sets(consideration_sets):
     return consideration_sets, component_set_ids, component_names
 
 
-def _validate_scheduler(scheduler, component_set_ids, component_names):
+def _validate_finished_values(
+    finished_values,
+    component_set_ids,
+    component_names,
+):
+    by_id: dict[int, BatchedFinishedValueSpec] = {}
+    for value in finished_values:
+        _validate_component_id(value.value_id, "finished-value ID")
+        _validate_component_id(value.component_id, "finished-value owner")
+        if value.value_id in by_id:
+            _raise(
+                "schedule.invalid_declaration",
+                f"finished-value ID {value.value_id} is declared more than once",
+                component_ids=(value.component_id,),
+            )
+        if value.component_id not in component_set_ids:
+            _raise(
+                "schedule.invalid_declaration",
+                f"finished-value owner {value.component_id} is not declared",
+                component_ids=(value.component_id,),
+            )
+        if (
+            type(value.name) is not str
+            or type(value.node) is not str
+            or value.node != component_names[value.component_id]
+        ):
+            _raise(
+                "schedule.invalid_declaration",
+                f"finished value {value.value_id} does not match its owner name",
+                component_ids=(value.component_id,),
+            )
+        if (
+            type(value.producer_consideration_set_id) is not int
+            or value.producer_consideration_set_id
+            != component_set_ids[value.component_id]
+        ):
+            _raise(
+                "schedule.invalid_declaration",
+                f"finished value {value.value_id} has the wrong producer "
+                "consideration-set ID",
+                component_ids=(value.component_id,),
+            )
+        if not isinstance(value.attrs, Mapping):
+            _raise(
+                "schedule.invalid_declaration",
+                f"finished-value attrs for component {value.component_id} "
+                "must be a mapping",
+                component_ids=(value.component_id,),
+            )
+        _validate_object_free(
+            value.attrs,
+            f"finished-value attrs for component {value.component_id}",
+        )
+        attrs = dict(value.attrs)
+        count = attrs.get("count")
+        if (
+            value.predicate_kind != "execution_count_at_least"
+            or value.storage != "combinational"
+            or type(value.width) is not int
+            or value.width != 1
+            or value.dtype != "bool"
+            or set(attrs) != {"count"}
+            or type(count) is not int
+            or count <= 0
+        ):
+            _raise(
+                "schedule.unsupported_finished_predicate",
+                "precomputed WhenFinished requires a combinational scalar bool "
+                "execution_count_at_least predicate with attrs={'count': N} "
+                "for a positive non-bool integer N",
+                component_ids=(value.component_id,),
+            )
+        by_id[value.value_id] = value
+    return by_id
+
+
+def _validate_scheduler(
+    scheduler,
+    component_set_ids,
+    component_names,
+    finished_values_by_id,
+):
     conditions: dict[int, BatchedSchedulerSpec] = {}
+    finished_predicates: dict[int, tuple[int, int]] = {}
+    referenced_finished_value_ids: set[int] = set()
     for condition in scheduler:
         component_id = condition.component_id
         _validate_component_id(component_id, "scheduler component")
@@ -379,7 +485,16 @@ def _validate_scheduler(scheduler, component_set_ids, component_names):
                 f"scheduler component {component_id} is not pass-scoped",
                 component_ids=(component_id,),
             )
-        _validate_condition(condition, component_set_ids, component_names)
+        finished_predicate = _validate_condition(
+            condition,
+            component_set_ids,
+            component_names,
+            finished_values_by_id,
+        )
+        if finished_predicate is not None:
+            owner_component_id, count, finished_value_id = finished_predicate
+            finished_predicates[component_id] = (owner_component_id, count)
+            referenced_finished_value_ids.add(finished_value_id)
         conditions[component_id] = condition
 
     missing = tuple(sorted(set(component_set_ids) - set(conditions)))
@@ -391,10 +506,24 @@ def _validate_scheduler(scheduler, component_set_ids, component_names):
             f"members; missing={missing}, extra={extra}",
             component_ids=missing + extra,
         )
-    return conditions
+    orphan_finished_values = tuple(
+        sorted(set(finished_values_by_id) - referenced_finished_value_ids)
+    )
+    if orphan_finished_values:
+        _raise(
+            "schedule.invalid_declaration",
+            "finished-value declarations must be consumed by a WhenFinished "
+            f"predicate; unreferenced value IDs={orphan_finished_values}",
+        )
+    return conditions, finished_predicates
 
 
-def _validate_condition(condition, component_set_ids, component_names):
+def _validate_condition(
+    condition,
+    component_set_ids,
+    component_names,
+    finished_values_by_id,
+):
     component_id = condition.component_id
     condition_type = condition.condition_type
     if type(condition_type) is not str:
@@ -409,10 +538,10 @@ def _validate_condition(condition, component_set_ids, component_names):
             f"unsupported precomputed scheduler predicate {condition_type!r}",
             component_ids=(component_id,),
         )
-    if condition.finished_value_ids:
+    if condition.condition_type != "WhenFinished" and condition.finished_value_ids:
         _raise(
             "schedule.unsupported_condition",
-            "precomputed scheduler predicates cannot consume finished values",
+            "only WhenFinished may consume a finished value",
             component_ids=(component_id,),
         )
     if type(condition.attrs) is not dict and not isinstance(condition.attrs, Mapping):
@@ -474,7 +603,7 @@ def _validate_condition(condition, component_set_ids, component_names):
             "implicit" in attrs and attrs["implicit"] is not True
         ):
             _invalid_attrs(condition)
-        return
+        return None
 
     if condition_type in {"AtPass", "AtTrialStart"}:
         _require_no_dependencies(condition)
@@ -487,7 +616,52 @@ def _validate_condition(condition, component_set_ids, component_names):
             _invalid_attrs(condition)
         if condition_type == "AtTrialStart" and pass_index != 0:
             _invalid_attrs(condition)
-        return
+        return None
+
+    if condition_type == "WhenFinished":
+        if attrs != {"predicate": "is_finished"}:
+            _invalid_attrs(condition)
+        if (
+            len(condition.dependency_component_ids) != 1
+            or len(condition.finished_value_ids) != 1
+        ):
+            _raise(
+                "schedule.invalid_declaration",
+                f"WhenFinished for component {component_id} requires exactly "
+                "one dependency and one finished-value ID",
+                component_ids=(component_id,),
+            )
+        finished_value_id = condition.finished_value_ids[0]
+        _validate_component_id(finished_value_id, "finished-value reference")
+        try:
+            finished_value = finished_values_by_id[finished_value_id]
+        except KeyError:
+            _raise(
+                "schedule.invalid_declaration",
+                f"WhenFinished for component {component_id} references "
+                f"undeclared finished-value ID {finished_value_id}",
+                component_ids=(component_id,),
+            )
+        owner_component_id = condition.dependency_component_ids[0]
+        if finished_value.component_id != owner_component_id:
+            _raise(
+                "schedule.invalid_declaration",
+                f"WhenFinished for component {component_id} references a "
+                "finished value owned by a different component",
+                component_ids=(owner_component_id, component_id),
+            )
+        if component_set_ids[owner_component_id] >= condition.consideration_set_id:
+            _raise(
+                "schedule.unsupported_dependency_order",
+                "precomputed WhenFinished requires its finished-value owner "
+                "to belong to an earlier consideration set",
+                component_ids=(owner_component_id, component_id),
+            )
+        return (
+            owner_component_id,
+            int(finished_value.attrs["count"]),
+            finished_value_id,
+        )
 
     if set(attrs) != {"implicit", "calls", "time_scale"}:
         _invalid_attrs(condition)
@@ -528,6 +702,7 @@ def _validate_condition(condition, component_set_ids, component_names):
                 "consideration set",
                 component_ids=(dependency_id, component_id),
             )
+    return None
 
 
 def _validate_termination(termination, component_ids):
@@ -640,11 +815,20 @@ def _validate_fresh_reads(
             )
 
 
-def _condition_is_satisfied(condition, pass_index, usable_counts):
+def _condition_is_satisfied(
+    condition,
+    pass_index,
+    usable_counts,
+    execution_counts,
+    finished_predicates,
+):
     if condition.condition_type == "Always":
         return True
     if condition.condition_type in {"AtPass", "AtTrialStart"}:
         return pass_index == condition.attrs["pass_index"]
+    if condition.condition_type == "WhenFinished":
+        owner_component_id, count = finished_predicates[condition.component_id]
+        return execution_counts[owner_component_id] >= count
     return all(
         usable_counts[(dependency_id, condition.component_id)] >= 1
         for dependency_id in condition.dependency_component_ids

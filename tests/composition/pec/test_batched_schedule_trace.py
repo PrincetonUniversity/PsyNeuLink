@@ -8,6 +8,7 @@ import pytest
 
 from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
+    BatchedFinishedValueSpec,
     BatchedProjectionSpec,
     BatchedSchedulerSpec,
     BatchedTerminationSpec,
@@ -88,6 +89,43 @@ def _implicit_calls(component_id, set_id, *dependencies):
     )
 
 
+def _when_finished(component_id, set_id, dependency, finished_value_id=0):
+    return BatchedSchedulerSpec(
+        node=_name(component_id),
+        condition_type="WhenFinished",
+        dependencies=(_name(dependency),),
+        attrs={"predicate": "is_finished"},
+        component_id=component_id,
+        dependency_component_ids=(dependency,),
+        finished_value_ids=(finished_value_id,),
+        consideration_set_id=set_id,
+    )
+
+
+def _count_finished(
+    component_id,
+    set_id,
+    count,
+    *,
+    value_id=0,
+    **overrides,
+):
+    values = {
+        "name": f"{_name(component_id)}.is_finished",
+        "node": _name(component_id),
+        "component_id": component_id,
+        "value_id": value_id,
+        "width": 1,
+        "dtype": "bool",
+        "storage": "combinational",
+        "producer_consideration_set_id": set_id,
+        "predicate_kind": "execution_count_at_least",
+        "attrs": {"count": count},
+    }
+    values.update(overrides)
+    return BatchedFinishedValueSpec(**values)
+
+
 def _termination(*component_ids):
     return (
         BatchedTerminationSpec(
@@ -114,7 +152,14 @@ def _edge(sender, receiver):
     )
 
 
-def _plan(scheduler, consideration_sets, *, projections=(), budget=64):
+def _plan(
+    scheduler,
+    consideration_sets,
+    *,
+    projections=(),
+    finished_values=(),
+    budget=64,
+):
     component_ids = tuple(
         component_id
         for consideration_set in consideration_sets
@@ -125,6 +170,7 @@ def _plan(scheduler, consideration_sets, *, projections=(), budget=64):
         consideration_sets=consideration_sets,
         termination=_termination(*component_ids),
         projections=projections,
+        finished_values=finished_values,
         expansion_budget=budget,
     )
 
@@ -261,6 +307,147 @@ def test_owner_execution_consumes_usable_dependency_count():
         (0, 1, (1,)),
         (3, 0, (2,)),
     )
+
+
+@pytest.mark.parametrize(
+    "count, expected_steps",
+    [
+        (1, ((0, 0, (0,)), (0, 1, (1,)))),
+        (
+            3,
+            (
+                (0, 0, (0,)),
+                (1, 0, (0,)),
+                (2, 0, (0,)),
+                (2, 1, (1,)),
+            ),
+        ),
+    ],
+)
+def test_when_finished_uses_trial_local_owner_execution_count(
+    count,
+    expected_steps,
+):
+    consideration_sets = _sets((0,), (1,))
+    trace = _plan(
+        (_always(0, 0), _when_finished(1, 1, 0)),
+        consideration_sets,
+        finished_values=(_count_finished(0, 0, count),),
+    )
+
+    assert _steps(trace) == expected_steps
+    assert trace.num_passes == count
+    assert trace.component_execution_count == count + 1
+
+
+def test_when_finished_later_set_observes_owner_finishing_in_same_pass():
+    consideration_sets = _sets((0,), (1,))
+    trace = _plan(
+        (_always(0, 0), _when_finished(1, 1, 0)),
+        consideration_sets,
+        finished_values=(_count_finished(0, 0, 1),),
+    )
+
+    assert _steps(trace) == (
+        (0, 0, (0,)),
+        (0, 1, (1,)),
+    )
+
+
+def test_when_finished_same_set_remains_fail_closed():
+    consideration_sets = _sets((0, 1))
+
+    with pytest.raises(BatchedScheduleTraceError) as error:
+        _plan(
+            (_always(0, 0), _when_finished(1, 0, 0)),
+            consideration_sets,
+            finished_values=(_count_finished(0, 0, 1),),
+        )
+
+    assert error.value.code == "schedule.unsupported_dependency_order"
+    assert error.value.component_ids == (0, 1)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"predicate_kind": "dynamic"},
+        {"attrs": {"count": 0}},
+        {"attrs": {"count": True}},
+        {"attrs": {"count": 1, "extra": 0}},
+        {"storage": "state"},
+        {"width": 2},
+        {"dtype": "float32"},
+    ],
+)
+def test_when_finished_rejects_unsupported_finished_declaration(overrides):
+    consideration_sets = _sets((0,), (1,))
+
+    with pytest.raises(BatchedScheduleTraceError) as error:
+        _plan(
+            (_always(0, 0), _when_finished(1, 1, 0)),
+            consideration_sets,
+            finished_values=(_count_finished(0, 0, 1, **overrides),),
+        )
+
+    assert error.value.code == "schedule.unsupported_finished_predicate"
+    assert error.value.component_ids == (0,)
+
+
+def test_when_finished_value_must_be_owned_by_condition_dependency():
+    consideration_sets = _sets((0,), (1,), (2,))
+
+    with pytest.raises(BatchedScheduleTraceError) as error:
+        _plan(
+            (
+                _always(0, 0),
+                _always(1, 1),
+                _when_finished(2, 2, 0),
+            ),
+            consideration_sets,
+            finished_values=(_count_finished(1, 1, 1),),
+        )
+
+    assert error.value.code == "schedule.invalid_declaration"
+    assert error.value.component_ids == (0, 2)
+
+
+def test_when_finished_rejects_undeclared_finished_value_id():
+    consideration_sets = _sets((0,), (1,))
+
+    with pytest.raises(BatchedScheduleTraceError) as error:
+        _plan(
+            (_always(0, 0), _when_finished(1, 1, 0, finished_value_id=7)),
+            consideration_sets,
+        )
+
+    assert error.value.code == "schedule.invalid_declaration"
+    assert error.value.component_ids == (1,)
+
+
+def test_when_finished_trace_expansion_budget_remains_fail_closed():
+    consideration_sets = _sets((0,), (1,))
+    scheduler = (_always(0, 0), _when_finished(1, 1, 0))
+    finished_values = (_count_finished(0, 0, 3),)
+
+    with pytest.raises(BatchedScheduleTraceError) as error:
+        _plan(
+            scheduler,
+            consideration_sets,
+            finished_values=finished_values,
+            budget=3,
+        )
+
+    assert error.value.code == "schedule.expansion_budget_exceeded"
+    assert error.value.component_ids == (1,)
+
+    trace = _plan(
+        scheduler,
+        consideration_sets,
+        finished_values=finished_values,
+        budget=4,
+    )
+    assert trace.component_execution_count == 4
 
 
 def test_all_have_run_stops_before_later_set_in_same_pass():
