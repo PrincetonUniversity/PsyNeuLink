@@ -12,6 +12,7 @@ from psyneulink.core.batched.graph import (
     DDM_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
 )
+from psyneulink.core.batched.kernel_ir import node_output_value_name
 from psyneulink.core.batched.backend.triton.emit._helpers import primary_output_port_name
 
 # Philox counter space reserved per RNG stream.  Stream identity is packed into
@@ -115,7 +116,13 @@ class LaneEmitMixin:
                 "mask=mask, other=0.0)"
             )
         node = self.graph.node(node_name)
-        return self._get_value(f"{node_name}:{primary_output_port_name(node)}")[component_idx]
+        return self._get_value(
+            node_output_value_name(
+                self.graph,
+                node,
+                primary_output_port_name(node),
+            )
+        )[component_idx]
 
     def raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
         return self._raw_input_value(node_name, component_idx)

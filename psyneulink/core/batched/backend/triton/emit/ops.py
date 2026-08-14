@@ -10,7 +10,11 @@ into the concrete emitter in `emitter.py`.
 from __future__ import annotations
 
 from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION, STATEFUL_GRAPH_FUSION
-from psyneulink.core.batched.kernel_ir import KernelOp
+from psyneulink.core.batched.kernel_ir import (
+    KernelOp,
+    component_symbol,
+    node_output_value_name,
+)
 from psyneulink.core.batched.backend.triton.api import TritonEmitContext, TritonOpCall
 from psyneulink.core.batched.backend.triton.emit._helpers import (
     float_literal,
@@ -170,10 +174,11 @@ class OpEmitMixin:
     def _emit_init_trial_states(self, terminator_op: KernelOp) -> None:
         spec = self._spec_for_op(terminator_op)
         node = self.graph.node(terminator_op.target)
-        for decl in spec.trial_states:
+        node_symbol = component_symbol(self.graph, node)
+        for state_slot, decl in enumerate(spec.trial_states):
             state_name = f"{node.name}.{decl.name}"
             for idx in range(decl.width or 1):
-                var = f"{safe_ident(state_name)}_{idx}"
+                var = f"{node_symbol}_trial_state_{state_slot}_{idx}"
                 self.state_vars[(state_name, idx)] = var
                 self.builder.line(
                     f"{var} = tl.full((BLOCK,), {float_literal(decl.initial)}, tl.float32)"
@@ -194,10 +199,12 @@ class OpEmitMixin:
         # A terminator's diagnostic (e.g. DDM "truncated") is exactly "never
         # finished within MAX_STEPS"; route it through the existing diag channel.
         finished_var = self.state_vars[(f"{node.name}.{spec.finished_output}", 0)]
-        for name in terminator_op.attrs.get("diagnostics", ()):
-            diag_var = f"{safe_ident(node.name)}_diag_{safe_ident(name)}"
+        diagnostic_names = tuple(terminator_op.attrs.get("diagnostics", ()))
+        diagnostic_values = tuple(terminator_op.attrs.get("diagnostic_values", ()))
+        for name, value_name in zip(diagnostic_names, diagnostic_values):
+            diag_var = self._component_vars(value_name, 1)[0]
             self.builder.line(f"{diag_var} = tl.where({finished_var} == 0.0, 1.0, 0.0)")
-            self._set_value(f"{node.name}:diag:{name}", [diag_var])
+            self._set_value(value_name, [diag_var])
         self.builder.line()
 
     def _emit_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
@@ -328,9 +335,8 @@ class OpEmitMixin:
             output_vars.extend(self._component_vars(output.name, output.width))
 
         diag_names = tuple(op.attrs.get("diagnostics", ()))
-        diag_vars = [
-            f"{safe_ident(node.name)}_diag_{safe_ident(name)}" for name in diag_names
-        ]
+        diag_value_names = tuple(op.attrs.get("diagnostic_values", ()))
+        diag_vars = [self._component_vars(name, 1)[0] for name in diag_value_names]
 
         if spec.triton_emit is not None:
             if diag_names:
@@ -351,8 +357,8 @@ class OpEmitMixin:
                 spec, node, input_values, output_vars, diag_vars
             )
 
-        for name, var in zip(diag_names, diag_vars):
-            self._set_value(f"{node.name}:diag:{name}", [var])
+        for value_name, var in zip(diag_value_names, diag_vars):
+            self._set_value(value_name, [var])
 
         expected_width = sum(output.width for output in op.outputs)
         if len(values) != expected_width:
@@ -364,7 +370,11 @@ class OpEmitMixin:
         for output in op.outputs:
             self._set_value(output.name, values[cursor:cursor + output.width])
             cursor += output.width
-        primary_value_name = f"{node.name}:{primary_output_port_name(node)}"
+        primary_value_name = node_output_value_name(
+            self.graph,
+            node,
+            primary_output_port_name(node),
+        )
         if primary_value_name not in self.value_vars:
             self._set_value(primary_value_name, self._get_value(op.outputs[0].name))
         self.builder.line()

@@ -40,14 +40,14 @@ def pnl_batched_stateless_graph_kernel(
     param_2_value = tl.load(param_2 + param_idx, mask=mask, other=3.0)
     param_3_value = tl.load(param_3 + param_idx, mask=mask, other=1.0)
 
-    n_source_RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
-    n_source_RESULT_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
+    n_n0_output_0_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
+    n_n0_output_0_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
 
-    n_target_projection_0_0 = _pnl_triton_projection_term(n_source_RESULT_0, 1.0) + _pnl_triton_projection_term(n_source_RESULT_1, 2.0)
+    n_n1_projection_0_0 = _pnl_triton_projection_term(n_n0_output_0_0, 1.0) + _pnl_triton_projection_term(n_n0_output_0_1, 2.0)
 
-    n_target_input_0 = (n_target_projection_0_0)
+    n_n1_input_0 = (n_n1_projection_0_0)
 
-    n_target_RESULT_0 = _pnl_triton_linear(n_target_input_0, param_2_value, param_3_value)
+    n_n1_output_0_0 = _pnl_triton_linear(n_n1_input_0, param_2_value, param_3_value)
 
     lane_out = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
-    tl.store(out + lane_out + 0, n_target_RESULT_0, mask=mask)
+    tl.store(out + lane_out + 0, n_n1_output_0_0, mask=mask)

@@ -16,14 +16,14 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
 )
-from psyneulink.core.batched.kernel_ir import KernelIR, diag_slots
+from psyneulink.core.batched.kernel_ir import KernelIR, component_symbol, diag_slots
 from psyneulink.core.batched.backend.triton.api import TritonOpTemplate
 from psyneulink.core.batched.backend.triton.source_builder import (
     SourceBuilder,
     emit_triton_function_header,
     emit_triton_imports,
 )
-from psyneulink.core.batched.backend.triton.emit._helpers import float_literal, safe_ident
+from psyneulink.core.batched.backend.triton.emit._helpers import float_literal
 from psyneulink.core.batched.backend.triton.emit.lanes import LaneEmitMixin
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
 
@@ -159,16 +159,30 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             self.builder.line()
 
     def _emit_initialize_state(self) -> None:
+        state_slots: dict[int, int] = {}
         for state in self.kernel.states:
-            safe_state = safe_ident(state.name)
+            node = self.graph.node(state.node)
+            component_id = (
+                state.component_id
+                if state.component_id >= 0
+                else node.component_id
+            )
+            if component_id < 0:
+                component_id = self.graph.nodes.index(node)
+            state_slot = state_slots.get(component_id, 0)
+            state_slots[component_id] = state_slot + 1
+            state_symbol = f"n{component_id}_state_{state_slot}"
             for idx, value in enumerate(state.initial_value):
-                var = f"{safe_state}_{idx}"
+                var = f"{state_symbol}_{idx}"
                 self.state_vars[(state.name, idx)] = var
                 self.builder.line(
                     f"{var} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
                 )
         if self.kernel.states:
             self.builder.line()
+
+    def component_symbol(self, node_spec) -> str:
+        return component_symbol(self.graph, node_spec)
 
 
 def triton_graph_kernel_source(kernel: KernelIR) -> str:

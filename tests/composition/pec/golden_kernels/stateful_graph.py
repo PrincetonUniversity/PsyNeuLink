@@ -163,10 +163,10 @@ def pnl_batched_stateful_graph_kernel(
     param_34_value = tl.load(param_34 + param_idx, mask=mask, other=1.0)
     param_35_value = tl.load(param_35 + param_idx, mask=mask, other=0.0)
 
-    n_Task_Activations__Act1__Act2__pre_0 = tl.full((BLOCK,), 0.0, tl.float32)
-    n_Task_Activations__Act1__Act2__pre_1 = tl.full((BLOCK,), 0.0, tl.float32)
-    n_Task_Activations__Act1__Act2__act_0 = tl.full((BLOCK,), 0.0, tl.float32)
-    n_Task_Activations__Act1__Act2__act_1 = tl.full((BLOCK,), 0.0, tl.float32)
+    n6_state_0_0 = tl.full((BLOCK,), 0.0, tl.float32)
+    n6_state_0_1 = tl.full((BLOCK,), 0.0, tl.float32)
+    n6_state_1_0 = tl.full((BLOCK,), 0.0, tl.float32)
+    n6_state_1_1 = tl.full((BLOCK,), 0.0, tl.float32)
 
     trial_idx = 0
     while trial_idx < num_trials:
@@ -175,89 +175,89 @@ def pnl_batched_stateful_graph_kernel(
         else:
             random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 12884901888
 
-        n_Correct_Response_Info_RESULT_0 = _pnl_triton_linear(tl.load(input_3 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_6_value, param_7_value)
+        n_n0_output_0_0 = _pnl_triton_linear(tl.load(input_3 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_6_value, param_7_value)
 
-        n_Cue_Stimulus_Interval_RESULT_0 = _pnl_triton_linear(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_4_value, param_5_value)
+        n_n1_output_0_0 = _pnl_triton_linear(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_4_value, param_5_value)
 
-        n_Stimulus_Input__S1__S2__RESULT_0 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_2_value, param_3_value)
-        n_Stimulus_Input__S1__S2__RESULT_1 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_2_value, param_3_value)
+        n_n3_output_0_0 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_2_value, param_3_value)
+        n_n3_output_0_1 = _pnl_triton_linear(tl.load(input_1 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_2_value, param_3_value)
 
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_0, 1.0)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_1, 1.0)
+        n_n4_projection_0_0 = _pnl_triton_projection_term(n_n3_output_0_0, 1.0)
+        n_n4_projection_0_1 = _pnl_triton_projection_term(n_n3_output_0_1, 1.0)
 
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_0)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1 = (n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__projection_0_1)
+        n_n4_input_0 = (n_n4_projection_0_0)
+        n_n4_input_1 = (n_n4_projection_0_1)
 
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_0 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_0, param_16_value, param_17_value)
-        n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_1 = _pnl_triton_linear(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__input_1, param_16_value, param_17_value)
+        n_n4_output_0_0 = _pnl_triton_linear(n_n4_input_0, param_16_value, param_17_value)
+        n_n4_output_0_1 = _pnl_triton_linear(n_n4_input_1, param_16_value, param_17_value)
 
-        n_Task_Input__I1__I2__RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
-        n_Task_Input__I1__I2__RESULT_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
+        n_n5_output_0_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
+        n_n5_output_0_1 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 2 + 1, mask=mask, other=0.0), param_0_value, param_1_value)
 
-        n_Task_Activations__Act1__Act2__projection_0_0 = _pnl_triton_projection_term(n_Task_Input__I1__I2__RESULT_0, 1.0)
-        n_Task_Activations__Act1__Act2__projection_0_1 = _pnl_triton_projection_term(n_Task_Input__I1__I2__RESULT_1, 1.0)
+        n_n6_projection_0_0 = _pnl_triton_projection_term(n_n5_output_0_0, 1.0)
+        n_n6_projection_0_1 = _pnl_triton_projection_term(n_n5_output_0_1, 1.0)
 
-        n_Task_Activations__Act1__Act2__input_0 = (n_Task_Activations__Act1__Act2__projection_0_0)
-        n_Task_Activations__Act1__Act2__input_1 = (n_Task_Activations__Act1__Act2__projection_0_1)
+        n_n6_input_0 = (n_n6_projection_0_0)
+        n_n6_input_1 = (n_n6_projection_0_1)
 
-        n_Task_Activations__Act1__Act2__lca_steps = tl.minimum(tl.maximum(tl.ceil(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0)), 0.0), LCA_MAX_STEPS)
-        n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1 = _pnl_triton_lca_width2_integrate(n_Task_Activations__Act1__Act2__input_0, n_Task_Activations__Act1__Act2__input_1, n_Task_Activations__Act1__Act2__pre_0, n_Task_Activations__Act1__Act2__pre_1, n_Task_Activations__Act1__Act2__act_0, n_Task_Activations__Act1__Act2__act_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n_Task_Activations__Act1__Act2__lca_steps, SEED, random_base, 0, 4294967296, LCA_MAX_STEPS, mask)
+        n6_lca_steps = tl.minimum(tl.maximum(tl.ceil(tl.load(input_2 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0)), 0.0), LCA_MAX_STEPS)
+        n6_state_0_0, n6_state_0_1, n6_state_1_0, n6_state_1_1 = _pnl_triton_lca_width2_integrate(n_n6_input_0, n_n6_input_1, n6_state_0_0, n6_state_0_1, n6_state_1_0, n6_state_1_1, param_8_value, param_9_value, param_10_value, param_11_value, param_12_value, param_13_value, n6_lca_steps, SEED, random_base, 0, 4294967296, LCA_MAX_STEPS, mask)
 
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_0 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_0, 1.0)
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_1 = _pnl_triton_projection_term(n_Task_Activations__Act1__Act2__act_1, 1.0)
+        n_n7_projection_0_0 = _pnl_triton_projection_term(n6_state_1_0, 1.0)
+        n_n7_projection_0_1 = _pnl_triton_projection_term(n6_state_1_1, 1.0)
 
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_1_0 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_0, 1.0)
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_1_1 = _pnl_triton_projection_term(n_Stimulus_Input__S1__S2__RESULT_1, 1.0)
+        n_n7_projection_1_0 = _pnl_triton_projection_term(n_n3_output_0_0, 1.0)
+        n_n7_projection_1_1 = _pnl_triton_projection_term(n_n3_output_0_1, 1.0)
 
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__input_0 = (n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_0) * (n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_1_0)
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__input_1 = (n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_0_1) * (n_Non_Automatic_Component__S1_Act1__S2_Act2__projection_1_1)
+        n_n7_input_0 = (n_n7_projection_0_0) * (n_n7_projection_1_0)
+        n_n7_input_1 = (n_n7_projection_0_1) * (n_n7_projection_1_1)
 
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_0 = _pnl_triton_linear(n_Non_Automatic_Component__S1_Act1__S2_Act2__input_0, param_14_value, param_15_value)
-        n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_1 = _pnl_triton_linear(n_Non_Automatic_Component__S1_Act1__S2_Act2__input_1, param_14_value, param_15_value)
+        n_n7_output_0_0 = _pnl_triton_linear(n_n7_input_0, param_14_value, param_15_value)
+        n_n7_output_0_1 = _pnl_triton_linear(n_n7_input_1, param_14_value, param_15_value)
 
-        n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__projection_0_0 = _pnl_triton_projection_term(n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_0, 1.0) + _pnl_triton_projection_term(n_Non_Automatic_Component__S1_Act1__S2_Act2__RESULT_1, 1.0)
+        n_n8_projection_0_0 = _pnl_triton_projection_term(n_n7_output_0_0, 1.0) + _pnl_triton_projection_term(n_n7_output_0_1, 1.0)
 
-        n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__projection_1_0 = _pnl_triton_projection_term(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_0, 1.0) + _pnl_triton_projection_term(n_Automaticity_weighted_Stimulus_Input__w_S1__w_S2__RESULT_1, 1.0)
+        n_n8_projection_1_0 = _pnl_triton_projection_term(n_n4_output_0_0, 1.0) + _pnl_triton_projection_term(n_n4_output_0_1, 1.0)
 
-        n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__input_0 = (n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__projection_0_0) + (n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__projection_1_0)
+        n_n8_input_0 = (n_n8_projection_0_0) + (n_n8_projection_1_0)
 
-        n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__RESULT_0 = _pnl_triton_linear(n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__input_0, param_18_value, param_19_value)
+        n_n8_output_0_0 = _pnl_triton_linear(n_n8_input_0, param_18_value, param_19_value)
 
-        n_Recoded_Drift___Drift___correctResponseInfo_projection_0_0 = _pnl_triton_projection_term(n_Drift____w_S1___w_S2_____S1_Act1___S2_Act2__RESULT_0, 1.0)
+        n_n9_projection_0_0 = _pnl_triton_projection_term(n_n8_output_0_0, 1.0)
 
-        n_Recoded_Drift___Drift___correctResponseInfo_projection_1_0 = _pnl_triton_projection_term(n_Correct_Response_Info_RESULT_0, 1.0)
+        n_n9_projection_1_0 = _pnl_triton_projection_term(n_n0_output_0_0, 1.0)
 
-        n_Recoded_Drift___Drift___correctResponseInfo_input_0 = (n_Recoded_Drift___Drift___correctResponseInfo_projection_0_0) * (n_Recoded_Drift___Drift___correctResponseInfo_projection_1_0)
+        n_n9_input_0 = (n_n9_projection_0_0) * (n_n9_projection_1_0)
 
-        n_Recoded_Drift___Drift___correctResponseInfo_RESULT_0 = _pnl_triton_linear(n_Recoded_Drift___Drift___correctResponseInfo_input_0, param_20_value, param_21_value)
+        n_n9_output_0_0 = _pnl_triton_linear(n_n9_input_0, param_20_value, param_21_value)
 
-        n_Scaled_DDM_Input_projection_0_0 = _pnl_triton_projection_term(n_Recoded_Drift___Drift___correctResponseInfo_RESULT_0, 1.0)
+        n_n10_projection_0_0 = _pnl_triton_projection_term(n_n9_output_0_0, 1.0)
 
-        n_Scaled_DDM_Input_input_0 = (n_Scaled_DDM_Input_projection_0_0)
+        n_n10_input_0 = (n_n10_projection_0_0)
 
-        n_Scaled_DDM_Input_RESULT_0 = _pnl_triton_linear(n_Scaled_DDM_Input_input_0, param_22_value, param_23_value)
+        n_n10_output_0_0 = _pnl_triton_linear(n_n10_input_0, param_22_value, param_23_value)
 
-        n_DDM_projection_0_0 = _pnl_triton_projection_term(n_Scaled_DDM_Input_RESULT_0, 1.0)
+        n_n11_projection_0_0 = _pnl_triton_projection_term(n_n10_output_0_0, 1.0)
 
-        n_DDM_input_0 = (n_DDM_projection_0_0)
+        n_n11_input_0 = (n_n11_projection_0_0)
 
-        n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, param_31_value, SEED, random_base + 8589934592, MAX_STEPS, mask)
+        n_n11_output_0_0, n_n11_output_1_0, n_n11_diagnostic_0_0 = _pnl_triton_ddm(n_n11_input_0, param_24_value, param_25_value, param_26_value, param_27_value, param_28_value, param_29_value, param_30_value, param_31_value, SEED, random_base + 8589934592, MAX_STEPS, mask)
 
         diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
-        tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)
-        n_DECISION_GATE_projection_0_0 = _pnl_triton_projection_term(n_DDM_DECISION_OUTCOME_0, 1.0)
+        tl.store(diag + diag_lane + 0, n_n11_diagnostic_0_0, mask=mask)
+        n_n12_projection_0_0 = _pnl_triton_projection_term(n_n11_output_0_0, 1.0)
 
-        n_DECISION_GATE_input_0 = (n_DECISION_GATE_projection_0_0)
+        n_n12_input_0 = (n_n12_projection_0_0)
 
-        n_DECISION_GATE_OutputPort_0_0 = _pnl_triton_linear(n_DECISION_GATE_input_0, param_32_value, param_33_value)
+        n_n12_output_0_0 = _pnl_triton_linear(n_n12_input_0, param_32_value, param_33_value)
 
-        n_RESPONSE_GATE_projection_0_0 = _pnl_triton_projection_term(n_DDM_RESPONSE_TIME_0, 1.0)
+        n_n13_projection_0_0 = _pnl_triton_projection_term(n_n11_output_1_0, 1.0)
 
-        n_RESPONSE_GATE_input_0 = (n_RESPONSE_GATE_projection_0_0)
+        n_n13_input_0 = (n_n13_projection_0_0)
 
-        n_RESPONSE_GATE_OutputPort_0_0 = _pnl_triton_linear(n_RESPONSE_GATE_input_0, param_34_value, param_35_value)
+        n_n13_output_0_0 = _pnl_triton_linear(n_n13_input_0, param_34_value, param_35_value)
 
         lane_out = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 2
-        tl.store(out + lane_out + 0, n_DECISION_GATE_OutputPort_0_0, mask=mask)
-        tl.store(out + lane_out + 1, n_RESPONSE_GATE_OutputPort_0_0, mask=mask)
+        tl.store(out + lane_out + 0, n_n12_output_0_0, mask=mask)
+        tl.store(out + lane_out + 1, n_n13_output_0_0, mask=mask)
         trial_idx += 1

@@ -67,6 +67,11 @@ class TritonEmitContext:
     def state(self, state_name: str, index: int) -> str:
         return self._emitter.state_vars[(state_name, index)]
 
+    def component_symbol(self, node_spec) -> str:
+        """Lowering-local symbol prefix for component-owned temporary values."""
+
+        return self._emitter.component_symbol(node_spec)
+
     def raw_input_value(self, node_name: str, component_idx: int = 0) -> str:
         return self._emitter.raw_input_value(node_name, component_idx)
 

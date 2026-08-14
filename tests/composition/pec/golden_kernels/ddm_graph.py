@@ -84,20 +84,20 @@ def pnl_batched_ddm_graph_kernel(
     param_8_value = tl.load(param_8 + param_idx, mask=mask, other=0.0)
     param_9_value = tl.load(param_9 + param_idx, mask=mask, other=0.0)
 
-    n_stimulus_RESULT_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
+    n_n0_output_0_0 = _pnl_triton_linear(tl.load(input_0 + (subject_idx * num_trials + trial_idx) * 1 + 0, mask=mask, other=0.0), param_0_value, param_1_value)
 
-    n_DDM_projection_0_0 = _pnl_triton_projection_term(n_stimulus_RESULT_0, 1.0)
+    n_n1_projection_0_0 = _pnl_triton_projection_term(n_n0_output_0_0, 1.0)
 
-    n_DDM_input_0 = (n_DDM_projection_0_0)
+    n_n1_input_0 = (n_n1_projection_0_0)
 
     if COMMON_RANDOM:
         random_base = ((subject_idx * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
     else:
         random_base = (((param_idx * num_subjects + subject_idx) * num_estimates + estimate_idx) * num_trials + trial_idx).to(tl.int64) * 4294967296
-    n_DDM_DECISION_OUTCOME_0, n_DDM_RESPONSE_TIME_0, n_DDM_diag_n_truncated = _pnl_triton_ddm(n_DDM_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, SEED, random_base, MAX_STEPS, mask)
+    n_n1_output_0_0, n_n1_output_1_0, n_n1_diagnostic_0_0 = _pnl_triton_ddm(n_n1_input_0, param_2_value, param_3_value, param_4_value, param_5_value, param_6_value, param_7_value, param_8_value, param_9_value, SEED, random_base, MAX_STEPS, mask)
 
     diag_lane = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 1
-    tl.store(diag + diag_lane + 0, n_DDM_diag_n_truncated, mask=mask)
+    tl.store(diag + diag_lane + 0, n_n1_diagnostic_0_0, mask=mask)
     lane_out = (((param_idx * num_subjects + subject_idx) * num_trials + trial_idx) * num_estimates + estimate_idx) * 2
-    tl.store(out + lane_out + 0, n_DDM_DECISION_OUTCOME_0, mask=mask)
-    tl.store(out + lane_out + 1, n_DDM_RESPONSE_TIME_0, mask=mask)
+    tl.store(out + lane_out + 0, n_n1_output_0_0, mask=mask)
+    tl.store(out + lane_out + 1, n_n1_output_1_0, mask=mask)

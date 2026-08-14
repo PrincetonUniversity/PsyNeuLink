@@ -62,6 +62,7 @@ class KernelRngStream:
     node: str
     width: int
     step_extent: str
+    component_id: int = -1
 
 
 @dataclass(frozen=True)
@@ -131,14 +132,23 @@ def lower_to_kernel_ir(
     rng_streams = _rng_streams(graph)
     trial_ops = _trial_body_ops(graph)
     if lane_layout.kind == STATEFUL_LANE_LAYOUT:
+        state_slots: dict[int, int] = {}
+        initial_state_values = []
+        for state in graph.states:
+            component_id = _state_component_id(graph, state)
+            state_slot = state_slots.get(component_id, 0)
+            state_slots[component_id] = state_slot + 1
+            initial_state_values.append(
+                KernelValue(
+                    f"n{component_id}:state:{state_slot}",
+                    state.width,
+                )
+            )
         ops = (
             KernelOp(
                 kind="InitializeState",
                 target="lane",
-                outputs=tuple(
-                    KernelValue(f"state:{state.name}", state.width)
-                    for state in graph.states
-                ),
+                outputs=tuple(initial_state_values),
             ),
             KernelOp(
                 kind="ForTrials",
@@ -239,9 +249,67 @@ def _rng_streams(graph: BatchedGraphIR) -> tuple[KernelRngStream, ...]:
                     node=node.name,
                     width=int(width),
                     step_extent=step_extent,
+                    component_id=_component_id(graph, node),
                 )
             )
     return tuple(streams)
+
+
+def component_symbol(graph: BatchedGraphIR, node_or_name) -> str:
+    """Backend-safe lowering-local symbol prefix for a graph component.
+
+    Component display names remain the graph lookup and decorator contract.  A
+    numeric prefix is used for generated symbols so target-language identifier
+    sanitization can never merge distinct PNL components.
+    """
+
+    return f"n{_component_id(graph, node_or_name)}"
+
+
+def node_input_value_name(graph: BatchedGraphIR, node_or_name) -> str:
+    return f"{component_symbol(graph, node_or_name)}:input"
+
+
+def node_output_value_name(graph: BatchedGraphIR, node_or_name, port: str) -> str:
+    node = graph.node(node_or_name) if isinstance(node_or_name, str) else node_or_name
+    output_ports = tuple(name for name, _ in node.attrs.get("op_outputs", ()))
+    if not output_ports:
+        output_ports = tuple(node.attrs.get("output_ports", ())) or ("RESULT",)
+    try:
+        port_slot = output_ports.index(port)
+    except ValueError as error:
+        raise ValueError(
+            f"Batched node '{node.name}' has no lowered output port '{port}'."
+        ) from error
+    return f"{component_symbol(graph, node)}:output:{port_slot}"
+
+
+def node_diagnostic_value_name(
+    graph: BatchedGraphIR,
+    node_or_name,
+    diagnostic_slot: int,
+) -> str:
+    return f"{component_symbol(graph, node_or_name)}:diagnostic:{diagnostic_slot}"
+
+
+def _component_id(graph: BatchedGraphIR, node_or_name) -> int:
+    node = graph.node(node_or_name) if isinstance(node_or_name, str) else node_or_name
+    component_id = int(node.component_id)
+    if component_id >= 0:
+        return component_id
+    # Preserve direct construction of the public experimental IR dataclasses:
+    # old callers that omit ``component_id`` still receive a distinct numeric
+    # identity, while normal Composition lowering always assigns one explicitly.
+    for fallback_id, candidate in enumerate(graph.nodes):
+        if candidate is node or candidate.name == node.name:
+            return fallback_id
+    raise KeyError(node.name)
+
+
+def _state_component_id(graph: BatchedGraphIR, state: BatchedStateSpec) -> int:
+    if state.component_id >= 0:
+        return int(state.component_id)
+    return _component_id(graph, state.node)
 
 
 def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
@@ -249,13 +317,13 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
     diag_slot = 0
     for node_name in graph.execution_order:
         node = graph.node(node_name)
-        node_input = KernelValue(f"{node.name}:input", node.input_width)
+        node_input = KernelValue(node_input_value_name(graph, node), node.input_width)
         projections = projection_inputs(graph, node.name)
         if projections:
             projected_values = []
             for idx, projection in enumerate(projections):
                 projected = KernelValue(
-                    f"{projection.receiver}:projection:{idx}",
+                    f"{component_symbol(graph, node)}:projection:{idx}",
                     projection.matrix.shape[1],
                 )
                 projected_values.append(projected)
@@ -265,7 +333,11 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                         target=projection.receiver,
                         inputs=(
                             KernelValue(
-                                f"{projection.sender}:{projection.sender_port}",
+                                node_output_value_name(
+                                    graph,
+                                    projection.sender,
+                                    projection.sender_port,
+                                ),
                                 projection.matrix.shape[0],
                             ),
                         ),
@@ -302,7 +374,10 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
         spec_kind = node.attrs.get("spec_kind")
         if spec_kind == "elementwise":
             output_port = _primary_output_port_name(node)
-            output_value = KernelValue(f"{node.name}:{output_port}", node.output_width)
+            output_value = KernelValue(
+                node_output_value_name(graph, node, output_port),
+                node.output_width,
+            )
             attrs = {
                 "component_type": node.component_type,
                 "function_type": node.function_type,
@@ -337,24 +412,40 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             diagnostics = tuple(node.attrs.get("diagnostics", ()))
             if diagnostics:
                 attrs["diagnostics"] = diagnostics
+                attrs["diagnostic_values"] = tuple(
+                    node_diagnostic_value_name(graph, node, index)
+                    for index, _ in enumerate(diagnostics)
+                )
             ops.append(
                 KernelOp(
                     kind="CallMechanism",
                     target=node.name,
                     inputs=(node_input,),
                     outputs=tuple(
-                        KernelValue(f"{node.name}:{port}", int(width))
+                        KernelValue(
+                            node_output_value_name(graph, node, port),
+                            int(width),
+                        )
                         for port, width in op_outputs
                     ),
                     attrs=attrs,
                 )
             )
-            for name in diagnostics:
+            for diagnostic_index, name in enumerate(diagnostics):
                 ops.append(
                     KernelOp(
                         kind="StoreFlag",
                         target=node.name,
-                        inputs=(KernelValue(f"{node.name}:diag:{name}", 1),),
+                        inputs=(
+                            KernelValue(
+                                node_diagnostic_value_name(
+                                    graph,
+                                    node,
+                                    diagnostic_index,
+                                ),
+                                1,
+                            ),
+                        ),
                         attrs={"node": node.name, "name": name, "slot": diag_slot},
                     )
                 )
@@ -369,7 +460,12 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             KernelOp(
                 kind="StoreOutput",
                 target=output.name,
-                inputs=(KernelValue(f"{output.node}:{output.port}", output.width),),
+                inputs=(
+                    KernelValue(
+                        node_output_value_name(graph, output.node, output.port),
+                        output.width,
+                    ),
+                ),
                 attrs={
                     "node": output.node,
                     "port": output.port,

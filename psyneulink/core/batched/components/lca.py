@@ -343,7 +343,7 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
         cue_value = ctx.raw_input_value(termination_node)
     else:
         cue_value = ctx.float_literal(node_spec.attrs.get("termination_threshold", 1.0))
-    steps_var = f"n_{_safe_ident(node_spec.name)}_lca_steps"
+    steps_var = f"{ctx.component_symbol(node_spec)}_lca_steps"
     stream0 = ctx.rng_stream_offset(node_spec.name, 0)
     stream1 = ctx.rng_stream_offset(node_spec.name, 1)
 
@@ -408,10 +408,6 @@ def _primary_output_width(node) -> int:
         return int(np.asarray(output_ports[0].value).reshape(-1).size)
     except Exception:
         return 1
-
-
-def _safe_ident(name: str) -> str:
-    return "".join(ch if ch.isalnum() else "_" for ch in name)
 
 
 register_batched_op(

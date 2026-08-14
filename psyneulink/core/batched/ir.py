@@ -47,6 +47,11 @@ class BatchedNodeSpec:
     combine: str = "sum"
     params: Mapping[str, str] = field(default_factory=dict)
     attrs: Mapping[str, Any] = field(default_factory=dict)
+    # Deterministic lowering-local identity.  ``name`` remains the public PNL
+    # lookup/display contract; code generation must use this numeric identity
+    # so distinct names that sanitize to the same target identifier cannot
+    # alias one another.
+    component_id: int = -1
 
 
 @dataclass(frozen=True)
@@ -55,6 +60,7 @@ class BatchedStateSpec:
     node: str
     width: int
     initial_value: tuple[float, ...]
+    component_id: int = -1
 
 
 @dataclass(frozen=True)

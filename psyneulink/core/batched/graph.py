@@ -61,6 +61,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     if absorbed:
         nodes = [node for node in nodes if _node_name(node) not in absorbed]
     topological_nodes, cyclic_nodes = _dependency_topological_order(composition, nodes)
+    component_ids = {
+        id(node): component_id
+        for component_id, node in enumerate(topological_nodes)
+    }
     node_names = {_node_name(node) for node in nodes}
     params = _ParamBuilder()
     rejected_nodes: list[BatchedDiagnostic] = [
@@ -100,7 +104,15 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 rejected_nodes.append(diagnostic)
                 continue
             supported_nodes.append(node_name)
-            node_specs.append(_node_spec(node, params, model_kind, composition))
+            node_specs.append(
+                _node_spec(
+                    node,
+                    params,
+                    model_kind,
+                    composition,
+                    component_id=component_ids[id(node)],
+                )
+            )
             continue
 
         diagnostic = _node_support_diagnostic(node, composition)
@@ -109,7 +121,13 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             continue
 
         supported_nodes.append(node_name)
-        node_spec = _node_spec(node, params, model_kind, composition)
+        node_spec = _node_spec(
+            node,
+            params,
+            model_kind,
+            composition,
+            component_id=component_ids[id(node)],
+        )
         node_specs.append(node_spec)
         mechanism_spec = specs.mechanism_spec_for(node)
         if mechanism_spec is not None:
@@ -117,10 +135,11 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 width = state_decl.width if state_decl.width is not None else node_spec.output_width
                 state_specs.append(
                     BatchedStateSpec(
-                        f"{node_name}.{state_decl.name}",
-                        node_name,
-                        width,
-                        tuple([state_decl.initial] * width),
+                        name=f"{node_name}.{state_decl.name}",
+                        node=node_name,
+                        width=width,
+                        initial_value=tuple([state_decl.initial] * width),
+                        component_id=node_spec.component_id,
                     )
                 )
 
@@ -210,7 +229,14 @@ class _ParamBuilder:
         return name
 
 
-def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition) -> BatchedNodeSpec:
+def _node_spec(
+    node,
+    params: _ParamBuilder,
+    model_kind: str | None,
+    composition,
+    *,
+    component_id: int,
+) -> BatchedNodeSpec:
     component_type = type(node).__name__
     function = getattr(node, "function", None)
     function_type = type(function).__name__
@@ -284,6 +310,7 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
         combine=combine,
         params=param_map,
         attrs=attrs,
+        component_id=component_id,
     )
 
 
