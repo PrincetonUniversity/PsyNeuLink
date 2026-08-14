@@ -17,6 +17,9 @@ class BatchedDiagnosticCode:
     MODEL_PROJECTION_UNSUPPORTED = "model.projection_unsupported"
     MODEL_LCA_WIDTH_UNSUPPORTED = "model.lca_width_unsupported"
     MODEL_SCHEDULER_CONDITION_UNSUPPORTED = "model.scheduler_condition_unsupported"
+    MODEL_SCHEDULER_TERMINATION_UNSUPPORTED = (
+        "model.scheduler_termination_unsupported"
+    )
     MODEL_SCHEDULE_NOT_EXECUTABLE = "model.schedule_not_executable"
 
     CODEGEN_OP_MISSING = "codegen.op_missing"

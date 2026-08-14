@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import inspect
 import re
 from typing import Any
@@ -27,9 +27,11 @@ from psyneulink.core.batched.ir import (
     BatchedSchedulerSpec,
     BatchedStateFunctionInitializer,
     BatchedStateSpec,
+    BatchedTerminationSpec,
 )
 from psyneulink.core.scheduling.condition import (
     All,
+    AllHaveRun,
     Always,
     AtPass,
     AtTrialStart,
@@ -37,6 +39,7 @@ from psyneulink.core.scheduling.condition import (
     Never,
     WhenFinished,
 )
+from psyneulink.core.scheduling.time import TimeScale
 
 
 GRAPH_MODEL = "graph"
@@ -112,6 +115,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         topological_nodes,
         component_ids,
     )
+    termination_specs, termination_rejections = _termination_ir_specs(
+        composition,
+        component_ids,
+    )
     consideration_set_ids = {
         component_id: consideration_set.consideration_set_id
         for consideration_set in consideration_sets
@@ -124,6 +131,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         consideration_set_ids,
         coevolving,
     )
+    rejected_conditions.extend(termination_rejections)
     node_bindings = {
         _node_name(node): node
         for node in topological_nodes
@@ -343,6 +351,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             consideration_sets=consideration_sets,
             finished_values=finished_values,
             resets=reset_specs,
+            termination=termination_specs,
         )
 
     return LoweringResult(
@@ -1540,11 +1549,19 @@ def _absorbed_lca_schedule_support_diagnostic(
 def _condition_time_scale_name(condition) -> str | None:
     """Return a scheduler condition's captured time-scale name, if explicit."""
 
-    try:
-        time_scale = inspect.getclosurevars(condition.func).nonlocals["time_scale"]
-    except (AttributeError, KeyError, TypeError):
+    time_scale = _condition_time_scale(condition)
+    if time_scale is None:
         return None
     return getattr(time_scale, "name", str(time_scale))
+
+
+def _condition_time_scale(condition):
+    """Return the exact time-scale object captured by a Condition function."""
+
+    try:
+        return inspect.getclosurevars(condition.func).nonlocals["time_scale"]
+    except (AttributeError, KeyError, TypeError):
+        return None
 
 
 def _condition_label(condition) -> str:
@@ -2320,6 +2337,113 @@ def _scheduler_ir_specs(composition, nodes, component_ids):
         for condition in declared
     )
     return declared, regions, consideration_sets, finished_values, complete
+
+
+def _termination_ir_specs(composition, component_ids):
+    """Snapshot the one termination contract precomputed scheduling can execute.
+
+    PsyNeuLink evaluates termination between consideration sets, independently
+    from node predicates.  The first executable scheduler tier therefore
+    accepts only the scheduler defaults: trial-local ``AllHaveRun()`` over all
+    lowered scheduler components and environment-sequence ``Never()``.  Custom
+    termination remains inspectable as a structured capability rejection; no
+    live Condition or Component object is retained in the graph IR.
+    """
+
+    composition_name = getattr(composition, "name", type(composition).__name__)
+    scheduler = getattr(composition, "scheduler", None)
+    conditions = getattr(scheduler, "termination_conds", None)
+    if not isinstance(conditions, Mapping):
+        return (), (
+            BatchedDiagnostic(
+                composition_name,
+                "unsupported scheduler termination for batched v2",
+                "scheduler does not expose typed termination predicates",
+            ),
+        )
+
+    by_scale = {}
+    for time_scale, condition in conditions.items():
+        if time_scale is TimeScale.ENVIRONMENT_STATE_UPDATE:
+            scale_name = "ENVIRONMENT_STATE_UPDATE"
+        elif time_scale is TimeScale.ENVIRONMENT_SEQUENCE:
+            scale_name = "ENVIRONMENT_SEQUENCE"
+        else:
+            return (), (
+                BatchedDiagnostic(
+                    composition_name,
+                    "unsupported scheduler termination for batched v2",
+                    "termination keys must be the canonical PsyNeuLink "
+                    "ENVIRONMENT_STATE_UPDATE and ENVIRONMENT_SEQUENCE "
+                    f"TimeScale members; got {time_scale!r}",
+                ),
+            )
+        by_scale[scale_name] = condition
+
+    expected_scales = {
+        "ENVIRONMENT_STATE_UPDATE",
+        "ENVIRONMENT_SEQUENCE",
+    }
+    if set(by_scale) != expected_scales:
+        return (), (
+            BatchedDiagnostic(
+                composition_name,
+                "unsupported scheduler termination for batched v2",
+                "termination must contain exactly ENVIRONMENT_STATE_UPDATE "
+                "AllHaveRun and ENVIRONMENT_SEQUENCE Never",
+            ),
+        )
+
+    trial = by_scale["ENVIRONMENT_STATE_UPDATE"]
+    raw_trial_args = getattr(trial, "args", None)
+    trial_args = raw_trial_args if type(raw_trial_args) is tuple else None
+    trial_time_scale = _condition_time_scale(trial)
+    if (
+        type(trial) is not AllHaveRun
+        or trial_args != ()
+        or trial_time_scale is not TimeScale.ENVIRONMENT_STATE_UPDATE
+    ):
+        return (), (
+            BatchedDiagnostic(
+                composition_name,
+                "unsupported scheduler termination for batched v2",
+                "ENVIRONMENT_STATE_UPDATE termination requires AllHaveRun over "
+                "every scheduler component ID at "
+                "time_scale=ENVIRONMENT_STATE_UPDATE; got "
+                f"{type(trial).__name__}(args={raw_trial_args!r}, "
+                "time_scale="
+                f"{getattr(trial_time_scale, 'name', trial_time_scale) or 'unknown'})",
+            ),
+        )
+
+    sequence = by_scale["ENVIRONMENT_SEQUENCE"]
+    raw_sequence_args = getattr(sequence, "args", None)
+    sequence_args = (
+        raw_sequence_args if type(raw_sequence_args) is tuple else None
+    )
+    if type(sequence) is not Never or sequence_args != ():
+        return (), (
+            BatchedDiagnostic(
+                composition_name,
+                "unsupported scheduler termination for batched v2",
+                "ENVIRONMENT_SEQUENCE termination requires Never with no "
+                f"component operands; got {type(sequence).__name__}"
+                f"(args={raw_sequence_args!r})",
+            ),
+        )
+
+    scheduler_component_ids = tuple(sorted(component_ids.values()))
+    return (
+        BatchedTerminationSpec(
+            time_scale="ENVIRONMENT_STATE_UPDATE",
+            condition_type="AllHaveRun",
+            dependency_component_ids=scheduler_component_ids,
+        ),
+        BatchedTerminationSpec(
+            time_scale="ENVIRONMENT_SEQUENCE",
+            condition_type="Never",
+        ),
+    ), ()
 
 
 def _scheduler_consideration_set_specs(composition, nodes, component_ids):
