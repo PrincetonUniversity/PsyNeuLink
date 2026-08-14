@@ -790,6 +790,12 @@ class Projection_Base(Projection):
 
         self._assign_default_projection_name()
 
+        try:
+            self._parameter_ports[MATRIX].function.reset(context=context)
+        except (AttributeError, KeyError):
+            # may not have parameter ports or a matrix one
+            pass
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
