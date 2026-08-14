@@ -75,6 +75,19 @@ separate processes.  Interpreter coverage is useful for semantic iteration,
 but a feature is not considered GPU-supported until a compiled-GPU parity
 case passes.
 
+The general operating-system and Python-version CI matrix does not install the
+Triton extra and selects ``not triton``.  A dedicated Linux job installs the
+``dev,triton`` extras, sets ``TRITON_INTERPRET=1`` before Python starts, selects
+``triton_interpreter``, and requires that backend so a missing dependency or
+incorrect mode fails rather than skips the job.
+
+The repository does not currently declare a CUDA-capable runner label, so CI
+does not claim compiled-GPU coverage.  Once managed GPU runner infrastructure
+is available, its separate Linux job must leave ``TRITON_INTERPRET`` unset,
+install the ``dev,triton`` extras, select ``triton_gpu``, and pass
+``--require-batched-backend=triton_gpu``.  The runner must expose a usable CUDA
+device; using a generic hosted ``ubuntu-latest`` runner is not a substitute.
+
 CSI is a composition-level acceptance case, not a model kind or compiler
 recognizer.  It is supported only through general implementations of its
 functions, mechanisms, ports, scheduler conditions, control projections,

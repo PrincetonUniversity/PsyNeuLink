@@ -39,6 +39,7 @@ jobs:
       matrix:
         python-version: ['3.10', '3.13', '3.14']
         extra-args: ['']
+        test-markers: ['not triton']
         os: [ubuntu, macos, windows]
         version-restrict: ['']
         torch: ['']
@@ -48,6 +49,7 @@ jobs:
           - python-version: '3.11'
             os: ubuntu
             extra-args: '--forked -m "not llvm"'
+            test-markers: 'not llvm and not triton'
 
           # --benchmark-enable run on macos python 3.11
           - python-version: '3.11'
@@ -58,26 +60,31 @@ jobs:
             # The latter works around a crash in pytest when collecting tests:
             # https://github.com/ionelmc/pytest-benchmark/issues/243
             extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
+            test-markers: 'benchmark and not triton'
 
           # fp32 run on linux python 3.12
           - python-version: '3.12'
             os: ubuntu
             extra-args: '--fp-precision=fp32'
+            test-markers: 'not triton'
 
           # code-coverage run on macos python 3.12
           - python-version: '3.12'
             os: macos
             extra-args: '--cov=psyneulink'
+            test-markers: 'not triton'
 
           # run without pytorch on windows python 3.12
           - python-version: '3.12'
             os: windows
             torch: 'notorch'
+            test-markers: 'not triton'
 
           # add python 3.10 with deps restricted to min supported package versions
           - python-version: '3.10'
             os: macos
             version-restrict: 'min'
+            test-markers: 'not triton'
 
         exclude:
           # Replaced with the min version run above
@@ -125,8 +132,8 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
 
     - name: Drop PyTorch requirement
       if: ${{ matrix.torch == 'notorch' }}
@@ -140,19 +147,14 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        # 'triton' installs upstream Triton on Linux and triton-windows on
-        # Windows, so the batched-compiler tests exercise both.  Its markers
-        # select nothing on macOS, where no wheels exist and those tests skip.
-        # Linux already got Triton transitively via torch; naming it here makes
-        # that explicit and version-bounded.
-        features: 'dev,triton'
+        features: 'dev'
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
       if: always()
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
 
     - name: Lint with Ruff
       shell: bash
@@ -204,7 +206,9 @@ jobs:
 
     - name: Test with pytest
       timeout-minutes: 180
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
+      # Keep the final -m authoritative for rows whose legacy extra-args also
+      # contain -m (the forked and benchmark jobs).
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }} -m "${{ matrix.test-markers }}"
 
     - name: Upload test results
       uses: actions/upload-artifact@v7
@@ -249,3 +253,65 @@ jobs:
       if: ${{ matrix.os == 'windows' }}
       run: |
         Get-Process;
+
+  batched-triton-interpreter:
+    name: Batched Triton interpreter (Linux, Python 3.12)
+    runs-on: ubuntu-latest
+    env:
+      TRITON_INTERPRET: '1'
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 200
+
+    - name: Checkout tags
+      run: git fetch --tags origin master
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+
+    - name: Get pip cache location
+      shell: bash
+      id: pip_cache
+      run: |
+        python -m pip install -U pip
+        python -m pip --version
+        echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a "$GITHUB_OUTPUT"
+
+    - name: Restore wheels cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
+        key: ${{ runner.os }}-python-3.12-triton-interpreter-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-3.12-triton-interpreter-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}
+
+    - name: Install PNL package with Triton
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'dev,triton'
+
+    - name: Save wheels cache
+      uses: actions/cache/save@v6
+      if: always()
+      with:
+        path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
+        key: ${{ runner.os }}-python-3.12-triton-interpreter-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'triton_requirements.txt') }}-${{ github.sha }}
+
+    - name: Test batched Triton interpreter backend
+      timeout-minutes: 60
+      run: >-
+        pytest --junit-xml=tests_out.xml --verbosity=0 -n logical
+        --capture=sys -o console_output_style=count
+        -m triton_interpreter
+        --require-batched-backend=triton_interpreter
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v7
+      if: success() || failure()
+      with:
+        name: test-results-triton-interpreter-linux-3.12
+        path: tests_out.xml
+        retention-days: 5
