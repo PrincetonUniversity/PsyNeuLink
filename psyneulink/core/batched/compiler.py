@@ -12,12 +12,15 @@ from psyneulink.core.batched.registry import analyze_composition
 
 
 class BatchedCompileError(RuntimeError):
-    pass
+    def __init__(self, message, *, capability_report=None):
+        super().__init__(message)
+        self.capability_report = capability_report
 
 
-# "triton_cpu" runs the generated kernels through Triton's interpreter on CPU (no
-# CUDA needed); "triton" compiles and runs them on the GPU.  Both execute the same
-# kernel source, so the CPU path is a true stand-in for the GPU path in testing.
+# "triton_cpu" runs generated kernels through Triton's interpreter on CPU (no
+# CUDA needed); "triton" compiles and runs them on the GPU.  The interpreter is
+# useful for semantic coverage, but real-GPU tests remain necessary for launch,
+# masking, device, and compiled-code behavior.
 _BACKEND_DEVICES = {"triton_cpu": "cpu", "triton": "cuda"}
 _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
@@ -43,10 +46,14 @@ class BatchedCompositionCompiler:
             outputs=outputs,
             max_steps=max_steps,
         )
-        if not report.is_supported or ir is None:
+        if not report.can_execute or ir is None:
+            blockers = report.execution_blockers or (
+                "compiler analysis did not produce an executable intermediate representation",
+            )
             raise BatchedCompileError(
                 "Composition cannot be compiled for batched simulation: "
-                + "; ".join(report.unsupported_reasons)
+                + "; ".join(blockers),
+                capability_report=report,
             )
 
         return BatchedSimulationPlan(

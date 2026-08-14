@@ -25,6 +25,7 @@ from psyneulink.core.batched.specs import (
 from psyneulink.core.batched.diagnostics import (
     BatchedCapabilityReport,
     BatchedDiagnostic,
+    BatchedDiagnosticCode,
 )
 from psyneulink.core.batched.likelihood import (
     histogram_likelihood,
@@ -50,6 +51,7 @@ __all__ = [
     "BatchedCompositionCompiler",
     "BatchedCompositionIR",
     "BatchedDiagnostic",
+    "BatchedDiagnosticCode",
     "BatchedGraphIR",
     "BatchedInputSpec",
     "BatchedNodeSpec",
