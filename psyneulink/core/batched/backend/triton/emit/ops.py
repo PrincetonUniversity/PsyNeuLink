@@ -247,8 +247,46 @@ class OpEmitMixin:
             self._emit_store_output(op)
         elif op.kind == "StoreFlag":
             self._emit_store_flag(op)
+        elif op.kind == "ForPasses":
+            self._emit_precomputed_passes(op)
+        elif op.kind == "ExecuteConsiderationSet":
+            self._emit_precomputed_consideration_set(op)
         else:
             raise ValueError(f"Unsupported Triton KernelIR op '{op.kind}'.")
+
+    def _emit_precomputed_passes(self, op: KernelOp) -> None:
+        if op.attrs.get("declaration_only") is not False:
+            raise ValueError(
+                "Cannot emit a declaration-only KernelIR ForPasses region."
+            )
+        if op.attrs.get("trace_kind") != "precomputed":
+            raise ValueError(
+                "Triton only emits typed precomputed KernelIR ForPasses regions."
+            )
+        for child in op.attrs["body"]:
+            if child.kind != "ExecuteConsiderationSet":
+                raise ValueError(
+                    "Executable KernelIR ForPasses contains a non-consideration-set "
+                    f"op '{child.kind}'."
+                )
+            self._emit_op(child)
+
+    def _emit_precomputed_consideration_set(self, op: KernelOp) -> None:
+        pass_index = op.attrs["pass_index"]
+        consideration_set_id = op.attrs["consideration_set_id"]
+        component_ids = op.attrs["component_ids"]
+        self.builder.line(
+            "# precomputed scheduler pass "
+            f"{pass_index}, consideration set {consideration_set_id}, "
+            f"components {component_ids}"
+        )
+        for child in op.attrs["body"]:
+            if child.kind in {"ForPasses", "ExecuteConsiderationSet"}:
+                raise ValueError(
+                    "Nested precomputed scheduler regions are unsupported in "
+                    "ExecuteConsiderationSet."
+                )
+            self._emit_op(child)
 
     def _emit_load_input(self, op: KernelOp) -> None:
         node_name = op.attrs["node"]

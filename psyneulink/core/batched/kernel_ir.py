@@ -8,6 +8,7 @@ from typing import Any
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
+    STATELESS_GRAPH_FUSION,
     projection_inputs,
 )
 from psyneulink.core.batched.ir import (
@@ -19,10 +20,13 @@ from psyneulink.core.batched.ir import (
     BatchedOutputSpec,
     BatchedParamSpec,
     BatchedResetSpec,
+    BatchedScheduleTraceSpec,
     BatchedScheduleRegionSpec,
     BatchedSchedulerSpec,
     BatchedStateSpec,
+    BatchedTerminationSpec,
 )
+from psyneulink.core.batched.schedule import plan_precomputed_schedule_trace
 from psyneulink.core.batched.specs import (
     BatchedOpSpecSnapshot,
     snapshot_batched_op_specs,
@@ -32,6 +36,10 @@ from psyneulink.core.batched.specs import (
 TRIAL_LANE_LAYOUT = "trial"
 STATEFUL_LANE_LAYOUT = "stateful"
 KernelConstant = Real | Iterable[Real]
+_DEFAULT_TRACE_COMPONENT_BUDGET = 4096
+_DEFAULT_TRACE_WEIGHTED_OP_BUDGET = 65536
+_TRACE_COMPONENT_BUDGET_KEY = "schedule_trace_component_budget"
+_TRACE_WEIGHTED_OP_BUDGET_KEY = "schedule_trace_weighted_op_budget"
 
 
 @dataclass(frozen=True)
@@ -99,6 +107,10 @@ class KernelOp:
             _validate_concatenate(self)
         elif self.kind == "ExtractSlice":
             _validate_extract_slice(self)
+        elif self.kind == "ForPasses":
+            _validate_for_passes(self)
+        elif self.kind == "ExecuteConsiderationSet":
+            _validate_execute_consideration_set(self)
 
 
 def add_constant_op(
@@ -247,6 +259,76 @@ def _validate_extract_slice(op: KernelOp) -> None:
         raise ValueError("KernelIR ExtractSlice input/output dtypes must match.")
 
 
+def _validate_for_passes(op: KernelOp) -> None:
+    if op.inputs or op.outputs:
+        raise ValueError("KernelIR ForPasses cannot have value inputs or outputs.")
+    declaration_only = op.attrs.get("declaration_only")
+    if type(declaration_only) is not bool:
+        raise ValueError(
+            "KernelIR ForPasses requires a typed declaration_only flag."
+        )
+    body = op.attrs.get("body")
+    if type(body) is not tuple or any(type(child) is not KernelOp for child in body):
+        raise ValueError("KernelIR ForPasses body must be a tuple of KernelOps.")
+    if declaration_only:
+        return
+    if op.attrs.get("trace_kind") != "precomputed":
+        raise ValueError(
+            "Executable KernelIR ForPasses requires trace_kind='precomputed'."
+        )
+    if not body or any(child.kind != "ExecuteConsiderationSet" for child in body):
+        raise ValueError(
+            "Executable KernelIR ForPasses must contain only nonempty "
+            "ExecuteConsiderationSet ops."
+        )
+
+
+def _validate_execute_consideration_set(op: KernelOp) -> None:
+    if op.inputs or op.outputs:
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet cannot have value inputs or outputs."
+        )
+    pass_index = op.attrs.get("pass_index")
+    consideration_set_id = op.attrs.get("consideration_set_id")
+    component_ids = op.attrs.get("component_ids")
+    body = op.attrs.get("body")
+    if type(pass_index) is not int or pass_index < 0:
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet pass_index must be a non-negative "
+            "non-bool integer."
+        )
+    if type(consideration_set_id) is not int or consideration_set_id < 0:
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet consideration_set_id must be a "
+            "non-negative non-bool integer."
+        )
+    if (
+        type(component_ids) is not tuple
+        or not component_ids
+        or any(type(component_id) is not int or component_id < 0 for component_id in component_ids)
+        or component_ids != tuple(sorted(set(component_ids)))
+    ):
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet component_ids must be a nonempty "
+            "tuple of unique, sorted, non-negative non-bool integers."
+        )
+    if type(body) is not tuple or not body or any(
+        type(child) is not KernelOp for child in body
+    ):
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet body must be a nonempty tuple of "
+            "KernelOps."
+        )
+    if any(
+        child.kind in {"ForPasses", "ExecuteConsiderationSet", "StoreOutput", "StoreFlag"}
+        for child in body
+    ):
+        raise ValueError(
+            "KernelIR ExecuteConsiderationSet body cannot contain nested schedule "
+            "regions or host-buffer stores."
+        )
+
+
 @dataclass(frozen=True)
 class KernelIR:
     """Backend-neutral batched execution plan.
@@ -278,6 +360,8 @@ class KernelIR:
     consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
+    termination: tuple[BatchedTerminationSpec, ...] = ()
+    schedule_trace: BatchedScheduleTraceSpec | None = None
 
 
 def lower_to_kernel_ir(
@@ -302,8 +386,43 @@ def lower_to_kernel_ir(
     lane_layout = _lane_layout_for(graph.fusion_kind)
     rng_streams = _rng_streams(graph)
     trial_ops = _trial_body_ops(graph)
+    schedule_trace = None
+    declaration_only_schedule = False
     scheduled_trial_ops = trial_ops
-    if _requires_pass_region(graph):
+    trace_requested = (
+        graph.metadata.get("schedule_kind") == "precomputed_trace"
+        and bool(graph.termination)
+    )
+    if (
+        _precomputed_trace_eligible(graph, lane_layout, rng_streams)
+        and trace_requested
+    ):
+        component_budget = _trace_budget(
+            graph,
+            _TRACE_COMPONENT_BUDGET_KEY,
+            _DEFAULT_TRACE_COMPONENT_BUDGET,
+        )
+        weighted_op_budget = _trace_budget(
+            graph,
+            _TRACE_WEIGHTED_OP_BUDGET_KEY,
+            _DEFAULT_TRACE_WEIGHTED_OP_BUDGET,
+        )
+        schedule_trace = plan_precomputed_schedule_trace(
+            scheduler=graph.scheduler,
+            consideration_sets=graph.consideration_sets,
+            termination=graph.termination,
+            expansion_budget=component_budget,
+            projections=graph.projections,
+        )
+        scheduled_trial_ops = _precomputed_trace_ops(
+            graph,
+            trial_ops,
+            schedule_trace,
+            component_budget=component_budget,
+            weighted_op_budget=weighted_op_budget,
+        )
+    elif trace_requested or _requires_pass_region(graph):
+        declaration_only_schedule = True
         pass_region = next(
             (
                 region
@@ -374,7 +493,7 @@ def lower_to_kernel_ir(
         max_steps=ir.max_steps,
         graph=graph,
         op_specs=op_specs,
-        executable=graph.executable,
+        executable=graph.executable and not declaration_only_schedule,
         metadata={
             "composition_name": ir.metadata.get("composition_name"),
             "fusion_kind": graph.fusion_kind,
@@ -385,7 +504,222 @@ def lower_to_kernel_ir(
         consideration_sets=graph.consideration_sets,
         finished_values=graph.finished_values,
         resets=graph.resets,
+        termination=graph.termination,
+        schedule_trace=schedule_trace,
     )
+
+
+def _trace_budget(graph: BatchedGraphIR, key: str, default: int) -> int:
+    value = graph.metadata.get(key, default)
+    if type(value) is not int or value <= 0:
+        raise ValueError(
+            f"KernelIR metadata '{key}' must be a positive non-bool integer."
+        )
+    return min(value, default)
+
+
+def _precomputed_trace_eligible(
+    graph: BatchedGraphIR,
+    lane_layout: KernelLaneLayout,
+    rng_streams: tuple[KernelRngStream, ...],
+) -> bool:
+    """Defensive boundary for the first executable trace tier.
+
+    Capability analysis remains the primary gate, but direct/public IR callers
+    can construct inconsistent records.  Do not turn one of those records into
+    executable nested bodies merely because its metadata requests a trace.
+    """
+
+    if (
+        not graph.executable
+        or graph.fusion_kind != STATELESS_GRAPH_FUSION
+        or lane_layout.kind != TRIAL_LANE_LAYOUT
+        or graph.states
+        or rng_streams
+        or graph.resets
+        or graph.finished_values
+    ):
+        return False
+
+    try:
+        node_ids = tuple(_component_id(graph, node) for node in graph.nodes)
+        execution_ids = tuple(
+            _component_id(graph, graph.node(node_name))
+            for node_name in graph.execution_order
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+    scheduler_ids = tuple(condition.component_id for condition in graph.scheduler)
+    consideration_ids = tuple(
+        component_id
+        for consideration_set in graph.consideration_sets
+        for component_id in consideration_set.component_ids
+    )
+    expected_ids = tuple(sorted(node_ids))
+    return (
+        len(set(node_ids)) == len(node_ids)
+        and tuple(sorted(execution_ids)) == expected_ids
+        and tuple(sorted(scheduler_ids)) == expected_ids
+        and tuple(sorted(consideration_ids)) == expected_ids
+        and all(
+            node.attrs.get("spec_kind") in {"elementwise", "mechanism"}
+            and not node.attrs.get("diagnostics")
+            for node in graph.nodes
+        )
+    )
+
+
+def _precomputed_trace_ops(
+    graph: BatchedGraphIR,
+    trial_ops: tuple[KernelOp, ...],
+    trace: BatchedScheduleTraceSpec,
+    *,
+    component_budget: int,
+    weighted_op_budget: int,
+) -> tuple[KernelOp, ...]:
+    component_bodies, epilogue = _partition_trace_trial_ops(graph, trial_ops)
+    component_weights = {
+        component_id: sum(_kernel_op_source_weight(op) for op in body)
+        for component_id, body in component_bodies.items()
+    }
+
+    # Compute the source-expansion proxy before constructing repeated nested
+    # bodies.  The component planner bounds scheduler work; this second bound
+    # accounts for wide and projection-heavy component bodies whose emitted
+    # Triton source can be much larger than their component count suggests.
+    weighted_expansion = 1 + sum(
+        _kernel_op_source_weight(op) for op in epilogue
+    )
+    for step in trace.steps:
+        weighted_expansion += 1
+        for component_id in step.component_ids:
+            try:
+                weighted_expansion += component_weights[component_id]
+            except KeyError as error:
+                raise ValueError(
+                    "KernelIR precomputed trace references component id "
+                    f"{component_id}, which has no lowered component body."
+                ) from error
+    if weighted_expansion > weighted_op_budget:
+        raise ValueError(
+            "KernelIR precomputed trace weighted op expansion "
+            f"{weighted_expansion} exceeds budget {weighted_op_budget}."
+        )
+
+    executions = tuple(
+        KernelOp(
+            kind="ExecuteConsiderationSet",
+            target=(
+                f"pass-{step.pass_index}:consideration-set-"
+                f"{step.consideration_set_id}"
+            ),
+            attrs={
+                "pass_index": step.pass_index,
+                "consideration_set_id": step.consideration_set_id,
+                "component_ids": step.component_ids,
+                "body": tuple(
+                    op
+                    for component_id in step.component_ids
+                    for op in component_bodies[component_id]
+                ),
+            },
+        )
+        for step in trace.steps
+    )
+    pass_regions = tuple(
+        region for region in graph.schedule_regions if region.kind == "pass"
+    )
+    if len(pass_regions) != 1:
+        raise ValueError(
+            "KernelIR precomputed trace requires exactly one typed pass region, "
+            f"found {len(pass_regions)}."
+        )
+    pass_region = pass_regions[0]
+    return (
+        KernelOp(
+            kind="ForPasses",
+            target="passes",
+            attrs={
+                "region": pass_region,
+                "body": executions,
+                "declaration_only": False,
+                "trace_kind": "precomputed",
+                "component_expansion_budget": component_budget,
+                "weighted_op_expansion": weighted_expansion,
+                "weighted_op_expansion_budget": weighted_op_budget,
+            },
+        ),
+        *epilogue,
+    )
+
+
+def _partition_trace_trial_ops(
+    graph: BatchedGraphIR,
+    trial_ops: tuple[KernelOp, ...],
+):
+    component_bodies = {
+        _component_id(graph, node): []
+        for node in graph.nodes
+    }
+    epilogue = []
+    for op in trial_ops:
+        if op.kind in {"StoreOutput", "StoreFlag"}:
+            epilogue.append(op)
+            continue
+        try:
+            node = graph.node(op.target)
+        except KeyError as error:
+            raise ValueError(
+                "KernelIR cannot assign op "
+                f"'{op.kind}' target '{op.target}' to a component body."
+            ) from error
+        component_id = _component_id(graph, node)
+        component_bodies[component_id].append(_trace_component_op(op))
+
+    empty = tuple(
+        sorted(
+            component_id
+            for component_id, body in component_bodies.items()
+            if not body
+        )
+    )
+    if empty:
+        raise ValueError(
+            "KernelIR precomputed trace has no lowered body for component id(s) "
+            f"{empty}."
+        )
+    return (
+        {component_id: tuple(body) for component_id, body in component_bodies.items()},
+        tuple(epilogue),
+    )
+
+
+def _trace_component_op(op: KernelOp) -> KernelOp:
+    if op.kind != "CallFunction" or "onset_step" not in op.attrs:
+        return op
+    return KernelOp(
+        kind=op.kind,
+        target=op.target,
+        inputs=op.inputs,
+        outputs=op.outputs,
+        attrs={
+            key: value
+            for key, value in op.attrs.items()
+            if key != "onset_step"
+        },
+    )
+
+
+def _kernel_op_source_weight(op: KernelOp) -> int:
+    input_width = sum(value.width for value in op.inputs)
+    output_width = sum(value.width for value in op.outputs)
+    if op.kind == "CallProjection" and op.inputs and op.outputs:
+        work = op.inputs[0].width * op.outputs[0].width
+    elif op.kind in {"CombineSum", "CombineProduct"} and op.outputs:
+        work = len(op.inputs) * op.outputs[0].width
+    else:
+        work = max(input_width, output_width)
+    return 1 + max(1, work)
 
 
 def _requires_pass_region(graph: BatchedGraphIR) -> bool:
