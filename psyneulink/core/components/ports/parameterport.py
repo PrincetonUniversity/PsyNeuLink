@@ -456,15 +456,18 @@ class ParameterPortList(ContentAddressableList):
 
         try:
             return super().__getitem__(key)
-        except TypeError as e:
-            # ContentAddressableList throws TypeError when key/index lookup fails
+        except TypeError:
+            # this situation happens when collecting parameter ports in _gen_llvm_param_ports_for_obj
+            raise
+        except KeyError as e:
             names = self._get_possible_port_names(key)
             possible_ports = set()
             for name in names:
                 try:
                     r = super().__getitem__(name)
                     possible_ports.add(r)
-                except TypeError:
+                except (KeyError, TypeError):
+                    # ContentAddressableList can also throw TypeError when key/index lookup fails
                     pass
             if len(possible_ports) == 0:
                 raise e from None
