@@ -1502,14 +1502,14 @@ class ContentAddressableList(UserList):
 
     def __getitem__(self, key):
         if key is None:
-            raise KeyError(f"None is not a legal key for '{self.name}'.")
+            raise TypeError(f"None is not a legal key for '{self.name}'.")
         try:
             return self.data[key]
-        except TypeError:
+        except TypeError as e:
             key_num = self._get_key_for_item(key)
             if key_num is None:
                 # raise TypeError(f"'{key}' is not a key in {self.name}.")
-                raise TypeError(f"'{key}' is not in {self.name}.")
+                raise KeyError(f"'{key}' is not in {self.name}.") from e
             return self.data[key_num]
 
     def __setitem__(self, key, value):
@@ -1545,7 +1545,7 @@ class ContentAddressableList(UserList):
             try:
                 self.__getitem__(item)
                 return True
-            except (KeyError, TypeError, UtilitiesError, ValueError):
+            except (KeyError, TypeError, ValueError):
                 return False
 
     def _get_key_for_item(self, key):
@@ -1558,7 +1558,7 @@ class ContentAddressableList(UserList):
         elif isinstance(key, self.component_type):
             return self.data.index(key)
         else:
-            raise UtilitiesError(
+            raise TypeError(
                 "{} is not a legal key for {} (must be {})".format(
                     key,
                     self.key,
