@@ -2574,7 +2574,16 @@ def _scheduler_conditions(composition):
     scheduler = getattr(composition, "scheduler", None)
     if scheduler is None:
         return {}
-    condition_set = getattr(scheduler, "conditions", None)
+    # ``Scheduler.run`` materializes graph-scheduler's implicit defaults into
+    # ``scheduler.conditions``.  Those generated Always/EveryNCalls predicates
+    # are lowered independently from the dependency graph above; treating them
+    # as explicit conditions makes compiler support depend on whether the same
+    # Composition has already executed.  PsyNeuLink retains the user's actual
+    # condition set separately across scheduler rebuilds, so prefer that source
+    # and use the live set only for older/custom scheduler implementations.
+    condition_set = getattr(scheduler, "_user_specified_conds", None)
+    if condition_set is None:
+        condition_set = getattr(scheduler, "conditions", None)
     conditions_basic = getattr(condition_set, "conditions_basic", {})
     if not hasattr(conditions_basic, "items"):
         return {}
@@ -2585,7 +2594,9 @@ def _scheduler_structural_conditions(composition):
     scheduler = getattr(composition, "scheduler", None)
     if scheduler is None:
         return {}
-    condition_set = getattr(scheduler, "conditions", None)
+    condition_set = getattr(scheduler, "_user_specified_conds", None)
+    if condition_set is None:
+        condition_set = getattr(scheduler, "conditions", None)
     conditions_structural = getattr(condition_set, "conditions_structural", {})
     if not hasattr(conditions_structural, "items"):
         return {}

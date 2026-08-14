@@ -458,6 +458,30 @@ def test_implicit_multi_parent_condition_declares_all_dependency_call_counts():
     }
 
 
+def test_materialized_implicit_conditions_do_not_change_lowering():
+    source = pnl.TransferMechanism(input_shapes=1, name="implicit source")
+    target = pnl.TransferMechanism(input_shapes=1, name="implicit target")
+    composition = pnl.Composition(pathways=[[source, target]])
+
+    before = lower_composition(composition)
+    assert before.graph is not None
+    assert before.schedule_kind == "static_graph"
+    assert not before.rejected_conditions
+    before_scheduler = before.graph.scheduler
+
+    # graph-scheduler creates its implicit Always/EveryNCalls objects lazily.
+    # This is execution history, not a semantic change to the Composition.
+    list(composition.scheduler.run())
+    assert composition.scheduler.conditions.conditions_basic
+
+    after = lower_composition(composition)
+    assert after.graph is not None
+    assert after.schedule_kind == before.schedule_kind
+    assert not after.rejected_conditions
+    assert after.graph.scheduler == before_scheduler
+    assert after.graph.executable
+
+
 def _coevolving_model():
     stepper = pnl.LCAMechanism(
         input_shapes=2,
