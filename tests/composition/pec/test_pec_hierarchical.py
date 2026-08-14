@@ -29,6 +29,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
+    ParameterSchema,
     SubjectLikelihoodProvider,
     split_stacked_data,
 )
@@ -465,6 +466,14 @@ def test_split_rejects_unusable_data():
         split_stacked_data(pd.DataFrame({"subject": ["a", "a"], "rt": [0.1, 0.2]}), "subject")
 
 
+def test_split_rejects_trials_with_no_participant_identifier():
+    # A missing identifier matches no row, so such a trial would belong to no participant and
+    # leave the fit silently.
+    data = pd.DataFrame({"subject": ["a", "a", np.nan, "b"], "rt": [0.1, 0.2, 0.3, 0.4]})
+    with pytest.raises(ValueError, match="no participant identifier on 1 of 4 rows"):
+        split_stacked_data(data, "subject")
+
+
 def test_provider_reads_names_and_bounds_from_the_model():
     frames = split_stacked_data(_stacked_frame(), "subject").frames
     factory = lambda data, subject_index=None: (  # noqa: E731
@@ -551,6 +560,52 @@ def test_provider_rejects_models_that_disagree_about_the_parameters():
     provider.log_likelihood([0.0], 0)
     with pytest.raises(ValueError, match="must fit the same"):
         provider.log_likelihood([0.0], 1)
+
+
+def test_provider_keeps_full_names_when_stripping_them_would_collide():
+    # Two mechanisms fitting the same parameter both strip to "rate", which would leave one name
+    # for two parameters and lose one of them wherever results are keyed by name.
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    factory = lambda data, subject_index=None: (  # noqa: E731
+        _StubPEC(["left.rate", "right.rate"], [(-1.0, 1.0), (-2.0, 2.0)]), None
+    )
+    provider = PECFactorySubjectLikelihood(factory, frames)
+    assert provider.fit_param_names == ("left.rate", "right.rate")
+    assert len(set(provider.fit_param_names)) == 2
+
+
+def test_provider_holds_models_to_a_supplied_schema():
+    # The model the fit was configured on is authoritative; a factory that fits something else is
+    # rejected rather than quietly redefining what is being estimated.
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    schema = ParameterSchema.from_pec(
+        _StubPEC(["rate"], [(-1.5, 1.5)]), source="the model given to the fit"
+    )
+
+    factory = lambda data, subject_index=None: (  # noqa: E731
+        _StubPEC(["threshold"], [(10.0, 20.0)]), None
+    )
+    provider = PECFactorySubjectLikelihood(factory, frames, schema=schema)
+    assert provider.fit_param_names == ("rate",)
+    with pytest.raises(ValueError, match="the model given to the fit fits"):
+        provider.log_likelihood([0.0], 0)
+
+
+def test_provider_reports_a_supplied_schema_without_building_a_model():
+    # Nothing needs to be built to know what is being fitted, which is what lets a distributed
+    # fit build every model on a worker.
+    frames = split_stacked_data(_stacked_frame(), "subject").frames
+    schema = ParameterSchema.from_pec(
+        _StubPEC(["rate", "threshold"], [(-1.5, 1.5), (0.3, 1.5)]), source="the fit"
+    )
+
+    def factory(data, subject_index=None):
+        raise AssertionError("no model should be built here")
+
+    provider = PECFactorySubjectLikelihood(factory, frames, schema=schema)
+    assert provider.fit_param_names == ("rate", "threshold")
+    assert provider.n_params == 2
+    assert np.allclose(provider.bounds[0], [-1.5, 0.3])
 
 
 def test_driver_fits_through_the_provider_interface_alone():
@@ -658,11 +713,13 @@ def clear_subject_cache():
     distributedestep._SUBJECT_FALLBACK_CACHE.clear()
 
 
-def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, sigma=None):
+def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, sigma=None, schema=None):
     sigma = np.array([1.0]) if sigma is None else sigma
+    if schema is None:
+        schema = ParameterSchema.from_pec(_StubPEC(["rate"], [(-1.0, 1.0)]), source="the fit")
     return distributedestep._dask_subject_estep(
         factory, subject_index, data, np.zeros(1), sigma,
-        np.array([-1.0]), np.array([1.0]), np.zeros(1), worker_cores, fit_id, EStepConfig(),
+        schema, np.zeros(1), worker_cores, fit_id, EStepConfig(),
     )
 
 
@@ -745,6 +802,42 @@ def test_worker_returns_the_participant_index_and_posterior():
     assert address is None
 
 
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_holds_its_model_to_the_schema():
+    # The in-process runner checks each model as it builds it; a worker has to do the same, or a
+    # participant fitting different parameters would be handed theta in someone else's order.
+    frame = pd.DataFrame({"rt": [0.1]})
+    factory = lambda data, subject_index=None: (  # noqa: E731
+        _StubPEC(["threshold"], [(0.3, 1.5)]), None
+    )
+    with pytest.raises(ValueError, match="must fit the same"):
+        _dask_task(factory, 2, frame, "fit-a")
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_worker_checks_the_search_range_before_scoring():
+    frame = pd.DataFrame({"rt": [0.1]})
+    factory = lambda data, subject_index=None: (  # noqa: E731
+        _StubPEC(["rate"], [(-9.0, 9.0)]), None
+    )
+    with pytest.raises(ValueError, match="searches ranges"):
+        _dask_task(factory, 0, frame, "fit-a")
+
+
+@pytest.mark.usefixtures("clear_subject_cache")
+def test_releasing_a_fit_drops_only_that_fits_models():
+    # Workers on a cluster the user supplied outlive the fit, so its models have to go explicitly.
+    frame = pd.DataFrame({"rt": [0.1]})
+    factory = lambda data, subject_index=None: (_StubPEC(["rate"], [(-1.0, 1.0)]), None)  # noqa: E731
+    _dask_task(factory, 0, frame, "fit-a")
+    _dask_task(factory, 1, frame, "fit-a")
+    _dask_task(factory, 0, frame, "fit-b")
+    assert len(distributedestep._SUBJECT_FALLBACK_CACHE) == 3
+
+    distributedestep._release_fit_models("fit-a")
+    assert list(distributedestep._SUBJECT_FALLBACK_CACHE) == [("fit-b", 0)]
+
+
 # ===========================================================================
 # Configuring a hierarchical fit on ParameterEstimationComposition
 # ===========================================================================
@@ -824,6 +917,16 @@ def test_pec_rejects_out_of_range_hierarchical_options():
     ]:
         with pytest.raises(Exception, match=match):
             _build_group_pec(hierarchical_options=opts)
+
+
+@pytest.mark.composition
+def test_pec_rejects_a_likelihood_include_mask():
+    # The mask indexes the stacked table, but each participant is scored by its own model built
+    # from its own slice, so there is nowhere for it to be applied.
+    mask = np.ones(len(_group_frame()), dtype=bool)
+    mask[0] = False
+    with pytest.raises(Exception, match="likelihood_include_mask is not supported"):
+        _build_group_pec(likelihood_include_mask=mask)
 
 
 @pytest.mark.composition

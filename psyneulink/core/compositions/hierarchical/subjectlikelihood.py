@@ -35,6 +35,7 @@ from psyneulink.core.compositions.hierarchical.transforms import BoundedTransfor
 
 __all__ = [
     "PECFactorySubjectLikelihood",
+    "ParameterSchema",
     "SubjectLikelihoodProvider",
     "SubjectSplit",
     "split_stacked_data",
@@ -45,15 +46,72 @@ __all__ = [
 IN_PROCESS_SUBJECT_WARN_THRESHOLD = 32
 
 
-def _parameter_name(qualified_name):
-    """Strip the mechanism instance a parameter name is qualified by.
+def _comparable_names(qualified):
+    """Parameter names with the mechanism instance stripped, for comparing one model to another.
 
     A model reports its fitted parameters as ``<mechanism>.<parameter>``, and the mechanism part
-    carries a number assigned in construction order.  Since each participant's model is built
-    separately, the same parameter appears as ``DDM-6.rate`` for one participant and ``DDM-7.rate``
-    for the next.  The parameter itself is what identifies it across participants.
+    carries a number assigned in construction order.  Since every model here is built separately,
+    the same parameter appears as ``DDM-6.rate`` in one and ``DDM-7.rate`` in the next; only the
+    parameter itself identifies it across models.
     """
-    return qualified_name.rsplit(".", 1)[-1]
+    return tuple(name.rsplit(".", 1)[-1] for name in qualified)
+
+
+def _reported_names(qualified):
+    """Names to report results under.
+
+    Normally the mechanism instance is dropped, for the reason `_comparable_names` gives.  A model
+    that fits the same parameter on two mechanisms -- ``left.rate`` and ``right.rate`` -- would be
+    left with one name for two parameters, so in that case the full names are kept instead.
+    """
+    stripped = _comparable_names(qualified)
+    return stripped if len(set(stripped)) == len(stripped) else tuple(qualified)
+
+
+@dataclass(frozen=True)
+class ParameterSchema:
+    """The parameters a model fits and the ranges it searches them over.
+
+    Every model in a hierarchical fit must agree on this.  The group prior is defined in a space
+    derived from the search ranges, so ranges that differed between participants would silently mean
+    different things for different people, and parameters in a different order would be assigned each
+    other's values.
+    """
+
+    names: Tuple[str, ...]      # with the mechanism instance stripped; what comparisons use
+    reported: Tuple[str, ...]   # what results are labelled with
+    lower: Tuple[float, ...]
+    upper: Tuple[float, ...]
+    source: str                 # where this came from, for error messages
+
+    @classmethod
+    def from_pec(cls, pec, source):
+        """Read the schema off a built `ParameterEstimationComposition`."""
+        function = pec.controller.function
+        qualified = tuple(function.fit_param_names)
+        bound_map = function.fit_param_bounds
+        return cls(
+            names=_comparable_names(qualified),
+            reported=_reported_names(qualified),
+            lower=tuple(float(bound_map[n][0]) for n in qualified),
+            upper=tuple(float(bound_map[n][1]) for n in qualified),
+            source=source,
+        )
+
+    def check_matches(self, other):
+        """Raise unless `other` fits the same parameters, in the same order, over the same ranges."""
+        if other.names != self.names:
+            raise ValueError(
+                f"{other.source} fits {list(other.names)}, but {self.source} fits "
+                f"{list(self.names)}; every model in a hierarchical fit must fit the same "
+                f"parameters in the same order"
+            )
+        if not (np.allclose(other.lower, self.lower) and np.allclose(other.upper, self.upper)):
+            raise ValueError(
+                f"{other.source} searches ranges {list(zip(other.lower, other.upper))}, but "
+                f"{self.source} searches {list(zip(self.lower, self.upper))}; the group prior is "
+                f"defined in terms of these ranges, so they must agree"
+            )
 
 
 class SubjectLikelihoodProvider:
@@ -122,6 +180,15 @@ def split_stacked_data(data, subject_id):
             f"available columns are {list(data.columns)}"
         )
 
+    # A missing identifier cannot be matched to itself, so such a trial would belong to no
+    # participant and be dropped from the fit without saying so.
+    n_missing = int(data[subject_id].isna().sum())
+    if n_missing:
+        raise ValueError(
+            f"column '{subject_id}' has no participant identifier on {n_missing} of "
+            f"{len(data)} rows; every trial must say who produced it"
+        )
+
     column = data[subject_id].to_numpy()
     labels = tuple(pd.unique(data[subject_id]))
     if len(labels) < 2:
@@ -157,27 +224,24 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
     data_slices : sequence of pandas.DataFrame
         One participant's trials each, in participant order.  Normally `SubjectSplit.frames`.
 
+    schema : ParameterSchema : default None
+        What every participant's model is required to fit, normally read off the composition the
+        user configured the fit on.  When omitted the first participant's model defines it.
+
     Notes
     -----
 
     Every participant's model must fit the same parameters, in the same order, over the same ranges.
     The group prior is defined in a space derived from those ranges, so ranges that differ between
     participants would silently mean different things for different people.  This is checked, not
-    assumed.
-
-    Models are compared by parameter name and bounds, but the comparison ignores the mechanism
-    instance each name is qualified by.  A factory builds a fresh model per participant, so the same
-    parameter is reported as ``DDM-6.rate`` for one and ``DDM-7.rate`` for the next; the instance
-    number is an artefact of construction order and carries no meaning here.
+    assumed; see `ParameterSchema`.
     """
 
-    def __init__(self, pec_factory, data_slices):
+    def __init__(self, pec_factory, data_slices, schema=None):
         self._factory = pec_factory
         self._data_slices = list(data_slices)
         self._cache = {}
-        self._fit_param_names = None
-        self._lower = None
-        self._upper = None
+        self._schema = schema
 
         if self.n_subjects > IN_PROCESS_SUBJECT_WARN_THRESHOLD:
             warnings.warn(
@@ -196,18 +260,22 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         return len(self.fit_param_names)
 
     @property
+    def schema(self):
+        """What every participant's model fits, and over what ranges."""
+        if self._schema is None:
+            self._build(0)
+        return self._schema
+
+    @property
     def fit_param_names(self):
         """Names of the fitted parameters, in the order the model reports them."""
-        if self._fit_param_names is None:
-            self._build(0)
-        return self._fit_param_names
+        return self.schema.reported
 
     @property
     def bounds(self):
         """``(lower, upper)`` arrays of the search range, in `fit_param_names` order."""
-        if self._lower is None:
-            self._build(0)
-        return self._lower, self._upper
+        schema = self.schema
+        return np.asarray(schema.lower, dtype=float), np.asarray(schema.upper, dtype=float)
 
     @property
     def transform(self):
@@ -216,34 +284,18 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         return BoundedTransform(lower=lower, upper=upper)
 
     def _build(self, subject_index):
-        """Build and cache one participant's model, checking it against the first one built."""
+        """Build and cache one participant's model, checking what it fits against the schema."""
         if subject_index in self._cache:
             return self._cache[subject_index]
 
         pec, inputs = self._factory(self._data_slices[subject_index], subject_index)
-        function = pec.controller.function
-        qualified = tuple(function.fit_param_names)
-        names = tuple(_parameter_name(n) for n in qualified)
-        bound_map = function.fit_param_bounds
-        lower = np.array([bound_map[n][0] for n in qualified], dtype=float)
-        upper = np.array([bound_map[n][1] for n in qualified], dtype=float)
-
-        if self._fit_param_names is None:
-            self._fit_param_names, self._lower, self._upper = names, lower, upper
+        schema = ParameterSchema.from_pec(
+            pec, source=f"the model built for participant {subject_index}"
+        )
+        if self._schema is None:
+            self._schema = schema
         else:
-            if names != self._fit_param_names:
-                raise ValueError(
-                    f"participant {subject_index} fits {list(names)}, but participant 0 fits "
-                    f"{list(self._fit_param_names)}; every participant must fit the same "
-                    f"parameters in the same order"
-                )
-            if not (np.allclose(lower, self._lower) and np.allclose(upper, self._upper)):
-                raise ValueError(
-                    f"participant {subject_index} searches ranges "
-                    f"{list(zip(lower, upper))}, but participant 0 searches "
-                    f"{list(zip(self._lower, self._upper))}; the group prior is defined in terms "
-                    f"of these ranges, so they must agree across participants"
-                )
+            self._schema.check_matches(schema)
 
         self._cache[subject_index] = (pec, inputs)
         return self._cache[subject_index]

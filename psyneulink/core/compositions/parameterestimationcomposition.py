@@ -688,7 +688,7 @@ class ParameterEstimationComposition(Composition):
         self.hierarchical_data = None
         self.fit_results = None
         if fit_method == "hierarchical":
-            self._setup_hierarchical()
+            self._setup_hierarchical(likelihood_include_mask)
 
         if not isinstance(self.nodes[0], Composition):
             raise ValueError(
@@ -802,7 +802,7 @@ class ParameterEstimationComposition(Composition):
         "estep_options": None,
     }
 
-    def _setup_hierarchical(self):
+    def _setup_hierarchical(self, likelihood_include_mask):
         """Divide the data by participant and check the fit was configured coherently."""
         from psyneulink.core.compositions.hierarchical.subjectlikelihood import split_stacked_data
 
@@ -842,6 +842,13 @@ class ParameterEstimationComposition(Composition):
                 "participant-level random effects would expand into a combination this release does "
                 "not model"
             )
+        if likelihood_include_mask is not None:
+            raise ParameterEstimationCompositionError(
+                "likelihood_include_mask is not supported with hierarchical fitting: each "
+                "participant's data is scored by its own model, built by the factory, which is "
+                "where a per-participant mask would have to be applied. Drop the rows you want "
+                "excluded from `data` instead."
+            )
 
         # split_stacked_data raises if the column is missing or holds fewer than two participants.
         self._subject_split = split_stacked_data(self.data, subject_id)
@@ -873,14 +880,20 @@ class ParameterEstimationComposition(Composition):
         )
         from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
             PECFactorySubjectLikelihood,
+            ParameterSchema,
         )
 
         options = self._hierarchical_options
+        # The model this composition was given declares what is fitted and over what range; every
+        # participant's model is held to it. Taking the first participant's model as authoritative
+        # instead would let a factory quietly fit something other than what was asked for.
+        schema = ParameterSchema.from_pec(
+            self, source="the model given to ParameterEstimationComposition"
+        )
         # Participants are fitted independently within an iteration, so `distributed` sends one
-        # per task; the group update stays here either way. The provider is built regardless,
-        # since the parameter names and search range come from a participant's model.
+        # per task; the group update stays here either way.
         provider = PECFactorySubjectLikelihood(
-            self._resolve_pec_factory(), self._subject_split.frames
+            self._resolve_pec_factory(), self._subject_split.frames, schema=schema
         )
         config = EStepConfig(
             method=options["estep_method"],
@@ -906,22 +919,26 @@ class ParameterEstimationComposition(Composition):
             )
 
             client, close_client = _dask_client(self._pec_distributed_options)
+            runner = make_distributed_estep_runner(
+                client,
+                self._resolve_pec_factory(),
+                self._subject_split.frames,
+                schema,
+                config=config,
+                worker_cores=_resolve_worker_cores(self._pec_distributed_options),
+                fit_id=self._pec_distributed_options.get("fit_id"),
+            )
             try:
-                runner = make_distributed_estep_runner(
-                    client,
-                    self._resolve_pec_factory(),
-                    self._subject_split.frames,
-                    provider.bounds,
-                    config=config,
-                    worker_cores=_resolve_worker_cores(self._pec_distributed_options),
-                    fit_id=self._pec_distributed_options.get("fit_id"),
-                )
                 em = fit_laplace_em(
                     runner, provider.n_subjects, provider.n_params, **fit_kwargs
                 )
             finally:
+                # A cluster this fit created goes away with its models. One the user supplied
+                # outlives the fit, so the models it built have to be dropped explicitly.
                 if close_client is not None:
                     close_client()
+                else:
+                    runner.release()
         else:
             runner = make_inprocess_estep_runner(provider.log_likelihood, transform, config)
             em = fit_laplace_em(runner, provider.n_subjects, provider.n_params, **fit_kwargs)
