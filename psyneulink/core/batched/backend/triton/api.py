@@ -130,7 +130,8 @@ def pnl_triton_op(
     except other helper templates passed via ``helpers``, which the body may
     call by their Python name (the emitter emits those device functions ahead of
     this one). This lets a shared recurrence live in one ``@triton.jit`` helper
-    called by both a run-to-completion loop and a single-step path.
+    called by both a run-to-completion loop and a single-step path. Undefined
+    names other than ``tl`` and those declared helpers are rejected immediately.
     """
 
     def decorate(func):
@@ -151,21 +152,6 @@ def _template_from_function(
     if func.__closure__:
         raise TritonOpError(f"Triton op helper '{func.__name__}' cannot close over values.")
 
-    allowed_globals = _ALLOWED_TEMPLATE_GLOBALS | {helper.name for helper in helpers}
-    closure_vars = inspect.getclosurevars(func)
-    unsupported_globals = sorted(
-        global_name
-        for global_name in closure_vars.globals
-        if global_name not in allowed_globals
-    )
-    if closure_vars.nonlocals or unsupported_globals:
-        details = ", ".join(
-            sorted(closure_vars.nonlocals) + unsupported_globals
-        )
-        raise TritonOpError(
-            f"Triton op helper '{func.__name__}' uses unsupported free variables: {details}."
-        )
-
     try:
         source = textwrap.dedent(inspect.getsource(func))
     except (OSError, TypeError) as error:
@@ -175,6 +161,38 @@ def _template_from_function(
 
     module = ast.parse(source)
     function_def = _single_function_def(module, func.__name__)
+
+    allowed_globals = _ALLOWED_TEMPLATE_GLOBALS | {helper.name for helper in helpers}
+    closure_vars = inspect.getclosurevars(func)
+    unsupported_globals = sorted(
+        global_name
+        for global_name in closure_vars.globals
+        if global_name not in allowed_globals
+    )
+    # Python 3.13 reports attribute names (e.g. ``exp`` in ``tl.exp``) in
+    # ``unbound`` as well as the actual unresolved root (``tl``). Intersect
+    # with AST Name loads to distinguish valid attributes from misspelled
+    # globals or undeclared helper calls.
+    loaded_names = {
+        node.id
+        for node in ast.walk(function_def)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+    }
+    unsupported_unbound = sorted(
+        name
+        for name in closure_vars.unbound & loaded_names
+        if name not in allowed_globals
+    )
+    if closure_vars.nonlocals or unsupported_globals or unsupported_unbound:
+        details = ", ".join(
+            sorted(closure_vars.nonlocals)
+            + unsupported_globals
+            + unsupported_unbound
+        )
+        raise TritonOpError(
+            f"Triton op helper '{func.__name__}' uses unsupported free variables: {details}."
+        )
+
     arg_names = tuple(arg.arg for arg in function_def.args.args)
     missing_constexpr = tuple(arg for arg in constexpr if arg not in arg_names)
     if missing_constexpr:

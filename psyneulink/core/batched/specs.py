@@ -474,7 +474,12 @@ def batched_op(
         if _is_pnl_function_class(component_class):
             if constexpr:
                 raise BatchedOpSpecError("Elementwise batched ops do not take constexpr arguments.")
-            _register_function_op(component_class, body, bind or {})
+            _register_function_op(
+                component_class,
+                body,
+                bind or {},
+                helpers=tuple(helpers),
+            )
         else:
             _register_mechanism_op(
                 component_class,
@@ -581,7 +586,7 @@ def _safe_ident(name: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in name)
 
 
-def _register_function_op(function_class, body, bind):
+def _register_function_op(function_class, body, bind, *, helpers=()):
     arg_names = _signature_args(body)
     if not arg_names or arg_names[0] != INPUT_ARG:
         raise BatchedOpSpecError(
@@ -601,6 +606,7 @@ def _register_function_op(function_class, body, bind):
     )
     template = pnl_triton_op(
         name=f"_pnl_triton_{function_class.__name__.lower()}",
+        helpers=helpers,
     )(body)
     register_batched_op(
         ElementwiseFunctionSpec(
