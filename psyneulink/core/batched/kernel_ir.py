@@ -90,6 +90,10 @@ class KernelOp:
         elif self.kind == "Clamp":
             _validate_constant_elementwise_op(self, ("lower", "upper"))
             _validate_clamp_bounds(self)
+        elif self.kind == "Concatenate":
+            _validate_concatenate(self)
+        elif self.kind == "ExtractSlice":
+            _validate_extract_slice(self)
 
 
 def add_constant_op(
@@ -202,6 +206,40 @@ def _validate_clamp_bounds(op: KernelOp) -> None:
                 "KernelIR Clamp lower bound exceeds upper bound at component "
                 f"{index}: {component_lower} > {component_upper}."
             )
+
+
+def _validate_concatenate(op: KernelOp) -> None:
+    if not op.inputs or len(op.outputs) != 1:
+        raise ValueError(
+            "KernelIR Concatenate requires at least one input and exactly one output."
+        )
+    output = op.outputs[0]
+    if sum(value.width for value in op.inputs) != output.width:
+        raise ValueError(
+            "KernelIR Concatenate input widths must sum to its output width."
+        )
+    if any(value.dtype != output.dtype for value in op.inputs):
+        raise ValueError("KernelIR Concatenate input/output dtypes must match.")
+
+
+def _validate_extract_slice(op: KernelOp) -> None:
+    if len(op.inputs) != 1 or len(op.outputs) != 1:
+        raise ValueError(
+            "KernelIR ExtractSlice requires exactly one input and one output."
+        )
+    start = int(op.attrs.get("start", -1))
+    stop = int(op.attrs.get("stop", -1))
+    if start < 0 or stop < start or stop > op.inputs[0].width:
+        raise ValueError(
+            f"KernelIR ExtractSlice has invalid bounds [{start}:{stop}] for "
+            f"input width {op.inputs[0].width}."
+        )
+    if stop - start != op.outputs[0].width:
+        raise ValueError(
+            "KernelIR ExtractSlice bounds must match its output width."
+        )
+    if op.inputs[0].dtype != op.outputs[0].dtype:
+        raise ValueError("KernelIR ExtractSlice input/output dtypes must match.")
 
 
 @dataclass(frozen=True)
@@ -406,6 +444,72 @@ def node_input_value_name(graph: BatchedGraphIR, node_or_name) -> str:
     return f"{component_symbol(graph, node_or_name)}:input"
 
 
+def _node_input_port_layout(graph: BatchedGraphIR, node):
+    """Per-port semantic layout with a legacy fallback for direct IR callers."""
+
+    layout = tuple(node.attrs.get("input_ports", ()))
+    if layout:
+        return layout
+
+    input_spec = next(
+        (
+            candidate
+            for candidate in graph.inputs
+            if candidate.component_id == node.component_id
+            or candidate.node == node.name
+        ),
+        None,
+    )
+    projection = next(
+        (
+            candidate
+            for candidate in graph.projections
+            if candidate.receiver_component_id == node.component_id
+            or candidate.receiver == node.name
+        ),
+        None,
+    )
+    port_name = (
+        input_spec.port
+        if input_spec is not None and input_spec.port
+        else projection.receiver_port
+        if projection is not None
+        else "InputPort-0"
+    )
+    port_id = (
+        input_spec.port_id
+        if input_spec is not None
+        else projection.receiver_port_id
+        if projection is not None
+        else -1
+    )
+    return ((port_name, node.input_width, node.combine, port_id, 0, node.input_width),)
+
+
+def _input_spec_for_port(graph: BatchedGraphIR, node, port_id: int):
+    matches = tuple(
+        input_spec
+        for input_spec in graph.inputs
+        if (
+            port_id >= 0
+            and input_spec.port_id == port_id
+        )
+        or (
+            port_id < 0
+            and (
+                input_spec.component_id == node.component_id
+                or input_spec.node == node.name
+            )
+        )
+    )
+    if len(matches) != 1:
+        raise ValueError(
+            f"Batched node '{node.name}' InputPort id {port_id} requires exactly "
+            f"one external input spec, found {len(matches)}."
+        )
+    return matches[0]
+
+
 def node_output_value_name(graph: BatchedGraphIR, node_or_name, port: str) -> str:
     node = graph.node(node_or_name) if isinstance(node_or_name, str) else node_or_name
     output_ports = tuple(name for name, _ in node.attrs.get("op_outputs", ()))
@@ -454,86 +558,148 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
     for node_name in graph.execution_order:
         node = graph.node(node_name)
         node_input = KernelValue(node_input_value_name(graph, node), node.input_width)
-        projections = projection_inputs(graph, node.name)
-        if projections:
-            projected_values = []
-            for idx, projection in enumerate(projections):
-                projected = KernelValue(
-                    f"{component_symbol(graph, node)}:projection:{idx}",
-                    projection.matrix.shape[1],
+        input_ports = _node_input_port_layout(graph, node)
+        port_values = []
+        for port_slot, (
+            port_name,
+            port_width,
+            combine,
+            port_id,
+            flat_start,
+            flat_stop,
+        ) in enumerate(input_ports):
+            port_value = (
+                node_input
+                if len(input_ports) == 1
+                else KernelValue(
+                    f"{component_symbol(graph, node)}:input-port:{port_slot}",
+                    port_width,
                 )
-                projected_values.append(projected)
+            )
+            port_values.append(port_value)
+            projections = projection_inputs(
+                graph,
+                node.name,
+                receiver_port_id=port_id,
+            )
+            if projections:
+                projected_values = []
+                for projection in projections:
+                    projected = KernelValue(
+                        f"{component_symbol(graph, node)}:projection:"
+                        f"{projection.projection_id}",
+                        projection.matrix.shape[1],
+                    )
+                    if projected.width != port_width:
+                        raise ValueError(
+                            f"Batched projection into '{node.name}.{port_name}' has "
+                            f"width {projected.width}, expected {port_width}."
+                        )
+                    projected_values.append(projected)
+                    ops.append(
+                        KernelOp(
+                            kind="CallProjection",
+                            target=projection.receiver,
+                            inputs=(
+                                KernelValue(
+                                    node_output_value_name(
+                                        graph,
+                                        projection.sender,
+                                        projection.sender_port,
+                                    ),
+                                    projection.matrix.shape[0],
+                                ),
+                            ),
+                            outputs=(projected,),
+                            attrs={
+                                "sender": projection.sender,
+                                "sender_port": projection.sender_port,
+                                "receiver": projection.receiver,
+                                "receiver_port": projection.receiver_port,
+                                "projection_id": projection.projection_id,
+                                "sender_component_id": projection.sender_component_id,
+                                "sender_port_id": projection.sender_port_id,
+                                "receiver_component_id": projection.receiver_component_id,
+                                "receiver_port_id": projection.receiver_port_id,
+                                "matrix": projection.matrix,
+                                "projection_type": "MappingProjection",
+                                "spec_key": projection.spec_key,
+                            },
+                        )
+                    )
                 ops.append(
                     KernelOp(
-                        kind="CallProjection",
-                        target=projection.receiver,
-                        inputs=(
-                            KernelValue(
-                                node_output_value_name(
-                                    graph,
-                                    projection.sender,
-                                    projection.sender_port,
-                                ),
-                                projection.matrix.shape[0],
-                            ),
+                        kind=(
+                            "CombineProduct"
+                            if combine == "product"
+                            else "CombineSum"
                         ),
-                        outputs=(projected,),
+                        target=node.name,
+                        inputs=tuple(projected_values),
+                        outputs=(port_value,),
                         attrs={
-                            "sender": projection.sender,
-                            "sender_port": projection.sender_port,
-                            "receiver": projection.receiver,
-                            "receiver_port": projection.receiver_port,
-                            "projection_id": projection.projection_id,
-                            "sender_component_id": projection.sender_component_id,
-                            "sender_port_id": projection.sender_port_id,
-                            "receiver_component_id": projection.receiver_component_id,
-                            "receiver_port_id": projection.receiver_port_id,
-                            "matrix": projection.matrix,
-                            "projection_type": "MappingProjection",
-                            "spec_key": projection.spec_key,
+                            "component_id": node.component_id,
+                            "receiver_port": port_name,
+                            "receiver_port_id": port_id,
+                            "flat_start": flat_start,
+                            "flat_stop": flat_stop,
                         },
                     )
                 )
-            ops.append(
-                KernelOp(
-                    kind="CombineProduct" if node.combine == "product" else "CombineSum",
-                    target=node.name,
-                    inputs=tuple(projected_values),
-                    outputs=(node_input,),
-                    attrs={"component_id": node.component_id},
+            else:
+                input_spec = _input_spec_for_port(graph, node, port_id)
+                ops.append(
+                    KernelOp(
+                        kind="LoadInput",
+                        target=node.name,
+                        outputs=(port_value,),
+                        attrs={
+                            "node": node.name,
+                            "input_name": input_spec.name,
+                            "width": port_width,
+                            "component_id": node.component_id,
+                            "port": port_name,
+                            "port_id": port_id,
+                            "flat_start": flat_start,
+                            "flat_stop": flat_stop,
+                        },
+                    )
                 )
-            )
-        else:
+
+        if len(port_values) > 1:
             ops.append(
                 KernelOp(
-                    kind="LoadInput",
+                    kind="Concatenate",
                     target=node.name,
+                    inputs=tuple(port_values),
                     outputs=(node_input,),
                     attrs={
-                        "node": node.name,
-                        "width": node.input_width,
                         "component_id": node.component_id,
-                        "port_id": next(
-                            (
-                                input_spec.port_id
-                                for input_spec in graph.inputs
-                                if (
-                                    input_spec.component_id == node.component_id
-                                    or input_spec.node == node.name
-                                )
-                            ),
-                            -1,
-                        ),
+                        "port_ids": tuple(port[3] for port in input_ports),
+                        "ports": tuple(port[0] for port in input_ports),
                     },
                 )
             )
 
         spec_kind = node.attrs.get("spec_kind")
         if spec_kind == "elementwise":
-            output_port = _primary_output_port_name(node)
-            output_value = KernelValue(
-                node_output_value_name(graph, node, output_port),
-                node.output_width,
+            output_port_slices = _node_output_port_slices(node)
+            output_port = output_port_slices[0][0]
+            needs_port_extracts = not (
+                len(output_port_slices) == 1
+                and output_port_slices[0][3] == 0
+                and output_port_slices[0][4] == node.output_width
+            )
+            output_value = (
+                KernelValue(
+                    f"{component_symbol(graph, node)}:mechanism-value",
+                    node.output_width,
+                )
+                if needs_port_extracts
+                else KernelValue(
+                    node_output_value_name(graph, node, output_port),
+                    node.output_width,
+                )
             )
             function_input = node_input
             if "noise" in node.attrs:
@@ -590,6 +756,34 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                         upper=upper,
                     )
                 )
+            if needs_port_extracts:
+                for (
+                    port_name,
+                    port_width,
+                    port_id,
+                    flat_start,
+                    flat_stop,
+                ) in output_port_slices:
+                    ops.append(
+                        KernelOp(
+                            kind="ExtractSlice",
+                            target=node.name,
+                            inputs=(output_value,),
+                            outputs=(
+                                KernelValue(
+                                    node_output_value_name(graph, node, port_name),
+                                    port_width,
+                                ),
+                            ),
+                            attrs={
+                                "component_id": node.component_id,
+                                "port": port_name,
+                                "port_id": port_id,
+                                "start": flat_start,
+                                "stop": flat_stop,
+                            },
+                        )
+                    )
         elif spec_kind == "mechanism":
             op_outputs = tuple(node.attrs.get("op_outputs", ()))
             rng_streams = tuple(node.attrs.get("rng_streams", ()))
@@ -678,3 +872,16 @@ def _primary_output_port_name(node) -> str:
     if output_ports:
         return output_ports[0]
     return "RESULT"
+
+
+def _node_output_port_slices(node):
+    slices = tuple(node.attrs.get("output_port_slices", ()))
+    if slices:
+        return slices
+    return ((
+        _primary_output_port_name(node),
+        node.output_width,
+        -1,
+        0,
+        node.output_width,
+    ),)

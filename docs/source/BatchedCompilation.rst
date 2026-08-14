@@ -51,6 +51,20 @@ does not use sanitized display names as identity.  These IDs are currently
 lowering-local.  A serializable structural fingerprint for reconstructed
 distributed models remains future work.
 
+Receiver InputPorts are lowered independently.  Each port gathers only the
+projections addressed to its numeric port ID, applies its validated ``SUM`` or
+``PRODUCT`` ``LinearCombination``, and is then concatenated in PsyNeuLink
+InputPort order for elementwise mechanism execution.  Identity OutputPorts are
+split back into explicit slices, so routing and requested output order do not
+depend on a node's primary port.  Derived OutputPort functions and external
+multi-port inputs remain fail-closed; the latter require a port-keyed public
+input-buffer ABI rather than the current node-keyed adapter.  InputPorts that
+use default/internal values also remain fail-closed until that ABI can
+represent constants explicitly.  Exact duplicate live node names or duplicate
+OutputPort names on one owner are rejected temporarily because a few internal
+graph lookups are still name-keyed; ordinary sanitized-name collisions and
+PsyNeuLink's automatically suffixed names are already distinguished by IDs.
+
 ``KernelIR`` is the backend-neutral executable program.  It makes projection,
 port combination, function, state, condition, loop, and output-store
 operations explicit.  Parameter/subject/trial/estimate lane layout and fusion

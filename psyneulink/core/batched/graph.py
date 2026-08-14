@@ -76,6 +76,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             ", ".join(_node_name(node) for node in cyclic_nodes),
         )
     ] if cyclic_nodes else []
+    rejected_nodes.extend(_duplicate_node_name_diagnostics(composition, topological_nodes))
     supported_nodes: list[str] = []
 
     model_kind = _classify_model(nodes)
@@ -115,6 +116,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     model_kind,
                     composition,
                     component_id=component_ids[id(node)],
+                    port_ids=port_ids,
                 )
             )
             continue
@@ -131,6 +133,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             model_kind,
             composition,
             component_id=component_ids[id(node)],
+            port_ids=port_ids,
         )
         node_specs.append(node_spec)
         mechanism_spec = specs.mechanism_spec_for(node)
@@ -161,15 +164,16 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     )
     rejected_nodes.extend(projection_rejections)
     rejected_nodes.extend(_output_support_diagnostics(outputs, nodes))
+    inputs = _input_specs(
+        topological_nodes,
+        projections,
+        component_ids,
+        port_ids,
+    )
+    rejected_nodes.extend(_external_input_support_diagnostics(inputs))
 
     graph = None
     if not rejected_nodes and not rejected_conditions:
-        inputs = _input_specs(
-            topological_nodes,
-            projections,
-            component_ids,
-            port_ids,
-        )
         outputs = _output_specs(
             composition,
             outputs,
@@ -250,8 +254,28 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     )
 
 
-def projection_inputs(graph: BatchedGraphIR, receiver: str) -> tuple[BatchedProjectionSpec, ...]:
-    return tuple(projection for projection in graph.projections if projection.receiver == receiver)
+def projection_inputs(
+    graph: BatchedGraphIR,
+    receiver: str,
+    *,
+    receiver_port_id: int | None = None,
+) -> tuple[BatchedProjectionSpec, ...]:
+    """Return projections into one node, optionally narrowed to one InputPort.
+
+    ``receiver`` remains the public display-name lookup contract.  Kernel
+    lowering supplies the stable numeric port id so two same-width InputPorts
+    can never be merged merely because they share a receiver node.
+    """
+
+    return tuple(
+        projection
+        for projection in graph.projections
+        if projection.receiver == receiver
+        and (
+            receiver_port_id is None
+            or projection.receiver_port_id == receiver_port_id
+        )
+    )
 
 
 class _ParamBuilder:
@@ -362,14 +386,17 @@ def _node_spec(
     composition,
     *,
     component_id: int,
+    port_ids,
 ) -> BatchedNodeSpec:
     component_type = type(node).__name__
     function = getattr(node, "function", None)
     function_type = type(function).__name__
     node_name = _node_name(node)
-    combine = _combine_name(node)
+    input_port_specs = _input_port_attrs(node, port_ids)
+    combine = input_port_specs[0][2] if input_port_specs else "sum"
     param_map: dict[str, str] = {}
     attrs: dict[str, Any] = {
+        "input_ports": input_port_specs,
         "output_ports": tuple(port.name for port in getattr(node, "output_ports", [])),
     }
     if component_type == "ControlMechanism":
@@ -417,6 +444,10 @@ def _node_spec(
     elif specs.passthrough_spec_for(node) is not None and function_spec is not None:
         attrs["spec_kind"] = "elementwise"
         attrs["spec_key"] = function_spec.key
+        attrs["output_port_slices"] = _elementwise_output_port_slices(
+            node,
+            port_ids,
+        )
         if component_type == "TransferMechanism":
             noise, _ = _transfer_noise_constant(node)
             clip, _ = _transfer_clip_bounds(node)
@@ -523,23 +554,45 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
 
 def _single_input_support_diagnostic(node) -> BatchedDiagnostic | None:
     input_ports = tuple(getattr(node, "input_ports", ()))
-    if len(input_ports) != 1:
+    if not input_ports:
         return BatchedDiagnostic(
             _node_name(node),
-            "unsupported multi-port input routing for batched v2",
-            f"input_ports={len(input_ports)}",
+            "unsupported input-port routing for batched v2",
+            "input_ports=0",
         )
+
+    for input_port in input_ports:
+        diagnostic = _input_port_function_support_diagnostic(node, input_port)
+        if diagnostic is not None:
+            return diagnostic
+
     output_ports = tuple(getattr(node, "output_ports", ()))
+    duplicate_output_names = _duplicate_component_names(output_ports)
+    if duplicate_output_names:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "duplicate OutputPort names are unsupported for batched v2",
+            f"duplicates={duplicate_output_names!r}",
+        )
     mechanism_spec = specs.mechanism_spec_for(node)
-    if mechanism_spec is not None and mechanism_spec.outputs is not None:
-        actual = {getattr(port, "name", "") for port in output_ports}
-        required = {decl.port for decl in mechanism_spec.outputs}
-        if not required.issubset(actual):
-            return BatchedDiagnostic(
-                _node_name(node),
-                "unsupported mechanism output-port configuration for batched v2",
-                f"requires {sorted(required)!r}",
+    if mechanism_spec is not None:
+        if mechanism_spec.outputs is not None:
+            diagnostic = _mechanism_output_port_support_diagnostic(
+                node,
+                output_ports,
+                mechanism_spec.outputs,
             )
+        else:
+            diagnostic = _single_mechanism_output_port_support_diagnostic(
+                node,
+                output_ports,
+            )
+        if diagnostic is not None:
+            return diagnostic
+    elif specs.passthrough_spec_for(node) is not None:
+        diagnostic = _elementwise_output_port_support_diagnostic(node)
+        if diagnostic is not None:
+            return diagnostic
     elif len(output_ports) != 1:
         return BatchedDiagnostic(
             _node_name(node),
@@ -547,6 +600,237 @@ def _single_input_support_diagnostic(node) -> BatchedDiagnostic | None:
             f"output_ports={len(output_ports)}",
         )
     return None
+
+
+def _single_mechanism_output_port_support_diagnostic(
+    node,
+    output_ports,
+) -> BatchedDiagnostic | None:
+    """Validate the one direct result emitted by a custom mechanism op."""
+
+    if len(output_ports) != 1:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported mechanism output-port configuration for batched v2",
+            f"output_ports={len(output_ports)} (requires one direct result)",
+        )
+    output_port = output_ports[0]
+    if (
+        _owner_value_selector_index(output_port) != 0
+        or not _is_identity_linear(getattr(output_port, "function", None))
+    ):
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported mechanism output-port semantics for batched v2",
+            f"{output_port.name}: requires identity OWNER_VALUE[0]",
+        )
+    return None
+
+
+def _input_port_function_support_diagnostic(node, input_port) -> BatchedDiagnostic | None:
+    """Validate the exact LinearCombination subset represented by Combine ops."""
+
+    function = getattr(input_port, "function", None)
+    port_name = getattr(input_port, "name", "InputPort")
+    default_input = _parameter_value(input_port, "default_input", None)
+    internal_only = bool(_parameter_value(input_port, "internal_only", False))
+    if default_input is not None or internal_only:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported InputPort default/internal binding for batched v2",
+            (
+                f"{port_name}: default_input={default_input!r}, "
+                f"internal_only={internal_only!r}"
+            ),
+        )
+    if type(function).__name__ != "LinearCombination":
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported InputPort function for batched v2",
+            f"{port_name}: {type(function).__name__}",
+        )
+
+    operation = _input_port_combine_name(input_port)
+    if operation not in {"sum", "product"}:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported InputPort function for batched v2",
+            f"{port_name}: LinearCombination(operation={operation!r})",
+        )
+
+    semantic_defaults = {
+        "weights": None,
+        "exponents": None,
+        "scale": 1.0,
+        "offset": 0.0,
+    }
+    for name, expected in semantic_defaults.items():
+        value = _parameter_value(function, name, expected)
+        supported = value is None if expected is None else _numeric_exact(value, expected)
+        if not supported:
+            return BatchedDiagnostic(
+                _node_name(node),
+                "unsupported InputPort function for batched v2",
+                f"{port_name}: LinearCombination {name}={value!r}",
+            )
+    return None
+
+
+def _mechanism_output_port_support_diagnostic(
+    node,
+    output_ports,
+    output_decls,
+) -> BatchedDiagnostic | None:
+    """Validate the standard OutputPort semantics implemented by a mechanism op.
+
+    A mechanism op's named outputs are semantic values, not aliases for any
+    live port with the same name.  Compare every declared port with the
+    owning mechanism's standard selector and function so a customized
+    same-name port cannot silently acquire the built-in kernel behavior.
+    """
+
+    node_name = _node_name(node)
+    standard_ports = getattr(node, "standard_output_ports", None)
+    for output_decl in output_decls:
+        matches = [
+            port
+            for port in output_ports
+            if getattr(port, "name", "") == output_decl.port
+        ]
+        if len(matches) != 1:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported mechanism output-port configuration for batched v2",
+                f"requires exactly one {output_decl.port!r} port",
+            )
+
+        output_port = matches[0]
+        actual_width = _port_width(output_port)
+        if actual_width != output_decl.width:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported mechanism output-port width for batched v2",
+                f"{output_decl.port}: width={actual_width}, requires {output_decl.width}",
+            )
+
+        try:
+            standard = standard_ports.get_port_dict(output_decl.port)
+        except Exception:
+            standard = None
+        if not standard:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported mechanism output-port semantics for batched v2",
+                f"{output_decl.port}: no standard port specification",
+            )
+
+        expected_selector = standard.get("variable")
+        expected_index = _owner_value_index(expected_selector)
+        actual_index = _owner_value_selector_index(output_port)
+        if expected_index is None or actual_index != expected_index:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported mechanism output-port selector for batched v2",
+                (
+                    f"{output_decl.port}: selector="
+                    f"{getattr(output_port, '_variable_spec', None)!r}, "
+                    f"requires {expected_selector!r}"
+                ),
+            )
+
+        expected_function = standard.get("function")
+        actual_function = getattr(output_port, "function", None)
+        if expected_function is None:
+            function_matches = _is_identity_linear(actual_function)
+        elif type(expected_function).__name__ == "UserDefinedFunction":
+            function_matches = (
+                type(actual_function) is type(expected_function)
+                and _user_defined_callable(actual_function)
+                is _user_defined_callable(expected_function)
+            )
+        else:
+            # No generic Function-to-kernel semantic equivalence exists yet.
+            # Future mechanism outputs must add a typed representation before
+            # validation can safely accept their standard function.
+            function_matches = False
+        if not function_matches:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported mechanism output-port function for batched v2",
+                (
+                    f"{output_decl.port}: {type(actual_function).__name__} "
+                    "does not match the standard output semantics"
+                ),
+            )
+    return None
+
+
+def _elementwise_output_port_support_diagnostic(node) -> BatchedDiagnostic | None:
+    """Accept OutputPorts that are identity slices of the mechanism value."""
+
+    input_ports = tuple(getattr(node, "input_ports", ()))
+    input_widths = tuple(_port_width(port) for port in input_ports)
+    for output_port in tuple(getattr(node, "output_ports", ())):
+        port_name = getattr(output_port, "name", "OutputPort")
+        owner_value_index = _owner_value_selector_index(output_port)
+        if (
+            owner_value_index is None
+            or owner_value_index < 0
+            or owner_value_index >= len(input_widths)
+            or _port_width(output_port) != input_widths[int(owner_value_index)]
+        ):
+            return BatchedDiagnostic(
+                _node_name(node),
+                "unsupported OutputPort function for batched v2",
+                f"{port_name}: requires an identity OWNER_VALUE slice",
+            )
+        function = getattr(output_port, "function", None)
+        if not _is_identity_linear(function):
+            return BatchedDiagnostic(
+                _node_name(node),
+                "unsupported OutputPort function for batched v2",
+                f"{port_name}: requires an identity Linear function",
+            )
+    return None
+
+
+def _owner_value_index(selector) -> int | None:
+    """Return an exact ``(OWNER_VALUE, integer index)`` selector's index."""
+
+    if not isinstance(selector, tuple) or len(selector) != 2:
+        return None
+    source, index = selector
+    if source != "OWNER_VALUE" or isinstance(index, (bool, np.bool_)):
+        return None
+    if not isinstance(index, (int, np.integer)):
+        return None
+    return int(index)
+
+
+def _owner_value_selector_index(output_port) -> int | None:
+    return _owner_value_index(getattr(output_port, "_variable_spec", None))
+
+
+def _is_identity_linear(function) -> bool:
+    if type(function).__name__ != "Linear":
+        return False
+    return all(
+        _numeric_exact(_parameter_value(function, parameter, expected), expected)
+        for parameter, expected in (
+            ("slope", 1.0),
+            ("intercept", 0.0),
+            ("scale", 1.0),
+            ("offset", 0.0),
+        )
+    )
+
+
+def _user_defined_callable(function):
+    custom_function = getattr(function, "custom_function", None)
+    if callable(custom_function):
+        return custom_function
+    custom_function = _parameter_value(function, "custom_function", None)
+    return custom_function if callable(custom_function) else None
 
 
 def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagnostic | None:
@@ -648,6 +932,16 @@ def _numeric_equal(value, expected) -> bool:
         return False
 
 
+def _numeric_exact(value, expected) -> bool:
+    """Exact numeric equality for semantics omitted from the kernel IR."""
+
+    try:
+        array = np.asarray(value)
+        return array.dtype.kind in "biufc" and bool(np.all(array == expected))
+    except Exception:
+        return False
+
+
 def _is_scalar_or_broadcast_scalar(value) -> bool:
     """Whether scalar parameter-buffer lowering preserves ``value`` exactly."""
 
@@ -731,8 +1025,16 @@ def _primary_input_port_name(node) -> str:
 def _supported_output_ports(node) -> set[str]:
     ports = tuple(getattr(node, "output_ports", ()))
     mechanism_spec = specs.mechanism_spec_for(node)
-    if mechanism_spec is not None and mechanism_spec.outputs is not None:
-        return {decl.port for decl in mechanism_spec.outputs}
+    if mechanism_spec is not None:
+        if mechanism_spec.outputs is not None:
+            return {decl.port for decl in mechanism_spec.outputs}
+        return {getattr(ports[0], "name", "RESULT")} if ports else {"RESULT"}
+    if specs.passthrough_spec_for(node) is not None:
+        return {
+            getattr(port, "name", "RESULT")
+            for port in ports
+            if _identity_output_port_slice(node, port) is not None
+        }
     return {getattr(ports[0], "name", "RESULT")} if ports else {"RESULT"}
 
 
@@ -1074,12 +1376,11 @@ def _projection_specs(
                 sender_port = getattr(getattr(projection, "sender", None), "name", "RESULT")
                 receiver_port = getattr(getattr(projection, "receiver", None), "name", "InputPort-0")
                 supported_sender_ports = _supported_output_ports(sender)
-                primary_receiver_port = _primary_input_port_name(receiver)
-                if sender_port not in supported_sender_ports or receiver_port != primary_receiver_port:
+                if sender_port not in supported_sender_ports:
                     rejected.append(
                         BatchedDiagnostic(
                             getattr(projection, "name", projection_type),
-                            "unsupported multi-port projection routing for batched v2",
+                            "unsupported output-port projection routing for batched v2",
                             f"{sender_name}.{sender_port}->{receiver_name}.{receiver_port}",
                         )
                     )
@@ -1113,27 +1414,62 @@ def _input_specs(
     component_ids,
     port_ids,
 ) -> list[BatchedInputSpec]:
-    receiver_names = {projection.receiver for projection in projections}
+    receiver_port_ids = {projection.receiver_port_id for projection in projections}
     specs_out = []
     for node in nodes:
         component_type = type(node).__name__
         node_name = _node_name(node)
         if component_type == "ControlMechanism":
             continue
-        if node_name in receiver_names:
+        input_ports = tuple(getattr(node, "input_ports", ()))
+        for input_port in input_ports:
+            port_id = port_ids[id(input_port)]
+            if port_id in receiver_port_ids:
+                continue
+            specs_out.append(
+                BatchedInputSpec(
+                    name=(
+                        node_name
+                        if len(input_ports) == 1
+                        else f"{node_name}.{input_port.name}"
+                    ),
+                    node=node_name,
+                    width=_port_width(input_port),
+                    component_id=component_ids[id(node)],
+                    port_id=port_id,
+                    port=input_port.name,
+                )
+            )
+    return specs_out
+
+
+def _external_input_support_diagnostics(
+    input_specs: list[BatchedInputSpec],
+) -> list[BatchedDiagnostic]:
+    """Reject node-keyed input bindings that would alias distinct InputPorts.
+
+    Count only the external ports that remain after successful in-composition
+    projections have been lowered.  Live ``path_afferents`` may include stale
+    projections owned by another Composition and are not evidence that a port
+    is internally fed in this graph.
+    """
+
+    by_component: dict[int, list[BatchedInputSpec]] = {}
+    for input_spec in input_specs:
+        by_component.setdefault(input_spec.component_id, []).append(input_spec)
+
+    diagnostics = []
+    for external_ports in by_component.values():
+        if len(external_ports) <= 1:
             continue
-        input_port = tuple(getattr(node, "input_ports", ()))[0]
-        specs_out.append(
-            BatchedInputSpec(
-                name=node_name,
-                node=node_name,
-                width=_input_width(node),
-                component_id=component_ids[id(node)],
-                port_id=port_ids[id(input_port)],
-                port=input_port.name,
+        diagnostics.append(
+            BatchedDiagnostic(
+                external_ports[0].node,
+                "unsupported external multi-port input binding for batched v2",
+                f"lowered external ports={[spec.port for spec in external_ports]!r}",
             )
         )
-    return specs_out
+    return diagnostics
 
 
 def _output_specs(
@@ -1161,9 +1497,15 @@ def _output_specs(
             continue
         output_ports = tuple(getattr(node, "output_ports", []))
         mechanism_spec = specs.mechanism_spec_for(node)
-        if mechanism_spec is not None and mechanism_spec.outputs is not None:
-            wanted = {decl.port for decl in mechanism_spec.outputs}
-            selected = [port for port in output_ports if port.name in wanted]
+        if mechanism_spec is not None:
+            if mechanism_spec.outputs is not None:
+                wanted = {decl.port for decl in mechanism_spec.outputs}
+                selected = [port for port in output_ports if port.name in wanted]
+            else:
+                selected = [output_ports[0]] if output_ports else []
+        elif specs.passthrough_spec_for(node) is not None:
+            supported = _supported_output_ports(node)
+            selected = [port for port in output_ports if port.name in supported]
         else:
             selected = [output_ports[0]] if output_ports else []
         selected_ports.extend(selected)
@@ -1478,6 +1820,24 @@ def _node_name(node) -> str:
     return getattr(node, "name", str(node))
 
 
+def _duplicate_component_names(components) -> list[str]:
+    names = [getattr(component, "name", str(component)) for component in components]
+    return sorted({name for name in names if names.count(name) > 1})
+
+
+def _duplicate_node_name_diagnostics(composition, nodes) -> list[BatchedDiagnostic]:
+    """Temporary fail-closed boundary until all graph lookup is ID-native."""
+
+    return [
+        BatchedDiagnostic(
+            getattr(composition, "name", "Composition"),
+            "duplicate live node names are unsupported for batched v2",
+            f"name={name!r}",
+        )
+        for name in _duplicate_component_names(nodes)
+    ]
+
+
 def _node_param_aliases(node_name: str, param_name: str) -> tuple[str, ...]:
     qualified = f"{node_name}.{param_name}"
     base_name = _unsuffixed_node_name(node_name)
@@ -1570,25 +1930,119 @@ def _combine_name(node) -> str:
     input_ports = getattr(node, "input_ports", [])
     if not input_ports:
         return "sum"
-    combine = getattr(input_ports[0], "combine", None)
-    if combine is None:
-        return "sum"
-    return str(combine).lower()
+    return _input_port_combine_name(input_ports[0])
+
+
+def _input_port_combine_name(input_port) -> str:
+    """Canonical operation for the port's actual LinearCombination function."""
+
+    function = getattr(input_port, "function", None)
+    operation = _parameter_value(function, "operation", None)
+    if operation is None:
+        operation = getattr(input_port, "combine", None)
+    return str(operation or "sum").lower()
+
+
+def _input_port_attrs(node, port_ids) -> tuple[tuple[str, int, str, int, int, int], ...]:
+    """Semantic per-InputPort layout in mechanism-variable order.
+
+    Each entry is ``(name, width, combine, port_id, flat_start, flat_stop)``.
+    The flattened bounds describe only the handoff from the independent port
+    values to the node function; projection accumulation never crosses them.
+    """
+
+    result = []
+    flat_start = 0
+    for input_port in tuple(getattr(node, "input_ports", ())):
+        width = _port_width(input_port)
+        result.append(
+            (
+                input_port.name,
+                width,
+                _input_port_combine_name(input_port),
+                port_ids[id(input_port)],
+                flat_start,
+                flat_start + width,
+            )
+        )
+        flat_start += width
+    return tuple(result)
+
+
+def _elementwise_output_port_slices(
+    node,
+    port_ids,
+) -> tuple[tuple[str, int, int, int, int], ...]:
+    """Identity OutputPort slices as ``(name,width,id,start,stop)``."""
+
+    result = []
+    for output_port in tuple(getattr(node, "output_ports", ())):
+        bounds = _identity_output_port_slice(node, output_port)
+        if bounds is None:
+            # Validation reports this before node lowering.  Retain a hard
+            # internal guard for direct/private callers so no port is omitted.
+            raise ValueError(
+                f"Batched elementwise node '{_node_name(node)}' has an unmodeled "
+                f"OutputPort '{getattr(output_port, 'name', output_port)}'."
+            )
+        flat_start, flat_stop = bounds
+        result.append(
+            (
+                output_port.name,
+                flat_stop - flat_start,
+                port_ids[id(output_port)],
+                flat_start,
+                flat_stop,
+            )
+        )
+    return tuple(result)
+
+
+def _identity_output_port_slice(node, output_port) -> tuple[int, int] | None:
+    """Flattened mechanism-value slice selected by an identity OutputPort."""
+
+    function = getattr(output_port, "function", None)
+    owner_value_index = _owner_value_selector_index(output_port)
+    input_ports = tuple(getattr(node, "input_ports", ()))
+    if (
+        owner_value_index is None
+        or owner_value_index < 0
+        or owner_value_index >= len(input_ports)
+        or not _is_identity_linear(function)
+    ):
+        return None
+    widths = tuple(_port_width(port) for port in input_ports)
+    index = int(owner_value_index)
+    if _port_width(output_port) != widths[index]:
+        return None
+    start = sum(widths[:index])
+    return start, start + widths[index]
 
 
 def _input_width(node) -> int:
     input_ports = getattr(node, "input_ports", [])
     if not input_ports:
         return _primary_output_width(node)
+    return sum(_port_width(port) for port in input_ports)
+
+
+def _port_width(port) -> int:
     try:
-        return int(np.asarray(input_ports[0].value).reshape(-1).size)
+        return int(np.asarray(port.value).reshape(-1).size)
     except Exception:
-        return _primary_output_width(node)
+        return 1
 
 
 def _node_output_width(node, mechanism_spec) -> int:
-    if mechanism_spec is not None and mechanism_spec.outputs:
-        return mechanism_spec.outputs[0].width
+    if mechanism_spec is not None:
+        if mechanism_spec.outputs:
+            return mechanism_spec.outputs[0].width
+        return _primary_output_width(node)
+    if specs.passthrough_spec_for(node) is not None:
+        # Built-in passthrough functions are elementwise over the complete
+        # mechanism value.  Multi-port values are flattened in InputPort order
+        # for the backend and split back into modeled OutputPort slices.
+        return _input_width(node)
     return _primary_output_width(node)
 
 

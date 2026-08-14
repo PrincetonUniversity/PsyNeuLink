@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import psyneulink as pnl
@@ -173,7 +174,100 @@ def test_full_logistic_transfer_support_does_not_relax_lca_contract(parameter):
 def test_rejects_multi_input_port_mechanism():
     node = pnl.TransferMechanism(input_ports=["left", "right"], name="mimo")
 
-    assert "multi-port input routing" in _reasons(pnl.Composition(pathways=node))
+    assert "external multi-port input binding" in _reasons(pnl.Composition(pathways=node))
+
+
+@pytest.mark.composition
+def test_stale_external_afferents_do_not_hide_multi_port_runtime_inputs():
+    left = pnl.TransferMechanism(input_shapes=1, name="left")
+    right = pnl.TransferMechanism(input_shapes=1, name="right")
+    receiver = pnl.TransferMechanism(input_ports=["left-in", "right-in"], name="receiver")
+    first_composition = pnl.Composition()
+    first_composition.add_nodes([left, right, receiver])
+    first_composition.add_projection(sender=left, receiver=receiver.input_ports[0])
+    first_composition.add_projection(sender=right, receiver=receiver.input_ports[1])
+
+    # Reusing the receiver preserves its live path_afferents, but neither
+    # projection belongs to this singleton Composition.  Both ports therefore
+    # require external values in the graph being lowered.
+    result = lower_composition(pnl.Composition(pathways=receiver))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported external multi-port input binding for batched v2"
+    )
+    assert diagnostic.component == receiver.name
+    assert diagnostic.detail == "lowered external ports=['left-in', 'right-in']"
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_duplicate_live_node_names_until_graph_lookup_is_id_native():
+    source = pnl.TransferMechanism(input_shapes=1, name="source")
+    target = pnl.TransferMechanism(input_shapes=1, name="target")
+    composition = pnl.Composition(pathways=[[source, target]])
+    target.name = source.name
+
+    result = lower_composition(composition)
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "duplicate live node names are unsupported for batched v2"
+    )
+    assert diagnostic.component == composition.name
+    assert diagnostic.detail == f"name={source.name!r}"
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_duplicate_output_port_names_until_lookup_is_id_native():
+    left = pnl.TransferMechanism(input_shapes=1, name="left")
+    right = pnl.TransferMechanism(input_shapes=1, name="right")
+    receiver = pnl.TransferMechanism(input_ports=["left-in", "right-in"], name="receiver")
+    composition = pnl.Composition()
+    composition.add_nodes([left, right, receiver])
+    composition.add_projection(sender=left, receiver=receiver.input_ports[0])
+    composition.add_projection(sender=right, receiver=receiver.input_ports[1])
+    receiver.output_ports[1].name = receiver.output_ports[0].name
+
+    result = lower_composition(composition)
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "duplicate OutputPort names are unsupported for batched v2"
+    )
+    assert diagnostic.component == receiver.name
+    assert diagnostic.detail == f"duplicates={[receiver.output_ports[0].name]!r}"
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_default_variable_input_instead_of_inventing_runtime_input():
+    node = pnl.TransferMechanism(
+        input_ports={
+            pnl.VARIABLE: [2.0],
+            pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE},
+        },
+        name="constant-input",
+    )
+    result = lower_composition(pnl.Composition(pathways=node))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported InputPort default/internal binding for batched v2"
+    )
+    assert diagnostic.component == node.name
+    assert "default_input='default_variable'" in diagnostic.detail
+    assert "internal_only=True" in diagnostic.detail
+    assert result.graph is None
 
 
 @pytest.mark.composition
@@ -184,7 +278,145 @@ def test_rejects_multi_output_port_mechanism_without_lowered_port_ops():
         name="multi-output",
     )
 
-    assert "multi-port output routing" in _reasons(pnl.Composition(pathways=node))
+    reasons = _reasons(pnl.Composition(pathways=node))
+    assert "unsupported OutputPort function" in reasons
+    assert pnl.MEAN in reasons
+
+
+@pytest.mark.composition
+def test_rejects_non_owner_value_output_selector_even_when_index_property_matches():
+    node = pnl.TransferMechanism(
+        input_shapes=1,
+        output_ports=[
+            pnl.OutputPort(name="execution-count", variable=("num_executions", 0))
+        ],
+        name="counter-output",
+    )
+    result = lower_composition(pnl.Composition(pathways=node))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason == "unsupported OutputPort function for batched v2"
+    )
+    assert diagnostic.component == node.name
+    assert "identity OWNER_VALUE slice" in diagnostic.detail
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_custom_function_on_declared_ddm_output_name():
+    ddm = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(noise=0.0),
+        output_ports=[
+            {
+                pnl.NAME: pnl.DECISION_OUTCOME,
+                pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
+                pnl.FUNCTION: pnl.Linear(slope=0.0, intercept=7.0),
+            },
+            pnl.RESPONSE_TIME,
+        ],
+        name="custom-output-ddm",
+    )
+    result = lower_composition(pnl.Composition(pathways=ddm))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported mechanism output-port function for batched v2"
+    )
+    assert diagnostic.component == ddm.name
+    assert diagnostic.detail.startswith("DECISION_OUTCOME: Linear")
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_custom_selector_on_declared_ddm_output_name():
+    ddm = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(noise=0.0),
+        output_ports=[
+            {
+                pnl.NAME: pnl.DECISION_OUTCOME,
+                pnl.VARIABLE: (pnl.OWNER_VALUE, 1),
+            },
+            pnl.RESPONSE_TIME,
+        ],
+        name="custom-selector-ddm",
+    )
+    result = lower_composition(pnl.Composition(pathways=ddm))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported mechanism output-port selector for batched v2"
+    )
+    assert diagnostic.component == ddm.name
+    assert "requires ('OWNER_VALUE', 0)" in diagnostic.detail
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_rejects_custom_width_on_declared_ddm_output_name():
+    def duplicate_value(value):
+        return np.asarray([value[0], value[0]])
+
+    ddm = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(noise=0.0),
+        output_ports=[
+            {
+                pnl.NAME: pnl.DECISION_OUTCOME,
+                pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
+                pnl.FUNCTION: pnl.UserDefinedFunction(
+                    custom_function=duplicate_value,
+                ),
+            },
+            pnl.RESPONSE_TIME,
+        ],
+        name="custom-width-ddm",
+    )
+    result = lower_composition(pnl.Composition(pathways=ddm))
+
+    diagnostic = next(
+        diagnostic
+        for diagnostic in result.rejected_nodes
+        if diagnostic.reason
+        == "unsupported mechanism output-port width for batched v2"
+    )
+    assert diagnostic.component == ddm.name
+    assert diagnostic.detail == "DECISION_OUTCOME: width=2, requires 1"
+    assert result.graph is None
+
+
+@pytest.mark.composition
+def test_near_identity_output_parameter_is_not_treated_as_exact():
+    node = pnl.TransferMechanism(
+        input_shapes=1,
+        output_ports=[
+            pnl.OutputPort(
+                name="near-identity",
+                variable=(pnl.OWNER_VALUE, 0),
+                function=pnl.Linear(slope=1.000009),
+            )
+        ],
+        name="node",
+    )
+
+    assert "OutputPort function" in _reasons(pnl.Composition(pathways=node))
+
+
+@pytest.mark.composition
+def test_near_default_input_combine_parameter_is_not_treated_as_exact():
+    node = pnl.TransferMechanism(
+        input_ports={
+            pnl.VARIABLE: [0.0],
+            pnl.FUNCTION: pnl.LinearCombination(scale=1.000009),
+        },
+        name="node",
+    )
+
+    assert "InputPort function" in _reasons(pnl.Composition(pathways=node))
 
 
 @pytest.mark.composition
@@ -196,8 +428,34 @@ def test_rejects_non_primary_output_port_routing():
     composition.add_projection(sender=source.output_ports[1], receiver=target)
 
     reasons = _reasons(composition)
-    assert "multi-port input routing" in reasons
-    assert "multi-port projection routing" in reasons
+    assert "external multi-port input binding" in reasons
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "function, expected",
+    [
+        (pnl.LinearCombination(operation=pnl.CROSS_ENTROPY), "cross-entropy"),
+        (pnl.LinearCombination(operation=pnl.SUM, scale=2.0), "scale"),
+        (pnl.LinearCombination(operation=pnl.PRODUCT, offset=1.0), "offset"),
+        (pnl.Linear(), "Linear"),
+    ],
+)
+def test_rejects_unmodeled_input_port_functions(function, expected):
+    left = pnl.TransferMechanism(input_shapes=1, name="left")
+    right = pnl.TransferMechanism(input_shapes=1, name="right")
+    receiver = pnl.TransferMechanism(
+        input_ports={pnl.INPUT_SHAPES: 1, pnl.FUNCTION: function},
+        name="receiver",
+    )
+    composition = pnl.Composition()
+    composition.add_nodes([left, right, receiver])
+    composition.add_projection(sender=left, receiver=receiver)
+    composition.add_projection(sender=right, receiver=receiver)
+
+    reasons = _reasons(composition)
+    assert "unsupported InputPort function" in reasons
+    assert expected in reasons
 
 
 @pytest.mark.composition

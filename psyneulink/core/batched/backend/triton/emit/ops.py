@@ -231,6 +231,10 @@ class OpEmitMixin:
             self._emit_projection_call(op)
         elif op.kind in {"CombineSum", "CombineProduct"}:
             self._emit_combine(op)
+        elif op.kind == "Concatenate":
+            self._emit_concatenate(op)
+        elif op.kind == "ExtractSlice":
+            self._emit_extract_slice(op)
         elif op.kind == "AddConstant":
             self._emit_add_constant(op)
         elif op.kind == "Clamp":
@@ -284,6 +288,28 @@ class OpEmitMixin:
             components = [values[idx] for values in input_values]
             expr = operator.join(f"({component})" for component in components)
             self.builder.line(f"{var} = {expr or zero_vector()}")
+        self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_concatenate(self, op: KernelOp) -> None:
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        components = [
+            component
+            for input_value in op.inputs
+            for component in self._get_value(input_value.name)
+        ]
+        for output_var, component in zip(output_vars, components):
+            self.builder.line(f"{output_var} = {component}")
+        self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_extract_slice(self, op: KernelOp) -> None:
+        input_values = self._get_value(op.inputs[0].name)
+        start = int(op.attrs["start"])
+        stop = int(op.attrs["stop"])
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        for output_var, component in zip(output_vars, input_values[start:stop]):
+            self.builder.line(f"{output_var} = {component}")
         self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 

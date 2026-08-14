@@ -5,6 +5,9 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched import BatchedCompositionCompiler
+from psyneulink.core.batched.graph import lower_composition
+from psyneulink.core.batched.ir import BatchedCompositionIR
+from psyneulink.core.batched.kernel_ir import iter_kernel_ops, lower_to_kernel_ir
 
 from batched_semantic_test_support import (
     SemanticCase,
@@ -265,6 +268,163 @@ def _rectangular_fan_out_case():
     )
 
 
+def _separate_receiver_input_ports_case():
+    build_number = itertools.count()
+
+    def build():
+        index = next(build_number)
+        left = pnl.TransferMechanism(input_shapes=1, name=f"left-source-{index}")
+        right = pnl.TransferMechanism(input_shapes=1, name=f"right-source-{index}")
+        receiver = pnl.TransferMechanism(
+            input_ports=[
+                {pnl.NAME: "left-input", pnl.INPUT_SHAPES: 1},
+                {pnl.NAME: "right-input", pnl.INPUT_SHAPES: 1},
+            ],
+            name=f"separate-input-receiver-{index}",
+        )
+        composition = pnl.Composition()
+        composition.add_nodes([left, right, receiver])
+        composition.add_projection(sender=left, receiver=receiver.input_ports[0])
+        composition.add_projection(sender=right, receiver=receiver.input_ports[1])
+        return SemanticModel(
+            composition=composition,
+            inputs={
+                left: np.asarray([[2.0], [-3.0]]),
+                right: np.asarray([[5.0], [7.0]]),
+            },
+            # Reverse the two automatic RESULT-N ports to exercise both port
+            # identity and flattened output ordering.
+            outputs=(receiver.output_ports[1], receiver.output_ports[0]),
+        )
+
+    return SemanticCase(
+        name="separate_receiver_input_ports",
+        build=build,
+        provenance=(
+            "tests/composition/test_interfaces.py:92-119; per-InputPort "
+            "mechanism variable and RESULT-N routing"
+        ),
+    )
+
+
+def _per_port_sum_product_case():
+    build_number = itertools.count()
+
+    def build():
+        index = next(build_number)
+        sources = [
+            pnl.TransferMechanism(input_shapes=1, name=f"port-source-{slot}-{index}")
+            for slot in range(4)
+        ]
+        receiver = pnl.TransferMechanism(
+            input_ports=[
+                {
+                    pnl.NAME: "sum-input",
+                    pnl.INPUT_SHAPES: 1,
+                    pnl.FUNCTION: pnl.LinearCombination(operation=pnl.SUM),
+                },
+                {
+                    pnl.NAME: "product-input",
+                    pnl.INPUT_SHAPES: 1,
+                    # This PNL spelling intentionally does not populate the
+                    # convenience InputPort.combine attribute.
+                    pnl.FUNCTION: pnl.LinearCombination(operation=pnl.PRODUCT),
+                },
+            ],
+            function=pnl.Linear(slope=2.0, intercept=1.0),
+            name=f"per-port-combine-{index}",
+        )
+        composition = pnl.Composition()
+        composition.add_nodes([*sources, receiver])
+        for source in sources[:2]:
+            composition.add_projection(sender=source, receiver=receiver.input_ports[0])
+        for source in sources[2:]:
+            composition.add_projection(sender=source, receiver=receiver.input_ports[1])
+        trial_values = (
+            np.asarray([[2.0], [-1.0]]),
+            np.asarray([[3.0], [4.0]]),
+            np.asarray([[4.0], [-2.0]]),
+            np.asarray([[5.0], [3.0]]),
+        )
+        return SemanticModel(
+            composition=composition,
+            inputs=dict(zip(sources, trial_values)),
+            outputs=tuple(receiver.output_ports),
+        )
+
+    return SemanticCase(
+        name="per_port_sum_and_product",
+        build=build,
+        provenance=(
+            "tests/ports/test_input_ports.py:14-49,70-76; SUM and PRODUCT "
+            "must be applied independently per receiver InputPort"
+        ),
+    )
+
+
+def _ddm_reordered_outputs_case(*, fan_out):
+    build_number = itertools.count()
+
+    def build():
+        index = next(build_number)
+        stimulus = pnl.TransferMechanism(input_shapes=1, name=f"ddm-stimulus-{index}")
+        decision = pnl.DDM(
+            function=pnl.DriftDiffusionIntegrator(
+                starting_value=0.0,
+                rate=1.0,
+                noise=0.0,
+                threshold=0.05,
+                non_decision_time=0.2,
+                time_step_size=0.01,
+            ),
+            output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+            name=f"port-ddm-{index}",
+        )
+        composition = pnl.Composition(pathways=[[stimulus, decision]])
+        inputs = {stimulus: np.asarray([[1.0], [-1.0]])}
+        if not fan_out:
+            outputs = (
+                decision.output_ports[pnl.RESPONSE_TIME],
+                decision.output_ports[pnl.DECISION_OUTCOME],
+            )
+        else:
+            outcome = pnl.TransferMechanism(
+                input_shapes=1,
+                function=pnl.Linear(slope=10.0, intercept=1.0),
+                name=f"outcome-readout-{index}",
+            )
+            response_time = pnl.TransferMechanism(
+                input_shapes=1,
+                function=pnl.Linear(slope=10.0, intercept=2.0),
+                name=f"rt-readout-{index}",
+            )
+            composition.add_nodes([outcome, response_time])
+            composition.add_projection(
+                sender=decision.output_ports[pnl.DECISION_OUTCOME],
+                receiver=outcome,
+            )
+            composition.add_projection(
+                sender=decision.output_ports[pnl.RESPONSE_TIME],
+                receiver=response_time,
+            )
+            outputs = (response_time.output_port, outcome.output_port)
+        return SemanticModel(
+            composition=composition,
+            inputs=inputs,
+            outputs=outputs,
+        )
+
+    return SemanticCase(
+        name=("ddm_named_output_fan_out" if fan_out else "ddm_reordered_named_outputs"),
+        build=build,
+        provenance=(
+            "tests/mechanisms/test_ddm_mechanism.py::TestOutputPorts; preserve "
+            "DECISION_OUTCOME versus RESPONSE_TIME identity"
+        ),
+        max_steps=64,
+    )
+
+
 PARITY_CASES = (
     _prefix_input_case(longer_name_first=False),
     _prefix_input_case(longer_name_first=True),
@@ -275,6 +435,10 @@ PARITY_CASES = (
     _reordered_output_case(),
     _rectangular_fan_in_case(),
     _rectangular_fan_out_case(),
+    _separate_receiver_input_ports_case(),
+    _per_port_sum_product_case(),
+    _ddm_reordered_outputs_case(fan_out=False),
+    _ddm_reordered_outputs_case(fan_out=True),
 )
 
 
@@ -303,37 +467,76 @@ def _assert_structured_rejection(composition, reason, *, outputs=None):
     return diagnostic
 
 
-def test_separate_receiver_input_ports_have_structured_rejection_until_port_routing_lands():
-    left = pnl.TransferMechanism(input_shapes=1, name="left-source")
-    right = pnl.TransferMechanism(input_shapes=1, name="right-source")
-    receiver = pnl.TransferMechanism(
-        input_ports=[
-            {pnl.NAME: "left-input", pnl.INPUT_SHAPES: 1},
-            {pnl.NAME: "right-input", pnl.INPUT_SHAPES: 1},
-        ],
-        name="separate-input-receiver",
+def _lower_case_without_backend(case):
+    """Build GraphIR and KernelIR without requiring Triton to be installed."""
+
+    model = case.build()
+    lowering = lower_composition(model.composition, outputs=tuple(model.outputs))
+    assert lowering.graph is not None
+    assert not lowering.rejected_nodes
+    assert not lowering.rejected_conditions
+    graph = lowering.graph
+    ir = BatchedCompositionIR(
+        model_kind=lowering.model_kind,
+        node_names=tuple(node.name for node in graph.nodes),
+        params=lowering.params,
+        output_names=tuple(output.name for output in graph.outputs),
+        max_steps=256,
+        graph=graph,
     )
-    composition = pnl.Composition()
-    composition.add_nodes([left, right, receiver])
-    composition.add_projection(sender=left, receiver=receiver.input_ports[0])
-    composition.add_projection(sender=right, receiver=receiver.input_ports[1])
+    return model, graph, lower_to_kernel_ir(ir)
 
-    node_diagnostic = _assert_structured_rejection(
-        composition,
-        "unsupported multi-port input routing for batched v2",
+
+def test_separate_receiver_input_ports_lower_by_stable_port_identity():
+    model, graph, kernel_ir = _lower_case_without_backend(
+        _separate_receiver_input_ports_case()
     )
-    assert node_diagnostic.component == receiver.name
-    assert node_diagnostic.detail == "input_ports=2"
-
-    projection_diagnostic = _assert_structured_rejection(
-        composition,
-        "unsupported multi-port projection routing for batched v2",
+    receiver = model.outputs[0].owner
+    receiver_port_ids = {projection.receiver_port_id for projection in graph.projections}
+    operations = iter_kernel_ops(kernel_ir)
+    combines = [
+        operation
+        for operation in operations
+        if operation.kind == "CombineSum" and operation.target == receiver.name
+    ]
+    concatenate = next(
+        operation
+        for operation in operations
+        if operation.kind == "Concatenate" and operation.target == receiver.name
     )
-    assert f"{right.name}.RESULT" in projection_diagnostic.detail
-    assert f"{receiver.name}.right-input" in projection_diagnostic.detail
+
+    assert len(receiver_port_ids) == 2
+    assert {operation.attrs["receiver_port_id"] for operation in combines} == receiver_port_ids
+    assert concatenate.attrs["port_ids"] == tuple(
+        port_id
+        for _, _, _, port_id, _, _ in graph.node(receiver.name).attrs["input_ports"]
+    )
 
 
-def test_non_primary_output_has_structured_rejection_until_output_port_lowering_lands():
+def test_each_receiver_port_lowers_its_own_sum_or_product():
+    model, graph, kernel_ir = _lower_case_without_backend(_per_port_sum_product_case())
+    receiver = model.outputs[0].owner
+    expected = {
+        port.name: ("CombineProduct" if index else "CombineSum")
+        for index, port in enumerate(receiver.input_ports)
+    }
+    combines = {
+        operation.attrs["receiver_port"]: operation.kind
+        for operation in iter_kernel_ops(kernel_ir)
+        if operation.kind in {"CombineSum", "CombineProduct"}
+        and operation.target == receiver.name
+    }
+
+    assert combines == expected
+    assert {
+        operation.attrs["receiver_port_id"]
+        for operation in iter_kernel_ops(kernel_ir)
+        if operation.target == receiver.name
+        and operation.kind in {"CombineSum", "CombineProduct"}
+    } == {projection.receiver_port_id for projection in graph.projections}
+
+
+def test_derived_output_port_function_remains_fail_closed():
     mechanism = pnl.TransferMechanism(
         input_shapes=3,
         output_ports=[pnl.RESULT, pnl.MEAN],
@@ -344,11 +547,11 @@ def test_non_primary_output_has_structured_rejection_until_output_port_lowering_
 
     node_diagnostic = _assert_structured_rejection(
         composition,
-        "unsupported multi-port output routing for batched v2",
+        "unsupported OutputPort function for batched v2",
         outputs=requested_outputs,
     )
     assert node_diagnostic.component == mechanism.name
-    assert node_diagnostic.detail == "output_ports=2"
+    assert pnl.MEAN in node_diagnostic.detail
 
     output_diagnostic = _assert_structured_rejection(
         composition,

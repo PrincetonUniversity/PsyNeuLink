@@ -359,7 +359,10 @@ def test_batched_node_op_registration_is_instance_scoped_and_reversible():
     # Without a registered instance op, the UDF node is rejected.
     rejected = BatchedCompositionCompiler.diagnose(comp)
     assert not rejected.is_supported
-    assert "UserDefinedFunction" in "; ".join(rejected.unsupported_reasons)
+    assert any(
+        diagnostic.component == "Reducer"
+        for diagnostic in rejected.model_diagnostics
+    )
 
     try:
         @batched_node_op("Reducer")
