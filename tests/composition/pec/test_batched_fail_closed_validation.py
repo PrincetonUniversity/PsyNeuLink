@@ -2,7 +2,13 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+from psyneulink.core.batched import BatchedCompileError, BatchedCompositionCompiler
+from psyneulink.core.batched.backend.triton.graph_emit import (
+    triton_graph_kernel_source,
+)
 from psyneulink.core.batched.graph import lower_composition
+from psyneulink.core.batched.ir import BatchedCompositionIR
+from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
 
 
 def _reasons(composition, outputs=None):
@@ -490,3 +496,203 @@ def test_exact_scalar_lca_termination_override_remains_explicitly_absorbed():
     }
     assert result.graph.node("lca").attrs["termination_input_node"] == "cue"
     assert all(projection.receiver != "controller" for projection in result.graph.projections)
+
+
+def _absorbed_lca_control_model():
+    task = pnl.TransferMechanism(input_shapes=2, name="absorbed task")
+    cue = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear(), name="absorbed cue")
+    lca = pnl.LCAMechanism(
+        input_shapes=2,
+        function=pnl.Logistic(),
+        leak=0.0,
+        competition=0.0,
+        self_excitation=0.0,
+        noise=0.0,
+        termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=8,
+        reset_stateful_function_when=pnl.Never(),
+        name="absorbed lca",
+    )
+    controller = pnl.ControlMechanism(
+        function=pnl.Identity(),
+        monitor_for_control=cue,
+        control_signals=[(pnl.TERMINATION_THRESHOLD, lca)],
+        modulation=pnl.OVERRIDE,
+        name="absorbed controller",
+    )
+    composition = pnl.Composition()
+    composition.add_nodes([task, cue, lca, controller])
+    composition.add_projection(sender=task, receiver=lca)
+    return composition, cue, lca, controller
+
+
+def test_control_chain_owned_by_another_composition_is_not_lowered():
+    composition, cue, lca, controller = _absorbed_lca_control_model()
+    del composition
+    lca.parameters.termination_threshold.set(2, None)
+    active_composition = pnl.Composition(pathways=lca)
+    active_projection_ids = {
+        id(projection) for projection in active_composition.projections
+    }
+    assert all(
+        id(projection) not in active_projection_ids
+        for projection in controller.control_signals[0].efferents
+    )
+
+    lowering = lower_composition(active_composition, outputs=(lca.output_port,))
+
+    assert not lowering.rejected_nodes
+    assert not lowering.rejected_conditions
+    assert lowering.graph is not None
+    node_spec = lowering.graph.node(lca.name)
+    assert node_spec.attrs["termination_input_node"] is None
+    ir = BatchedCompositionIR(
+        model_kind=lowering.model_kind,
+        node_names=tuple(node.name for node in lowering.graph.nodes),
+        params=lowering.params,
+        output_names=tuple(output.name for output in lowering.graph.outputs),
+        graph=lowering.graph,
+    )
+    source = triton_graph_kernel_source(lower_to_kernel_ir(ir))
+    assert cue.name.replace(" ", "_") not in source
+
+
+def _mutate_cue_scale(cue, controller):
+    del controller
+    cue.function.parameters.scale.set(2.0, None)
+
+
+def _mutate_controller_scale(cue, controller):
+    del cue
+    controller.function = pnl.Linear(scale=2.0)
+
+
+def _mutate_monitor_normalization(cue, controller):
+    del cue
+    monitor = controller.input_ports[0].path_afferents[0]
+    monitor.function.parameters.normalize.set(True, None)
+
+
+def _mutate_control_projection(cue, controller):
+    del cue
+    projection = controller.control_signals[0].efferents[0]
+    projection.function.parameters.slope.set(2.0, None)
+
+
+def _mutate_control_signal(cue, controller):
+    del cue
+    controller.control_signals[0].function.parameters.transfer_fct.set(
+        pnl.Linear(slope=2.0),
+        None,
+    )
+
+
+def _mutate_control_input(cue, controller):
+    del cue
+    controller.input_ports[0].function.parameters.scale.set(2.0, None)
+
+
+def _mutate_cue_vector_identity(cue, controller):
+    del controller
+    cue.function.parameters.slope.set([1.0, 1.0], None)
+
+
+def _mutate_controller_vector_identity(cue, controller):
+    del cue
+    controller.function = pnl.Linear(slope=[1.0, 1.0])
+
+
+def _mutate_control_projection_vector_identity(cue, controller):
+    del cue
+    projection = controller.control_signals[0].efferents[0]
+    projection.function.parameters.slope.set([1.0, 1.0], None)
+
+
+def _mutate_control_projection_complex_identity(cue, controller):
+    del cue
+    projection = controller.control_signals[0].efferents[0]
+    projection.function.parameters.slope.set(1.0 + 0.0j, None)
+
+
+def _mutate_control_signal_vector_identity(cue, controller):
+    del cue
+    controller.control_signals[0].function.parameters.transfer_fct.set(
+        pnl.Linear(slope=[1.0, 1.0]),
+        None,
+    )
+
+
+def _mutate_control_input_vector_identity(cue, controller):
+    del cue
+    controller.input_ports[0].function.parameters.scale.set([1.0, 1.0], None)
+
+
+@pytest.mark.parametrize(
+    "mutation, reason",
+    [
+        (_mutate_cue_scale, "unsupported generic ControlMechanism for batched v2"),
+        (_mutate_controller_scale, "unsupported generic ControlMechanism for batched v2"),
+        (_mutate_monitor_normalization, "unsupported control monitor routing for batched v2"),
+        (_mutate_control_projection, "unsupported ControlProjection semantics for batched v2"),
+        (_mutate_control_signal, "unsupported ControlSignal semantics for batched v2"),
+        (_mutate_control_input, "unsupported control input semantics for batched v2"),
+        (_mutate_cue_vector_identity, "unsupported generic ControlMechanism for batched v2"),
+        (
+            _mutate_controller_vector_identity,
+            "unsupported generic ControlMechanism for batched v2",
+        ),
+        (
+            _mutate_control_projection_vector_identity,
+            "unsupported ControlProjection semantics for batched v2",
+        ),
+        (
+            _mutate_control_projection_complex_identity,
+            "unsupported ControlProjection semantics for batched v2",
+        ),
+        (
+            _mutate_control_signal_vector_identity,
+            "unsupported ControlSignal semantics for batched v2",
+        ),
+        (
+            _mutate_control_input_vector_identity,
+            "unsupported control input semantics for batched v2",
+        ),
+    ],
+    ids=(
+        "cue-function",
+        "controller-function",
+        "monitor-projection",
+        "control-projection",
+        "control-signal",
+        "control-input-port",
+        "cue-vector-identity",
+        "controller-vector-identity",
+        "control-projection-vector-identity",
+        "control-projection-complex-identity",
+        "control-signal-vector-identity",
+        "control-input-vector-identity",
+    ),
+)
+def test_absorbed_lca_control_requires_identity_end_to_end(mutation, reason):
+    composition, cue, lca, controller = _absorbed_lca_control_model()
+    mutation(cue, controller)
+    report = BatchedCompositionCompiler.diagnose(
+        composition,
+        outputs=(lca.output_port,),
+        backend="triton_cpu",
+    )
+
+    matches = [
+        diagnostic
+        for diagnostic in report.model_diagnostics
+        if diagnostic.component == controller.name and diagnostic.reason == reason
+    ]
+    assert not report.model_supported
+    assert len(matches) == 1, report.to_dict()
+    with pytest.raises(BatchedCompileError) as error:
+        BatchedCompositionCompiler.compile(
+            composition,
+            outputs=(lca.output_port,),
+            backend="triton_cpu",
+        )
+    assert error.value.capability_report == report

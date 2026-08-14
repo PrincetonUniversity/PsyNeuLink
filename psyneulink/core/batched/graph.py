@@ -682,7 +682,11 @@ def _input_port_function_support_diagnostic(node, input_port) -> BatchedDiagnost
     }
     for name, expected in semantic_defaults.items():
         value = _parameter_value(function, name, expected)
-        supported = value is None if expected is None else _numeric_exact(value, expected)
+        supported = (
+            value is None
+            if expected is None
+            else _numeric_scalar_exact(value, expected)
+        )
         if not supported:
             return BatchedDiagnostic(
                 _node_name(node),
@@ -831,7 +835,10 @@ def _is_identity_linear(function) -> bool:
     if type(function).__name__ != "Linear":
         return False
     return all(
-        _numeric_exact(_parameter_value(function, parameter, expected), expected)
+        _numeric_scalar_exact(
+            _parameter_value(function, parameter, expected),
+            expected,
+        )
         for parameter, expected in (
             ("slope", 1.0),
             ("intercept", 0.0),
@@ -954,6 +961,21 @@ def _numeric_exact(value, expected) -> bool:
     try:
         array = np.asarray(value)
         return array.dtype.kind in "biufc" and bool(np.all(array == expected))
+    except Exception:
+        return False
+
+
+def _numeric_scalar_exact(value, expected) -> bool:
+    """Exact finite-real scalar equality for an absorbed scalar operation."""
+
+    try:
+        array = np.asarray(value)
+        return bool(
+            array.size == 1
+            and array.dtype.kind in "biuf"
+            and np.isfinite(array.reshape(-1)[0])
+            and array.reshape(-1)[0] == expected
+        )
     except Exception:
         return False
 
@@ -1125,6 +1147,36 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
             "unsupported control modulation for batched v2",
             str(getattr(signal, "modulation", None)),
         )
+    input_ports = tuple(getattr(control, "input_ports", ()))
+    if len(input_ports) != 1:
+        return BatchedDiagnostic(
+            name,
+            "unsupported control input routing for batched v2",
+            f"input_ports={len(input_ports)}",
+        )
+    input_diagnostic = _input_port_function_support_diagnostic(control, input_ports[0])
+    if input_diagnostic is not None:
+        return BatchedDiagnostic(
+            name,
+            "unsupported control input semantics for batched v2",
+            input_diagnostic.detail,
+        )
+    if (
+        not _is_identity_linear(getattr(control_projection, "function", None))
+        or _parameter_value(control_projection, "weight", None) is not None
+        or _parameter_value(control_projection, "exponent", None) is not None
+    ):
+        return BatchedDiagnostic(
+            name,
+            "unsupported ControlProjection semantics for batched v2",
+            "requires identity Linear with no weight or exponent",
+        )
+    if not _control_signal_is_identity(signal):
+        return BatchedDiagnostic(
+            name,
+            "unsupported ControlSignal semantics for batched v2",
+            "requires an identity TransferWithCosts transfer function",
+        )
 
     receiver = getattr(control_projection, "receiver", None)
     target = getattr(receiver, "owner", None)
@@ -1174,11 +1226,7 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
                 "finished predicate and termination-control value that KernelIR "
                 "does not model",
             )
-        identity = type(function).__name__ == "Identity" or (
-            type(function).__name__ == "Linear"
-            and _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
-            and _numeric_equal(_parameter_value(function, "intercept", 0.0), 0.0)
-        )
+        identity = type(function).__name__ == "Identity" or _is_identity_linear(function)
         if (
             identity
             and _control_monitor_source_for(composition, target) is source
@@ -1225,6 +1273,23 @@ def _is_override(value) -> bool:
     return str(value).upper().endswith("OVERRIDE")
 
 
+def _control_signal_is_identity(signal) -> bool:
+    function = getattr(signal, "function", None)
+    transfer_function = _parameter_value(function, "transfer_fct", None)
+    return (
+        type(function).__name__ == "TransferWithCosts"
+        and _is_identity_linear(transfer_function)
+        and _numeric_scalar_exact(
+            _parameter_value(function, "transfer_fct_mult_param", 1.0),
+            1.0,
+        )
+        and _numeric_scalar_exact(
+            _parameter_value(function, "transfer_fct_add_param", 0.0),
+            0.0,
+        )
+    )
+
+
 def _is_identity_scalar_projection(projection) -> bool:
     matrix = np.asarray(_get_matrix(projection))
     sender = getattr(projection, "sender", None)
@@ -1232,8 +1297,9 @@ def _is_identity_scalar_projection(projection) -> bool:
     ports = tuple(getattr(owner, "output_ports", ()))
     primary_name = getattr(ports[0], "name", "RESULT") if ports else "RESULT"
     return (
-        matrix.shape == (1, 1)
-        and _numeric_equal(matrix, 1.0)
+        _mapping_projection_support_diagnostic(projection) is None
+        and matrix.shape == (1, 1)
+        and _numeric_exact(matrix, 1.0)
         and getattr(sender, "name", primary_name) == primary_name
     )
 
@@ -1243,8 +1309,9 @@ def _is_external_parameter_projection(composition, projection) -> bool:
     source = getattr(sender, "owner", None)
     return (
         source is getattr(composition, "input_CIM", None)
+        and _mapping_projection_support_diagnostic(projection) is None
         and np.asarray(_get_matrix(projection)).shape == (1, 1)
-        and _numeric_equal(_get_matrix(projection), 1.0)
+        and _numeric_exact(_get_matrix(projection), 1.0)
     )
 
 
@@ -1264,13 +1331,10 @@ def _supported_lca_termination_source(source) -> bool:
     if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
         return False
     function = getattr(source, "function", None)
-    if type(function).__name__ != "Linear":
-        return False
     return (
-        _function_parameter_support_diagnostic(_node_name(source), function) is None
-        and _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
-        and _numeric_equal(_parameter_value(function, "intercept", 0.0), 0.0)
-        and _is_zero(_parameter_value(source, "noise", 0.0))
+        _is_identity_linear(function)
+        and not _integrator_mode_enabled(source)
+        and _numeric_exact(_parameter_value(source, "noise", 0.0), 0.0)
         and _parameter_value(source, "clip", None) is None
     )
 

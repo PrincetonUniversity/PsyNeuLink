@@ -412,20 +412,27 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
 
 
 def _control_monitor_source_for(composition, controlled_node):
-    del composition  # The semantic edge lives on the controlled ParameterPort.
+    active_node_ids = {id(node) for node in getattr(composition, "nodes", ())}
+    active_projection_ids = {
+        id(projection) for projection in getattr(composition, "projections", ())
+    }
     for parameter_port in getattr(controlled_node, "parameter_ports", ()):
         for control_projection in getattr(parameter_port, "mod_afferents", ()):
+            if id(control_projection) not in active_projection_ids:
+                continue
             control = getattr(getattr(control_projection, "sender", None), "owner", None)
-            if type(control).__name__ != "ControlMechanism":
+            if type(control).__name__ != "ControlMechanism" or id(control) not in active_node_ids:
                 continue
             for input_port in getattr(control, "input_ports", ()):
                 for monitor_projection in getattr(input_port, "path_afferents", ()):
+                    if id(monitor_projection) not in active_projection_ids:
+                        continue
                     source = getattr(
                         getattr(monitor_projection, "sender", None),
                         "owner",
                         None,
                     )
-                    if source is not None:
+                    if source is not None and id(source) in active_node_ids:
                         return source
     return None
 
