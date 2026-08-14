@@ -1321,7 +1321,15 @@ def _projection_specs(
     rejected: list[BatchedDiagnostic] = []
     bindings: dict[str, object] = {}
     bindings_by_id: dict[int, object] = {}
-    node_names = {_node_name(node) for node in nodes}
+    node_ids = {id(node) for node in nodes}
+    active_projection_ids = {
+        id(projection)
+        for projection in getattr(composition, "projections", ())
+    }
+    feedback_projection_ids = {
+        id(projection)
+        for projection in getattr(composition, "feedback_projections", ())
+    }
     for node in nodes:
         for input_port in getattr(node, "input_ports", []):
             afferents = sorted(
@@ -1338,6 +1346,11 @@ def _projection_specs(
                 ),
             )
             for projection in afferents:
+                # Ports retain projections owned by every Composition in which
+                # they have participated.  Only projections active in this
+                # Composition belong to the graph being lowered.
+                if id(projection) not in active_projection_ids:
+                    continue
                 projection_type = type(projection).__name__
                 sender = getattr(getattr(projection, "sender", None), "owner", None)
                 receiver = getattr(getattr(projection, "receiver", None), "owner", None)
@@ -1345,9 +1358,18 @@ def _projection_specs(
                     continue
                 sender_name = _node_name(sender)
                 receiver_name = _node_name(receiver)
-                if sender_name not in node_names or receiver_name not in node_names:
+                if id(sender) not in node_ids or id(receiver) not in node_ids:
                     continue
                 if projection_type == "AutoAssociativeProjection":
+                    continue
+                if id(projection) in feedback_projection_ids:
+                    rejected.append(
+                        BatchedDiagnostic(
+                            getattr(projection, "name", projection_type),
+                            "unsupported feedback projection for batched v2",
+                            f"{sender_name}->{receiver_name}",
+                        )
+                    )
                     continue
                 # Monitor projections into an exactly-supported absorbed controller
                 # are represented by that controller's semantic metadata, not as a
@@ -1373,6 +1395,12 @@ def _projection_specs(
                         )
                     )
                     continue
+                projection_diagnostic = _mapping_projection_support_diagnostic(
+                    projection
+                )
+                if projection_diagnostic is not None:
+                    rejected.append(projection_diagnostic)
+                    continue
                 sender_port = getattr(getattr(projection, "sender", None), "name", "RESULT")
                 receiver_port = getattr(getattr(projection, "receiver", None), "name", "InputPort-0")
                 supported_sender_ports = _supported_output_ports(sender)
@@ -1385,13 +1413,14 @@ def _projection_specs(
                         )
                     )
                     continue
+                matrix = np.asarray(_get_matrix(projection), dtype=np.float32)
                 projections.append(
                     BatchedProjectionSpec(
                         sender=sender_name,
                         sender_port=sender_port,
                         receiver=receiver_name,
                         receiver_port=receiver_port,
-                        matrix=np.asarray(_get_matrix(projection), dtype=np.float32),
+                        matrix=matrix,
                         spec_key=projection_spec.key,
                         projection_id=len(projections),
                         sender_component_id=component_ids[id(sender)],
@@ -1406,6 +1435,50 @@ def _projection_specs(
                 ] = projection
                 bindings_by_id[projection_id] = projection
     return projections, rejected, bindings, bindings_by_id
+
+
+def _mapping_projection_support_diagnostic(projection) -> BatchedDiagnostic | None:
+    """Validate the exact dense real dot-product semantics lowered to KernelIR."""
+
+    projection_name = getattr(projection, "name", type(projection).__name__)
+    function = getattr(projection, "function", None)
+    operation = _parameter_value(function, "operation", None)
+    normalize = _parameter_value(function, "normalize", False)
+    if (
+        type(function).__name__ != "MatrixTransform"
+        or operation != "dot_product"
+        or not _numeric_exact(normalize, False)
+    ):
+        return BatchedDiagnostic(
+            projection_name,
+            "unsupported MappingProjection function for batched v2",
+            (
+                "requires MatrixTransform(operation=DOT_PRODUCT, normalize=False); "
+                f"got {type(function).__name__}(operation={operation!r}, "
+                f"normalize={normalize!r})"
+            ),
+        )
+
+    try:
+        matrix = np.asarray(_get_matrix(projection))
+        real_numeric = matrix.dtype.kind in "biuf"
+        finite = real_numeric and bool(np.all(np.isfinite(matrix)))
+        representable = finite and bool(
+            np.all(np.abs(matrix) <= np.finfo(np.float32).max)
+        )
+    except Exception:
+        matrix = np.asarray(())
+        representable = False
+    if not representable:
+        return BatchedDiagnostic(
+            projection_name,
+            "unsupported MappingProjection matrix for batched v2",
+            (
+                "requires finite real values representable as float32; "
+                f"dtype={matrix.dtype}, shape={matrix.shape}"
+            ),
+        )
+    return None
 
 
 def _input_specs(
@@ -2060,10 +2133,10 @@ def _get_matrix(projection) -> np.ndarray:
     parameters = getattr(projection, "parameters", None)
     if parameters is not None and hasattr(parameters, "matrix"):
         try:
-            return np.asarray(parameters.matrix.get(None), dtype=np.float32)
+            return np.asarray(parameters.matrix.get(None))
         except Exception:
             pass
     defaults = getattr(projection, "defaults", None)
     if defaults is not None and hasattr(defaults, "matrix"):
-        return np.asarray(defaults.matrix, dtype=np.float32)
+        return np.asarray(defaults.matrix)
     return np.eye(1, dtype=np.float32)
