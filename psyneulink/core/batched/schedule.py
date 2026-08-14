@@ -2,8 +2,8 @@
 
 This module deliberately depends only on typed batched IR declarations.  It
 does not import PsyNeuLink scheduler or Component classes and never evaluates a
-live Condition object.  Capability analysis will consume this planner in a
-later checkpoint; defining it alone does not make any new model executable.
+live Condition object.  Capability analysis uses it for the exact stateless
+precomputed-schedule subset; other pass-wise semantics remain fail-closed.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from psyneulink.core.batched.ir import (
 
 _TRIAL_TIME_SCALE = "ENVIRONMENT_STATE_UPDATE"
 _SEQUENCE_TIME_SCALE = "ENVIRONMENT_SEQUENCE"
+PRECOMPUTED_TRACE_COMPONENT_BUDGET = 4096
 _SUPPORTED_CONDITIONS = {
     "Always",
     "AtPass",

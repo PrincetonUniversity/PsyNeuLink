@@ -1,4 +1,4 @@
-"""Structural contract for declaration-only batched scheduler lowering."""
+"""Structural contract for typed batched scheduler lowering."""
 
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass, replace
@@ -143,27 +143,37 @@ def test_static_scheduler_declarations_preserve_regions_sets_and_finished_ids():
     _assert_scheduler_data_only(graph.finished_values)
 
 
-def test_delayed_at_pass_is_declared_but_execution_remains_fail_closed():
+def test_delayed_at_pass_is_declared_and_lowered_to_executable_trace():
     mechanism = pnl.TransferMechanism(input_shapes=1, name="delayed")
     composition = pnl.Composition(pathways=mechanism)
     composition.scheduler.add_condition(mechanism, pnl.AtPass(3))
 
     lowering = lower_composition(composition)
     assert lowering.graph is not None
-    assert len(lowering.rejected_conditions) == 1
+    assert not lowering.rejected_conditions
     condition = lowering.graph.scheduler[0]
     assert condition.condition_type == "AtPass"
     assert condition.attrs == {
         "pass_index": 3,
         "time_scale": "ENVIRONMENT_STATE_UPDATE",
     }
-    assert not lowering.graph.metadata["scheduler_executable"]
+    assert lowering.graph.metadata["scheduler_executable"]
     kernel = _kernel_ir(lowering)
-    assert tuple(op.kind for op in kernel.ops) == ("ForPasses",)
+    assert kernel.executable
+    assert kernel.schedule_trace is not None
+    assert tuple(
+        (step.pass_index, step.consideration_set_id, step.component_ids)
+        for step in kernel.schedule_trace.steps
+    ) == ((3, 0, (0,)),)
+    assert kernel.schedule_trace.num_passes == 4
+    assert kernel.schedule_trace.component_execution_count == 1
+    assert tuple(op.kind for op in kernel.ops) == ("ForPasses", "StoreOutput")
     pass_op = kernel.ops[0]
-    assert pass_op.attrs["declaration_only"] is True
-    assert pass_op.attrs["conditions"] == lowering.graph.scheduler
-    assert pass_op.attrs["consideration_sets"] == lowering.graph.consideration_sets
+    assert pass_op.attrs["declaration_only"] is False
+    assert pass_op.attrs["trace_kind"] == "precomputed"
+    assert tuple(op.kind for op in pass_op.attrs["body"]) == (
+        "ExecuteConsiderationSet",
+    )
     _assert_scheduler_data_only(
         {
             key: value
@@ -173,10 +183,9 @@ def test_delayed_at_pass_is_declared_but_execution_remains_fail_closed():
     )
 
     report = BatchedCompositionCompiler.diagnose(composition, backend="triton_cpu")
-    assert not report.is_supported
-    assert any("AtPass" in reason for reason in report.unsupported_reasons)
-    with pytest.raises(BatchedCompileError):
-        BatchedCompositionCompiler.compile(composition, backend="triton_cpu")
+    assert report.is_supported
+    assert report.codegen_ready is True
+    assert not report.unsupported_reasons
 
 
 def test_triton_emitter_enforces_kernel_executability_independently_of_ops():
@@ -414,7 +423,7 @@ def test_mixed_delayed_graph_declares_scheduler_effective_implicit_defaults():
     lowering = lower_composition(composition)
     graph = lowering.graph
     assert graph is not None
-    assert not graph.executable
+    assert graph.executable
     scheduler = {condition.node: condition for condition in graph.scheduler}
     assert scheduler[delayed.name].condition_type == "AtPass"
     assert scheduler[downstream.name].condition_type == "EveryNCalls"

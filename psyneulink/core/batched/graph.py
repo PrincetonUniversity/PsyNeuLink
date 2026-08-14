@@ -29,6 +29,11 @@ from psyneulink.core.batched.ir import (
     BatchedStateSpec,
     BatchedTerminationSpec,
 )
+from psyneulink.core.batched.schedule import (
+    PRECOMPUTED_TRACE_COMPONENT_BUDGET,
+    BatchedScheduleTraceError,
+    plan_precomputed_schedule_trace,
+)
 from psyneulink.core.scheduling.condition import (
     All,
     AllHaveRun,
@@ -339,6 +344,9 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     or coevolving
                     or schedule_kind != STATIC_GRAPH_SCHEDULE
                 ),
+                "schedule_trace_component_budget": (
+                    PRECOMPUTED_TRACE_COMPONENT_BUDGET
+                ),
                 # Warm-up steps before the co-evolving terminator begins (the ITI:
                 # the LCA decays / integrates onset inputs first). = max node
                 # onset; 0 when there is none.
@@ -353,6 +361,23 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             resets=reset_specs,
             termination=termination_specs,
         )
+
+        if (
+            schedule_kind == PRECOMPUTED_TRACE_SCHEDULE
+            and not rejected_nodes
+            and not rejected_conditions
+        ):
+            schedule_diagnostic = _precomputed_schedule_support_diagnostic(graph)
+            if schedule_diagnostic is not None:
+                rejected_conditions.append(schedule_diagnostic)
+                graph = replace(
+                    graph,
+                    executable=False,
+                    metadata={
+                        **graph.metadata,
+                        "scheduler_executable": False,
+                    },
+                )
 
     return LoweringResult(
         graph=graph,
@@ -2596,17 +2621,81 @@ def _classify_schedule(
 
         if required_schedule_kind != UNSUPPORTED_SCHEDULE:
             required_schedule_kind = condition_schedule_kind
-        rejected.append(
-            BatchedDiagnostic(
-                component=node_name,
-                reason="batched schedule kind is not executable yet",
-                detail=f"{condition_name} requires {condition_schedule_kind}",
+        if not (
+            condition_schedule_kind == PRECOMPUTED_TRACE_SCHEDULE
+            and condition_name == "AtPass"
+        ):
+            rejected.append(
+                BatchedDiagnostic(
+                    component=node_name,
+                    reason="batched schedule kind is not executable yet",
+                    detail=f"{condition_name} requires {condition_schedule_kind}",
+                )
             )
-        )
 
     if rejected:
         return required_schedule_kind, supported, rejected
-    return STATIC_GRAPH_SCHEDULE, supported, []
+    return required_schedule_kind, supported, []
+
+
+def _precomputed_schedule_support_diagnostic(
+    graph: BatchedGraphIR,
+) -> BatchedDiagnostic | None:
+    """Validate the exact first executable precomputed-schedule boundary."""
+
+    node_ids = tuple(sorted(node.component_id for node in graph.nodes))
+    execution_ids = tuple(sorted(
+        graph.node(node_name).component_id
+        for node_name in graph.execution_order
+    ))
+    scheduler_ids = tuple(sorted(
+        condition.component_id for condition in graph.scheduler
+    ))
+    consideration_ids = tuple(sorted(
+        component_id
+        for consideration_set in graph.consideration_sets
+        for component_id in consideration_set.component_ids
+    ))
+    boundary_reasons = []
+    if graph.fusion_kind != STATELESS_GRAPH_FUSION:
+        boundary_reasons.append(f"fusion_kind={graph.fusion_kind!r}")
+    if graph.states:
+        boundary_reasons.append("retained state")
+    if graph.rng_streams:
+        boundary_reasons.append("RNG streams")
+    if graph.resets:
+        boundary_reasons.append("reset policies")
+    if graph.finished_values:
+        boundary_reasons.append("finished-value dependencies")
+    if not (
+        node_ids == execution_ids == scheduler_ids == consideration_ids
+    ):
+        boundary_reasons.append("scheduler components without executable bodies")
+    if any(node.attrs.get("diagnostics") for node in graph.nodes):
+        boundary_reasons.append("mechanism diagnostics")
+    if boundary_reasons:
+        return BatchedDiagnostic(
+            component=graph.metadata.get("composition_name") or "Composition",
+            reason="batched schedule is not executable",
+            detail="precomputed trace requires a stateless trial-lane graph; "
+            + ", ".join(boundary_reasons),
+        )
+
+    try:
+        plan_precomputed_schedule_trace(
+            scheduler=graph.scheduler,
+            consideration_sets=graph.consideration_sets,
+            termination=graph.termination,
+            expansion_budget=PRECOMPUTED_TRACE_COMPONENT_BUDGET,
+            projections=graph.projections,
+        )
+    except BatchedScheduleTraceError as error:
+        return BatchedDiagnostic(
+            component=graph.metadata.get("composition_name") or "Composition",
+            reason="batched schedule is not executable",
+            detail=f"{error.code}: {error.detail}",
+        )
+    return None
 
 
 def _condition_schedule_kind(

@@ -26,7 +26,10 @@ from psyneulink.core.batched.ir import (
     BatchedStateSpec,
     BatchedTerminationSpec,
 )
-from psyneulink.core.batched.schedule import plan_precomputed_schedule_trace
+from psyneulink.core.batched.schedule import (
+    PRECOMPUTED_TRACE_COMPONENT_BUDGET,
+    plan_precomputed_schedule_trace,
+)
 from psyneulink.core.batched.specs import (
     BatchedOpSpecSnapshot,
     snapshot_batched_op_specs,
@@ -36,7 +39,6 @@ from psyneulink.core.batched.specs import (
 TRIAL_LANE_LAYOUT = "trial"
 STATEFUL_LANE_LAYOUT = "stateful"
 KernelConstant = Real | Iterable[Real]
-_DEFAULT_TRACE_COMPONENT_BUDGET = 4096
 _DEFAULT_TRACE_WEIGHTED_OP_BUDGET = 65536
 _TRACE_COMPONENT_BUDGET_KEY = "schedule_trace_component_budget"
 _TRACE_WEIGHTED_OP_BUDGET_KEY = "schedule_trace_weighted_op_budget"
@@ -400,7 +402,7 @@ def lower_to_kernel_ir(
         component_budget = _trace_budget(
             graph,
             _TRACE_COMPONENT_BUDGET_KEY,
-            _DEFAULT_TRACE_COMPONENT_BUDGET,
+            PRECOMPUTED_TRACE_COMPONENT_BUDGET,
         )
         weighted_op_budget = _trace_budget(
             graph,
@@ -445,8 +447,8 @@ def lower_to_kernel_ir(
                     ),
                     "body": trial_ops,
                     # No backend may treat this declaration as sequential
-                    # execution.  The next checkpoint replaces this marker with
-                    # executable predicate/conditional-region lowering.
+                    # execution.  Each additional scheduler tier replaces this
+                    # marker only after its semantics are represented.
                     "declaration_only": True,
                 },
             ),

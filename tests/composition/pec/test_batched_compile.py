@@ -682,20 +682,19 @@ def test_batched_compiler_accepts_at_pass_zero_condition():
 
 
 @pytest.mark.composition
-def test_batched_compiler_defers_at_pass_nonzero_condition():
-    # AtPass(n>0) is a delayed within-trial onset (e.g. ITI); it is recognized
-    # but not executable yet, and must be deferred rather than silently mis-timed
-    # as a static graph.
+def test_batched_compiler_accepts_stateless_at_pass_nonzero_condition():
+    # A finite, stateless AtPass(n>0) schedule is planned once from typed
+    # scheduler declarations and lowered to an executable KernelIR trace.
     mech = pnl.TransferMechanism(input_shapes=1, name="linear")
     comp = pnl.Composition(pathways=mech)
     comp.scheduler.add_condition(mech, pnl.AtPass(3))
     report = BatchedCompositionCompiler.diagnose(comp)
 
-    assert not report.is_supported
+    assert report.is_supported
+    assert report.codegen_ready is True
     assert report.metadata["schedule_kind"] == "precomputed_trace"
-    unsupported = "; ".join(report.unsupported_reasons)
-    assert "AtPass" in unsupported
-    assert "not executable yet" in unsupported
+    assert not report.model_diagnostics
+    assert not report.codegen_diagnostics
 
 
 @pytest.mark.composition

@@ -30,7 +30,10 @@ def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, 
             d,
             component_kind=(
                 "composition"
-                if d.reason == "unsupported scheduler termination for batched v2"
+                if d.reason in {
+                    "unsupported scheduler termination for batched v2",
+                    "batched schedule is not executable",
+                }
                 else "node"
             ),
         )
@@ -318,6 +321,9 @@ def _normalize_model_diagnostic(
     elif reason == "batched schedule kind is not executable yet":
         code = BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
         kind = "node"
+    elif reason == "batched schedule is not executable":
+        code = BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
+        kind = "composition"
     elif reason == "unsupported node for batched v2":
         code = BatchedDiagnosticCode.MODEL_NODE_UNSUPPORTED
         kind = "node"

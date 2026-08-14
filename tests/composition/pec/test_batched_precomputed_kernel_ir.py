@@ -147,11 +147,15 @@ def test_precomputed_trace_emits_directly_without_a_runtime_step_symbol():
     assert source.count("tl.store(out + lane_out") == 1
 
 
-def test_current_nonexecutable_graph_stays_declaration_only_with_termination():
+def test_explicit_nonexecutable_graph_stays_declaration_only_with_termination():
     lowering, _, _ = _scheduled_lowering()
     graph = lowering.graph
     assert graph is not None
-    graph = replace(graph, termination=_default_termination(graph))
+    graph = replace(
+        graph,
+        executable=False,
+        termination=_default_termination(graph),
+    )
 
     assert not graph.executable
     kernel = _kernel(lowering, graph)
