@@ -24,6 +24,8 @@ class BatchedDiagnosticCode:
 
     CODEGEN_OP_MISSING = "codegen.op_missing"
     CODEGEN_FUSION_UNSUPPORTED = "codegen.fusion_unsupported"
+    CODEGEN_KERNEL_IR_LOWERING_FAILED = "codegen.kernel_ir_lowering_failed"
+    CODEGEN_SOURCE_EMISSION_FAILED = "codegen.source_emission_failed"
 
     BACKEND_UNKNOWN = "backend.unknown"
     BACKEND_TRITON_MISSING = "backend.triton_missing"

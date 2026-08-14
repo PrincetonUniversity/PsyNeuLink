@@ -8,7 +8,7 @@ from psyneulink.core.batched.bindings import (
 )
 from psyneulink.core.batched.diagnostics import BatchedCapabilityReport
 from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedSimulationResult
-from psyneulink.core.batched.kernel_ir import KernelIR, lower_to_kernel_ir
+from psyneulink.core.batched.kernel_ir import KernelIR
 from psyneulink.core.batched.registry import analyze_composition
 
 
@@ -30,7 +30,7 @@ class BatchedCompositionCompiler:
     @staticmethod
     def diagnose(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
         _validate_backend(backend)
-        report, _, _ = analyze_composition(
+        report, _, _, _ = analyze_composition(
             composition,
             backend=backend,
             outputs=outputs,
@@ -41,13 +41,13 @@ class BatchedCompositionCompiler:
     @staticmethod
     def compile(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedSimulationPlan:
         _validate_backend(backend)
-        report, ir, bindings = analyze_composition(
+        report, ir, bindings, kernel_ir = analyze_composition(
             composition,
             backend=backend,
             outputs=outputs,
             max_steps=max_steps,
         )
-        if not report.can_execute or ir is None:
+        if not report.can_execute or ir is None or kernel_ir is None:
             blockers = report.execution_blockers or (
                 "compiler analysis did not produce an executable intermediate representation",
             )
@@ -61,6 +61,7 @@ class BatchedCompositionCompiler:
             ir=ir,
             backend=backend,
             capability_report=report,
+            kernel_ir=kernel_ir,
             component_bindings=bindings,
         )
 
@@ -70,14 +71,10 @@ class BatchedSimulationPlan:
     ir: BatchedCompositionIR
     backend: str
     capability_report: BatchedCapabilityReport
+    # This is the exact frozen snapshot that capability analysis successfully
+    # emitted; recompiling it here would reopen the registry-mutation race.
+    kernel_ir: KernelIR = field(repr=False)
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
-    kernel_ir: KernelIR = field(init=False, repr=False)
-
-    def __post_init__(self) -> None:
-        # Lower exactly once while compiling the plan. KernelIR owns an
-        # immutable snapshot of every resolved batched op implementation, so a
-        # later decorator registration cannot change this plan's code.
-        object.__setattr__(self, "kernel_ir", lower_to_kernel_ir(self.ir))
 
     def run(
         self,

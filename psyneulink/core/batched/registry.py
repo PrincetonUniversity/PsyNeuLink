@@ -5,6 +5,9 @@ import importlib.util
 from dataclasses import replace
 
 from psyneulink.core.batched import specs
+from psyneulink.core.batched.backend.triton.graph_emit import (
+    triton_graph_kernel_source,
+)
 from psyneulink.core.batched.diagnostics import (
     BatchedCapabilityReport,
     BatchedDiagnostic,
@@ -12,9 +15,12 @@ from psyneulink.core.batched.diagnostics import (
 )
 from psyneulink.core.batched.graph import lower_composition
 from psyneulink.core.batched.ir import BatchedCompositionIR
+from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
 
 
 def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None):
+    """Return capability, semantic IR, live bindings, and preflighted KernelIR."""
+
     lowering = lower_composition(composition, outputs=outputs)
     backend_available, backend_diagnostics = _backend_availability(backend)
 
@@ -49,6 +55,24 @@ def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, 
         and not rejected_nodes
         and not rejected_conditions
     )
+    candidate_ir = None
+    if model_supported and lowering.graph is not None:
+        output_names = tuple(output.name for output in lowering.graph.outputs)
+        candidate_ir = BatchedCompositionIR(
+            model_kind=lowering.model_kind,
+            node_names=tuple(node.name for node in lowering.graph.nodes),
+            params=lowering.params,
+            output_names=output_names,
+            max_steps=256 if max_steps is None else int(max_steps),
+            graph=lowering.graph,
+            metadata={
+                "composition_name": getattr(composition, "name", None),
+                "fusion_kind": lowering.graph.fusion_kind,
+                **lowering.graph.metadata,
+            },
+        )
+
+    kernel_ir = None
     codegen_ready = None
     codegen_diagnostics: list[BatchedDiagnostic] = []
     if model_supported and lowering.graph is not None:
@@ -65,6 +89,47 @@ def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, 
                     component_id=f"composition:{name}",
                 )
             )
+        if not codegen_diagnostics and candidate_ir is not None:
+            try:
+                kernel_ir = lower_to_kernel_ir(candidate_ir)
+                if not kernel_ir.executable:
+                    raise ValueError(
+                        "KernelIR preflight produced a declaration-only, "
+                        "non-executable plan"
+                    )
+            except ValueError as error:
+                name = getattr(composition, "name", type(composition).__name__)
+                codegen_diagnostics.append(
+                    BatchedDiagnostic(
+                        component=name,
+                        reason="KernelIR preflight failed",
+                        detail=str(error),
+                        code=BatchedDiagnosticCode.CODEGEN_KERNEL_IR_LOWERING_FAILED,
+                        component_id=f"composition:{name}",
+                    )
+                )
+            if (
+                not codegen_diagnostics
+                and kernel_ir is not None
+                and backend in ("triton", "triton_cpu")
+            ):
+                try:
+                    triton_graph_kernel_source(kernel_ir)
+                except Exception as error:
+                    name = getattr(
+                        composition,
+                        "name",
+                        type(composition).__name__,
+                    )
+                    codegen_diagnostics.append(
+                        BatchedDiagnostic(
+                            component=name,
+                            reason="Triton source emission preflight failed",
+                            detail=str(error),
+                            code=BatchedDiagnosticCode.CODEGEN_SOURCE_EMISSION_FAILED,
+                            component_id=f"composition:{name}",
+                        )
+                    )
         codegen_ready = len(codegen_diagnostics) == 0
 
     report = BatchedCapabilityReport(
@@ -86,24 +151,14 @@ def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, 
         },
     )
 
-    ir = None
-    if report.is_supported and lowering.graph is not None:
-        output_names = tuple(output.name for output in lowering.graph.outputs)
-        ir = BatchedCompositionIR(
-            model_kind=lowering.model_kind,
-            node_names=tuple(node.name for node in lowering.graph.nodes),
-            params=lowering.params,
-            output_names=output_names,
-            max_steps=256 if max_steps is None else int(max_steps),
-            graph=lowering.graph,
-            metadata={
-                "composition_name": getattr(composition, "name", None),
-                "fusion_kind": lowering.graph.fusion_kind,
-                **lowering.graph.metadata,
-            },
-        )
+    ir = candidate_ir if report.is_supported else None
 
-    return report, ir, lowering.bindings
+    return (
+        report,
+        ir,
+        lowering.bindings,
+        kernel_ir if report.is_supported else None,
+    )
 
 
 def _triton_spec_diagnostics(graph) -> list[BatchedDiagnostic]:

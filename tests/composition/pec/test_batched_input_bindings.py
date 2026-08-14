@@ -17,7 +17,7 @@ def _two_origin_composition():
     composition.add_nodes([short, long, receiver])
     composition.add_projection(sender=short, receiver=receiver)
     composition.add_projection(sender=long, receiver=receiver)
-    report, ir, bindings = analyze_composition(composition)
+    report, ir, bindings, _ = analyze_composition(composition)
     assert report.model_supported
     return short, long, ir, bindings
 
