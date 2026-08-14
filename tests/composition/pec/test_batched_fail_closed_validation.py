@@ -69,6 +69,62 @@ def test_rejects_elementwise_transfer_function_parameter_until_vector_abi_lands(
     assert diagnostic.detail == "slope shape=(3,)"
 
 
+@pytest.mark.parametrize(
+    "slope, reason, detail",
+    [
+        (
+            1.0 + 0.0j,
+            "unsupported complex Linear parameter for batched v2",
+            "slope dtype=complex128",
+        ),
+        (
+            float("nan"),
+            "unsupported non-finite Linear parameter for batched v2",
+            "slope contains non-finite values",
+        ),
+        (
+            1e40,
+            "unsupported out-of-range Linear parameter for batched v2",
+            "slope is not representable as float32",
+        ),
+        (
+            [1.0, 1.0000001],
+            "unsupported non-scalar Linear parameter for batched v2",
+            "slope shape=(2,)",
+        ),
+    ],
+    ids=("complex", "nonfinite", "float32-overflow", "near-broadcast"),
+)
+def test_rejects_unrepresentable_modeled_function_parameter(slope, reason, detail):
+    node = pnl.TransferMechanism(
+        input_shapes=2,
+        function=pnl.Linear(slope=slope),
+        name="invalid function parameter",
+    )
+    composition = pnl.Composition(pathways=node)
+    report = BatchedCompositionCompiler.diagnose(
+        composition,
+        outputs=(node.output_port,),
+        backend="triton_cpu",
+    )
+
+    matches = [
+        diagnostic
+        for diagnostic in report.model_diagnostics
+        if diagnostic.component == node.name and diagnostic.reason == reason
+    ]
+    assert not report.model_supported
+    assert len(matches) == 1, report.to_dict()
+    assert matches[0].detail == detail
+    with pytest.raises(BatchedCompileError) as error:
+        BatchedCompositionCompiler.compile(
+            composition,
+            outputs=(node.output_port,),
+            backend="triton_cpu",
+        )
+    assert error.value.capability_report == report
+
+
 @pytest.mark.composition
 def test_accepts_constant_transfer_noise_and_clip():
     node = pnl.TransferMechanism(

@@ -882,11 +882,39 @@ def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagno
             parameter_name,
             semantic_defaults[parameter_name],
         )
+        try:
+            value_array = np.asarray(value)
+            finite = (
+                value_array.size > 0
+                and value_array.dtype.kind in "biufc"
+                and bool(np.all(np.isfinite(value_array)))
+            )
+        except Exception:
+            value_array = np.asarray(())
+            finite = False
+        if value_array.size > 0 and value_array.dtype.kind == "c":
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported complex {function_type} parameter for batched v2",
+                f"{parameter_name} dtype={value_array.dtype}",
+            )
+        if not finite and value_array.size > 0 and value_array.dtype.kind in "biuf":
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported non-finite {function_type} parameter for batched v2",
+                f"{parameter_name} contains non-finite values",
+            )
+        if finite and bool(np.any(np.abs(value_array) > np.finfo(np.float32).max)):
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported out-of-range {function_type} parameter for batched v2",
+                f"{parameter_name} is not representable as float32",
+            )
         if not _is_scalar_or_broadcast_scalar(value):
             return BatchedDiagnostic(
                 node_name,
                 f"unsupported non-scalar {function_type} parameter for batched v2",
-                f"{parameter_name} shape={np.asarray(value).shape}",
+                f"{parameter_name} shape={value_array.shape}",
             )
     unsupported_defaults = {
         name: default
@@ -987,7 +1015,10 @@ def _is_scalar_or_broadcast_scalar(value) -> bool:
         array = np.asarray(value)
         if array.size == 0 or array.dtype.kind not in "biufc":
             return False
-        return bool(np.allclose(array, array.reshape(-1)[0]))
+        return bool(
+            np.all(np.isfinite(array))
+            and np.all(array == array.reshape(-1)[0])
+        )
     except Exception:
         return False
 
