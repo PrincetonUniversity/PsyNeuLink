@@ -210,6 +210,8 @@ def test_scheduler_identity_schema_is_additive_and_backend_neutral():
         component_id=10,
         value_id=20,
         producer_consideration_set_id=3,
+        predicate_kind="execution_count_at_least",
+        attrs={"count": 4},
     )
     condition = BatchedSchedulerSpec(
         node="consumer",
@@ -247,6 +249,8 @@ def test_scheduler_identity_schema_is_additive_and_backend_neutral():
     assert graph.consideration_sets[0].component_ids == (10, 11)
     assert graph.scheduler[0].dependency_component_ids == (10,)
     assert graph.finished_values[0].storage == "combinational"
+    assert graph.finished_values[0].predicate_kind == "execution_count_at_least"
+    assert graph.finished_values[0].attrs == {"count": 4}
     assert graph.resets[0].state_ids == (30,)
 
 

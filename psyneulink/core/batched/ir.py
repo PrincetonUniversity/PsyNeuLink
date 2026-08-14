@@ -254,6 +254,12 @@ class BatchedFinishedValueSpec:
     dtype: str = "bool"
     storage: str = "combinational"
     producer_consideration_set_id: int = -1
+    # Object-free semantic definition of the finished value.  ``dynamic`` is
+    # declaration-only; the first executable form is
+    # ``execution_count_at_least`` with ``attrs={"count": N}``, evaluated after
+    # the owner executes and reset with the scheduler's per-trial counts.
+    predicate_kind: str = "dynamic"
+    attrs: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

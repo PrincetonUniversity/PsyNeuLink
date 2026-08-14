@@ -265,6 +265,11 @@ class MechanismOpSpec:
     param_alias_prefixes: tuple[str, ...] = ()
     diagnostics: tuple[str, ...] = ()
     key: str = ""
+    # Optional semantic hook for a scheduler-visible ``is_finished`` value
+    # that is provably equivalent to a fixed number of scheduled executions.
+    # The hook runs during graph lowering and must return a positive ``int`` or
+    # ``None``; no live PNL object is retained in GraphIR.
+    finished_after_execution_count: Callable | None = None
 
     @property
     def persistent_state(self) -> bool:
@@ -460,6 +465,7 @@ def batched_op(
     readout_emit: Callable | None = None,
     trial_states: tuple[StateDecl, ...] = (),
     finished_output: str = "",
+    finished_after_execution_count: Callable | None = None,
     helpers: tuple = (),
 ):
     """Register a batched op for ``component_class`` from its kernel body.
@@ -484,6 +490,12 @@ def batched_op(
     outputs; the compiler routes them to a separate per-lane diagnostic buffer
     (a ``StoreFlag`` op) so the runtime can surface truncation without
     perturbing the modelled outputs.
+
+    ``finished_after_execution_count`` is an optional semantic lowering hook
+    for mechanisms whose scheduler-visible ``is_finished`` value can be proven
+    equivalent to a fixed positive number of scheduled calls.  It declares
+    semantics only; backend execution remains subject to the scheduler
+    capability boundary.
     """
 
     def decorate(body):
@@ -514,6 +526,7 @@ def batched_op(
                 readout_emit=readout_emit,
                 trial_states=tuple(trial_states),
                 finished_output=finished_output,
+                finished_after_execution_count=finished_after_execution_count,
                 helpers=tuple(helpers),
             )
         return body
@@ -652,6 +665,7 @@ def _register_mechanism_op(
     readout_emit=None,
     trial_states=(),
     finished_output="",
+    finished_after_execution_count=None,
     helpers=(),
 ):
     template = pnl_triton_op(
@@ -682,6 +696,7 @@ def _register_mechanism_op(
             readout_emit=readout_emit,
             trial_states=tuple(trial_states),
             finished_output=finished_output,
+            finished_after_execution_count=finished_after_execution_count,
         )
     )
 

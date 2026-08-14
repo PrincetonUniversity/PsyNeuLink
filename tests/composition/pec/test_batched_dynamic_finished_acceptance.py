@@ -412,6 +412,8 @@ def test_lca_ddm_declares_exact_finished_value_before_execution_support():
     assert finished.component_id == producer_spec.component_id
     assert finished.value_id == 0
     assert finished.dtype == "bool"
+    assert finished.predicate_kind == "execution_count_at_least"
+    assert finished.attrs == {"count": 3}
     assert follower_condition.finished_value_ids == (finished.value_id,)
     assert (
         finished.producer_consideration_set_id

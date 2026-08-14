@@ -2336,9 +2336,9 @@ def _scheduler_ir_specs(composition, nodes, component_ids):
         )
 
     finished_values = tuple(
-        BatchedFinishedValueSpec(
-            name=f"{_node_name(dependency)}.is_finished",
-            node=_node_name(dependency),
+        _finished_value_spec(
+            dependency,
+            composition,
             component_id=component_id,
             value_id=value_id,
             producer_consideration_set_id=consideration_set_ids[component_id],
@@ -2362,6 +2362,44 @@ def _scheduler_ir_specs(composition, nodes, component_ids):
         for condition in declared
     )
     return declared, regions, consideration_sets, finished_values, complete
+
+
+def _finished_value_spec(
+    node,
+    composition,
+    *,
+    component_id: int,
+    value_id: int,
+    producer_consideration_set_id: int,
+) -> BatchedFinishedValueSpec:
+    """Snapshot a registered, object-free scheduler-visible finished value."""
+
+    predicate_kind = "dynamic"
+    attrs = {}
+    mechanism_spec = specs.mechanism_spec_for(node)
+    resolver = (
+        None
+        if mechanism_spec is None
+        else mechanism_spec.finished_after_execution_count
+    )
+    if resolver is not None:
+        try:
+            count = resolver(node, composition)
+        except Exception:
+            count = None
+        if type(count) is int and count > 0:
+            predicate_kind = "execution_count_at_least"
+            attrs = {"count": count}
+
+    return BatchedFinishedValueSpec(
+        name=f"{_node_name(node)}.is_finished",
+        node=_node_name(node),
+        component_id=component_id,
+        value_id=value_id,
+        producer_consideration_set_id=producer_consideration_set_id,
+        predicate_kind=predicate_kind,
+        attrs=attrs,
+    )
 
 
 def _termination_ir_specs(composition, component_ids):

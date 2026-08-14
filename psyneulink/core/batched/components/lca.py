@@ -434,6 +434,29 @@ def _lca_extract_attrs(node, composition) -> dict:
     }
 
 
+def _lca_finished_after_execution_count(node, composition) -> int | None:
+    """Return the exact scheduler-call count for a fixed LCA finished value.
+
+    A run-to-completion LCA is finished after its one scheduled call.  A
+    stepwise LCA becomes finished after ``ceil(termination_threshold)`` calls;
+    unlike a run-to-completion call, PsyNeuLink resets the per-call execution
+    cap on every one-step ``execute``, so ``max_executions_before_finished``
+    does not reduce this scheduler count.
+
+    A controlled threshold is lane/runtime dependent and intentionally remains
+    dynamic until conditional scheduler execution is represented in KernelIR.
+    """
+
+    if bool(_raw_parameter(node, "execute_until_finished", True)):
+        return 1
+    if _control_monitor_source_for(composition, node) is not None:
+        return None
+    threshold = np.asarray(_raw_parameter(node, "termination_threshold", None))
+    if threshold.size != 1:
+        return None
+    return max(1, int(np.ceil(float(threshold.reshape(-1)[0]))))
+
+
 def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     if node_spec.output_width != 2:
         raise ValueError(
@@ -588,5 +611,6 @@ register_batched_op(
         extract_attrs=_lca_extract_attrs,
         triton_emit=_lca_triton_emit,
         step_emit=_lca_step_emit,
+        finished_after_execution_count=_lca_finished_after_execution_count,
     )
 )
