@@ -5,6 +5,10 @@ import warnings
 
 import numpy as np
 
+from psyneulink.core.batched.bindings import (
+    EMPTY_COMPONENT_BINDINGS,
+    BatchedComponentBindings,
+)
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
@@ -17,7 +21,7 @@ from psyneulink.core.batched.prep import (
     normalize_parameter_sets,
     prepare_inputs,
 )
-from psyneulink.core.batched.kernel_ir import diag_slots, lower_to_kernel_ir
+from psyneulink.core.batched.kernel_ir import KernelIR, diag_slots, lower_to_kernel_ir
 from psyneulink.core.batched.backend.triton.cache import (
     interpret_scope,
     load_triton_kernel_module,
@@ -53,6 +57,9 @@ def run_triton(
     device: str = "cuda",
     strict_truncation: bool = False,
     keep_device_values: bool = False,
+    *,
+    kernel_ir: KernelIR | None = None,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
 ) -> BatchedSimulationResult:
     """Execute the generated batched kernels.
 
@@ -78,12 +85,18 @@ def run_triton(
         raise RuntimeError("The Triton batched backend requires an available CUDA device.")
 
     params = normalize_parameter_sets(parameter_sets, ir)
-    prepared_inputs = prepare_inputs(ir, inputs, subject_slices)
+    prepared_inputs = prepare_inputs(
+        ir,
+        inputs,
+        subject_slices,
+        component_bindings=component_bindings,
+    )
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
-    slots = diag_slots(lower_to_kernel_ir(ir)) if ir.graph is not None else ()
+    kernel_ir = kernel_ir or lower_to_kernel_ir(ir)
+    slots = diag_slots(kernel_ir) if ir.graph is not None else ()
 
     with interpret_scope(interpret):
-        module = _load_kernel_module(ir, interpret=interpret)
+        module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret)
 
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
@@ -306,11 +319,16 @@ def _import_torch_triton(interpret: bool):
     return torch, triton
 
 
-def _load_kernel_module(ir: BatchedCompositionIR, interpret: bool = False):
+def _load_kernel_module(
+    ir: BatchedCompositionIR,
+    *,
+    kernel_ir: KernelIR | None = None,
+    interpret: bool = False,
+):
     if ir.graph is None or ir.graph.fusion_kind is None:
         raise ValueError(
             "The Triton batched backend requires a lowered graph with a "
             "supported fusion kind."
         )
-    source = triton_graph_kernel_source(lower_to_kernel_ir(ir))
+    source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir))
     return load_triton_kernel_module(source, ir.graph.fusion_kind, ir.model_kind, interpret=interpret)

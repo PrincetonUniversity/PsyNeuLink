@@ -8,10 +8,14 @@ shared by the Triton GPU and CPU-interpret runtimes.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import numpy as np
 
+from psyneulink.core.batched.bindings import (
+    EMPTY_COMPONENT_BINDINGS,
+    BatchedComponentBindings,
+)
 from psyneulink.core.batched.ir import BatchedCompositionIR
 
 
@@ -56,13 +60,24 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
     return rows
 
 
-def prepare_inputs(ir: BatchedCompositionIR, inputs, subject_slices=None) -> dict[str, np.ndarray]:
+def prepare_inputs(
+    ir: BatchedCompositionIR,
+    inputs,
+    subject_slices=None,
+    *,
+    component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+) -> dict[str, np.ndarray]:
     if ir.graph is None:
         raise ValueError("Batched execution requires a graph IR.")
 
     values = {}
     for input_spec in ir.graph.inputs:
-        raw_value = _extract_named_input(inputs, (input_spec.node,), fallback_first=len(ir.graph.inputs) == 1)
+        raw_value = _extract_bound_input(
+            inputs,
+            input_spec,
+            component_bindings,
+            fallback_first=len(ir.graph.inputs) == 1,
+        )
         coerced = _coerce_trials(raw_value, width=input_spec.width)
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
@@ -104,19 +119,70 @@ def _split_subject_trials(values: dict[str, np.ndarray], subject_slices) -> dict
     return result
 
 
-def _extract_named_input(inputs, name_prefixes: Sequence[str], fallback_first: bool = False):
+def _extract_bound_input(
+    inputs,
+    input_spec,
+    component_bindings: BatchedComponentBindings,
+    *,
+    fallback_first: bool = False,
+):
+    """Resolve one input by live object identity or an exact string alias.
+
+    Component names are display labels.  A plan carries the live node objects
+    used to compile it, so object-keyed input mappings are resolved by identity.
+    Strings remain a compatibility form, but must match the complete IR name;
+    prefix and suffix guessing is deliberately forbidden.
+    """
+
     if not isinstance(inputs, Mapping):
         return inputs
 
+    expected_node = component_bindings.nodes.get(input_spec.node)
+    expected_ports = ()
+    if expected_node is not None:
+        # Multi-port origins are rejected during semantic lowering for now, so
+        # accepting the primary InputPort identity is exact and unambiguous.
+        expected_ports = tuple(getattr(expected_node, "input_ports", ()))[:1]
+
+    matches = []
     for key, value in inputs.items():
-        key_name = getattr(key, "name", str(key))
-        if any(key_name.startswith(prefix) for prefix in name_prefixes):
-            return value
+        object_match = expected_node is not None and (
+            key is expected_node or any(key is port for port in expected_ports)
+        )
+        if expected_node is None:
+            # Direct ``prepare_inputs`` callers may not have a live sidecar.
+            # Retain exact-name compatibility for component/port keys without
+            # reintroducing prefix matching.
+            object_match = not isinstance(key, str) and getattr(key, "name", None) in {
+                input_spec.name,
+                input_spec.node,
+            }
+        string_match = isinstance(key, str) and key in {
+            input_spec.name,
+            input_spec.node,
+        }
+        if object_match or string_match:
+            matches.append((key, value))
+
+    if len(matches) == 1:
+        return matches[0][1]
+    if len(matches) > 1:
+        raise ValueError(
+            f"Multiple input entries resolve to batched input '{input_spec.name}'. "
+            "Use exactly one component, InputPort, or exact string key."
+        )
 
     if fallback_first and len(inputs) == 1:
         return next(iter(inputs.values()))
 
-    raise KeyError(f"Could not find an input keyed by one of {tuple(name_prefixes)}.")
+    available = tuple(
+        key if isinstance(key, str) else getattr(key, "name", type(key).__name__)
+        for key in inputs
+    )
+    raise KeyError(
+        f"Could not find input '{input_spec.name}' by component identity or exact "
+        f"name. Available keys: {available}."
+    )
 
 
 def _coerce_trials(value, width: int) -> np.ndarray:

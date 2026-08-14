@@ -108,6 +108,8 @@ class BatchedSimulationPlan:
             device=device,
             strict_truncation=strict_truncation,
             keep_device_values=keep_device_values,
+            kernel_ir=self.kernel_ir,
+            component_bindings=self.component_bindings,
         )
 
     def log_likelihood(

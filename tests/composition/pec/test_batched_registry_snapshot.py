@@ -45,7 +45,7 @@ def _make_reducer_composition(node_name):
         receiver=reducer,
         projection=pnl.MappingProjection(matrix=np.array([[0.0, 1.0]])),
     )
-    return composition
+    return composition, left, right
 
 
 def test_compiled_plan_freezes_registered_op_specs(monkeypatch):
@@ -55,7 +55,7 @@ def test_compiled_plan_freezes_registered_op_specs(monkeypatch):
         lambda backend: (True, []),
     )
     node_name = "Registry Snapshot Reducer"
-    composition = _make_reducer_composition(node_name)
+    composition, _, _ = _make_reducer_composition(node_name)
 
     try:
         @batched_node_op(node_name)
@@ -79,5 +79,42 @@ def test_compiled_plan_freezes_registered_op_specs(monkeypatch):
         assert triton_graph_kernel_source(subtract_plan.kernel_ir) == subtract_source
         with pytest.raises(BatchedCompileError):
             BatchedCompositionCompiler.compile(composition)
+    finally:
+        unregister_batched_instance_op(node_name)
+
+
+def test_compiled_plan_executes_frozen_op_specs(batched_backend):
+    node_name = "Registry Runtime Reducer"
+    composition, left, right = _make_reducer_composition(node_name)
+
+    try:
+        @batched_node_op(node_name)
+        def add_reducer(x0, x1):
+            return x0 + x1
+
+        add_plan = BatchedCompositionCompiler.compile(
+            composition,
+            backend=batched_backend,
+        )
+
+        @batched_node_op(node_name)
+        def subtract_reducer(x0, x1):
+            return x0 - x1
+
+        subtract_plan = BatchedCompositionCompiler.compile(
+            composition,
+            backend=batched_backend,
+        )
+        unregister_batched_instance_op(node_name)
+
+        inputs = {
+            left: np.asarray([[2.0]], dtype=np.float32),
+            right: np.asarray([[3.0]], dtype=np.float32),
+        }
+        add = add_plan.run(inputs, parameter_sets=[{}], num_estimates=1)
+        subtract = subtract_plan.run(inputs, parameter_sets=[{}], num_estimates=1)
+
+        np.testing.assert_array_equal(add.values[..., 0], [[[[5.0]]]])
+        np.testing.assert_array_equal(subtract.values[..., 0], [[[[-1.0]]]])
     finally:
         unregister_batched_instance_op(node_name)
