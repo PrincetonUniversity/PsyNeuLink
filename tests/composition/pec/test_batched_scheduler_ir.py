@@ -321,7 +321,10 @@ def test_condition_name_impostor_is_not_a_typed_scheduler_predicate():
         BatchedCompositionCompiler.compile(composition, backend="triton_cpu")
 
 
-@pytest.mark.parametrize("invalid_pass", (None, "bad", False, 0.5, -1))
+@pytest.mark.parametrize(
+    "invalid_pass",
+    (None, "bad", False, 0.5, -1, float("inf"), float("-inf")),
+)
 def test_malformed_at_pass_rejects_without_lowering_crash(invalid_pass):
     mechanism = pnl.TransferMechanism(input_shapes=1, name="malformed onset")
     composition = pnl.Composition(pathways=mechanism)
@@ -333,6 +336,11 @@ def test_malformed_at_pass_rejects_without_lowering_crash(invalid_pass):
     diagnostic = lowering.rejected_conditions[0]
     assert diagnostic.reason == "unsupported scheduler condition for static batched graph"
     assert "requires one non-negative non-bool integer index" in diagnostic.detail
+
+    report = BatchedCompositionCompiler.diagnose(composition, backend="triton_cpu")
+    assert not report.is_supported
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(composition, backend="triton_cpu")
 
 
 def test_nondefault_at_pass_clock_is_declaration_incomplete():

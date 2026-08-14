@@ -2551,7 +2551,7 @@ def _at_pass_spec(condition) -> tuple[int, str] | None:
     try:
         pass_index = int(args[0])
         exact_integer = bool(args[0] == pass_index)
-    except (TypeError, ValueError):
+    except (OverflowError, TypeError, ValueError):
         return None
     time_scale = _condition_time_scale_name(condition)
     if not exact_integer or pass_index < 0 or time_scale is None:
