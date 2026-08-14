@@ -1,14 +1,13 @@
-"""Golden-source snapshot tests for the generated Triton kernels.
+"""One representative golden-source snapshot for generated Triton kernels.
 
-These pin the *exact* emitted kernel source for representative fixtures. They are
-the acceptance criterion for refactors that must not change emission (e.g.
-splitting `graph_emit.py` into the `emit/` package): the generated source must
-match the committed goldens in `golden_kernels/`.
+The stateless fixture pins exact source for mechanical emitter refactors. Broad
+compiler coverage belongs in KernelIR structural assertions and Python/GPU
+behavior tests; duplicating every fusion as a source snapshot made semantic
+changes expensive without adding an independent correctness oracle.
 
-Emission is deterministic (fixed op order, insertion-ordered template/param
-dicts), so this is stable across runs. Both sides are re-rendered through the
-running interpreter's unparser before comparison, because `ast.unparse`
-formatting differs between Python versions -- see `_normalized`.
+Emission is deterministic. Both sides are re-rendered through the running
+interpreter's unparser before comparison because `ast.unparse` formatting
+differs between Python versions -- see `_normalized`.
 
 To regenerate after an *intentional* emission change:
 
@@ -18,10 +17,8 @@ To regenerate after an *intentional* emission change:
 
 import ast
 import os
-import sys
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 import psyneulink as pnl
@@ -51,69 +48,10 @@ def _stateless_graph_plan():
     return BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
 
 
-def _ddm_graph_plan():
-    decision = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(
-            starting_value=0.0, rate=1.0, noise=0.0, threshold=0.05,
-            non_decision_time=0.0, time_step_size=0.01,
-        ),
-        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-        name="DDM",
-    )
-    stimulus = pnl.TransferMechanism(input_shapes=1, name="stimulus")
-    comp = pnl.Composition(pathways=[[stimulus, decision]])
-    return BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64)
+def test_generated_kernel_source_matches_golden():
+    """Keep one representative snapshot; semantic tests carry broad coverage."""
 
-
-def _stateful_graph_plan():
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from test_stab_flex_pec_fit import make_stab_flex
-
-    comp = make_stab_flex(
-        lca_time_step_size=0.01, ddm_time_step_size=0.01,
-        threshold=0.05, ddm_noise=0.0, lca_noise=0.0,
-    )
-    return BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=256)
-
-
-@pytest.mark.parametrize(
-    "name, plan_factory",
-    [
-        ("stateless_graph", _stateless_graph_plan),
-        ("ddm_graph", _ddm_graph_plan),
-        ("stateful_graph", _stateful_graph_plan),
-    ],
-)
-def test_generated_kernel_source_matches_golden(name, plan_factory):
-    _assert_matches_golden(name, _source_for(plan_factory()))
-
-
-def test_coevolving_graph_source_matches_golden():
-    """The fused co-evolution loop (Always-LCA stepping with the DDM) emission."""
-
-    from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op
-
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
-
-    try:
-        @batched_node_op("Drift Rate Value")
-        def drift_rate(x0, x1, x2, x3, x4, x5, x6):
-            a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
-            b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
-            c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
-            d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
-            pos = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
-            neg = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
-            return (pos - neg) * x6
-
-        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
-                              ddm_noise=0.0, lca_noise=0.0)
-        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=4000)
-        _assert_matches_golden("coevolving_graph", _source_for(plan))
-    finally:
-        unregister_batched_instance_op("Drift Rate Value")
+    _assert_matches_golden("stateless_graph", _source_for(_stateless_graph_plan()))
 
 
 def _normalized(source, name):
