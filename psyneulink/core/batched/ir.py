@@ -143,10 +143,85 @@ class BatchedRngStreamSpec:
 
 @dataclass(frozen=True)
 class BatchedSchedulerSpec:
+    """One explicit scheduler predicate attached to a graph component.
+
+    ``dependencies`` and their numeric IDs identify predicate operands such as
+    the mechanism referenced by ``WhenFinished``.  ``finished_value_ids`` then
+    names the corresponding boolean values declared in
+    :class:`BatchedFinishedValueSpec`.  Condition-specific scalar data (for
+    example an ``AtPass`` index and time scale) remains in ``attrs`` so this
+    schema can grow without embedding PsyNeuLink condition objects in the IR.
+    """
+
     node: str
     condition_type: str
     dependencies: tuple[str, ...] = ()
     attrs: Mapping[str, Any] = field(default_factory=dict)
+    component_id: int = -1
+    dependency_component_ids: tuple[int, ...] = ()
+    finished_value_ids: tuple[int, ...] = ()
+    region: str = "pass"
+    consideration_set_id: int = -1
+
+
+@dataclass(frozen=True)
+class BatchedScheduleRegionSpec:
+    """A semantic scheduler region independent of backend loop placement."""
+
+    name: str
+    kind: str
+    time_scale: str
+    parent: str = ""
+
+
+@dataclass(frozen=True)
+class BatchedConsiderationSetSpec:
+    """One ordered scheduler consideration set within a pass.
+
+    Members of a consideration set observe inputs frozen at the beginning of
+    that set, while sets are considered in ascending ``consideration_set_id``
+    order.  This distinction is required for predicates that can become true
+    part-way through a pass: a later set may observe the transition in that
+    pass, whereas an earlier set waits until the next pass.
+    """
+
+    consideration_set_id: int
+    nodes: tuple[str, ...]
+    component_ids: tuple[int, ...]
+    region: str = "pass"
+    inputs_frozen: bool = True
+
+
+@dataclass(frozen=True)
+class BatchedFinishedValueSpec:
+    """Boolean ``Mechanism.is_finished`` value consumed by scheduler predicates."""
+
+    name: str
+    node: str
+    component_id: int = -1
+    value_id: int = -1
+    width: int = 1
+    dtype: str = "bool"
+    storage: str = "combinational"
+    producer_consideration_set_id: int = -1
+
+
+@dataclass(frozen=True)
+class BatchedResetSpec:
+    """A retained-state reset policy owned by one component.
+
+    ``Never`` is represented explicitly as well as reset events so a backend
+    cannot accidentally turn persistent state into trial-local state.  Storage
+    that has been semantically optimized away has no state ID and is omitted;
+    emitter-private trial state will move into this schema in a later slice.
+    """
+
+    node: str
+    condition_type: str
+    state_ids: tuple[int, ...] = ()
+    attrs: Mapping[str, Any] = field(default_factory=dict)
+    component_id: int = -1
+    region: str = "trial"
 
 
 @dataclass(frozen=True)
@@ -169,8 +244,13 @@ class BatchedGraphIR:
     ops: tuple[BatchedOp, ...]
     execution_order: tuple[str, ...]
     fusion_kind: str | None = None
+    executable: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
     rng_streams: tuple[BatchedRngStreamSpec, ...] = ()
+    schedule_regions: tuple[BatchedScheduleRegionSpec, ...] = ()
+    consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
+    finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
+    resets: tuple[BatchedResetSpec, ...] = ()
 
     def node(self, name: str) -> BatchedNodeSpec:
         for node in self.nodes:

@@ -2,13 +2,18 @@ import numpy as np
 import pytest
 
 from psyneulink.core.batched import (
+    BatchedConsiderationSetSpec,
+    BatchedFinishedValueSpec,
     BatchedGraphIR,
     BatchedInputSpec,
     BatchedNodeSpec,
     BatchedOutputSpec,
     BatchedParamSpec,
     BatchedProjectionSpec,
+    BatchedResetSpec,
     BatchedRngStreamSpec,
+    BatchedScheduleRegionSpec,
+    BatchedSchedulerSpec,
     BatchedStateSpec,
 )
 from psyneulink.core.batched.bindings import BatchedComponentBindings
@@ -174,3 +179,66 @@ def test_numeric_component_bindings_are_additive_to_name_bindings():
     assert bindings.port_by_id(30) is port
     assert bindings.projection_by_id(40) is projection
     assert bindings.projection("source", "RESULT", "node", "InputPort-0") is projection
+
+
+def test_scheduler_identity_schema_is_additive_and_backend_neutral():
+    trial_region = BatchedScheduleRegionSpec(
+        name="trial",
+        kind="trial",
+        time_scale="ENVIRONMENT_STATE_UPDATE",
+    )
+    pass_region = BatchedScheduleRegionSpec(
+        name="pass",
+        kind="pass",
+        time_scale="PASS",
+        parent="trial",
+    )
+    consideration_set = BatchedConsiderationSetSpec(
+        consideration_set_id=3,
+        nodes=("producer", "consumer"),
+        component_ids=(10, 11),
+    )
+    finished = BatchedFinishedValueSpec(
+        name="producer.is_finished",
+        node="producer",
+        component_id=10,
+        value_id=20,
+        producer_consideration_set_id=3,
+    )
+    condition = BatchedSchedulerSpec(
+        node="consumer",
+        condition_type="WhenFinished",
+        dependencies=("producer",),
+        component_id=11,
+        dependency_component_ids=(10,),
+        finished_value_ids=(20,),
+        consideration_set_id=3,
+    )
+    reset = BatchedResetSpec(
+        node="producer",
+        condition_type="Never",
+        state_ids=(30,),
+        component_id=10,
+    )
+    graph = BatchedGraphIR(
+        nodes=(),
+        inputs=(),
+        projections=(),
+        outputs=(),
+        states=(),
+        scheduler=(condition,),
+        ops=(),
+        execution_order=(),
+        executable=False,
+        schedule_regions=(trial_region, pass_region),
+        consideration_sets=(consideration_set,),
+        finished_values=(finished,),
+        resets=(reset,),
+    )
+
+    assert not graph.executable
+    assert graph.schedule_regions[1].parent == "trial"
+    assert graph.consideration_sets[0].component_ids == (10, 11)
+    assert graph.scheduler[0].dependency_component_ids == (10,)
+    assert graph.finished_values[0].storage == "combinational"
+    assert graph.resets[0].state_ids == (30,)
