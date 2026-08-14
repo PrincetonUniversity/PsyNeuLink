@@ -286,6 +286,13 @@ def _node_spec(
     elif specs.passthrough_spec_for(node) is not None and function_spec is not None:
         attrs["spec_kind"] = "elementwise"
         attrs["spec_key"] = function_spec.key
+        if component_type == "TransferMechanism":
+            noise, _ = _transfer_noise_constant(node)
+            clip, _ = _transfer_clip_bounds(node)
+            if noise != 0.0:
+                attrs["noise"] = noise
+            if clip is not None:
+                attrs["clip"] = clip
         # A fires-once, reset-each-trial integrator_mode transfer advances its
         # integrator a single step from its initializer, which is affine in the
         # input (integ = a*input + b).  Fold that affine step in front of the
@@ -327,21 +334,19 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
         return diagnostic
 
     if type(node).__name__ == "TransferMechanism":
-        noise = _parameter_value(node, "noise", 0.0)
+        _, diagnostic = _transfer_noise_constant(node)
+        if diagnostic is not None:
+            return diagnostic
         integrator_noise = _parameter_value(getattr(node, "integrator_function", None), "noise", 0.0)
-        if not _is_zero(noise) or (_integrator_mode_enabled(node) and not _is_zero(integrator_noise)):
+        if _integrator_mode_enabled(node) and not _is_zero(integrator_noise):
             return BatchedDiagnostic(
                 node_name,
                 "unsupported TransferMechanism noise for batched v2",
-                "noise must be numeric zero",
+                "integrator noise must be numeric zero",
             )
-        clip = _parameter_value(node, "clip", None)
-        if clip is not None:
-            return BatchedDiagnostic(
-                node_name,
-                "unsupported TransferMechanism clip for batched v2",
-                repr(clip),
-            )
+        _, diagnostic = _transfer_clip_bounds(node)
+        if diagnostic is not None:
+            return diagnostic
 
     mechanism_spec = specs.mechanism_spec_for(node)
     if mechanism_spec is not None:
@@ -521,6 +526,65 @@ def _is_scalar_or_broadcast_scalar(value) -> bool:
         return bool(np.allclose(array, array.reshape(-1)[0]))
     except Exception:
         return False
+
+
+def _transfer_noise_constant(node):
+    value = _parameter_value(node, "noise", 0.0)
+    if callable(value):
+        return None, BatchedDiagnostic(
+            _node_name(node),
+            "unsupported TransferMechanism noise for batched v2",
+            "requires deterministic finite scalar or broadcast-scalar noise",
+        )
+    shape = None
+    try:
+        array = np.asarray(value)
+        shape = array.shape
+        first = array.reshape(-1)[0]
+        supported = (
+            array.size > 0
+            and array.dtype.kind in "biuf"
+            and bool(np.all(np.isfinite(array)))
+            and bool(np.all(array == first))
+        )
+    except Exception:
+        supported = False
+    if not supported:
+        return None, BatchedDiagnostic(
+            _node_name(node),
+            "unsupported TransferMechanism noise for batched v2",
+            f"requires deterministic finite scalar or broadcast-scalar noise; shape={shape}",
+        )
+    return float(first), None
+
+
+def _transfer_clip_bounds(node):
+    value = _parameter_value(node, "clip", None)
+    if value is None:
+        return None, None
+    try:
+        bounds = np.asarray(value)
+        supported = (
+            bounds.shape == (2,)
+            and bounds.dtype.kind in "biuf"
+            and bool(np.all(np.isfinite(bounds)))
+        )
+    except Exception:
+        supported = False
+    if not supported:
+        return None, BatchedDiagnostic(
+            _node_name(node),
+            "unsupported TransferMechanism clip for batched v2",
+            "requires exactly two finite scalar bounds",
+        )
+    lower, upper = (float(bound) for bound in bounds)
+    if lower > upper:
+        return None, BatchedDiagnostic(
+            _node_name(node),
+            "unsupported TransferMechanism clip for batched v2",
+            f"lower bound {lower} exceeds upper bound {upper}",
+        )
+    return (lower, upper), None
 
 
 def _is_zero(value) -> bool:

@@ -63,11 +63,45 @@ def test_rejects_elementwise_transfer_function_parameter_until_vector_abi_lands(
 
 
 @pytest.mark.composition
-@pytest.mark.parametrize("kwargs, parameter", [({"noise": 0.1}, "noise"), ({"clip": (0, 1)}, "clip")])
-def test_rejects_unlowered_transfer_mechanism_semantics(kwargs, parameter):
-    node = pnl.TransferMechanism(input_shapes=1, name="node", **kwargs)
+def test_accepts_constant_transfer_noise_and_clip():
+    node = pnl.TransferMechanism(
+        input_shapes=3,
+        name="node",
+        noise=[0.25, 0.25, 0.25],
+        clip=(-1.0, 2.0),
+    )
+    result = lower_composition(pnl.Composition(pathways=node))
 
-    assert parameter in _reasons(pnl.Composition(pathways=node))
+    assert not result.rejected_nodes
+    assert result.graph.node(node.name).attrs["noise"] == 0.25
+    assert result.graph.node(node.name).attrs["clip"] == (-1.0, 2.0)
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "noise",
+    [
+        pytest.param([0.1, 0.2, 0.3], id="heterogeneous"),
+        pytest.param(lambda: 0.1, id="callable"),
+        pytest.param(pnl.NormalDist(), id="distribution"),
+        pytest.param(float("inf"), id="nonfinite"),
+    ],
+)
+def test_rejects_untyped_or_stochastic_transfer_noise(noise):
+    node = pnl.TransferMechanism(input_shapes=3, name="node", noise=noise)
+
+    assert "TransferMechanism noise" in _reasons(pnl.Composition(pathways=node))
+
+
+@pytest.mark.composition
+def test_rejects_nonfinite_transfer_clip():
+    node = pnl.TransferMechanism(
+        input_shapes=1,
+        name="node",
+        clip=(float("-inf"), float("inf")),
+    )
+
+    assert "TransferMechanism clip" in _reasons(pnl.Composition(pathways=node))
 
 
 @pytest.mark.composition

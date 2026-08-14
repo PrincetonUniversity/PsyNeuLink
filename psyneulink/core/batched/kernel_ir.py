@@ -499,6 +499,29 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                 node_output_value_name(graph, node, output_port),
                 node.output_width,
             )
+            function_input = node_input
+            if "noise" in node.attrs:
+                noisy_input = KernelValue(
+                    f"{component_symbol(graph, node)}:noise",
+                    node.input_width,
+                )
+                ops.append(
+                    add_constant_op(
+                        target=node.name,
+                        input_value=function_input,
+                        output_value=noisy_input,
+                        value=node.attrs["noise"],
+                    )
+                )
+                function_input = noisy_input
+            function_output = (
+                KernelValue(
+                    f"{component_symbol(graph, node)}:function",
+                    node.output_width,
+                )
+                if "clip" in node.attrs
+                else output_value
+            )
             attrs = {
                 "component_type": node.component_type,
                 "function_type": node.function_type,
@@ -514,11 +537,22 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                 KernelOp(
                     kind="CallFunction",
                     target=node.name,
-                    inputs=(node_input,),
-                    outputs=(output_value,),
+                    inputs=(function_input,),
+                    outputs=(function_output,),
                     attrs=attrs,
                 )
             )
+            if "clip" in node.attrs:
+                lower, upper = node.attrs["clip"]
+                ops.append(
+                    clamp_op(
+                        target=node.name,
+                        input_value=function_output,
+                        output_value=output_value,
+                        lower=lower,
+                        upper=upper,
+                    )
+                )
         elif spec_kind == "mechanism":
             op_outputs = tuple(node.attrs.get("op_outputs", ()))
             rng_streams = tuple(node.attrs.get("rng_streams", ()))

@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+from psyneulink.core.batched import BatchedCompositionCompiler
+from psyneulink.core.batched import registry as batched_registry
 
 from batched_semantic_test_support import (
     SemanticCase,
@@ -242,9 +244,37 @@ TRANSFER_PIPELINE_CASES = (
 )
 
 
-# Register the function-parameter contract first.  The pipeline cases become
-# executable in the following constant-noise/clip lowering commit.
-CASES = LINEAR_PARAMETER_CASES + LOGISTIC_PARAMETER_CASES
+CASES = LINEAR_PARAMETER_CASES + LOGISTIC_PARAMETER_CASES + TRANSFER_PIPELINE_CASES
+
+
+def test_transfer_pipeline_lowers_as_explicit_chained_ops(monkeypatch):
+    monkeypatch.setattr(
+        batched_registry,
+        "_backend_availability",
+        lambda backend: (True, []),
+    )
+    mechanism = pnl.TransferMechanism(
+        input_shapes=2,
+        function=pnl.Linear(slope=-2.0, intercept=0.4),
+        noise=[0.75, 0.75],
+        clip=(-1.2, 1.4),
+        name="pipeline",
+    )
+    plan = BatchedCompositionCompiler.compile(pnl.Composition(pathways=mechanism))
+    ops = plan.kernel_ir.ops
+
+    assert tuple(op.kind for op in ops) == (
+        "LoadInput",
+        "AddConstant",
+        "CallFunction",
+        "Clamp",
+        "StoreOutput",
+    )
+    load, add, call, clamp, store = ops
+    assert load.outputs == add.inputs
+    assert add.outputs == call.inputs
+    assert call.outputs == clamp.inputs
+    assert clamp.outputs == store.inputs
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda case: case.name)
