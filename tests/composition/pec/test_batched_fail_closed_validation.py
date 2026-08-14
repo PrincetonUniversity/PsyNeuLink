@@ -216,20 +216,26 @@ def test_rejects_lca_configurations_not_represented_by_width2_op(kwargs, expecte
 
 @pytest.mark.composition
 @pytest.mark.parametrize("parameter", ["bias", "x_0", "scale", "offset"])
-def test_full_logistic_transfer_support_does_not_relax_lca_contract(parameter):
-    defaults = {"bias": 0.0, "x_0": 0.0, "scale": 1.0, "offset": 0.0}
-    defaults[parameter] += 0.25
+def test_full_logistic_lca_parameters_are_explicitly_bound(parameter):
+    values = {"bias": 0.0, "x_0": 0.0, "scale": 1.0, "offset": 0.0}
+    values[parameter] += 0.25
     lca = pnl.LCAMechanism(
         input_shapes=2,
-        function=pnl.Logistic(**defaults),
+        function=pnl.Logistic(**values),
         termination_measure=pnl.TimeScale.TRIAL,
         termination_threshold=2,
         name="lca",
     )
 
-    reasons = _reasons(pnl.Composition(pathways=lca))
-    assert "unsupported LCA Logistic parameter" in reasons
-    assert parameter in reasons
+    result = lower_composition(pnl.Composition(pathways=lca))
+
+    assert not result.rejected_nodes
+    assert result.graph is not None
+    node_spec = result.graph.node(lca.name)
+    assert {"gain", "bias", "x_0", "scale", "offset"}.issubset(node_spec.params)
+    public_name = node_spec.params[parameter]
+    param_spec = next(spec for spec in result.params if spec.name == public_name)
+    assert param_spec.default == values[parameter]
 
 
 @pytest.mark.composition

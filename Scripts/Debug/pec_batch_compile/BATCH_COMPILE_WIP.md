@@ -1,5 +1,14 @@
 # PEC Batched Compile WIP Handoff
 
+> **Historical development log.** This document records experiments and
+> intermediate conclusions, so older sections below intentionally describe
+> behavior that no longer exists. The authoritative current semantic contract
+> and fail-closed support boundary are maintained in
+> `docs/source/BatchedCompilation.rst` and executable tests. As of the exact-LCA
+> checkpoint, CSI and all generic `Always`/`WhenFinished` co-evolution cases are
+> rejected until scheduler predicates, conditional pass regions, and control
+> values are explicit in `KernelIR`.
+
 This branch is `feat/pec_batch_compile`, currently based on `origin/devel`.
 The work is experimental and opt-in. Existing PEC fitting, `Composition.run`,
 `ParameterEstimationComposition.log_likelihood`, LLVM, and PTX behavior should
@@ -46,12 +55,16 @@ ll = plan.log_likelihood(inputs, parameter_sets, num_estimates,
                          data=exp_data, categorical_dims=[True, False], bins=100)
 ```
 
-The PEC data-fitting objective can be routed through this path (opt-in, no silent
-fallback):
+The serial PEC data-fitting objective can be routed through this path (opt-in):
 
 ```python
 pnl.PECOptimizationFunction(method=..., batched_backend="triton")
 ```
+
+PEC entry points are not unified behind one simulation engine yet; objective
+mode, distributed workers, and the public log-likelihood path still require the
+post-CSI interface cleanup. Use the direct compiler API above when strict
+no-fallback behavior is required.
 
 Researcher-facing op registration (see "Code Map / specs.py"):
 
@@ -88,20 +101,18 @@ processes.
 
 PsyNeuLink itself is the correctness oracle, not a hand-written twin:
 
-- Unit tests (`tests/composition/pec/test_batched_reference.py`) compare the
-  batched backend against real PNL **Python-mode** execution — deterministic
-  (noise=0) cases exactly, stochastic cases by summary statistics.
-- **Prefer a deterministic comparison where one is possible.** `zero_all_noise(
-  comp)` strips every noise source from any model, so paths can be compared
-  elementwise rather than by distribution — which is what catches a systematic
-  drift, since a drifting model still produces a distribution that looks
-  reasonable. Noise-free, PNL Python and LLVM agree *exactly* with each other,
-  and the batched CSI surrogate matches both to within one DDM step. The
-  stochastic tests remain necessary: zeroing noise exercises none of the RNG
-  machinery (stream layout, Philox draws, lane independence).
-- PEC-scale / GPU-compiled validation lives in
-  `pec_grid_correctness_check.py`, which uses PNL **LLVM** grid evaluation as
-  the reference (separate process from interpret-mode tests).
+- The shared semantic cases construct independent Python and batched models,
+  bind exact components and ports, and compare every output lane. Discrete
+  values and execution counts are exact; deterministic fp32 values use declared
+  per-case tolerances. Stochastic cases compare distribution summaries.
+- **Prefer a deterministic comparison where one is possible.** It catches
+  systematic drift that can be hidden by a plausible-looking distribution.
+  Stochastic tests remain necessary for stream layout, Philox draws, and lane
+  independence.
+- Triton-interpreter and compiled-GPU pytest cases run in separate processes.
+  The historical `pec_grid_correctness_check.py` script is useful for research
+  exploration but is not the executable support gate. CSI currently fails
+  closed in both modes.
 
 `ParameterEstimationComposition.can_compile_batched(..., backend="triton")` is
 diagnostic-only. It calls `BatchedCompositionCompiler.diagnose()` on the model
@@ -115,8 +126,8 @@ composition and does not route PEC fitting through Triton.
 
 ## Current Commit Stack
 
-The **"Milestone Roadmap → Done"** section below is the authoritative,
-up-to-date status. Foundational commits (early architecture):
+The **"Milestone Roadmap → Done"** section below is a historical record, not
+the authoritative current status. Foundational commits (early architecture):
 
 - `99b2313fc0` - initial opt-in Triton batched simulator for PEC models.
 - `667963121b` - generated graph compiler for DDM and stateful graph cases.
@@ -325,7 +336,9 @@ Supported mechanisms:
 - `DDM` (fixed **or** collapsing boundary; a control mechanism OVERRIDE'ing the
   threshold from a SimpleIntegrator transfer is recognized and that transfer is
   absorbed into the DDM)
-- `LCAMechanism`, width 2 only (cue-driven, or co-evolving with a terminator)
+- `LCAMechanism`, an exact deterministic width-2 subset with either a static
+  `TimeScale.TRIAL` execution-count threshold or the narrowly validated scalar
+  identity cue -> `OVERRIDE` threshold path; see "LCA Caveats"
 - `ControlMechanism` — recognized for LCA-termination and DDM-threshold OVERRIDE
   routing; not lowered as its own executable op
 
@@ -335,7 +348,10 @@ Supported functions:
 - arbitrary elementwise/reduction bodies via `@batched_op` (class) or
   `@batched_node_op` (a specific node instance, e.g. a `UserDefinedFunction`)
 
-Supported projections: dense `MappingProjection`.
+Supported projections: dense, feed-forward `MappingProjection` using
+`MatrixTransform(operation=DOT_PRODUCT, normalize=False)` with no weight or
+exponent and a finite real fp32-representable matrix. Feedback and other
+projection semantics fail closed.
 
 Supported input combines: single input, `SUM`, `PRODUCT`.
 
@@ -346,8 +362,9 @@ Supported executable schedules / fusions:
   are recognized but fail closed until their predicates and conditional pass
   regions are represented in `KernelIR`.
 - Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
-  static-threshold stateful execution). The old `coevolving_graph` emitter is
-  not currently advertised as semantically executable. See "Fusion and Lane
+  stateful execution with a static threshold or the validated scalar identity
+  cue -> `OVERRIDE` threshold path). The old `coevolving_graph` emitter is not
+  currently advertised as semantically executable. See "Fusion and Lane
   Layout" for its historical implementation.
 
 Recognized but not executable yet: `precomputed_trace` (`EveryNCalls`),
@@ -454,9 +471,10 @@ not the checksum, is the real accuracy check.
 > speedup — the GPU was nowhere near saturated at 262k lanes — and collapsed the
 > checksum gap. Treat any pre-fix co-evolving multi-parameter number as void.
 
-asv tracks the
-co-evolving path via the `CSISurrogate` benchmark in `benchmarks/batched.py`.
-Its recorded results predate the parameter-set fix and are void (`PARAM_SETS = 8`).
+asv retains a `CSISurrogate` benchmark identifier for historical continuity,
+but the builder now skips it until the generic scheduler/control IR is ready.
+Its recorded results predate the parameter-set fix and are void
+(`PARAM_SETS = 8`); there is no current CSI baseline.
 
 ## Fusion and Lane Layout
 
@@ -475,8 +493,8 @@ Current fusion kinds:
 
 - `stateful_graph`
   - Static graph with lane-local state where the stateful ops run **sequentially**
-    to completion (e.g. a cue-terminated LCA settles, then the DDM decides — the
-    toy stab-flex model).
+    to completion (e.g. an LCA with a static threshold, or with the narrow
+    scalar identity cue -> `OVERRIDE` threshold path, settles before a DDM).
   - Lane layout: `(parameter_set, subject, estimate)`.
   - Trials run inside the Triton lane so LCA state persists across trials.
 
@@ -492,11 +510,12 @@ architecture semantics.
 
 ## Stability-Flexibility Status
 
-The **toy** stab-flex model (cue-terminated LCA) is treated as a generic graph:
+The **toy** stab-flex model is treated as a generic graph. Its LCA threshold
+uses the narrowly validated scalar identity cue -> `OVERRIDE` chain:
 
 ```text
 model_kind="graph"
-fusion_kind="stateful_graph"   # cue-terminated LCA settles, then the DDM decides
+fusion_kind="stateful_graph"   # threshold-count LCA settles, then the DDM decides
 schedule_kind="static_graph"
 ```
 
@@ -515,7 +534,6 @@ Parameter sets should use generic node-qualified names, for example:
 {
     "DDM.threshold": 0.05,
     "DDM.noise": 0.0,
-    "Task Activations [Act1, Act2].noise": 0.0,
 }
 ```
 
@@ -526,9 +544,9 @@ parameter naming/alias policy, not a model-specific shortcut.
 
 ## LCA Caveats
 
-The current batched LCA hook is a narrow approximation for width-2 LCA-like
-stateful graphs. It is not a full implementation of PsyNeuLink
-`LCAMechanism`.
+The current batched LCA hook is exact for a narrow deterministic width-2
+`LCAMechanism` subset. It is not an approximation: accepted configurations
+must match Python PsyNeuLink, and all other configurations fail closed.
 
 The real PsyNeuLink `LCAMechanism` is implemented through:
 
@@ -544,15 +562,29 @@ The batched hook currently handles:
 - width 2 only;
 - persistent lane-local `pre` and `act` state;
 - recurrent coupling via scalar `self_excitation` and `competition`;
-- Logistic activation;
-- Gaussian noise through Triton `tl.randn`;
-- **two step-count modes**: cue-driven (a cue/termination input → a fixed step
-  count, `stateful_graph`) or **co-evolving** (steps once per fused-loop
-  iteration alongside a terminator until it finishes, `coevolving_graph`).
-
-The width-2 **recurrence itself was verified equal to PNL step-for-step** this
-session (an isolated LCA at a fixed step count matches PNL exactly); the
-"approximation" is the surrounding scope, not the math.
+- finite Logistic parameters within the fp32 range (`gain`, `bias`, `x_0`,
+  `scale`, and `offset`) that are scalar or exactly uniform broadcasts,
+  including lane-specific fitted values;
+- finite recurrent parameters within the fp32 range that are scalar or exactly
+  uniform broadcasts, with a strictly positive `time_step_size`;
+- activation initialization as `Logistic(0)` through the registered decorated
+  Logistic implementation;
+- zero integrator initializer and offset, deterministic zero noise, no clip,
+  canonical recurrent matrix, and `Never` reset;
+- a nonnegative `TimeScale.TRIAL` execution-count threshold, either static or
+  supplied through a narrowly validated scalar identity cue -> `OVERRIDE`
+  control chain;
+- host discretization of static thresholds using `ceil`, with a minimum of one
+  execution; both the effective static count and runtime cue values are bounded
+  by `2**24`, and runtime cues must already be exact nonnegative integers before
+  fp32 conversion;
+- a positive-integer `max_executions_before_finished` cap for each LCA node,
+  with persistent state between trials; and
+- an absorbed identity cue whose lowered Linear parameters are
+  validated-default-only in runtime parameter rows. Only an absent explicit
+  condition or `AtPass(0)` at the default `ENVIRONMENT_STATE_UPDATE` time scale
+  on that cue is accepted; other explicit cue/controller/target conditions or
+  time scales fail closed.
 
 It does not yet cover:
 
@@ -562,18 +594,23 @@ It does not yet cover:
 - generic `combination_function`;
 - learning;
 - full output-port variants;
-- threshold-terminated (convergence) LCA in isolation;
-- the init-`act=0` start (isolated LCA differs from PNL's `logistic(0)` start,
-  though this washes out in the models we run).
+- convergence or other termination measures;
+- stochastic noise, clipping, nonzero/custom initialization, or trial reset;
+- non-identity or otherwise general termination-threshold control;
+- generic co-evolving `Always`/`WhenFinished` scheduling and control.
 
-Be careful not to describe the batched LCA hook as the authoritative
-PsyNeuLink LCA semantics. It is currently a performance-oriented lowering for a
-small supported subset.
+The old handwritten recurrence test and heuristic co-evolution checks are not
+semantic support evidence. Fresh Python and batched compositions now compare
+representative cases across the accepted subset on both Triton interpreter and
+compiled GPU, including the first step, multiple trials, threshold counts,
+Logistic parameters, and distinct parameter lanes.
 
 ## RNG and Common Random Numbers
 
-The Triton backend uses `tl.randn` in component helpers. RNG offsets are derived
-from lane indices and stream layout.
+The Triton backend uses `tl.randn` in stochastic component helpers. The exact
+supported LCA subset is deterministic and declares no RNG stream; DDM remains
+the active stochastic mechanism. RNG offsets are derived from lane indices and
+stream layout.
 
 ### Stream layout
 
@@ -588,16 +625,16 @@ stream_off  = random_base + slot * RNG_STREAM_STRIDE
 draw(step)  = tl.randn(SEED, stream_off + step)
 ```
 
-**Offsets do not depend on any step cap.** That is the point: `MAX_STEPS` and
-`LCA_MAX_STEPS` are safety bounds, and raising one must not change results.
+**Offsets do not depend on any step cap.** That is the point: step caps are
+safety or loop bounds, and raising one must not change results.
 Streams used to be packed by cap (`n_lca*LCA_MAX_STEPS + n_ddm*MAX_STEPS`), which
 had two consequences, both now gone:
 
 - Changing a cap changed every downstream offset, so simulations silently
   produced different draws — even when nothing truncated. Bumping a cap for
   safety looked like a bug and broke reproducibility against recorded numbers.
-- A stream could **run off its own end**. The co-evolving LCA steps up to
-  `MAX_STEPS` times but was strided by `LCA_MAX_STEPS`, so with
+- A stream could **run off its own end**. The retired stochastic co-evolving LCA
+  stepped up to `MAX_STEPS` times but was strided by `LCA_MAX_STEPS`, so with
   `MAX_STEPS > LCA_MAX_STEPS` and `lca_noise > 0` its two units drew the same
   sequence time-shifted, and then collided with the DDM's stream. Observable as
   a decision rate that drifted with the cap (0.781 / 0.773 / 0.769 at
@@ -631,7 +668,9 @@ PsyNeuLink LLVM/PTX RNG streams.
 ## Precision and Termination
 
 The Triton runtime currently uses `torch.float32` buffers and Triton `tl.float32`
-state. Parity tolerances should account for this.
+state. Parity tolerances should account for this. Every published outcome tensor
+is checked before outcome-buffer host conversion or likelihood scoring; NaN or
+infinite values raise `BatchedNumericalError`.
 
 DDM and LCA integration use bounded loops:
 
@@ -642,11 +681,11 @@ The existing LLVM/PsyNeuLink path uses mechanism/scheduler termination
 machinery. The Triton path uses caps and must be given caps large enough for
 the parameter/input regime.
 
-### Bounded-loop early exit
+### Bounded-loop early exit (DDM; historical co-evolution measurements)
 
-Both bounded loops — the run-to-completion DDM body (`components/ddm.py`) and
-the fused co-evolution loop (`emit/ops.py`) — stop as soon as every in-range
-lane of the **block** has finished, instead of always running to the cap:
+The run-to-completion DDM body (`components/ddm.py`) stops as soon as every
+in-range lane of the **block** has finished, instead of always running to the
+cap. The retired fused co-evolution loop used the same optimization:
 
 ```python
 step = 0
@@ -695,15 +734,15 @@ The lowering emits a `StoreFlag` KernelOp per diagnostic into a separate per-lan
 golden is unchanged); the runtime aggregates the truncated fraction per node into
 `result.metadata["truncation"]`, **warns** by default and **raises**
 `BatchedTruncationError` under `run(..., strict_truncation=True)`. The channel is
-node-generic: the **co-evolving DDM terminator** reuses it (its `truncated` flag
-is `finished == 0` after `MAX_STEPS`), and a future threshold-terminated LCA
-would too.
+node-generic. The retired co-evolving DDM emitter also used it; a future
+KernelIR-based coupled terminator may reuse the same channel once that execution
+path is semantically supported.
 
-Note the *cue-driven* LCA (toy stab-flex) cannot truncate: `LCA_MAX_STEPS` is
-sized from the cue data (`prep.lca_max_steps` = `max(metadata, ceil(cue))`), so
-the cap is always ≥ demand. In the *co-evolving* graph the LCA steps once per
-loop iteration and freezes with the terminator, so its own truncation is not a
-separate concern; only the terminator (DDM) truncates.
+The supported LCA sizes `LCA_MAX_STEPS` from metadata and either the largest
+host-discretized static threshold or the validated integer runtime cues. Each
+node's `max_executions_before_finished` is also applied, and every trial still
+executes at least once. General controlled thresholds and co-evolving execution
+are rejected rather than assigned an inferred cap.
 
 ## Contrast With LLVM/PTX
 

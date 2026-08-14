@@ -273,8 +273,8 @@ def test_projection_ids_and_endpoint_ids_bind_the_exact_live_edges():
         ) is projection.receiver
 
 
-def test_state_and_rng_ids_are_unique_and_owned_by_the_stateful_component():
-    model = _make_identity_model("state-rng-id")
+def test_state_ids_are_unique_and_owned_by_the_stateful_component():
+    model = _make_identity_model("state-id")
     lowering = _lower(model)
     graph = lowering.graph
     stateful = model.nodes["stateful"]
@@ -286,14 +286,34 @@ def test_state_and_rng_ids_are_unique_and_owned_by_the_stateful_component():
     }
     _assert_contiguous_ids(state.state_id for state in graph.states)
     assert all(state.component_id == component_id for state in graph.states)
+    assert graph.rng_streams == ()
 
+
+def test_rng_ids_are_owned_by_the_stochastic_component():
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0,
+            rate=1.0,
+            noise=0.2,
+            threshold=0.05,
+            non_decision_time=0.0,
+            time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="rng-owner",
+    )
+    lowering = lower_composition(pnl.Composition(pathways=decision))
+    assert not lowering.rejected_nodes
+    assert lowering.graph is not None
+
+    graph = lowering.graph
     assert len(graph.rng_streams) == 1
     _assert_contiguous_ids(stream.stream_id for stream in graph.rng_streams)
     stream = graph.rng_streams[0]
-    assert stream.node == stateful.name
-    assert stream.component_id == component_id
-    assert stream.width == 2
-    assert stream.step_extent == "LCA_MAX_STEPS"
+    assert stream.node == decision.name
+    assert stream.component_id == graph.node(decision.name).component_id
+    assert stream.width == 1
+    assert stream.step_extent == "MAX_STEPS"
 
 
 def test_output_flat_slices_follow_explicit_mixed_width_order():
@@ -355,7 +375,7 @@ def test_kernel_ir_operations_retain_graph_identity():
     assert [op.attrs["port_id"] for op in output_ops] == [
         output.port_id for output in graph.outputs
     ]
-    assert [stream.stream_id for stream in kernel.rng_streams] == [0]
+    assert kernel.rng_streams == ()
 
 
 def test_numeric_node_and_function_bindings_are_live_and_complete():

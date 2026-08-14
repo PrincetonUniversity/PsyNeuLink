@@ -353,6 +353,11 @@ def _graph_spec_keys(graph: BatchedGraphIR) -> tuple[str, ...]:
         for projection in graph.projections
         if projection.spec_key
     )
+    keys.extend(
+        state.function_initializer.spec_key
+        for state in graph.states
+        if state.function_initializer is not None
+    )
     return tuple(dict.fromkeys(keys))
 
 

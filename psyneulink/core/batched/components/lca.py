@@ -1,22 +1,19 @@
-"""Batched op for width-2 `LCAMechanism`.
+"""Batched op for the exact, deliberately narrow width-2 LCA subset.
 
-This is a narrow, performance-oriented lowering for width-2 LCA-like
-stateful graphs, not a full implementation of PsyNeuLink ``LCAMechanism``
-semantics (see BATCH_COMPILE_WIP.md, "LCA Caveats").  Because its state, RNG,
-and termination handling are still custom, it uses the ``triton_emit`` escape
-hatch instead of the declarative body form.  The single kernel body runs
-compiled on the GPU and interpreted on the CPU; there is no separate numpy
-implementation.
+The op implements canonical recurrent ``LCAMechanism`` semantics for the
+validated deterministic configuration. Broader widths, nonzero/custom state
+initialization, noise, reset, clipping, and scheduler behavior remain
+fail-closed until their semantics are represented explicitly.
 """
 
 import numpy as np
 
 from psyneulink.core.batched.backend.triton.api import TritonOpCall, pnl_triton_op
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
+from psyneulink.core.batched.ir import FP32_EXACT_INTEGER_LIMIT
 from psyneulink.core.batched.specs import (
     MechanismOpSpec,
     ParamBinding,
-    RngDecl,
     StateDecl,
     register_batched_op,
     resolve_component_param,
@@ -41,28 +38,37 @@ def _pnl_triton_lca_width2_recurrence(
     leak,
     competition,
     self_excitation,
-    noise,
     dt,
-    n0,
-    n1,
+    bias,
+    x_0,
+    scale,
+    offset,
 ):
     # The single shared leaky-competing recurrence step (width 2).  Both the
     # run-to-completion integrate loop and the co-evolution step call this, so
     # the recurrence math lives in exactly one place.  `active` masks the update
     # (lanes that are past their step budget / whose terminator finished freeze);
-    # `n0`/`n1` are the caller-drawn noise samples.
-    sqrt_dt = tl.sqrt(dt)
+    # Deterministic numeric LCI noise and offset are not yet represented by the
+    # accepted subset and are rejected during capability analysis.
     rec0 = self_excitation * act0 - competition * act1
     rec1 = -competition * act0 + self_excitation * act1
-    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt + noise * sqrt_dt * n0, pre0)
-    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt + noise * sqrt_dt * n1, pre1)
-    act0 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre0)), act0)
-    act1 = tl.where(active, 1.0 / (1.0 + tl.exp(-gain * pre1)), act1)
+    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt, pre0)
+    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt, pre1)
+    act0 = tl.where(
+        active,
+        scale / (1.0 + tl.exp(-gain * (pre0 + bias - x_0))) + offset,
+        act0,
+    )
+    act1 = tl.where(
+        active,
+        scale / (1.0 + tl.exp(-gain * (pre1 + bias - x_0))) + offset,
+        act1,
+    )
     return pre0, pre1, act0, act1
 
 
 @pnl_triton_op(
-    constexpr=("stream0", "stream1", "lca_max_steps"),
+    constexpr=("lca_max_steps",),
     helpers=(_pnl_triton_lca_width2_recurrence,),
 )
 def _pnl_triton_lca_width2_integrate(
@@ -76,20 +82,15 @@ def _pnl_triton_lca_width2_integrate(
     leak,
     competition,
     self_excitation,
-    noise,
     dt,
+    bias,
+    x_0,
+    scale,
+    offset,
     lca_steps,
-    seed,
-    random_base,
-    stream0,
-    stream1,
     lca_max_steps,
     lane_mask,
 ):
-    # `stream0`/`stream1` are absolute Philox offsets from the lane's base, one
-    # full counter space each, so the step index just adds into the low bits and
-    # the draws do not depend on `lca_max_steps` (which is only the loop cap).
-    #
     # `lca_max_steps` is the cap over *every* trial (the largest cue anywhere in
     # the data), while `lca_steps` is what this trial actually demands -- so
     # masking through to the cap makes every trial pay the worst one.
@@ -104,18 +105,16 @@ def _pnl_triton_lca_width2_integrate(
     step = 0
     while step < block_steps:
         active = step < lca_steps
-        n0 = tl.randn(seed, random_base + stream0 + step)
-        n1 = tl.randn(seed, random_base + stream1 + step)
         pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
             input0, input1, pre0, pre1, act0, act1, active,
-            gain, leak, competition, self_excitation, noise, dt, n0, n1,
+            gain, leak, competition, self_excitation, dt,
+            bias, x_0, scale, offset,
         )
         step += 1
     return pre0, pre1, act0, act1
 
 
 @pnl_triton_op(
-    constexpr=("stream0", "stream1"),
     helpers=(_pnl_triton_lca_width2_recurrence,),
 )
 def _pnl_triton_lca_width2_step(
@@ -130,33 +129,27 @@ def _pnl_triton_lca_width2_step(
     leak,
     competition,
     self_excitation,
-    noise,
     dt,
-    seed,
-    random_base,
-    step,
-    stream0,
-    stream1,
+    bias,
+    x_0,
+    scale,
+    offset,
 ):
     # One integration step for the fused co-evolution loop where the LCA steps
     # alongside a terminator.  Lanes whose terminator has finished freeze, so the
     # persisted state carried to the next trial matches when the trial ended.
     #
-    # A co-evolving LCA steps up to MAX_STEPS times, not LCA_MAX_STEPS.  Its
-    # stream owns a full counter space, so that is fine -- when the stride was
-    # LCA_MAX_STEPS this path could run off the end of its own stream and into
-    # the next one.
     active = finished == 0.0
-    n0 = tl.randn(seed, random_base + stream0 + step)
-    n1 = tl.randn(seed, random_base + stream1 + step)
     pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
         input0, input1, pre0, pre1, act0, act1, active,
-        gain, leak, competition, self_excitation, noise, dt, n0, n1,
+        gain, leak, competition, self_excitation, dt,
+        bias, x_0, scale, offset,
     )
     return pre0, pre1, act0, act1
 
 
 def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
+    del step_var
     if node_spec.output_width != 2:
         raise ValueError(
             "Triton batched LCA step supports width 2, "
@@ -168,8 +161,6 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     pre1 = ctx.state(pre_state, 1)
     act0 = ctx.state(act_state, 0)
     act1 = ctx.state(act_state, 1)
-    stream0 = ctx.rng_stream_offset(node_spec.name, 0)
-    stream1 = ctx.rng_stream_offset(node_spec.name, 1)
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_lca_width2_step,
@@ -186,13 +177,11 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 ctx.param(node_spec, "leak"),
                 ctx.param(node_spec, "competition"),
                 ctx.param(node_spec, "self_excitation"),
-                ctx.param(node_spec, "noise"),
                 ctx.param(node_spec, "time_step_size"),
-                ctx.seed,
-                "random_base",
-                step_var,
-                str(stream0),
-                str(stream1),
+                ctx.param(node_spec, "bias"),
+                ctx.param(node_spec, "x_0"),
+                ctx.param(node_spec, "scale"),
+                ctx.param(node_spec, "offset"),
             ),
         )
     )
@@ -220,12 +209,40 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         )
     if _raw_parameter(node, "clip", None) is not None:
         return BatchedDiagnostic(name, "unsupported LCA clip for batched v2")
-    if not _numeric_array_matches(_raw_parameter(node, "initial_value", 0.0), 0.0):
+    integrator = getattr(node, "integrator_function", None)
+    initial_value_parameter = getattr(
+        getattr(node, "parameters", None),
+        "initial_value",
+        None,
+    )
+    node_initial_value_matches = _parameter_matches(node, "initial_value", 0.0)
+    if (
+        not node_initial_value_matches
+        and bool(getattr(initial_value_parameter, "_user_specified", False))
+    ):
         return BatchedDiagnostic(name, "unsupported LCA initial_value for batched v2", "requires zero")
+    if not _parameter_matches(integrator, "initializer", 0.0):
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA integrator initializer for batched v2",
+            "requires zero",
+        )
+    if not node_initial_value_matches:
+        return BatchedDiagnostic(name, "unsupported LCA initial_value for batched v2", "requires zero")
+    if not _parameter_matches(integrator, "offset", 0.0):
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA integrator offset for batched v2",
+            "requires zero",
+        )
+    for noise_owner in (node, integrator):
+        if not _parameter_matches(noise_owner, "noise", 0.0):
+            return BatchedDiagnostic(
+                name,
+                "unsupported LCA noise for batched v2",
+                "requires numeric zero",
+            )
 
-    # The current LCA op has its own Logistic implementation and binds only
-    # ``gain``.  Full Logistic support for passthrough TransferMechanisms must
-    # not make these other behavior-affecting parameters look supported here.
     function = getattr(node, "function", None)
     logistic_defaults = {
         "gain": 1.0,
@@ -234,38 +251,48 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         "scale": 1.0,
         "offset": 0.0,
     }
-    for parameter_name, expected in logistic_defaults.items():
-        value = np.asarray(_raw_parameter(function, parameter_name, expected))
-        if (
-            value.size == 0
-            or value.dtype.kind not in "biufc"
-            or not np.allclose(value, value.reshape(-1)[0])
-        ):
+    for parameter_name, default in logistic_defaults.items():
+        value = np.asarray(_raw_parameter(function, parameter_name, default))
+        if value.size == 0 or value.dtype.kind not in "biuf":
             return BatchedDiagnostic(
                 name,
                 "unsupported non-scalar LCA Logistic parameter for batched v2",
                 parameter_name,
             )
-        if parameter_name != "gain" and not np.allclose(value, expected):
+        scalar = value.reshape(-1)[0]
+        if not np.isfinite(scalar) or not np.all(value == scalar):
             return BatchedDiagnostic(
                 name,
-                "unsupported LCA Logistic parameter for batched v2",
-                f"{parameter_name}={value.reshape(-1)[0]!r} (requires {expected!r})",
+                "unsupported non-scalar LCA Logistic parameter for batched v2",
+                parameter_name,
+            )
+        if abs(scalar) > np.finfo(np.float32).max:
+            return BatchedDiagnostic(
+                name,
+                "unsupported out-of-range LCA Logistic parameter for batched v2",
+                f"{parameter_name} is not representable as float32",
             )
 
-    scalar_names = ("leak", "competition", "self_excitation", "noise", "time_step_size")
+    scalar_names = ("leak", "competition", "self_excitation", "time_step_size")
     values = {}
     for parameter_name in scalar_names:
         value = np.asarray(_raw_parameter(node, parameter_name, 0.0))
         if (
             value.size == 0
-            or value.dtype.kind not in "biufc"
-            or not np.allclose(value, value.reshape(-1)[0])
+            or value.dtype.kind not in "biuf"
+            or not np.isfinite(value.reshape(-1)[0])
+            or not np.all(value == value.reshape(-1)[0])
         ):
             return BatchedDiagnostic(
                 name,
                 "unsupported non-scalar LCA parameter for batched v2",
                 parameter_name,
+            )
+        if abs(value.reshape(-1)[0]) > np.finfo(np.float32).max:
+            return BatchedDiagnostic(
+                name,
+                "unsupported out-of-range LCA parameter for batched v2",
+                f"{parameter_name} is not representable as float32",
             )
         values[parameter_name] = float(value.reshape(-1)[0])
     if values["time_step_size"] <= 0:
@@ -278,7 +305,12 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         ]
     )
     matrix = np.asarray(_raw_parameter(node, "matrix", expected_matrix))
-    if matrix.shape != (2, 2) or not np.allclose(matrix, expected_matrix):
+    if (
+        matrix.shape != (2, 2)
+        or matrix.dtype.kind not in "biuf"
+        or not np.all(np.isfinite(matrix))
+        or not np.array_equal(matrix, expected_matrix)
+    ):
         return BatchedDiagnostic(
             name,
             "unsupported LCA recurrent matrix for batched v2",
@@ -297,26 +329,45 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
             "unsupported LCA termination comparison for batched v2",
             "requires >=",
         )
+    max_executions = np.asarray(
+        _raw_parameter(node, "max_executions_before_finished", np.iinfo(np.int64).max)
+    )
+    if (
+        max_executions.size != 1
+        or max_executions.dtype.kind not in "iuf"
+        or not np.isfinite(max_executions.reshape(-1)[0])
+        or max_executions.reshape(-1)[0] < 1
+        or max_executions.reshape(-1)[0] != int(max_executions.reshape(-1)[0])
+    ):
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA maximum execution count for batched v2",
+            "requires a positive integer",
+        )
     threshold = _raw_parameter(node, "termination_threshold", None)
-    try:
-        termination_port = node.parameter_ports["termination_threshold"]
-    except Exception:
-        termination_port = None
-    controlled = bool(getattr(termination_port, "mod_afferents", ()))
-    if not controlled:
-        threshold_value = np.asarray(threshold)
-        if (
-            threshold is None
-            or threshold_value.size != 1
-            or threshold_value.dtype.kind not in "biufc"
-            or not np.isfinite(threshold_value.reshape(-1)[0])
-            or threshold_value.reshape(-1)[0] < 0
-        ):
-            return BatchedDiagnostic(
-                name,
-                "unsupported LCA termination_threshold for batched v2",
-                "requires a finite nonnegative scalar or supported OVERRIDE control",
-            )
+    threshold_value = np.asarray(threshold)
+    if (
+        threshold is None
+        or threshold_value.size != 1
+        or threshold_value.dtype.kind not in "biuf"
+        or not np.isfinite(threshold_value.reshape(-1)[0])
+        or threshold_value.reshape(-1)[0] < 0
+    ):
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA termination_threshold for batched v2",
+            "requires a finite nonnegative scalar",
+        )
+    static_steps = min(
+        max(1, int(np.ceil(threshold_value.reshape(-1)[0]))),
+        int(max_executions.reshape(-1)[0]),
+    )
+    if static_steps > FP32_EXACT_INTEGER_LIMIT:
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA termination step count for batched v2",
+            f"requires no more than {FP32_EXACT_INTEGER_LIMIT} executions",
+        )
     return None
 
 
@@ -338,20 +389,48 @@ def _raw_parameter(component, name, default=None):
 def _numeric_array_matches(value, expected) -> bool:
     try:
         array = np.asarray(value)
-        return array.dtype.kind in "biufc" and bool(np.allclose(array, expected))
+        return bool(
+            array.dtype.kind in "biuf"
+            and np.all(np.isfinite(array))
+            and np.all(array == expected)
+        )
     except Exception:
         return False
 
 
+def _parameter_matches(component, name, expected) -> bool:
+    if not _numeric_array_matches(_raw_parameter(component, name, expected), expected):
+        return False
+    defaults = getattr(component, "defaults", None)
+    default_value = getattr(defaults, name, expected) if defaults is not None else expected
+    return _numeric_array_matches(default_value, expected)
+
+
 def _lca_extract_attrs(node, composition) -> dict:
     termination_input_node = _control_monitor_source_for(composition, node)
+    threshold = _raw_parameter(node, "termination_threshold", 1200)
+    max_executions = int(
+        np.asarray(
+            _raw_parameter(
+                node,
+                "max_executions_before_finished",
+                np.iinfo(np.int64).max,
+            )
+        ).reshape(-1)[0]
+    )
     return {
         "termination_input_node": (
             None
             if termination_input_node is None
             else getattr(termination_input_node, "name", str(termination_input_node))
         ),
-        "termination_threshold": resolve_component_param(node, "termination_threshold", 1200),
+        "termination_threshold": threshold,
+        "termination_steps": (
+            None
+            if termination_input_node is not None
+            else min(max(1, int(np.ceil(float(threshold)))), max_executions)
+        ),
+        "max_executions_before_finished": max_executions,
     }
 
 
@@ -372,14 +451,25 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     if termination_node:
         cue_value = ctx.raw_input_value(termination_node)
     else:
-        cue_value = ctx.float_literal(node_spec.attrs.get("termination_threshold", 1.0))
+        # Resolve the discrete static step demand on the host.  Sending a value
+        # such as 1.00000001 through an fp32 literal before ``ceil`` would
+        # silently change PsyNeuLink's two executions into one.
+        # Keep the literal floating-point because compiled Triton (unlike its
+        # interpreter) rejects an integer operand to ``tl.ceil``.
+        cue_value = f"{int(node_spec.attrs.get('termination_steps', 1))}.0"
     steps_var = f"{ctx.component_symbol(node_spec)}_lca_steps"
-    stream0 = ctx.rng_stream_offset(node_spec.name, 0)
-    stream1 = ctx.rng_stream_offset(node_spec.name, 1)
-
+    node_step_cap = min(
+        int(
+            node_spec.attrs.get(
+                "max_executions_before_finished",
+                FP32_EXACT_INTEGER_LIMIT,
+            )
+        ),
+        FP32_EXACT_INTEGER_LIMIT,
+    )
     ctx.line(
-        f"{steps_var} = tl.minimum(tl.maximum(tl.ceil({cue_value}), 0.0), "
-        "LCA_MAX_STEPS)"
+        f"{steps_var} = tl.minimum(tl.maximum(tl.ceil({cue_value}), 1.0), "
+        f"tl.minimum({node_step_cap}, LCA_MAX_STEPS))"
     )
     ctx.emit_call(
         TritonOpCall(
@@ -396,13 +486,12 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
                 ctx.param(node_spec, "leak"),
                 ctx.param(node_spec, "competition"),
                 ctx.param(node_spec, "self_excitation"),
-                ctx.param(node_spec, "noise"),
                 ctx.param(node_spec, "time_step_size"),
+                ctx.param(node_spec, "bias"),
+                ctx.param(node_spec, "x_0"),
+                ctx.param(node_spec, "scale"),
+                ctx.param(node_spec, "offset"),
                 steps_var,
-                ctx.seed,
-                "random_base",
-                str(stream0),
-                str(stream1),
                 ctx.lca_max_steps,
                 "mask",
             ),
@@ -454,6 +543,10 @@ register_batched_op(
         display_name="LCA",
         params=(
             ParamBinding(arg="gain", pnl_name="gain", default=1.0, scope="function"),
+            ParamBinding(arg="bias", pnl_name="bias", default=0.0, scope="function"),
+            ParamBinding(arg="x_0", pnl_name="x_0", default=0.0, scope="function"),
+            ParamBinding(arg="scale", pnl_name="scale", default=1.0, scope="function"),
+            ParamBinding(arg="offset", pnl_name="offset", default=0.0, scope="function"),
             ParamBinding(
                 arg="leak",
                 get=lambda node: resolve_component_param(
@@ -471,13 +564,25 @@ register_batched_op(
                     node, "self_excitation", resolve_component_param(node, "auto", 0.0)
                 ),
             ),
-            ParamBinding(arg="noise", pnl_name="noise", default=0.0, scope="mechanism"),
             ParamBinding(
-                arg="time_step_size", pnl_name="time_step_size", default=0.01, scope="mechanism"
+                arg="time_step_size",
+                pnl_name="time_step_size",
+                default=0.01,
+                scope="mechanism",
+                minimum=0.0,
+                minimum_inclusive=False,
             ),
         ),
-        states=(StateDecl("pre", width=None, initial=0.0), StateDecl("act", width=None, initial=0.0)),
-        rng=(RngDecl(name="lca", step_extent="LCA_MAX_STEPS", width=None),),
+        states=(
+            StateDecl("pre", width=None, initial=0.0),
+            StateDecl(
+                "act",
+                width=None,
+                initial=0.0,
+                initialize_with_function=True,
+            ),
+        ),
+        rng=(),
         outputs=None,
         supports=_lca_supports,
         extract_attrs=_lca_extract_attrs,

@@ -767,7 +767,6 @@ def test_stability_flexibility_ir_debug_smoke():
             {
                 "DDM.threshold": 0.05,
                 "DDM.noise": 0.0,
-                "Task Activations [Act1, Act2].noise": 0.0,
             }
         ],
         num_estimates=1,
@@ -829,4 +828,6 @@ def test_kernel_ir_stability_flexibility_stateful_structure():
         if op.kind == "CallMechanism"
     }
     assert mechanism_types == {"LCAMechanism", "DDM"}
-    assert {stream.step_extent for stream in kernel.rng_streams} == {"LCA_MAX_STEPS", "MAX_STEPS"}
+    assert [(stream.name, stream.step_extent) for stream in kernel.rng_streams] == [
+        ("DDM.rng", "MAX_STEPS")
+    ]

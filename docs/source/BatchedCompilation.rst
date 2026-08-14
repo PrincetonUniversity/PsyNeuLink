@@ -12,7 +12,8 @@ Semantic contract
 -----------------
 
 Python PsyNeuLink execution is the semantic authority.  An explicitly
-requested batched backend never falls back to Python or LLVM.  A supported
+requested backend through the direct batched compiler API never falls back to
+Python or LLVM.  A supported
 configuration must preserve the behavior of every represented component,
 port, projection, parameter, scheduler condition, state transition, and
 output.  A configuration is rejected when that promise cannot be made; a
@@ -38,9 +39,11 @@ IR layers
 
 ``BatchedGraphIR`` is the backend-neutral semantic graph.  Component, port,
 projection, parameter, state, and RNG identities belong here.  It records
-exact routing, scheduler and reset semantics, control/modulation edges, and
-every graph element that lowering intentionally absorbs.  Display names are
-diagnostic labels, not identity.
+exact routing plus the scheduler, reset, control, and absorption semantics of
+the currently supported subset.  Unrepresented variants fail closed.  Generic
+scheduler predicates, reset events, control edges, and a complete absorption
+ledger remain incremental IR work.  Display names are diagnostic labels, not
+identity.
 
 Composition lowering assigns nonnegative numeric IDs in deterministic
 dependency order and carries them through ``KernelIR`` operations.  Input and
@@ -65,18 +68,50 @@ OutputPort names on one owner are rejected temporarily because a few internal
 graph lookups are still name-keyed; ordinary sanitized-name collisions and
 PsyNeuLink's automatically suffixed names are already distinguished by IDs.
 
-``KernelIR`` is the backend-neutral executable program.  It makes projection,
-port combination, function, state, condition, loop, and output-store
-operations explicit.  Parameter/subject/trial/estimate lane layout and fusion
-are lowering and optimization choices; they must not determine model
-semantics.  A backend emitter translates ``KernelIR`` and does not infer new
-behavior from the live Composition.
+``KernelIR`` is the backend-neutral executable program.  It currently makes
+projection, port combination, function, state, trial-loop, and output-store
+operations explicit.  Generic scheduler predicates, conditional pass regions,
+and finished/control values are not explicit yet; models that need them are
+rejected.  Parameter/subject/trial/estimate lane layout and fusion are lowering
+and optimization choices; they must not determine model semantics.  A backend
+emitter translates ``KernelIR`` and does not infer new behavior from the live
+Composition.
 
 Persistent state can be initialized either from typed constants or by applying
 a registered elementwise function to an initializer with the lane's effective
 parameters.  The latter reuses the same decorated implementation as ordinary
 execution; it is needed for recurrent sender state whose PsyNeuLink initial
 value is the mechanism function applied to its integrator initializer.
+
+The current LCA implementation is an exact but deliberately narrow semantic
+subset: width two, canonical self-excitation/competition matrix, deterministic
+zero noise, zero integrator initializer and offset, ``Never`` reset, no clip,
+and finite Logistic and recurrent parameters within the fp32 range that are
+scalar or exactly uniform broadcasts.  ``time_step_size`` must be strictly
+positive.  It supports a
+nonnegative ``TimeScale.TRIAL`` execution-count threshold either directly or
+through a narrow scalar identity cue -> ``OVERRIDE`` control chain.  Static
+thresholds are discretized on the host (ceiling, with at least one execution);
+runtime cues must be exact nonnegative integers no larger than ``2**24`` so
+fp32 conversion cannot change the step count.  The effective static execution
+count has the same bound.  Each node's ``max_executions_before_finished`` must
+be a positive integer and is enforced independently.
+
+The identity cue path is absorbed during lowering, so its Linear ``slope``,
+``intercept``, ``scale``, and ``offset`` bindings are validated-default-only:
+parameter rows may not change them until KernelIR represents and executes the
+cue transform itself.  An explicit ``AtPass(0)`` on the cue at the default
+``ENVIRONMENT_STATE_UPDATE`` time scale is accepted as the same static-origin
+timing.  Other explicit conditions or time scales on the cue, controller, or
+controlled LCA are rejected rather than ignored.
+
+Recurrent activation is initialized by applying the registered Logistic
+implementation to zero for each parameter lane and persists between trials.
+The absorbed cue/control path is a validated instance of general identity
+routing, not recognition of stability-flexibility or CSI.  Nonzero noise,
+custom state, other termination measures, and generic co-evolving
+``Always``/``WhenFinished`` scheduling and control remain structured
+rejections rather than approximate execution.
 
 Extension API
 -------------
@@ -98,6 +133,16 @@ the additional batch axes, and compares every lane to Python through exact
 component and OutputPort bindings.  LLVM is a secondary oracle for selected
 complex deterministic cases.
 
+Device buffers and current Triton kernels use fp32. Discrete outcomes and
+execution counts compare exactly. The exact LCA semantic cases compare
+deterministic numeric outputs with ``rtol=1e-5`` and
+``atol=1e-6``. This is an fp32 numerical contract, not bitwise preservation of
+host fp64 arithmetic for ill-conditioned compositions; the shared corpus will
+adopt the same default as existing looser cases are calibrated.
+Every Triton run validates its outcome tensor before outcome-buffer host
+conversion or device-side likelihood evaluation; NaN or infinite values raise
+``BatchedNumericalError`` instead of being returned or scored.
+
 Unsupported variants assert a structured diagnostic and compile rejection;
 they are not skipped.  Triton's interpreter and compiled GPU modes run in
 separate processes.  Interpreter coverage is useful for semantic iteration,
@@ -118,6 +163,6 @@ install the ``dev,triton`` extras, select ``triton_gpu``, and pass
 device; using a generic hosted ``ubuntu-latest`` runner is not a substitute.
 
 CSI is a composition-level acceptance case, not a model kind or compiler
-recognizer.  It is supported only through general implementations of its
+recognizer.  It can become supported only through general implementations of its
 functions, mechanisms, ports, scheduler conditions, control projections,
 state, and reset behavior.

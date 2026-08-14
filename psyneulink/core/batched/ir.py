@@ -5,6 +5,12 @@ from typing import Any
 import numpy as np
 
 
+# Every integer through this bound is represented exactly by IEEE-754 fp32.
+# Batched inputs and parameter buffers currently use fp32, so values that carry
+# discrete execution semantics must stay within this range before conversion.
+FP32_EXACT_INTEGER_LIMIT = 2 ** 24
+
+
 @dataclass(frozen=True)
 class BatchedParamSpec:
     name: str
@@ -15,6 +21,8 @@ class BatchedParamSpec:
     minimum_inclusive: bool = True
     maximum: float | None = None
     maximum_inclusive: bool = True
+    runtime_mutable: bool = True
+    runtime_constraint: str = ""
 
 
 @dataclass(frozen=True)

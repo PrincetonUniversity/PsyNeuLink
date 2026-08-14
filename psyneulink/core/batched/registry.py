@@ -243,7 +243,10 @@ def _normalize_model_diagnostic(
     elif reason == "unsupported LCA width for batched v2":
         code = BatchedDiagnosticCode.MODEL_LCA_WIDTH_UNSUPPORTED
         kind = "node"
-    elif reason == "unsupported scheduler condition for static batched graph":
+    elif reason in {
+        "unsupported scheduler condition for static batched graph",
+        "unsupported absorbed control scheduler condition for batched v2",
+    }:
         code = BatchedDiagnosticCode.MODEL_SCHEDULER_CONDITION_UNSUPPORTED
         kind = "node"
     elif reason == "batched schedule kind is not executable yet":

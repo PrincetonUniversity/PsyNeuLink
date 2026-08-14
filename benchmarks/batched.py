@@ -5,7 +5,8 @@ representative models, swept over the number of estimates (GPU lanes):
 
 - `DDM`         — single DDM (ddm fusion)
 - `DDMGraph`    — transfer -> DDM (ddm_graph fusion)
-- `LCA`         — isolated width-2 LCA, cue-driven (stateful_graph fusion)
+- `LCA`         — deterministic width-2 LCA with a static trial threshold
+  (stateful_graph fusion)
 - `StabilityFlexibility` — toy LCA + DDM (stateful_graph fusion)
 - `CSISurrogate`  — reserved for the realistic co-evolving model; skipped until
   generic scheduler/control lowering is executable
@@ -103,29 +104,17 @@ def _build_ddm_graph():
 
 
 def _build_lca():
-    cue = 64.0  # LCA integration steps per trial
     task = pnl.TransferMechanism(input_shapes=2, function=pnl.Linear, name="Task")
-    cue_in = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear, name="Cue")
     lca = pnl.LCAMechanism(
         input_shapes=2, function=pnl.Logistic(gain=1.0), leak=0.5, competition=1.0,
-        self_excitation=0.0, noise=0.1, termination_measure=pnl.TimeScale.TRIAL,
-        termination_threshold=1200, time_step_size=0.01, name="LCA",
+        self_excitation=0.0, noise=0.0, termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=64, time_step_size=0.01,
+        reset_stateful_function_when=pnl.Never(), name="LCA",
     )
     readout = pnl.TransferMechanism(input_shapes=2, function=pnl.Linear(slope=1.0), name="Readout")
-    ctl = pnl.ControlMechanism(
-        monitor_for_control=cue_in,
-        control_signals=[(pnl.TERMINATION_THRESHOLD, lca)], modulation=pnl.OVERRIDE,
-    )
-    comp = pnl.Composition()
-    for node in (task, cue_in, lca, readout, ctl):
-        comp.add_node(node)
-    comp.add_projection(sender=task, receiver=lca)
-    comp.add_projection(pnl.MappingProjection(matrix=np.eye(2)), sender=lca, receiver=readout)
+    comp = pnl.Composition(pathways=[[task, lca, readout]])
     plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=64)
-    inputs = {
-        task: np.tile(np.array([1.0, 0.0]), (TRIALS, 1)),
-        cue_in: np.full((TRIALS, 1), cue, dtype=float),
-    }
+    inputs = {task: np.tile(np.array([1.0, 0.0]), (TRIALS, 1))}
     param_sets = [dict() for _ in range(PARAM_SETS)]
     return plan, inputs, param_sets
 
@@ -141,7 +130,7 @@ def _build_stab_flex():
     inputs = make_input_dict(comp, task[:TRIALS], stimulus[:TRIALS], cue[:TRIALS], correct[:TRIALS])
     plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=256)
     param_sets = [
-        {"DDM.threshold": 0.05, "DDM.noise": 0.1, "Task Activations [Act1, Act2].noise": 0.0}
+        {"DDM.threshold": 0.05, "DDM.noise": 0.1}
         for _ in range(PARAM_SETS)
     ]
     return plan, inputs, param_sets

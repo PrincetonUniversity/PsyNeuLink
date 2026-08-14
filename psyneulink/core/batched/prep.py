@@ -16,7 +16,10 @@ from psyneulink.core.batched.bindings import (
     EMPTY_COMPONENT_BINDINGS,
     BatchedComponentBindings,
 )
-from psyneulink.core.batched.ir import BatchedCompositionIR
+from psyneulink.core.batched.ir import (
+    FP32_EXACT_INTEGER_LIMIT,
+    BatchedCompositionIR,
+)
 
 
 def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[dict[str, float]]:
@@ -72,6 +75,11 @@ def prepare_inputs(
     if ir.graph is None:
         raise ValueError("Batched execution requires a graph IR.")
 
+    termination_step_sources = {
+        node.attrs.get("termination_input_node")
+        for node in ir.graph.nodes
+        if node.attrs.get("termination_input_node") is not None
+    }
     values = {}
     for input_spec in ir.graph.inputs:
         raw_value = _extract_bound_input(
@@ -80,23 +88,64 @@ def prepare_inputs(
             component_bindings,
             fallback_first=len(ir.graph.inputs) == 1,
         )
+        if input_spec.node in termination_step_sources:
+            _validate_dynamic_lca_step_counts(raw_value, input_spec.name)
         coerced = _coerce_trials(raw_value, width=input_spec.width)
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
     return _split_subject_trials(values, subject_slices)
 
 
+def _validate_dynamic_lca_step_counts(value, input_name: str) -> None:
+    """Keep controlled LCA execution counts exact through the fp32 input ABI."""
+
+    try:
+        array = np.asarray(value, dtype=float)
+    except Exception as error:
+        raise ValueError(
+            f"Batched LCA step-count input '{input_name}' must be numeric."
+        ) from error
+    if (
+        array.size == 0
+        or not np.all(np.isfinite(array))
+        or np.any(array < 0)
+        or np.any(array != np.floor(array))
+        or np.any(array > FP32_EXACT_INTEGER_LIMIT)
+    ):
+        raise ValueError(
+            f"Batched LCA step-count input '{input_name}' requires finite, "
+            "nonnegative integer values no greater than "
+            f"{FP32_EXACT_INTEGER_LIMIT}."
+        )
+
+
 def lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> int:
     metadata_limit = int(ir.metadata.get("lca_max_steps", 0) or 0)
+    static_limit = 0
     input_limit = 0
     if ir.graph is not None:
         for node in ir.graph.nodes:
+            execution_cap = int(
+                node.attrs.get("max_executions_before_finished", np.iinfo(np.int64).max)
+            )
             termination_input_node = node.attrs.get("termination_input_node")
             if termination_input_node is None:
+                step_count = node.attrs.get("termination_steps")
+                if step_count is not None:
+                    static_limit = max(
+                        static_limit,
+                        min(int(step_count), execution_cap),
+                    )
                 continue
             if termination_input_node in inputs and np.size(inputs[termination_input_node]):
-                input_limit = max(input_limit, int(np.ceil(np.max(inputs[termination_input_node]))))
-    return max(1, metadata_limit, input_limit)
+                input_limit = max(
+                    input_limit,
+                    min(
+                        int(np.ceil(np.max(inputs[termination_input_node]))),
+                        execution_cap,
+                    ),
+                )
+    return max(1, metadata_limit, static_limit, input_limit)
 
 
 def _split_subject_trials(values: dict[str, np.ndarray], subject_slices) -> dict[str, np.ndarray]:
@@ -242,6 +291,11 @@ def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> 
 
 
 def _validate_parameter_constraints(spec, value: float) -> None:
+    if not spec.runtime_mutable and value != spec.default:
+        detail = f" ({spec.runtime_constraint})" if spec.runtime_constraint else ""
+        raise ValueError(
+            f"Batched parameter '{spec.name}' is fixed at {spec.default}{detail}."
+        )
     if spec.minimum is not None:
         valid = value >= spec.minimum if spec.minimum_inclusive else value > spec.minimum
         if not valid:

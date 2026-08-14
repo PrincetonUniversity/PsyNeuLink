@@ -143,66 +143,41 @@ def test_ddm_behind_transfer_deterministic_matches_pnl_python():
     _assert_matches_pnl_python(comp, {source: np.array([[1.0], [-1.0]])}, max_steps=64)
 
 
-def _make_bare_lca(*, leak, competition, self_excitation, gain, dt):
-    """An isolated width-2 LCA driven by a cue (-> step count), read out by an
-    identity transfer (the LCA is a stateful intermediate node, never terminal).
-    """
+def _make_bare_lca(*, leak, competition, self_excitation, gain, dt, steps):
+    """An isolated deterministic width-2 LCA with a static trial step count."""
 
-    task = pnl.TransferMechanism(input_shapes=2, function=pnl.Linear, name="Task")
-    cue_in = pnl.TransferMechanism(input_shapes=1, function=pnl.Linear, name="Cue")
     lca = pnl.LCAMechanism(
         input_shapes=2, function=pnl.Logistic(gain=gain), leak=leak, competition=competition,
         self_excitation=self_excitation, noise=0.0, termination_measure=pnl.TimeScale.TRIAL,
-        termination_threshold=1200, time_step_size=dt, name="LCA",
+        termination_threshold=steps, time_step_size=dt,
+        reset_stateful_function_when=pnl.Never(), name="LCA",
     )
-    readout = pnl.TransferMechanism(input_shapes=2, function=pnl.Linear(slope=1.0), name="Readout")
-    ctl = pnl.ControlMechanism(
-        monitor_for_control=cue_in,
-        control_signals=[(pnl.TERMINATION_THRESHOLD, lca)],
-        modulation=pnl.OVERRIDE,
-    )
-    comp = pnl.Composition()
-    for node in (task, cue_in, lca, readout, ctl):
-        comp.add_node(node)
-    comp.add_projection(sender=task, receiver=lca)
-    comp.add_projection(pnl.MappingProjection(matrix=np.eye(2)), sender=lca, receiver=readout)
-    return comp, task, cue_in
+    return pnl.Composition(pathways=lca), lca
 
 
-def test_bare_lca_width2_matches_documented_recurrence():
-    """Isolated width-2 LCA op: lowers/runs standalone and computes its specified
-    leaky-competing recurrence.
+def test_bare_lca_width2_matches_pnl_python():
+    """The deterministic static-threshold width-2 subset must match PsyNeuLink.
 
-    The batched width-2 LCA is a *documented approximation*, not a full PsyNeuLink
-    ``LCAMechanism`` (BATCH_COMPILE_WIP.md, "LCA Caveats"); it initializes its
-    activation state at 0 rather than ``logistic(0)``, so it is exactly
-    PNL-equivalent only in the wiring it was tuned for (covered by the
-    stability-flexibility reference test).  Here we isolate the op and check it
-    computes the recurrence it claims, for a cue-driven step count.
+    This replaces the legacy handwritten recurrence oracle with a static trial
+    threshold inside the exact deterministic support boundary. The shared
+    semantic corpus separately constructs fresh models to pin first-step
+    initialization, persistence, Logistic parameters, and threshold behavior.
     """
 
-    leak, competition, self_excitation, gain, dt, cue = 0.5, 1.0, 0.0, 1.0, 0.1, 5.0
-    comp, task, cue_in = _make_bare_lca(
-        leak=leak, competition=competition, self_excitation=self_excitation, gain=gain, dt=dt,
+    leak, competition, self_excitation, gain, dt, steps = 0.5, 1.0, 0.0, 1.0, 0.1, 5
+    comp, lca = _make_bare_lca(
+        leak=leak,
+        competition=competition,
+        self_excitation=self_excitation,
+        gain=gain,
+        dt=dt,
+        steps=steps,
     )
-    batched = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64).run(
-        inputs={task: np.array([[1.0, 0.0]]), cue_in: np.array([[cue]])},
-        parameter_sets=[{}], num_estimates=1, seed=0,
+    _assert_matches_pnl_python(
+        comp,
+        {lca: np.array([[1.0, 0.0]])},
+        max_steps=64,
     )
-    got = batched.values[0, 0, 0, 0, :]
-
-    pre = np.zeros(2)
-    act = np.zeros(2)
-    inp = np.array([1.0, 0.0])
-    for _ in range(int(np.ceil(cue))):
-        rec = np.array([
-            self_excitation * act[0] - competition * act[1],
-            -competition * act[0] + self_excitation * act[1],
-        ])
-        pre = pre + (inp + rec - leak * pre) * dt
-        act = 1.0 / (1.0 + np.exp(-gain * pre))
-
-    np.testing.assert_allclose(got, act, atol=1e-5)
 
 
 def test_fires_once_integrating_transfer_matches_pnl_python():

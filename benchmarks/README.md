@@ -2,10 +2,35 @@
 
 [airspeed velocity](https://asv.readthedocs.io) benchmarks tracking the GPU
 batched Triton simulator across commits (`benchmarks/batched.py`): `DDM`,
-`DDMGraph` (transfer→DDM), `LCA` (isolated width-2, cue-driven),
-`StabilityFlexibility` (LCA+DDM, `stateful_graph`) and `CSISurrogate` (the
-co-evolving research model, `coevolving_graph`) — each `time_run` +
-`track_checksum`, swept over the number of estimates (GPU lanes).
+`DDMGraph` (transfer→DDM), deterministic `LCA` (width-2 with a static trial
+threshold), and `StabilityFlexibility` (the narrow scalar identity
+cue→`OVERRIDE` threshold path feeding the deterministic LCA, followed by a
+stochastic DDM; `stateful_graph`) — each `time_run` + `track_checksum`, swept
+over the number of estimates (GPU lanes). Runtime LCA cues must be exact
+nonnegative integers no larger than `2**24`; static thresholds are
+host-discretized, and either form honors the LCA node's execution cap. The
+`CSISurrogate` series is retained but explicitly skipped until generic
+`Always`/`WhenFinished` scheduling and control are represented in `KernelIR`.
+
+## Exact deterministic LCA boundary
+
+Results recorded before the exact deterministic LCA migration are not directly
+comparable for `LCA` or `StabilityFlexibility`. Historical `CSISurrogate`
+results have no current baseline because that benchmark is intentionally
+disabled:
+
+- recurrent activation now starts from the PsyNeuLink value `Logistic(0)` rather
+  than from zero;
+- the supported LCA subset rejects noise and therefore declares no RNG stream;
+- removing that stream changes the DDM stream slot, and hence stochastic draws,
+  in mixed LCA+DDM kernels;
+- the standalone LCA benchmark is now deterministic; and
+- CSI is intentionally unavailable until its generic scheduler/control
+  semantics are executable; it is not a compiler-recognized model kind.
+
+The first result recorded after this migration establishes the new LCA and
+stability-flexibility baseline. Historical result files remain useful for the
+older implementation and should not be rewritten.
 
 ## Baseline reset at `504319d70d`
 

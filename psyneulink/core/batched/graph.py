@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from collections.abc import Iterable
+import inspect
 import re
 from typing import Any
 
@@ -20,6 +21,7 @@ from psyneulink.core.batched.ir import (
     BatchedProjectionSpec,
     BatchedRngStreamSpec,
     BatchedSchedulerSpec,
+    BatchedStateFunctionInitializer,
     BatchedStateSpec,
 )
 
@@ -140,6 +142,40 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         if mechanism_spec is not None:
             for state_decl in mechanism_spec.states:
                 width = state_decl.width if state_decl.width is not None else node_spec.output_width
+                function_initializer = None
+                if state_decl.initialize_with_function:
+                    function_spec = specs.function_spec_for(getattr(node, "function", None))
+                    missing_params = (
+                        ()
+                        if function_spec is None
+                        else tuple(
+                            binding.arg
+                            for binding in function_spec.params
+                            if binding.arg not in node_spec.params
+                        )
+                    )
+                    if function_spec is None or missing_params:
+                        detail = (
+                            type(getattr(node, "function", None)).__name__
+                            if function_spec is None
+                            else f"missing parameters={missing_params!r}"
+                        )
+                        rejected_nodes.append(
+                            BatchedDiagnostic(
+                                node_name,
+                                "unsupported state function initializer for batched v2",
+                                detail,
+                            )
+                        )
+                        continue
+                    function_initializer = BatchedStateFunctionInitializer(
+                        spec_key=function_spec.key,
+                        input_value=tuple([state_decl.initial] * width),
+                        params={
+                            binding.arg: node_spec.params[binding.arg]
+                            for binding in function_spec.params
+                        },
+                    )
                 state_specs.append(
                     BatchedStateSpec(
                         name=f"{node_name}.{state_decl.name}",
@@ -148,6 +184,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                         initial_value=tuple([state_decl.initial] * width),
                         component_id=node_spec.component_id,
                         state_id=len(state_specs),
+                        function_initializer=function_initializer,
                     )
                 )
 
@@ -168,6 +205,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 "finished predicates and conditional pass regions in KernelIR",
             )
         )
+
+    _freeze_absorbed_control_parameters(node_specs, params)
 
     (
         projections,
@@ -333,6 +372,46 @@ class _ParamBuilder:
         if parameter is not None:
             self.bindings_by_id[parameter_id] = parameter
         return name
+
+    def freeze(self, name: str, reason: str) -> None:
+        """Mark one lowered parameter as validated-default-only at runtime."""
+
+        for index, spec in enumerate(self.specs):
+            if spec.name == name:
+                self.specs[index] = replace(
+                    spec,
+                    runtime_mutable=False,
+                    runtime_constraint=reason,
+                )
+                return
+        raise KeyError(f"Cannot freeze unknown batched parameter '{name}'.")
+
+
+def _freeze_absorbed_control_parameters(
+    node_specs: list[BatchedNodeSpec],
+    params: _ParamBuilder,
+) -> None:
+    """Freeze values whose compile-time identity semantics are intentionally erased."""
+
+    nodes_by_name = {node.name: node for node in node_specs}
+    for node in node_specs:
+        source_name = node.attrs.get("termination_input_node")
+        if node.component_type != "LCAMechanism" or source_name is None:
+            continue
+        # A referenced source can have failed its own semantic lowering.  Its
+        # structured rejection is already part of the capability report; do
+        # not turn that unsupported model into an internal compiler error.
+        source = nodes_by_name.get(source_name)
+        if source is None:
+            continue
+        for parameter_name in source.params.values():
+            params.freeze(
+                parameter_name,
+                (
+                    f"absorbed identity termination-threshold source for "
+                    f"{node.name}"
+                ),
+            )
 
 
 def _bound_parameter(binding, component):
@@ -951,6 +1030,17 @@ def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagno
 
 
 def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
+    recurrent_projection = getattr(node, "recurrent_projection", None)
+    projection_diagnostic = _mapping_projection_support_diagnostic(
+        recurrent_projection
+    )
+    if projection_diagnostic is not None:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported LCA recurrent projection for batched v2",
+            projection_diagnostic.detail,
+        )
+
     condition = _scheduler_conditions(composition).get(node)
     stepwise = type(condition).__name__ == "Always" and any(
         type(candidate).__name__ == "DDM"
@@ -1275,6 +1365,14 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
                 "finished predicate and termination-control value that KernelIR "
                 "does not model",
             )
+        schedule_diagnostic = _absorbed_lca_schedule_support_diagnostic(
+            composition,
+            source,
+            control,
+            target,
+        )
+        if schedule_diagnostic is not None:
+            return schedule_diagnostic
         identity = type(function).__name__ == "Identity" or _is_identity_linear(function)
         if (
             identity
@@ -1290,6 +1388,61 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
         name,
         "unsupported generic ControlMechanism for batched v2",
         f"{_node_name(source)}->{_node_name(target)}.{target_port}",
+    )
+
+
+def _absorbed_lca_schedule_support_diagnostic(
+    composition,
+    source,
+    control,
+    target,
+) -> BatchedDiagnostic | None:
+    """Validate timing that remains equivalent after an LCA control is absorbed."""
+
+    conditions = _scheduler_conditions(composition)
+    for role, component in (
+        ("source", source),
+        ("controller", control),
+        ("target", target),
+    ):
+        condition = conditions.get(component)
+        if condition is None:
+            continue
+        if (
+            role == "source"
+            and type(condition).__name__ == "AtPass"
+            and tuple(getattr(condition, "args", ())) == (0,)
+            and _condition_time_scale_name(condition)
+            == "ENVIRONMENT_STATE_UPDATE"
+        ):
+            continue
+        return BatchedDiagnostic(
+            _node_name(control),
+            "unsupported absorbed control scheduler condition for batched v2",
+            f"{role} {_node_name(component)} uses {_condition_label(condition)}",
+        )
+    return None
+
+
+def _condition_time_scale_name(condition) -> str | None:
+    """Return a scheduler condition's captured time-scale name, if explicit."""
+
+    try:
+        time_scale = inspect.getclosurevars(condition.func).nonlocals["time_scale"]
+    except (AttributeError, KeyError, TypeError):
+        return None
+    return getattr(time_scale, "name", str(time_scale))
+
+
+def _condition_label(condition) -> str:
+    condition_name = type(condition).__name__
+    if condition_name != "AtPass":
+        return condition_name
+    args = tuple(getattr(condition, "args", ()))
+    pass_count = args[0] if args else "?"
+    return (
+        f"AtPass({pass_count}, "
+        f"time_scale={_condition_time_scale_name(condition) or 'unknown'})"
     )
 
 
