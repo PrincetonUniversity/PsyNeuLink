@@ -1388,9 +1388,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Remove internal prefix from name if an internal instance is the
         # source of the copy
-        # FIXME: Use str.removeprefix in Python 3.9+
-        if newone.name.startswith(_PNL_INHERENT_PREFIX):
-            newone.name = newone.name[len(_PNL_INHERENT_PREFIX):]
+        newone.name = newone.name.removeprefix(_PNL_INHERENT_PREFIX)
 
         return newone
 
