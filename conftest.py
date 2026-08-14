@@ -1,9 +1,11 @@
 import contextlib
 import doctest
+import importlib.util
 import inspect
 import io
 import itertools
 import numpy as np
+import os
 import pytest
 import re
 import types
@@ -43,9 +45,89 @@ def pytest_addoption(parser):
     parser.addoption('--fp-precision', action='store', default='fp64', choices=['fp32', 'fp64'],
                      help='Set default fp precision for the runtime compiler. Default: fp64')
 
+    parser.addoption(
+        '--require-batched-backend',
+        action='append',
+        default=[],
+        choices=['triton_interpreter', 'triton_gpu'],
+        help=(
+            'Require a batched test backend to be usable instead of skipping it. '
+            'May be repeated; intended for dedicated backend CI jobs.'
+        ),
+    )
+
+
+def _probe_required_batched_backend(backend):
+    missing = [name for name in ('torch', 'triton') if importlib.util.find_spec(name) is None]
+    if missing:
+        raise RuntimeError(f"missing required package(s): {', '.join(missing)}")
+
+    interpret_env = os.environ.get('TRITON_INTERPRET')
+    if backend == 'triton_interpreter' and interpret_env != '1':
+        raise RuntimeError('TRITON_INTERPRET=1 must be set before pytest starts')
+    if backend == 'triton_gpu' and interpret_env is not None:
+        raise RuntimeError('TRITON_INTERPRET must be unset for GPU tests')
+
+    import torch
+    import triton.language as tl
+
+    is_interpreted = type(tl.randn).__name__ == 'InterpretedFunction'
+    if backend == 'triton_interpreter' and not is_interpreted:
+        raise RuntimeError('Triton was not imported in interpreter mode')
+    if backend == 'triton_gpu':
+        if is_interpreted:
+            raise RuntimeError('Triton was imported in interpreter mode')
+        if not torch.cuda.is_available():
+            raise RuntimeError('torch.cuda.is_available() is false')
+        # Exercise CUDA initialization, rather than accepting a visible but unusable device.
+        torch.empty(1, device='cuda')
+        torch.cuda.synchronize()
+
 def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
     assert 'llvm' in item.keywords or 'cuda' not in item.keywords
+
+    batched_backends = {'triton_interpreter', 'triton_gpu'} & set(item.keywords)
+    assert len(batched_backends) <= 1, 'A test cannot use both Triton execution modes'
+    assert not batched_backends or 'batched' in item.keywords, \
+        'Triton backend tests must also be marked batched'
+    assert not batched_backends or 'triton' in item.keywords, \
+        'Triton backend tests must also have the triton grouping marker'
+
+    if batched_backends:
+        backend = batched_backends.pop()
+        missing = [name for name in ('torch', 'triton') if importlib.util.find_spec(name) is None]
+        required = backend in item.config.getoption('--require-batched-backend')
+        if missing:
+            message = f"{backend} requires: {', '.join(missing)}"
+            if required:
+                pytest.fail(message, pytrace=False)
+            pytest.skip(message)
+
+        if backend == 'triton_interpreter':
+            if os.environ.get('TRITON_INTERPRET') != '1':
+                message = (
+                    'triton_interpreter requires external TRITON_INTERPRET=1 '
+                    'before pytest starts'
+                )
+                if required:
+                    pytest.fail(message, pytrace=False)
+                pytest.skip(message)
+        else:
+            # Triton records compiled mode as ``TRITON_INTERPRET=0`` after the
+            # first JIT launch.  Only an enabled interpreter value conflicts
+            # with subsequent GPU cases in the same process.
+            if os.environ.get('TRITON_INTERPRET') not in (None, '', '0'):
+                message = 'triton_gpu requires TRITON_INTERPRET to be unset before pytest starts'
+                if required:
+                    pytest.fail(message, pytrace=False)
+                pytest.skip(message)
+            import torch
+            if not torch.cuda.is_available():
+                message = 'triton_gpu requires an available CUDA device'
+                if required:
+                    pytest.fail(message, pytrace=False)
+                pytest.skip(message)
 
     # It the item is a parametrized function. It has a 'callspec' attribute.
     # Convert any dict arguments to an unmutable MappingProxyType.
@@ -98,6 +180,13 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("autodiff_mode", auto_modes)
 
 
+def pytest_collection_modifyitems(items):
+    """Keep ``triton`` as the grouping marker for either concrete backend."""
+    for item in items:
+        if 'triton_interpreter' in item.keywords or 'triton_gpu' in item.keywords:
+            item.add_marker(pytest.mark.triton)
+
+
 _old_register_prefix = None
 
 # Collection hooks
@@ -116,9 +205,23 @@ def pytest_sessionstart(session):
     _old_register_prefix = psyneulink.core.globals.registry._register_auto_name_prefix
     psyneulink.core.globals.registry._register_auto_name_prefix = "__pnl_pytest_"
 
+    for backend in session.config.getoption('--require-batched-backend'):
+        try:
+            _probe_required_batched_backend(backend)
+        except Exception as error:
+            raise pytest.UsageError(
+                f"Required batched backend '{backend}' is unavailable: {error}"
+            ) from error
+
 def pytest_collection_finish(session):
     """Restore component prefix at the end of test collection."""
     psyneulink.core.globals.registry._register_auto_name_prefix = _old_register_prefix
+
+    for backend in session.config.getoption('--require-batched-backend'):
+        if not any(backend in item.keywords for item in session.items):
+            raise pytest.UsageError(
+                f"Required batched backend '{backend}' has no collected tests"
+            )
 
 # Runtest hooks
 def pytest_runtest_call(item):
@@ -154,6 +257,15 @@ def pytest_runtest_teardown(item):
 def comp_mode_no_per_node():
     # dummy fixture to allow 'comp_mode' filtering
     pass
+
+
+@pytest.fixture(params=[
+    pytest.param('triton_cpu', marks=pytest.mark.triton_interpreter, id='triton_interpreter'),
+    pytest.param('triton', marks=pytest.mark.triton_gpu, id='triton_gpu'),
+])
+def batched_backend(request):
+    """Batched execution backends, isolated by mutually exclusive test markers."""
+    return request.param
 
 @pytest.fixture
 def benchmark(benchmark):

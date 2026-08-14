@@ -1,4 +1,3 @@
-import importlib.util
 import sys
 from pathlib import Path
 
@@ -32,7 +31,10 @@ from psyneulink.core.components.functions.userdefinedfunction import UserDefined
 from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction
 
 
-pytestmark = pytest.mark.usefixtures("set_threads_to_one")
+pytestmark = [
+    pytest.mark.batched,
+    pytest.mark.usefixtures("set_threads_to_one"),
+]
 
 
 _TRITON_TEST_GLOBAL = 2.0
@@ -63,14 +65,9 @@ def _make_ddm_comp(noise=0.0):
     return pnl.Composition(pathways=decision), decision
 
 
-# Numeric batched execution runs the generated kernels through Triton's CPU
-# interpreter, so it needs torch + triton importable (no CUDA required).  Pure
-# lowering / diagnostic / source-emission tests do not import triton and run
-# unconditionally.
-requires_triton = pytest.mark.skipif(
-    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
-    reason="torch + triton are required for batched CPU (interpret) execution",
-)
+# Numeric execution uses the externally configured Triton interpreter. Pure
+# lowering, diagnostic, and source-emission tests remain backend-independent.
+requires_triton = pytest.mark.triton_interpreter
 
 
 @pytest.mark.composition

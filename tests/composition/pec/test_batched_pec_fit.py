@@ -8,8 +8,6 @@ data with the on-device histogram likelihood.  Correctness of the recovered
 parameters at PEC scale is validated separately on GPU.
 """
 
-import importlib.util
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -22,12 +20,12 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
 )
 
-requires_triton = pytest.mark.skipif(
-    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
-    reason="torch + triton are required for batched CPU (interpret) execution",
-)
-
-pytestmark = [pytest.mark.composition, requires_triton]
+pytestmark = [
+    pytest.mark.batched,
+    pytest.mark.composition,
+    pytest.mark.triton,
+    pytest.mark.triton_interpreter,
+]
 
 
 def _make_ddm_pec(batched_backend, num_estimates=150, threshold=0.2):

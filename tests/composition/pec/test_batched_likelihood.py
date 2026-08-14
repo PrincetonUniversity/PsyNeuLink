@@ -21,12 +21,9 @@ requires_torch = pytest.mark.skipif(
     importlib.util.find_spec("torch") is None,
     reason="torch is required for the histogram likelihood",
 )
-requires_triton = pytest.mark.skipif(
-    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
-    reason="torch + triton are required for batched CPU (interpret) execution",
-)
+requires_triton = pytest.mark.triton_interpreter
 
-pytestmark = [pytest.mark.composition]
+pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
 
 def _numpy_reference(sim, exp, cat_mask, bins, bin_range):

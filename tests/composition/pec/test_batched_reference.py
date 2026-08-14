@@ -15,7 +15,6 @@ oracle), which runs as its own process because Triton interpret (CPU) and
 compiled (GPU) modes cannot coexist in one process.
 """
 
-import importlib.util
 import sys
 from pathlib import Path
 
@@ -31,12 +30,12 @@ from psyneulink.core.batched import (
 )
 
 
-requires_triton = pytest.mark.skipif(
-    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
-    reason="torch + triton are required for batched CPU (interpret) execution",
-)
-
-pytestmark = [pytest.mark.composition, requires_triton]
+pytestmark = [
+    pytest.mark.batched,
+    pytest.mark.composition,
+    pytest.mark.triton,
+    pytest.mark.triton_interpreter,
+]
 
 
 def _pnl_python_outcomes(comp, inputs, output_specs=None):

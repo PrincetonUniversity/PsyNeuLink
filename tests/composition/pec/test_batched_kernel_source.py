@@ -31,7 +31,7 @@ from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
 from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
 
 
-pytestmark = pytest.mark.composition
+pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden_kernels"
 

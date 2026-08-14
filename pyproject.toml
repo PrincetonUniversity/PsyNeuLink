@@ -79,6 +79,7 @@ addopts = [
 markers = [
     "stress: Long running tests, skipped by defaults",
     "autodiff_constructor",
+    "batched: Tests of batched Composition compilation and execution",
     "acmisc",
     "accorrectness",
     "actime",
@@ -116,7 +117,9 @@ markers = [
     "mimo: Tests using multiple inputs and outputs",
     "model: Tests based on existing models",
     "pytorch: Tests using Torch",
-    "triton: Tests using Triton",
+    "triton: Tests using a Triton backend or Triton lowering",
+    "triton_interpreter: Batched Triton tests executed in interpreter mode",
+    "triton_gpu: Batched Triton tests executed on a real CUDA device",
 ]
 
 # These are needed for test fixtures or default parameters

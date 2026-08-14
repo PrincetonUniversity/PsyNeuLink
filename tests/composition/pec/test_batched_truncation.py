@@ -11,7 +11,6 @@ time_step_size=0.01 and input 1.0 the particle gains 0.01/step, so it crosses in
 5 steps.  ``max_steps=2`` therefore truncates every lane; ``max_steps=64`` none.
 """
 
-import importlib.util
 import warnings
 
 import numpy as np
@@ -23,12 +22,12 @@ from psyneulink.core.batched import BatchedCompositionCompiler
 from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 
 
-requires_triton = pytest.mark.skipif(
-    importlib.util.find_spec("triton") is None or importlib.util.find_spec("torch") is None,
-    reason="torch + triton are required for batched CPU (interpret) execution",
-)
-
-pytestmark = [pytest.mark.composition, requires_triton]
+pytestmark = [
+    pytest.mark.batched,
+    pytest.mark.composition,
+    pytest.mark.triton,
+    pytest.mark.triton_interpreter,
+]
 
 
 def _ddm_plan(max_steps):
