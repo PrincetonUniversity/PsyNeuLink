@@ -88,6 +88,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         component_type = type(node).__name__
         node_name = _node_name(node)
         if component_type == "ControlMechanism":
+            diagnostic = _control_support_diagnostic(node, composition)
+            if diagnostic is not None:
+                rejected_nodes.append(diagnostic)
+                continue
             supported_nodes.append(node_name)
             node_specs.append(_node_spec(node, params, model_kind, composition))
             continue
@@ -113,8 +117,9 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     )
                 )
 
-    projections, projection_rejections, projection_bindings = _projection_specs(composition, node_names)
+    projections, projection_rejections, projection_bindings = _projection_specs(composition, nodes)
     rejected_nodes.extend(projection_rejections)
+    rejected_nodes.extend(_output_support_diagnostics(outputs, nodes))
 
     graph = None
     if not rejected_nodes and not rejected_conditions:
@@ -207,6 +212,8 @@ def _node_spec(node, params: _ParamBuilder, model_kind: str | None, composition)
     attrs: dict[str, Any] = {
         "output_ports": tuple(port.name for port in getattr(node, "output_ports", [])),
     }
+    if component_type == "ControlMechanism":
+        attrs["absorbed_control"] = _absorbed_control_attrs(node)
     # A delayed within-trial onset (AtPass(n>0)): the co-evolution loop withholds
     # this node's output until step n. Only meaningful/executable in a co-evolving
     # graph (AtPass(n>0) is rejected at the schedule level otherwise).
@@ -277,6 +284,30 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
     function_type = type(function).__name__
     node_name = _node_name(node)
 
+    diagnostic = _single_input_support_diagnostic(node)
+    if diagnostic is not None:
+        return diagnostic
+    diagnostic = _function_parameter_support_diagnostic(node_name, function)
+    if diagnostic is not None:
+        return diagnostic
+
+    if type(node).__name__ == "TransferMechanism":
+        noise = _parameter_value(node, "noise", 0.0)
+        integrator_noise = _parameter_value(getattr(node, "integrator_function", None), "noise", 0.0)
+        if not _is_zero(noise) or (_integrator_mode_enabled(node) and not _is_zero(integrator_noise)):
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported TransferMechanism noise for batched v2",
+                "noise must be numeric zero",
+            )
+        clip = _parameter_value(node, "clip", None)
+        if clip is not None:
+            return BatchedDiagnostic(
+                node_name,
+                "unsupported TransferMechanism clip for batched v2",
+                repr(clip),
+            )
+
     mechanism_spec = specs.mechanism_spec_for(node)
     if mechanism_spec is not None:
         if mechanism_spec.function_class is not None and type(function) is not mechanism_spec.function_class:
@@ -287,6 +318,10 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
             )
         if mechanism_spec.supports is not None:
             diagnostic = mechanism_spec.supports(node)
+            if diagnostic is not None:
+                return diagnostic
+        if type(node).__name__ == "LCAMechanism":
+            diagnostic = _lca_execution_support_diagnostic(node, composition)
             if diagnostic is not None:
                 return diagnostic
         return None
@@ -314,13 +349,369 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
     return BatchedDiagnostic(node_name, "unsupported node for batched v2", type(node).__name__)
 
 
+def _single_input_support_diagnostic(node) -> BatchedDiagnostic | None:
+    input_ports = tuple(getattr(node, "input_ports", ()))
+    if len(input_ports) != 1:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported multi-port input routing for batched v2",
+            f"input_ports={len(input_ports)}",
+        )
+    output_ports = tuple(getattr(node, "output_ports", ()))
+    mechanism_spec = specs.mechanism_spec_for(node)
+    if mechanism_spec is not None and mechanism_spec.outputs is not None:
+        actual = {getattr(port, "name", "") for port in output_ports}
+        required = {decl.port for decl in mechanism_spec.outputs}
+        if not required.issubset(actual):
+            return BatchedDiagnostic(
+                _node_name(node),
+                "unsupported mechanism output-port configuration for batched v2",
+                f"requires {sorted(required)!r}",
+            )
+    elif len(output_ports) != 1:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported multi-port output routing for batched v2",
+            f"output_ports={len(output_ports)}",
+        )
+    return None
+
+
+def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagnostic | None:
+    function_type = type(function).__name__
+    unsupported_defaults = {
+        "Linear": {"scale": 1.0, "offset": 0.0},
+        "Logistic": {"bias": 0.0, "x_0": 0.0, "scale": 1.0, "offset": 0.0},
+    }.get(function_type, {})
+    for parameter_name, expected in unsupported_defaults.items():
+        value = _parameter_value(function, parameter_name, expected)
+        if not _numeric_equal(value, expected):
+            return BatchedDiagnostic(
+                node_name,
+                f"unsupported {function_type} parameter for batched v2",
+                f"{parameter_name}={value!r} (requires {expected!r})",
+            )
+    return None
+
+
+def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
+    condition = _scheduler_conditions(composition).get(node)
+    stepwise = type(condition).__name__ == "Always" and any(
+        type(candidate).__name__ == "DDM"
+        and type(candidate_condition).__name__ == "WhenFinished"
+        and tuple(getattr(candidate_condition, "args", ())) == (node,)
+        for candidate, candidate_condition in _scheduler_conditions(composition).items()
+    )
+    execute_until_finished = bool(_parameter_value(node, "execute_until_finished", True))
+    if execute_until_finished == (not stepwise):
+        return None
+    return BatchedDiagnostic(
+        _node_name(node),
+        "unsupported LCA execution mode for batched v2",
+        "execute_until_finished must be False only for an Always/WhenFinished stepwise pair",
+    )
+
+
+_MISSING = object()
+
+
+def _parameter_value(component, name, default=_MISSING):
+    """Read a live parameter without the scalar coercion used for kernel bindings."""
+
+    if component is not None:
+        parameters = getattr(component, "parameters", None)
+        parameter = getattr(parameters, name, None) if parameters is not None else None
+        if parameter is not None:
+            for getter_name in ("get", "_get"):
+                getter = getattr(parameter, getter_name, None)
+                if getter is not None:
+                    try:
+                        return getter(None)
+                    except Exception:
+                        pass
+        defaults = getattr(component, "defaults", None)
+        if defaults is not None and hasattr(defaults, name):
+            return getattr(defaults, name)
+        if hasattr(component, name):
+            return getattr(component, name)
+    return None if default is _MISSING else default
+
+
+def _numeric_equal(value, expected) -> bool:
+    try:
+        array = np.asarray(value)
+        return array.dtype.kind in "biufc" and bool(np.allclose(array, expected))
+    except Exception:
+        return False
+
+
+def _is_zero(value) -> bool:
+    return value is None or _numeric_equal(value, 0.0)
+
+
+def _primary_input_port_name(node) -> str:
+    ports = tuple(getattr(node, "input_ports", ()))
+    return getattr(ports[0], "name", "InputPort-0") if ports else "InputPort-0"
+
+
+def _supported_output_ports(node) -> set[str]:
+    ports = tuple(getattr(node, "output_ports", ()))
+    mechanism_spec = specs.mechanism_spec_for(node)
+    if mechanism_spec is not None and mechanism_spec.outputs is not None:
+        return {decl.port for decl in mechanism_spec.outputs}
+    return {getattr(ports[0], "name", "RESULT")} if ports else {"RESULT"}
+
+
+def _output_support_diagnostics(outputs, nodes) -> list[BatchedDiagnostic]:
+    if outputs is None:
+        return []
+    node_names = {_node_name(node) for node in nodes}
+    rejected = []
+    for output in outputs:
+        if isinstance(output, str):
+            continue
+        owner = getattr(output, "owner", None)
+        port_name = getattr(output, "name", str(output))
+        if owner is None or _node_name(owner) not in node_names or port_name not in _supported_output_ports(owner):
+            rejected.append(
+                BatchedDiagnostic(
+                    _node_name(owner) if owner is not None else port_name,
+                    "unsupported output-port routing for batched v2",
+                    port_name,
+                )
+            )
+    return rejected
+
+
+def _control_edges(control):
+    signals = tuple(getattr(control, "control_signals", ()))
+    efferents = tuple(
+        projection
+        for signal in signals
+        for projection in getattr(signal, "efferents", ())
+    )
+    monitors = tuple(
+        projection
+        for port in getattr(control, "input_ports", ())
+        for projection in getattr(port, "path_afferents", ())
+    )
+    return signals, efferents, monitors
+
+
+def _absorbed_control_attrs(control) -> dict[str, str]:
+    _, efferents, monitors = _control_edges(control)
+    target = getattr(getattr(efferents[0], "receiver", None), "owner", None) if efferents else None
+    source = getattr(getattr(monitors[0], "sender", None), "owner", None) if monitors else None
+    receiver = getattr(efferents[0], "receiver", None) if efferents else None
+    return {
+        "source": _node_name(source) if source is not None else "",
+        "target": _node_name(target) if target is not None else "",
+        "parameter": getattr(receiver, "name", ""),
+        "modulation": "OVERRIDE",
+    }
+
+
+def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | None:
+    """Accept only control edges whose semantics are explicitly folded by an op."""
+
+    name = _node_name(control)
+    signals, efferents, monitors = _control_edges(control)
+    if len(signals) != 1 or len(efferents) != 1 or len(monitors) != 1:
+        return BatchedDiagnostic(
+            name,
+            "unsupported generic ControlMechanism for batched v2",
+            "requires exactly one monitor, ControlSignal, and ControlProjection",
+        )
+    control_projection = efferents[0]
+    monitor_projection = monitors[0]
+    if type(control_projection).__name__ != "ControlProjection" or type(monitor_projection).__name__ != "MappingProjection":
+        return BatchedDiagnostic(name, "unsupported generic control projection for batched v2")
+    signal = signals[0]
+    if not _is_override(getattr(signal, "modulation", getattr(control, "modulation", None))):
+        return BatchedDiagnostic(
+            name,
+            "unsupported control modulation for batched v2",
+            str(getattr(signal, "modulation", None)),
+        )
+
+    receiver = getattr(control_projection, "receiver", None)
+    target = getattr(receiver, "owner", None)
+    source = getattr(getattr(monitor_projection, "sender", None), "owner", None)
+    target_port = getattr(receiver, "name", "")
+    monitor_is_identity = _is_identity_scalar_projection(monitor_projection)
+    monitor_is_parameter_input = _is_external_parameter_projection(
+        composition, monitor_projection
+    )
+    if target is None or source is None or not (monitor_is_identity or monitor_is_parameter_input):
+        return BatchedDiagnostic(
+            name,
+            "unsupported control monitor routing for batched v2",
+            "monitor must be a scalar identity projection",
+        )
+    try:
+        target_afferents = tuple(receiver.mod_afferents)
+    except Exception:
+        target_afferents = ()
+    if target_afferents != (control_projection,):
+        return BatchedDiagnostic(
+            name,
+            "ambiguous control projection routing for batched v2",
+            f"{_node_name(target)}.{target_port}",
+        )
+
+    function = getattr(control, "function", None)
+    function_diagnostic = _function_parameter_support_diagnostic(name, function)
+    if function_diagnostic is not None:
+        return function_diagnostic
+
+    if (
+        monitor_is_parameter_input
+        and type(function).__name__ == "Identity"
+        and _is_declared_batched_parameter(target, target_port)
+    ):
+        return None
+
+    if type(target).__name__ == "LCAMechanism" and target_port == "termination_threshold":
+        from psyneulink.core.batched.components.lca import _control_monitor_source_for
+
+        identity = type(function).__name__ == "Identity" or (
+            type(function).__name__ == "Linear"
+            and _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
+            and _numeric_equal(_parameter_value(function, "intercept", 0.0), 0.0)
+        )
+        if (
+            identity
+            and _control_monitor_source_for(composition, target) is source
+            and _supported_lca_termination_source(source)
+        ):
+            return None
+    elif type(target).__name__ == "DDM" and target_port == "threshold":
+        if _supported_ddm_threshold_override(composition, control, source, target):
+            return None
+
+    return BatchedDiagnostic(
+        name,
+        "unsupported generic ControlMechanism for batched v2",
+        f"{_node_name(source)}->{_node_name(target)}.{target_port}",
+    )
+
+
+def _is_override(value) -> bool:
+    return str(value).upper().endswith("OVERRIDE")
+
+
+def _is_identity_scalar_projection(projection) -> bool:
+    matrix = np.asarray(_get_matrix(projection))
+    sender = getattr(projection, "sender", None)
+    owner = getattr(sender, "owner", None)
+    ports = tuple(getattr(owner, "output_ports", ()))
+    primary_name = getattr(ports[0], "name", "RESULT") if ports else "RESULT"
+    return (
+        matrix.shape == (1, 1)
+        and _numeric_equal(matrix, 1.0)
+        and getattr(sender, "name", primary_name) == primary_name
+    )
+
+
+def _is_external_parameter_projection(composition, projection) -> bool:
+    sender = getattr(projection, "sender", None)
+    source = getattr(sender, "owner", None)
+    return (
+        source is getattr(composition, "input_CIM", None)
+        and np.asarray(_get_matrix(projection)).shape == (1, 1)
+        and _numeric_equal(_get_matrix(projection), 1.0)
+    )
+
+
+def _is_declared_batched_parameter(target, parameter_name) -> bool:
+    mechanism_spec = specs.mechanism_spec_for(target)
+    if mechanism_spec is None:
+        return False
+    return any(
+        parameter_name in {binding.arg, binding.pnl_name, *binding.fallbacks}
+        for binding in mechanism_spec.params
+    )
+
+
+def _supported_lca_termination_source(source) -> bool:
+    if specs.passthrough_spec_for(source) is None or len(tuple(getattr(source, "input_ports", ()))) != 1:
+        return False
+    if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
+        return False
+    function = getattr(source, "function", None)
+    if type(function).__name__ != "Linear":
+        return False
+    return (
+        _function_parameter_support_diagnostic(_node_name(source), function) is None
+        and _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
+        and _numeric_equal(_parameter_value(function, "intercept", 0.0), 0.0)
+        and _is_zero(_parameter_value(source, "noise", 0.0))
+        and _parameter_value(source, "clip", None) is None
+    )
+
+
+def _supported_ddm_threshold_override(composition, control, source, target) -> bool:
+    from psyneulink.core.batched.components.ddm import threshold_override_collapse
+
+    try:
+        chain = threshold_override_collapse(target)
+    except Exception:
+        return False
+    if chain is None or chain[0] != _node_name(source):
+        return False
+    if type(source).__name__ != "TransferMechanism":
+        return False
+    function = getattr(source, "function", None)
+    integrator = getattr(source, "integrator_function", None)
+    if type(function).__name__ != "Linear" or type(integrator).__name__ != "SimpleIntegrator":
+        return False
+    if _function_parameter_support_diagnostic(_node_name(source), function) is not None:
+        return False
+    if not _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0):
+        return False
+    if not _is_zero(_parameter_value(source, "noise", 0.0)) or _parameter_value(source, "clip", None) is not None:
+        return False
+    if not _is_zero(_parameter_value(integrator, "noise", 0.0)) or not _is_zero(_parameter_value(integrator, "initializer", 0.0)):
+        return False
+    if type(getattr(source, "reset_stateful_function_when", None)).__name__ != "AtTrialStart":
+        return False
+    if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
+        return False
+    if not _is_zero(getattr(getattr(source, "defaults", None), "variable", 0.0)):
+        return False
+    source_condition = _scheduler_conditions(composition).get(source)
+    control_condition = _scheduler_conditions(composition).get(control)
+    target_condition = _scheduler_conditions(composition).get(target)
+    if source_condition is None:
+        return False
+    return _same_condition(source_condition, control_condition) and _same_condition(
+        source_condition, target_condition
+    )
+
+
+def _same_condition(left, right) -> bool:
+    if type(left) is not type(right):
+        return False
+    left_args = tuple(_node_name(arg) if hasattr(arg, "name") else arg for arg in getattr(left, "args", ()))
+    right_args = tuple(_node_name(arg) if hasattr(arg, "name") else arg for arg in getattr(right, "args", ()))
+    return left_args == right_args
+
+
 def _projection_specs(
     composition,
-    node_names: set[str],
+    nodes,
 ) -> tuple[list[BatchedProjectionSpec], list[BatchedDiagnostic], dict[str, object]]:
     projections: list[BatchedProjectionSpec] = []
     rejected: list[BatchedDiagnostic] = []
     bindings: dict[str, object] = {}
+    node_by_name = {_node_name(node): node for node in nodes}
+    node_names = set(node_by_name)
+    executable_order = {
+        _node_name(node): index
+        for index, node in enumerate(
+            node for node in nodes if type(node).__name__ != "ControlMechanism"
+        )
+    }
     for node in _composition_nodes(composition):
         for input_port in getattr(node, "input_ports", []):
             for projection in getattr(input_port, "path_afferents", []):
@@ -333,7 +724,21 @@ def _projection_specs(
                 receiver_name = _node_name(receiver)
                 if sender_name not in node_names or receiver_name not in node_names:
                     continue
-                if projection_type in {"AutoAssociativeProjection", "ControlProjection"}:
+                if projection_type == "AutoAssociativeProjection":
+                    continue
+                # Monitor projections into an exactly-supported absorbed controller
+                # are represented by that controller's semantic metadata, not as a
+                # graph op.  No other path through a ControlMechanism is executable.
+                if type(receiver).__name__ == "ControlMechanism":
+                    continue
+                if type(sender).__name__ == "ControlMechanism" or projection_type == "ControlProjection":
+                    rejected.append(
+                        BatchedDiagnostic(
+                            getattr(projection, "name", projection_type),
+                            "unsupported control projection for batched v2",
+                            f"{sender_name}->{receiver_name}",
+                        )
+                    )
                     continue
                 projection_spec = specs.projection_spec_for(projection)
                 if projection_spec is None:
@@ -347,6 +752,26 @@ def _projection_specs(
                     continue
                 sender_port = getattr(getattr(projection, "sender", None), "name", "RESULT")
                 receiver_port = getattr(getattr(projection, "receiver", None), "name", "InputPort-0")
+                supported_sender_ports = _supported_output_ports(sender)
+                primary_receiver_port = _primary_input_port_name(receiver)
+                if sender_port not in supported_sender_ports or receiver_port != primary_receiver_port:
+                    rejected.append(
+                        BatchedDiagnostic(
+                            getattr(projection, "name", projection_type),
+                            "unsupported multi-port projection routing for batched v2",
+                            f"{sender_name}.{sender_port}->{receiver_name}.{receiver_port}",
+                        )
+                    )
+                    continue
+                if executable_order[sender_name] >= executable_order[receiver_name]:
+                    rejected.append(
+                        BatchedDiagnostic(
+                            getattr(projection, "name", projection_type),
+                            "non-topological graph emission order for batched v2",
+                            f"{sender_name}->{receiver_name}",
+                        )
+                    )
+                    continue
                 projections.append(
                     BatchedProjectionSpec(
                         sender=sender_name,
@@ -678,9 +1103,24 @@ def _absorbed_nodes(composition, nodes) -> set[str]:
     for node in nodes:
         if type(node).__name__ != "DDM":
             continue
-        chain = threshold_override_collapse(node)
-        if chain is not None:
-            absorbed.add(chain[0])
+        try:
+            chain = threshold_override_collapse(node)
+        except Exception:
+            chain = None
+        if chain is None:
+            continue
+        for control in nodes:
+            if type(control).__name__ != "ControlMechanism":
+                continue
+            attrs = _absorbed_control_attrs(control)
+            if (
+                attrs["source"] == chain[0]
+                and attrs["target"] == _node_name(node)
+                and attrs["parameter"] == "threshold"
+                and _control_support_diagnostic(control, composition) is None
+            ):
+                absorbed.add(chain[0])
+                break
     return absorbed
 
 

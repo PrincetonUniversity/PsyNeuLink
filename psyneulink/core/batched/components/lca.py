@@ -25,6 +25,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
     LCAMechanism,
 )
+from psyneulink.core.scheduling.time import TimeScale
 
 
 @pnl_triton_op
@@ -199,14 +200,117 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
 
 
 def _lca_supports(node) -> BatchedDiagnostic | None:
+    name = getattr(node, "name", str(node))
     width = _primary_output_width(node)
     if width != 2:
         return BatchedDiagnostic(
-            getattr(node, "name", str(node)),
+            name,
             "unsupported LCA width for batched v2",
             f"width={width}",
         )
+    if type(getattr(node, "integrator_function", None)).__name__ != "LeakyCompetingIntegrator":
+        return BatchedDiagnostic(name, "unsupported LCA integrator for batched v2")
+    if not bool(_raw_parameter(node, "integrator_mode", True)):
+        return BatchedDiagnostic(name, "unsupported LCA integrator_mode for batched v2", "False")
+    if type(getattr(node, "reset_stateful_function_when", None)).__name__ != "Never":
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA reset policy for batched v2",
+            type(getattr(node, "reset_stateful_function_when", None)).__name__,
+        )
+    if _raw_parameter(node, "clip", None) is not None:
+        return BatchedDiagnostic(name, "unsupported LCA clip for batched v2")
+    if not _numeric_array_matches(_raw_parameter(node, "initial_value", 0.0), 0.0):
+        return BatchedDiagnostic(name, "unsupported LCA initial_value for batched v2", "requires zero")
+
+    scalar_names = ("leak", "competition", "self_excitation", "noise", "time_step_size")
+    values = {}
+    for parameter_name in scalar_names:
+        value = np.asarray(_raw_parameter(node, parameter_name, 0.0))
+        if (
+            value.size == 0
+            or value.dtype.kind not in "biufc"
+            or not np.allclose(value, value.reshape(-1)[0])
+        ):
+            return BatchedDiagnostic(
+                name,
+                "unsupported non-scalar LCA parameter for batched v2",
+                parameter_name,
+            )
+        values[parameter_name] = float(value.reshape(-1)[0])
+    if values["time_step_size"] <= 0:
+        return BatchedDiagnostic(name, "unsupported LCA time_step_size for batched v2", "must be > 0")
+
+    expected_matrix = np.array(
+        [
+            [values["self_excitation"], -values["competition"]],
+            [-values["competition"], values["self_excitation"]],
+        ]
+    )
+    matrix = np.asarray(_raw_parameter(node, "matrix", expected_matrix))
+    if matrix.shape != (2, 2) or not np.allclose(matrix, expected_matrix):
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA recurrent matrix for batched v2",
+            "requires canonical self-excitation/competition matrix",
+        )
+
+    if _raw_parameter(node, "termination_measure", None) != TimeScale.TRIAL:
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA termination measure for batched v2",
+            "requires TimeScale.TRIAL step-count semantics",
+        )
+    if _raw_parameter(node, "termination_comparison_op", ">=") != ">=":
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA termination comparison for batched v2",
+            "requires >=",
+        )
+    threshold = _raw_parameter(node, "termination_threshold", None)
+    try:
+        termination_port = node.parameter_ports["termination_threshold"]
+    except Exception:
+        termination_port = None
+    controlled = bool(getattr(termination_port, "mod_afferents", ()))
+    if not controlled:
+        threshold_value = np.asarray(threshold)
+        if (
+            threshold is None
+            or threshold_value.size != 1
+            or threshold_value.dtype.kind not in "biufc"
+            or not np.isfinite(threshold_value.reshape(-1)[0])
+            or threshold_value.reshape(-1)[0] < 0
+        ):
+            return BatchedDiagnostic(
+                name,
+                "unsupported LCA termination_threshold for batched v2",
+                "requires a finite nonnegative scalar or supported OVERRIDE control",
+            )
     return None
+
+
+def _raw_parameter(component, name, default=None):
+    parameters = getattr(component, "parameters", None)
+    parameter = getattr(parameters, name, None) if parameters is not None else None
+    if parameter is not None:
+        for getter_name in ("get", "_get"):
+            getter = getattr(parameter, getter_name, None)
+            if getter is not None:
+                try:
+                    return getter(None)
+                except Exception:
+                    pass
+    defaults = getattr(component, "defaults", None)
+    return getattr(defaults, name, default) if defaults is not None else default
+
+
+def _numeric_array_matches(value, expected) -> bool:
+    try:
+        array = np.asarray(value)
+        return array.dtype.kind in "biufc" and bool(np.allclose(array, expected))
+    except Exception:
+        return False
 
 
 def _lca_extract_attrs(node, composition) -> dict:
