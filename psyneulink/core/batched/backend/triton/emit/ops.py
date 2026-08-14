@@ -231,6 +231,10 @@ class OpEmitMixin:
             self._emit_projection_call(op)
         elif op.kind in {"CombineSum", "CombineProduct"}:
             self._emit_combine(op)
+        elif op.kind == "AddConstant":
+            self._emit_add_constant(op)
+        elif op.kind == "Clamp":
+            self._emit_clamp(op)
         elif op.kind == "CallFunction":
             self._emit_function_call(op)
         elif op.kind == "CallMechanism":
@@ -280,6 +284,38 @@ class OpEmitMixin:
             components = [values[idx] for values in input_values]
             expr = operator.join(f"({component})" for component in components)
             self.builder.line(f"{var} = {expr or zero_vector()}")
+        self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_add_constant(self, op: KernelOp) -> None:
+        input_values = self._get_value(op.inputs[0].name)
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        constants = op.attrs["value"]
+        for index, (input_value, output_var) in enumerate(
+            zip(input_values, output_vars)
+        ):
+            constant = constants[0] if len(constants) == 1 else constants[index]
+            self.builder.line(
+                f"{output_var} = {input_value} + ({float_literal(constant)})"
+            )
+        self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_clamp(self, op: KernelOp) -> None:
+        input_values = self._get_value(op.inputs[0].name)
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        lower = op.attrs["lower"]
+        upper = op.attrs["upper"]
+        for index, (input_value, output_var) in enumerate(
+            zip(input_values, output_vars)
+        ):
+            component_lower = lower[0] if len(lower) == 1 else lower[index]
+            component_upper = upper[0] if len(upper) == 1 else upper[index]
+            self.builder.line(
+                f"{output_var} = tl.minimum(tl.maximum({input_value}, "
+                f"{float_literal(component_lower)}), "
+                f"{float_literal(component_upper)})"
+            )
         self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Any
 
 from psyneulink.core.batched.graph import (
@@ -80,6 +81,123 @@ class KernelOp:
     inputs: tuple[KernelValue, ...] = ()
     outputs: tuple[KernelValue, ...] = ()
     attrs: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.kind == "AddConstant":
+            _validate_constant_elementwise_op(self, ("value",))
+        elif self.kind == "Clamp":
+            _validate_constant_elementwise_op(self, ("lower", "upper"))
+            _validate_clamp_bounds(self)
+
+
+def add_constant_op(
+    *,
+    target: str,
+    input_value: KernelValue,
+    output_value: KernelValue,
+    value: Real | tuple[Real, ...],
+) -> KernelOp:
+    """Build an elementwise constant addition with scalar broadcast support."""
+
+    return KernelOp(
+        kind="AddConstant",
+        target=target,
+        inputs=(input_value,),
+        outputs=(output_value,),
+        attrs={"value": value},
+    )
+
+
+def clamp_op(
+    *,
+    target: str,
+    input_value: KernelValue,
+    output_value: KernelValue,
+    lower: Real | tuple[Real, ...],
+    upper: Real | tuple[Real, ...],
+) -> KernelOp:
+    """Build an elementwise clamp with scalar or exact-width vector bounds."""
+
+    return KernelOp(
+        kind="Clamp",
+        target=target,
+        inputs=(input_value,),
+        outputs=(output_value,),
+        attrs={"lower": lower, "upper": upper},
+    )
+
+
+def _validate_constant_elementwise_op(
+    op: KernelOp,
+    constant_attrs: tuple[str, ...],
+) -> None:
+    if len(op.inputs) != 1 or len(op.outputs) != 1:
+        raise ValueError(
+            f"KernelIR {op.kind} requires exactly one input and one output."
+        )
+    input_value = op.inputs[0]
+    output_value = op.outputs[0]
+    if input_value.width != output_value.width:
+        raise ValueError(
+            f"KernelIR {op.kind} input/output widths must match, got "
+            f"{input_value.width} and {output_value.width}."
+        )
+    if input_value.dtype != output_value.dtype:
+        raise ValueError(
+            f"KernelIR {op.kind} input/output dtypes must match, got "
+            f"'{input_value.dtype}' and '{output_value.dtype}'."
+        )
+
+    attrs = dict(op.attrs)
+    for attr in constant_attrs:
+        try:
+            value = attrs[attr]
+        except KeyError as error:
+            raise ValueError(
+                f"KernelIR {op.kind} requires a '{attr}' constant."
+            ) from error
+        attrs[attr] = _normalize_constant(
+            value,
+            width=input_value.width,
+            op_kind=op.kind,
+            attr=attr,
+        )
+    object.__setattr__(op, "attrs", attrs)
+
+
+def _normalize_constant(value, *, width: int, op_kind: str, attr: str) -> tuple[float, ...]:
+    if isinstance(value, Real):
+        values = (float(value),)
+    elif isinstance(value, (str, bytes)):
+        values = ()
+    else:
+        try:
+            values = tuple(float(component) for component in value)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                f"KernelIR {op_kind} '{attr}' must be a numeric scalar or vector."
+            ) from error
+
+    if len(values) not in (1, width):
+        raise ValueError(
+            f"KernelIR {op_kind} '{attr}' must be scalar or have width {width}, "
+            f"got width {len(values)}."
+        )
+    return values
+
+
+def _validate_clamp_bounds(op: KernelOp) -> None:
+    width = op.inputs[0].width
+    lower = op.attrs["lower"]
+    upper = op.attrs["upper"]
+    for index in range(width):
+        component_lower = lower[0] if len(lower) == 1 else lower[index]
+        component_upper = upper[0] if len(upper) == 1 else upper[index]
+        if component_lower > component_upper:
+            raise ValueError(
+                "KernelIR Clamp lower bound exceeds upper bound at component "
+                f"{index}: {component_lower} > {component_upper}."
+            )
 
 
 @dataclass(frozen=True)
