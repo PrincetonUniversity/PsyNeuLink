@@ -65,6 +65,11 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
 
     def emit(self) -> str:
+        if not self.kernel.executable:
+            raise ValueError(
+                "Cannot emit Triton source for declaration-only, non-executable "
+                "KernelIR."
+            )
         self._index_rng_streams()
         with self.builder.indent():
             self._emit_lane_decode()

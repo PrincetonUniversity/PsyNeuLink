@@ -1,7 +1,7 @@
 """Structural contract for declaration-only batched scheduler lowering."""
 
 from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
+from dataclasses import fields, is_dataclass, replace
 
 import pytest
 
@@ -179,6 +179,15 @@ def test_delayed_at_pass_is_declared_but_execution_remains_fail_closed():
         BatchedCompositionCompiler.compile(composition, backend="triton_cpu")
 
 
+def test_triton_emitter_enforces_kernel_executability_independently_of_ops():
+    kernel = _kernel_ir(lower_composition(_static_scheduler_model()))
+    assert kernel.executable
+    assert all(op.kind != "ForPasses" for op in kernel.ops)
+
+    with pytest.raises(ValueError, match="declaration-only, non-executable KernelIR"):
+        triton_graph_kernel_source(replace(kernel, executable=False))
+
+
 @pytest.mark.parametrize(
     "condition_factory, expected_type",
     (
@@ -237,13 +246,7 @@ def test_control_conditions_are_retained_even_when_control_execution_rejects(
     kernel = _kernel_ir(lowering)
     assert not kernel.executable
     assert kernel.ops[0].kind == "ForPasses"
-    with pytest.raises(
-        ValueError,
-        match=(
-            "declaration-only, non-executable KernelIR|"
-            "Unsupported Triton KernelIR op 'ForPasses'"
-        ),
-    ):
+    with pytest.raises(ValueError, match="declaration-only, non-executable KernelIR"):
         triton_graph_kernel_source(kernel)
 
     report = BatchedCompositionCompiler.diagnose(composition, backend="triton_cpu")
