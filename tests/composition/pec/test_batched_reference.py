@@ -24,7 +24,9 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.batched import (
+    BatchedCompileError,
     BatchedCompositionCompiler,
+    BatchedDiagnosticCode,
     batched_node_op,
     unregister_batched_instance_op,
 )
@@ -272,43 +274,20 @@ def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python(
     _assert_matches_pnl_python(comp, inputs, max_steps=256, seed=3)
 
 
-def test_csi_drift_rate_udf_instance_op_clears_node_rejection():
-    """An instance-level op unblocks the CSI surrogate's drift-rate UDF node.
+_CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
+_UNMODELED_CSI_CONTROL_DETAIL = (
+    "coevolving Always/WhenFinished execution requires an LCA finished "
+    "predicate and termination-control value that KernelIR does not model"
+)
 
-    `Drift Rate Value` is a ProcessingMechanism wrapping a UserDefinedFunction
-    (a nested logistic reducing its 7-wide combined input to a scalar); the
-    class-keyed registry cannot express it.  Without an instance op it is the
-    sole remaining node rejection for `iti=0` (Task Input and Threshold Mechanism
-    are handled by later milestones); registering one makes the whole model
-    `is_supported`.
-    """
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
+def _make_csi_surrogate(**kwargs):
+    """Build the CSI reference model retained from the original runtime tests."""
+
+    sys.path.insert(0, str(_CSI_DIR))
     from csi_model_surrogate import make_stab_flex
 
-    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0)
-
-    before = {d.component for d in BatchedCompositionCompiler.diagnose(comp).rejected_nodes}
-    assert any("Drift Rate Value" in name for name in before)
-
-    try:
-        _register_csi_drift_rate()
-        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
-        assert report.is_supported, report.unsupported_reasons
-    finally:
-        unregister_batched_instance_op("Drift Rate Value")
-
-
-def _csi_inputs(comp):
-    import re
-    def node(base):
-        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
-    return {
-        node("Stimulus Input"): [[1, 0, 1, 0], [0, 1, 0, 1]],
-        node("Task Input"): [[1, 0], [0, 1]],
-        node("Correct Response"): [[1], [-1]],
-        node("Cue Stimulus Interval"): [[0], [0]],
-    }
+    return make_stab_flex(**kwargs)
 
 
 def _register_csi_drift_rate():
@@ -324,106 +303,94 @@ def _register_csi_drift_rate():
         return (pos - neg) * x6
 
 
-def test_csi_surrogate_compiles_and_runs_end_to_end():
-    """The full CSI surrogate (the north-star model) compiles and runs on the
-    batched path once its drift-rate UDF op is registered, with both decision
-    outcomes AND response times matching PNL Python mode.
+def _lca_termination_override(composition):
+    """Find the semantic control edge without relying on CSI component names."""
 
-    This exercises every milestone together: AtPass(0) scheduling, the
-    instance-level UDF op, the fires-once integrating ``Task Input``, the
-    collapsing-threshold control chain (``Threshold Mechanism`` absorbed into the
-    DDM boundary), and the fused **co-evolution** loop (the ``Always``-scheduled
-    LCA steps together with the DDM, as in PNL).  RT is asserted within a small
-    discretisation tolerance: the batched width-2 LCA is documented and the
-    coupled LCA/DDM boundary crossing can differ by ~1 DDM step.
-    """
+    matches = []
+    for node in composition.nodes:
+        if not isinstance(node, pnl.ControlMechanism):
+            continue
+        for signal in node.control_signals:
+            for projection in signal.efferents:
+                receiver = projection.receiver
+                if (
+                    isinstance(receiver.owner, pnl.LCAMechanism)
+                    and receiver.name == pnl.TERMINATION_THRESHOLD
+                ):
+                    matches.append(node)
+    assert len(matches) == 1
+    return matches[0]
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
+
+def _assert_csi_control_rejection(composition):
+    controller = _lca_termination_override(composition)
+    report = BatchedCompositionCompiler.diagnose(
+        composition,
+        backend="triton_cpu",
+        max_steps=800,
+    )
+
+    assert not report.model_supported
+    assert len(report.model_diagnostics) == 1
+    diagnostic = report.model_diagnostics[0]
+    assert diagnostic.component == controller.name
+    assert diagnostic.component_id == f"node:{controller.name}"
+    assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
+    assert diagnostic.reason == "batched schedule kind is not executable yet"
+    assert diagnostic.detail == _UNMODELED_CSI_CONTROL_DETAIL
+    return report
+
+
+def test_csi_drift_rate_udf_registration_exposes_schedule_rejection():
+    """Registering the CSI UDF clears that blocker, but not missing control IR."""
+
+    comp = _make_csi_surrogate(iti=0, csi_repeat=0, csi_switch=0)
+    before = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
+    udf_diagnostics = [
+        diagnostic
+        for diagnostic in before.model_diagnostics
+        if diagnostic.code == BatchedDiagnosticCode.MODEL_FUNCTION_UNSUPPORTED
+        and "Drift Rate Value" in diagnostic.component
+    ]
+    assert len(udf_diagnostics) == 1
 
     try:
         _register_csi_drift_rate()
-        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
-                              ddm_noise=0.0, lca_noise=0.0)
-        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
-        assert report.is_supported, report.unsupported_reasons
-        # The Always-LCA + DDM couple, so this lowers as a fused co-evolution loop.
-        assert report.metadata["fusion_kind"] == "coevolving_graph"
-
-        inputs = _csi_inputs(comp)
-        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
-        batched = plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=1)
-        got = batched.values[0, 0, :, 0, :]
-        assert np.all(np.isfinite(got))
-
-        decision_idx = next(
-            i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper()
-        )
-        rt_idx = next(
-            i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper()
-        )
-        reference = _pnl_python_outcomes(comp, inputs, output_specs=plan.ir.graph.outputs)
-        np.testing.assert_allclose(got[:, decision_idx], reference[:, decision_idx], atol=1e-4)
-        # RT parity: within ~2 DDM steps (0.02 s) of PNL's coupled LCA/DDM dynamics.
-        np.testing.assert_allclose(got[:, rt_idx], reference[:, rt_idx], atol=0.02)
+        _assert_csi_control_rejection(comp)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
 
-def test_csi_surrogate_iti_delayed_onset_matches_pnl():
-    """iti>0: `Task Input` fires at `AtPass(iti)`, a delayed within-trial onset.
+@pytest.mark.parametrize(
+    "iti, threshold_collapse",
+    [
+        pytest.param(0, 0.0, id="zero_iti_fixed_threshold"),
+        pytest.param(0, -0.001, id="zero_iti_collapsing_threshold"),
+        pytest.param(10, 0.0, id="delayed_iti_fixed_threshold"),
+        pytest.param(10, -0.001, id="delayed_iti_collapsing_threshold"),
+    ],
+)
+def test_csi_noise_free_model_variants_reject_unmodeled_control(
+    iti,
+    threshold_collapse,
+):
+    """Retain the former end-to-end, ITI, collapse, and Python/LLVM variants.
 
-    The fused co-evolution loop gates it per step — the task input is withheld
-    (so the `Always`-LCA integrates 0 and *decays* during the ITI), and the DDM
-    terminator is frozen until step `iti`. Decision + RT must still match PNL
-    Python (the ITI shifts the LCA's state when the DDM runs, lengthening RT).
+    These deterministic model variants cannot honestly reach an execution-mode
+    oracle until KernelIR represents the controlled LCA finished predicate.
     """
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
-
     try:
         _register_csi_drift_rate()
-        comp = make_stab_flex(iti=10, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
-                              ddm_noise=0.0, lca_noise=0.0)
-        report = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
-        assert report.is_supported, report.unsupported_reasons
-        assert report.metadata["fusion_kind"] == "coevolving_graph"
-
-        inputs = _csi_inputs(comp)
-        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
-        assert plan.ir.graph.metadata["coevolve_warmup"] == 10  # the ITI
-
-        batched = plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=1)
-        got = batched.values[0, 0, :, 0, :]
-        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
-        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
-        reference = _pnl_python_outcomes(comp, inputs, output_specs=plan.ir.graph.outputs)
-        np.testing.assert_allclose(got[:, dec_idx], reference[:, dec_idx], atol=1e-4)
-        np.testing.assert_allclose(got[:, rt_idx], reference[:, rt_idx], atol=0.02)
-    finally:
-        unregister_batched_instance_op("Drift Rate Value")
-
-
-def test_csi_surrogate_collapsing_threshold_shortens_response_time():
-    """The absorbed collapsing-threshold chain actually drives the DDM boundary:
-    a collapsing threshold reaches a decision sooner than a fixed one."""
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
-
-    try:
-        _register_csi_drift_rate()
-
-        def mean_rt(collapse):
-            comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=collapse,
-                                  ddm_noise=0.0, lca_noise=0.0)
-            plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
-            batched = plan.run(inputs=_csi_inputs(comp), parameter_sets=[{}], num_estimates=1, seed=1)
-            rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
-            return float(batched.values[0, 0, :, 0, rt_idx].mean())
-
-        assert mean_rt(-0.001) < mean_rt(0.0)
+        comp = _make_csi_surrogate(
+            iti=iti,
+            csi_repeat=0,
+            csi_switch=0,
+            threshold_collapse=threshold_collapse,
+            ddm_noise=0.0,
+            lca_noise=0.0,
+        )
+        _assert_csi_control_rejection(comp)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
@@ -463,189 +430,30 @@ def test_ddm_stochastic_matches_pnl_python_statistics():
     assert np.all(np.isfinite(bvals))
 
 
-def test_csi_surrogate_all_parameter_sets_are_evaluated():
-    """Every parameter set of a co-evolving graph must actually be computed.
-
-    Regression test.  The co-evolving kernel used the trial-inclusive lane
-    decode while its runtime sized the launch with the lane-persistent
-    (parameter_set, subject, estimate) layout, so every lane collapsed onto
-    parameter set 0.  Sets 1..N-1 were never written and came back as whatever
-    the output buffer happened to hold.
-
-    It went unnoticed because every other co-evolving test runs a single
-    parameter set, and set 0 is correct.  Sweeping `non_decision_time` makes the
-    failure unmissable and is a sharp check on its own: it shifts response time
-    by exactly its own amount and cannot touch the decision at all.
-    """
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
+def test_csi_multi_parameter_lane_model_rejects_before_launch():
+    """The former non-decision-time lane sweep must not bypass model analysis."""
 
     try:
         _register_csi_drift_rate()
-        comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
-                              ddm_noise=0.0, lca_noise=0.0)
-        plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=400)
-        assert plan.ir.graph.fusion_kind == "coevolving_graph"
-
-        offsets = [0.0, 0.1, 0.25]
-        batched = plan.run(
-            inputs=_csi_inputs(comp),
-            parameter_sets=[{"DDM.non_decision_time": ndt} for ndt in offsets],
-            num_estimates=1,
-            seed=1,
+        comp = _make_csi_surrogate(
+            iti=0,
+            csi_repeat=0,
+            csi_switch=0,
+            threshold_collapse=-0.001,
+            ddm_noise=0.0,
+            lca_noise=0.0,
         )
-        values = batched.values
-        assert values.shape[0] == len(offsets)
+        diagnosed = _assert_csi_control_rejection(comp)
 
-        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
-        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
+        with pytest.raises(BatchedCompileError) as error:
+            BatchedCompositionCompiler.compile(
+                comp,
+                backend="triton_cpu",
+                max_steps=400,
+            )
 
-        base = values[0, 0, :, 0, :]
-        assert np.all(np.isfinite(values)), "un-evaluated parameter sets leave garbage behind"
-        for i, ndt in enumerate(offsets):
-            got = values[i, 0, :, 0, :]
-            # A skipped set shows up as an all-zero slice; a real one never is.
-            assert np.any(got != 0.0), f"parameter set {i} (ndt={ndt}) was not evaluated"
-            # non_decision_time cannot affect which boundary is crossed ...
-            np.testing.assert_allclose(got[:, dec_idx], base[:, dec_idx], atol=1e-6)
-            # ... and shifts response time by exactly itself.
-            np.testing.assert_allclose(got[:, rt_idx], base[:, rt_idx] + ndt, atol=1e-5)
-    finally:
-        unregister_batched_instance_op("Drift Rate Value")
-
-
-def zero_all_noise(comp):
-    """Zero every noise source in ``comp``, making the model fully deterministic.
-
-    Model builders do not consistently expose their noise sources as constructor
-    arguments, and a `noise` Parameter can live in three places: on the mechanism
-    itself, on its primary function, or on its integrator function.  Walk the
-    composition (descending into nested ones) and zero all of them, so a test can
-    take *any* model and compare execution paths elementwise instead of
-    statistically.  Returns the list of owners it zeroed, so a caller can assert
-    it actually found something.
-    """
-
-    zeroed = []
-    stack = list(getattr(comp, "nodes", []))
-    while stack:
-        node = stack.pop()
-        if hasattr(node, "nodes"):          # nested Composition
-            stack.extend(node.nodes)
-            continue
-        owners = [node]
-        for attr in ("function", "integrator_function"):
-            owner = getattr(node, attr, None)
-            # A Function's own `.function` is a method, not a component.
-            if owner is not None and hasattr(owner, "parameters"):
-                owners.append(owner)
-        for owner in owners:
-            if not hasattr(getattr(owner, "parameters", None), "noise"):
-                continue
-            owner.parameters.noise.set(0.0, None)
-            zeroed.append(f"{getattr(node, 'name', node)}::{type(owner).__name__}")
-    return zeroed
-
-
-def _csi_inputs_n(comp, trials):
-    import re
-
-    def node(base):
-        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
-
-    half = (trials + 1) // 2
-    return {
-        node("Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1))[:trials],
-        node("Task Input"): np.tile([[1, 0], [0, 1]], (half, 1))[:trials],
-        node("Correct Response"): np.tile([[1], [-1]], (half, 1))[:trials],
-        node("Cue Stimulus Interval"): np.zeros((trials, 1)),
-    }
-
-
-def _pnl_gate_outcomes(comp, inputs, execution_mode):
-    """[trial, (decision, response_time)] from the CSI surrogate's gate nodes."""
-
-    comp.run(inputs=inputs, execution_mode=execution_mode)
-    names = [op.name for op in comp.output_CIM.output_ports]
-    per_port = {
-        nm: np.array([float(np.asarray(comp.results[t][i]).reshape(-1)[0])
-                      for t in range(len(comp.results))])
-        for i, nm in enumerate(names)
-    }
-    return np.stack([
-        next(v for k, v in per_port.items() if "DECISION_GATE" in k),
-        next(v for k, v in per_port.items() if "RESPONSE_GATE" in k),
-    ], axis=1)
-
-
-@pytest.mark.parametrize("iti,collapse", [(0, 0.0), (0, -0.001), (10, 0.0), (10, -0.001)])
-@pytest.mark.parametrize(
-    "execution_mode",
-    [pnl.ExecutionMode.Python, pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)],
-)
-def test_csi_surrogate_noise_free_matches_pnl_elementwise(iti, collapse, execution_mode):
-    """With noise removed, the batched path must agree with PNL *elementwise*.
-
-    The stochastic comparisons elsewhere can only check summary statistics, which
-    tolerates a lot: a systematic drift hides inside a distribution that still
-    looks right.  Zeroing every noise source makes all three execution paths
-    deterministic, so the residual can be characterised exactly instead.
-
-    Empirically that residual is tightly bounded, and this test pins it there:
-
-    * decision outcomes are **exactly** equal, in every configuration;
-    * response times differ by **either zero or exactly one DDM time step**,
-      never a fraction of one and never two.
-
-    That is a much stronger statement than a loose tolerance.  A one-step
-    difference is boundary-crossing discretisation -- the batched LCA starts from
-    ``act=0`` where PNL starts from ``logistic(0)``, so a near-tie crossing can
-    land on either side of a step.  An ITI or a collapsing threshold makes
-    near-ties more common (both bring the accumulator closer to the boundary at
-    the moment it crosses), which is why the *number* of affected trials varies
-    by configuration while the *size* of the error never does.  Anything that
-    accumulates, scales, or drifts would break the one-step bound immediately.
-    """
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"))
-    from csi_model_surrogate import make_stab_flex
-
-    trials = 8
-    try:
-        _register_csi_drift_rate()
-        # Build the model *with* noise, then strip it, so the helper is doing the
-        # work rather than the builder's own noise arguments.
-        kwargs = dict(iti=iti, csi_repeat=0, csi_switch=0, threshold_collapse=collapse,
-                      ddm_noise=0.35, lca_noise=0.25)
-
-        comp_batched = make_stab_flex(**kwargs)
-        assert zero_all_noise(comp_batched), "no noise sources found to zero"
-        plan = BatchedCompositionCompiler.compile(comp_batched, backend="triton_cpu", max_steps=800)
-        batched = plan.run(inputs=_csi_inputs_n(comp_batched, trials), parameter_sets=[{}],
-                           num_estimates=1, seed=1).values[0, 0, :, 0, :]
-        dec_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "DECISION" in o.node.upper())
-        rt_idx = next(i for i, o in enumerate(plan.ir.graph.outputs) if "RESPONSE" in o.node.upper())
-
-        comp_ref = make_stab_flex(**kwargs)
-        zero_all_noise(comp_ref)
-        reference = _pnl_gate_outcomes(comp_ref, _csi_inputs_n(comp_ref, trials), execution_mode)
-
-        dt = float(np.asarray(
-            next(n for n in comp_ref.nodes if n.name.startswith("DDM"))
-            .function.parameters.time_step_size.get(None)
-        ).reshape(-1)[0])
-
-        np.testing.assert_allclose(batched[:, dec_idx], reference[:, 0], atol=1e-6,
-                                   err_msg="decision outcomes must match exactly without noise")
-
-        rt_diff = np.abs(batched[:, rt_idx] - reference[:, 1])
-        assert rt_diff.max() <= dt + 1e-6, (
-            f"response times differ by more than one DDM step ({dt}): {rt_diff}"
-        )
-        # Every nonzero difference must be a *whole* step, not a fraction of one.
-        off = rt_diff[rt_diff > 1e-6]
-        np.testing.assert_allclose(off, np.full(off.shape, dt), atol=1e-5,
-                                   err_msg=f"non-integral step differences: {off}")
+        assert error.value.capability_report == diagnosed
+        diagnostic = diagnosed.model_diagnostics[0]
+        assert diagnostic.formatted_reason in str(error.value)
     finally:
         unregister_batched_instance_op("Drift Rate Value")

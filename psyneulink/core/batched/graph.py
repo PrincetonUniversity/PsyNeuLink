@@ -716,6 +716,14 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
     if type(target).__name__ == "LCAMechanism" and target_port == "termination_threshold":
         from psyneulink.core.batched.components.lca import _control_monitor_source_for
 
+        if _is_unmodeled_coevolving_lca_termination(composition, target):
+            return BatchedDiagnostic(
+                name,
+                "batched schedule kind is not executable yet",
+                "coevolving Always/WhenFinished execution requires an LCA "
+                "finished predicate and termination-control value that KernelIR "
+                "does not model",
+            )
         identity = type(function).__name__ == "Identity" or (
             type(function).__name__ == "Linear"
             and _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
@@ -736,6 +744,31 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
         "unsupported generic ControlMechanism for batched v2",
         f"{_node_name(source)}->{_node_name(target)}.{target_port}",
     )
+
+
+def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
+    """Whether ``lca`` controls the start of a coupled lane-local terminator.
+
+    The current fused emitter infers a warm-up count, but KernelIR contains
+    neither the LCA's per-lane ``finished`` value nor its effective controlled
+    threshold.  Recognizing the surrounding composition as co-evolving is not
+    sufficient to preserve this scheduling edge, even when sampled control
+    values happen to be constant.
+    """
+
+    conditions = _scheduler_conditions(composition)
+    if type(conditions.get(lca)).__name__ != "Always":
+        return False
+    for node, condition in conditions.items():
+        mechanism_spec = specs.mechanism_spec_for(node)
+        if (
+            mechanism_spec is not None
+            and mechanism_spec.is_terminator
+            and mechanism_spec.can_step
+            and _when_finished_depends_on(condition, lca)
+        ):
+            return True
+    return False
 
 
 def _is_override(value) -> bool:

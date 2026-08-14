@@ -11,6 +11,7 @@ from psyneulink.core.batched import (
     BatchedGraphIR,
     BatchedCompileError,
     BatchedCompositionCompiler,
+    BatchedDiagnosticCode,
     batched_node_op,
     unregister_batched_instance_op,
 )
@@ -599,12 +600,13 @@ def test_batched_compiler_accepts_stateless_transfer():
 
 
 @pytest.mark.composition
-def test_csi_surrogate_with_iti_accepts_at_pass_onset():
+def test_csi_surrogate_with_iti_reports_each_remaining_semantic_blocker():
     # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset.
     # In the co-evolving CSI graph the fused loop gates it per step (input withheld
     # until step iti; terminator frozen), so AtPass(n>0) is now *accepted*, not
-    # deferred. Without the drift-rate UDF op the model is still unsupported, but
-    # the ONLY blocker is that UDF -- not AtPass, Task Input, or Threshold Mechanism.
+    # deferred. The model is nevertheless unsupported for two independent
+    # reasons: its drift-rate UDF has no instance op in this test, and KernelIR
+    # does not yet carry the controlled LCA-finished predicate that starts DDM.
     csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
@@ -621,8 +623,14 @@ def test_csi_surrogate_with_iti_accepts_at_pass_onset():
         "Task Input" in d.component and "integrator_mode" in d.reason
         for d in report.rejected_nodes
     )
-    # The sole remaining blocker is the drift-rate UDF (needs an instance op).
     assert any("Drift Rate Value" in name for name in rejected)
+    schedule_diagnostic = next(
+        diagnostic
+        for diagnostic in report.rejected_nodes
+        if diagnostic.component.startswith("CSI Override")
+    )
+    assert schedule_diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
+    assert "LCA finished predicate" in schedule_diagnostic.detail
 
 
 @pytest.mark.composition
