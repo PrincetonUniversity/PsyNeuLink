@@ -70,7 +70,11 @@ Participants may have different trial counts.  They are ordered by first appeara
 sorted, and that order is used for every per-participant array and frame in the results, so
 ``results.subject_labels[i]`` always identifies row ``i``.
 
-At least two participants are required: with one, the group variance is not identified.
+At least two participants are required: with one, the group variance is not identified.  Every trial
+must name a participant; a missing identifier is rejected rather than dropped.
+
+``likelihood_include_mask`` is not accepted here.  Each participant is scored by its own model,
+built from its own slice, so exclusions belong in the rows you pass as ``data``.
 
 
 .. _Hierarchical_Fitting_Factory:
@@ -114,9 +118,11 @@ Requirements on what it returns:
 * **A distinct seed per participant.**  Use ``subject_index``.  A shared seed gives every
   participant the same stream of simulation noise, and that common component is absorbed into the
   group variance rather than averaging out.
-* **LLVM execution**, and the same parameters over the same ranges for every participant.  The
-  group model is defined in terms of those ranges, so ranges that varied between participants would
-  mean different things for different people.  This is checked.
+* **LLVM execution**, and the same parameters, in the same order, over the same ranges as the model
+  passed to the constructor.  That model is what declares the fit; the group model is defined in
+  terms of its ranges, so ranges that varied between participants would mean different things for
+  different people.  This is checked for every participant, in-process and on a worker alike, before
+  that participant is scored.
 
 
 .. _Hierarchical_Fitting_Options:
@@ -215,6 +221,12 @@ Limitations
 
 * Group covariance is diagonal: parameters are modelled as varying independently across
   participants.
+* Participant uncertainty is diagonal too, and is the spread of one parameter with the others held
+  at the mode rather than integrated out.  Where two parameters trade off against each other, that
+  is the narrower of the two quantities, so reported intervals err towards being too tight.  The
+  effect is small where it has been measured -- about 4% on drift-diffusion posterior widths,
+  against a sampler that integrates the other parameters out -- and much smaller than the effect of
+  the likelihood itself.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood.  A likelihood estimated from too few

@@ -12,8 +12,17 @@
 
 The E-step maximizes ``log_likelihood(theta(z)) + log N(z | mu, diag(sigma))`` over the unconstrained
 `z` (see `transforms <transforms>`) and takes the inverse curvature at the mode as the posterior
-covariance.  Only the diagonal is computed, matching the diagonal group covariance.  The M-step
-updates `beta` by least squares on the modes and `sigma` from the posterior second moments.
+covariance.  The M-step updates `beta` by least squares on the modes and `sigma` from the posterior
+second moments.
+
+Only the diagonal of the curvature is computed, matching the diagonal group covariance, so a
+participant's reported variance is ``1 / H_kk`` rather than ``(H^-1)_kk``: the variance of one
+parameter with the others held at the mode, not with them integrated out.  Where parameters trade
+off against each other the first is the smaller of the two, so intervals are narrow rather than
+wide -- on the drift-diffusion model, by about 4% against a sampler that integrates them out.  The
+off-diagonal curvature that would close the gap costs ``P(P+1)/2`` mixed second differences instead
+of ``P``, each four evaluations of a simulated likelihood rather than two, which is more estimation
+noise than the correction is worth.
 
 Curvature comes from central finite differences, which requires the objective to be deterministic in
 `theta`.  Participant models must therefore be built with common random numbers; without them the
