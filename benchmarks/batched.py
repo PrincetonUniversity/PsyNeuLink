@@ -7,7 +7,8 @@ representative models, swept over the number of estimates (GPU lanes):
 - `DDMGraph`    — transfer -> DDM (ddm_graph fusion)
 - `LCA`         — isolated width-2 LCA, cue-driven (stateful_graph fusion)
 - `StabilityFlexibility` — toy LCA + DDM (stateful_graph fusion)
-- `CSISurrogate`  — co-evolving LCA + DDM (coevolving_graph fusion); realistic model
+- `CSISurrogate`  — reserved for the realistic co-evolving model; skipped until
+  generic scheduler/control lowering is executable
 
 The kernel is compiled and warmed up in `setup()`, so the timed methods measure
 only the batched simulation (not one-time compilation). Each warmup records an
@@ -147,32 +148,12 @@ def _build_stab_flex():
 
 
 def _build_csi():
-    """The CSI surrogate (co-evolving LCA+DDM): the north-star research model."""
+    """Reserve the CSI series without advertising unsupported execution."""
 
-    from csi_model_surrogate import make_stab_flex
-
-    comp = make_stab_flex(
-        iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
-        ddm_noise=0.1, lca_noise=0.0,
+    raise NotImplementedError(
+        "CSI requires generic Always/WhenFinished scheduler predicates and "
+        "termination-threshold control in KernelIR"
     )
-
-    def node(base):
-        import re
-        return next(n for n in comp.nodes if re.sub(r"-\d+$", "", n.name) == base)
-
-    half = TRIALS // 2
-    inputs = {
-        node("Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1)),
-        node("Task Input"): np.tile([[1, 0], [0, 1]], (half, 1)),
-        node("Correct Response"): np.tile([[1], [-1]], (half, 1)),
-        node("Cue Stimulus Interval"): np.zeros((TRIALS, 1)),
-    }
-    plan = BatchedCompositionCompiler.compile(comp, backend="triton", max_steps=512)
-    param_sets = [
-        {"DDM.threshold": 0.06, "DDM.noise": 0.1, "Task Activations [C1, C2].noise": 0.0}
-        for _ in range(PARAM_SETS)
-    ]
-    return plan, inputs, param_sets
 
 
 class _BatchedBenchmark:
@@ -226,7 +207,7 @@ class StabilityFlexibility(_BatchedBenchmark):
 
 
 class CSISurrogate(_BatchedBenchmark):
-    """Co-evolving LCA+DDM (coevolving_graph fusion) — the realistic research model."""
+    """Reserved for CSI after generic scheduler/control support lands."""
 
     params = STATEFUL_ESTIMATES
     _seed = 3

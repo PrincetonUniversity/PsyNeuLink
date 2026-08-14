@@ -341,13 +341,14 @@ Supported input combines: single input, `SUM`, `PRODUCT`.
 
 Supported executable schedules / fusions:
 
-- `static_graph` schedule, including `AtPass(0)` origins and the `Always`-LCA /
-  `WhenFinished(LCA)` idiom.
-- `AtPass(n>0)` delayed onset (the ITI) — executable **in a co-evolving graph**
-  (the fused loop gates it per step); still deferred in non-co-evolving graphs.
+- `static_graph` schedule, including `AtPass(0)` origins.
+- Generic `Always`/`WhenFinished` co-evolution and `AtPass(n>0)` delayed onset
+  are recognized but fail closed until their predicates and conditional pass
+  regions are represented in `KernelIR`.
 - Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
-  cue-terminated), `coevolving_graph` (fused per-step loop for coupled stateful
-  mechanisms). See "Fusion and Lane Layout".
+  static-threshold stateful execution). The old `coevolving_graph` emitter is
+  not currently advertised as semantically executable. See "Fusion and Lane
+  Layout" for its historical implementation.
 
 Recognized but not executable yet: `precomputed_trace` (`EveryNCalls`),
 `dynamic_lane_local`.
@@ -364,10 +365,14 @@ researcher actually runs is the **CSI surrogate** stability-flexibility model in
 target for "supporting researchers' models," and the roadmap in "Good Next
 Steps" is scoped to close the gap to it.
 
-`BatchedCompositionCompiler.diagnose()` now **accepts** the CSI surrogate (with
-`iti=0`) once its `driftRate` op is registered: `make_stab_flex(iti=0)` is
-`is_supported`, compiles, and runs (decision outcomes match PNL Python;
-see "CSI status" below). The original gaps and how each was closed:
+`BatchedCompositionCompiler.diagnose()` currently **rejects** the CSI surrogate
+even after its `driftRate` op is registered. This is intentional: the generic
+compiler does not yet represent the LCA finished predicate, effective
+termination-threshold control, or conditional `Always`/`WhenFinished` pass
+regions. Older measurements below describe the retired heuristic co-evolution
+path and are not current correctness evidence. The component-level work remains
+useful, but CSI becomes supported only when those general semantics pass the
+Python oracle without a model recognizer.
 
 1. **Custom / UDF reduction op** (`driftRate`, a nested-logistic reducing a
    7-vector to a scalar) — RESOLVED (step 6). `batched_node_op("<node name>")`
@@ -389,16 +394,18 @@ see "CSI status" below). The original gaps and how each was closed:
    and the `thresholdMechanism` is **absorbed** into the DDM boundary (not lowered
    as its own op).
 
-### CSI status
+### Historical CSI experiment (not current support)
 
-`make_stab_flex` compiles and runs end-to-end on `triton_cpu`/`triton` for
+The following measurements describe the retired heuristic emitter and are kept
+only as performance history. `make_stab_flex` previously compiled and ran on
+`triton_cpu`/`triton` for
 `iti=0` **and `iti>0`**, with **both decision outcomes and response times
-matching** PNL Python mode (RT within ~1 DDM step). This required the
+matching** PNL Python mode (RT within ~1 DDM step). That path required the
 **co-evolution loop** (see below): the CSI LCA is `Always`-scheduled and its
 activation feeds the drift, so the LCA and DDM step together each timestep. For
-`iti>0` the fused loop gates the `AtPass(iti)` task-input onset per step (the LCA
-decays during the ITI, the DDM is frozen). Remaining for the full PEC fit: GPU
-likelihood/KDE (step 9) and PEC fit routing (step 10).
+`iti>0` the fused loop gated the `AtPass(iti)` task-input onset per step. These
+terminal-output checks did not establish general scheduler/control fidelity,
+so the current compiler rejects the model pending generic KernelIR support.
 
 **Benchmark (vs LLVM PEC).** `csi_triton_vs_llvm.py` compares the co-evolving
 CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
@@ -474,14 +481,11 @@ Current fusion kinds:
   - Trials run inside the Triton lane so LCA state persists across trials.
 
 - `coevolving_graph`
-  - Coupled stateful ops that **step together** in a single fused per-step loop
-    (the CSI surrogate: an `Always`-scheduled LCA whose activation feeds the
-    drift, co-evolving with the DDM until the DDM crosses its boundary).
-  - Lane layout: `(parameter_set, subject, estimate)` (same as `stateful_graph`).
-  - Each step, in topological order: loop-invariant ops are hoisted out once;
-    stepper ops (LCA `step_emit`, DDM `step_emit`) advance one step; lanes whose
-    terminator has `finished` freeze; the terminator's outputs are produced by a
-    `readout_emit` after the loop. See "Co-evolution loop" below.
+  - Historical optimization for coupled stateful ops. It inferred the
+    `Always`/`WhenFinished` schedule and a shared finished flag in the emitter,
+    so it is not currently accepted as semantic support.
+  - A replacement must express generic loop regions, predicates, scheduling,
+    and effective controlled values in `KernelIR` before CSI can use it.
 
 Fusion kind is a dispatch/optimization detail. It should not encode model
 architecture semantics.
@@ -496,9 +500,10 @@ fusion_kind="stateful_graph"   # cue-terminated LCA settles, then the DDM decide
 schedule_kind="static_graph"
 ```
 
-The **CSI surrogate** (the realistic model, `Always`-scheduled LCA co-evolving
-with the DDM) instead lowers as `fusion_kind="coevolving_graph"` — same
-generic-graph treatment, different fusion (see "Fusion and Lane Layout").
+The **CSI surrogate** (the realistic model, with an `Always`-scheduled LCA
+co-evolving with the DDM) currently fails closed. Supporting it requires the
+same generic scheduler, control, and state semantics that any composition with
+that topology requires; there is no CSI recognizer or special fusion rule.
 
 There should be no `STABILITY_FLEXIBILITY_MODEL`, no
 `stability_flexibility_roles` metadata, no forced `cue`/`correct` aliases, and
@@ -1193,22 +1198,19 @@ steps 9-10 make the full PEC fit run on the batched path.
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.
 
-4. **Tiered scheduling** (pay only when needed) — MOSTLY DONE. `AtPass(0)` origins
-   / `Always` LCA / `WhenFinished(LCA)` recognition (gap 3), plus **`AtPass(n>0)`
-   ITI-delayed onset** in the co-evolution loop (see Done above): `make_stab_flex`
-   compiles + matches PNL for `iti>0` too. **Remaining:** precomputed per-trial
-   traces for `EveryNCalls`-style conditions (no research model needs them yet).
+4. **Tiered scheduling** (pay only when needed) — OPEN beyond static execution.
+   `AtPass(0)` origins are executable. `Always` LCA / `WhenFinished(LCA)`,
+   `AtPass(n>0)`, and precomputed per-trial traces remain fail-closed until
+   their generic predicates and regions are explicit in `KernelIR`.
    Prefer static erasure / precomputed traces over dynamic lane-local scheduler
    state (which would recreate the LLVM/PTX overhead problem).
 
-5. **Co-evolution loop for coupled stateful mechanisms** — DONE (see Done above).
-   This was the actual blocker to CSI RT parity (not LCA *width*): the diagnosis
-   showed the batched LCA recurrence is correct, but the CSI LCA is
-   `Always`-scheduled and co-evolves with the DDM (~1:1), while the sequential
-   `stateful_graph` ran the LCA to a cue-driven step count (0 for CSI). The fused
-   co-evolution loop closes that. *Still open under "generalize LCA":* width-N /
-   arbitrary recurrent matrix, and dropping the init-`act=0` approximation for an
-   isolated LCA — neither is needed for CSI.
+5. **Co-evolution loop for coupled stateful mechanisms** — OPEN. The old fused
+   emitter inferred one terminator and one shared finished flag, so it is no
+   longer accepted as semantic support. The new path must lower generic loop
+   regions, per-node finished predicates, scheduler ordering, and effective
+   controlled values. Exact deterministic LCA initialization is a separate
+   concern; width-N and arbitrary recurrent matrices remain separate open work.
 
 6. **UDF / instance-level ops** (gap 1) — DONE (see Done above). Researchers
    register an op for a specific node via `batched_node_op("<node name>")`; the

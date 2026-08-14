@@ -34,6 +34,10 @@ _UNMODELED_CONTROL_DETAIL = (
     "coevolving Always/WhenFinished execution requires an LCA finished "
     "predicate and termination-control value that KernelIR does not model"
 )
+_UNMODELED_COEVOLUTION_DETAIL = (
+    "coevolving Always/WhenFinished execution requires explicit finished "
+    "predicates and conditional pass regions in KernelIR"
+)
 
 
 @dataclass(frozen=True)
@@ -218,6 +222,45 @@ def _termination_override(composition):
     return matches[0]
 
 
+def _make_uncontrolled_coevolving_model():
+    stepper = pnl.LCAMechanism(
+        input_shapes=2,
+        function=pnl.Logistic(gain=2.0),
+        leak=1.0,
+        competition=0.5,
+        self_excitation=0.0,
+        noise=0.0,
+        termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=2,
+        time_step_size=0.01,
+        execute_until_finished=False,
+        name="uncontrolled persistent stepper",
+    )
+    terminator = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0,
+            rate=1.0,
+            noise=0.0,
+            threshold=0.02,
+            non_decision_time=0.0,
+            time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        execute_until_finished=False,
+        name="uncontrolled lane-local terminator",
+    )
+    composition = pnl.Composition()
+    composition.add_nodes([stepper, terminator])
+    composition.add_projection(
+        sender=stepper,
+        receiver=terminator,
+        projection=pnl.MappingProjection(matrix=[[1.0], [-1.0]]),
+    )
+    composition.scheduler.add_condition(stepper, pnl.Always())
+    composition.scheduler.add_condition(terminator, pnl.WhenFinished(stepper))
+    return composition, stepper, tuple(terminator.output_ports)
+
+
 def _assert_unmodeled_control_diagnostic(report, controller):
     assert not report.model_supported
     assert len(report.model_diagnostics) == 1
@@ -265,4 +308,35 @@ def test_controlled_lca_compile_error_carries_capability_report():
     report = error.value.capability_report
     assert report == diagnosed
     diagnostic = _assert_unmodeled_control_diagnostic(report, controller)
+    assert diagnostic.formatted_reason in str(error.value)
+
+
+def test_uncontrolled_lca_when_finished_rejects_missing_generic_schedule_ir():
+    composition, stepper, outputs = _make_uncontrolled_coevolving_model()
+    report = BatchedCompositionCompiler.diagnose(
+        composition,
+        outputs=outputs,
+        max_steps=128,
+    )
+
+    matches = [
+        diagnostic
+        for diagnostic in report.model_diagnostics
+        if diagnostic.component == stepper.name
+        and diagnostic.reason == "batched schedule kind is not executable yet"
+    ]
+    assert not report.model_supported
+    assert len(matches) == 1
+    diagnostic = matches[0]
+    assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
+    assert diagnostic.component_id == f"node:{stepper.name}"
+    assert diagnostic.detail == _UNMODELED_COEVOLUTION_DETAIL
+
+    with pytest.raises(BatchedCompileError) as error:
+        BatchedCompositionCompiler.compile(
+            composition,
+            outputs=outputs,
+            max_steps=128,
+        )
+    assert error.value.capability_report == report
     assert diagnostic.formatted_reason in str(error.value)

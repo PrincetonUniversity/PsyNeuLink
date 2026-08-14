@@ -151,6 +151,24 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     )
                 )
 
+    if coevolving and not any(
+        diagnostic.reason == "batched schedule kind is not executable yet"
+        for diagnostic in rejected_nodes
+    ):
+        stepper = _coevolving_stepper(composition, executable_nodes)
+        rejected_conditions.append(
+            BatchedDiagnostic(
+                _node_name(stepper) if stepper is not None else getattr(
+                    composition,
+                    "name",
+                    "Composition",
+                ),
+                "batched schedule kind is not executable yet",
+                "coevolving Always/WhenFinished execution requires explicit "
+                "finished predicates and conditional pass regions in KernelIR",
+            )
+        )
+
     (
         projections,
         projection_rejections,
@@ -1790,13 +1808,19 @@ def _is_coevolving(composition, executable_nodes) -> bool:
     which settles before the DDM) are NOT ``Always`` and stay sequential.
     """
 
+    return _coevolving_stepper(composition, executable_nodes) is not None
+
+
+def _coevolving_stepper(composition, executable_nodes):
+    """Return the persistent node in an Always/WhenFinished coupled loop."""
+
     conditions = _scheduler_conditions(composition)
     terminators = [
         node for node in executable_nodes
         if (spec := specs.mechanism_spec_for(node)) is not None and spec.is_terminator and spec.can_step
     ]
     if not terminators:
-        return False
+        return None
     for node in executable_nodes:
         spec = specs.mechanism_spec_for(node)
         if spec is None or not (spec.can_step and spec.persistent_state):
@@ -1811,8 +1835,8 @@ def _is_coevolving(composition, executable_nodes) -> bool:
             or _when_finished_depends_on(conditions.get(terminator), node)
             for terminator in terminators
         ):
-            return True
-    return False
+            return node
+    return None
 
 
 def _processing_depends_on(composition, node, dependency) -> bool:

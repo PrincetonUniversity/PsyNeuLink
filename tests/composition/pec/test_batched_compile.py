@@ -605,11 +605,12 @@ def test_batched_compiler_accepts_stateless_transfer():
 @pytest.mark.composition
 def test_csi_surrogate_with_iti_reports_each_remaining_semantic_blocker():
     # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset.
-    # In the co-evolving CSI graph the fused loop gates it per step (input withheld
-    # until step iti; terminator frozen), so AtPass(n>0) is now *accepted*, not
-    # deferred. The model is nevertheless unsupported for two independent
-    # reasons: its drift-rate UDF has no instance op in this test, and KernelIR
-    # does not yet carry the controlled LCA-finished predicate that starts DDM.
+    # Diagnosis recognizes that condition instead of reporting it independently,
+    # but the composition still fails closed: generic co-evolving
+    # Always/WhenFinished regions and the controlled LCA-finished predicate that
+    # starts the DDM are not executable in KernelIR. Its drift-rate UDF also has
+    # no instance op in this test. CSI is an acceptance composition, not a model
+    # kind or special compiler path.
     csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
