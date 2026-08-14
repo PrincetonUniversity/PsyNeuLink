@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from numbers import Real
 from typing import Any
@@ -26,6 +26,7 @@ from psyneulink.core.batched.specs import (
 
 TRIAL_LANE_LAYOUT = "trial"
 STATEFUL_LANE_LAYOUT = "stateful"
+KernelConstant = Real | Iterable[Real]
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,7 @@ def add_constant_op(
     target: str,
     input_value: KernelValue,
     output_value: KernelValue,
-    value: Real | tuple[Real, ...],
+    value: KernelConstant,
 ) -> KernelOp:
     """Build an elementwise constant addition with scalar broadcast support."""
 
@@ -113,8 +114,8 @@ def clamp_op(
     target: str,
     input_value: KernelValue,
     output_value: KernelValue,
-    lower: Real | tuple[Real, ...],
-    upper: Real | tuple[Real, ...],
+    lower: KernelConstant,
+    upper: KernelConstant,
 ) -> KernelOp:
     """Build an elementwise clamp with scalar or exact-width vector bounds."""
 
@@ -169,7 +170,9 @@ def _normalize_constant(value, *, width: int, op_kind: str, attr: str) -> tuple[
     if isinstance(value, Real):
         values = (float(value),)
     elif isinstance(value, (str, bytes)):
-        values = ()
+        raise ValueError(
+            f"KernelIR {op_kind} '{attr}' must be a numeric scalar or vector."
+        )
     else:
         try:
             values = tuple(float(component) for component in value)

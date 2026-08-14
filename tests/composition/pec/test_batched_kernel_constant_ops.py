@@ -152,6 +152,14 @@ def test_constant_ops_require_scalar_or_exact_width_vectors():
 def test_constant_ops_validate_value_type_and_clamp_order():
     input_value = KernelValue("input", 2)
 
+    with pytest.raises(ValueError, match="must be a numeric scalar or vector"):
+        add_constant_op(
+            target="node",
+            input_value=input_value,
+            output_value=KernelValue("output", 2),
+            value="1.0",
+        )
+
     with pytest.raises(ValueError, match="input/output dtypes must match"):
         add_constant_op(
             target="node",
