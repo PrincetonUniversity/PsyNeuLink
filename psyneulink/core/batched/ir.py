@@ -193,6 +193,56 @@ class BatchedConsiderationSetSpec:
 
 
 @dataclass(frozen=True)
+class BatchedTerminationSpec:
+    """One typed scheduler termination predicate.
+
+    Termination is independent of node execution predicates: the scheduler
+    reevaluates it between consideration-set executions.  Component operands
+    are expanded to stable numeric IDs during semantic lowering so a host or
+    backend planner never needs live PsyNeuLink objects to interpret the
+    predicate.
+    """
+
+    time_scale: str
+    condition_type: str
+    dependency_component_ids: tuple[int, ...] = ()
+    attrs: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class BatchedScheduleTraceStepSpec:
+    """One nonempty consideration-set execution in a precomputed trace.
+
+    Within the supported precomputed subset, all call-count dependencies must
+    originate in an earlier consideration set.  Members can therefore be
+    selected from the same beginning-of-set scheduler snapshot.
+    ``component_ids`` is an unordered execution set with deterministic storage
+    order, not a sequence whose earlier members may make later members
+    eligible.
+    """
+
+    pass_index: int
+    consideration_set_id: int
+    component_ids: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class BatchedScheduleTraceSpec:
+    """Finite, lane-invariant execution trace for one trial.
+
+    Empty consideration-set visits are omitted because they have no execution
+    effect.  Their timing is retained by the absolute ``pass_index`` on each
+    nonempty step and by ``num_passes``.  ``component_execution_count`` is the
+    expansion quantity bounded by the host planner before KernelIR duplicates
+    any component bodies.
+    """
+
+    steps: tuple[BatchedScheduleTraceStepSpec, ...]
+    num_passes: int
+    component_execution_count: int
+
+
+@dataclass(frozen=True)
 class BatchedFinishedValueSpec:
     """Boolean ``Mechanism.is_finished`` value consumed by scheduler predicates."""
 
@@ -251,6 +301,7 @@ class BatchedGraphIR:
     consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
+    termination: tuple[BatchedTerminationSpec, ...] = ()
 
     def node(self, name: str) -> BatchedNodeSpec:
         for node in self.nodes:

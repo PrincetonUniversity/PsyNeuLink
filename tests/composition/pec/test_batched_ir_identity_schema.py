@@ -18,6 +18,11 @@ from psyneulink.core.batched import (
 )
 from psyneulink.core.batched.bindings import BatchedComponentBindings
 from psyneulink.core.batched.kernel_ir import KernelIR, KernelLaneLayout
+from psyneulink.core.batched.ir import (
+    BatchedScheduleTraceSpec,
+    BatchedScheduleTraceStepSpec,
+    BatchedTerminationSpec,
+)
 from psyneulink.core.batched.specs import BatchedOpSpecSnapshot
 
 
@@ -59,6 +64,7 @@ def test_identity_fields_preserve_legacy_direct_construction():
     assert projection.receiver_port_id == -1
     assert (state.component_id, state.state_id) == (-1, -1)
     assert graph.rng_streams == ()
+    assert graph.termination == ()
     assert bindings.nodes_by_id == {}
 
 
@@ -242,3 +248,49 @@ def test_scheduler_identity_schema_is_additive_and_backend_neutral():
     assert graph.scheduler[0].dependency_component_ids == (10,)
     assert graph.finished_values[0].storage == "combinational"
     assert graph.resets[0].state_ids == (30,)
+
+
+def test_termination_and_precomputed_trace_schema_use_numeric_identity():
+    termination = (
+        BatchedTerminationSpec(
+            time_scale="ENVIRONMENT_STATE_UPDATE",
+            condition_type="AllHaveRun",
+            dependency_component_ids=(10, 11),
+        ),
+        BatchedTerminationSpec(
+            time_scale="ENVIRONMENT_SEQUENCE",
+            condition_type="Never",
+        ),
+    )
+    trace = BatchedScheduleTraceSpec(
+        steps=(
+            BatchedScheduleTraceStepSpec(
+                pass_index=3,
+                consideration_set_id=0,
+                component_ids=(10,),
+            ),
+            BatchedScheduleTraceStepSpec(
+                pass_index=3,
+                consideration_set_id=1,
+                component_ids=(11,),
+            ),
+        ),
+        num_passes=4,
+        component_execution_count=2,
+    )
+    graph = BatchedGraphIR(
+        nodes=(),
+        inputs=(),
+        projections=(),
+        outputs=(),
+        states=(),
+        scheduler=(),
+        ops=(),
+        execution_order=(),
+        termination=termination,
+    )
+
+    assert graph.termination == termination
+    assert trace.steps[0].component_ids == (10,)
+    assert trace.steps[1].consideration_set_id == 1
+    assert trace.num_passes == 4
