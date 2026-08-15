@@ -120,6 +120,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         topological_nodes,
         component_ids,
     )
+    finished_values_by_component_id = {
+        value.component_id: value
+        for value in finished_values
+    }
     termination_specs, termination_rejections = _termination_ir_specs(
         composition,
         component_ids,
@@ -134,6 +138,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         topological_nodes,
         component_ids,
         consideration_set_ids,
+        finished_values_by_component_id,
         coevolving,
     )
     rejected_conditions.extend(termination_rejections)
@@ -173,7 +178,12 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             )
             continue
 
-        diagnostic = _node_support_diagnostic(node, composition)
+        diagnostic = _node_support_diagnostic(
+            node,
+            composition,
+            component_id=component_ids[id(node)],
+            finished_values_by_component_id=finished_values_by_component_id,
+        )
         if diagnostic is not None:
             rejected_nodes.append(diagnostic)
             graph_blockers.append(diagnostic)
@@ -693,7 +703,13 @@ def _node_spec(
     )
 
 
-def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
+def _node_support_diagnostic(
+    node,
+    composition,
+    *,
+    component_id: int,
+    finished_values_by_component_id: Mapping[int, BatchedFinishedValueSpec],
+) -> BatchedDiagnostic | None:
     function = getattr(node, "function", None)
     function_type = type(function).__name__
     node_name = _node_name(node)
@@ -747,7 +763,12 @@ def _node_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
             if diagnostic is not None:
                 return diagnostic
         if type(node).__name__ == "LCAMechanism":
-            diagnostic = _lca_execution_support_diagnostic(node, composition)
+            diagnostic = _lca_execution_support_diagnostic(
+                node,
+                composition,
+                component_id=component_id,
+                finished_values_by_component_id=finished_values_by_component_id,
+            )
             if diagnostic is not None:
                 return diagnostic
         return None
@@ -1139,7 +1160,13 @@ def _function_parameter_support_diagnostic(node_name, function) -> BatchedDiagno
     return None
 
 
-def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | None:
+def _lca_execution_support_diagnostic(
+    node,
+    composition,
+    *,
+    component_id: int,
+    finished_values_by_component_id: Mapping[int, BatchedFinishedValueSpec],
+) -> BatchedDiagnostic | None:
     recurrent_projection = getattr(node, "recurrent_projection", None)
     projection_diagnostic = _mapping_projection_support_diagnostic(
         recurrent_projection
@@ -1163,7 +1190,10 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         for candidate, candidate_condition in conditions.items()
     )
     counted_finished_pair = (
-        _fixed_stepwise_finished_execution_count(node, composition) is not None
+        _fixed_finished_execution_count(
+            finished_values_by_component_id.get(component_id)
+        )
+        is not None
         and _scheduler_condition_is_effective_always(
             composition,
             node,
@@ -1190,25 +1220,19 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
     )
 
 
-def _fixed_stepwise_finished_execution_count(node, composition) -> int | None:
-    """Resolve a registered, lane-invariant finished count for one-step calls."""
+def _fixed_finished_execution_count(
+    finished_value: BatchedFinishedValueSpec | None,
+) -> int | None:
+    """Read a validated execution count from one frozen finished declaration."""
 
-    if node is None or bool(
-        _parameter_value(node, "execute_until_finished", True)
+    if (
+        finished_value is None
+        or finished_value.predicate_kind != "execution_count_at_least"
+        or not isinstance(finished_value.attrs, Mapping)
+        or set(finished_value.attrs) != {"count"}
     ):
         return None
-    mechanism_spec = specs.mechanism_spec_for(node)
-    resolver = (
-        None
-        if mechanism_spec is None
-        else mechanism_spec.finished_after_execution_count
-    )
-    if resolver is None:
-        return None
-    try:
-        count = resolver(node, composition)
-    except Exception:
-        return None
+    count = finished_value.attrs.get("count")
     return count if type(count) is int and count > 0 else None
 
 
@@ -2654,6 +2678,7 @@ def _classify_schedule(
     nodes,
     component_ids,
     consideration_set_ids,
+    finished_values_by_component_id,
     coevolving=False,
 ) -> tuple[str, list[str], list[BatchedDiagnostic]]:
     conditions = _scheduler_conditions(composition)
@@ -2693,7 +2718,8 @@ def _classify_schedule(
             condition,
             node,
             node_consideration_set,
-            composition,
+            component_ids,
+            finished_values_by_component_id,
             coevolving,
         )
         if condition_schedule_kind == UNSUPPORTED_SCHEDULE:
@@ -2906,7 +2932,8 @@ def _condition_schedule_kind(
     condition,
     node,
     node_consideration_set: dict[int, int],
-    composition,
+    component_ids,
+    finished_values_by_component_id,
     coevolving=False,
 ) -> str:
     condition_name = _supported_scheduler_condition_name(condition)
@@ -2927,11 +2954,18 @@ def _condition_schedule_kind(
         target_set = node_consideration_set.get(id(target), -1)
         receiver_set = node_consideration_set.get(id(node), -1)
         if target_set >= 0 and target_set < receiver_set:
+            target_component_id = component_ids.get(id(target))
             if (
                 not coevolving
-                and _fixed_stepwise_finished_execution_count(
-                    target,
-                    composition,
+                and not bool(
+                    _parameter_value(
+                        target,
+                        "execute_until_finished",
+                        True,
+                    )
+                )
+                and _fixed_finished_execution_count(
+                    finished_values_by_component_id.get(target_component_id)
                 )
                 is not None
             ):
