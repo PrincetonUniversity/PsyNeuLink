@@ -437,18 +437,18 @@ def _lca_extract_attrs(node, composition) -> dict:
 def _lca_finished_after_execution_count(node, composition) -> int | None:
     """Return the exact scheduler-call count for a fixed LCA finished value.
 
-    A run-to-completion LCA is finished after its one scheduled call.  A
-    stepwise LCA becomes finished after ``ceil(termination_threshold)`` calls;
-    unlike a run-to-completion call, PsyNeuLink resets the per-call execution
-    cap on every one-step ``execute``, so ``max_executions_before_finished``
-    does not reduce this scheduler count.
+    A stepwise LCA becomes finished after ``ceil(termination_threshold)``
+    calls.  PsyNeuLink resets the per-call execution cap on every one-step
+    ``execute``, so ``max_executions_before_finished`` does not reduce this
+    scheduler count.  A run-to-completion LCA keeps its ordinary atomic
+    ``CallMechanism`` lowering and needs no counted scheduler predicate.
 
     A controlled threshold is lane/runtime dependent and intentionally remains
     dynamic until conditional scheduler execution is represented in KernelIR.
     """
 
     if bool(_raw_parameter(node, "execute_until_finished", True)):
-        return 1
+        return None
     if _control_monitor_source_for(composition, node) is not None:
         return None
     threshold = np.asarray(_raw_parameter(node, "termination_threshold", None))

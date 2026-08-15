@@ -16,7 +16,12 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
 )
-from psyneulink.core.batched.kernel_ir import KernelIR, component_symbol, diag_slots
+from psyneulink.core.batched.kernel_ir import (
+    KernelIR,
+    component_symbol,
+    diag_slots,
+    validate_kernel_ir,
+)
 from psyneulink.core.batched.backend.triton.api import (
     TritonEmitContext,
     TritonOpCall,
@@ -65,6 +70,10 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
 
     def emit(self) -> str:
+        # KernelIR attrs are mapping-valued for an extensible public schema.
+        # Revalidate cross-op identity/effect invariants at the backend boundary
+        # so post-construction mapping mutation cannot redirect retained state.
+        validate_kernel_ir(self.kernel)
         if not self.kernel.executable:
             raise ValueError(
                 "Cannot emit Triton source for declaration-only, non-executable "

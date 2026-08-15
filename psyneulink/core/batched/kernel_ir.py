@@ -32,6 +32,7 @@ from psyneulink.core.batched.schedule import (
 )
 from psyneulink.core.batched.specs import (
     BatchedOpSpecSnapshot,
+    MechanismOpSpec,
     snapshot_batched_op_specs,
 )
 
@@ -113,6 +114,8 @@ class KernelOp:
             _validate_for_passes(self)
         elif self.kind == "ExecuteConsiderationSet":
             _validate_execute_consideration_set(self)
+        elif self.kind == "StepMechanism":
+            _validate_step_mechanism(self)
 
 
 def add_constant_op(
@@ -331,6 +334,44 @@ def _validate_execute_consideration_set(op: KernelOp) -> None:
         )
 
 
+def _validate_step_mechanism(op: KernelOp) -> None:
+    if len(op.inputs) != 1 or not op.outputs:
+        raise ValueError(
+            "KernelIR StepMechanism requires exactly one input and at least one "
+            "output."
+        )
+    component_id = op.attrs.get("component_id")
+    execution_index = op.attrs.get("execution_index")
+    state_ids = op.attrs.get("state_ids")
+    if type(component_id) is not int or component_id < 0:
+        raise ValueError(
+            "KernelIR StepMechanism component_id must be a non-negative "
+            "non-bool integer."
+        )
+    if type(execution_index) is not int or execution_index < 0:
+        raise ValueError(
+            "KernelIR StepMechanism execution_index must be a non-negative "
+            "non-bool integer."
+        )
+    if (
+        type(state_ids) is not tuple
+        or not state_ids
+        or any(type(state_id) is not int or state_id < 0 for state_id in state_ids)
+        or state_ids != tuple(sorted(set(state_ids)))
+    ):
+        raise ValueError(
+            "KernelIR StepMechanism state_ids must be a nonempty tuple of "
+            "unique, sorted, non-negative non-bool integers."
+        )
+    if op.attrs.get("active_lanes") != "all":
+        raise ValueError(
+            "KernelIR precomputed StepMechanism currently requires "
+            "active_lanes='all'."
+        )
+    if not isinstance(op.attrs.get("spec_key"), str) or not op.attrs["spec_key"]:
+        raise ValueError("KernelIR StepMechanism requires a nonempty spec_key.")
+
+
 @dataclass(frozen=True)
 class KernelIR:
     """Backend-neutral batched execution plan.
@@ -365,6 +406,236 @@ class KernelIR:
     termination: tuple[BatchedTerminationSpec, ...] = ()
     schedule_trace: BatchedScheduleTraceSpec | None = None
 
+    def __post_init__(self) -> None:
+        validate_kernel_ir(self)
+
+
+def validate_kernel_ir(kernel: KernelIR) -> None:
+    """Validate cross-op identity and effect invariants in a complete KernelIR."""
+
+    semantic_fields = (
+        ("input", kernel.inputs, kernel.graph.inputs),
+        ("retained-state", kernel.states, kernel.graph.states),
+        ("output", kernel.outputs, kernel.graph.outputs),
+        ("scheduler", kernel.scheduler, kernel.graph.scheduler),
+        ("schedule-region", kernel.schedule_regions, kernel.graph.schedule_regions),
+        ("consideration-set", kernel.consideration_sets, kernel.graph.consideration_sets),
+        ("finished-value", kernel.finished_values, kernel.graph.finished_values),
+        ("reset", kernel.resets, kernel.graph.resets),
+        ("termination", kernel.termination, kernel.graph.termination),
+    )
+    for label, kernel_declarations, graph_declarations in semantic_fields:
+        if kernel_declarations != graph_declarations:
+            raise ValueError(
+                f"KernelIR {label} declarations must exactly match GraphIR."
+            )
+    step_counts: dict[int, int] = {}
+    precomputed_regions: list[KernelOp] = []
+    output_stores: list[KernelOp] = []
+
+    def visit(op: KernelOp, *, in_precomputed_region: bool = False) -> None:
+        if op.kind == "StepMechanism":
+            if not in_precomputed_region:
+                raise ValueError(
+                    "KernelIR StepMechanism must belong to an executable "
+                    "precomputed ForPasses region."
+                )
+            try:
+                node = kernel.graph.node(op.target)
+            except KeyError as error:
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' is not declared."
+                ) from error
+            component_id = _component_id(kernel.graph, node)
+            expected_state_ids = tuple(
+                sorted(
+                    state.state_id
+                    for state in kernel.states
+                    if _state_component_id(kernel.graph, state) == component_id
+                )
+            )
+            if op.attrs["component_id"] != component_id:
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' has component "
+                    f"id {op.attrs['component_id']}, expected {component_id}."
+                )
+            if op.attrs["state_ids"] != expected_state_ids:
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' has state IDs "
+                    f"{op.attrs['state_ids']}, expected {expected_state_ids}."
+                )
+            if op.attrs["spec_key"] != node.attrs.get("spec_key"):
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' does not use "
+                    "its frozen graph implementation key."
+                )
+            expected_execution_index = step_counts.get(component_id, 0)
+            if op.attrs["execution_index"] != expected_execution_index:
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' has execution "
+                    f"index {op.attrs['execution_index']}, expected "
+                    f"{expected_execution_index}."
+                )
+            step_counts[component_id] = expected_execution_index + 1
+        elif op.kind == "StoreOutput":
+            output_stores.append(op)
+
+        child_precomputed = in_precomputed_region
+        if op.kind == "ForPasses":
+            child_precomputed = (
+                op.attrs.get("declaration_only") is False
+                and op.attrs.get("trace_kind") == "precomputed"
+            )
+            if child_precomputed:
+                precomputed_regions.append(op)
+        for child in op.attrs.get("body", ()):
+            visit(child, in_precomputed_region=child_precomputed)
+
+    for op in kernel.ops:
+        visit(op)
+
+    if kernel.schedule_trace is not None:
+        # This first executable schedule tier has a compiler-owned epilogue.
+        # Enforce it here so a hand-forged scheduled body cannot add or replace
+        # a host-buffer write.  Ordinary KernelIR remains extensible: custom
+        # lowering may legitimately feed a declared output from a different
+        # SSA value (for example after AddConstant/Clamp transforms).
+        if len(output_stores) != len(kernel.graph.outputs):
+            raise ValueError(
+                "KernelIR precomputed schedule must contain exactly one "
+                "StoreOutput for each declared GraphIR output."
+            )
+        for store, output in zip(output_stores, kernel.graph.outputs):
+            expected_input = KernelValue(
+                node_output_value_name(kernel.graph, output.node, output.port),
+                output.width,
+            )
+            expected_attrs = {
+                "node": output.node,
+                "port": output.port,
+                "width": output.width,
+                "component_id": output.component_id,
+                "port_id": output.port_id,
+                "flat_start": output.flat_start,
+                "flat_stop": output.flat_stop,
+            }
+            if (
+                store.target != output.name
+                or store.inputs != (expected_input,)
+                or store.outputs
+                or dict(store.attrs) != expected_attrs
+            ):
+                raise ValueError(
+                    "KernelIR StoreOutput does not exactly match its declared "
+                    f"GraphIR output '{output.name}'."
+                )
+
+        if len(precomputed_regions) != 1:
+            raise ValueError(
+                "KernelIR schedule_trace requires exactly one executable "
+                "precomputed ForPasses region."
+            )
+        region_steps = tuple(
+            (
+                child.attrs.get("pass_index"),
+                child.attrs.get("consideration_set_id"),
+                child.attrs.get("component_ids"),
+            )
+            for child in precomputed_regions[0].attrs["body"]
+        )
+        declared_steps = tuple(
+            (
+                step.pass_index,
+                step.consideration_set_id,
+                step.component_ids,
+            )
+            for step in kernel.schedule_trace.steps
+        )
+        if region_steps != declared_steps:
+            raise ValueError(
+                "KernelIR executable precomputed region does not match its "
+                "typed schedule_trace."
+            )
+        for execution in precomputed_regions[0].attrs["body"]:
+            declared_component_ids = set(execution.attrs["component_ids"])
+            body_component_ids = set()
+            for child in execution.attrs["body"]:
+                try:
+                    child_component_id = _component_id(
+                        kernel.graph,
+                        kernel.graph.node(child.target),
+                    )
+                except KeyError as error:
+                    raise ValueError(
+                        "KernelIR executable consideration-set body references "
+                        f"undeclared target '{child.target}'."
+                    ) from error
+                if child_component_id not in declared_component_ids:
+                    raise ValueError(
+                        "KernelIR executable consideration-set body target "
+                        f"'{child.target}' is not one of its declared component "
+                        "IDs."
+                    )
+                body_component_ids.add(child_component_id)
+            if body_component_ids != declared_component_ids:
+                raise ValueError(
+                    "KernelIR executable consideration-set body does not cover "
+                    "exactly its declared component IDs."
+                )
+        declared_execution_count = sum(
+            len(step.component_ids) for step in kernel.schedule_trace.steps
+        )
+        if (
+            kernel.schedule_trace.component_execution_count
+            != declared_execution_count
+        ):
+            raise ValueError(
+                "KernelIR schedule_trace component_execution_count does not "
+                "match its declared steps."
+            )
+    elif precomputed_regions:
+        raise ValueError(
+            "KernelIR executable precomputed ForPasses region requires a typed "
+            "schedule_trace."
+        )
+
+    counted_finished = {
+        value.component_id: value.attrs.get("count")
+        for value in kernel.finished_values
+        if value.predicate_kind == "execution_count_at_least"
+    }
+    if not step_counts:
+        if kernel.executable and counted_finished:
+            raise ValueError(
+                "Executable KernelIR counted finished values require typed "
+                "StepMechanism operations."
+            )
+        return
+    if set(step_counts) != set(counted_finished):
+        raise ValueError(
+            "KernelIR StepMechanism owners must exactly match counted finished "
+            "value owners."
+        )
+    trace_execution_counts: dict[int, int] = {}
+    for step in kernel.schedule_trace.steps:
+        for component_id in step.component_ids:
+            trace_execution_counts[component_id] = (
+                trace_execution_counts.get(component_id, 0) + 1
+            )
+    for component_id, count in counted_finished.items():
+        if step_counts[component_id] != trace_execution_counts.get(component_id, 0):
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} StepMechanism count does not match its typed "
+                "schedule trace."
+            )
+        if type(count) is not int or count <= 0 or step_counts[component_id] < count:
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} requires at least {count!r} scheduled steps, "
+                f"found {step_counts[component_id]}."
+            )
+
 
 def lower_to_kernel_ir(
     ir: BatchedCompositionIR,
@@ -396,7 +667,7 @@ def lower_to_kernel_ir(
         and bool(graph.termination)
     )
     if (
-        _precomputed_trace_eligible(graph, lane_layout, rng_streams)
+        _precomputed_trace_eligible(graph, lane_layout, rng_streams, op_specs)
         and trace_requested
     ):
         component_budget = _trace_budget(
@@ -415,11 +686,13 @@ def lower_to_kernel_ir(
             termination=graph.termination,
             expansion_budget=component_budget,
             projections=graph.projections,
+            finished_values=graph.finished_values,
         )
         scheduled_trial_ops = _precomputed_trace_ops(
             graph,
             trial_ops,
             schedule_trace,
+            op_specs=op_specs,
             component_budget=component_budget,
             weighted_op_budget=weighted_op_budget,
         )
@@ -524,6 +797,7 @@ def _precomputed_trace_eligible(
     graph: BatchedGraphIR,
     lane_layout: KernelLaneLayout,
     rng_streams: tuple[KernelRngStream, ...],
+    op_specs: BatchedOpSpecSnapshot,
 ) -> bool:
     """Defensive boundary for the first executable trace tier.
 
@@ -532,15 +806,22 @@ def _precomputed_trace_eligible(
     executable nested bodies merely because its metadata requests a trace.
     """
 
-    if (
-        not graph.executable
-        or graph.fusion_kind != STATELESS_GRAPH_FUSION
-        or lane_layout.kind != TRIAL_LANE_LAYOUT
-        or graph.states
-        or rng_streams
-        or graph.resets
-        or graph.finished_values
-    ):
+    if not graph.executable or rng_streams:
+        return False
+
+    stateless = (
+        graph.fusion_kind == STATELESS_GRAPH_FUSION
+        and lane_layout.kind == TRIAL_LANE_LAYOUT
+        and not graph.states
+        and not graph.resets
+        and not graph.finished_values
+    )
+    counted_stateful = _counted_stateful_trace_eligible(
+        graph,
+        lane_layout,
+        op_specs,
+    )
+    if not stateless and not counted_stateful:
         return False
 
     try:
@@ -571,11 +852,64 @@ def _precomputed_trace_eligible(
     )
 
 
+def _counted_stateful_trace_eligible(
+    graph: BatchedGraphIR,
+    lane_layout: KernelLaneLayout,
+    op_specs: BatchedOpSpecSnapshot,
+) -> bool:
+    """Defensive boundary for compile-time counted stateful schedules."""
+
+    if (
+        graph.fusion_kind != STATEFUL_GRAPH_FUSION
+        or lane_layout.kind != STATEFUL_LANE_LAYOUT
+        or not graph.states
+        or not graph.finished_values
+        or any(reset.condition_type != "Never" for reset in graph.resets)
+    ):
+        return False
+
+    state_component_ids = {state.component_id for state in graph.states}
+    reset_component_ids = {reset.component_id for reset in graph.resets}
+    finished_component_ids = {
+        value.component_id
+        for value in graph.finished_values
+        if (
+            value.predicate_kind == "execution_count_at_least"
+            and value.storage == "combinational"
+            and value.width == 1
+            and value.dtype == "bool"
+        )
+    }
+    if not (
+        state_component_ids
+        and state_component_ids == reset_component_ids == finished_component_ids
+    ):
+        return False
+
+    for component_id in finished_component_ids:
+        try:
+            node = next(
+                node for node in graph.nodes if _component_id(graph, node) == component_id
+            )
+            spec = op_specs.lookup_spec(node.attrs["spec_key"])
+        except (KeyError, StopIteration, TypeError, ValueError):
+            return False
+        if (
+            not isinstance(spec, MechanismOpSpec)
+            or not spec.can_step
+            or spec.trial_states
+            or node.attrs.get("diagnostics")
+        ):
+            return False
+    return True
+
+
 def _precomputed_trace_ops(
     graph: BatchedGraphIR,
     trial_ops: tuple[KernelOp, ...],
     trace: BatchedScheduleTraceSpec,
     *,
+    op_specs: BatchedOpSpecSnapshot,
     component_budget: int,
     weighted_op_budget: int,
 ) -> tuple[KernelOp, ...]:
@@ -608,26 +942,49 @@ def _precomputed_trace_ops(
             f"{weighted_expansion} exceeds budget {weighted_op_budget}."
         )
 
-    executions = tuple(
-        KernelOp(
-            kind="ExecuteConsiderationSet",
-            target=(
-                f"pass-{step.pass_index}:consideration-set-"
-                f"{step.consideration_set_id}"
-            ),
-            attrs={
-                "pass_index": step.pass_index,
-                "consideration_set_id": step.consideration_set_id,
-                "component_ids": step.component_ids,
-                "body": tuple(
-                    op
-                    for component_id in step.component_ids
-                    for op in component_bodies[component_id]
-                ),
-            },
-        )
-        for step in trace.steps
+    step_component_ids = {
+        value.component_id
+        for value in graph.finished_values
+        if value.predicate_kind == "execution_count_at_least"
+    }
+    _validate_scheduled_step_bodies(
+        graph,
+        component_bodies,
+        step_component_ids,
+        op_specs,
     )
+    component_execution_counts = dict.fromkeys(component_bodies, 0)
+    executions = []
+    for step in trace.steps:
+        body = []
+        for component_id in step.component_ids:
+            execution_index = component_execution_counts[component_id]
+            body.extend(
+                _scheduled_component_op(
+                    graph,
+                    op,
+                    component_id=component_id,
+                    execution_index=execution_index,
+                    step_component_ids=step_component_ids,
+                )
+                for op in component_bodies[component_id]
+            )
+            component_execution_counts[component_id] += 1
+        executions.append(
+            KernelOp(
+                kind="ExecuteConsiderationSet",
+                target=(
+                    f"pass-{step.pass_index}:consideration-set-"
+                    f"{step.consideration_set_id}"
+                ),
+                attrs={
+                    "pass_index": step.pass_index,
+                    "consideration_set_id": step.consideration_set_id,
+                    "component_ids": step.component_ids,
+                    "body": tuple(body),
+                },
+            )
+        )
     pass_regions = tuple(
         region for region in graph.schedule_regions if region.kind == "pass"
     )
@@ -643,7 +1000,7 @@ def _precomputed_trace_ops(
             target="passes",
             attrs={
                 "region": pass_region,
-                "body": executions,
+                "body": tuple(executions),
                 "declaration_only": False,
                 "trace_kind": "precomputed",
                 "component_expansion_budget": component_budget,
@@ -652,6 +1009,81 @@ def _precomputed_trace_ops(
             },
         ),
         *epilogue,
+    )
+
+
+def _validate_scheduled_step_bodies(
+    graph: BatchedGraphIR,
+    component_bodies: Mapping[int, tuple[KernelOp, ...]],
+    step_component_ids: set[int],
+    op_specs: BatchedOpSpecSnapshot,
+) -> None:
+    for component_id in step_component_ids:
+        calls = tuple(
+            op
+            for op in component_bodies.get(component_id, ())
+            if op.kind == "CallMechanism"
+        )
+        if len(calls) != 1:
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} requires exactly one CallMechanism body, "
+                f"found {len(calls)}."
+            )
+        try:
+            spec = op_specs.lookup_spec(calls[0].attrs["spec_key"])
+        except KeyError as error:
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} has no frozen mechanism implementation."
+            ) from error
+        if not isinstance(spec, MechanismOpSpec) or not spec.can_step:
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} has no one-step mechanism implementation."
+            )
+        state_ids = tuple(
+            sorted(
+                state.state_id
+                for state in graph.states
+                if state.component_id == component_id
+            )
+        )
+        if not state_ids:
+            raise ValueError(
+                "KernelIR counted finished component id "
+                f"{component_id} has no retained state declarations."
+            )
+
+
+def _scheduled_component_op(
+    graph: BatchedGraphIR,
+    op: KernelOp,
+    *,
+    component_id: int,
+    execution_index: int,
+    step_component_ids: set[int],
+) -> KernelOp:
+    if component_id not in step_component_ids or op.kind != "CallMechanism":
+        return op
+    state_ids = tuple(
+        sorted(
+            state.state_id
+            for state in graph.states
+            if state.component_id == component_id
+        )
+    )
+    return KernelOp(
+        kind="StepMechanism",
+        target=op.target,
+        inputs=op.inputs,
+        outputs=op.outputs,
+        attrs={
+            **op.attrs,
+            "state_ids": state_ids,
+            "execution_index": execution_index,
+            "active_lanes": "all",
+        },
     )
 
 

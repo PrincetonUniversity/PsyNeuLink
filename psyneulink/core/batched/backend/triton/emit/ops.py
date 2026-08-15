@@ -152,7 +152,15 @@ class OpEmitMixin:
                 return
         self._emit_op(op)
 
-    def _emit_step_mechanism(self, op: KernelOp, spec, step_var: str, finished_var: str) -> None:
+    def _emit_step_mechanism(
+        self,
+        op: KernelOp,
+        spec,
+        step_var: str,
+        finished_var: str,
+        *,
+        require_outputs: bool = False,
+    ) -> None:
         node = self.graph.node(op.target)
         input_values = self._get_value(op.inputs[0].name)
         output_vars = []
@@ -165,11 +173,28 @@ class OpEmitMixin:
         # terminator (e.g. DDM) only advances state and returns None — its
         # outputs are produced by the readout after the loop.
         if result is not None:
-            values = list(result)
+            try:
+                values = list(result)
+            except TypeError as error:
+                raise ValueError(
+                    f"One-step mechanism '{op.target}' returned a non-iterable "
+                    "result."
+                ) from error
+            expected_values = sum(output.width for output in op.outputs)
+            if len(values) != expected_values:
+                raise ValueError(
+                    f"One-step mechanism '{op.target}' returned {len(values)} "
+                    f"value(s), expected {expected_values}."
+                )
             cursor = 0
             for output in op.outputs:
                 self._set_value(output.name, values[cursor : cursor + output.width])
                 cursor += output.width
+        elif require_outputs:
+            raise ValueError(
+                f"Scheduled one-step mechanism '{op.target}' did not return its "
+                "declared outputs."
+            )
 
     def _emit_init_trial_states(self, terminator_op: KernelOp) -> None:
         spec = self._spec_for_op(terminator_op)
@@ -243,6 +268,8 @@ class OpEmitMixin:
             self._emit_function_call(op)
         elif op.kind == "CallMechanism":
             self._emit_mechanism_call(op)
+        elif op.kind == "StepMechanism":
+            self._emit_scheduled_step_mechanism(op)
         elif op.kind == "StoreOutput":
             self._emit_store_output(op)
         elif op.kind == "StoreFlag":
@@ -253,6 +280,26 @@ class OpEmitMixin:
             self._emit_precomputed_consideration_set(op)
         else:
             raise ValueError(f"Unsupported Triton KernelIR op '{op.kind}'.")
+
+    def _emit_scheduled_step_mechanism(self, op: KernelOp) -> None:
+        spec = self._spec_for_op(op)
+        if not spec.can_step:
+            raise ValueError(
+                "Batched op spec for scheduled mechanism "
+                f"'{op.target}' has no one-step Triton implementation."
+            )
+        # A precomputed trace is lane-invariant: every in-range lane executes
+        # this occurrence.  The existing one-step adapter accepts a 0/1
+        # finished mask (0 means active), so pass an all-zero tensor.  Dynamic
+        # schedules will replace this with a typed lane-local active value.
+        self._emit_step_mechanism(
+            op,
+            spec,
+            str(op.attrs["execution_index"]),
+            "tl.zeros((BLOCK,), tl.float32)",
+            require_outputs=True,
+        )
+        self.builder.line()
 
     def _emit_precomputed_passes(self, op: KernelOp) -> None:
         if op.attrs.get("declaration_only") is not False:
