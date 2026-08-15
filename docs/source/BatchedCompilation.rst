@@ -78,14 +78,17 @@ PsyNeuLink's automatically suffixed names are already distinguished by IDs.
 projection, port combination, function, state, trial-loop, and output-store
 operations explicit and carries the graph's scheduler, consideration-set,
 termination, finished-value, and reset declarations forward.  For the exact
-stateless boundary described below, a backend-neutral host planner consumes
-only those typed declarations and produces a finite one-trial
-``BatchedScheduleTraceSpec``.  Kernel lowering expands the trace into an
-executable ``ForPasses`` containing typed ``ExecuteConsiderationSet`` regions,
-followed by one output-store epilogue.  Each trial lane executes that same trace
-independently, including trial-local predicate and usable-call-count resets.
+stateless and fixed-count stateful boundaries described below, a
+backend-neutral host planner consumes only those typed declarations and
+produces a finite one-trial ``BatchedScheduleTraceSpec``.  Kernel lowering
+expands the trace into an executable ``ForPasses`` containing typed
+``ExecuteConsiderationSet`` regions, followed by one output-store epilogue.
+Stateless trial lanes execute that trace independently.  The fixed-count
+stateful path instead executes trials serially within each subject/estimate
+lane so its supported LCA state persists between trials.  Predicate and usable
+call counts remain trial-local in both paths.
 
-Pass-wise programs outside that finite stateless boundary remain
+Pass-wise programs outside those finite precomputed boundaries remain
 declaration-only.  Their ``ForPasses`` attributes describe the required region
 but do not authorize sequential execution or define conditional behavior; the
 corresponding ``KernelIR`` is non-executable and the Triton emitter refuses it
@@ -100,9 +103,18 @@ Current scheduler and control boundary
 --------------------------------------
 
 The semantic declarations are intentionally broader than the executable
-subset.  The finite precomputed path does not enable stateful pass schedules,
-``WhenFinished``-driven pass loops, generic control, or CSI; those remain
-fail-closed:
+subset.  The first executable stateful scheduler tier is a fixed,
+compile-time execution-count pattern: one stateful LCA with
+``execute_until_finished=False`` scheduled ``Always`` projects to one
+stateless ``TransferMechanism`` scheduled by
+``WhenFinished`` in a strictly later consideration set.  The LCA uses
+``Never`` reset, the finished count is positive and identical for every lane,
+and the graph has no RNG stream, control path, or custom termination.  This is
+generic typed scheduler, finished-value, state, and ``KernelIR`` machinery;
+LCA is merely the first mechanism with a registered one-step implementation
+and fixed-count resolver, not a recognized model type.  Lane-varying finished
+counts, controlled termination, DDM followers, and ``AtTrialStart`` reset
+remain fail-closed, as do stateful graphs outside this exact boundary:
 
 .. list-table::
    :header-rows: 1
@@ -124,8 +136,9 @@ fail-closed:
        precomputed-trace boundary.  Within such a trace, ``Always`` may execute
        on each pass, ``AtTrialStart`` and ``AtPass`` use absolute pass indices,
        and the implicit one-call predicates consume trial-local usable counts.
-       There is no generic or dynamic ``WhenFinished`` executor; only its
-       already validated one-pass static equivalent remains admitted.
+       A fixed ``WhenFinished`` execution count also runs for the exact
+       stateful producer/follower boundary above.  There is no lane-varying or
+       otherwise dynamic ``WhenFinished`` executor.
        Explicit call-count predicates, unsupported condition types or
        subclasses, malformed arguments, structural scheduler conditions, and
        other time scales remain fail-closed.
@@ -134,8 +147,8 @@ fail-closed:
        and component IDs.  Each set declares the PsyNeuLink frozen-input
        contract, and predicate dependencies use those identities rather than
        display-name order.
-     - The host planner evaluates the typed sets in order for the stateless
-       precomputed subset.  It selects every member of a set from one
+     - The host planner evaluates the typed sets in order for the supported
+       precomputed subsets.  It selects every member of a set from one
        beginning-of-set predicate snapshot, consumes and publishes usable call
        counts between sets, and checks termination between sets.  Empty visits
        are omitted from the trace while absolute pass and consideration-set
@@ -147,14 +160,16 @@ fail-closed:
      - A delayed-``AtPass`` graph gets executable ``ForPasses`` only when it is
        a stateless trial-lane graph with no retained state, RNG stream, reset,
        finished-value dependency, or scheduler component lacking a lowered
-       body.  Data projections must run sender-before-receiver in the current
-       trial; a receiver that would read a previous trial's held sender value
-       is rejected.  Projection edges within one consideration set are also
-       rejected until current/next value banks can preserve frozen inputs.
-       Nontermination, invalid dependency order, malformed declarations, and
-       component- or weighted-operation expansion beyond the compiler budgets
-       fail closed.  Other required pass regions remain declaration-only with
-       ``KernelIR.executable == False``.
+       body.  The fixed-count LCA/Transfer boundary also gets an executable
+       pass region, with a typed one-step state update for each planned LCA
+       execution.  Data projections must run sender-before-receiver in the
+       current trial; a receiver that would read a previous trial's held sender
+       value is rejected.  Projection edges within one consideration set are
+       also rejected until current/next value banks can preserve frozen
+       inputs.  Nontermination, invalid dependency order, malformed
+       declarations, and component- or weighted-operation expansion beyond
+       the compiler budgets fail closed.  Other required pass regions remain
+       declaration-only with ``KernelIR.executable == False``.
    * - Termination
      - The exact default trial ``AllHaveRun()`` predicate is expanded to every
        lowered scheduler component ID, and the environment-sequence
@@ -238,9 +253,9 @@ Recurrent activation is initialized by applying the registered Logistic
 implementation to zero for each parameter lane and persists between trials.
 The absorbed cue/control path is a validated instance of general identity
 routing, not recognition of stability-flexibility or CSI.  Nonzero noise,
-custom state, other termination measures, and generic co-evolving
-``Always``/``WhenFinished`` scheduling and control remain structured
-rejections rather than approximate execution.
+custom state, other termination measures, and lane-varying, controlled, or
+otherwise general co-evolving ``Always``/``WhenFinished`` scheduling remain
+structured rejections rather than approximate execution.
 
 Extension API
 -------------
@@ -268,6 +283,15 @@ multi-origin fan-in with implicit ``SUM`` combination.  Each case spans
 multiple trials, asserts the exact typed trace, and compares both Triton
 interpreter and compiled-GPU results directly with a freshly constructed
 Python Composition.
+
+The fixed-count ``WhenFinished`` matrix exercises persistent LCA state,
+renamed components with reverse insertion order, one execution, a host-fp64
+threshold just above one that resolves to two executions, and a fractional
+threshold that resolves to three.  Every case checks its typed graph and
+``KernelIR`` trace, then compares fresh Python, Triton-interpreter, and
+compiled-GPU results.  The same contract keeps ``AtTrialStart`` reset, an
+LCA-to-DDM dependency, lane-varying or controlled finished state, multiple
+finished producers, and custom termination as structured compile rejections.
 
 Device buffers and current Triton kernels use fp32. Discrete outcomes and
 execution counts compare exactly. The exact LCA semantic cases compare

@@ -1,10 +1,10 @@
-"""Fail-closed acceptance contract for dynamic ``WhenFinished`` execution.
+"""Acceptance contract for counted ``WhenFinished`` execution.
 
 The primary cases deliberately use an ordinary stateless follower.  A dynamic
 finished-state executor must therefore be a scheduler capability, not a hidden
 LCA/DDM pairing rule.  Each semantic case builds a fresh Python oracle and a
-fresh compiler input.  Until that executor exists, compilation must reject the
-same cases with structured diagnostics.
+fresh compiler input.  Nearby scheduler, reset, control, and co-evolution
+semantics remain structured fail-closed boundaries.
 
 The provenance strings point to existing execution-mode-expanded tests whose
 LCA, ``WhenFinished``, multi-trial, DDM, termination, and control semantics this
@@ -24,10 +24,18 @@ from psyneulink.core.batched import (
     BatchedCompositionCompiler,
     BatchedDiagnosticCode,
 )
-from psyneulink.core.batched.graph import lower_composition
+from psyneulink.core.batched.graph import STATEFUL_GRAPH_FUSION, lower_composition
 from psyneulink.core.batched.ir import BatchedFinishedValueSpec
+from psyneulink.core.batched.kernel_ir import (
+    STATEFUL_LANE_LAYOUT,
+    iter_kernel_ops,
+)
 
-from batched_semantic_test_support import SemanticCase, SemanticModel
+from batched_semantic_test_support import (
+    SemanticCase,
+    SemanticModel,
+    assert_matches_python,
+)
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
@@ -91,7 +99,7 @@ _UNMODELED_COEVOLUTION_DETAIL = (
 )
 
 
-def _stepwise_lca(*, name: str, reset_condition):
+def _stepwise_lca(*, name: str, reset_condition, threshold: float = 3.0):
     return pnl.LCAMechanism(
         input_shapes=2,
         function=pnl.Logistic(gain=1.0),
@@ -100,7 +108,7 @@ def _stepwise_lca(*, name: str, reset_condition):
         self_excitation=0.0,
         noise=0.0,
         termination_measure=pnl.TimeScale.TRIAL,
-        termination_threshold=3,
+        termination_threshold=threshold,
         time_step_size=0.5,
         execute_until_finished=False,
         reset_stateful_function_when=reset_condition,
@@ -111,6 +119,7 @@ def _stepwise_lca(*, name: str, reset_condition):
 def _generic_finished_case(
     name: str,
     *,
+    threshold: float = 3.0,
     reverse_insertion: bool = False,
     renamed_boundary: bool = False,
     reset_factory: Callable[[], object] = pnl.Never,
@@ -129,6 +138,7 @@ def _generic_finished_case(
         producer = _stepwise_lca(
             name=producer_name,
             reset_condition=reset_factory(),
+            threshold=threshold,
         )
         follower = pnl.TransferMechanism(
             input_shapes=1,
@@ -160,49 +170,53 @@ def _generic_finished_case(
             f"{_MULTI_TRIAL_LLVM_PROVENANCE}"
         ),
         max_steps=16,
+        atol=1e-6,
+        rtol=1e-5,
     )
 
 
 @dataclass(frozen=True)
-class _GenericAcceptance:
+class _ExecutableAcceptance:
     case: SemanticCase
-    expected_values: np.ndarray
-    expected_reason: str
-    expected_detail: str
+    expected_count: int
+    expected_values: np.ndarray | None = None
 
 
-GENERIC_ACCEPTANCE_CASES = (
-    _GenericAcceptance(
+EXECUTABLE_ACCEPTANCE_CASES = (
+    _ExecutableAcceptance(
         case=_generic_finished_case("persistent_state"),
+        expected_count=3,
         expected_values=_PERSISTENT_RESULTS,
-        expected_reason="unsupported LCA execution mode for batched v2",
-        expected_detail=(
-            "execute_until_finished must be False only for an "
-            "Always/WhenFinished stepwise pair"
-        ),
     ),
-    _GenericAcceptance(
+    _ExecutableAcceptance(
         case=_generic_finished_case(
             "renamed_reverse_insertion",
             reverse_insertion=True,
             renamed_boundary=True,
         ),
+        expected_count=3,
         expected_values=_PERSISTENT_RESULTS,
-        expected_reason="unsupported LCA execution mode for batched v2",
-        expected_detail=(
-            "execute_until_finished must be False only for an "
-            "Always/WhenFinished stepwise pair"
-        ),
     ),
-    _GenericAcceptance(
+    _ExecutableAcceptance(
+        case=_generic_finished_case("count_one", threshold=1.0),
+        expected_count=1,
+    ),
+    _ExecutableAcceptance(
         case=_generic_finished_case(
-            "trial_reset",
-            reset_factory=pnl.AtTrialStart,
+            "host_fp64_threshold_rounds_up",
+            threshold=1.00000001,
         ),
-        expected_values=_TRIAL_RESET_RESULTS,
-        expected_reason="unsupported LCA reset policy for batched v2",
-        expected_detail="AtTrialStart",
+        expected_count=2,
     ),
+    _ExecutableAcceptance(
+        case=_generic_finished_case("fractional_threshold", threshold=2.2),
+        expected_count=3,
+    ),
+)
+
+_TRIAL_RESET_CASE = _generic_finished_case(
+    "trial_reset",
+    reset_factory=pnl.AtTrialStart,
 )
 
 
@@ -256,46 +270,223 @@ def _result_index(composition, output_port) -> int:
     return matches[0]
 
 
+def _expected_trace(execution_count: int):
+    one_trial = (
+        (frozenset({"producer"}),) * execution_count
+        + (frozenset({"follower"}),)
+    )
+    return one_trial * len(_TRIAL_INPUTS)
+
+
+def _assert_executable_ir_contract(acceptance, model, backend):
+    producer = next(iter(model.inputs))
+    follower = model.outputs[0].owner
+    history_before = dict(model.composition.scheduler.execution_list)
+
+    lowering = lower_composition(
+        model.composition,
+        outputs=model.outputs,
+    )
+    graph = lowering.graph
+    assert graph is not None
+    assert graph.executable
+    assert lowering.schedule_kind == "precomputed_trace"
+    assert not lowering.rejected_nodes
+    assert not lowering.rejected_conditions
+    assert graph.fusion_kind == STATEFUL_GRAPH_FUSION
+    assert graph.metadata["schedule_kind"] == "precomputed_trace"
+    assert graph.metadata["scheduler_requires_pass_region"] is True
+    assert graph.execution_order == (producer.name, follower.name)
+
+    producer_spec = graph.node(producer.name)
+    follower_spec = graph.node(follower.name)
+    conditions = {condition.component_id: condition for condition in graph.scheduler}
+    producer_condition = conditions[producer_spec.component_id]
+    follower_condition = conditions[follower_spec.component_id]
+    assert producer_condition.condition_type == "Always"
+    assert producer_condition.consideration_set_id < (
+        follower_condition.consideration_set_id
+    )
+    assert follower_condition.condition_type == "WhenFinished"
+    assert follower_condition.dependency_component_ids == (
+        producer_spec.component_id,
+    )
+
+    assert len(graph.finished_values) == 1
+    finished = graph.finished_values[0]
+    assert type(finished) is BatchedFinishedValueSpec
+    assert finished.node == producer.name
+    assert finished.component_id == producer_spec.component_id
+    assert finished.predicate_kind == "execution_count_at_least"
+    assert finished.attrs == {"count": acceptance.expected_count}
+    assert finished.storage == "combinational"
+    assert finished.width == 1
+    assert finished.dtype == "bool"
+    assert follower_condition.finished_value_ids == (finished.value_id,)
+    assert finished.producer_consideration_set_id == (
+        producer_condition.consideration_set_id
+    )
+
+    producer_states = tuple(
+        state for state in graph.states
+        if state.component_id == producer_spec.component_id
+    )
+    producer_resets = tuple(
+        reset for reset in graph.resets
+        if reset.component_id == producer_spec.component_id
+    )
+    assert len(producer_states) == 2
+    assert len(producer_resets) == 1
+    assert producer_resets[0].condition_type == "Never"
+    assert producer_resets[0].state_ids == tuple(
+        state.state_id for state in producer_states
+    )
+
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        backend=backend,
+        outputs=model.outputs,
+        max_steps=acceptance.case.max_steps,
+    )
+    assert dict(model.composition.scheduler.execution_list) == history_before
+    report = plan.capability_report
+    assert report.model_supported
+    assert report.codegen_ready is True
+    assert report.backend_available
+    assert report.can_execute
+    assert not report.model_diagnostics
+    assert not report.codegen_diagnostics
+    assert not report.backend_diagnostics
+    assert report.metadata["fusion_kind"] == STATEFUL_GRAPH_FUSION
+    assert report.metadata["schedule_kind"] == "precomputed_trace"
+
+    kernel = plan.kernel_ir
+    assert kernel.executable
+    assert kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
+    assert kernel.graph.executable
+    assert kernel.states == graph.states
+    assert kernel.finished_values == graph.finished_values
+    assert kernel.schedule_trace is not None
+    trace = kernel.schedule_trace
+    expected_steps = tuple(
+        (
+            pass_index,
+            producer_condition.consideration_set_id,
+            (producer_spec.component_id,),
+        )
+        for pass_index in range(acceptance.expected_count)
+    ) + (
+        (
+            acceptance.expected_count - 1,
+            follower_condition.consideration_set_id,
+            (follower_spec.component_id,),
+        ),
+    )
+    assert tuple(
+        (step.pass_index, step.consideration_set_id, step.component_ids)
+        for step in trace.steps
+    ) == expected_steps
+    assert trace.num_passes == acceptance.expected_count
+    assert trace.component_execution_count == acceptance.expected_count + 1
+
+    role_by_component_id = {
+        producer_spec.component_id: "producer",
+        follower_spec.component_id: "follower",
+    }
+    typed_role_trace = tuple(
+        frozenset(role_by_component_id[component_id] for component_id in step.component_ids)
+        for step in trace.steps
+    )
+    assert typed_role_trace == _expected_trace(acceptance.expected_count)[
+        : acceptance.expected_count + 1
+    ]
+
+    ops = iter_kernel_ops(kernel)
+    producer_steps = tuple(
+        op
+        for op in ops
+        if op.kind == "StepMechanism" and op.target == producer.name
+    )
+    assert len(producer_steps) == acceptance.expected_count
+    assert tuple(op.attrs["execution_index"] for op in producer_steps) == tuple(
+        range(acceptance.expected_count)
+    )
+    expected_state_ids = tuple(state.state_id for state in producer_states)
+    assert all(op.attrs["state_ids"] == expected_state_ids for op in producer_steps)
+    assert all(op.attrs["active_lanes"] == "all" for op in producer_steps)
+    assert not any(
+        op.kind == "CallMechanism" and op.target == producer.name
+        for op in ops
+    )
+    assert sum(
+        op.kind == "CallFunction" and op.target == follower.name
+        for op in ops
+    ) == 1
+    assert sum(op.kind == "StoreOutput" for op in ops) == len(graph.outputs)
+    return plan
+
+
 @pytest.mark.parametrize(
     "acceptance",
-    GENERIC_ACCEPTANCE_CASES,
+    EXECUTABLE_ACCEPTANCE_CASES,
     ids=lambda acceptance: acceptance.case.name,
 )
-def test_generic_later_set_finished_acceptance_is_currently_fail_closed(
+def test_generic_later_set_finished_matches_python(
     acceptance,
+    batched_backend,
 ):
-    """This block converts to Python/batched parity with the first executor."""
-
     python_model = acceptance.case.build()
+    python_values, python_trace = _run_python_oracle(python_model)
+    if acceptance.expected_values is not None:
+        np.testing.assert_allclose(
+            python_values,
+            acceptance.expected_values,
+            rtol=1e-12,
+            atol=1e-12,
+        )
+    assert python_trace == _expected_trace(acceptance.expected_count)
+
+    compiled_model = acceptance.case.build()
+    assert compiled_model.composition is not python_model.composition
+    assert next(iter(compiled_model.inputs)) is not next(iter(python_model.inputs))
+    assert compiled_model.outputs[0].owner is not python_model.outputs[0].owner
+    _assert_executable_ir_contract(
+        acceptance,
+        compiled_model,
+        batched_backend,
+    )
+
+    comparison = assert_matches_python(
+        acceptance.case,
+        backend=batched_backend,
+    )
+    np.testing.assert_allclose(
+        comparison.python_values,
+        python_values,
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+def test_trial_reset_finished_case_remains_fail_closed():
+    python_model = _TRIAL_RESET_CASE.build()
     python_values, python_trace = _run_python_oracle(python_model)
     np.testing.assert_allclose(
         python_values,
-        acceptance.expected_values,
+        _TRIAL_RESET_RESULTS,
         rtol=1e-12,
         atol=1e-12,
     )
     assert python_trace == _EXPECTED_TRACE
 
-    batched_model = acceptance.case.build()
-    assert batched_model.composition is not python_model.composition
+    batched_model = _TRIAL_RESET_CASE.build()
     producer = next(iter(batched_model.inputs))
-    follower = batched_model.outputs[0].owner
-    assert producer is not next(iter(python_model.inputs))
-    assert follower is not python_model.outputs[0].owner
-
-    lowering = lower_composition(
-        batched_model.composition,
-        outputs=batched_model.outputs,
-    )
-    assert lowering.graph is None
-    assert not lowering.rejected_conditions
-
     history_before = dict(batched_model.composition.scheduler.execution_list)
     report = BatchedCompositionCompiler.diagnose(
         batched_model.composition,
         backend="triton_cpu",
         outputs=batched_model.outputs,
-        max_steps=acceptance.case.max_steps,
+        max_steps=_TRIAL_RESET_CASE.max_steps,
     )
     assert dict(batched_model.composition.scheduler.execution_list) == history_before
     assert not report.model_supported
@@ -304,15 +495,15 @@ def test_generic_later_set_finished_acceptance_is_currently_fail_closed(
     assert diagnostic.code == BatchedDiagnosticCode.MODEL_UNSUPPORTED
     assert diagnostic.component == producer.name
     assert diagnostic.component_id == f"component:{producer.name}"
-    assert diagnostic.reason == acceptance.expected_reason
-    assert diagnostic.detail == acceptance.expected_detail
+    assert diagnostic.reason == "unsupported LCA reset policy for batched v2"
+    assert diagnostic.detail == "AtTrialStart"
 
     with pytest.raises(BatchedCompileError) as error:
         BatchedCompositionCompiler.compile(
             batched_model.composition,
             backend="triton_cpu",
             outputs=batched_model.outputs,
-            max_steps=acceptance.case.max_steps,
+            max_steps=_TRIAL_RESET_CASE.max_steps,
         )
     assert error.value.capability_report == report
 

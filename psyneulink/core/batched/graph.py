@@ -1152,7 +1152,7 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         )
 
     conditions = _scheduler_conditions(composition)
-    stepwise = _scheduler_condition_is_effective_always(
+    stepwise_ddm_pair = _scheduler_condition_is_effective_always(
         composition,
         node,
         conditions,
@@ -1162,6 +1162,24 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         and tuple(getattr(candidate_condition, "args", ())) == (node,)
         for candidate, candidate_condition in conditions.items()
     )
+    counted_finished_pair = (
+        _fixed_stepwise_finished_execution_count(node, composition) is not None
+        and _scheduler_condition_is_effective_always(
+            composition,
+            node,
+            conditions,
+        )
+        and sum(
+            _is_stateless_transfer_finished_follower(
+                candidate,
+                candidate_condition,
+                node,
+            )
+            for candidate, candidate_condition in conditions.items()
+        )
+        == 1
+    )
+    stepwise = stepwise_ddm_pair or counted_finished_pair
     execute_until_finished = bool(_parameter_value(node, "execute_until_finished", True))
     if execute_until_finished == (not stepwise):
         return None
@@ -1169,6 +1187,41 @@ def _lca_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
         _node_name(node),
         "unsupported LCA execution mode for batched v2",
         "execute_until_finished must be False only for an Always/WhenFinished stepwise pair",
+    )
+
+
+def _fixed_stepwise_finished_execution_count(node, composition) -> int | None:
+    """Resolve a registered, lane-invariant finished count for one-step calls."""
+
+    if node is None or bool(
+        _parameter_value(node, "execute_until_finished", True)
+    ):
+        return None
+    mechanism_spec = specs.mechanism_spec_for(node)
+    resolver = (
+        None
+        if mechanism_spec is None
+        else mechanism_spec.finished_after_execution_count
+    )
+    if resolver is None:
+        return None
+    try:
+        count = resolver(node, composition)
+    except Exception:
+        return None
+    return count if type(count) is int and count > 0 else None
+
+
+def _is_stateless_transfer_finished_follower(candidate, condition, producer) -> bool:
+    """Whether ``candidate`` is the narrow first counted-finished follower."""
+
+    return (
+        type(candidate).__name__ == "TransferMechanism"
+        and specs.passthrough_spec_for(candidate) is not None
+        and specs.function_spec_for(getattr(candidate, "function", None)) is not None
+        and not bool(_parameter_value(candidate, "integrator_mode", False))
+        and type(condition) is WhenFinished
+        and tuple(getattr(condition, "args", ())) == (producer,)
     )
 
 
@@ -2640,6 +2693,7 @@ def _classify_schedule(
             condition,
             node,
             node_consideration_set,
+            composition,
             coevolving,
         )
         if condition_schedule_kind == UNSUPPORTED_SCHEDULE:
@@ -2661,7 +2715,7 @@ def _classify_schedule(
             required_schedule_kind = condition_schedule_kind
         if not (
             condition_schedule_kind == PRECOMPUTED_TRACE_SCHEDULE
-            and condition_name == "AtPass"
+            and condition_name in {"AtPass", "WhenFinished"}
         ):
             rejected.append(
                 BatchedDiagnostic(
@@ -2694,17 +2748,27 @@ def _precomputed_schedule_support_diagnostic(
         for consideration_set in graph.consideration_sets
         for component_id in consideration_set.component_ids
     ))
+    stateless_trace = (
+        graph.fusion_kind == STATELESS_GRAPH_FUSION
+        and not graph.states
+        and not graph.rng_streams
+        and not graph.resets
+        and not graph.finished_values
+    )
+    counted_finished_trace = _is_counted_finished_precomputed_graph(graph)
     boundary_reasons = []
-    if graph.fusion_kind != STATELESS_GRAPH_FUSION:
-        boundary_reasons.append(f"fusion_kind={graph.fusion_kind!r}")
-    if graph.states:
-        boundary_reasons.append("retained state")
-    if graph.rng_streams:
-        boundary_reasons.append("RNG streams")
-    if graph.resets:
-        boundary_reasons.append("reset policies")
-    if graph.finished_values:
-        boundary_reasons.append("finished-value dependencies")
+    if not stateless_trace and not counted_finished_trace:
+        if graph.fusion_kind != STATELESS_GRAPH_FUSION:
+            boundary_reasons.append(f"fusion_kind={graph.fusion_kind!r}")
+        if graph.states:
+            boundary_reasons.append("retained state")
+        if graph.rng_streams:
+            boundary_reasons.append("RNG streams")
+        if graph.resets:
+            boundary_reasons.append("reset policies")
+        if graph.finished_values:
+            boundary_reasons.append("finished-value dependencies")
+        boundary_reasons.append("not an exact counted-finished stepper/follower graph")
     if not (
         node_ids == execution_ids == scheduler_ids == consideration_ids
     ):
@@ -2715,7 +2779,10 @@ def _precomputed_schedule_support_diagnostic(
         return BatchedDiagnostic(
             component=graph.metadata.get("composition_name") or "Composition",
             reason="batched schedule is not executable",
-            detail="precomputed trace requires a stateless trial-lane graph; "
+            detail=(
+                "precomputed trace requires a stateless trial-lane graph or "
+                "the exact counted-finished stateful boundary; "
+            )
             + ", ".join(boundary_reasons),
         )
 
@@ -2726,6 +2793,7 @@ def _precomputed_schedule_support_diagnostic(
             termination=graph.termination,
             expansion_budget=PRECOMPUTED_TRACE_COMPONENT_BUDGET,
             projections=graph.projections,
+            finished_values=graph.finished_values,
         )
     except BatchedScheduleTraceError as error:
         return BatchedDiagnostic(
@@ -2736,10 +2804,109 @@ def _precomputed_schedule_support_diagnostic(
     return None
 
 
+def _is_counted_finished_precomputed_graph(graph: BatchedGraphIR) -> bool:
+    """Recognize the first typed counted-finished execution boundary.
+
+    The implementation is intentionally expressed in typed component,
+    scheduler, state, and port semantics.  Display names and Composition node
+    insertion order are irrelevant.
+    """
+
+    if (
+        graph.fusion_kind != STATEFUL_GRAPH_FUSION
+        or len(graph.nodes) != 2
+        or len(graph.finished_values) != 1
+        or graph.rng_streams
+        or len(graph.projections) != 1
+    ):
+        return False
+
+    finished = graph.finished_values[0]
+    if (
+        finished.predicate_kind != "execution_count_at_least"
+        or finished.storage != "combinational"
+        or finished.width != 1
+        or finished.dtype != "bool"
+        or not isinstance(finished.attrs, Mapping)
+        or set(finished.attrs) != {"count"}
+        or type(finished.attrs.get("count")) is not int
+        or finished.attrs["count"] <= 0
+    ):
+        return False
+
+    nodes_by_id = {node.component_id: node for node in graph.nodes}
+    producer = nodes_by_id.get(finished.component_id)
+    follower_ids = set(nodes_by_id) - {finished.component_id}
+    if producer is None or len(follower_ids) != 1:
+        return False
+    follower = nodes_by_id[follower_ids.pop()]
+    if (
+        producer.component_type != "LCAMechanism"
+        or producer.attrs.get("spec_kind") != "mechanism"
+        or producer.attrs.get("diagnostics")
+        or follower.component_type != "TransferMechanism"
+        or follower.attrs.get("spec_kind") != "elementwise"
+        or follower.attrs.get("diagnostics")
+    ):
+        return False
+
+    conditions = {
+        condition.component_id: condition
+        for condition in graph.scheduler
+    }
+    if set(conditions) != set(nodes_by_id):
+        return False
+    producer_condition = conditions[producer.component_id]
+    follower_condition = conditions[follower.component_id]
+    if (
+        producer_condition.condition_type != "Always"
+        or producer_condition.dependencies
+        or producer_condition.dependency_component_ids
+        or producer_condition.finished_value_ids
+        or follower_condition.condition_type != "WhenFinished"
+        or follower_condition.dependencies != (producer.name,)
+        or follower_condition.dependency_component_ids != (producer.component_id,)
+        or follower_condition.finished_value_ids != (finished.value_id,)
+        or producer_condition.consideration_set_id
+        >= follower_condition.consideration_set_id
+        or finished.producer_consideration_set_id
+        != producer_condition.consideration_set_id
+    ):
+        return False
+
+    producer_state_ids = tuple(
+        state.state_id
+        for state in graph.states
+        if state.component_id == producer.component_id
+    )
+    if not producer_state_ids or len(producer_state_ids) != len(graph.states):
+        return False
+    if (
+        len(graph.resets) != 1
+        or graph.resets[0].component_id != producer.component_id
+        or graph.resets[0].condition_type != "Never"
+        or graph.resets[0].state_ids != producer_state_ids
+    ):
+        return False
+
+    projection = graph.projections[0]
+    return (
+        projection.sender_component_id == producer.component_id
+        and projection.receiver_component_id == follower.component_id
+        and graph.execution_order == (producer.name, follower.name)
+        and bool(graph.inputs)
+        and all(
+            input_spec.component_id == producer.component_id
+            for input_spec in graph.inputs
+        )
+    )
+
+
 def _condition_schedule_kind(
     condition,
     node,
     node_consideration_set: dict[int, int],
+    composition,
     coevolving=False,
 ) -> str:
     condition_name = _supported_scheduler_condition_name(condition)
@@ -2760,6 +2927,15 @@ def _condition_schedule_kind(
         target_set = node_consideration_set.get(id(target), -1)
         receiver_set = node_consideration_set.get(id(node), -1)
         if target_set >= 0 and target_set < receiver_set:
+            if (
+                not coevolving
+                and _fixed_stepwise_finished_execution_count(
+                    target,
+                    composition,
+                )
+                is not None
+            ):
+                return PRECOMPUTED_TRACE_SCHEDULE
             return STATIC_GRAPH_SCHEDULE
         return DYNAMIC_LANE_LOCAL_SCHEDULE
     if condition_name == "AtPass":
