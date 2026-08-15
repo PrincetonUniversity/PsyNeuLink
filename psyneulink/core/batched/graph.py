@@ -10,6 +10,7 @@ import numpy as np
 
 from psyneulink.core.batched import specs
 from psyneulink.core.batched.bindings import BatchedComponentBindings, projection_binding_key
+from psyneulink.core.batched.condition_validation import is_canonical_condition
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
@@ -750,8 +751,13 @@ def _node_support_diagnostic(
                 return diagnostic
         if (
             type(node).__name__ == "DDM"
-            and type(getattr(node, "reset_stateful_function_when", None))
-            is not AtTrialStart
+            and (
+                type(getattr(node, "reset_stateful_function_when", None))
+                is not AtTrialStart
+                or not is_canonical_condition(
+                    getattr(node, "reset_stateful_function_when", None)
+                )
+            )
         ):
             return BatchedDiagnostic(
                 node_name,
@@ -1186,6 +1192,7 @@ def _lca_execution_support_diagnostic(
     ) and any(
         type(candidate).__name__ == "DDM"
         and type(candidate_condition) is WhenFinished
+        and is_canonical_condition(candidate_condition)
         and tuple(getattr(candidate_condition, "args", ())) == (node,)
         for candidate, candidate_condition in conditions.items()
     )
@@ -1245,6 +1252,7 @@ def _is_stateless_transfer_finished_follower(candidate, condition, producer) -> 
         and specs.function_spec_for(getattr(candidate, "function", None)) is not None
         and not bool(_parameter_value(candidate, "integrator_mode", False))
         and type(condition) is WhenFinished
+        and is_canonical_condition(condition)
         and tuple(getattr(condition, "args", ())) == (producer,)
     )
 
@@ -1262,7 +1270,15 @@ def _ddm_execution_support_diagnostic(node, composition) -> BatchedDiagnostic | 
 
     condition = _scheduler_conditions(composition).get(node)
     args = tuple(getattr(condition, "args", ()))
-    stepper = args[0] if type(condition) is WhenFinished and len(args) == 1 else None
+    stepper = (
+        args[0]
+        if (
+            type(condition) is WhenFinished
+            and is_canonical_condition(condition)
+            and len(args) == 1
+        )
+        else None
+    )
     stepper_spec = specs.mechanism_spec_for(stepper) if stepper is not None else None
     if (
         stepper_spec is not None
@@ -1632,12 +1648,9 @@ def _absorbed_lca_schedule_support_diagnostic(
         condition = conditions.get(component)
         if condition is None:
             continue
-        if (
-            role == "source"
-            and type(condition).__name__ == "AtPass"
-            and tuple(getattr(condition, "args", ())) == (0,)
-            and _condition_time_scale_name(condition)
-            == "ENVIRONMENT_STATE_UPDATE"
+        if role == "source" and _at_pass_spec(condition) == (
+            0,
+            "ENVIRONMENT_STATE_UPDATE",
         ):
             continue
         return BatchedDiagnostic(
@@ -1800,7 +1813,10 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
         return False
     if not _is_zero(_parameter_value(integrator, "noise", 0.0)) or not _is_zero(_parameter_value(integrator, "initializer", 0.0)):
         return False
-    if type(getattr(source, "reset_stateful_function_when", None)) is not AtTrialStart:
+    source_reset = getattr(source, "reset_stateful_function_when", None)
+    if type(source_reset) is not AtTrialStart or not is_canonical_condition(
+        source_reset
+    ):
         return False
     if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
         return False
@@ -1817,7 +1833,11 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
 
 
 def _same_condition(left, right) -> bool:
-    if type(left) is not type(right):
+    if (
+        type(left) is not type(right)
+        or not is_canonical_condition(left)
+        or not is_canonical_condition(right)
+    ):
         return False
     left_args = tuple(_node_name(arg) if hasattr(arg, "name") else arg for arg in getattr(left, "args", ()))
     right_args = tuple(_node_name(arg) if hasattr(arg, "name") else arg for arg in getattr(right, "args", ()))
@@ -2254,6 +2274,7 @@ def _processing_depends_on(composition, node, dependency) -> bool:
 def _when_finished_depends_on(condition, dependency) -> bool:
     return (
         type(condition) is WhenFinished
+        and is_canonical_condition(condition)
         and tuple(getattr(condition, "args", ())) == (dependency,)
     )
 
@@ -2655,9 +2676,13 @@ def _reset_ir_specs(nodes, states, component_ids):
         if not component_states:
             continue
         reset_condition = getattr(node, "reset_stateful_function_when", None)
-        if type(reset_condition) is AtTrialStart:
+        if type(reset_condition) is AtTrialStart and is_canonical_condition(
+            reset_condition
+        ):
             condition_type = "AtTrialStart"
-        elif type(reset_condition) is Never:
+        elif type(reset_condition) is Never and is_canonical_condition(
+            reset_condition
+        ):
             condition_type = "Never"
         else:
             complete = False
@@ -2907,11 +2932,16 @@ def _is_counted_finished_precomputed_graph(graph: BatchedGraphIR) -> bool:
     )
     if not producer_state_ids or len(producer_state_ids) != len(graph.states):
         return False
+    if len(graph.resets) != 1:
+        return False
+    reset = graph.resets[0]
     if (
-        len(graph.resets) != 1
-        or graph.resets[0].component_id != producer.component_id
-        or graph.resets[0].condition_type != "Never"
-        or graph.resets[0].state_ids != producer_state_ids
+        reset.node != producer.name
+        or reset.component_id != producer.component_id
+        or reset.condition_type != "Never"
+        or reset.state_ids != producer_state_ids
+        or reset.attrs
+        or reset.region != "trial"
     ):
         return False
 
@@ -3014,13 +3044,15 @@ _SUPPORTED_SCHEDULER_CONDITION_TYPES = {
 def _supported_scheduler_condition_name(condition) -> str | None:
     """Name an exact supported PNL condition class; subclasses fail closed."""
 
+    if not is_canonical_condition(condition):
+        return None
     return _SUPPORTED_SCHEDULER_CONDITION_TYPES.get(type(condition))
 
 
 def _at_pass_spec(condition) -> tuple[int, str] | None:
     """Validate and snapshot an exact PNL ``AtPass`` predicate."""
 
-    if type(condition) is not AtPass:
+    if type(condition) is not AtPass or not is_canonical_condition(condition):
         return None
     args = tuple(getattr(condition, "args", ()))
     if len(args) != 1 or isinstance(args[0], (bool, np.bool_)):
@@ -3084,7 +3116,7 @@ def _scheduler_condition_is_effective_always(
         conditions = _scheduler_conditions(composition)
     condition = conditions.get(node)
     if condition is not None:
-        return type(condition) is Always
+        return type(condition) is Always and is_canonical_condition(condition)
     dependency_dict = getattr(
         getattr(composition, "scheduler", None),
         "dependency_dict",
@@ -3109,10 +3141,10 @@ def _is_implicit_scheduler_default(condition, dependencies) -> bool:
 
     dependencies = tuple(dependencies)
     if not dependencies:
-        return type(condition) is Always and not tuple(condition.args)
+        return type(condition) is Always and is_canonical_condition(condition)
     if len(dependencies) == 1:
         return _is_default_every_n_calls(condition, dependencies[0])
-    if type(condition) is not All:
+    if type(condition) is not All or not is_canonical_condition(condition):
         return False
     operands = tuple(getattr(condition, "args", ()))
     if len(operands) != len(dependencies):
@@ -3120,7 +3152,12 @@ def _is_implicit_scheduler_default(condition, dependencies) -> bool:
     operand_dependencies = []
     for operand in operands:
         args = tuple(getattr(operand, "args", ()))
-        if type(operand) is not EveryNCalls or len(args) != 2 or args[1] != 1:
+        if (
+            type(operand) is not EveryNCalls
+            or not is_canonical_condition(operand)
+            or len(args) != 2
+            or args[1] != 1
+        ):
             return False
         operand_dependencies.append(args[0])
     return {id(item) for item in operand_dependencies} == {
@@ -3132,6 +3169,7 @@ def _is_default_every_n_calls(condition, dependency) -> bool:
     args = tuple(getattr(condition, "args", ()))
     return (
         type(condition) is EveryNCalls
+        and is_canonical_condition(condition)
         and len(args) == 2
         and args[0] is dependency
         and args[1] == 1
@@ -3242,7 +3280,10 @@ def _integrating_transfer_affine(node, composition) -> tuple[float, float] | Non
 
     if not _integrator_mode_enabled(node):
         return None
-    if type(getattr(node, "reset_stateful_function_when", None)) is not AtTrialStart:
+    reset_condition = getattr(node, "reset_stateful_function_when", None)
+    if type(reset_condition) is not AtTrialStart or not is_canonical_condition(
+        reset_condition
+    ):
         return None
     at_pass = _at_pass_spec(_scheduler_conditions(composition).get(node))
     if at_pass is None or at_pass[1] != "ENVIRONMENT_STATE_UPDATE":

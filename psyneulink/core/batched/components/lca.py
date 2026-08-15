@@ -2,13 +2,14 @@
 
 The op implements canonical recurrent ``LCAMechanism`` semantics for the
 validated deterministic configuration. Broader widths, nonzero/custom state
-initialization, noise, reset, clipping, and scheduler behavior remain
-fail-closed until their semantics are represented explicitly.
+initialization, noise, reset policies beyond exact ``Never``, clipping, and
+scheduler behavior remain fail-closed until represented.
 """
 
 import numpy as np
 
 from psyneulink.core.batched.backend.triton.api import TritonOpCall, pnl_triton_op
+from psyneulink.core.batched.condition_validation import is_canonical_condition
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import FP32_EXACT_INTEGER_LIMIT
 from psyneulink.core.batched.specs import (
@@ -19,6 +20,7 @@ from psyneulink.core.batched.specs import (
     resolve_component_param,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
     LCAMechanism,
 )
@@ -201,11 +203,15 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         return BatchedDiagnostic(name, "unsupported LCA integrator for batched v2")
     if not bool(_raw_parameter(node, "integrator_mode", True)):
         return BatchedDiagnostic(name, "unsupported LCA integrator_mode for batched v2", "False")
-    if type(getattr(node, "reset_stateful_function_when", None)).__name__ != "Never":
+    reset_condition = getattr(node, "reset_stateful_function_when", None)
+    if (
+        type(reset_condition) is not Never
+        or not is_canonical_condition(reset_condition)
+    ):
         return BatchedDiagnostic(
             name,
             "unsupported LCA reset policy for batched v2",
-            type(getattr(node, "reset_stateful_function_when", None)).__name__,
+            type(reset_condition).__name__,
         )
     if _raw_parameter(node, "clip", None) is not None:
         return BatchedDiagnostic(name, "unsupported LCA clip for batched v2")
