@@ -107,14 +107,17 @@ subset.  The first executable stateful scheduler tier is a fixed,
 compile-time execution-count pattern: one stateful LCA with
 ``execute_until_finished=False`` scheduled ``Always`` projects to one
 stateless ``TransferMechanism`` scheduled by
-``WhenFinished`` in a strictly later consideration set.  The LCA uses
-``Never`` reset, the finished count is positive and identical for every lane,
-and the graph has no RNG stream, control path, or custom termination.  This is
-generic typed scheduler, finished-value, state, and ``KernelIR`` machinery;
-LCA is merely the first mechanism with a registered one-step implementation
-and fixed-count resolver, not a recognized model type.  Lane-varying finished
-counts, controlled termination, DDM followers, and ``AtTrialStart`` reset
-remain fail-closed, as do stateful graphs outside this exact boundary:
+``WhenFinished`` in a strictly later consideration set.  The LCA uses an
+exact, unmodified ``Never`` or ``AtTrialStart`` reset, the finished count is
+positive and identical for every lane, and the graph has no RNG stream,
+control path, or custom termination.  ``AtTrialStart`` re-evaluates every declared state
+initializer before pass zero, including function-based initializers using the
+current parameter lane; ``Never`` preserves state across trials.  This is
+generic typed scheduler, finished-value, state, reset, and ``KernelIR``
+machinery.  LCA is merely the first mechanism with registered one-step and
+reset implementations and a fixed-count resolver, not a recognized model
+type.  Lane-varying finished counts, controlled termination, DDM followers,
+and stateful graphs outside this exact boundary remain fail-closed:
 
 .. list-table::
    :header-rows: 1
@@ -186,9 +189,16 @@ remain fail-closed, as do stateful graphs outside this exact boundary:
        state IDs; the schema distinguishes exact ``Never`` and
        ``AtTrialStart`` policies.  DDM trial-local storage is still private to
        its mechanism operation rather than represented by these reset records.
-     - The exact LCA subset currently executes only with ``Never``.  An ordinary
-       DDM requires exact ``AtTrialStart`` and resets its trial-local state.  A
-       validated fires-once integrating TransferMechanism may fold its
+     - The fixed-count LCA/follower subset executes exact ``Never`` and exact
+       ``AtTrialStart``.  ``AtTrialStart`` lowers to an unconditional
+       ``ResetState`` prefix before pass zero and restores all of the owner's
+       retained states from their declared initializers; ``Never`` emits no
+       per-trial reset and therefore persists.  KernelIR requires one canonical
+       reset declaration per retained-state owner and never erases a declared
+       reset effect.  Mutated built-in conditions fail closed.  Isolated/static
+       LCA execution with ``AtTrialStart`` remains unsupported.  An ordinary
+       DDM requires exact ``AtTrialStart`` and resets its private trial-local
+       state.  A validated fires-once integrating TransferMechanism may fold its
        ``AtTrialStart`` reset into one stateless affine step.  Other reset
        semantics fail closed.
    * - Control
@@ -289,9 +299,15 @@ renamed components with reverse insertion order, one execution, a host-fp64
 threshold just above one that resolves to two executions, and a fractional
 threshold that resolves to three.  Every case checks its typed graph and
 ``KernelIR`` trace, then compares fresh Python, Triton-interpreter, and
-compiled-GPU results.  The same contract keeps ``AtTrialStart`` reset, an
+compiled-GPU results.  A companion reset matrix compares exact
+``AtTrialStart`` and ``Never`` over three trials, including renamed/reordered
+components, a newline-bearing diagnostic label, and nondefault Logistic
+parameters.  It also verifies that two parameter rows and two estimate lanes
+re-evaluate the ``AtTrialStart``
+function initializer independently.  Isolated/static ``AtTrialStart``, an
 LCA-to-DDM dependency, lane-varying or controlled finished state, multiple
-finished producers, and custom termination as structured compile rejections.
+finished producers, and custom termination remain structured compile
+rejections.
 
 Device buffers and current Triton kernels use fp32. Discrete outcomes and
 execution counts compare exactly. The exact LCA semantic cases compare

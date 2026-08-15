@@ -829,7 +829,7 @@ REJECTION_CASES = (
             lambda: {"reset_stateful_function_when": pnl.AtTrialStart()},
         ),
         "unsupported LCA reset policy for batched v2",
-        "AtTrialStart",
+        "AtTrialStart requires the fixed-count Always/WhenFinished schedule",
         LCA_RESET_PROVENANCE,
     ),
     _RejectionCase(

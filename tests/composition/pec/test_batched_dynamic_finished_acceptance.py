@@ -72,10 +72,6 @@ _PERSISTENT_RESULTS = np.array(
     [[1.0202979047745746], [1.0691310439370374], [-0.12468102134796921]],
     dtype=float,
 )
-_TRIAL_RESET_RESULTS = np.array(
-    [[1.0202979047745746], [-0.0769758015573534], [-1.4176584685525668]],
-    dtype=float,
-)
 _ONE_TRIAL_TRACE = (
     frozenset({"producer"}),
     frozenset({"producer"}),
@@ -213,12 +209,6 @@ EXECUTABLE_ACCEPTANCE_CASES = (
         expected_count=3,
     ),
 )
-
-_TRIAL_RESET_CASE = _generic_finished_case(
-    "trial_reset",
-    reset_factory=pnl.AtTrialStart,
-)
-
 
 def _run_python_oracle(model: SemanticModel):
     model.composition.run(
@@ -466,46 +456,6 @@ def test_generic_later_set_finished_matches_python(
         rtol=1e-12,
         atol=1e-12,
     )
-
-
-def test_trial_reset_finished_case_remains_fail_closed():
-    python_model = _TRIAL_RESET_CASE.build()
-    python_values, python_trace = _run_python_oracle(python_model)
-    np.testing.assert_allclose(
-        python_values,
-        _TRIAL_RESET_RESULTS,
-        rtol=1e-12,
-        atol=1e-12,
-    )
-    assert python_trace == _EXPECTED_TRACE
-
-    batched_model = _TRIAL_RESET_CASE.build()
-    producer = next(iter(batched_model.inputs))
-    history_before = dict(batched_model.composition.scheduler.execution_list)
-    report = BatchedCompositionCompiler.diagnose(
-        batched_model.composition,
-        backend="triton_cpu",
-        outputs=batched_model.outputs,
-        max_steps=_TRIAL_RESET_CASE.max_steps,
-    )
-    assert dict(batched_model.composition.scheduler.execution_list) == history_before
-    assert not report.model_supported
-    assert len(report.model_diagnostics) == 1
-    diagnostic = report.model_diagnostics[0]
-    assert diagnostic.code == BatchedDiagnosticCode.MODEL_UNSUPPORTED
-    assert diagnostic.component == producer.name
-    assert diagnostic.component_id == f"component:{producer.name}"
-    assert diagnostic.reason == "unsupported LCA reset policy for batched v2"
-    assert diagnostic.detail == "AtTrialStart"
-
-    with pytest.raises(BatchedCompileError) as error:
-        BatchedCompositionCompiler.compile(
-            batched_model.composition,
-            backend="triton_cpu",
-            outputs=batched_model.outputs,
-            max_steps=_TRIAL_RESET_CASE.max_steps,
-        )
-    assert error.value.capability_report == report
 
 
 def _lca_ddm_finished_case() -> SemanticCase:

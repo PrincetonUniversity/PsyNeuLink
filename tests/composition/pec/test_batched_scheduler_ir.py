@@ -619,7 +619,8 @@ def test_retained_state_reset_policy_is_typed_or_rejected():
     assert any(
         diagnostic.component == reset_each_trial.name
         and diagnostic.reason == "unsupported LCA reset policy for batched v2"
-        and diagnostic.detail == "AtTrialStart"
+        and diagnostic.detail
+        == "AtTrialStart requires the fixed-count Always/WhenFinished schedule"
         for diagnostic in rejected.rejected_nodes
     )
 

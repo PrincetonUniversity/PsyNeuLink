@@ -2,8 +2,8 @@
 
 The op implements canonical recurrent ``LCAMechanism`` semantics for the
 validated deterministic configuration. Broader widths, nonzero/custom state
-initialization, noise, reset policies beyond exact ``Never``, clipping, and
-scheduler behavior remain fail-closed until represented.
+initialization, noise, reset policies beyond exact ``Never``/``AtTrialStart``,
+clipping, and scheduler behavior remain fail-closed until represented.
 """
 
 import numpy as np
@@ -20,7 +20,7 @@ from psyneulink.core.batched.specs import (
     resolve_component_param,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
-from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.condition import AtTrialStart, Never
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
     LCAMechanism,
 )
@@ -205,7 +205,7 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         return BatchedDiagnostic(name, "unsupported LCA integrator_mode for batched v2", "False")
     reset_condition = getattr(node, "reset_stateful_function_when", None)
     if (
-        type(reset_condition) is not Never
+        type(reset_condition) not in {Never, AtTrialStart}
         or not is_canonical_condition(reset_condition)
     ):
         return BatchedDiagnostic(

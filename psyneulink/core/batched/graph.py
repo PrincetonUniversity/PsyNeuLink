@@ -1217,6 +1217,17 @@ def _lca_execution_support_diagnostic(
         == 1
     )
     stepwise = stepwise_ddm_pair or counted_finished_pair
+    reset_condition = getattr(node, "reset_stateful_function_when", None)
+    if (
+        type(reset_condition) is AtTrialStart
+        and is_canonical_condition(reset_condition)
+        and not counted_finished_pair
+    ):
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported LCA reset policy for batched v2",
+            "AtTrialStart requires the fixed-count Always/WhenFinished schedule",
+        )
     execute_until_finished = bool(_parameter_value(node, "execute_until_finished", True))
     if execute_until_finished == (not stepwise):
         return None
@@ -2938,7 +2949,7 @@ def _is_counted_finished_precomputed_graph(graph: BatchedGraphIR) -> bool:
     if (
         reset.node != producer.name
         or reset.component_id != producer.component_id
-        or reset.condition_type != "Never"
+        or reset.condition_type not in {"Never", "AtTrialStart"}
         or reset.state_ids != producer_state_ids
         or reset.attrs
         or reset.region != "trial"
