@@ -200,7 +200,9 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
 
     def _emit_reset_state(self, op: KernelOp) -> None:
         states_by_id = {state.state_id: state for state in self.kernel.states}
-        self.builder.line(f"# reset {op.target} state at trial start")
+        self.builder.line(
+            f"# reset component {op.attrs['component_id']} state at trial start"
+        )
         for state_id, output in zip(op.attrs["state_ids"], op.outputs):
             state = states_by_id[state_id]
             state_vars = []

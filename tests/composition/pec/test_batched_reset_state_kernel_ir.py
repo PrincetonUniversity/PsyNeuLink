@@ -9,7 +9,7 @@ from psyneulink.core.batched.backend.triton.graph_emit import (
     triton_graph_kernel_source,
 )
 from psyneulink.core.batched.graph import lower_composition
-from psyneulink.core.batched.ir import BatchedCompositionIR
+from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedResetSpec
 from psyneulink.core.batched.kernel_ir import KernelIR, KernelOp, lower_to_kernel_ir
 
 
@@ -69,6 +69,55 @@ def _counted_lca_kernel(*, reset_at_trial_start: bool):
     return kernel, producer
 
 
+def _atomic_lca_kernel_with_typed_trial_reset():
+    mechanism = pnl.LCAMechanism(
+        input_shapes=2,
+        function=pnl.Logistic(gain=1.5, bias=0.25),
+        leak=0.0,
+        competition=0.0,
+        self_excitation=0.0,
+        noise=0.0,
+        termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=3,
+        time_step_size=0.5,
+        reset_stateful_function_when=pnl.Never(),
+        name="atomic typed-reset producer",
+    )
+    composition = pnl.Composition(pathways=mechanism)
+    lowering = lower_composition(
+        composition,
+        outputs=(mechanism.output_port,),
+    )
+    graph = lowering.graph
+    assert graph is not None and graph.executable
+    graph = replace(
+        graph,
+        resets=(replace(graph.resets[0], condition_type="AtTrialStart"),),
+    )
+    return lower_to_kernel_ir(
+        BatchedCompositionIR(
+            model_kind=lowering.model_kind,
+            node_names=tuple(node.name for node in graph.nodes),
+            params=lowering.params,
+            output_names=tuple(output.name for output in graph.outputs),
+            graph=graph,
+        )
+    )
+
+
+def _lower_replaced_graph(kernel, *, resets):
+    graph = replace(kernel.graph, resets=tuple(resets))
+    return lower_to_kernel_ir(
+        BatchedCompositionIR(
+            model_kind=kernel.model_kind,
+            node_names=tuple(node.name for node in graph.nodes),
+            params=kernel.params,
+            output_names=tuple(output.name for output in graph.outputs),
+            graph=graph,
+        )
+    )
+
+
 def _trial_body(kernel: KernelIR):
     trials = tuple(op for op in kernel.ops if op.kind == "ForTrials")
     assert len(trials) == 1
@@ -120,11 +169,92 @@ def test_never_reset_preserves_state_without_a_reset_effect():
     )
 
 
+def test_non_precomputed_stateful_ir_cannot_erase_a_typed_trial_reset():
+    kernel = _atomic_lca_kernel_with_typed_trial_reset()
+
+    assert kernel.executable
+    assert kernel.schedule_trace is None
+    body = _trial_body(kernel)
+    assert body[0].kind == "ResetState"
+    assert body[0].target == "atomic typed-reset producer"
+    assert "# reset component 0 state at trial start" in (
+        triton_graph_kernel_source(kernel)
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "missing",
+        "duplicate",
+        "unsupported-condition",
+        "attrs",
+        "region",
+        "node",
+        "component",
+        "partial-state",
+    ),
+)
+def test_stateful_ir_rejects_noncanonical_reset_declarations(mutation):
+    kernel = _atomic_lca_kernel_with_typed_trial_reset()
+    reset = kernel.resets[0]
+
+    if mutation == "missing":
+        resets = ()
+    elif mutation == "duplicate":
+        resets = (reset, reset)
+    elif mutation == "unsupported-condition":
+        resets = (replace(reset, condition_type="AtPass"),)
+    elif mutation == "attrs":
+        resets = (replace(reset, attrs={"pass": 0}),)
+    elif mutation == "region":
+        resets = (replace(reset, region="pass"),)
+    elif mutation == "node":
+        resets = (replace(reset, node="forged reset owner"),)
+    elif mutation == "component":
+        resets = (replace(reset, component_id=reset.component_id + 1),)
+    else:
+        resets = (replace(reset, state_ids=reset.state_ids[:1]),)
+
+    with pytest.raises(ValueError, match="reset declaration|ResetState"):
+        _lower_replaced_graph(kernel, resets=resets)
+
+
+def test_stateless_ir_rejects_a_retained_reset_declaration():
+    mechanism = pnl.TransferMechanism(input_shapes=1, name="stateless reset owner")
+    composition = pnl.Composition(pathways=mechanism)
+    lowering = lower_composition(composition, outputs=(mechanism.output_port,))
+    graph = lowering.graph
+    assert graph is not None and not graph.states and not graph.resets
+    graph = replace(
+        graph,
+        resets=(
+            BatchedResetSpec(
+                node=mechanism.name,
+                condition_type="AtTrialStart",
+                state_ids=(),
+                component_id=graph.node(mechanism.name).component_id,
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="stateless lane layouts"):
+        lower_to_kernel_ir(
+            BatchedCompositionIR(
+                model_kind=lowering.model_kind,
+                node_names=(mechanism.name,),
+                params=lowering.params,
+                output_names=tuple(output.name for output in graph.outputs),
+                graph=graph,
+            )
+        )
+
+
 def test_reset_source_reapplies_literal_and_function_initializers_before_pass_zero():
     kernel, _ = _counted_lca_kernel(reset_at_trial_start=True)
     source = triton_graph_kernel_source(kernel)
 
-    reset_comment = source.index("# reset reset-state producer state at trial start")
+    reset_comment = source.index("# reset component 0 state at trial start")
     assert source.index("while trial_idx < num_trials") < reset_comment
     assert reset_comment < source.index("# precomputed scheduler pass 0")
     # The pre-state literal and the Logistic-derived activation are initialized

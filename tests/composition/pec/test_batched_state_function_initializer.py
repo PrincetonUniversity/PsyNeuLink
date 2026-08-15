@@ -10,6 +10,7 @@ from psyneulink.core.batched.ir import (
     BatchedGraphIR,
     BatchedNodeSpec,
     BatchedParamSpec,
+    BatchedResetSpec,
     BatchedStateFunctionInitializer,
     BatchedStateSpec,
 )
@@ -83,6 +84,14 @@ def _state_initializer_kernel(*, omit_parameter=None):
         projections=(),
         outputs=(),
         states=states,
+        resets=(
+            BatchedResetSpec(
+                node="lca",
+                condition_type="Never",
+                state_ids=(0, 1),
+                component_id=0,
+            ),
+        ),
         scheduler=(),
         ops=(),
         execution_order=("lca",),
@@ -108,6 +117,7 @@ def _state_initializer_kernel(*, omit_parameter=None):
         max_steps=1,
         graph=graph,
         op_specs=specs.snapshot_batched_op_specs((logistic_spec.key,)),
+        resets=graph.resets,
     )
     return kernel, logistic_spec.triton_template.name
 

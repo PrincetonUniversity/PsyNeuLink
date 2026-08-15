@@ -465,6 +465,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             raise ValueError(
                 f"KernelIR {label} declarations must exactly match GraphIR."
             )
+    _validate_kernel_reset_declarations(kernel)
     step_counts: dict[int, int] = {}
     precomputed_regions: list[KernelOp] = []
     output_stores: list[KernelOp] = []
@@ -641,13 +642,27 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             "schedule_trace."
         )
 
-    if kernel.schedule_trace is not None and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT:
-        trial_regions = tuple(op for op in kernel.ops if op.kind == "ForTrials")
-        if len(trial_regions) != 1:
-            raise ValueError(
-                "KernelIR stateful precomputed schedule requires exactly one "
-                "ForTrials region."
-            )
+    expected_reset_declarations = tuple(
+        reset
+        for reset in kernel.resets
+        if reset.condition_type == "AtTrialStart"
+    )
+    stateful_layout = kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
+    trial_regions = tuple(op for op in kernel.ops if op.kind == "ForTrials")
+    if (
+        stateful_layout
+        and (
+            kernel.schedule_trace is not None
+            or expected_reset_declarations
+            or reset_ops
+        )
+        and len(trial_regions) != 1
+    ):
+        raise ValueError(
+            "KernelIR stateful scheduled/reset effects require exactly one "
+            "ForTrials region."
+        )
+    if stateful_layout and (expected_reset_declarations or reset_ops):
         trial_body = tuple(trial_regions[0].attrs.get("body", ()))
         reset_prefix = tuple(
             op for op in trial_body[:len(reset_ops)] if op.kind == "ResetState"
@@ -657,11 +672,6 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                 "KernelIR ResetState operations must form an unconditional "
                 "prefix of the ForTrials body."
             )
-        expected_reset_declarations = tuple(
-            reset
-            for reset in kernel.resets
-            if reset.condition_type == "AtTrialStart"
-        )
         if len(reset_prefix) != len(expected_reset_declarations):
             raise ValueError(
                 "KernelIR must contain exactly one ResetState for each "
@@ -704,10 +714,10 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                     "KernelIR ResetState does not exactly match its declared "
                     f"reset for '{reset.node}'."
                 )
-    elif reset_ops:
+    elif reset_ops or expected_reset_declarations:
         raise ValueError(
-            "KernelIR ResetState operations require an executable stateful "
-            "precomputed schedule."
+            "KernelIR AtTrialStart reset effects require a stateful lane "
+            "layout."
         )
 
     counted_finished = {
@@ -745,6 +755,59 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                 "KernelIR counted finished component id "
                 f"{component_id} requires at least {count!r} scheduled steps, "
                 f"found {step_counts[component_id]}."
+            )
+
+
+def _validate_kernel_reset_declarations(kernel: KernelIR) -> None:
+    """Require a canonical reset declaration for every retained-state owner."""
+
+    if kernel.lane_layout.kind != STATEFUL_LANE_LAYOUT:
+        if kernel.resets:
+            raise ValueError(
+                "KernelIR stateless lane layouts cannot retain reset "
+                "declarations."
+            )
+        return
+
+    states_by_component: dict[int, list[BatchedStateSpec]] = {}
+    for state in kernel.states:
+        component_id = _state_component_id(kernel.graph, state)
+        states_by_component.setdefault(component_id, []).append(state)
+
+    component_ids = tuple(states_by_component)
+    reset_component_ids = tuple(reset.component_id for reset in kernel.resets)
+    if reset_component_ids != component_ids:
+        raise ValueError(
+            "KernelIR stateful reset declarations must contain exactly one "
+            "entry for every retained-state owner, in state declaration order."
+        )
+
+    for reset in kernel.resets:
+        try:
+            node = next(
+                node
+                for node in kernel.graph.nodes
+                if _component_id(kernel.graph, node) == reset.component_id
+            )
+        except StopIteration as error:
+            raise ValueError(
+                "KernelIR reset declaration references an undeclared component "
+                f"id {reset.component_id}."
+            ) from error
+        expected_state_ids = tuple(
+            state.state_id
+            for state in states_by_component[reset.component_id]
+        )
+        if (
+            reset.node != node.name
+            or reset.condition_type not in {"Never", "AtTrialStart"}
+            or reset.state_ids != expected_state_ids
+            or reset.attrs
+            or reset.region != "trial"
+        ):
+            raise ValueError(
+                "KernelIR reset declaration does not exactly match retained "
+                f"state owner '{node.name}'."
             )
 
 
@@ -839,11 +902,7 @@ def lower_to_kernel_ir(
         )
     if lane_layout.kind == STATEFUL_LANE_LAYOUT:
         initial_state_values = _state_kernel_values(graph)
-        trial_reset_ops = (
-            _trial_reset_ops(graph, initial_state_values)
-            if schedule_trace is not None
-            else ()
-        )
+        trial_reset_ops = _trial_reset_ops(graph, initial_state_values)
         ops = (
             KernelOp(
                 kind="InitializeState",
