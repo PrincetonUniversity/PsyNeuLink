@@ -194,15 +194,31 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             for idx, value in enumerate(state.initial_value):
                 var = f"{state_symbol}_{idx}"
                 self.state_vars[(state.name, idx)] = var
-                initializer = state.function_initializer
-                if initializer is None:
-                    self.builder.line(
-                        f"{var} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
-                    )
-                    continue
-                self._emit_state_function_initializer(initializer, idx, var)
+                self._emit_state_initializer_value(state, idx, value, var)
         if self.kernel.states:
             self.builder.line()
+
+    def _emit_reset_state(self, op: KernelOp) -> None:
+        states_by_id = {state.state_id: state for state in self.kernel.states}
+        self.builder.line(f"# reset {op.target} state at trial start")
+        for state_id, output in zip(op.attrs["state_ids"], op.outputs):
+            state = states_by_id[state_id]
+            state_vars = []
+            for idx, value in enumerate(state.initial_value):
+                var = self.state_vars[(state.name, idx)]
+                self._emit_state_initializer_value(state, idx, value, var)
+                state_vars.append(var)
+            self._set_value(output.name, state_vars)
+        self.builder.line()
+
+    def _emit_state_initializer_value(self, state, index: int, value, output: str) -> None:
+        initializer = state.function_initializer
+        if initializer is None:
+            self.builder.line(
+                f"{output} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
+            )
+            return
+        self._emit_state_function_initializer(initializer, index, output)
 
     def _emit_state_function_initializer(self, initializer, index: int, output: str) -> None:
         spec = self.kernel.op_specs.lookup_spec(initializer.spec_key)

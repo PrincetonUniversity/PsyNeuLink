@@ -116,6 +116,8 @@ class KernelOp:
             _validate_execute_consideration_set(self)
         elif self.kind == "StepMechanism":
             _validate_step_mechanism(self)
+        elif self.kind == "ResetState":
+            _validate_reset_state(self)
 
 
 def add_constant_op(
@@ -372,6 +374,40 @@ def _validate_step_mechanism(op: KernelOp) -> None:
         raise ValueError("KernelIR StepMechanism requires a nonempty spec_key.")
 
 
+def _validate_reset_state(op: KernelOp) -> None:
+    if op.inputs or not op.outputs:
+        raise ValueError(
+            "KernelIR ResetState requires no inputs and at least one state output."
+        )
+    attrs = op.attrs
+    if set(attrs) != {"component_id", "state_ids", "condition_type", "region"}:
+        raise ValueError(
+            "KernelIR ResetState requires exactly component_id, state_ids, "
+            "condition_type, and region attributes."
+        )
+    component_id = attrs["component_id"]
+    state_ids = attrs["state_ids"]
+    if type(component_id) is not int or component_id < 0:
+        raise ValueError(
+            "KernelIR ResetState component_id must be a non-negative "
+            "non-bool integer."
+        )
+    if (
+        type(state_ids) is not tuple
+        or not state_ids
+        or any(type(state_id) is not int or state_id < 0 for state_id in state_ids)
+        or state_ids != tuple(sorted(set(state_ids)))
+        or len(op.outputs) != len(state_ids)
+    ):
+        raise ValueError(
+            "KernelIR ResetState state_ids must be a nonempty tuple of unique, "
+            "sorted, non-negative integers matching its state outputs."
+        )
+    if attrs["condition_type"] != "AtTrialStart" or attrs["region"] != "trial":
+        raise ValueError(
+            "KernelIR ResetState requires condition_type='AtTrialStart' and "
+            "region='trial'."
+        )
 @dataclass(frozen=True)
 class KernelIR:
     """Backend-neutral batched execution plan.
@@ -432,6 +468,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
     step_counts: dict[int, int] = {}
     precomputed_regions: list[KernelOp] = []
     output_stores: list[KernelOp] = []
+    reset_ops: list[KernelOp] = []
 
     def visit(op: KernelOp, *, in_precomputed_region: bool = False) -> None:
         if op.kind == "StepMechanism":
@@ -479,6 +516,11 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             step_counts[component_id] = expected_execution_index + 1
         elif op.kind == "StoreOutput":
             output_stores.append(op)
+        elif op.kind == "ResetState":
+            # attrs is a Mapping and may have been mutated after construction;
+            # source emission re-runs this complete-IR boundary.
+            _validate_reset_state(op)
+            reset_ops.append(op)
 
         child_precomputed = in_precomputed_region
         if op.kind == "ForPasses":
@@ -597,6 +639,75 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
         raise ValueError(
             "KernelIR executable precomputed ForPasses region requires a typed "
             "schedule_trace."
+        )
+
+    if kernel.schedule_trace is not None and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT:
+        trial_regions = tuple(op for op in kernel.ops if op.kind == "ForTrials")
+        if len(trial_regions) != 1:
+            raise ValueError(
+                "KernelIR stateful precomputed schedule requires exactly one "
+                "ForTrials region."
+            )
+        trial_body = tuple(trial_regions[0].attrs.get("body", ()))
+        reset_prefix = tuple(
+            op for op in trial_body[:len(reset_ops)] if op.kind == "ResetState"
+        )
+        if tuple(reset_ops) != reset_prefix:
+            raise ValueError(
+                "KernelIR ResetState operations must form an unconditional "
+                "prefix of the ForTrials body."
+            )
+        expected_reset_declarations = tuple(
+            reset
+            for reset in kernel.resets
+            if reset.condition_type == "AtTrialStart"
+        )
+        if len(reset_prefix) != len(expected_reset_declarations):
+            raise ValueError(
+                "KernelIR must contain exactly one ResetState for each "
+                "AtTrialStart reset declaration."
+            )
+        state_values = {
+            state.state_id: value
+            for state, value in zip(kernel.states, _state_kernel_values(kernel.graph))
+        }
+        states_by_id = {state.state_id: state for state in kernel.states}
+        for op, reset in zip(reset_prefix, expected_reset_declarations):
+            try:
+                declared_states = tuple(
+                    states_by_id[state_id]
+                    for state_id in reset.state_ids
+                )
+                expected_outputs = tuple(
+                    state_values[state_id]
+                    for state_id in reset.state_ids
+                )
+            except KeyError as error:
+                raise ValueError(
+                    f"KernelIR reset for '{reset.node}' references an "
+                    "undeclared state ID."
+                ) from error
+            if (
+                reset.attrs
+                or reset.region != "trial"
+                or any(state.component_id != reset.component_id for state in declared_states)
+                or op.target != reset.node
+                or op.outputs != expected_outputs
+                or dict(op.attrs) != {
+                    "component_id": reset.component_id,
+                    "state_ids": reset.state_ids,
+                    "condition_type": "AtTrialStart",
+                    "region": "trial",
+                }
+            ):
+                raise ValueError(
+                    "KernelIR ResetState does not exactly match its declared "
+                    f"reset for '{reset.node}'."
+                )
+    elif reset_ops:
+        raise ValueError(
+            "KernelIR ResetState operations require an executable stateful "
+            "precomputed schedule."
         )
 
     counted_finished = {
@@ -727,28 +838,22 @@ def lower_to_kernel_ir(
             ),
         )
     if lane_layout.kind == STATEFUL_LANE_LAYOUT:
-        state_slots: dict[int, int] = {}
-        initial_state_values = []
-        for state in graph.states:
-            component_id = _state_component_id(graph, state)
-            state_slot = state_slots.get(component_id, 0)
-            state_slots[component_id] = state_slot + 1
-            initial_state_values.append(
-                KernelValue(
-                    f"n{component_id}:state:{state_slot}",
-                    state.width,
-                )
-            )
+        initial_state_values = _state_kernel_values(graph)
+        trial_reset_ops = (
+            _trial_reset_ops(graph, initial_state_values)
+            if schedule_trace is not None
+            else ()
+        )
         ops = (
             KernelOp(
                 kind="InitializeState",
                 target="lane",
-                outputs=tuple(initial_state_values),
+                outputs=initial_state_values,
             ),
             KernelOp(
                 kind="ForTrials",
                 target="trials",
-                attrs={"body": scheduled_trial_ops},
+                attrs={"body": (*trial_reset_ops, *scheduled_trial_ops)},
             ),
         )
     else:
@@ -782,6 +887,60 @@ def lower_to_kernel_ir(
         termination=graph.termination,
         schedule_trace=schedule_trace,
     )
+
+
+def _state_kernel_values(graph: BatchedGraphIR) -> tuple[KernelValue, ...]:
+    state_slots: dict[int, int] = {}
+    values = []
+    for state in graph.states:
+        component_id = _state_component_id(graph, state)
+        state_slot = state_slots.get(component_id, 0)
+        state_slots[component_id] = state_slot + 1
+        values.append(
+            KernelValue(
+                f"n{component_id}:state:{state_slot}",
+                state.width,
+            )
+        )
+    return tuple(values)
+
+
+def _trial_reset_ops(
+    graph: BatchedGraphIR,
+    state_values: tuple[KernelValue, ...],
+) -> tuple[KernelOp, ...]:
+    values_by_state_id = {
+        state.state_id: value
+        for state, value in zip(graph.states, state_values)
+    }
+    reset_ops = []
+    for reset in graph.resets:
+        if reset.condition_type != "AtTrialStart":
+            continue
+        try:
+            outputs = tuple(
+                values_by_state_id[state_id]
+                for state_id in reset.state_ids
+            )
+        except KeyError as error:
+            raise ValueError(
+                f"Batched reset for '{reset.node}' references an undeclared "
+                "state ID."
+            ) from error
+        reset_ops.append(
+            KernelOp(
+                kind="ResetState",
+                target=reset.node,
+                outputs=outputs,
+                attrs={
+                    "component_id": reset.component_id,
+                    "state_ids": reset.state_ids,
+                    "condition_type": reset.condition_type,
+                    "region": reset.region,
+                },
+            )
+        )
+    return tuple(reset_ops)
 
 
 def _trace_budget(graph: BatchedGraphIR, key: str, default: int) -> int:
@@ -864,12 +1023,50 @@ def _counted_stateful_trace_eligible(
         or lane_layout.kind != STATEFUL_LANE_LAYOUT
         or not graph.states
         or not graph.finished_values
-        or any(reset.condition_type != "Never" for reset in graph.resets)
     ):
         return False
 
     state_component_ids = {state.component_id for state in graph.states}
-    reset_component_ids = {reset.component_id for reset in graph.resets}
+    states_by_component_id = {
+        component_id: tuple(
+            state
+            for state in graph.states
+            if state.component_id == component_id
+        )
+        for component_id in state_component_ids
+    }
+    if len(graph.resets) != len(state_component_ids):
+        return False
+    reset_component_ids = []
+    reset_state_ids = []
+    for reset in graph.resets:
+        try:
+            node = next(
+                node
+                for node in graph.nodes
+                if _component_id(graph, node) == reset.component_id
+            )
+            expected_states = states_by_component_id[reset.component_id]
+        except (KeyError, StopIteration, TypeError, ValueError):
+            return False
+        expected_state_ids = tuple(state.state_id for state in expected_states)
+        if (
+            reset.node != node.name
+            or reset.condition_type not in {"Never", "AtTrialStart"}
+            or reset.state_ids != expected_state_ids
+            or reset.attrs
+            or reset.region != "trial"
+        ):
+            return False
+        reset_component_ids.append(reset.component_id)
+        reset_state_ids.extend(reset.state_ids)
+    if (
+        len(set(reset_component_ids)) != len(reset_component_ids)
+        or tuple(sorted(reset_state_ids))
+        != tuple(sorted(state.state_id for state in graph.states))
+    ):
+        return False
+
     finished_component_ids = {
         value.component_id
         for value in graph.finished_values
@@ -882,7 +1079,7 @@ def _counted_stateful_trace_eligible(
     }
     if not (
         state_component_ids
-        and state_component_ids == reset_component_ids == finished_component_ids
+        and state_component_ids == set(reset_component_ids) == finished_component_ids
     ):
         return False
 

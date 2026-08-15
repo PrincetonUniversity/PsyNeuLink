@@ -270,6 +270,8 @@ class OpEmitMixin:
             self._emit_mechanism_call(op)
         elif op.kind == "StepMechanism":
             self._emit_scheduled_step_mechanism(op)
+        elif op.kind == "ResetState":
+            self._emit_reset_state(op)
         elif op.kind == "StoreOutput":
             self._emit_store_output(op)
         elif op.kind == "StoreFlag":
