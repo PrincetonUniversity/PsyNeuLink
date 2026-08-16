@@ -536,10 +536,14 @@ def _control_monitor_source_for(composition, controlled_node):
     }
     for parameter_port in getattr(controlled_node, "parameter_ports", ()):
         for control_projection in getattr(parameter_port, "mod_afferents", ()):
-            if id(control_projection) not in active_projection_ids:
-                continue
             control = getattr(getattr(control_projection, "sender", None), "owner", None)
-            if type(control).__name__ != "ControlMechanism" or id(control) not in active_node_ids:
+            signal = getattr(control_projection, "sender", None)
+            if (
+                type(control).__name__ != "ControlMechanism"
+                or id(control) not in active_node_ids
+                or getattr(signal, "owner", None) is not control
+                or control_projection not in tuple(getattr(signal, "efferents", ()))
+            ):
                 continue
             for input_port in getattr(control, "input_ports", ()):
                 for monitor_projection in getattr(input_port, "path_afferents", ()):

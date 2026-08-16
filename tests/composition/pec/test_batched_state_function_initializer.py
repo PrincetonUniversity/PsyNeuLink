@@ -37,7 +37,13 @@ def _state_initializer_kernel(*, omit_parameter=None):
         "offset": 0.125,
     }
     parameters = tuple(
-        BatchedParamSpec(name, default, parameter_id=index)
+        BatchedParamSpec(
+            name,
+            default,
+            parameter_id=index,
+            owner_component_id=0,
+            owner_scope="function",
+        )
         for index, (name, default) in enumerate(parameter_defaults.items())
     )
     initializer_params = {

@@ -6,11 +6,11 @@ This module keeps only the semantic pattern relevant to the batched compiler:
 
 ``AtPass(n) input -> Always LCA -> WhenFinished(LCA) DDM``
 
-The current KernelIR records the static onset ``n``, but it does not represent
-the LCA's ``finished`` predicate or the value supplied by its termination
-controller.  Even constant-zero and statically matching controls must therefore
-fail closed until generic scheduler/control lowering can preserve those
-semantics.
+The current KernelIR records the static onset ``n``, but this LCA-to-DDM
+topology is outside the first typed controlled-finished subset and still lacks
+an executable conditional pass region.  Even constant-zero and statically
+matching controls must therefore fail closed until generic scheduler/control
+lowering can preserve those semantics.
 """
 
 from dataclasses import dataclass
@@ -31,8 +31,8 @@ pytestmark = [
 
 
 _UNMODELED_CONTROL_DETAIL = (
-    "coevolving Always/WhenFinished execution requires an LCA finished "
-    "predicate and termination-control value that KernelIR does not model"
+    "coevolving Always/WhenFinished execution falls outside the typed "
+    "controlled-finished subset and requires executable conditional pass regions"
 )
 _UNMODELED_COEVOLUTION_DETAIL = (
     "coevolving Always/WhenFinished execution requires explicit finished "
@@ -289,7 +289,7 @@ def test_controlled_lca_when_finished_has_structured_rejection(timing):
 def test_controlled_lca_compile_error_carries_capability_report():
     # Use the most tempting special case (zero monitor, zero onset): it must not
     # bypass capability analysis merely because a sampled execution can appear
-    # equivalent while the required predicate remains absent from KernelIR.
+    # equivalent while this coevolving predicate remains non-executable.
     model = _make_coevolving_model(_TerminationTiming(onset=0))
     controller = _termination_override(model.composition)
     diagnosed = BatchedCompositionCompiler.diagnose(

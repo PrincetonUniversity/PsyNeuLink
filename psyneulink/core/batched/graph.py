@@ -13,14 +13,20 @@ from psyneulink.core.batched.bindings import BatchedComponentBindings, projectio
 from psyneulink.core.batched.condition_validation import is_canonical_condition
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import (
+    FP32_EXACT_INTEGER_LIMIT,
+    BatchedAbsorbedProjectionSpec,
     BatchedConsiderationSetSpec,
+    BatchedEffectiveParameterSpec,
     BatchedFinishedValueSpec,
     BatchedGraphIR,
     BatchedInputSpec,
+    BatchedModulationSpec,
     BatchedNodeSpec,
     BatchedOp,
     BatchedOutputSpec,
+    BatchedParameterBindingSpec,
     BatchedParamSpec,
+    BatchedPortSpec,
     BatchedProjectionSpec,
     BatchedResetSpec,
     BatchedRngStreamSpec,
@@ -34,6 +40,24 @@ from psyneulink.core.batched.schedule import (
     PRECOMPUTED_TRACE_COMPONENT_BUDGET,
     BatchedScheduleTraceError,
     plan_precomputed_schedule_trace,
+)
+from psyneulink.core.components.functions.nonstateful.transferfunctions import (
+    Identity,
+    Linear,
+    TransferWithCosts,
+)
+from psyneulink.core.components.functions.nonstateful.transformfunctions import (
+    LinearCombination,
+    MatrixTransform,
+)
+from psyneulink.core.components.projections.modulatory.controlprojection import (
+    ControlProjection,
+)
+from psyneulink.core.components.projections.pathway.mappingprojection import (
+    MappingProjection,
+)
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import (
+    ControlMechanism,
 )
 from psyneulink.core.scheduling.condition import (
     All,
@@ -79,6 +103,16 @@ class LoweringResult:
 def lower_composition(composition, outputs=None) -> LoweringResult:
     specs.ensure_builtin_specs()
 
+    # PsyNeuLink completes deferred control projections, CIM routing, node
+    # roles, and the scheduler dependency graph during normal Composition
+    # analysis.  Snapshotting before that lifecycle step can describe a graph
+    # that Python execution will never use (for example, a controller and its
+    # controlled node may incorrectly share a consideration set until the
+    # ControlProjection is activated).  Normalize the live structure before
+    # assigning stable IDs so lowering is invariant to whether the Composition
+    # has already executed.
+    composition._analyze_graph()
+
     nodes = _composition_nodes(composition)
     # Nodes absorbed into another op's kernel (e.g. a collapsing-threshold
     # integrator folded into the DDM boundary) are not lowered as graph nodes.
@@ -91,6 +125,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         for component_id, node in enumerate(topological_nodes)
     }
     port_ids, ports_by_id = _port_identity_maps(topological_nodes)
+    port_specs = _port_specs(topological_nodes, component_ids, port_ids)
     params = _ParamBuilder()
     rejected_nodes: list[BatchedDiagnostic] = [
         BatchedDiagnostic(
@@ -107,7 +142,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     executable_nodes = [
         node
         for node in topological_nodes
-        if type(node).__name__ != "ControlMechanism"
+        if type(node) is not ControlMechanism
     ]
     coevolving = _is_coevolving(composition, executable_nodes)
     (
@@ -125,15 +160,23 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         value.component_id: value
         for value in finished_values
     }
-    termination_specs, termination_rejections = _termination_ir_specs(
-        composition,
-        component_ids,
-    )
     consideration_set_ids = {
         component_id: consideration_set.consideration_set_id
         for consideration_set in consideration_sets
         for component_id in consideration_set.component_ids
     }
+    dynamic_controlled_finished_component_ids = (
+        _dynamic_controlled_finished_component_ids(
+            composition,
+            topological_nodes,
+            component_ids,
+            consideration_set_ids,
+        )
+    )
+    termination_specs, termination_rejections = _termination_ir_specs(
+        composition,
+        component_ids,
+    )
     schedule_kind, supported_conditions, rejected_conditions = _classify_schedule(
         composition,
         topological_nodes,
@@ -157,7 +200,7 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     for node in topological_nodes:
         component_type = type(node).__name__
         node_name = _node_name(node)
-        if component_type == "ControlMechanism":
+        if type(node) is ControlMechanism:
             diagnostic = _control_support_diagnostic(node, composition)
             if diagnostic is not None:
                 rejected_nodes.append(diagnostic)
@@ -184,6 +227,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             composition,
             component_id=component_ids[id(node)],
             finished_values_by_component_id=finished_values_by_component_id,
+            dynamic_controlled_finished=(
+                component_ids[id(node)]
+                in dynamic_controlled_finished_component_ids
+            ),
         )
         if diagnostic is not None:
             rejected_nodes.append(diagnostic)
@@ -250,25 +297,59 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     )
                 )
 
-    if coevolving and not any(
-        diagnostic.reason == "batched schedule kind is not executable yet"
-        for diagnostic in rejected_nodes
-    ):
-        stepper = _coevolving_stepper(composition, executable_nodes)
-        rejected_conditions.append(
-            BatchedDiagnostic(
-                _node_name(stepper) if stepper is not None else getattr(
-                    composition,
-                    "name",
-                    "Composition",
-                ),
-                "batched schedule kind is not executable yet",
-                "coevolving Always/WhenFinished execution requires explicit "
-                "finished predicates and conditional pass regions in KernelIR",
+    if coevolving:
+        # The coupled stepper/terminator region is the single unsupported
+        # semantic unit.  Replace derivative per-node lane-local diagnostics
+        # with one stable composition-level explanation.
+        rejected_conditions = [
+            diagnostic
+            for diagnostic in rejected_conditions
+            if not (
+                diagnostic.reason
+                == "batched schedule kind is not executable yet"
+                and diagnostic.detail.endswith(
+                    f"requires {DYNAMIC_LANE_LOCAL_SCHEDULE}"
+                )
             )
-        )
+        ]
+        if not any(
+            diagnostic.reason == "batched schedule kind is not executable yet"
+            for diagnostic in rejected_nodes
+        ):
+            stepper = _coevolving_stepper(composition, executable_nodes)
+            rejected_conditions.append(
+                BatchedDiagnostic(
+                    _node_name(stepper) if stepper is not None else getattr(
+                        composition,
+                        "name",
+                        "Composition",
+                    ),
+                    "batched schedule kind is not executable yet",
+                    "coevolving Always/WhenFinished execution requires explicit "
+                    "finished predicates and conditional pass regions in KernelIR",
+                )
+            )
 
     _freeze_absorbed_control_parameters(node_specs, params)
+    (
+        absorbed_projection_specs,
+        effective_parameter_specs,
+        modulation_specs,
+        absorbed_projection_bindings_by_id,
+        modulation_bindings_by_id,
+    ) = _modulation_ir_specs(
+        composition,
+        topological_nodes,
+        node_specs,
+        params,
+        component_ids,
+        port_ids,
+        consideration_set_ids,
+    )
+    finished_values = _controlled_finished_value_specs(
+        finished_values,
+        modulation_specs,
+    )
 
     (
         projections,
@@ -324,12 +405,12 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         execution_order = tuple(
             _node_name(node)
             for node in topological_nodes
-            if type(node).__name__ != "ControlMechanism"
+            if type(node) is not ControlMechanism
         )
         ops = tuple(
             BatchedOp(kind=_op_kind(node), target=_node_name(node))
             for node in topological_nodes
-            if type(node).__name__ != "ControlMechanism"
+            if type(node) is not ControlMechanism
         ) + tuple(
             BatchedOp(
                 kind="store_output",
@@ -348,11 +429,19 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             ops=ops,
             execution_order=execution_order,
             fusion_kind=_fusion_kind(model_kind, nodes, composition),
-            executable=not rejected_nodes and not rejected_conditions,
+            executable=(
+                not rejected_nodes
+                and not rejected_conditions
+                and not modulation_specs
+            ),
             metadata={
                 "composition_name": getattr(composition, "name", None),
                 "schedule_kind": schedule_kind,
-                "scheduler_executable": not rejected_nodes and not rejected_conditions,
+                "scheduler_executable": (
+                    not rejected_nodes
+                    and not rejected_conditions
+                    and not modulation_specs
+                ),
                 "scheduler_requires_pass_region": (
                     bool(rejected_nodes)
                     or coevolving
@@ -369,9 +458,13 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 ),
             },
             rng_streams=_rng_stream_specs(node_specs),
+            ports=port_specs,
+            absorbed_projections=absorbed_projection_specs,
             schedule_regions=schedule_regions,
             consideration_sets=consideration_sets,
             finished_values=finished_values,
+            effective_parameters=effective_parameter_specs,
+            modulations=modulation_specs,
             resets=reset_specs,
             termination=termination_specs,
         )
@@ -411,6 +504,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
             parameters_by_id=params.bindings_by_id,
             ports_by_id=ports_by_id,
             projections_by_id=projection_bindings_by_id,
+            absorbed_projections_by_id=absorbed_projection_bindings_by_id,
+            modulations_by_id=modulation_bindings_by_id,
         ),
         model_kind=model_kind,
         schedule_kind=schedule_kind,
@@ -462,6 +557,8 @@ class _ParamBuilder:
         minimum_inclusive: bool = True,
         maximum: float | None = None,
         maximum_inclusive: bool = True,
+        owner_component_id: int = -1,
+        owner_scope: str = "",
     ) -> str:
         if name in self._names:
             return name
@@ -477,6 +574,8 @@ class _ParamBuilder:
                 minimum_inclusive=minimum_inclusive,
                 maximum=maximum,
                 maximum_inclusive=maximum_inclusive,
+                owner_component_id=owner_component_id,
+                owner_scope=owner_scope,
             )
         )
         if parameter is not None:
@@ -496,6 +595,20 @@ class _ParamBuilder:
                 return
         raise KeyError(f"Cannot freeze unknown batched parameter '{name}'.")
 
+    def binding(self, argument: str, name: str) -> BatchedParameterBindingSpec:
+        """Return the stable identity for a parameter previously added by name."""
+
+        matches = tuple(spec for spec in self.specs if spec.name == name)
+        if len(matches) != 1:
+            raise KeyError(
+                f"Cannot bind batched argument '{argument}' to parameter '{name}'."
+            )
+        return BatchedParameterBindingSpec(
+            argument=argument,
+            parameter=name,
+            parameter_id=matches[0].parameter_id,
+        )
+
 
 def _freeze_absorbed_control_parameters(
     node_specs: list[BatchedNodeSpec],
@@ -505,6 +618,12 @@ def _freeze_absorbed_control_parameters(
 
     nodes_by_name = {node.name: node for node in node_specs}
     for node in node_specs:
+        if node.component_type == "ControlMechanism":
+            for parameter_name in node.params.values():
+                params.freeze(
+                    parameter_name,
+                    "control execution is declaration-only in KernelIR",
+                )
         source_name = node.attrs.get("termination_input_node")
         if node.component_type != "LCAMechanism" or source_name is None:
             continue
@@ -522,6 +641,377 @@ def _freeze_absorbed_control_parameters(
                     f"{node.name}"
                 ),
             )
+
+
+def _typed_dynamic_control_chain_supported(
+    composition,
+    control,
+    chain: _ResolvedControlChain,
+    active_node_ids: set[int],
+    component_ids,
+    consideration_set_ids,
+) -> bool:
+    """Whether one exact control chain can be declared as dynamic finished IR."""
+
+    source = chain.source
+    target = chain.target
+    function = getattr(control, "function", None)
+    conditions = _scheduler_conditions(composition)
+    source_set = consideration_set_ids.get(component_ids.get(id(source), -1), -1)
+    controller_set = consideration_set_ids.get(
+        component_ids.get(id(control), -1),
+        -1,
+    )
+    target_set = consideration_set_ids.get(component_ids.get(id(target), -1), -1)
+    return bool(
+        id(source) in active_node_ids
+        and id(control) in active_node_ids
+        and id(target) in active_node_ids
+        and type(target).__name__ == "LCAMechanism"
+        and chain.target_port == "termination_threshold"
+        # PNL freezes values at consideration-set entry.  The first declared
+        # controlled-finished subset therefore requires the cue, controller,
+        # and controlled target to occupy strictly ordered sets.  Same-set
+        # control would make the target observe the prior held value.
+        and 0 <= source_set < controller_set < target_set
+        and _supported_lca_termination_source(composition, source)
+        and all(
+            _port_width(port) == 1
+            for port in (
+                chain.source_port,
+                chain.controller_input_port,
+                chain.signal,
+                chain.target_parameter_port,
+            )
+        )
+        and _finite_fp32_scalar_value(
+            _parameter_value(target, chain.target_port, None)
+        )
+        is not None
+        and _finite_fp32_scalar_value(
+            _parameter_default_value(chain.control_projection, "value", None)
+        )
+        is not None
+        and (
+            type(function) is Identity
+            or (
+                type(function) is Linear
+                and specs.function_spec_for(function) is not None
+            )
+        )
+        and _scheduler_condition_is_effective_always(
+            composition,
+            target,
+            conditions,
+        )
+        and any(
+            _when_finished_depends_on(condition, target)
+            for candidate, condition in conditions.items()
+            if candidate is not target
+        )
+    )
+
+
+def _dynamic_controlled_finished_component_ids(
+    composition,
+    nodes,
+    component_ids,
+    consideration_set_ids,
+) -> frozenset[int]:
+    """Return targets whose lane-varying finished edge has complete typed data."""
+
+    active_node_ids = {id(node) for node in nodes}
+    targets = set()
+    for control in nodes:
+        if type(control) is not ControlMechanism:
+            continue
+        chain, diagnostic = _resolve_control_chain(control, composition)
+        if (
+            diagnostic is None
+            and chain is not None
+            and _typed_dynamic_control_chain_supported(
+                composition,
+                control,
+                chain,
+                active_node_ids,
+                component_ids,
+                consideration_set_ids,
+            )
+        ):
+            targets.add(component_ids[id(chain.target)])
+    return frozenset(targets)
+
+
+def _modulation_ir_specs(
+    composition,
+    nodes,
+    node_specs: list[BatchedNodeSpec],
+    params: _ParamBuilder,
+    component_ids,
+    port_ids,
+    consideration_set_ids,
+) -> tuple[
+    tuple[BatchedAbsorbedProjectionSpec, ...],
+    tuple[BatchedEffectiveParameterSpec, ...],
+    tuple[BatchedModulationSpec, ...],
+    dict[int, object],
+    dict[int, object],
+]:
+    """Snapshot exact scalar LCA ``OVERRIDE`` chains as typed data.
+
+    Execution remains fail-closed.  This declaration replaces the informal
+    name dictionary as the semantic description of the absorbed monitor,
+    controller, ControlSignal, and ControlProjection chain.  Numeric endpoint
+    identities are resolved from the same lowering-local maps as processing
+    projections; live objects remain only in ``BatchedComponentBindings``.
+    """
+
+    active_node_ids = {id(node) for node in nodes}
+    node_specs_by_id = {
+        node.component_id: (index, node)
+        for index, node in enumerate(node_specs)
+    }
+    effective_parameters = []
+    modulations = []
+    absorbed_projections = []
+    absorbed_projection_bindings_by_id: dict[int, object] = {}
+    bindings_by_id: dict[int, object] = {}
+    for control in nodes:
+        if type(control) is not ControlMechanism:
+            continue
+        chain, chain_diagnostic = _resolve_control_chain(control, composition)
+        if chain_diagnostic is not None or chain is None:
+            continue
+        signal = chain.signal
+        control_projection = chain.control_projection
+        source_port = chain.source_port
+        controller_input_port = chain.controller_input_port
+        target_parameter_port = chain.target_parameter_port
+        source = chain.source
+        target = chain.target
+        if not _typed_dynamic_control_chain_supported(
+            composition,
+            control,
+            chain,
+            active_node_ids,
+            component_ids,
+            consideration_set_ids,
+        ):
+            continue
+
+        base_value = _finite_fp32_scalar_value(
+            _parameter_value(target, chain.target_port, None)
+        )
+        initial_modulation_value = _finite_fp32_scalar_value(
+            _parameter_default_value(control_projection, "value", None)
+        )
+        if base_value is None or initial_modulation_value is None:
+            continue
+
+        function = getattr(control, "function", None)
+        function_spec = specs.function_spec_for(function)
+        if type(function) is Identity:
+            function_spec_key = ""
+            controller_param_bindings = ()
+            control_function_attrs = {
+                "spec_kind": "control",
+                "control_function": "identity",
+            }
+        elif (
+            type(function) is Linear
+            and function_spec is not None
+            and _function_parameter_support_diagnostic(
+                _node_name(control),
+                function,
+            ) is None
+        ):
+            function_spec_key = function_spec.key
+            controller_param_bindings = []
+            for binding in function_spec.params:
+                public_name = f"{_node_name(control)}.{binding.arg}"
+                parameter_name = params.add(
+                    public_name,
+                    binding.resolve(function),
+                    aliases=_node_param_aliases(
+                        _node_name(control),
+                        binding.arg,
+                    ),
+                    parameter=_bound_parameter(binding, function),
+                    minimum=binding.minimum,
+                    minimum_inclusive=binding.minimum_inclusive,
+                    maximum=binding.maximum,
+                    maximum_inclusive=binding.maximum_inclusive,
+                    owner_component_id=component_ids[id(control)],
+                    owner_scope=binding.scope,
+                )
+                params.freeze(
+                    parameter_name,
+                    "control execution is declaration-only in KernelIR",
+                )
+                controller_param_bindings.append(
+                    params.binding(binding.arg, parameter_name)
+                )
+            controller_param_bindings = tuple(controller_param_bindings)
+            control_function_attrs = {
+                "spec_kind": "control",
+                "spec_key": function_spec_key,
+                "control_function": "registered",
+            }
+        else:
+            continue
+
+        controller_component_id = component_ids[id(control)]
+        source_component_id = component_ids[id(source)]
+        try:
+            node_index, node_spec = node_specs_by_id[controller_component_id]
+            _, source_node_spec = node_specs_by_id[source_component_id]
+            endpoint_port_ids = tuple(
+                port_ids[id(port)]
+                for port in (
+                    source_port,
+                    controller_input_port,
+                    signal,
+                    target_parameter_port,
+                )
+            )
+        except KeyError:
+            continue
+        for parameter_name in source_node_spec.params.values():
+            params.freeze(
+                parameter_name,
+                "absorbed identity source for typed OVERRIDE modulation",
+            )
+        node_specs[node_index] = replace(
+            node_spec,
+            params={
+                binding.argument: binding.parameter
+                for binding in controller_param_bindings
+            },
+            attrs={**node_spec.attrs, **control_function_attrs},
+        )
+        source_port_id, controller_input_port_id, signal_port_id, target_port_id = (
+            endpoint_port_ids
+        )
+        modulation_id = len(modulations)
+        monitor_projection_id = len(absorbed_projections)
+        absorbed_projections.append(
+            BatchedAbsorbedProjectionSpec(
+                projection_id=monitor_projection_id,
+                name=getattr(
+                    chain.monitor_projection,
+                    "name",
+                    "MappingProjection",
+                ),
+                kind="MappingProjection",
+                sender=_node_name(source),
+                sender_component_id=source_component_id,
+                sender_port=getattr(source_port, "name", ""),
+                sender_port_id=source_port_id,
+                receiver=_node_name(control),
+                receiver_component_id=controller_component_id,
+                receiver_port=getattr(controller_input_port, "name", ""),
+                receiver_port_id=controller_input_port_id,
+            )
+        )
+        absorbed_projection_bindings_by_id[monitor_projection_id] = (
+            chain.monitor_projection
+        )
+        control_projection_id = len(absorbed_projections)
+        absorbed_projections.append(
+            BatchedAbsorbedProjectionSpec(
+                projection_id=control_projection_id,
+                name=getattr(control_projection, "name", "ControlProjection"),
+                kind="ControlProjection",
+                sender=_node_name(control),
+                sender_component_id=controller_component_id,
+                sender_port=getattr(signal, "name", ""),
+                sender_port_id=signal_port_id,
+                receiver=_node_name(target),
+                receiver_component_id=component_ids[id(target)],
+                receiver_port=chain.target_port,
+                receiver_port_id=target_port_id,
+                initial_value=(initial_modulation_value,),
+            )
+        )
+        absorbed_projection_bindings_by_id[control_projection_id] = (
+            control_projection
+        )
+        effective_parameters.append(
+            BatchedEffectiveParameterSpec(
+                effective_parameter_id=modulation_id,
+                target=_node_name(target),
+                target_component_id=component_ids[id(target)],
+                target_parameter=chain.target_port,
+                target_parameter_port_id=target_port_id,
+                base_value=(base_value,),
+                initial_modulation_value=(initial_modulation_value,),
+            )
+        )
+        modulations.append(
+            BatchedModulationSpec(
+                modulation_id=modulation_id,
+                controller=_node_name(control),
+                controller_component_id=controller_component_id,
+                controller_input_port=getattr(controller_input_port, "name", ""),
+                controller_input_port_id=controller_input_port_id,
+                control_signal_port=getattr(signal, "name", ""),
+                control_signal_port_id=signal_port_id,
+                source=_node_name(source),
+                source_component_id=source_component_id,
+                source_port=getattr(source_port, "name", ""),
+                source_port_id=source_port_id,
+                target=_node_name(target),
+                target_component_id=component_ids[id(target)],
+                target_parameter=chain.target_port,
+                target_parameter_port_id=target_port_id,
+                effective_parameter_id=modulation_id,
+                monitor_projection_id=monitor_projection_id,
+                control_projection_id=control_projection_id,
+                controller_function_spec_key=function_spec_key,
+                controller_param_bindings=controller_param_bindings,
+            )
+        )
+        bindings_by_id[modulation_id] = control_projection
+    return (
+        tuple(absorbed_projections),
+        tuple(effective_parameters),
+        tuple(modulations),
+        absorbed_projection_bindings_by_id,
+        bindings_by_id,
+    )
+
+
+def _controlled_finished_value_specs(
+    finished_values: tuple[BatchedFinishedValueSpec, ...],
+    modulations: tuple[BatchedModulationSpec, ...],
+) -> tuple[BatchedFinishedValueSpec, ...]:
+    """Bind scheduler-visible finished values to controlled effective values."""
+
+    modulation_by_target = {
+        modulation.target_component_id: modulation
+        for modulation in modulations
+        if modulation.target_parameter == "termination_threshold"
+    }
+    return tuple(
+        replace(
+            value,
+            predicate_kind="execution_count_at_least_effective_parameter",
+            attrs={
+                "effective_parameter_id": modulation_by_target[
+                    value.component_id
+                ].effective_parameter_id,
+                "target_parameter_port_id": modulation_by_target[
+                    value.component_id
+                ].target_parameter_port_id,
+                "rounding": "ceil",
+                "minimum": 1,
+                "maximum": FP32_EXACT_INTEGER_LIMIT,
+            },
+        )
+        if value.component_id in modulation_by_target
+        else value
+        for value in finished_values
+    )
 
 
 def _bound_parameter(binding, component):
@@ -575,6 +1065,26 @@ def _port_identity_maps(nodes):
                 port_ids[object_id] = port_id
                 ports_by_id[port_id] = port
     return port_ids, ports_by_id
+
+
+def _port_specs(nodes, component_ids, port_ids) -> tuple[BatchedPortSpec, ...]:
+    """Declare every port ID, kind, owner, and width used by semantic IR."""
+
+    result: list[BatchedPortSpec] = []
+    for node in nodes:
+        for collection_name in ("input_ports", "output_ports", "parameter_ports"):
+            for port in tuple(getattr(node, collection_name, ())):
+                result.append(
+                    BatchedPortSpec(
+                        port_id=port_ids[id(port)],
+                        name=getattr(port, "name", type(port).__name__),
+                        owner=_node_name(node),
+                        owner_component_id=component_ids[id(node)],
+                        kind=type(port).__name__,
+                        width=_port_width(port),
+                    )
+                )
+    return tuple(sorted(result, key=lambda spec: spec.port_id))
 
 
 def _rng_stream_specs(nodes: list[BatchedNodeSpec]) -> tuple[BatchedRngStreamSpec, ...]:
@@ -647,6 +1157,8 @@ def _node_spec(
                 minimum_inclusive=binding.minimum_inclusive,
                 maximum=binding.maximum,
                 maximum_inclusive=binding.maximum_inclusive,
+                owner_component_id=component_id,
+                owner_scope=binding.scope,
             )
         if mechanism_spec.extract_attrs is not None:
             attrs.update(mechanism_spec.extract_attrs(node, composition))
@@ -692,6 +1204,8 @@ def _node_spec(
                 minimum_inclusive=binding.minimum_inclusive,
                 maximum=binding.maximum,
                 maximum_inclusive=binding.maximum_inclusive,
+                owner_component_id=component_id,
+                owner_scope=binding.scope,
             )
 
     return BatchedNodeSpec(
@@ -704,6 +1218,18 @@ def _node_spec(
         params=param_map,
         attrs=attrs,
         component_id=component_id,
+        input_port_ids=tuple(
+            port_ids[id(port)]
+            for port in tuple(getattr(node, "input_ports", ()))
+        ),
+        output_port_ids=tuple(
+            port_ids[id(port)]
+            for port in tuple(getattr(node, "output_ports", ()))
+        ),
+        parameter_port_ids=tuple(
+            (getattr(port, "name", type(port).__name__), port_ids[id(port)])
+            for port in tuple(getattr(node, "parameter_ports", ()))
+        ),
     )
 
 
@@ -713,6 +1239,7 @@ def _node_support_diagnostic(
     *,
     component_id: int,
     finished_values_by_component_id: Mapping[int, BatchedFinishedValueSpec],
+    dynamic_controlled_finished: bool = False,
 ) -> BatchedDiagnostic | None:
     function = getattr(node, "function", None)
     function_type = type(function).__name__
@@ -777,6 +1304,7 @@ def _node_support_diagnostic(
                 composition,
                 component_id=component_id,
                 finished_values_by_component_id=finished_values_by_component_id,
+                dynamic_controlled_finished=dynamic_controlled_finished,
             )
             if diagnostic is not None:
                 return diagnostic
@@ -896,7 +1424,7 @@ def _input_port_function_support_diagnostic(node, input_port) -> BatchedDiagnost
                 f"internal_only={internal_only!r}"
             ),
         )
-    if type(function).__name__ != "LinearCombination":
+    if type(function) is not LinearCombination:
         return BatchedDiagnostic(
             _node_name(node),
             "unsupported InputPort function for batched v2",
@@ -1069,7 +1597,7 @@ def _owner_value_selector_index(output_port) -> int | None:
 
 
 def _is_identity_linear(function) -> bool:
-    if type(function).__name__ != "Linear":
+    if type(function) is not Linear:
         return False
     return all(
         _numeric_scalar_exact(
@@ -1175,6 +1703,7 @@ def _lca_execution_support_diagnostic(
     *,
     component_id: int,
     finished_values_by_component_id: Mapping[int, BatchedFinishedValueSpec],
+    dynamic_controlled_finished: bool = False,
 ) -> BatchedDiagnostic | None:
     recurrent_projection = getattr(node, "recurrent_projection", None)
     projection_diagnostic = _mapping_projection_support_diagnostic(
@@ -1219,12 +1748,16 @@ def _lca_execution_support_diagnostic(
         )
         == 1
     )
-    stepwise = stepwise_ddm_pair or counted_finished_pair
+    stepwise = (
+        stepwise_ddm_pair
+        or counted_finished_pair
+        or dynamic_controlled_finished
+    )
     reset_condition = getattr(node, "reset_stateful_function_when", None)
     if (
         type(reset_condition) is AtTrialStart
         and is_canonical_condition(reset_condition)
-        and not counted_finished_pair
+        and not (counted_finished_pair or dynamic_controlled_finished)
     ):
         return BatchedDiagnostic(
             _node_name(node),
@@ -1337,6 +1870,20 @@ def _parameter_value(component, name, default=_MISSING):
     return None if default is _MISSING else default
 
 
+def _parameter_default_value(component, name, default=_MISSING):
+    """Read a declared Parameter default without observing execution history."""
+
+    if component is not None:
+        parameters = getattr(component, "parameters", None)
+        parameter = getattr(parameters, name, None) if parameters is not None else None
+        if parameter is not None and hasattr(parameter, "default_value"):
+            return parameter.default_value
+        defaults = getattr(component, "defaults", None)
+        if defaults is not None and hasattr(defaults, name):
+            return getattr(defaults, name)
+    return None if default is _MISSING else default
+
+
 def _numeric_equal(value, expected) -> bool:
     try:
         array = np.asarray(value)
@@ -1368,6 +1915,22 @@ def _numeric_scalar_exact(value, expected) -> bool:
         )
     except Exception:
         return False
+
+
+def _finite_fp32_scalar_value(value) -> float | None:
+    """Return a finite real scalar in the representable fp32 range."""
+
+    try:
+        array = np.asarray(value)
+        if array.size != 1 or array.dtype.kind not in "biuf":
+            return None
+        scalar = array.reshape(-1)[0]
+        packed = np.float32(scalar)
+        if not np.isfinite(scalar) or not np.isfinite(packed):
+            return None
+        return float(scalar)
+    except Exception:
+        return None
 
 
 def _is_scalar_or_broadcast_scalar(value) -> bool:
@@ -1505,6 +2068,20 @@ def _control_edges(control):
     return signals, efferents, monitors
 
 
+def _projection_is_active_in_composition(projection, composition) -> bool:
+    """Require both structural membership and PNL's live activation flag."""
+
+    if id(projection) not in {
+        id(candidate)
+        for candidate in getattr(composition, "projections", ())
+    }:
+        return False
+    try:
+        return bool(projection.is_active_in_composition(composition))
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
 def _absorbed_control_attrs(control) -> dict[str, str]:
     _, efferents, monitors = _control_edges(control)
     target = getattr(getattr(efferents[0], "receiver", None), "owner", None) if efferents else None
@@ -1518,38 +2095,102 @@ def _absorbed_control_attrs(control) -> dict[str, str]:
     }
 
 
-def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | None:
-    """Accept only control edges whose semantics are explicitly folded by an op."""
+@dataclass(frozen=True)
+class _ResolvedControlChain:
+    signal: object
+    control_projection: object
+    monitor_projection: object
+    source_port: object
+    controller_input_port: object
+    target_parameter_port: object
+    source: object
+    target: object
+    target_port: str
+    monitor_is_parameter_input: bool
+
+
+def _parameter_port_has_canonical_source(target, parameter_name, port) -> bool:
+    """Whether ``port`` is backed by the named live Parameter on its owner."""
+
+    source = getattr(port, "source", None)
+    owners = (
+        target,
+        getattr(target, "function", None),
+        getattr(target, "integrator_function", None),
+    )
+    return any(
+        source
+        is getattr(
+            getattr(owner, "parameters", None),
+            parameter_name,
+            None,
+        )
+        for owner in owners
+        if owner is not None
+    )
+
+
+def _resolve_control_chain(
+    control,
+    composition,
+) -> tuple[_ResolvedControlChain | None, BatchedDiagnostic | None]:
+    """Validate and resolve the exact scalar control chain once.
+
+    Both capability diagnostics and typed modulation lowering consume this
+    resolver, so a semantically rejected InputPort or projection can never be
+    described as an absorbed identity edge in GraphIR.
+    """
 
     name = _node_name(control)
     signals, efferents, monitors = _control_edges(control)
     if len(signals) != 1 or len(efferents) != 1 or len(monitors) != 1:
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "unsupported generic ControlMechanism for batched v2",
             "requires exactly one monitor, ControlSignal, and ControlProjection",
         )
+    signal = signals[0]
     control_projection = efferents[0]
     monitor_projection = monitors[0]
-    if type(control_projection).__name__ != "ControlProjection" or type(monitor_projection).__name__ != "MappingProjection":
-        return BatchedDiagnostic(name, "unsupported generic control projection for batched v2")
-    signal = signals[0]
-    if not _is_override(getattr(signal, "modulation", getattr(control, "modulation", None))):
-        return BatchedDiagnostic(
+    if (
+        type(control_projection) is not ControlProjection
+        or type(monitor_projection) is not MappingProjection
+    ):
+        return None, BatchedDiagnostic(
+            name,
+            "unsupported generic control projection for batched v2",
+        )
+    if not _projection_is_active_in_composition(
+        monitor_projection,
+        composition,
+    ):
+        return None, BatchedDiagnostic(
+            name,
+            "unsupported control monitor routing for batched v2",
+            "monitor MappingProjection is not active in this Composition",
+        )
+    if not _is_override(
+        getattr(signal, "modulation", getattr(control, "modulation", None))
+    ):
+        return None, BatchedDiagnostic(
             name,
             "unsupported control modulation for batched v2",
             str(getattr(signal, "modulation", None)),
         )
     input_ports = tuple(getattr(control, "input_ports", ()))
     if len(input_ports) != 1:
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "unsupported control input routing for batched v2",
             f"input_ports={len(input_ports)}",
         )
-    input_diagnostic = _input_port_function_support_diagnostic(control, input_ports[0])
+    controller_input_port = input_ports[0]
+    input_diagnostic = _input_port_function_support_diagnostic(
+        control,
+        controller_input_port,
+    )
     if input_diagnostic is not None:
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "unsupported control input semantics for batched v2",
             input_diagnostic.detail,
@@ -1559,51 +2200,119 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
         or _parameter_value(control_projection, "weight", None) is not None
         or _parameter_value(control_projection, "exponent", None) is not None
     ):
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "unsupported ControlProjection semantics for batched v2",
             "requires identity Linear with no weight or exponent",
         )
     if not _control_signal_is_identity(signal):
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "unsupported ControlSignal semantics for batched v2",
             "requires an identity TransferWithCosts transfer function",
         )
 
-    receiver = getattr(control_projection, "receiver", None)
-    target = getattr(receiver, "owner", None)
-    source = getattr(getattr(monitor_projection, "sender", None), "owner", None)
-    target_port = getattr(receiver, "name", "")
+    source_port = getattr(monitor_projection, "sender", None)
+    monitor_receiver = getattr(monitor_projection, "receiver", None)
+    target_parameter_port = getattr(control_projection, "receiver", None)
+    source = getattr(source_port, "owner", None)
+    target = getattr(target_parameter_port, "owner", None)
+    target_port = getattr(target_parameter_port, "name", "")
     monitor_is_identity = _is_identity_scalar_projection(monitor_projection)
     monitor_is_parameter_input = _is_external_parameter_projection(
-        composition, monitor_projection
+        composition,
+        monitor_projection,
     )
-    if target is None or source is None or not (monitor_is_identity or monitor_is_parameter_input):
-        return BatchedDiagnostic(
+    if not _parameter_port_has_canonical_source(
+        target,
+        target_port,
+        target_parameter_port,
+    ):
+        return None, BatchedDiagnostic(
+            name,
+            "unsupported control target parameter identity for batched v2",
+            (
+                f"{_node_name(target)}.{target_port} does not resolve to its "
+                "canonical PsyNeuLink Parameter"
+            ),
+        )
+    if (
+        source is None
+        or target is None
+        or monitor_receiver is not controller_input_port
+        or getattr(controller_input_port, "owner", None) is not control
+        or getattr(signal, "owner", None) is not control
+        or getattr(control_projection, "sender", None) is not signal
+        or not (monitor_is_identity or monitor_is_parameter_input)
+    ):
+        return None, BatchedDiagnostic(
             name,
             "unsupported control monitor routing for batched v2",
-            "monitor must be a scalar identity projection",
+            "monitor must be the controller's scalar identity InputPort projection",
         )
     try:
-        target_afferents = tuple(receiver.mod_afferents)
+        target_afferents = tuple(target_parameter_port.mod_afferents)
     except Exception:
         target_afferents = ()
+    # ControlProjections are not ordinary Composition.projections.  Exact
+    # signal ownership plus the target ParameterPort's sole mod_afferent is the
+    # authoritative active-edge relation in PNL.
     if target_afferents != (control_projection,):
-        return BatchedDiagnostic(
+        return None, BatchedDiagnostic(
             name,
             "ambiguous control projection routing for batched v2",
             f"{_node_name(target)}.{target_port}",
         )
+    if not _projection_is_active_in_composition(
+        control_projection,
+        composition,
+    ):
+        return None, BatchedDiagnostic(
+            name,
+            "unsupported control projection routing for batched v2",
+            "ControlProjection is not active in this Composition",
+        )
 
-    function = getattr(control, "function", None)
-    function_diagnostic = _function_parameter_support_diagnostic(name, function)
+    function_diagnostic = _function_parameter_support_diagnostic(
+        name,
+        getattr(control, "function", None),
+    )
     if function_diagnostic is not None:
-        return function_diagnostic
+        return None, function_diagnostic
+    return (
+        _ResolvedControlChain(
+            signal=signal,
+            control_projection=control_projection,
+            monitor_projection=monitor_projection,
+            source_port=source_port,
+            controller_input_port=controller_input_port,
+            target_parameter_port=target_parameter_port,
+            source=source,
+            target=target,
+            target_port=target_port,
+            monitor_is_parameter_input=monitor_is_parameter_input,
+        ),
+        None,
+    )
+
+
+def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | None:
+    """Accept only control edges whose semantics are explicitly folded by an op."""
+
+    name = _node_name(control)
+    chain, diagnostic = _resolve_control_chain(control, composition)
+    if diagnostic is not None:
+        return diagnostic
+    assert chain is not None
+    source = chain.source
+    target = chain.target
+    target_port = chain.target_port
+    monitor_is_parameter_input = chain.monitor_is_parameter_input
+    function = getattr(control, "function", None)
 
     if (
         monitor_is_parameter_input
-        and type(function).__name__ == "Identity"
+        and type(function) is Identity
         and _is_declared_batched_parameter(target, target_port)
     ):
         return None
@@ -1615,9 +2324,9 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
             return BatchedDiagnostic(
                 name,
                 "batched schedule kind is not executable yet",
-                "coevolving Always/WhenFinished execution requires an LCA "
-                "finished predicate and termination-control value that KernelIR "
-                "does not model",
+                "coevolving Always/WhenFinished execution falls outside the "
+                "typed controlled-finished subset and requires executable "
+                "conditional pass regions",
             )
         schedule_diagnostic = _absorbed_lca_schedule_support_diagnostic(
             composition,
@@ -1627,11 +2336,25 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
         )
         if schedule_diagnostic is not None:
             return schedule_diagnostic
-        identity = type(function).__name__ == "Identity" or _is_identity_linear(function)
+        identity = type(function) is Identity or _is_identity_linear(function)
+        registered_dynamic_transform = (
+            type(function) is Linear
+            and specs.function_spec_for(function) is not None
+            and not bool(
+                _parameter_value(target, "execute_until_finished", True)
+            )
+            and any(
+                _when_finished_depends_on(condition, target)
+                for candidate, condition in _scheduler_conditions(
+                    composition
+                ).items()
+                if candidate is not target
+            )
+        )
         if (
-            identity
+            (identity or registered_dynamic_transform)
             and _control_monitor_source_for(composition, target) is source
-            and _supported_lca_termination_source(source)
+            and _supported_lca_termination_source(composition, source)
         ):
             return None
     elif type(target).__name__ == "DDM" and target_port == "threshold":
@@ -1654,6 +2377,17 @@ def _absorbed_lca_schedule_support_diagnostic(
     """Validate timing that remains equivalent after an LCA control is absorbed."""
 
     conditions = _scheduler_conditions(composition)
+    source_set = _live_consideration_set_id(composition, source)
+    controller_set = _live_consideration_set_id(composition, control)
+    target_set = _live_consideration_set_id(composition, target)
+    if not (0 <= source_set < controller_set < target_set):
+        return BatchedDiagnostic(
+            _node_name(control),
+            "unsupported absorbed control scheduler ordering for batched v2",
+            "requires source consideration set < controller set < target set; "
+            f"got {source_set}, {controller_set}, {target_set}",
+        )
+
     for role, component in (
         ("source", source),
         ("controller", control),
@@ -1661,10 +2395,24 @@ def _absorbed_lca_schedule_support_diagnostic(
     ):
         condition = conditions.get(component)
         if condition is None:
+            if role == "target" and not bool(
+                _parameter_value(target, "execute_until_finished", True)
+            ):
+                return BatchedDiagnostic(
+                    _node_name(control),
+                    "unsupported absorbed control scheduler condition for batched v2",
+                    "stepwise controlled target requires explicit Always",
+                )
             continue
-        if role == "source" and _at_pass_spec(condition) == (
+        if role in {"source", "controller"} and _at_pass_spec(condition) == (
             0,
             "ENVIRONMENT_STATE_UPDATE",
+        ):
+            continue
+        if (
+            role == "target"
+            and type(condition) is Always
+            and is_canonical_condition(condition)
         ):
             continue
         return BatchedDiagnostic(
@@ -1673,6 +2421,18 @@ def _absorbed_lca_schedule_support_diagnostic(
             f"{role} {_node_name(component)} uses {_condition_label(condition)}",
         )
     return None
+
+
+def _live_consideration_set_id(composition, component) -> int:
+    """Return one component's normalized PNL scheduler-set ordinal."""
+
+    queue = getattr(getattr(composition, "scheduler", None), "consideration_queue", ())
+    matches = tuple(
+        index
+        for index, consideration_set in enumerate(queue)
+        if component in consideration_set
+    )
+    return matches[0] if len(matches) == 1 else -1
 
 
 def _condition_time_scale_name(condition) -> str | None:
@@ -1735,14 +2495,14 @@ def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
 
 
 def _is_override(value) -> bool:
-    return str(value).upper().endswith("OVERRIDE")
+    return type(value) is str and value == "OVERRIDE"
 
 
 def _control_signal_is_identity(signal) -> bool:
     function = getattr(signal, "function", None)
     transfer_function = _parameter_value(function, "transfer_fct", None)
     return (
-        type(function).__name__ == "TransferWithCosts"
+        type(function) is TransferWithCosts
         and _is_identity_linear(transfer_function)
         and _numeric_scalar_exact(
             _parameter_value(function, "transfer_fct_mult_param", 1.0),
@@ -1790,10 +2550,29 @@ def _is_declared_batched_parameter(target, parameter_name) -> bool:
     )
 
 
-def _supported_lca_termination_source(source) -> bool:
+def _has_active_node_afferents(composition, node) -> bool:
+    """Whether ``node`` receives a processing edge from another active node."""
+
+    active_node_ids = {id(candidate) for candidate in _composition_nodes(composition)}
+    active_projection_ids = {
+        id(projection)
+        for projection in getattr(composition, "projections", ())
+    }
+    return any(
+        id(projection) in active_projection_ids
+        and id(
+            getattr(getattr(projection, "sender", None), "owner", None)
+        )
+        in active_node_ids
+        for port in getattr(node, "input_ports", ())
+        for projection in getattr(port, "path_afferents", ())
+    )
+
+
+def _supported_lca_termination_source(composition, source) -> bool:
     if specs.passthrough_spec_for(source) is None or len(tuple(getattr(source, "input_ports", ()))) != 1:
         return False
-    if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
+    if _has_active_node_afferents(composition, source):
         return False
     function = getattr(source, "function", None)
     return (
@@ -1832,7 +2611,7 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
         source_reset
     ):
         return False
-    if any(getattr(port, "path_afferents", ()) for port in getattr(source, "input_ports", ())):
+    if _has_active_node_afferents(composition, source):
         return False
     if not _is_zero(getattr(getattr(source, "defaults", None), "variable", 0.0)):
         return False
@@ -1926,9 +2705,9 @@ def _projection_specs(
                 # Monitor projections into an exactly-supported absorbed controller
                 # are represented by that controller's semantic metadata, not as a
                 # graph op.  No other path through a ControlMechanism is executable.
-                if type(receiver).__name__ == "ControlMechanism":
+                if type(receiver) is ControlMechanism:
                     continue
-                if type(sender).__name__ == "ControlMechanism" or projection_type == "ControlProjection":
+                if type(sender) is ControlMechanism or type(projection) is ControlProjection:
                     rejected.append(
                         BatchedDiagnostic(
                             getattr(projection, "name", projection_type),
@@ -1999,7 +2778,7 @@ def _mapping_projection_support_diagnostic(projection) -> BatchedDiagnostic | No
     weight = _parameter_value(projection, "weight", None)
     exponent = _parameter_value(projection, "exponent", None)
     if (
-        type(function).__name__ != "MatrixTransform"
+        type(function) is not MatrixTransform
         or operation != "dot_product"
         or not _numeric_exact(normalize, False)
         or weight is not None
@@ -2135,7 +2914,7 @@ def _output_specs(
         terminal_names = [_node_name(nodes[-1])] if nodes else []
     selected_ports = []
     for node in nodes:
-        if _node_name(node) not in terminal_names or type(node).__name__ == "ControlMechanism":
+        if _node_name(node) not in terminal_names or type(node) is ControlMechanism:
             continue
         output_ports = tuple(getattr(node, "output_ports", []))
         mechanism_spec = specs.mechanism_spec_for(node)
@@ -2199,7 +2978,7 @@ def _output_port_from_name(name: str, nodes):
 
 
 def _classify_model(nodes) -> str | None:
-    executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
+    executable_nodes = [node for node in nodes if type(node) is not ControlMechanism]
     if len(executable_nodes) == 1:
         mechanism_spec = specs.mechanism_spec_for(executable_nodes[0])
         if mechanism_spec is not None and mechanism_spec.single_node_model_kind:
@@ -2210,7 +2989,7 @@ def _classify_model(nodes) -> str | None:
 
 
 def _fusion_kind(model_kind: str | None, nodes, composition=None) -> str | None:
-    executable_nodes = [node for node in nodes if type(node).__name__ != "ControlMechanism"]
+    executable_nodes = [node for node in nodes if type(node) is not ControlMechanism]
     if not executable_nodes:
         return None
 
@@ -2763,7 +3542,7 @@ def _classify_schedule(
         node_name = _node_name(node)
         # Skip conditions on nodes that are not lowered as graph ops (absorbed
         # into another op's kernel); their timing is handled by that op.
-        if id(node) not in component_ids or type(node).__name__ == "ControlMechanism":
+        if id(node) not in component_ids or type(node) is ControlMechanism:
             continue
         condition_name = type(condition).__name__
         condition_schedule_kind = _condition_schedule_kind(
@@ -3012,21 +3791,26 @@ def _condition_schedule_kind(
         receiver_set = node_consideration_set.get(id(node), -1)
         if target_set >= 0 and target_set < receiver_set:
             target_component_id = component_ids.get(id(target))
-            if (
-                not coevolving
-                and not bool(
-                    _parameter_value(
-                        target,
-                        "execute_until_finished",
-                        True,
-                    )
+            if not bool(
+                _parameter_value(
+                    target,
+                    "execute_until_finished",
+                    True,
                 )
-                and _fixed_finished_execution_count(
-                    finished_values_by_component_id.get(target_component_id)
-                )
-                is not None
             ):
-                return PRECOMPUTED_TRACE_SCHEDULE
+                if (
+                    not coevolving
+                    and _fixed_finished_execution_count(
+                        finished_values_by_component_id.get(target_component_id)
+                    )
+                    is not None
+                ):
+                    return PRECOMPUTED_TRACE_SCHEDULE
+                # A one-step mechanism with a lane-varying or otherwise
+                # non-constant finished predicate requires conditional
+                # lane-local pass execution.  Treating it as a static graph
+                # would execute the target only once.
+                return DYNAMIC_LANE_LOCAL_SCHEDULE
             return STATIC_GRAPH_SCHEDULE
         return DYNAMIC_LANE_LOCAL_SCHEDULE
     if condition_name == "AtPass":
@@ -3348,7 +4132,7 @@ def _absorbed_nodes(composition, nodes) -> set[str]:
         if chain is None:
             continue
         for control in nodes:
-            if type(control).__name__ != "ControlMechanism":
+            if type(control) is not ControlMechanism:
                 continue
             attrs = _absorbed_control_attrs(control)
             if (

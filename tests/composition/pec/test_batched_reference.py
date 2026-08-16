@@ -251,8 +251,8 @@ def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python(
 
 _CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
 _UNMODELED_CSI_CONTROL_DETAIL = (
-    "coevolving Always/WhenFinished execution requires an LCA finished "
-    "predicate and termination-control value that KernelIR does not model"
+    "coevolving Always/WhenFinished execution falls outside the typed "
+    "controlled-finished subset and requires executable conditional pass regions"
 )
 
 
@@ -317,7 +317,7 @@ def _assert_csi_control_rejection(composition):
 
 
 def test_csi_drift_rate_udf_registration_exposes_schedule_rejection():
-    """Registering the CSI UDF clears that blocker, but not missing control IR."""
+    """The UDF clears its blocker; CSI remains outside executable control IR."""
 
     comp = _make_csi_surrogate(iti=0, csi_repeat=0, csi_switch=0)
     before = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
@@ -351,8 +351,8 @@ def test_csi_noise_free_model_variants_reject_unmodeled_control(
 ):
     """Retain the former end-to-end, ITI, collapse, and Python/LLVM variants.
 
-    These deterministic model variants cannot honestly reach an execution-mode
-    oracle until KernelIR represents the controlled LCA finished predicate.
+    These deterministic variants cannot honestly reach an execution-mode
+    oracle until KernelIR executes their controlled LCA/DDM pass region.
     """
 
     try:

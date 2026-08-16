@@ -634,7 +634,8 @@ def test_csi_surrogate_with_iti_reports_each_remaining_semantic_blocker():
         if diagnostic.component.startswith("CSI Override")
     )
     assert schedule_diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
-    assert "LCA finished predicate" in schedule_diagnostic.detail
+    assert "typed controlled-finished subset" in schedule_diagnostic.detail
+    assert "conditional pass regions" in schedule_diagnostic.detail
 
 
 @pytest.mark.composition

@@ -14,7 +14,7 @@ point for later Python/interpreter/GPU parity tests.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import FrozenInstanceError, dataclass, replace
 import itertools
 
 import numpy as np
@@ -22,9 +22,19 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched import (
+    BatchedAbsorbedProjectionSpec,
     BatchedCompileError,
     BatchedCompositionCompiler,
+    BatchedCompositionIR,
     BatchedDiagnosticCode,
+    BatchedEffectiveParameterSpec,
+    BatchedModulationSpec,
+    BatchedParameterBindingSpec,
+    BatchedPortSpec,
+)
+from psyneulink.core.batched import specs as batched_specs
+from psyneulink.core.batched.backend.triton.graph_emit import (
+    triton_graph_kernel_source,
 )
 from psyneulink.core.batched.graph import STATEFUL_GRAPH_FUSION, lower_composition
 from psyneulink.core.batched.ir import (
@@ -32,6 +42,7 @@ from psyneulink.core.batched.ir import (
     BatchedResetSpec,
     BatchedSchedulerSpec,
 )
+from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
@@ -80,7 +91,14 @@ class _ControlledFinishedCase:
     expected_values: np.ndarray
     provenance: str = _PROVENANCE
 
-    def build(self) -> _ControlledFinishedModel:
+    def build(
+        self,
+        *,
+        controller_class=pnl.ControlMechanism,
+        controller_function=None,
+        monitor_projection=None,
+        target_parameter=pnl.TERMINATION_THRESHOLD,
+    ) -> _ControlledFinishedModel:
         build_number = next(_BUILD_NUMBERS)
         stem = f"controlled finished {self.name} {build_number}"
         cue = pnl.TransferMechanism(
@@ -108,15 +126,22 @@ class _ControlledFinishedCase:
             reset_stateful_function_when=self.reset_factory(),
             name=f"{stem} producer",
         )
-        controller = pnl.ControlMechanism(
-            function=pnl.Linear(
+        if controller_function is None:
+            controller_function = pnl.Linear(
                 slope=1.0,
                 intercept=self.controller_intercept,
-            ),
-            monitor_for_control=cue,
-            control_signals=[(pnl.TERMINATION_THRESHOLD, producer)],
+            )
+        controller_kwargs = {}
+        if monitor_projection is None:
+            controller_kwargs["monitor_for_control"] = cue
+        else:
+            controller_kwargs["default_variable"] = [0.0]
+        controller = controller_class(
+            function=controller_function,
+            control_signals=[(target_parameter, producer)],
             modulation=pnl.OVERRIDE,
             name=f"{stem} controller",
+            **controller_kwargs,
         )
         follower = pnl.TransferMechanism(
             input_shapes=1,
@@ -126,6 +151,12 @@ class _ControlledFinishedCase:
 
         composition = pnl.Composition(name=f"{stem} composition")
         composition.add_nodes([task, cue, controller, producer, follower])
+        if monitor_projection is not None:
+            composition.add_projection(
+                sender=cue,
+                receiver=controller.input_port,
+                projection=monitor_projection,
+            )
         composition.add_projection(sender=task, receiver=producer)
         composition.add_projection(
             sender=producer,
@@ -325,6 +356,172 @@ def test_python_reset_policy_changes_state_history_not_controlled_counts():
     assert not np.allclose(reset_values[1:], persistent_values[1:])
 
 
+def test_controlled_finished_lowering_is_execution_history_invariant():
+    model = RESET_INTERCEPT_ONE.build()
+    before = lower_composition(model.composition, outputs=(model.output,))
+
+    _run_python(model)
+    after = lower_composition(model.composition, outputs=(model.output,))
+
+    assert before.graph is not None
+    assert after.graph is not None
+    assert before.params == after.params
+    assert before.rejected_nodes == after.rejected_nodes
+    assert before.rejected_conditions == after.rejected_conditions
+    for field in (
+        "nodes",
+        "ports",
+        "states",
+        "scheduler",
+        "consideration_sets",
+        "finished_values",
+        "absorbed_projections",
+        "effective_parameters",
+        "modulations",
+        "resets",
+        "termination",
+        "execution_order",
+        "executable",
+    ):
+        assert getattr(before.graph, field) == getattr(after.graph, field), field
+
+
+def test_controlled_finished_rejects_parameter_port_name_spoof():
+    model = RESET_INTERCEPT_ZERO.build(target_parameter=pnl.BIAS)
+    control_projection = model.controller.control_signals[0].efferents[0]
+    bias_port = control_projection.receiver
+    threshold_port = model.producer.parameter_ports[pnl.TERMINATION_THRESHOLD]
+    bias_port.name = pnl.TERMINATION_THRESHOLD
+    threshold_port.name = pnl.BIAS
+
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    matches = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+        and diagnostic.reason
+        == "unsupported control target parameter identity for batched v2"
+    ]
+    assert len(matches) == 1
+    assert lowering.graph is None or not lowering.graph.modulations
+
+    report = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        outputs=(model.output,),
+        max_steps=16,
+    )
+    assert not report.model_supported
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(
+            model.composition,
+            outputs=(model.output,),
+            max_steps=16,
+        )
+
+
+def test_controlled_finished_rejects_function_type_name_spoof():
+    class Identity(pnl.Linear):
+        pass
+
+    model = RESET_INTERCEPT_ZERO.build(
+        controller_function=Identity(slope=2.0),
+    )
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    matches = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+        and diagnostic.reason
+        == "unsupported generic ControlMechanism for batched v2"
+    ]
+    assert len(matches) == 1
+    assert lowering.graph is None or not lowering.graph.modulations
+
+    report = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        outputs=(model.output,),
+        max_steps=16,
+    )
+    assert not report.model_supported
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(
+            model.composition,
+            outputs=(model.output,),
+            max_steps=16,
+        )
+
+
+def test_controlled_finished_rejects_projection_type_name_spoof():
+    class MappingProjection(pnl.MappingProjection):
+        def _execute(self, *args, **kwargs):
+            return 2.0 * super()._execute(*args, **kwargs)
+
+    model = RESET_INTERCEPT_ZERO.build(
+        monitor_projection=MappingProjection(matrix=[[1.0]]),
+    )
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    matches = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+        and diagnostic.reason
+        == "unsupported generic control projection for batched v2"
+    ]
+    assert len(matches) == 1
+    assert lowering.graph is None or not lowering.graph.modulations
+
+    report = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        outputs=(model.output,),
+        max_steps=16,
+    )
+    assert not report.model_supported
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(
+            model.composition,
+            outputs=(model.output,),
+            max_steps=16,
+        )
+
+
+def test_controlled_finished_rejects_controller_type_name_spoof():
+    class ControlMechanism(pnl.ControlMechanism):
+        def _execute(self, variable=None, context=None, runtime_params=None):
+            value = super()._execute(
+                variable=variable,
+                context=context,
+                runtime_params=runtime_params,
+            )
+            return np.asarray(value) * 2.0
+
+    model = RESET_INTERCEPT_ZERO.build(
+        controller_class=ControlMechanism,
+        controller_function=pnl.Identity(),
+    )
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    matches = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+        and diagnostic.reason == "unsupported node for batched v2"
+    ]
+    assert len(matches) == 1
+    assert lowering.graph is None
+
+    report = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        outputs=(model.output,),
+        max_steps=16,
+    )
+    assert not report.model_supported
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(
+            model.composition,
+            outputs=(model.output,),
+            max_steps=16,
+        )
+
+
 @pytest.mark.parametrize(
     "case",
     CONTROLLED_FINISHED_CASES,
@@ -342,7 +539,7 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
     assert graph is not None
     assert not graph.executable
     assert graph.fusion_kind == STATEFUL_GRAPH_FUSION
-    assert graph.metadata["schedule_kind"] == "precomputed_trace"
+    assert graph.metadata["schedule_kind"] == "dynamic_lane_local"
     assert not graph.rng_streams
 
     cue_id = _component_id(lowering, model.cue)
@@ -366,6 +563,139 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
         model.follower.name,
     }
 
+    assert len(graph.modulations) == 1
+    modulation = graph.modulations[0]
+    assert type(modulation) is BatchedModulationSpec
+    assert modulation.modulation_id == 0
+    assert modulation.effective_parameter_id == 0
+    assert modulation.mode == "OVERRIDE"
+    assert modulation.width == 1
+    assert modulation.dtype == "float32"
+    assert modulation.controller == model.controller.name
+    assert modulation.controller_component_id == controller_id
+    assert modulation.controller_input_port == model.controller.input_ports[0].name
+    assert modulation.control_signal_port == model.controller.control_signals[0].name
+    assert modulation.source == model.cue.name
+    assert modulation.source_component_id == cue_id
+    assert modulation.source_port == model.cue.output_port.name
+    assert modulation.target == model.producer.name
+    assert modulation.target_component_id == producer_id
+    assert modulation.target_parameter == pnl.TERMINATION_THRESHOLD
+    source_node = graph.node(model.cue.name)
+    target_node = graph.node(model.producer.name)
+    assert modulation.source_port_id == source_node.output_port_ids[0]
+    assert dict(target_node.parameter_port_ids)[pnl.TERMINATION_THRESHOLD] == (
+        modulation.target_parameter_port_id
+    )
+
+    signal = model.controller.control_signals[0]
+    control_projection = signal.efferents[0]
+    monitor_projection = model.controller.input_ports[0].path_afferents[0]
+    assert lowering.bindings.modulation_by_id(0) is control_projection
+    assert lowering.bindings.port_by_id(modulation.source_port_id) is (
+        monitor_projection.sender
+    )
+    assert lowering.bindings.port_by_id(modulation.controller_input_port_id) is (
+        monitor_projection.receiver
+    )
+    assert lowering.bindings.port_by_id(modulation.control_signal_port_id) is signal
+    assert lowering.bindings.port_by_id(modulation.target_parameter_port_id) is (
+        control_projection.receiver
+    )
+
+    assert len(graph.absorbed_projections) == 2
+    monitor_spec = graph.absorbed_projections[modulation.monitor_projection_id]
+    control_spec = graph.absorbed_projections[modulation.control_projection_id]
+    assert type(monitor_spec) is BatchedAbsorbedProjectionSpec
+    assert monitor_spec.kind == "MappingProjection"
+    assert monitor_spec.initial_value == ()
+    assert monitor_spec.sender_component_id == modulation.source_component_id
+    assert monitor_spec.sender_port_id == modulation.source_port_id
+    assert monitor_spec.receiver_component_id == modulation.controller_component_id
+    assert monitor_spec.receiver_port_id == modulation.controller_input_port_id
+    assert type(control_spec) is BatchedAbsorbedProjectionSpec
+    assert control_spec.kind == "ControlProjection"
+    assert control_spec.initial_value == (1.0,)
+    assert control_spec.sender_component_id == modulation.controller_component_id
+    assert control_spec.sender_port_id == modulation.control_signal_port_id
+    assert control_spec.receiver_component_id == modulation.target_component_id
+    assert control_spec.receiver_port_id == modulation.target_parameter_port_id
+    assert (
+        lowering.bindings.absorbed_projection_by_id(modulation.monitor_projection_id)
+        is monitor_projection
+    )
+    assert (
+        lowering.bindings.absorbed_projection_by_id(modulation.control_projection_id)
+        is control_projection
+    )
+
+    expected_controller_params = ("slope", "intercept", "scale", "offset")
+    assert all(
+        type(binding) is BatchedParameterBindingSpec
+        for binding in modulation.controller_param_bindings
+    )
+    assert (
+        tuple(binding.argument for binding in modulation.controller_param_bindings)
+        == expected_controller_params
+    )
+    controller_params = {
+        binding.argument: binding.parameter
+        for binding in modulation.controller_param_bindings
+    }
+    assert control_node.params == controller_params
+    assert control_node.attrs["spec_key"] == modulation.controller_function_spec_key
+    controller_param_specs = {param.parameter_id: param for param in lowering.params}
+    assert all(
+        controller_param_specs[binding.parameter_id].name == binding.parameter
+        for binding in modulation.controller_param_bindings
+    )
+    assert all(
+        not controller_param_specs[binding.parameter_id].runtime_mutable
+        for binding in modulation.controller_param_bindings
+    )
+    assert all(
+        controller_param_specs[binding.parameter_id].owner_component_id == controller_id
+        for binding in modulation.controller_param_bindings
+    )
+    assert {
+        binding.argument: controller_param_specs[binding.parameter_id].default
+        for binding in modulation.controller_param_bindings
+    } == {
+        "slope": 1.0,
+        "intercept": case.controller_intercept,
+        "scale": 1.0,
+        "offset": 0.0,
+    }
+    cue_param_names = set(graph.node(model.cue.name).params.values())
+    assert cue_param_names
+    cue_param_specs = {
+        param.name: param for param in lowering.params if param.name in cue_param_names
+    }
+    assert set(cue_param_specs) == cue_param_names
+    assert all(not param.runtime_mutable for param in cue_param_specs.values())
+
+    assert all(type(port) is BatchedPortSpec for port in graph.ports)
+    assert tuple(port.port_id for port in graph.ports) == tuple(range(len(graph.ports)))
+
+    assert len(graph.effective_parameters) == 1
+    effective_parameter = graph.effective_parameters[0]
+    assert type(effective_parameter) is BatchedEffectiveParameterSpec
+    assert effective_parameter.effective_parameter_id == (
+        modulation.effective_parameter_id
+    )
+    assert effective_parameter.target == modulation.target
+    assert effective_parameter.target_component_id == modulation.target_component_id
+    assert effective_parameter.target_parameter == modulation.target_parameter
+    assert effective_parameter.target_parameter_port_id == (
+        modulation.target_parameter_port_id
+    )
+    assert effective_parameter.base_value == (9.0,)
+    assert effective_parameter.initial_modulation_value == (1.0,)
+    assert effective_parameter.storage == "lane_persistent"
+    assert effective_parameter.reset == "Never"
+    assert effective_parameter.update_event == "after_controller_execution"
+    assert effective_parameter.sample_event == "at_target_parameter_update"
+
     schedule = {spec.component_id: spec for spec in graph.scheduler}
     assert all(type(spec) is BatchedSchedulerSpec for spec in schedule.values())
     assert schedule[cue_id].condition_type == "AtPass"
@@ -388,7 +718,21 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
     assert type(finished) is BatchedFinishedValueSpec
     assert finished.node == model.producer.name
     assert finished.component_id == producer_id
+    assert finished.predicate_kind == ("execution_count_at_least_effective_parameter")
+    assert finished.attrs == {
+        "effective_parameter_id": modulation.effective_parameter_id,
+        "target_parameter_port_id": modulation.target_parameter_port_id,
+        "rounding": "ceil",
+        "minimum": 1,
+        "maximum": 2**24,
+    }
     assert schedule[follower_id].finished_value_ids == (finished.value_id,)
+    assert (
+        schedule[cue_id].consideration_set_id
+        < schedule[controller_id].consideration_set_id
+        < schedule[producer_id].consideration_set_id
+        < schedule[follower_id].consideration_set_id
+    )
 
     assert len(graph.resets) == 1
     reset = graph.resets[0]
@@ -403,6 +747,24 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
         if state.state_id in reset.state_ids
     } == {producer_id}
 
+    semantic_ir = BatchedCompositionIR(
+        model_kind=lowering.model_kind,
+        node_names=tuple(node.name for node in graph.nodes),
+        params=lowering.params,
+        output_names=tuple(output.name for output in graph.outputs),
+        max_steps=16,
+        graph=graph,
+    )
+    kernel_ir = lower_to_kernel_ir(semantic_ir)
+    assert not kernel_ir.executable
+    assert kernel_ir.ports == graph.ports
+    assert kernel_ir.absorbed_projections == graph.absorbed_projections
+    assert kernel_ir.effective_parameters == graph.effective_parameters
+    assert kernel_ir.modulations == graph.modulations
+    assert kernel_ir.finished_values == graph.finished_values
+    with pytest.raises(ValueError, match="non-executable"):
+        triton_graph_kernel_source(kernel_ir)
+
     report = BatchedCompositionCompiler.diagnose(
         model.composition,
         backend="triton_cpu",
@@ -413,22 +775,15 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
     assert not report.model_supported
     assert report.codegen_ready is None
     assert report.metadata["fusion_kind"] == STATEFUL_GRAPH_FUSION
-    assert report.metadata["schedule_kind"] == "precomputed_trace"
+    assert report.metadata["schedule_kind"] == "dynamic_lane_local"
     assert len(report.model_diagnostics) == 1
 
     diagnostic = report.model_diagnostics[0]
-    assert (
-        diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULER_CONDITION_UNSUPPORTED
-    )
-    assert diagnostic.component == model.controller.name
-    assert diagnostic.component_id == f"node:{model.controller.name}"
-    assert diagnostic.reason == (
-        "unsupported absorbed control scheduler condition for batched v2"
-    )
-    assert diagnostic.detail == (
-        f"controller {model.controller.name} uses "
-        "AtPass(0, time_scale=ENVIRONMENT_STATE_UPDATE)"
-    )
+    assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
+    assert diagnostic.component == model.follower.name
+    assert diagnostic.component_id == f"node:{model.follower.name}"
+    assert diagnostic.reason == "batched schedule kind is not executable yet"
+    assert diagnostic.detail == "WhenFinished requires dynamic_lane_local"
 
     with pytest.raises(BatchedCompileError) as error:
         BatchedCompositionCompiler.compile(
@@ -440,3 +795,670 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
     assert error.value.capability_report == report
     assert diagnostic.formatted_reason in str(error.value)
     assert _scheduler_history(model.composition) == history_before
+
+
+@pytest.mark.parametrize(
+    "changes, message",
+    [
+        ({"modulation_id": -1}, "identities"),
+        ({"controller_component_id": True}, "identities"),
+        ({"controller": ""}, "labels"),
+        ({"mode": "PREFIX_OVERRIDE"}, "scalar float32 OVERRIDE"),
+        ({"width": 2}, "scalar float32 OVERRIDE"),
+        ({"dtype": "float64"}, "scalar float32 OVERRIDE"),
+        ({"absorbed_identity_chain": False}, "identity projection chain"),
+        (
+            {"controller_param_bindings": ()},
+            "implementation and parameter bindings",
+        ),
+        ({"controller_function_spec_key": ""}, "implementation and parameter bindings"),
+    ],
+)
+def test_modulation_schema_rejects_malformed_declarations(changes, message):
+    model = RESET_INTERCEPT_ONE.build()
+    modulation = lower_composition(
+        model.composition,
+        outputs=(model.output,),
+    ).graph.modulations[0]
+
+    with pytest.raises(ValueError, match=message):
+        replace(modulation, **changes)
+
+
+def _lower_replaced_controlled_graph(*, graph_changes=None, modulation_changes=None):
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    if modulation_changes is not None:
+        graph = replace(
+            graph,
+            modulations=(replace(graph.modulations[0], **modulation_changes),),
+        )
+    if graph_changes is not None:
+        graph = replace(graph, **graph_changes)
+    return _lower_graph_to_kernel_ir(lowering, graph)
+
+
+def _lower_graph_to_kernel_ir(lowering, graph):
+    semantic_ir = BatchedCompositionIR(
+        model_kind=lowering.model_kind,
+        node_names=tuple(node.name for node in graph.nodes),
+        params=lowering.params,
+        output_names=tuple(output.name for output in graph.outputs),
+        max_steps=16,
+        graph=graph,
+    )
+    return lower_to_kernel_ir(semantic_ir)
+
+
+@pytest.mark.parametrize(
+    ("field", "forged_value"),
+    [
+        ("base_value", (4.0,)),
+        ("initial_modulation_value", (7.0,)),
+    ],
+)
+def test_kernel_ir_rejects_forged_effective_parameter_values(
+    field,
+    forged_value,
+):
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    effective_parameter = replace(
+        graph.effective_parameters[0],
+        **{field: forged_value},
+    )
+    graph = replace(
+        graph,
+        effective_parameters=(effective_parameter,),
+    )
+
+    with pytest.raises(ValueError, match="target or initial values"):
+        _lower_graph_to_kernel_ir(lowering, graph)
+
+
+def test_kernel_ir_rejects_forged_modulation_component_identity():
+    model = RESET_INTERCEPT_ONE.build()
+    graph = lower_composition(
+        model.composition,
+        outputs=(model.output,),
+    ).graph
+    modulation = graph.modulations[0]
+
+    with pytest.raises(ValueError, match="component identity|controller-component"):
+        _lower_replaced_controlled_graph(
+            modulation_changes={
+                "controller_component_id": modulation.source_component_id,
+            },
+        )
+
+
+def test_kernel_ir_rejects_duplicate_modulation_target():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    duplicate = replace(
+        graph.modulations[0],
+        modulation_id=1,
+        effective_parameter_id=1,
+    )
+    duplicate_effective_parameter = replace(
+        graph.effective_parameters[0],
+        effective_parameter_id=1,
+    )
+    duplicate_finished = replace(
+        graph.finished_values[0],
+        value_id=1,
+        attrs={
+            **graph.finished_values[0].attrs,
+            "effective_parameter_id": 1,
+        },
+    )
+    graph = replace(
+        graph,
+        effective_parameters=(
+            *graph.effective_parameters,
+            duplicate_effective_parameter,
+        ),
+        modulations=(*graph.modulations, duplicate),
+        finished_values=(*graph.finished_values, duplicate_finished),
+    )
+    semantic_ir = BatchedCompositionIR(
+        model_kind=lowering.model_kind,
+        node_names=tuple(node.name for node in graph.nodes),
+        params=lowering.params,
+        output_names=tuple(output.name for output in graph.outputs),
+        max_steps=16,
+        graph=graph,
+    )
+
+    with pytest.raises(ValueError):
+        lower_to_kernel_ir(semantic_ir)
+
+
+def test_kernel_ir_rejects_erased_dynamic_finished_binding():
+    model = RESET_INTERCEPT_ONE.build()
+    graph = lower_composition(
+        model.composition,
+        outputs=(model.output,),
+    ).graph
+    finished = replace(graph.finished_values[0], predicate_kind="dynamic", attrs={})
+
+    with pytest.raises(
+        ValueError,
+        match="exact GraphIR node|exact bijection",
+    ):
+        _lower_replaced_controlled_graph(
+            graph_changes={"finished_values": (finished,)},
+        )
+
+
+def test_executable_graph_cannot_erase_declared_modulation_effect():
+    with pytest.raises(ValueError, match="declaration-only"):
+        _lower_replaced_controlled_graph(graph_changes={"executable": True})
+
+
+def test_kernel_ir_rejects_complete_control_effect_ledger_erasure():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    follower_id = _component_id(lowering, model.follower)
+    scheduler = tuple(
+        replace(condition, finished_value_ids=())
+        if condition.component_id == follower_id
+        else condition
+        for condition in graph.scheduler
+    )
+    forged = replace(
+        graph,
+        absorbed_projections=(),
+        effective_parameters=(),
+        modulations=(),
+        finished_values=(),
+        scheduler=scheduler,
+        executable=True,
+        metadata={
+            **graph.metadata,
+            "scheduler_executable": True,
+            "scheduler_requires_pass_region": False,
+        },
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(lowering, forged)
+
+
+def test_kernel_ir_rejects_erased_registered_controller_transform():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    controller_nodes = tuple(
+        replace(
+            node,
+            params={},
+            attrs={
+                **node.attrs,
+                "spec_key": "",
+                "control_function": "identity",
+            },
+        )
+        if node.component_id == modulation.controller_component_id
+        else node
+        for node in graph.nodes
+    )
+    forged = replace(
+        graph,
+        nodes=controller_nodes,
+        modulations=(
+            replace(
+                modulation,
+                controller_function_spec_key="",
+                controller_param_bindings=(),
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(lowering, forged)
+
+
+def test_override_mode_requires_exact_canonical_value():
+    model = RESET_INTERCEPT_ZERO.build()
+    model.controller.control_signals[0].modulation = "PREFIX_OVERRIDE"
+
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+
+    # Without an exact control edge, the stepwise LCA has no complete finished
+    # predicate and the semantic graph must fail closed rather than retain a
+    # partially typed modulation declaration.
+    assert lowering.graph is None
+    diagnostics = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+    ]
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == "unsupported control modulation for batched v2"
+    assert diagnostics[0].detail == "PREFIX_OVERRIDE"
+
+
+@pytest.mark.parametrize(
+    "endpoint, forged_endpoint",
+    (
+        ("source_port_id", "controller_input_port_id"),
+        ("controller_input_port_id", "control_signal_port_id"),
+        ("control_signal_port_id", "target_parameter_port_id"),
+        ("target_parameter_port_id", "source_port_id"),
+    ),
+)
+def test_kernel_ir_rejects_each_forged_modulation_endpoint_port_role(
+    endpoint,
+    forged_endpoint,
+):
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    forged_port_id = getattr(modulation, forged_endpoint)
+    assert forged_port_id != getattr(modulation, endpoint)
+    forged_modulation = replace(modulation, **{endpoint: forged_port_id})
+
+    finished_values = graph.finished_values
+    effective_parameters = graph.effective_parameters
+    if endpoint == "target_parameter_port_id":
+        finished = graph.finished_values[0]
+        finished_values = (
+            replace(
+                finished,
+                attrs={
+                    **finished.attrs,
+                    "target_parameter_port_id": forged_port_id,
+                },
+            ),
+        )
+        effective_parameters = (
+            replace(
+                graph.effective_parameters[0],
+                target_parameter_port_id=forged_port_id,
+            ),
+        )
+    forged_graph = replace(
+        graph,
+        effective_parameters=effective_parameters,
+        modulations=(forged_modulation,),
+        finished_values=finished_values,
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(lowering, forged_graph)
+
+
+def test_kernel_ir_rejects_forged_modulation_target_parameter_label():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    forged = replace(
+        graph.modulations[0],
+        target_parameter="not_the_termination_threshold",
+    )
+    forged_effective_parameter = replace(
+        graph.effective_parameters[0],
+        target_parameter=forged.target_parameter,
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(
+            lowering,
+            replace(
+                graph,
+                effective_parameters=(forged_effective_parameter,),
+                modulations=(forged,),
+            ),
+        )
+
+
+def test_kernel_ir_rejects_forged_modulation_source_role():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    forged = replace(
+        graph.modulations[0],
+        source=model.follower.name,
+        source_component_id=_component_id(lowering, model.follower),
+        source_port_id=graph.outputs[0].port_id,
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(
+            lowering,
+            replace(graph, modulations=(forged,)),
+        )
+
+
+def test_kernel_ir_rejects_coherent_monitor_route_to_late_source():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    follower_id = _component_id(lowering, model.follower)
+    follower_port_id = graph.node(model.follower.name).output_port_ids[0]
+    monitor = graph.absorbed_projections[modulation.monitor_projection_id]
+    forged_monitor = replace(
+        monitor,
+        sender=model.follower.name,
+        sender_component_id=follower_id,
+        sender_port=model.follower.output_port.name,
+        sender_port_id=follower_port_id,
+    )
+    forged_modulation = replace(
+        modulation,
+        source=model.follower.name,
+        source_component_id=follower_id,
+        source_port=model.follower.output_port.name,
+        source_port_id=follower_port_id,
+    )
+    absorbed = tuple(
+        forged_monitor if item.projection_id == monitor.projection_id else item
+        for item in graph.absorbed_projections
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(
+            lowering,
+            replace(
+                graph,
+                absorbed_projections=absorbed,
+                modulations=(forged_modulation,),
+            ),
+        )
+
+
+def test_kernel_ir_rejects_forged_modulation_target_role():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    cue_slope = model.cue.parameter_ports["slope"]
+    cue_slope_port_id = next(
+        port_id
+        for port_id, port in lowering.bindings.ports_by_id.items()
+        if port is cue_slope
+    )
+    cue_id = _component_id(lowering, model.cue)
+    forged_modulation = replace(
+        modulation,
+        target=model.cue.name,
+        target_component_id=cue_id,
+        target_parameter="slope",
+        target_parameter_port_id=cue_slope_port_id,
+    )
+    finished = graph.finished_values[0]
+    forged_finished = replace(
+        finished,
+        node=model.cue.name,
+        component_id=cue_id,
+        attrs={
+            **finished.attrs,
+            "target_parameter_port_id": cue_slope_port_id,
+        },
+    )
+    forged_effective_parameter = replace(
+        graph.effective_parameters[0],
+        target=model.cue.name,
+        target_component_id=cue_id,
+        target_parameter="slope",
+        target_parameter_port_id=cue_slope_port_id,
+    )
+    forged_graph = replace(
+        graph,
+        effective_parameters=(forged_effective_parameter,),
+        modulations=(forged_modulation,),
+        finished_values=(forged_finished,),
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(lowering, forged_graph)
+
+
+def test_kernel_ir_rejects_coherent_target_parameter_port_relabeling():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    target_id = modulation.target_component_id
+    target_ports = {
+        port.name: port
+        for port in graph.ports
+        if port.owner_component_id == target_id and port.kind == "ParameterPort"
+    }
+    bias_port = target_ports["bias"]
+    termination_port = target_ports[pnl.TERMINATION_THRESHOLD]
+    swapped_ports = tuple(
+        replace(port, name=pnl.TERMINATION_THRESHOLD)
+        if port.port_id == bias_port.port_id
+        else replace(port, name="bias")
+        if port.port_id == termination_port.port_id
+        else port
+        for port in graph.ports
+    )
+    control_route = graph.absorbed_projections[modulation.control_projection_id]
+    swapped_route = replace(
+        control_route,
+        receiver_port_id=bias_port.port_id,
+    )
+    absorbed = tuple(
+        swapped_route if item.projection_id == control_route.projection_id else item
+        for item in graph.absorbed_projections
+    )
+    effective = replace(
+        graph.effective_parameters[0],
+        target_parameter_port_id=bias_port.port_id,
+    )
+    finished = replace(
+        graph.finished_values[0],
+        attrs={
+            **graph.finished_values[0].attrs,
+            "target_parameter_port_id": bias_port.port_id,
+        },
+    )
+    forged_modulation = replace(
+        modulation,
+        target_parameter_port_id=bias_port.port_id,
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(
+            lowering,
+            replace(
+                graph,
+                ports=swapped_ports,
+                absorbed_projections=absorbed,
+                effective_parameters=(effective,),
+                modulations=(forged_modulation,),
+                finished_values=(finished,),
+            ),
+        )
+
+
+def test_kernel_ir_rejects_orphan_effective_finished_value():
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    assert graph.finished_values[0].predicate_kind == (
+        "execution_count_at_least_effective_parameter"
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(
+            lowering,
+            replace(graph, effective_parameters=(), modulations=()),
+        )
+
+
+def _malform_control_input_function(model):
+    model.controller.input_ports[0].function.parameters.scale.set(2.0, None)
+
+
+def _add_unprojected_control_input(model):
+    model.controller.add_ports(
+        [
+            pnl.InputPort(
+                reference_value=[0.0],
+                name=f"{model.controller.name} extra input",
+            )
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation, expected_reason",
+    (
+        (
+            _malform_control_input_function,
+            "unsupported control input semantics for batched v2",
+        ),
+        (
+            _add_unprojected_control_input,
+            "unsupported control input routing for batched v2",
+        ),
+    ),
+    ids=("malformed-input-port", "extra-input-port"),
+)
+def test_malformed_control_input_never_produces_typed_modulation(
+    mutation,
+    expected_reason,
+):
+    model = RESET_INTERCEPT_ZERO.build()
+    mutation(model)
+
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+
+    assert lowering.graph is None
+    assert lowering.bindings.modulations_by_id == {}
+    diagnostics = [
+        diagnostic
+        for diagnostic in lowering.rejected_nodes
+        if diagnostic.component == model.controller.name
+    ]
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == expected_reason
+
+
+def test_controller_function_spec_is_frozen_in_kernel_registry_snapshot(monkeypatch):
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    registered_spec = batched_specs.lookup_spec(modulation.controller_function_spec_key)
+    spec_key = "test:controlled-finished-controller-linear"
+    controller_spec = replace(registered_spec, key=spec_key)
+    monkeypatch.setitem(
+        batched_specs._SPECS_BY_KEY,
+        spec_key,
+        controller_spec,
+    )
+    controller_node = graph.node(model.controller.name)
+    graph = replace(
+        graph,
+        nodes=tuple(
+            replace(
+                node,
+                attrs={**node.attrs, "spec_key": spec_key},
+            )
+            if node.component_id == modulation.controller_component_id
+            else node
+            for node in graph.nodes
+        ),
+        modulations=(
+            replace(
+                modulation,
+                controller_function_spec_key=spec_key,
+            ),
+        ),
+    )
+    assert controller_node.attrs["spec_key"] != spec_key
+    kernel = _lower_graph_to_kernel_ir(lowering, graph)
+
+    assert kernel.op_specs.lookup_spec(spec_key) is controller_spec
+
+    def replacement_linear(x, slope, intercept, scale, offset):
+        return x + slope + intercept + scale + offset
+
+    replacement_spec = replace(controller_spec, body=replacement_linear)
+    monkeypatch.setitem(
+        batched_specs._SPECS_BY_KEY,
+        spec_key,
+        replacement_spec,
+    )
+
+    assert batched_specs.lookup_spec(spec_key) is replacement_spec
+    assert kernel.op_specs.lookup_spec(spec_key) is controller_spec
+    replacement_kernel = _lower_graph_to_kernel_ir(lowering, graph)
+    assert replacement_kernel.op_specs.lookup_spec(spec_key) is replacement_spec
+
+
+def test_modulation_controller_parameter_bindings_are_deeply_immutable():
+    model = RESET_INTERCEPT_ONE.build()
+    graph = lower_composition(
+        model.composition,
+        outputs=(model.output,),
+    ).graph
+    modulation = graph.modulations[0]
+    bindings = modulation.controller_param_bindings
+    assert type(bindings) is tuple
+    original_binding = bindings[0]
+
+    with pytest.raises(TypeError):
+        bindings[0] = bindings[1]
+
+    with pytest.raises(FrozenInstanceError):
+        original_binding.argument = "forged_argument"
+
+
+@pytest.mark.parametrize(
+    "forgery",
+    ("argument_name", "parameter_name"),
+)
+def test_kernel_ir_rejects_forged_controller_parameter_binding_names(forgery):
+    model = RESET_INTERCEPT_ONE.build()
+    lowering = lower_composition(model.composition, outputs=(model.output,))
+    graph = lowering.graph
+    modulation = graph.modulations[0]
+    bindings = list(modulation.controller_param_bindings)
+    if forgery == "argument_name":
+        bindings[0] = replace(bindings[0], argument="forged_argument")
+    else:
+        cue_parameter_name = graph.node(model.cue.name).params["slope"]
+        cue_parameter = next(
+            parameter
+            for parameter in lowering.params
+            if parameter.name == cue_parameter_name
+        )
+        bindings[0] = replace(
+            bindings[0],
+            parameter=cue_parameter.name,
+            parameter_id=cue_parameter.parameter_id,
+        )
+
+    forged_bindings = tuple(bindings)
+    forged_modulation = replace(
+        modulation,
+        controller_param_bindings=forged_bindings,
+    )
+    forged_params = {binding.argument: binding.parameter for binding in forged_bindings}
+    forged_nodes = tuple(
+        replace(node, params=forged_params)
+        if node.component_id == modulation.controller_component_id
+        else node
+        for node in graph.nodes
+    )
+    forged_graph = replace(
+        graph,
+        nodes=forged_nodes,
+        modulations=(forged_modulation,),
+    )
+
+    with pytest.raises(ValueError):
+        _lower_graph_to_kernel_ir(lowering, forged_graph)

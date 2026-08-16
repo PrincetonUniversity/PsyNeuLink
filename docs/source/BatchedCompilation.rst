@@ -46,15 +46,31 @@ predicates are snapshotted as well as supported explicit predicates; the
 declarations retain neither live PsyNeuLink components nor ``Condition``
 objects.  An ``executable`` flag distinguishes a graph whose current operations
 preserve all of those semantics from a graph retained only for inspection and
-subsequent IR work.  Exactly validated control paths absorbed by existing
-operations carry explicit metadata, but generic control/modulation operations
-and a complete absorption ledger remain incremental work.  Unrepresented
-variants fail closed.  Display names are diagnostic labels, not identity.
+subsequent IR work.  Every lowered Port also has a typed owner, kind, width,
+and numeric identity.  A controlled, scheduler-visible effective parameter is
+represented by a typed ``BatchedModulationSpec`` containing stable source,
+controller, ControlSignal, target ParameterPort, and effective-value IDs.  Its
+monitor MappingProjection and ControlProjection are retained in an explicit
+absorbed-projection ledger rather than disappearing during lowering.  A
+separate effective-parameter declaration records the base value, initial held
+ControlProjection value, lane-persistent storage, update after controller
+execution, and sampling when the target ParameterPort updates.  The controller
+declaration records the decorator-resolved function implementation and exact
+argument-to-parameter IDs; those parameters are frozen while control execution
+is unavailable.  Compatibility name metadata is not the semantic authority
+for that edge.  Executable generic modulation operations and ledger coverage
+for other existing folds remain incremental work.  Unrepresented variants
+fail closed.  Display names are diagnostic labels, not identity.
 
 Composition lowering assigns nonnegative numeric IDs in deterministic
-dependency order and carries them through ``KernelIR`` operations.  Input and
+dependency order and carries them through ``KernelIR`` operations.  It first
+runs PsyNeuLink's ordinary structural analysis so deferred ControlProjections,
+CIM routing, and scheduler dependencies match the graph Python execution will
+use; lowering the same Composition before and after a Python run produces the
+same declarations.  Input and
 output specs bind exact live ports, projection specs bind both endpoint ports,
-and each output owns an explicit flattened result slice.  The compiled plan
+and each node anchors the ordered IDs of its live InputPorts, OutputPorts, and
+named ParameterPorts.  Each output owns an explicit flattened result slice.  The compiled plan
 keeps a sidecar from those IDs to the live PsyNeuLink objects; generated code
 does not use sanitized display names as identity.  These IDs are currently
 lowering-local.  A serializable structural fingerprint for reconstructed
@@ -77,7 +93,14 @@ PsyNeuLink's automatically suffixed names are already distinguished by IDs.
 ``KernelIR`` is the backend-neutral executable program.  It currently makes
 projection, port combination, function, state, trial-loop, and output-store
 operations explicit and carries the graph's scheduler, consideration-set,
-termination, finished-value, and reset declarations forward.  For the exact
+termination, finished-value, effective-parameter, modulation, absorbed-edge,
+Port, and reset declarations forward.  A GraphIR modulation must survive
+exactly into KernelIR and form a bijection with one held effective value, its
+two absorbed projections, and one matching dynamic finished value.  KernelIR
+validates every endpoint's owner, Port kind, width, and registered controller
+signature against the frozen plan snapshot.  Until explicit control-compute,
+``ApplyModulation``, and lane-local predicate-mask operations exist, such a
+KernelIR remains declaration-only and source emission is forbidden.  For the exact
 stateless and fixed-count stateful boundaries described below, a
 backend-neutral host planner consumes only those typed declarations and
 produces a finite one-trial ``BatchedScheduleTraceSpec``.  Kernel lowering
@@ -202,15 +225,35 @@ and stateful graphs outside this exact boundary remain fail-closed:
        ``AtTrialStart`` reset into one stateless affine step.  Other reset
        semantics fail closed.
    * - Control
-     - Control component identity and its scheduler predicate can be retained
-       in a declaration-only graph even when execution is rejected.  Exactly
-       absorbed controls record source, target, parameter, and ``OVERRIDE``
-       modulation metadata; generic effective-parameter operations are not in
-       ``KernelIR`` yet.
-     - Executable control is limited to validated absorbed paths, including the
-       narrow scalar identity cue to LCA termination-threshold ``OVERRIDE`` and
-       the existing affine DDM threshold-collapse chain.  Generic control and
-       co-evolving LCA termination control remain fail-closed.
+     - The scalar controlled-finished boundary has a typed ``OVERRIDE`` edge
+       with exact numeric endpoint-port identities, two explicit absorbed
+       projection records, a target ParameterPort, and a distinct held
+       effective-parameter ID.  The held value declaratively records its
+       initial allocation, cross-trial persistence, controller-update event,
+       and ParameterPort sampling event; these are not executable effects yet.
+       ``Lane-persistent`` means that future execution must preserve the value
+       across trials of one parameter/subject/estimate lane within a simulation
+       invocation and initialize each new invocation from the declared initial
+       modulation value.  Registered Linear controller parameters use the
+       ordinary decorator/signature binding machinery and are
+       validated-default-only while execution is unavailable.  The LCA
+       finished declaration references that effective value with explicit
+       ceiling, lower-bound, and integer-range semantics.  GraphIR and KernelIR
+       validate the full declaration bijection and reject forged or erased
+       routes, parameter bindings, and effects.
+     - Existing executable control remains limited to separately validated
+       atomic folds: the run-to-completion scalar identity cue to LCA
+       termination-threshold path and the affine DDM threshold-collapse chain.
+       Those folds do not produce the scheduler-visible modulation declaration
+       above.  Every KernelIR containing ``BatchedModulationSpec`` remains
+       declaration-only.  Lane-varying controlled ``Always``/``WhenFinished``
+       execution therefore remains fail-closed.
+       The first declared dynamic subset requires strictly ordered source,
+       controller, and target consideration sets.  PsyNeuLink freezes values
+       at set entry, so same-set control would make the target observe the
+       previously held value and is rejected until that timing can be modeled
+       explicitly.  Generic control and co-evolving LCA termination control
+       remain fail-closed.
    * - Stepwise DDM
      - A DDM with ``execute_until_finished=False`` is structurally admitted
        only as the typed ``Always`` persistent-stepper / ``WhenFinished``
@@ -251,8 +294,10 @@ fp32 conversion cannot change the step count.  The effective static execution
 count has the same bound.  Each node's ``max_executions_before_finished`` must
 be a positive integer and is enforced independently.
 
-The identity cue path is absorbed during lowering, so its Linear ``slope``,
-``intercept``, ``scale``, and ``offset`` bindings are validated-default-only:
+The executable identity cue path in this paragraph is the atomic
+run-to-completion fold, not the scheduler-visible ``BatchedModulationSpec``
+path.  It is absorbed during lowering, so its Linear ``slope``, ``intercept``,
+``scale``, and ``offset`` bindings are validated-default-only:
 parameter rows may not change them until KernelIR represents and executes the
 cue transform itself.  An explicit ``AtPass(0)`` on the cue at the default
 ``ENVIRONMENT_STATE_UPDATE`` time scale is accepted as the same static-origin

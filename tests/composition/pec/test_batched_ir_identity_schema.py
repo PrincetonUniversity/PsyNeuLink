@@ -69,7 +69,13 @@ def test_identity_fields_preserve_legacy_direct_construction():
 
 
 def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
-    parameter = BatchedParamSpec("gain", 1.0, parameter_id=20)
+    parameter = BatchedParamSpec(
+        "gain",
+        1.0,
+        parameter_id=0,
+        owner_component_id=10,
+        owner_scope="function",
+    )
     input_spec = BatchedInputSpec(
         "node.InputPort-0",
         "node",
@@ -144,7 +150,7 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
         op_specs=BatchedOpSpecSnapshot({}),
     )
 
-    assert kernel.params[0].parameter_id == 20
+    assert kernel.params[0].parameter_id == 0
     assert (kernel.inputs[0].component_id, kernel.inputs[0].port_id) == (10, 30)
     assert kernel.inputs[0].port == "InputPort-0"
     assert kernel.outputs[0].flat_slice == slice(3, 5)

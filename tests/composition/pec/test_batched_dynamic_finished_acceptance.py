@@ -694,7 +694,7 @@ REJECTION_CASES = (
         code=BatchedDiagnosticCode.MODEL_UNSUPPORTED,
         component_kind="component",
         reason="unsupported generic ControlMechanism for batched v2",
-        detail_contains="->",
+        detail_contains=".slope",
     ),
 )
 

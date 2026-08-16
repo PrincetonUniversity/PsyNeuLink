@@ -527,6 +527,69 @@ def test_rejects_unmodeled_input_port_functions(function, expected):
 
 
 @pytest.mark.composition
+def test_rejects_input_port_function_class_name_spoof():
+    class LinearCombination(pnl.LinearCombination):
+        def _function(self, variable=None, context=None, params=None):
+            return 2.0 * super()._function(
+                variable=variable,
+                context=context,
+                params=params,
+            )
+
+    input_port = pnl.InputPort(
+        function=LinearCombination(operation=pnl.SUM),
+    )
+    node = pnl.TransferMechanism(
+        input_shapes=1,
+        input_ports=[input_port],
+        function=pnl.Linear(),
+        name="spoofed input combine",
+    )
+    composition = pnl.Composition(pathways=node)
+
+    report = BatchedCompositionCompiler.diagnose(composition)
+    assert not report.model_supported
+    assert "unsupported InputPort function" in "; ".join(
+        report.unsupported_reasons
+    )
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(composition)
+
+
+@pytest.mark.composition
+def test_rejects_mapping_function_class_name_spoof():
+    class MatrixTransform(pnl.MatrixTransform):
+        def _function(self, variable=None, context=None, params=None):
+            return 2.0 * super()._function(
+                variable=variable,
+                context=context,
+                params=params,
+            )
+
+    source = pnl.TransferMechanism(input_shapes=1, name="spoof source")
+    target = pnl.TransferMechanism(input_shapes=1, name="spoof target")
+    projection = pnl.MappingProjection(
+        function=MatrixTransform(),
+        matrix=[[1.0]],
+    )
+    composition = pnl.Composition()
+    composition.add_nodes([source, target])
+    composition.add_projection(
+        sender=source,
+        receiver=target,
+        projection=projection,
+    )
+
+    report = BatchedCompositionCompiler.diagnose(composition)
+    assert not report.model_supported
+    assert "unsupported MappingProjection function" in "; ".join(
+        report.unsupported_reasons
+    )
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(composition)
+
+
+@pytest.mark.composition
 def test_exact_scalar_lca_termination_override_remains_explicitly_absorbed():
     task = pnl.TransferMechanism(input_shapes=2, name="task")
     cue = pnl.TransferMechanism(input_shapes=1, name="cue")

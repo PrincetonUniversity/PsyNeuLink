@@ -12,13 +12,17 @@ from psyneulink.core.batched.graph import (
     projection_inputs,
 )
 from psyneulink.core.batched.ir import (
+    BatchedAbsorbedProjectionSpec,
     BatchedCompositionIR,
     BatchedConsiderationSetSpec,
+    BatchedEffectiveParameterSpec,
     BatchedFinishedValueSpec,
     BatchedGraphIR,
     BatchedInputSpec,
+    BatchedModulationSpec,
     BatchedOutputSpec,
     BatchedParamSpec,
+    BatchedPortSpec,
     BatchedResetSpec,
     BatchedScheduleTraceSpec,
     BatchedScheduleRegionSpec,
@@ -31,7 +35,9 @@ from psyneulink.core.batched.schedule import (
     plan_precomputed_schedule_trace,
 )
 from psyneulink.core.batched.specs import (
+    BatchedOpSpecError,
     BatchedOpSpecSnapshot,
+    ElementwiseFunctionSpec,
     MechanismOpSpec,
     snapshot_batched_op_specs,
 )
@@ -434,10 +440,14 @@ class KernelIR:
     op_specs: BatchedOpSpecSnapshot
     executable: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    ports: tuple[BatchedPortSpec, ...] = ()
+    absorbed_projections: tuple[BatchedAbsorbedProjectionSpec, ...] = ()
     scheduler: tuple[BatchedSchedulerSpec, ...] = ()
     schedule_regions: tuple[BatchedScheduleRegionSpec, ...] = ()
     consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
+    effective_parameters: tuple[BatchedEffectiveParameterSpec, ...] = ()
+    modulations: tuple[BatchedModulationSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
     termination: tuple[BatchedTerminationSpec, ...] = ()
     schedule_trace: BatchedScheduleTraceSpec | None = None
@@ -449,14 +459,33 @@ class KernelIR:
 def validate_kernel_ir(kernel: KernelIR) -> None:
     """Validate cross-op identity and effect invariants in a complete KernelIR."""
 
+    # Validate identity-bearing declaration sequences before constructing any
+    # lookup dictionaries from them.  Otherwise duplicate or bool-valued IDs
+    # can be silently collapsed by Python's mapping-key equality.
+    _validate_kernel_parameters(kernel)
+    _validate_kernel_ports(kernel)
+    _validate_kernel_finished_scheduler(kernel)
+
     semantic_fields = (
         ("input", kernel.inputs, kernel.graph.inputs),
         ("retained-state", kernel.states, kernel.graph.states),
         ("output", kernel.outputs, kernel.graph.outputs),
+        ("port", kernel.ports, kernel.graph.ports),
+        (
+            "absorbed-projection",
+            kernel.absorbed_projections,
+            kernel.graph.absorbed_projections,
+        ),
         ("scheduler", kernel.scheduler, kernel.graph.scheduler),
         ("schedule-region", kernel.schedule_regions, kernel.graph.schedule_regions),
         ("consideration-set", kernel.consideration_sets, kernel.graph.consideration_sets),
         ("finished-value", kernel.finished_values, kernel.graph.finished_values),
+        (
+            "effective-parameter",
+            kernel.effective_parameters,
+            kernel.graph.effective_parameters,
+        ),
+        ("modulation", kernel.modulations, kernel.graph.modulations),
         ("reset", kernel.resets, kernel.graph.resets),
         ("termination", kernel.termination, kernel.graph.termination),
     )
@@ -465,6 +494,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             raise ValueError(
                 f"KernelIR {label} declarations must exactly match GraphIR."
             )
+    _validate_kernel_modulations(kernel)
     _validate_kernel_reset_declarations(kernel)
     step_counts: dict[int, int] = {}
     precomputed_regions: list[KernelOp] = []
@@ -758,6 +788,381 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             )
 
 
+def _nodes_resolving_component_id(
+    graph: BatchedGraphIR,
+    component_id: int,
+) -> tuple:
+    """Return graph nodes resolving to one lowering-local component identity."""
+
+    return tuple(
+        node
+        for node in graph.nodes
+        if _component_id(graph, node) == component_id
+    )
+
+
+def _consideration_set_owns(
+    consideration_set: BatchedConsiderationSetSpec,
+    node: str,
+    component_id: int,
+) -> bool:
+    """Whether one typed consideration set owns an exact node/ID pair."""
+
+    return bool(
+        type(consideration_set.consideration_set_id) is int
+        and type(consideration_set.nodes) is tuple
+        and type(consideration_set.component_ids) is tuple
+        and len(consideration_set.nodes) == len(consideration_set.component_ids)
+        and any(
+            type(member_name) is str
+            and type(member_id) is int
+            and member_name == node
+            and member_id == component_id
+            for member_name, member_id in zip(
+                consideration_set.nodes,
+                consideration_set.component_ids,
+            )
+        )
+    )
+
+
+def _validate_kernel_parameters(kernel: KernelIR) -> None:
+    """Validate the global parameter inventory without lossy ID lookups."""
+
+    parameter_ids = tuple(parameter.parameter_id for parameter in kernel.params)
+    if any(type(parameter_id) is not int for parameter_id in parameter_ids):
+        raise ValueError(
+            "KernelIR parameter IDs must be exact non-bool integers."
+        )
+    if parameter_ids != tuple(range(len(kernel.params))):
+        raise ValueError(
+            "KernelIR parameter IDs must be unique, contiguous, and in "
+            "declaration order."
+        )
+
+    parameter_names = tuple(parameter.name for parameter in kernel.params)
+    if any(type(name) is not str or not name for name in parameter_names):
+        raise ValueError(
+            "KernelIR parameter canonical names must be nonempty strings."
+        )
+    if len(set(parameter_names)) != len(parameter_names):
+        raise ValueError(
+            "KernelIR parameter canonical names must be unique."
+        )
+
+    for parameter in kernel.params:
+        if type(parameter.owner_component_id) is not int:
+            raise ValueError(
+                "KernelIR parameter owner component IDs must be exact non-bool "
+                "integers."
+            )
+        owners = _nodes_resolving_component_id(
+            kernel.graph,
+            parameter.owner_component_id,
+        )
+        if len(owners) != 1:
+            raise ValueError(
+                f"KernelIR parameter '{parameter.name}' owner component id "
+                f"{parameter.owner_component_id} must resolve to exactly one "
+                "GraphIR node."
+            )
+        if (
+            type(parameter.owner_scope) is not str
+            or parameter.owner_scope not in {"function", "mechanism"}
+        ):
+            raise ValueError(
+                f"KernelIR parameter '{parameter.name}' owner_scope must be "
+                "'function' or 'mechanism'."
+            )
+
+
+def _validate_kernel_ports(kernel: KernelIR) -> None:
+    """Validate the complete typed port inventory for every KernelIR shape."""
+
+    port_ids = tuple(port.port_id for port in kernel.ports)
+    if any(type(port_id) is not int for port_id in port_ids):
+        raise ValueError("KernelIR port IDs must be exact non-bool integers.")
+    if port_ids != tuple(range(len(kernel.ports))):
+        raise ValueError(
+            "KernelIR port IDs must be unique, contiguous, and in declaration "
+            "order."
+        )
+
+    identities = []
+    supported_kinds = {"InputPort", "OutputPort", "ParameterPort", "ControlSignal"}
+    for port in kernel.ports:
+        if (
+            type(port.name) is not str
+            or not port.name
+            or type(port.owner) is not str
+            or not port.owner
+            or type(port.owner_component_id) is not int
+            or type(port.kind) is not str
+            or port.kind not in supported_kinds
+            or type(port.width) is not int
+            or port.width <= 0
+        ):
+            raise ValueError(
+                "KernelIR ports require nonempty labels, exact owner IDs, a "
+                "supported port kind, and a positive non-bool width."
+            )
+        owners = tuple(
+            node
+            for node in _nodes_resolving_component_id(
+                kernel.graph,
+                port.owner_component_id,
+            )
+            if node.name == port.owner
+        )
+        if len(owners) != 1:
+            raise ValueError(
+                f"KernelIR port '{port.name}' owner name and component id must "
+                "resolve to exactly one GraphIR node."
+            )
+        identities.append((port.owner_component_id, port.kind, port.name))
+    if len(set(identities)) != len(identities):
+        raise ValueError(
+            "KernelIR ports must have unique (owner component, kind, name) "
+            "identities."
+        )
+
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    for node in kernel.graph.nodes:
+        component_id = _component_id(kernel.graph, node)
+        owned_ports = tuple(
+            port
+            for port in kernel.ports
+            if port.owner_component_id == component_id
+        )
+        anchors_present = bool(
+            node.input_port_ids
+            or node.output_port_ids
+            or node.parameter_port_ids
+        )
+        # Hand-built declaration-only legacy fixtures may omit the global port
+        # inventory entirely.  Once either side declares ports, require an
+        # exact component-local anchor rather than trusting free-form labels.
+        if not owned_ports and not anchors_present:
+            continue
+        expected_input_ids = tuple(
+            port.port_id for port in owned_ports if port.kind == "InputPort"
+        )
+        expected_output_ids = tuple(
+            port.port_id
+            for port in owned_ports
+            if port.kind in {"OutputPort", "ControlSignal"}
+        )
+        expected_parameter_ids = tuple(
+            (port.name, port.port_id)
+            for port in owned_ports
+            if port.kind == "ParameterPort"
+        )
+        if (
+            type(node.input_port_ids) is not tuple
+            or type(node.output_port_ids) is not tuple
+            or type(node.parameter_port_ids) is not tuple
+            or node.input_port_ids != expected_input_ids
+            or node.output_port_ids != expected_output_ids
+            or node.parameter_port_ids != expected_parameter_ids
+            or any(port_id not in ports_by_id for port_id in node.input_port_ids)
+            or any(port_id not in ports_by_id for port_id in node.output_port_ids)
+        ):
+            raise ValueError(
+                f"KernelIR node '{node.name}' port anchors must exactly match "
+                "its ordered typed port inventory."
+            )
+
+
+def _validate_kernel_finished_scheduler(kernel: KernelIR) -> None:
+    """Validate scheduler-visible finished values and their typed references."""
+
+    if kernel.scheduler:
+        scheduler_component_ids = tuple(
+            condition.component_id for condition in kernel.scheduler
+        )
+        graph_component_ids = tuple(
+            _component_id(kernel.graph, node) for node in kernel.graph.nodes
+        )
+        if (
+            len(set(scheduler_component_ids)) != len(scheduler_component_ids)
+            or set(scheduler_component_ids) != set(graph_component_ids)
+        ):
+            raise ValueError(
+                "KernelIR scheduler declarations must contain exactly one "
+                "condition for every GraphIR node."
+            )
+
+    value_ids = tuple(value.value_id for value in kernel.finished_values)
+    if any(type(value_id) is not int for value_id in value_ids):
+        raise ValueError(
+            "KernelIR finished-value IDs must be exact non-bool integers."
+        )
+    if value_ids != tuple(range(len(kernel.finished_values))):
+        raise ValueError(
+            "KernelIR finished-value IDs must be unique, contiguous, and in "
+            "declaration order."
+        )
+
+    finished_components = []
+    for value in kernel.finished_values:
+        if (
+            type(value.component_id) is not int
+            or type(value.producer_consideration_set_id) is not int
+            or type(value.name) is not str
+            or type(value.node) is not str
+            or value.name != f"{value.node}.is_finished"
+            or value.width != 1
+            or type(value.width) is not int
+            or value.dtype != "bool"
+            or value.storage != "combinational"
+        ):
+            raise ValueError(
+                "KernelIR finished values require exact node/component/set "
+                "identity and scalar bool combinational storage."
+            )
+        owners = tuple(
+            node
+            for node in _nodes_resolving_component_id(kernel.graph, value.component_id)
+            if node.name == value.node
+        )
+        producer_sets = tuple(
+            consideration_set
+            for consideration_set in kernel.consideration_sets
+            if consideration_set.consideration_set_id
+            == value.producer_consideration_set_id
+            and _consideration_set_owns(
+                consideration_set,
+                value.node,
+                value.component_id,
+            )
+        )
+        if len(owners) != 1 or len(producer_sets) != 1:
+            raise ValueError(
+                f"KernelIR finished value '{value.name}' must resolve to its "
+                "exact GraphIR node and producer consideration set."
+            )
+        finished_components.append(value.component_id)
+    if len(set(finished_components)) != len(finished_components):
+        raise ValueError(
+            "KernelIR finished values must declare at most one value per "
+            "producer component."
+        )
+
+    referenced_value_ids = set()
+    for condition in kernel.scheduler:
+        if (
+            type(condition.component_id) is not int
+            or type(condition.consideration_set_id) is not int
+        ):
+            raise ValueError(
+                "KernelIR scheduler component and consideration-set IDs must be "
+                "exact non-bool integers."
+            )
+        targets = tuple(
+            node
+            for node in _nodes_resolving_component_id(
+                kernel.graph,
+                condition.component_id,
+            )
+            if node.name == condition.node
+        )
+        target_sets = tuple(
+            consideration_set
+            for consideration_set in kernel.consideration_sets
+            if consideration_set.consideration_set_id
+            == condition.consideration_set_id
+            and _consideration_set_owns(
+                consideration_set,
+                condition.node,
+                condition.component_id,
+            )
+        )
+        if len(targets) != 1 or len(target_sets) != 1:
+            raise ValueError(
+                f"KernelIR scheduler condition for '{condition.node}' must "
+                "resolve to its exact GraphIR node and consideration set."
+            )
+        if (
+            type(condition.dependencies) is not tuple
+            or type(condition.dependency_component_ids) is not tuple
+            or len(condition.dependencies) != len(condition.dependency_component_ids)
+            or any(
+                type(component_id) is not int
+                for component_id in condition.dependency_component_ids
+            )
+        ):
+            raise ValueError(
+                "KernelIR scheduler dependencies require parallel name and exact "
+                "non-bool component-ID tuples."
+            )
+        for dependency, component_id in zip(
+            condition.dependencies,
+            condition.dependency_component_ids,
+        ):
+            matches = tuple(
+                node
+                for node in _nodes_resolving_component_id(kernel.graph, component_id)
+                if node.name == dependency
+            )
+            if len(matches) != 1:
+                raise ValueError(
+                    f"KernelIR scheduler dependency '{dependency}' does not "
+                    "match component id {component_id}."
+                )
+
+        if type(condition.finished_value_ids) is not tuple:
+            raise ValueError(
+                "KernelIR scheduler finished-value IDs must be a typed tuple."
+            )
+        if condition.condition_type != "WhenFinished":
+            if condition.finished_value_ids:
+                raise ValueError(
+                    "KernelIR finished-value IDs are valid only on WhenFinished "
+                    "scheduler conditions."
+                )
+            continue
+        if any(
+            type(value_id) is not int
+            for value_id in condition.finished_value_ids
+        ):
+            raise ValueError(
+                "KernelIR WhenFinished finished-value IDs must be exact "
+                "non-bool integers."
+            )
+        if (
+            not condition.dependencies
+            or len(condition.finished_value_ids) != len(condition.dependencies)
+            or len(set(condition.finished_value_ids))
+            != len(condition.finished_value_ids)
+        ):
+            raise ValueError(
+                "KernelIR WhenFinished dependencies and finished-value IDs must "
+                "form parallel unique tuples."
+            )
+        for component_id, finished_value_id in zip(
+            condition.dependency_component_ids,
+            condition.finished_value_ids,
+        ):
+            matches = tuple(
+                value
+                for value in kernel.finished_values
+                if value.value_id == finished_value_id
+                and value.component_id == component_id
+            )
+            if len(matches) != 1:
+                raise ValueError(
+                    "KernelIR WhenFinished reference does not match its declared "
+                    "dependency finished value."
+                )
+            referenced_value_ids.add(finished_value_id)
+
+    if referenced_value_ids != set(value_ids):
+        raise ValueError(
+            "KernelIR WhenFinished references and finished-value declarations "
+            "must form an exact component-wise bijection."
+        )
+
+
 def _validate_kernel_reset_declarations(kernel: KernelIR) -> None:
     """Require a canonical reset declaration for every retained-state owner."""
 
@@ -809,6 +1214,442 @@ def _validate_kernel_reset_declarations(kernel: KernelIR) -> None:
                 "KernelIR reset declaration does not exactly match retained "
                 f"state owner '{node.name}'."
             )
+
+
+def _validate_kernel_modulations(kernel: KernelIR) -> None:
+    """Validate the declaration-only scalar ``OVERRIDE`` identity boundary."""
+
+    typed_controller_ids = {
+        _component_id(kernel.graph, node)
+        for node in kernel.graph.nodes
+        if node.component_type == "ControlMechanism"
+        and node.attrs.get("control_function") in {"identity", "registered"}
+    }
+    modulation_controller_ids = {
+        modulation.controller_component_id for modulation in kernel.modulations
+    }
+    if typed_controller_ids != modulation_controller_ids:
+        raise ValueError(
+            "KernelIR typed ControlMechanism declarations and modulation "
+            "effects must form an exact controller-component bijection."
+        )
+
+    dynamic_finished = tuple(
+        value
+        for value in kernel.finished_values
+        if value.predicate_kind
+        == "execution_count_at_least_effective_parameter"
+    )
+    if (
+        not kernel.modulations
+        and not kernel.effective_parameters
+        and not dynamic_finished
+        and not kernel.absorbed_projections
+    ):
+        return
+    if kernel.graph.executable or kernel.executable:
+        raise ValueError(
+            "KernelIR effective-parameter modulation is declaration-only until "
+            "ApplyModulation and lane-local scheduler effects are lowered."
+        )
+
+    modulation_ids = tuple(
+        modulation.modulation_id for modulation in kernel.modulations
+    )
+    effective_parameter_ids = tuple(
+        modulation.effective_parameter_id for modulation in kernel.modulations
+    )
+    declared_effective_ids = tuple(
+        parameter.effective_parameter_id
+        for parameter in kernel.effective_parameters
+    )
+    if modulation_ids != tuple(range(len(kernel.modulations))):
+        raise ValueError(
+            "KernelIR modulation IDs must be contiguous and in declaration order."
+        )
+    if len(set(effective_parameter_ids)) != len(effective_parameter_ids):
+        raise ValueError(
+            "KernelIR effective-parameter modulation IDs must be unique."
+        )
+    if (
+        declared_effective_ids != tuple(range(len(kernel.effective_parameters)))
+        or declared_effective_ids != effective_parameter_ids
+        or len(dynamic_finished) != len(kernel.modulations)
+        or len(kernel.absorbed_projections) != 2 * len(kernel.modulations)
+    ):
+        raise ValueError(
+            "KernelIR modulation, held effective-parameter, and dynamic "
+            "finished declarations must form an exact bijection."
+        )
+
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    absorbed_by_id = {
+        projection.projection_id: projection
+        for projection in kernel.absorbed_projections
+    }
+    if tuple(sorted(absorbed_by_id)) != tuple(
+        range(len(kernel.absorbed_projections))
+    ):
+        raise ValueError(
+            "KernelIR absorbed-projection declarations must have unique "
+            "contiguous IDs."
+        )
+    for projection in kernel.absorbed_projections:
+        try:
+            sender = kernel.graph.node(projection.sender)
+            receiver = kernel.graph.node(projection.receiver)
+        except KeyError as error:
+            raise ValueError(
+                "KernelIR absorbed projection references an undeclared component."
+            ) from error
+        sender_port = ports_by_id.get(projection.sender_port_id)
+        receiver_port = ports_by_id.get(projection.receiver_port_id)
+        if (
+            _component_id(kernel.graph, sender) != projection.sender_component_id
+            or _component_id(kernel.graph, receiver)
+            != projection.receiver_component_id
+            or sender_port is None
+            or sender_port.owner_component_id != projection.sender_component_id
+            or sender_port.name != projection.sender_port
+            or sender_port.width != projection.width
+            or receiver_port is None
+            or receiver_port.owner_component_id
+            != projection.receiver_component_id
+            or receiver_port.name != projection.receiver_port
+            or receiver_port.width != projection.width
+        ):
+            raise ValueError(
+                "KernelIR absorbed projection endpoint identity does not match "
+                "its typed port ownership."
+            )
+
+    params_by_id = {parameter.parameter_id: parameter for parameter in kernel.params}
+    params_by_name = {parameter.name: parameter for parameter in kernel.params}
+    scheduler_by_component_id = {
+        condition.component_id: condition for condition in kernel.scheduler
+    }
+    effective_by_id = {
+        parameter.effective_parameter_id: parameter
+        for parameter in kernel.effective_parameters
+    }
+    target_port_ids = set()
+    referenced_absorbed_projection_ids = []
+    for modulation in kernel.modulations:
+        try:
+            controller = kernel.graph.node(modulation.controller)
+            source = kernel.graph.node(modulation.source)
+            target = kernel.graph.node(modulation.target)
+        except KeyError as error:
+            raise ValueError(
+                "KernelIR modulation references an undeclared component."
+            ) from error
+        if (
+            _component_id(kernel.graph, controller)
+            != modulation.controller_component_id
+            or _component_id(kernel.graph, source)
+            != modulation.source_component_id
+            or _component_id(kernel.graph, target)
+            != modulation.target_component_id
+            or controller.component_type != "ControlMechanism"
+            or source.component_type != "TransferMechanism"
+            or target.component_type != "LCAMechanism"
+            or dict(controller.params)
+            != {
+                binding.argument: binding.parameter
+                for binding in modulation.controller_param_bindings
+            }
+            or controller.attrs.get("spec_key", "")
+            != modulation.controller_function_spec_key
+        ):
+            raise ValueError(
+                "KernelIR modulation component identity or controller binding "
+                "does not match GraphIR."
+            )
+
+        source_condition = scheduler_by_component_id.get(
+            modulation.source_component_id
+        )
+        controller_condition = scheduler_by_component_id.get(
+            modulation.controller_component_id
+        )
+        target_condition = scheduler_by_component_id.get(
+            modulation.target_component_id
+        )
+        if (
+            source_condition is None
+            or controller_condition is None
+            or target_condition is None
+            or not (
+                source_condition.consideration_set_id
+                < controller_condition.consideration_set_id
+                < target_condition.consideration_set_id
+            )
+            or target_condition.condition_type != "Always"
+        ):
+            raise ValueError(
+                "KernelIR modulation requires strictly ordered source, "
+                "controller, and Always-target consideration sets."
+            )
+
+        source_inputs = tuple(
+            input_spec
+            for input_spec in kernel.inputs
+            if input_spec.component_id == modulation.source_component_id
+        )
+        source_spec_key = source.attrs.get("spec_key", "")
+        try:
+            source_implementation = kernel.op_specs.lookup_spec(source_spec_key)
+        except BatchedOpSpecError as error:
+            raise ValueError(
+                "KernelIR modulation source must use its frozen registered "
+                "identity Linear implementation."
+            ) from error
+        expected_source_defaults = {
+            "slope": 1.0,
+            "intercept": 0.0,
+            "scale": 1.0,
+            "offset": 0.0,
+        }
+        source_parameters = {
+            argument: params_by_name.get(parameter_name)
+            for argument, parameter_name in dict(source.params).items()
+        }
+        if (
+            source.function_type != "Linear"
+            or source.attrs.get("spec_kind") != "elementwise"
+            or source.attrs.get("noise") is not None
+            or source.attrs.get("clip") is not None
+            or source.attrs.get("integrator_pre") is not None
+            or source.input_width != 1
+            or source.output_width != 1
+            or len(source.input_port_ids) != 1
+            or not source.output_port_ids
+            or source.output_port_ids[0] != modulation.source_port_id
+            or len(source_inputs) != 1
+            or source_inputs[0].port_id != source.input_port_ids[0]
+            or source_inputs[0].width != 1
+            or any(
+                projection.receiver_component_id
+                == modulation.source_component_id
+                for projection in kernel.graph.projections
+            )
+            or not isinstance(source_implementation, ElementwiseFunctionSpec)
+            or source_implementation.function_class.__name__ != "Linear"
+            or set(source_parameters) != set(expected_source_defaults)
+            or any(parameter is None for parameter in source_parameters.values())
+            or any(
+                source_parameters[argument].default != expected_default
+                or source_parameters[argument].runtime_mutable
+                or source_parameters[argument].owner_component_id
+                != modulation.source_component_id
+                for argument, expected_default in expected_source_defaults.items()
+            )
+        ):
+            raise ValueError(
+                "KernelIR controlled-finished source must be the frozen scalar "
+                "identity Linear origin declared by GraphIR."
+            )
+        endpoint_expectations = (
+            (
+                modulation.source_port_id,
+                modulation.source_component_id,
+                modulation.source_port,
+                "OutputPort",
+            ),
+            (
+                modulation.controller_input_port_id,
+                modulation.controller_component_id,
+                modulation.controller_input_port,
+                "InputPort",
+            ),
+            (
+                modulation.control_signal_port_id,
+                modulation.controller_component_id,
+                modulation.control_signal_port,
+                "ControlSignal",
+            ),
+            (
+                modulation.target_parameter_port_id,
+                modulation.target_component_id,
+                modulation.target_parameter,
+                "ParameterPort",
+            ),
+        )
+        for port_id, owner_id, port_name, port_kind in endpoint_expectations:
+            port = ports_by_id.get(port_id)
+            if (
+                port is None
+                or port.owner_component_id != owner_id
+                or port.name != port_name
+                or port.kind != port_kind
+                or port.width != 1
+            ):
+                raise ValueError(
+                    "KernelIR modulation endpoint port identity does not match "
+                    "its declared owner, role, name, and width."
+                )
+        if modulation.target_parameter != "termination_threshold":
+            raise ValueError(
+                "KernelIR controlled finished modulation must target the LCA "
+                "termination_threshold ParameterPort."
+            )
+        target_parameter_ports = dict(target.parameter_port_ids)
+        if (
+            target_parameter_ports.get("termination_threshold")
+            != modulation.target_parameter_port_id
+        ):
+            raise ValueError(
+                "KernelIR controlled-finished target must use the LCA node's "
+                "canonical termination_threshold ParameterPort identity."
+            )
+        monitor_projection = absorbed_by_id.get(
+            modulation.monitor_projection_id
+        )
+        control_projection = absorbed_by_id.get(
+            modulation.control_projection_id
+        )
+        referenced_absorbed_projection_ids.extend(
+            (
+                modulation.monitor_projection_id,
+                modulation.control_projection_id,
+            )
+        )
+        if (
+            monitor_projection is None
+            or monitor_projection.kind != "MappingProjection"
+            or monitor_projection.sender_component_id
+            != modulation.source_component_id
+            or monitor_projection.sender_port_id != modulation.source_port_id
+            or monitor_projection.receiver_component_id
+            != modulation.controller_component_id
+            or monitor_projection.receiver_port_id
+            != modulation.controller_input_port_id
+            or control_projection is None
+            or control_projection.kind != "ControlProjection"
+            or control_projection.sender_component_id
+            != modulation.controller_component_id
+            or control_projection.sender_port_id
+            != modulation.control_signal_port_id
+            or control_projection.receiver_component_id
+            != modulation.target_component_id
+            or control_projection.receiver_port_id
+            != modulation.target_parameter_port_id
+        ):
+            raise ValueError(
+                "KernelIR modulation must exactly reference its typed absorbed "
+                "monitor and ControlProjection routes."
+            )
+        parameter_bindings = modulation.controller_param_bindings
+        implementation_bindings = {}
+        if modulation.controller_function_spec_key:
+            implementation = kernel.op_specs.lookup_spec(
+                modulation.controller_function_spec_key
+            )
+            if (
+                not isinstance(implementation, ElementwiseFunctionSpec)
+                or controller.function_type
+                != implementation.function_class.__name__
+                or controller.attrs.get("spec_kind") != "control"
+                or controller.attrs.get("control_function") != "registered"
+            ):
+                raise ValueError(
+                    "KernelIR registered controller function identity must "
+                    "match its frozen elementwise implementation."
+                )
+            implementation_bindings = {
+                binding.arg: binding for binding in implementation.params
+            }
+            expected_arguments = tuple(
+                binding.arg for binding in implementation.params
+            )
+            if tuple(binding.argument for binding in parameter_bindings) != (
+                expected_arguments
+            ):
+                raise ValueError(
+                    "KernelIR modulation controller bindings do not match its "
+                    "frozen registered implementation signature."
+                )
+        elif (
+            parameter_bindings
+            or controller.function_type != "Identity"
+            or controller.params
+            or controller.attrs.get("spec_kind") != "control"
+            or controller.attrs.get("control_function") != "identity"
+            or controller.attrs.get("spec_key", "")
+        ):
+            raise ValueError(
+                "KernelIR identity controller requires an exact Identity "
+                "function with no registered implementation or parameters."
+            )
+        for binding in parameter_bindings:
+            parameter = params_by_id.get(binding.parameter_id)
+            if (
+                parameter is None
+                or parameter.name != binding.parameter
+                or parameter.runtime_mutable
+                or parameter.owner_component_id
+                != modulation.controller_component_id
+                or parameter.owner_scope
+                != implementation_bindings[binding.argument].scope
+            ):
+                raise ValueError(
+                    "KernelIR modulation controller parameter identity must "
+                    "resolve to one frozen KernelIR parameter."
+                )
+        if modulation.target_parameter_port_id in target_port_ids:
+            raise ValueError(
+                "KernelIR supports at most one modulation for each target "
+                "ParameterPort."
+            )
+        target_port_ids.add(modulation.target_parameter_port_id)
+
+        held_parameter = effective_by_id[modulation.effective_parameter_id]
+        expected_base_value = _normalize_constant(
+            target.attrs.get("termination_threshold"),
+            width=1,
+            op_kind="EffectiveParameter",
+            attr="base_value",
+        )
+        if (
+            held_parameter.target != modulation.target
+            or held_parameter.target_component_id
+            != modulation.target_component_id
+            or held_parameter.target_parameter != modulation.target_parameter
+            or held_parameter.target_parameter_port_id
+            != modulation.target_parameter_port_id
+            or held_parameter.base_value != expected_base_value
+            or control_projection.initial_value
+            != held_parameter.initial_modulation_value
+        ):
+            raise ValueError(
+                "KernelIR held effective-parameter target or initial values do "
+                "not match its modulation edge and target declaration."
+            )
+
+        matches = tuple(
+            value
+            for value in dynamic_finished
+            if value.component_id == modulation.target_component_id
+        )
+        expected_attrs = {
+            "effective_parameter_id": modulation.effective_parameter_id,
+            "target_parameter_port_id": modulation.target_parameter_port_id,
+            "rounding": "ceil",
+            "minimum": 1,
+            "maximum": 2 ** 24,
+        }
+        if len(matches) != 1 or dict(matches[0].attrs) != expected_attrs:
+            raise ValueError(
+                "KernelIR modulation must own exactly one matching dynamic "
+                "finished-value declaration."
+            )
+    if tuple(sorted(referenced_absorbed_projection_ids)) != tuple(
+        range(len(kernel.absorbed_projections))
+    ):
+        raise ValueError(
+            "KernelIR modulation routes must form an exact bijection with "
+            "absorbed projection declarations."
+        )
 
 
 def lower_to_kernel_ir(
@@ -938,10 +1779,14 @@ def lower_to_kernel_ir(
             "fusion_kind": graph.fusion_kind,
             **graph.metadata,
         },
+        ports=graph.ports,
+        absorbed_projections=graph.absorbed_projections,
         scheduler=graph.scheduler,
         schedule_regions=graph.schedule_regions,
         consideration_sets=graph.consideration_sets,
         finished_values=graph.finished_values,
+        effective_parameters=graph.effective_parameters,
+        modulations=graph.modulations,
         resets=graph.resets,
         termination=graph.termination,
         schedule_trace=schedule_trace,
@@ -1470,6 +2315,11 @@ def _graph_spec_keys(graph: BatchedGraphIR) -> tuple[str, ...]:
         state.function_initializer.spec_key
         for state in graph.states
         if state.function_initializer is not None
+    )
+    keys.extend(
+        modulation.controller_function_spec_key
+        for modulation in graph.modulations
+        if modulation.controller_function_spec_key
     )
     return tuple(dict.fromkeys(keys))
 
