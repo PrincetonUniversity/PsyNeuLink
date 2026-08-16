@@ -31,6 +31,8 @@ class BatchedComponentBindings:
     parameters_by_id: Mapping[int, Any] = field(default_factory=dict)
     ports_by_id: Mapping[int, Any] = field(default_factory=dict)
     projections_by_id: Mapping[int, Any] = field(default_factory=dict)
+    absorbed_projections_by_id: Mapping[int, Any] = field(default_factory=dict)
+    modulations_by_id: Mapping[int, Any] = field(default_factory=dict)
 
     def node(self, name: str):
         return self.nodes[name]
@@ -52,6 +54,12 @@ class BatchedComponentBindings:
 
     def projection_by_id(self, projection_id: int):
         return self.projections_by_id[projection_id]
+
+    def absorbed_projection_by_id(self, projection_id: int):
+        return self.absorbed_projections_by_id[projection_id]
+
+    def modulation_by_id(self, modulation_id: int):
+        return self.modulations_by_id[modulation_id]
 
     def projection(
         self,

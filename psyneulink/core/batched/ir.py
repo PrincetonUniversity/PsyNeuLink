@@ -23,6 +23,31 @@ class BatchedParamSpec:
     maximum_inclusive: bool = True
     runtime_mutable: bool = True
     runtime_constraint: str = ""
+    owner_component_id: int = -1
+    owner_scope: str = ""
+
+
+@dataclass(frozen=True)
+class BatchedParameterBindingSpec:
+    """Bind one registered implementation argument to one lowered parameter."""
+
+    argument: str
+    parameter: str
+    parameter_id: int
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.argument) is not str
+            or not self.argument
+            or type(self.parameter) is not str
+            or not self.parameter
+            or type(self.parameter_id) is not int
+            or self.parameter_id < 0
+        ):
+            raise ValueError(
+                "Batched parameter bindings require nonempty labels and a "
+                "non-negative non-bool parameter ID."
+            )
 
 
 @dataclass(frozen=True)
@@ -90,6 +115,114 @@ class BatchedProjectionSpec:
 
 
 @dataclass(frozen=True)
+class BatchedAbsorbedProjectionSpec:
+    """A validated projection intentionally represented by another IR effect."""
+
+    projection_id: int
+    name: str
+    kind: str
+    sender: str
+    sender_component_id: int
+    sender_port: str
+    sender_port_id: int
+    receiver: str
+    receiver_component_id: int
+    receiver_port: str
+    receiver_port_id: int
+    width: int = 1
+    reason: str = "typed_scalar_override"
+    initial_value: tuple[float, ...] = ()
+
+    def __post_init__(self) -> None:
+        ids = (
+            self.projection_id,
+            self.sender_component_id,
+            self.sender_port_id,
+            self.receiver_component_id,
+            self.receiver_port_id,
+        )
+        if any(type(value) is not int or value < 0 for value in ids):
+            raise ValueError(
+                "Batched absorbed-projection identities must be non-negative "
+                "non-bool integers."
+            )
+        if any(
+            type(value) is not str or not value
+            for value in (
+                self.name,
+                self.kind,
+                self.sender,
+                self.sender_port,
+                self.receiver,
+                self.receiver_port,
+            )
+        ):
+            raise ValueError(
+                "Batched absorbed-projection labels must be nonempty strings."
+            )
+        if (
+            self.kind not in {"MappingProjection", "ControlProjection"}
+            or self.width != 1
+            or self.reason != "typed_scalar_override"
+        ):
+            raise ValueError(
+                "Batched absorbed control projections currently require a "
+                "scalar typed OVERRIDE identity chain."
+            )
+        if type(self.initial_value) is not tuple:
+            raise ValueError(
+                "Batched absorbed-projection initial values must be tuples."
+            )
+        if self.kind == "MappingProjection" and self.initial_value:
+            raise ValueError(
+                "Batched absorbed MappingProjections do not retain a held value."
+            )
+        if self.kind == "ControlProjection":
+            array = np.asarray(self.initial_value)
+            packed = array.astype(np.float32) if array.dtype.kind in "biuf" else array
+            if (
+                len(self.initial_value) != self.width
+                or array.dtype.kind not in "biuf"
+                or not bool(np.all(np.isfinite(array)))
+                or not bool(np.all(np.isfinite(packed)))
+            ):
+                raise ValueError(
+                    "Batched absorbed ControlProjection initial value must be "
+                    "finite real scalar data representable in float32 range."
+                )
+
+
+@dataclass(frozen=True)
+class BatchedPortSpec:
+    """Object-free identity and ownership for one live PsyNeuLink Port."""
+
+    port_id: int
+    name: str
+    owner: str
+    owner_component_id: int
+    kind: str
+    width: int
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.port_id) is not int
+            or self.port_id < 0
+            or type(self.owner_component_id) is not int
+            or self.owner_component_id < 0
+        ):
+            raise ValueError(
+                "Batched port identities must be non-negative non-bool integers."
+            )
+        if any(
+            type(value) is not str or not value
+            for value in (self.name, self.owner, self.kind)
+        ):
+            raise ValueError("Batched port labels and kinds must be nonempty strings.")
+        if type(self.width) is not int or self.width <= 0:
+            raise ValueError("Batched port width must be a positive non-bool integer.")
+
+
+@dataclass(frozen=True)
 class BatchedNodeSpec:
     name: str
     component_type: str
@@ -104,6 +237,14 @@ class BatchedNodeSpec:
     # so distinct names that sanitize to the same target identifier cannot
     # alias one another.
     component_id: int = -1
+    # Canonical lowering-time port ownership.  The graph-wide port inventory
+    # describes each port, while these ordered IDs anchor those declarations to
+    # the live component's InputPort, OutputPort, and named ParameterPort
+    # collections.  Parameter names are semantic here because registered
+    # mechanism capabilities select controllable parameters by their PNL name.
+    input_port_ids: tuple[int, ...] = ()
+    output_port_ids: tuple[int, ...] = ()
+    parameter_port_ids: tuple[tuple[str, int], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -263,6 +404,190 @@ class BatchedFinishedValueSpec:
 
 
 @dataclass(frozen=True)
+class BatchedEffectiveParameterSpec:
+    """Held modulation value and target-parameter sampling semantics.
+
+    PsyNeuLink modulation is not an ordinary data edge.  A ControlProjection
+    retains its last value across trials, updates that value when its controller
+    executes, and the target ParameterPort samples it when its owner executes.
+    This declaration records those semantics before an executable KernelIR op
+    is introduced.
+    """
+
+    effective_parameter_id: int
+    target: str
+    target_component_id: int
+    target_parameter: str
+    target_parameter_port_id: int
+    base_value: tuple[float, ...]
+    initial_modulation_value: tuple[float, ...]
+    width: int = 1
+    dtype: str = "float32"
+    storage: str = "lane_persistent"
+    reset: str = "Never"
+    update_event: str = "after_controller_execution"
+    sample_event: str = "at_target_parameter_update"
+
+    def __post_init__(self) -> None:
+        ids = (
+            self.effective_parameter_id,
+            self.target_component_id,
+            self.target_parameter_port_id,
+        )
+        if any(type(value) is not int or value < 0 for value in ids):
+            raise ValueError(
+                "Batched effective-parameter identities must be non-negative "
+                "non-bool integers."
+            )
+        if any(
+            type(value) is not str or not value
+            for value in (self.target, self.target_parameter)
+        ):
+            raise ValueError(
+                "Batched effective-parameter labels must be nonempty strings."
+            )
+        if (
+            self.width != 1
+            or self.dtype != "float32"
+            or self.storage != "lane_persistent"
+            or self.reset != "Never"
+            or self.update_event != "after_controller_execution"
+            or self.sample_event != "at_target_parameter_update"
+        ):
+            raise ValueError(
+                "Batched effective parameters currently require scalar float32 "
+                "lane-persistent held OVERRIDE semantics."
+            )
+        for label, values in (
+            ("base", self.base_value),
+            ("initial modulation", self.initial_modulation_value),
+        ):
+            if type(values) is not tuple or len(values) != self.width:
+                raise ValueError(
+                    f"Batched effective-parameter {label} value must match its width."
+                )
+            array = np.asarray(values)
+            if array.dtype.kind not in "biuf":
+                raise ValueError(
+                    f"Batched effective-parameter {label} value must be real numeric."
+                )
+            packed = array.astype(np.float32)
+            if (
+                not bool(np.all(np.isfinite(array)))
+                or not bool(np.all(np.isfinite(packed)))
+            ):
+                raise ValueError(
+                    f"Batched effective-parameter {label} value must be finite "
+                    "and representable in float32 range."
+                )
+
+
+@dataclass(frozen=True)
+class BatchedModulationSpec:
+    """One object-free effective-parameter edge.
+
+    The first declared subset is a scalar ``OVERRIDE`` supplied by one
+    ControlMechanism.  Numeric component, port, and parameter IDs are the
+    semantic identity; names remain diagnostic labels.  The identity port IDs
+    make the intentionally absorbed monitor/signal/projection chain auditable
+    without retaining live PsyNeuLink objects in the IR.
+    """
+
+    modulation_id: int
+    controller: str
+    controller_component_id: int
+    controller_input_port: str
+    controller_input_port_id: int
+    control_signal_port: str
+    control_signal_port_id: int
+    source: str
+    source_component_id: int
+    source_port: str
+    source_port_id: int
+    target: str
+    target_component_id: int
+    target_parameter: str
+    target_parameter_port_id: int
+    effective_parameter_id: int
+    monitor_projection_id: int
+    control_projection_id: int
+    mode: str = "OVERRIDE"
+    width: int = 1
+    dtype: str = "float32"
+    absorbed_identity_chain: bool = True
+    controller_function_spec_key: str = ""
+    controller_param_bindings: tuple[BatchedParameterBindingSpec, ...] = ()
+
+    def __post_init__(self) -> None:
+        ids = (
+            self.modulation_id,
+            self.controller_component_id,
+            self.controller_input_port_id,
+            self.control_signal_port_id,
+            self.source_component_id,
+            self.source_port_id,
+            self.target_component_id,
+            self.target_parameter_port_id,
+            self.effective_parameter_id,
+            self.monitor_projection_id,
+            self.control_projection_id,
+        )
+        if any(type(value) is not int or value < 0 for value in ids):
+            raise ValueError(
+                "Batched modulation identities must be non-negative "
+                "non-bool integers."
+            )
+        labels = (
+            self.controller,
+            self.controller_input_port,
+            self.control_signal_port,
+            self.source,
+            self.source_port,
+            self.target,
+            self.target_parameter,
+        )
+        if any(type(value) is not str or not value for value in labels):
+            raise ValueError("Batched modulation labels must be nonempty strings.")
+        if self.mode != "OVERRIDE" or self.width != 1 or self.dtype != "float32":
+            raise ValueError(
+                "Batched modulation currently requires scalar float32 OVERRIDE."
+            )
+        if self.absorbed_identity_chain is not True:
+            raise ValueError(
+                "Batched modulation currently requires a validated absorbed "
+                "identity projection chain."
+            )
+        if type(self.controller_param_bindings) is not tuple or any(
+            type(binding) is not BatchedParameterBindingSpec
+            for binding in self.controller_param_bindings
+        ):
+            raise ValueError(
+                "Batched modulation controller bindings must be a tuple of "
+                "BatchedParameterBindingSpec values."
+            )
+        arguments = tuple(
+            binding.argument for binding in self.controller_param_bindings
+        )
+        parameter_ids = tuple(
+            binding.parameter_id for binding in self.controller_param_bindings
+        )
+        if len(set(arguments)) != len(arguments) or len(set(parameter_ids)) != len(
+            parameter_ids
+        ):
+            raise ValueError(
+                "Batched modulation controller bindings must have unique "
+                "arguments and parameter IDs."
+            )
+        if bool(self.controller_function_spec_key) != bool(
+            self.controller_param_bindings
+        ):
+            raise ValueError(
+                "Batched modulation controller implementation and parameter "
+                "bindings must either both be declared or both be empty."
+            )
+
+
+@dataclass(frozen=True)
 class BatchedResetSpec:
     """A retained-state reset policy owned by one component.
 
@@ -302,10 +627,14 @@ class BatchedGraphIR:
     fusion_kind: str | None = None
     executable: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    ports: tuple[BatchedPortSpec, ...] = ()
+    absorbed_projections: tuple[BatchedAbsorbedProjectionSpec, ...] = ()
     rng_streams: tuple[BatchedRngStreamSpec, ...] = ()
     schedule_regions: tuple[BatchedScheduleRegionSpec, ...] = ()
     consideration_sets: tuple[BatchedConsiderationSetSpec, ...] = ()
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
+    effective_parameters: tuple[BatchedEffectiveParameterSpec, ...] = ()
+    modulations: tuple[BatchedModulationSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
     termination: tuple[BatchedTerminationSpec, ...] = ()
 
