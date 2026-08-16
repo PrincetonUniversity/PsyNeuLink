@@ -78,9 +78,14 @@ def test_external_input_binding_uses_exact_port_identity():
     receiver = model.outputs[0].owner
     lowering = lower_composition(model.composition, outputs=model.outputs)
     assert lowering.graph is not None
-    external_spec = next(
-        spec for spec in lowering.graph.inputs if spec.component_id == lowering.graph.node(receiver.name).component_id
+    external_specs = tuple(
+        spec
+        for spec in lowering.graph.inputs
+        if spec.component_id
+        == lowering.graph.node(receiver.name).component_id
     )
+    assert len(external_specs) == 1
+    external_spec = external_specs[0]
     assert lowering.bindings.port_by_id(external_spec.port_id) is receiver.input_ports[1]
 
     correct = prepare_inputs(

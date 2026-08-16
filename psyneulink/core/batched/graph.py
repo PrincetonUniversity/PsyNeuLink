@@ -292,7 +292,10 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         component_ids,
         port_ids,
     )
-    input_rejections = _external_input_support_diagnostics(inputs)
+    input_rejections = _external_input_support_diagnostics(
+        inputs,
+        ports_by_id,
+    )
     rejected_nodes.extend(input_rejections)
     graph_blockers.extend(input_rejections)
     reset_specs, reset_declarations_complete = _reset_ir_specs(
@@ -884,7 +887,7 @@ def _input_port_function_support_diagnostic(node, input_port) -> BatchedDiagnost
     port_name = getattr(input_port, "name", "InputPort")
     default_input = _parameter_value(input_port, "default_input", None)
     internal_only = bool(_parameter_value(input_port, "internal_only", False))
-    if default_input is not None or internal_only:
+    if default_input is not None:
         return BatchedDiagnostic(
             _node_name(node),
             "unsupported InputPort default/internal binding for batched v2",
@@ -2071,6 +2074,7 @@ def _input_specs(
 
 def _external_input_support_diagnostics(
     input_specs: list[BatchedInputSpec],
+    ports_by_id: Mapping[int, object],
 ) -> list[BatchedDiagnostic]:
     """Reject node-keyed input bindings that would alias distinct InputPorts.
 
@@ -2080,11 +2084,23 @@ def _external_input_support_diagnostics(
     is internally fed in this graph.
     """
 
+    diagnostics = []
     by_component: dict[int, list[BatchedInputSpec]] = {}
     for input_spec in input_specs:
+        input_port = ports_by_id[input_spec.port_id]
+        if bool(_parameter_value(input_port, "internal_only", False)):
+            diagnostics.append(
+                BatchedDiagnostic(
+                    input_spec.node,
+                    "unsupported InputPort default/internal binding for batched v2",
+                    (
+                        f"{input_spec.port}: default_input=None, "
+                        "internal_only=True"
+                    ),
+                )
+            )
         by_component.setdefault(input_spec.component_id, []).append(input_spec)
 
-    diagnostics = []
     for external_ports in by_component.values():
         if len(external_ports) <= 1:
             continue
