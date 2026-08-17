@@ -37,6 +37,23 @@ def _monitored_source(control_mechanism):
     return None
 
 
+def _integrator_mode_enabled(node) -> bool:
+    parameters = getattr(node, "parameters", None)
+    parameter = (
+        getattr(parameters, "integrator_mode", None)
+        if parameters is not None
+        else None
+    )
+    if parameter is not None:
+        try:
+            return bool(parameter.get(None))
+        except Exception:
+            pass
+    return bool(
+        getattr(getattr(node, "defaults", None), "integrator_mode", False)
+    )
+
+
 def _control_function_affine(function):
     """(slope, intercept) for a control mechanism's function, or None.
 
@@ -48,10 +65,15 @@ def _control_function_affine(function):
     if name == "Identity":
         return (1.0, 0.0)
     if name == "Linear":
-        return (
-            resolve_component_param(function, "slope", 1.0),
-            resolve_component_param(function, "intercept", 0.0),
-        )
+        slope = resolve_component_param(function, "slope", 1.0)
+        intercept = resolve_component_param(function, "intercept", 0.0)
+        scale = resolve_component_param(function, "scale", 1.0)
+        offset = resolve_component_param(function, "offset", 0.0)
+        # PNL Linear computes ``scale * (slope * x + intercept) + offset``.
+        # Collapse absorption must preserve the complete affine transform;
+        # ignoring scale/offset changes both the initial DDM boundary and its
+        # per-step delta while leaving the original mechanism out of GraphIR.
+        return (scale * slope, scale * intercept + offset)
     return None
 
 
@@ -79,19 +101,31 @@ def threshold_override_collapse(ddm_node):
             continue
         source = _monitored_source(controller)
         integrator = getattr(source, "integrator_function", None)
-        if source is None or type(integrator).__name__ != "SimpleIntegrator":
+        if (
+            source is None
+            or type(integrator).__name__ != "SimpleIntegrator"
+            or not _integrator_mode_enabled(source)
+        ):
             continue
-        affine = _control_function_affine(getattr(controller, "function", None))
-        if affine is None:
+        controller_affine = _control_function_affine(
+            getattr(controller, "function", None)
+        )
+        source_affine = _control_function_affine(
+            getattr(source, "function", None)
+        )
+        if controller_affine is None or source_affine is None:
             continue
-        slope, intercept = affine
-        base_src = resolve_component_param(getattr(source, "function", None), "intercept", 0.0)
-        offset = resolve_component_param(integrator, "offset", 0.0)
-        base = slope * base_src + intercept
+        controller_slope, controller_intercept = controller_affine
+        source_slope, source_intercept = source_affine
+        integrator_offset = resolve_component_param(integrator, "offset", 0.0)
+        base = controller_slope * source_intercept + controller_intercept
         ddm_threshold = resolve_component_param(getattr(ddm_node, "function", None), "threshold", 0.0)
         if abs(base - ddm_threshold) > 1.0e-9:
             continue
-        return (getattr(source, "name", str(source)), slope * offset)
+        return (
+            getattr(source, "name", str(source)),
+            controller_slope * source_slope * integrator_offset,
+        )
     return None
 
 
@@ -125,12 +159,16 @@ def _pnl_triton_ddm_update(
     sqrt_dt = tl.sqrt(time_step_size)
     thr = threshold + threshold_collapse * step
     boundary_tolerance = tl.maximum(1.0e-7, threshold * 1.0e-6)
-    active = (finished == 0.0) & (tl.abs(value) + boundary_tolerance < thr)
+    active = finished == 0.0
     updated = value + rate * drift * time_step_size + noise * sqrt_dt * draw
     updated = tl.minimum(tl.maximum(updated + offset, -thr), thr)
     value = tl.where(active, updated, value)
     steps = tl.where(active, steps + 1.0, steps)
-    finished = tl.where(tl.abs(value) + boundary_tolerance >= thr, 1.0, finished)
+    finished = tl.where(
+        active & (tl.abs(value) + boundary_tolerance >= thr),
+        1.0,
+        finished,
+    )
     return value, steps, finished
 
 
@@ -150,17 +188,21 @@ def _pnl_triton_ddm_step(
     rng_base,
     step,
     start,
+    max_steps,
+    held_threshold,
 ):
     # One DDM step for the fused co-evolution loop: draw noise, then apply the
     # shared update.  `start` is the warm-up (ITI): the terminator is frozen until
     # `step >= start`, and its own step index (for the collapsing boundary) counts
     # from `start`, so an ITI shifts *when* the DDM runs without changing its
     # decision dynamics.
-    active_time = step >= start
-    draw = tl.randn(seed, rng_base + step)
+    local_step = tl.maximum(step - start, 0)
+    active_time = (step >= start) & (local_step < max_steps)
+    draw = tl.randn(seed, rng_base + local_step)
+    active_threshold = tl.where(local_step == 0, held_threshold, threshold)
     new_value, new_steps, new_finished = _pnl_triton_ddm_update(
-        value, steps, finished, drift, rate, noise, threshold,
-        threshold_collapse, time_step_size, offset, draw, tl.maximum(step - start, 0),
+        value, steps, finished, drift, rate, noise, active_threshold,
+        threshold_collapse, time_step_size, offset, draw, local_step,
     )
     value = tl.where(active_time, new_value, value)
     steps = tl.where(active_time, new_steps, steps)
@@ -192,6 +234,8 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 ctx.rng_base(name),
                 step_var,
                 str(ctx.coevolve_warmup()),
+                "MAX_STEPS",
+                ctx.coevolve_terminator_control_value(),
             ),
         )
     )

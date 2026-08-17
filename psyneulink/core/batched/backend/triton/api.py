@@ -110,6 +110,10 @@ class TritonEmitContext:
         """Warm-up (ITI) steps before the co-evolving terminator begins."""
         return self._emitter.coevolve_warmup
 
+    def coevolve_terminator_control_value(self) -> str:
+        """Lane-persistent folded control value seen by the terminator."""
+        return self._emitter.coevolve_terminator_control_value
+
     def float_literal(self, value: float) -> str:
         return repr(float(value))
 

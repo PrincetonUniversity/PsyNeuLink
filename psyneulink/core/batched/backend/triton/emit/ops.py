@@ -42,8 +42,10 @@ class OpEmitMixin:
             for op in self.kernel.ops:
                 if op.kind == "InitializeState":
                     self._emit_initialize_state()
+                elif op.kind == "InitializeEffectiveParameter":
+                    self._emit_initialize_effective_parameter(op)
                 elif op.kind == "ForTrials":
-                    self._emit_coevolving_trial_loop(tuple(op.attrs["body"]))
+                    self._emit_coevolving_trials(tuple(op.attrs["body"]))
                 else:
                     raise ValueError(f"Unsupported co-evolving top-level op '{op.kind}'.")
             return
@@ -52,7 +54,30 @@ class OpEmitMixin:
 
     # ---- co-evolution (fused per-step loop over coupled stateful ops) ----
 
-    def _emit_coevolving_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
+    def _emit_coevolving_trials(self, body: tuple[KernelOp, ...]) -> None:
+        reset_ops = tuple(op for op in body if op.kind == "ResetState")
+        regions = tuple(
+            op
+            for op in body
+            if op.kind == "ForPasses"
+            and op.attrs.get("trace_kind") == "lane_local_coevolving"
+        )
+        if (
+            body != (*reset_ops, *regions)
+            or len(regions) != 1
+        ):
+            raise ValueError(
+                "Triton co-evolving ForTrials requires an optional ResetState "
+                "prefix and exactly one lane-local coevolving ForPasses region."
+            )
+        self._emit_coevolving_trial_loop(regions[0], reset_ops)
+
+    def _emit_coevolving_trial_loop(
+        self,
+        region: KernelOp,
+        reset_ops: tuple[KernelOp, ...],
+    ) -> None:
+        body = tuple(region.attrs["body"])
         terminator_index = self._coevolving_terminator_index(body)
         terminator_op = body[terminator_index]
         # In-loop ops co-evolve each step (up to and including the terminator's
@@ -60,6 +85,17 @@ class OpEmitMixin:
         # store-output, truncation StoreFlag) and run once after the loop.
         in_loop_ops = body[: terminator_index + 1]
         post_loop_ops = body[terminator_index + 1 :]
+        terminator_spec = self._spec_for_op(terminator_op)
+        terminator_node = self.graph.node(terminator_op.target)
+        terminator_symbol = f"n{region.attrs['terminator_component_id']}"
+        control_value_var = f"{terminator_symbol}_coevolving_held_control"
+        self.builder.line(
+            f"{control_value_var} = tl.full((BLOCK,), "
+            f"{float_literal(region.attrs['terminator_initial_control_value'])}, "
+            "tl.float32)"
+        )
+        self.coevolve_terminator_control_value = control_value_var
+        self.builder.line()
 
         self.builder.line("trial_idx = 0")
         with self.builder.block("while trial_idx < num_trials"):
@@ -67,11 +103,14 @@ class OpEmitMixin:
             self.output_cursor = 0
             self.lane_out_emitted = False
             self.diag_lane_emitted = False
+            for reset_op in reset_ops:
+                self._emit_op(reset_op)
             self._emit_init_trial_states(terminator_op)
-            terminator_spec = self._spec_for_op(terminator_op)
-            terminator_node = self.graph.node(terminator_op.target)
             finished_var = self.state_vars[
                 (f"{terminator_node.name}.{terminator_spec.finished_output}", 0)
+            ]
+            terminator_steps_var = self.state_vars[
+                (f"{terminator_node.name}.steps", 0)
             ]
             # Hoist loop-invariant ops (constant inputs and projections that do
             # not depend on a stepper's evolving state) out of the step loop:
@@ -80,6 +119,27 @@ class OpEmitMixin:
             hoisted_ops, stepping_ops = self._partition_coevolving_ops(in_loop_ops)
             for op in hoisted_ops:
                 self._emit_op(op)
+            held_var = self._get_value(region.inputs[0].name)[0]
+            target_symbol = f"n{region.attrs['stepper_component_id']}"
+            required_var = f"{target_symbol}_coevolving_required_passes"
+            start_var = f"{target_symbol}_coevolving_start_pass"
+            minimum = float_literal(region.attrs["minimum"])
+            maximum = float_literal(region.attrs["maximum"])
+            self.builder.line(
+                f"{required_var} = tl.minimum(tl.maximum(tl.ceil({held_var}), "
+                f"{minimum}), {maximum}).to(tl.int64)"
+            )
+            self.builder.line(f"{start_var} = {required_var} - 1")
+            lane_end_var = f"{target_symbol}_coevolving_lane_end"
+            block_end_var = f"{target_symbol}_coevolving_block_end"
+            scheduler_finished_var = (
+                f"{target_symbol}_coevolving_scheduler_finished"
+            )
+            self.builder.line(f"{lane_end_var} = {start_var} + MAX_STEPS")
+            self.builder.line(
+                f"{block_end_var} = tl.max(tl.where(mask, {lane_end_var}, 0))"
+            )
+            self.coevolve_warmup = start_var
             # Early exit: every stepper freezes once the terminator reports
             # `finished` (that is the `step_emit` contract), so iterations after
             # the last active lane finishes are no-ops.  Stop the block as soon
@@ -89,11 +149,49 @@ class OpEmitMixin:
             # default parameters, never finish, and would pin the loop open.
             self.builder.line("step = 0")
             with self.builder.block(
-                f"while (step < MAX_STEPS) & ({self._any_running_expr(finished_var)})"
+                f"while (step < {block_end_var}) & "
+                f"({self._any_running_expr(finished_var, lane_end_var)})"
             ):
+                self.builder.line(
+                    f"{scheduler_finished_var} = tl.where("
+                    f"mask & (step < {lane_end_var}), {finished_var}, 1.0)"
+                )
                 for op in stepping_ops:
-                    self._emit_coevolving_op(op, "step", finished_var)
+                    self._emit_coevolving_op(
+                        op,
+                        "step",
+                        scheduler_finished_var,
+                    )
                 self.builder.line("step += 1")
+            control_updates_var = (
+                f"{terminator_symbol}_coevolving_control_updates"
+            )
+            has_control_update_var = (
+                f"{terminator_symbol}_coevolving_has_control_update"
+            )
+            self.builder.line(
+                f"{control_updates_var} = tl.where("
+                f"{terminator_steps_var} > 1.0, "
+                f"{terminator_steps_var} - 1.0, 1.0)"
+            )
+            self.builder.line(
+                f"{has_control_update_var} = "
+                f"({terminator_steps_var} > 1.0) | "
+                f"(({finished_var} != 0.0) & "
+                f"({terminator_steps_var} == 1.0))"
+            )
+            emit_context = TritonEmitContext(self)
+            threshold_var = emit_context.param(terminator_node, "threshold")
+            collapse_var = emit_context.param(
+                terminator_node,
+                "threshold_collapse",
+            )
+            self.builder.line(
+                f"{control_value_var} = tl.where("
+                f"mask & {has_control_update_var}, "
+                f"{threshold_var} + {collapse_var} * {control_updates_var}, "
+                f"{control_value_var})"
+            )
             self.builder.line()
             self._emit_terminator_readout(terminator_op)
             for op in post_loop_ops:
@@ -102,7 +200,10 @@ class OpEmitMixin:
         self.builder.line()
 
     @staticmethod
-    def _any_running_expr(finished_var: str) -> str:
+    def _any_running_expr(
+        finished_var: str,
+        lane_end_var: str | None = None,
+    ) -> str:
         """Block-wide scalar test: does any in-range lane still have work to do?
 
         Reduces to a scalar so it can drive a Triton `while` condition; the
@@ -110,7 +211,10 @@ class OpEmitMixin:
         finishes (not until its own lane does).
         """
 
-        return f"tl.max(tl.where(mask & ({finished_var} == 0.0), 1, 0)) > 0"
+        active = f"mask & ({finished_var} == 0.0)"
+        if lane_end_var is not None:
+            active += f" & (step < {lane_end_var})"
+        return f"tl.max(tl.where({active}, 1, 0)) > 0"
 
     def _partition_coevolving_ops(self, in_loop_ops):
         """Split into (hoisted, stepping): an op steps each iteration if it is a
@@ -128,7 +232,8 @@ class OpEmitMixin:
             )
             # A delayed-onset node's output depends on `step` (withheld until its
             # onset), so it and everything downstream must run inside the loop.
-            has_onset = op.attrs.get("onset_step") is not None
+            onset_step = op.attrs.get("onset_step")
+            has_onset = type(onset_step) is int and onset_step > 0
             depends_on_variant = any(inp.name in variant for inp in op.inputs)
             if is_stepper or has_onset or depends_on_variant:
                 stepping.append(op)

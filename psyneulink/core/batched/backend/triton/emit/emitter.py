@@ -69,6 +69,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # Warm-up steps before the co-evolving terminator begins (the ITI); 0 when
         # there is no delayed onset.
         self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
+        self.coevolve_terminator_control_value = ""
 
     def emit(self) -> str:
         # KernelIR attrs are mapping-valued for an extensible public schema.
