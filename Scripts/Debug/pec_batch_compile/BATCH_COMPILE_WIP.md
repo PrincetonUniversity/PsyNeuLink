@@ -418,6 +418,46 @@ typed path.
    `thresholdMechanism` SimpleIntegrator) is authenticated and absorbed into
    the DDM boundary. The latter retains its held override across trials.
 
+### Typed CSI performance checkpoint (2026-08-17)
+
+The current typed deterministic path was measured on an RTX 2080 Ti with a
+fresh Triton cache. The CSI workload was 4 parameter values x 512 estimates x
+128 trials = 262,144 simulations, with `iti=0`, `csi_repeat=0`,
+`csi_switch=1`, alternating cue counts 1/3, `ddm_noise=0`, and `lca_noise=0`.
+Seven warm sweeps were reduced by their median:
+
+| | compile estimate | warm sweep | cold total | warm simulations/s |
+| --- | ---: | ---: | ---: | ---: |
+| typed Triton GPU | 3.453 s | 19.2 ms | 3.472 s | 13.64 M |
+| LLVM PEC | 3.417 s | 1.426 s | 4.843 s | 0.184 M |
+
+This is **74.2x steady-state** and **1.4x cold one-shot**. The output sums after
+excluding trial 0 match exactly (`410972.2`). LLVM retains its known first-trial
+initialization artifact, so its all-trial checksum is not an accuracy oracle;
+the elementwise Python/interpreter/GPU acceptance tests remain authoritative.
+
+For context, detached historical commit `7ad3d0637d` was rerun on the same GPU
+and software environment with its original broader configuration
+(`csi_switch=0`, `ddm_noise=.1`). It measured 16.5 ms Triton, 1.539 s LLVM, and
+**93.5x steady-state**. Relative to that run, the typed GPU path is about 16%
+slower in absolute warm time and its GPU/LLVM speedup is about 21% lower. This
+is directionally useful, but not an exact regression comparison because the
+old stochastic/zero-cue model is outside the current executable boundary.
+
+A common-size GPU-only sweep used 8 parameter rows x 1,024 estimates x 128
+trials = 1,048,576 simulations for each model:
+
+| model | median warm time | simulations/s |
+| --- | ---: | ---: |
+| DDM | 8.6 ms | 122.3 M |
+| transfer -> DDM | 8.9 ms | 118.5 M |
+| deterministic LCA, 64 steps | 8.0 ms | 130.9 M |
+| toy stability/flexibility | 58.7 ms | 17.9 M |
+| typed deterministic CSI | 27.8 ms | 37.7 M |
+
+These rates compare complete simulations, not equal amounts of mechanism work;
+they are useful for capacity planning, not per-operation efficiency claims.
+
 ### Historical CSI experiment (not current support)
 
 The following measurements describe the retired heuristic emitter and are kept

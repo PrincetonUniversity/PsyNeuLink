@@ -1,10 +1,12 @@
-"""Compare the batched co-evolving CSI surrogate (Triton GPU) against the current
-PEC grid_evaluate LLVM baseline, on the same workload.
+"""Compare deterministic CSI co-evolution on Triton GPU and the LLVM PEC path.
 
 Both run ``param_evals`` parameter values x ``estimates`` x ``trials`` independent
-stochastic simulations of the CSI surrogate (LCA co-evolving with a collapsing-
-threshold DDM).  The swept parameter is ``non_decision_time`` (the DDM
-``threshold`` is already controlled by the model, so PEC cannot also modulate it).
+simulations of the CSI surrogate (LCA co-evolving with a collapsing-threshold
+DDM).  This benchmark uses the compiler's current exact executable boundary:
+``iti=0``, ``csi_repeat=0``, ``csi_switch=1``, ``ddm_noise=0``, and
+``lca_noise=0``.  The swept parameter is ``non_decision_time`` (the DDM
+``threshold`` is already controlled by the model, so PEC cannot also modulate
+it).
 
 Both sides are measured the same way -- compilation separately from steady state
 -- because they cost about the same to compile and mixing the two is misleading:
@@ -32,11 +34,11 @@ import pandas as pd
 warnings.filterwarnings("ignore", category=FutureWarning, module="graph_scheduler.condition")
 warnings.filterwarnings("ignore", message=r"The following arg\(s\) were not specified.*")
 
-import psyneulink as pnl
-from psyneulink.core.batched import (
+import psyneulink as pnl  # noqa: E402
+from psyneulink.core.batched import (  # noqa: E402
     BatchedCompositionCompiler, batched_node_op, unregister_batched_instance_op,
 )
-from csi_model_surrogate import make_stab_flex
+from csi_model_surrogate import make_stab_flex  # noqa: E402
 
 
 @batched_node_op("Drift Rate Value")
@@ -60,7 +62,7 @@ def _csi_inputs(comp, trials):
         _node(comp, "Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1))[:trials],
         _node(comp, "Task Input"): np.tile([[1, 0], [0, 1]], (half, 1))[:trials],
         _node(comp, "Correct Response"): np.tile([[1], [-1]], (half, 1))[:trials],
-        _node(comp, "Cue Stimulus Interval"): np.zeros((trials, 1)),
+        _node(comp, "Cue Stimulus Interval"): np.tile([[1], [3]], (half, 1))[:trials],
     }
 
 
@@ -68,8 +70,8 @@ def _ndt_values(param_evals):
     return list(np.linspace(0.25, 0.35, param_evals))
 
 
-def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.1, repeats=5):
-    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.0, repeats=5):
+    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=1, threshold_collapse=-0.001,
                           ddm_noise=noise, lca_noise=0.0)
     inputs = _csi_inputs(comp, trials)
     param_sets = [{"DDM.non_decision_time": float(v)} for v in _ndt_values(param_evals)]
@@ -93,12 +95,18 @@ def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.1, repea
         torch.cuda.synchronize()
         runs.append(time.perf_counter() - t)
     warm = float(np.median(runs))
-    return {"cold": cold, "warm": warm, "compile": cold - warm,
-            "checksum": float(np.sum(res.values))}
+    values = np.asarray(res.values)
+    return {
+        "cold": cold,
+        "warm": warm,
+        "compile": cold - warm,
+        "checksum": float(np.sum(values)),
+        "checksum_after_trial0": float(np.sum(values[:, :, 1:, :, :])),
+    }
 
 
-def run_llvm(trials, estimates, param_evals, seed, noise=0.1):
-    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
+def run_llvm(trials, estimates, param_evals, seed, noise=0.0, repeats=5):
+    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=1, threshold_collapse=-0.001,
                           ddm_noise=noise, lca_noise=0.0)
     inputs = _csi_inputs(comp, trials)
     decision, dg, rg = _node(comp, "DDM"), _node(comp, "DECISION_GATE"), _node(comp, "RESPONSE_GATE")
@@ -122,22 +130,31 @@ def run_llvm(trials, estimates, param_evals, seed, noise=0.1):
     pec_inputs[_node(comp, "Threshold Mechanism")] = np.zeros((trials, 1))
 
     def sweep():
-        """One pass over the parameter values; returns (seconds, checksum)."""
+        """One pass over the parameter values; return time and smoke checks."""
         t = time.perf_counter()
         total = 0.0
+        after_trial0 = 0.0
         for v in _ndt_values(param_evals):
             pec.controller.function._ll_func = None
             _, sim = pec.log_likelihood(float(v), inputs=pec_inputs, return_sim_data=True)
-            total += float(np.sum(np.asarray(sim)))
-        return time.perf_counter() - t, total
+            values = np.asarray(sim)
+            total += float(np.sum(values))
+            after_trial0 += float(np.sum(values[1:, ...]))
+        return time.perf_counter() - t, total, after_trial0
 
-    # Two identical passes: the first pays LLVM's compilation, the second does
-    # not.  Timing only the first (as this script used to) charges LLVM for
-    # compilation while the Triton side is measured warm, which on this workload
-    # is worth roughly 3x on its own.
-    cold, checksum = sweep()
-    warm, _ = sweep()
-    return {"cold": cold, "warm": warm, "compile": cold - warm, "checksum": checksum}
+    # The first pass pays LLVM's compilation.  Median repeated warm passes just
+    # as on the Triton side; timing only LLVM's first pass used to overstate the
+    # GPU speedup materially.
+    cold, checksum, checksum_after_trial0 = sweep()
+    warm_runs = [sweep()[0] for _ in range(repeats)]
+    warm = float(np.median(warm_runs))
+    return {
+        "cold": cold,
+        "warm": warm,
+        "compile": cold - warm,
+        "checksum": checksum,
+        "checksum_after_trial0": checksum_after_trial0,
+    }
 
 
 def main():
@@ -147,12 +164,19 @@ def main():
     ap.add_argument("--param-evals", type=int, default=4)
     ap.add_argument("--max-steps", type=int, default=512)
     ap.add_argument("--seed", type=int, default=11)
-    ap.add_argument("--noise", type=float, default=0.1)
+    ap.add_argument(
+        "--noise",
+        type=float,
+        default=0.0,
+        help="DDM noise; the current typed CSI boundary requires 0",
+    )
     ap.add_argument("--repeats", type=int, default=5,
-                    help="warm triton sweeps to median over")
+                    help="warm sweeps per backend to median over")
     ap.add_argument("--skip-llvm", action="store_true")
     ap.add_argument("--skip-triton", action="store_true")
     args = ap.parse_args()
+    if args.noise != 0.0:
+        ap.error("the current typed CSI benchmark requires --noise 0")
 
     sims = args.param_evals * args.estimates * args.trials
     print(f"CSI surrogate: {args.param_evals} params x {args.estimates} estimates x "
@@ -166,12 +190,21 @@ def main():
                              args.max_steps, args.seed, args.noise, args.repeats)
             print(f"  {'triton GPU (coevolving)':<24}{tri['compile']*1000:>11.1f}ms"
                   f"{tri['warm']*1000:>13.1f}ms{tri['cold']*1000:>12.1f}ms"
-                  f"   {sims/tri['warm']:>14,.0f}   checksum={tri['checksum']:.1f}")
+                  f"   {sims/tri['warm']:>14,.0f}   checksum={tri['checksum']:.1f}"
+                  f" ({tri['checksum_after_trial0']:.1f} excluding trial 0)")
         if not args.skip_llvm:
-            llvm = run_llvm(args.trials, args.estimates, args.param_evals, args.seed, args.noise)
+            llvm = run_llvm(
+                args.trials,
+                args.estimates,
+                args.param_evals,
+                args.seed,
+                args.noise,
+                args.repeats,
+            )
             print(f"  {'LLVM PEC grid_evaluate':<24}{llvm['compile']*1000:>11.1f}ms"
                   f"{llvm['warm']*1000:>13.1f}ms{llvm['cold']*1000:>12.1f}ms"
-                  f"   {sims/llvm['warm']:>14,.0f}   checksum={llvm['checksum']:.1f}")
+                  f"   {sims/llvm['warm']:>14,.0f}   checksum={llvm['checksum']:.1f}"
+                  f" ({llvm['checksum_after_trial0']:.1f} excluding trial 0)")
         if tri and llvm:
             print(f"\n  -> steady-state speedup: {llvm['warm']/tri['warm']:6.1f}x   "
                   "(warm vs warm; what a fitting loop sees, compilation amortised "
@@ -181,9 +214,9 @@ def main():
                   "a single ad-hoc run is close to a wash)")
             print("\n  Note: the checksum sums decisions and response times together, so "
                   "errors in one\n  can cancel the other -- it is a smoke test, not an "
-                  "accuracy measure.  For that see\n  "
-                  "test_csi_surrogate_noise_free_matches_pnl_elementwise, which compares "
-                  "noise-free\n  and elementwise.")
+                  "accuracy measure.  The executable support gate is\n  "
+                  "test_batched_csi_coevolving_acceptance.py, which compares "
+                  "fresh Python,\n  Triton interpreter, and compiled GPU output.")
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
