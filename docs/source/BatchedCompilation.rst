@@ -56,11 +56,15 @@ separate effective-parameter declaration records the base value, initial held
 ControlProjection value, lane-persistent storage, update after controller
 execution, and sampling when the target ParameterPort updates.  The controller
 declaration records the decorator-resolved function implementation and exact
-argument-to-parameter IDs; those parameters are frozen while control execution
-is unavailable.  Compatibility name metadata is not the semantic authority
-for that edge.  Executable generic modulation operations and ledger coverage
-for other existing folds remain incremental work.  Unrepresented variants
-fail closed.  Display names are diagnostic labels, not identity.
+argument-to-parameter IDs.  Compatibility name metadata is not the semantic
+authority for that edge.  The compiler executes this representation for two
+exact dynamic subsets: a scalar-controlled LCA followed by one stateless
+``WhenFinished`` consumer, and the deterministic CSI co-evolving graph
+described below.  Parameters that could change a discrete pass count are
+frozen or restricted so host fp64 semantics and device fp32 semantics select
+the same count.  Generic modulation, multiple controlled targets, and ledger
+coverage for other existing folds remain incremental work.  Unrepresented
+variants fail closed.  Display names are diagnostic labels, not identity.
 
 Composition lowering assigns nonnegative numeric IDs in deterministic
 dependency order and carries them through ``KernelIR`` operations.  It first
@@ -98,10 +102,16 @@ Port, and reset declarations forward.  A GraphIR modulation must survive
 exactly into KernelIR and form a bijection with one held effective value, its
 two absorbed projections, and one matching dynamic finished value.  KernelIR
 validates every endpoint's owner, Port kind, width, and registered controller
-signature against the frozen plan snapshot.  Until explicit control-compute,
-``ApplyModulation``, and lane-local predicate-mask operations exist, such a
-KernelIR remains declaration-only and source emission is forbidden.  For the exact
-stateless and fixed-count stateful boundaries described below, a
+signature against the frozen plan snapshot.  Executable controlled programs
+use explicit ``InitializeEffectiveParameter`` and ``ApplyModulation``
+operations.  Their held values live at lane scope across trials, and their
+dynamic regions publish only declared results to later operations.  KernelIR
+has two authenticated lane-local region forms: ``lane_local_counted`` for the
+single controlled-finished chain and ``lane_local_coevolving`` for the exact
+deterministic CSI topology.  A partial, forged, or otherwise unsupported
+control program remains declaration-only and source emission is forbidden.
+
+For the exact stateless and fixed-count stateful boundaries described below, a
 backend-neutral host planner consumes only those typed declarations and
 produces a finite one-trial ``BatchedScheduleTraceSpec``.  Kernel lowering
 expands the trace into an executable ``ForPasses`` containing typed
@@ -111,36 +121,41 @@ stateful path instead executes trials serially within each subject/estimate
 lane so its supported LCA state persists between trials.  Predicate and usable
 call counts remain trial-local in both paths.
 
-Pass-wise programs outside those finite precomputed boundaries remain
-declaration-only.  Their ``ForPasses`` attributes describe the required region
-but do not authorize sequential execution or define conditional behavior; the
-corresponding ``KernelIR`` is non-executable and the Triton emitter refuses it
-before generating source.  Accepted one-pass static graphs retain their flat
-executable operation sequence.  Parameter, subject, trial, and estimate lane
-layout and fusion are lowering and optimization choices; they must not
-determine model semantics.  After semantic declarations have been snapshotted,
-neither the host trace planner nor a backend emitter interprets the live
-Composition, scheduler, components, or ``Condition`` objects.
+Pass-wise programs outside the precomputed, fixed-count, and two authenticated
+dynamic boundaries remain declaration-only.  Their ``ForPasses`` attributes
+describe the required region but do not authorize sequential execution or
+define conditional behavior; the corresponding ``KernelIR`` is
+non-executable and the Triton emitter refuses it before generating source.
+Accepted one-pass static graphs retain their flat executable operation
+sequence.  Parameter, subject, trial, and estimate lane layout and fusion are
+lowering and optimization choices; they must not determine model semantics.
+After semantic declarations have been snapshotted, neither the host trace
+planner nor a backend emitter interprets the live Composition, scheduler,
+components, or ``Condition`` objects.
 
 Current scheduler and control boundary
 --------------------------------------
 
 The semantic declarations are intentionally broader than the executable
-subset.  The first executable stateful scheduler tier is a fixed,
-compile-time execution-count pattern: one stateful LCA with
-``execute_until_finished=False`` scheduled ``Always`` projects to one
-stateless ``TransferMechanism`` scheduled by
-``WhenFinished`` in a strictly later consideration set.  The LCA uses an
-exact, unmodified ``Never`` or ``AtTrialStart`` reset, the finished count is
-positive and identical for every lane, and the graph has no RNG stream,
-control path, or custom termination.  ``AtTrialStart`` re-evaluates every declared state
-initializer before pass zero, including function-based initializers using the
-current parameter lane; ``Never`` preserves state across trials.  This is
-generic typed scheduler, finished-value, state, reset, and ``KernelIR``
-machinery.  LCA is merely the first mechanism with registered one-step and
-reset implementations and a fixed-count resolver, not a recognized model
-type.  Lane-varying finished counts, controlled termination, DDM followers,
-and stateful graphs outside this exact boundary remain fail-closed:
+subset.  Executable pass-wise programs currently form four tiers:
+
+* stateless schedules that can be expanded to a finite precomputed trace;
+* one stateful LCA with a compile-time fixed count followed by one stateless
+  ``WhenFinished`` consumer;
+* the same producer/follower shape with one scalar ``OVERRIDE`` control path
+  supplying a lane-varying execution count; and
+* one exactly authenticated deterministic CSI co-evolving topology.
+
+The fixed-count and scalar-controlled producer use an exact, unmodified
+``Never`` or ``AtTrialStart`` reset.  ``AtTrialStart`` re-evaluates every
+declared state initializer before pass zero, including function-based
+initializers using the current parameter lane; ``Never`` preserves state
+across trials.  This is generic typed scheduler, finished-value, state, reset,
+modulation, and ``KernelIR`` machinery.  LCA and CSI are not assigned model
+types: they are the first complete graphs whose registered operations and
+scheduler contracts satisfy these exact boundaries.  Additional controlled
+targets, finished producers, scheduler shapes, and co-evolving graphs remain
+fail-closed:
 
 .. list-table::
    :header-rows: 1
@@ -163,11 +178,13 @@ and stateful graphs outside this exact boundary remain fail-closed:
        on each pass, ``AtTrialStart`` and ``AtPass`` use absolute pass indices,
        and the implicit one-call predicates consume trial-local usable counts.
        A fixed ``WhenFinished`` execution count also runs for the exact
-       stateful producer/follower boundary above.  There is no lane-varying or
-       otherwise dynamic ``WhenFinished`` executor.
-       Explicit call-count predicates, unsupported condition types or
-       subclasses, malformed arguments, structural scheduler conditions, and
-       other time scales remain fail-closed.
+       stateful producer/follower boundary above.  Lane-varying
+       ``WhenFinished`` executes only for the exact scalar-controlled
+       producer/follower chain and for CSI's ordered LCA, drift, DDM, and gate
+       regions.  Explicit call-count predicates, unsupported condition types
+       or subclasses, malformed arguments, structural scheduler conditions,
+       additional dynamic dependencies, and other time scales remain
+       fail-closed.
    * - Consideration sets
      - The scheduler's ordered consideration queue is stored with numeric set
        and component IDs.  Each set declares the PsyNeuLink frozen-input
@@ -178,8 +195,12 @@ and stateful graphs outside this exact boundary remain fail-closed:
        beginning-of-set predicate snapshot, consumes and publishes usable call
        counts between sets, and checks termination between sets.  Empty visits
        are omitted from the trace while absolute pass and consideration-set
-       indices are retained.  Dynamic or lane-varying consideration-set
-       evaluation is not implemented.
+       indices are retained.  The authenticated dynamic regions evaluate
+       their exact consideration-set order per lane.  In CSI, the absorbed
+       threshold controller is in an earlier set than the LCA, so it observes
+       the LCA finished transition on the following pass; the later drift and
+       DDM sets observe that transition on the same pass.  Other dynamic or
+       lane-varying consideration-set evaluation is not implemented.
    * - Pass regions
      - Trial and nested pass regions, finished-value identities, and the
        predicate data needed by ``ForPasses`` are explicit.
@@ -192,10 +213,16 @@ and stateful graphs outside this exact boundary remain fail-closed:
        current trial; a receiver that would read a previous trial's held sender
        value is rejected.  Projection edges within one consideration set are
        also rejected until current/next value banks can preserve frozen
-       inputs.  Nontermination, invalid dependency order, malformed
-       declarations, and component- or weighted-operation expansion beyond
-       the compiler budgets fail closed.  Other required pass regions remain
-       declaration-only with ``KernelIR.executable == False``.
+       inputs.  ``lane_local_counted`` executes a controlled LCA once per pass
+       until each lane reaches its held count.  ``lane_local_coevolving``
+       executes CSI's LCA on every active outer pass, enables drift and DDM at
+       the lane's controlled LCA transition, and stops at the lane-local DDM
+       limit.  Both use a typed integer scheduling clock and the declared
+       ``MAX_STEPS`` diagnostic contract.  Nontermination, invalid dependency
+       order, malformed declarations, and component- or weighted-operation
+       expansion beyond the compiler budgets fail closed.  Other required
+       pass regions remain declaration-only with
+       ``KernelIR.executable == False``.
    * - Termination
      - The exact default trial ``AllHaveRun()`` predicate is expanded to every
        lowered scheduler component ID, and the environment-sequence
@@ -212,67 +239,70 @@ and stateful graphs outside this exact boundary remain fail-closed:
        state IDs; the schema distinguishes exact ``Never`` and
        ``AtTrialStart`` policies.  DDM trial-local storage is still private to
        its mechanism operation rather than represented by these reset records.
-     - The fixed-count LCA/follower subset executes exact ``Never`` and exact
-       ``AtTrialStart``.  ``AtTrialStart`` lowers to an unconditional
-       ``ResetState`` prefix before pass zero and restores all of the owner's
-       retained states from their declared initializers; ``Never`` emits no
-       per-trial reset and therefore persists.  KernelIR requires one canonical
-       reset declaration per retained-state owner and never erases a declared
-       reset effect.  Mutated built-in conditions fail closed.  Isolated/static
-       LCA execution with ``AtTrialStart`` remains unsupported.  An ordinary
-       DDM requires exact ``AtTrialStart`` and resets its private trial-local
-       state.  A validated fires-once integrating TransferMechanism may fold its
-       ``AtTrialStart`` reset into one stateless affine step.  Other reset
-       semantics fail closed.
+     - The fixed-count and controlled LCA/follower subsets execute exact
+       ``Never`` and exact ``AtTrialStart``.  ``AtTrialStart`` lowers to an
+       unconditional ``ResetState`` prefix before pass zero and restores all
+       of the owner's retained states from their declared initializers;
+       ``Never`` emits no per-trial reset and therefore persists.  In the CSI
+       region, LCA state persists across trials, DDM value/step/finished state
+       resets at trial entry, and the absorbed threshold override remains held
+       across trials.  The latter is updated even after a one-step DDM trial,
+       matching the scheduler's final threshold-control visit.  KernelIR
+       requires one canonical reset declaration per retained-state owner and
+       never erases a declared reset effect.  Mutated built-in conditions fail
+       closed.  Isolated/static LCA execution with ``AtTrialStart`` remains
+       unsupported.  An ordinary DDM requires exact ``AtTrialStart`` and
+       resets its private trial-local state.  A validated fires-once
+       integrating TransferMechanism may fold its ``AtTrialStart`` reset into
+       one stateless affine step.  Other reset semantics fail closed.
    * - Control
      - The scalar controlled-finished boundary has a typed ``OVERRIDE`` edge
        with exact numeric endpoint-port identities, two explicit absorbed
        projection records, a target ParameterPort, and a distinct held
-       effective-parameter ID.  The held value declaratively records its
-       initial allocation, cross-trial persistence, controller-update event,
-       and ParameterPort sampling event; these are not executable effects yet.
-       ``Lane-persistent`` means that future execution must preserve the value
-       across trials of one parameter/subject/estimate lane within a simulation
-       invocation and initialize each new invocation from the declared initial
-       modulation value.  Registered Linear controller parameters use the
-       ordinary decorator/signature binding machinery and are
-       validated-default-only while execution is unavailable.  The LCA
-       finished declaration references that effective value with explicit
-       ceiling, lower-bound, and integer-range semantics.  GraphIR and KernelIR
-       validate the full declaration bijection and reject forged or erased
-       routes, parameter bindings, and effects.
-     - Existing executable control remains limited to separately validated
-       atomic folds: the run-to-completion scalar identity cue to LCA
-       termination-threshold path and the affine DDM threshold-collapse chain.
-       Those folds do not produce the scheduler-visible modulation declaration
-       above.  Every KernelIR containing ``BatchedModulationSpec`` remains
-       declaration-only.  Lane-varying controlled ``Always``/``WhenFinished``
-       execution therefore remains fail-closed.
-       The first declared dynamic subset requires strictly ordered source,
-       controller, and target consideration sets.  PsyNeuLink freezes values
-       at set entry, so same-set control would make the target observe the
-       previously held value and is rejected until that timing can be modeled
-       explicitly.  Generic control and co-evolving LCA termination control
-       remain fail-closed.
+       effective-parameter ID.  The held value records its initial allocation,
+       cross-trial persistence, controller-update event, and ParameterPort
+       sampling event.  The LCA finished declaration references that effective
+       value with explicit ceiling, lower-bound, and integer-range semantics.
+       GraphIR and KernelIR validate the full declaration bijection and reject
+       forged or erased routes, parameter bindings, and effects.
+     - ``InitializeEffectiveParameter`` allocates lane-persistent held storage,
+       and ``ApplyModulation`` updates it after the registered controller.
+       ``Lane-persistent`` means the value survives trials within one
+       parameter/subject/estimate lane and each simulation invocation begins
+       from the declared initial modulation value.  The executable dynamic
+       subsets require exact ordered source, controller, and target sets and
+       an integer-stable scalar count.  PsyNeuLink freezes values at set entry,
+       so same-set control is rejected.  The separately validated
+       run-to-completion LCA fold and affine DDM threshold-collapse fold also
+       remain supported.  Generic control, more than one scheduler-visible
+       modulation, and arbitrary co-evolving control topologies fail closed.
    * - Stepwise DDM
      - A DDM with ``execute_until_finished=False`` is structurally admitted
        only as the typed ``Always`` persistent-stepper / ``WhenFinished``
        terminator pattern, so its required dependencies and finished value can
        be declared.  An orphan stepwise DDM is rejected.
      - Ordinary ``execute_until_finished=True`` DDM execution uses its existing
-       bounded inner loop.  The co-evolving stepwise form produces
-       declaration-only ``ForPasses`` and is not executable yet.
+       bounded inner loop.  The CSI DDM executes one typed step per active
+       co-evolving pass, with a lane-local execution index for collapse and RNG
+       addressing, a private trial-state tuple, and a bounded truncation flag.
+       Other co-evolving stepwise forms remain declaration-only.
    * - CSI
      - General constituent pieces already represented include exact port and
        rectangular-matrix routing, the registered nested-logistic drift UDF,
-       the narrow deterministic width-two LCA subset, and typed declarations of
-       the full scheduler topology.  CSI is not assigned a special model type or
-       recognizer.
-     - The full surrogate remains unsupported because its co-evolving
-       ``Always``/``WhenFinished`` pass execution and controlled LCA finished
-       transition are not executable.  Compilation fails explicitly; CSI
-       likelihood and fitting support therefore remain a later acceptance
-       gate.
+       the narrow deterministic width-two LCA subset, the DDM threshold-control
+       fold, two finished values, and the full six-set scheduler topology.  CSI
+       is not assigned a public model type or selected by display-name
+       dispatch; admission authenticates the complete typed graph.
+     - The deterministic surrogate executes through one
+       ``lane_local_coevolving`` region when ``iti=0``, ``csi_repeat=0``,
+       ``csi_switch=1``, LCA and DDM noise are zero, and the remaining graph,
+       resets, functions, matrices, controls, and scheduler conditions match
+       the authenticated boundary.  The LCA remains active until the DDM
+       finishes; drift and DDM begin on the pass where the controlled LCA count
+       is reached; decision and response gates run after DDM completion.
+       Delayed ITI, generalized affine cue/control transforms, stochastic CSI,
+       and other CSI variants fail closed.  PEC fitting is not automatically
+       routed through this path.
 
 Persistent state can be initialized either from typed constants or by applying
 a registered elementwise function to an initializer with the lane's effective
@@ -287,30 +317,105 @@ and finite Logistic and recurrent parameters within the fp32 range that are
 scalar or exactly uniform broadcasts.  ``time_step_size`` must be strictly
 positive.  It supports a
 nonnegative ``TimeScale.TRIAL`` execution-count threshold either directly or
-through a narrow scalar identity cue -> ``OVERRIDE`` control chain.  Static
-thresholds are discretized on the host (ceiling, with at least one execution);
-runtime cues must be exact nonnegative integers no larger than ``2**24`` so
-fp32 conversion cannot change the step count.  The effective static execution
-count has the same bound.  Each node's ``max_executions_before_finished`` must
-be a positive integer and is enforced independently.
+through a narrow scalar cue -> ``OVERRIDE`` control chain.  Static thresholds
+are discretized on the host (ceiling, with at least one execution).  Dynamic
+cue values and controller transforms must satisfy the admitted integer-stable
+contract and remain no larger than ``2**24`` so fp32 conversion cannot change
+the pass count.  The effective static execution count has the same bound.
+Each node's ``max_executions_before_finished`` must be a positive integer and
+is enforced independently.
 
-The executable identity cue path in this paragraph is the atomic
-run-to-completion fold, not the scheduler-visible ``BatchedModulationSpec``
-path.  It is absorbed during lowering, so its Linear ``slope``, ``intercept``,
-``scale``, and ``offset`` bindings are validated-default-only:
-parameter rows may not change them until KernelIR represents and executes the
-cue transform itself.  An explicit ``AtPass(0)`` on the cue at the default
-``ENVIRONMENT_STATE_UPDATE`` time scale is accepted as the same static-origin
-timing.  Other explicit conditions or time scales on the cue, controller, or
-controlled LCA are rejected rather than ignored.
+There are two executable cue/control lowerings.  The atomic
+run-to-completion fold absorbs an exact identity chain and validates its
+Linear ``slope``, ``intercept``, ``scale``, and ``offset`` bindings at their
+defaults.  The scheduler-visible path retains a
+``BatchedModulationSpec``, emits the registered cue/controller computation,
+updates a held effective count, and runs ``lane_local_counted``.  Its currently
+accepted Linear transforms are frozen and integer-preserving.  An explicit
+``AtPass(0)`` at the default ``ENVIRONMENT_STATE_UPDATE`` time scale is
+accepted where required by the authenticated scheduler shape.  Other explicit
+conditions or time scales on the cue, controller, or controlled LCA are
+rejected rather than ignored.
 
 Recurrent activation is initialized by applying the registered Logistic
 implementation to zero for each parameter lane and persists between trials.
-The absorbed cue/control path is a validated instance of general identity
-routing, not recognition of stability-flexibility or CSI.  Nonzero noise,
-custom state, other termination measures, and lane-varying, controlled, or
-otherwise general co-evolving ``Always``/``WhenFinished`` scheduling remain
-structured rejections rather than approximate execution.
+The absorbed and typed cue/control paths are validated instances of general
+routing and modulation records, not recognition of stability-flexibility or
+CSI.  Nonzero LCA noise, custom state, other termination measures, multiple
+dynamic targets, and otherwise general co-evolving
+``Always``/``WhenFinished`` scheduling remain structured rejections rather
+than approximate execution.
+
+Deterministic CSI execution
+---------------------------
+
+The first executable co-evolving graph is the deterministic CSI surrogate.
+Its authenticated ``BatchedGraphIR`` contains eleven lowered nodes and six
+ordered consideration sets: four trial origins; the absorbed threshold and
+CSI controllers; the persistent LCA; the registered drift UDF; the DDM; and
+the two result gates.  One finished value is the controlled LCA execution
+count and the other is the DDM's dynamic finished flag.  The graph is admitted
+only when every node implementation, parameter binding, Port, projection
+matrix, reset, condition, control route, state declaration, and output slice
+matches that complete topology.
+
+Kernel lowering allocates the persistent LCA state, the held LCA count, and
+the held DDM-threshold override before ``ForTrials``.  Each trial computes its
+origins and CSI control, then enters one ``lane_local_coevolving``
+``ForPasses`` region.  The LCA steps on every active outer pass.  Drift and DDM
+start on the same pass that reaches the lane's controlled LCA count.  The DDM
+uses a lane-local integer step for its threshold collapse and RNG address;
+only DDM executions count against ``MAX_STEPS``.  DDM trial state resets each
+trial, while LCA state and the last threshold override persist.  The decision
+and response gates consume the region's declared outputs after DDM completion.
+
+The executable acceptance configuration currently uses ``iti=0``,
+``csi_repeat=0``, ``csi_switch=1``, ``ddm_noise=0``, and ``lca_noise=0``.
+``threshold_collapse`` may be finite and nonpositive within the authenticated
+fold; boundary crossing, multi-trial held-threshold behavior, one-step cleanup,
+Triton interpreter parity, and compiled-CUDA parity are covered by acceptance
+tests.  The region also publishes the ordinary bounded-loop truncation
+diagnostic.  Nonzero ITI, a nonidentity CSI cue transform, stochastic DDM or
+LCA execution, and altered co-evolving topology are rejected rather than
+approximated.
+
+Implementation map
+------------------
+
+Read the implementation in semantic order:
+
+* ``psyneulink/core/batched/compiler.py``: public diagnosis, compilation, plan
+  execution, and no-fallback behavior.
+
+* ``psyneulink/core/batched/ir.py`` and
+  ``psyneulink/core/batched/graph.py``: graph-level declarations and extraction
+  from a live Composition.  Start with graph lowering, then the exact
+  executable-boundary predicates; CSI admission is
+  ``_dynamic_controlled_coevolving_graph_eligible``.
+
+* ``psyneulink/core/batched/kernel_ir.py``: backend-neutral operations,
+  complete validation, dynamic-region contracts, and GraphIR-to-KernelIR
+  lowering.  Search for ``lane_local_counted`` and
+  ``lane_local_coevolving`` to follow the two executable dynamic paths.
+
+* ``psyneulink/core/batched/backend/triton/emit/``: Triton source generation.
+  ``ops.py`` emits individual operations and the two lane-local regions;
+  ``emitter.py`` owns values, state, loops, and source assembly.
+
+* ``psyneulink/core/batched/components/``: registered mechanism semantics.
+  ``lca.py`` contains the deterministic LCA step, and ``ddm.py`` contains
+  ordinary and co-evolving DDM updates.
+
+* ``psyneulink/core/batched/prep.py`` and
+  ``psyneulink/core/batched/backend/triton/api.py``: public input/parameter
+  normalization, subject/trial lane validation, device launch, result shaping,
+  and diagnostics.
+
+* ``tests/composition/pec/test_batched_controlled_finished_acceptance.py`` and
+  ``tests/composition/pec/test_batched_csi_coevolving_acceptance.py``: the most
+  direct executable specifications for controlled lane-local counts and
+  deterministic CSI.  Read the structural assertions before the Python,
+  interpreter, and GPU parity cases.
 
 Extension API
 -------------
@@ -350,9 +455,17 @@ components, a newline-bearing diagnostic label, and nondefault Logistic
 parameters.  It also verifies that two parameter rows and two estimate lanes
 re-evaluate the ``AtTrialStart``
 function initializer independently.  Isolated/static ``AtTrialStart``, an
-LCA-to-DDM dependency, lane-varying or controlled finished state, multiple
-finished producers, and custom termination remain structured compile
-rejections.
+LCA-to-DDM dependency outside the authenticated CSI graph, unsupported
+lane-varying control shapes, multiple controlled producers, and custom
+termination remain structured compile rejections.
+
+The controlled-finished matrix covers lane counts one through four, exact
+``AtTrialStart`` and ``Never`` state lifetime, multi-subject lanes, strict
+``MAX_STEPS`` truncation, structured-IR authenticity mutations, and fresh
+Python parity in interpreter and GPU modes.  CSI acceptance separately checks
+the complete graph and ``lane_local_coevolving`` region, the canonical
+two-trial decision/response oracle, zero-boundary threshold collapse,
+cross-trial threshold persistence, one-step cleanup, and compiled CUDA output.
 
 Device buffers and current Triton kernels use fp32. Discrete outcomes and
 execution counts compare exactly. The exact LCA semantic cases compare
@@ -384,6 +497,8 @@ install the ``dev,triton`` extras, select ``triton_gpu``, and pass
 device; using a generic hosted ``ubuntu-latest`` runner is not a substitute.
 
 CSI is a composition-level acceptance case, not a model kind or compiler
-recognizer.  It can become supported only through general implementations of its
-functions, mechanisms, ports, scheduler conditions, control projections,
-state, and reset behavior.
+recognizer.  The deterministic subset is supported because its functions,
+mechanisms, ports, scheduler conditions, control projections, state, and reset
+behavior are represented and authenticated end to end.  A new CSI variant is
+supported only when those same semantic checks cover it; similarity to the
+accepted graph is not sufficient.

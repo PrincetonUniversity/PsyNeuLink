@@ -8,8 +8,8 @@ representative models, swept over the number of estimates (GPU lanes):
 - `LCA`         — deterministic width-2 LCA with a static trial threshold
   (stateful_graph fusion)
 - `StabilityFlexibility` — toy LCA + DDM (stateful_graph fusion)
-- `CSISurrogate`  — reserved for the realistic co-evolving model; skipped until
-  generic scheduler/control lowering is executable
+- `CSISurrogate`  — reserved for the realistic co-evolving model; its historical
+  stochastic configuration remains outside the deterministic acceptance slice
 
 The kernel is compiled and warmed up in `setup()`, so the timed methods measure
 only the batched simulation (not one-time compilation). Each warmup records an
@@ -137,11 +137,11 @@ def _build_stab_flex():
 
 
 def _build_csi():
-    """Reserve the CSI series without advertising unsupported execution."""
+    """Reserve the CSI series until its research configuration is supported."""
 
     raise NotImplementedError(
-        "CSI requires generic Always/WhenFinished scheduler predicates and "
-        "termination-threshold control in KernelIR"
+        "the CSI benchmark's stochastic research configuration is broader "
+        "than the deterministic typed co-evolution boundary"
     )
 
 
@@ -196,7 +196,7 @@ class StabilityFlexibility(_BatchedBenchmark):
 
 
 class CSISurrogate(_BatchedBenchmark):
-    """Reserved for CSI after generic scheduler/control support lands."""
+    """Reserved for the broader CSI research benchmark."""
 
     params = STATEFUL_ESTIMATES
     _seed = 3

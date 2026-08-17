@@ -9,8 +9,10 @@ stochastic DDM; `stateful_graph`) — each `time_run` + `track_checksum`, swept
 over the number of estimates (GPU lanes). Runtime LCA cues must be exact
 nonnegative integers no larger than `2**24`; static thresholds are
 host-discretized, and either form honors the LCA node's execution cap. The
-`CSISurrogate` series is retained but explicitly skipped until generic
-`Always`/`WhenFinished` scheduling and control are represented in `KernelIR`.
+compiler now has an executable deterministic CSI acceptance slice, but the
+historical `CSISurrogate` series remains disabled because its research
+configuration (including stochastic execution and a broader cue transform)
+falls outside that exact boundary.
 
 ## Exact deterministic LCA boundary
 
@@ -25,8 +27,9 @@ disabled:
 - removing that stream changes the DDM stream slot, and hence stochastic draws,
   in mixed LCA+DDM kernels;
 - the standalone LCA benchmark is now deterministic; and
-- CSI is intentionally unavailable until its generic scheduler/control
-  semantics are executable; it is not a compiler-recognized model kind.
+- the deterministic CSI acceptance slice is executable through typed scheduler
+  and control semantics, but the historical stochastic benchmark configuration
+  is still unsupported; CSI is not a compiler-recognized model kind.
 
 The first result recorded after this migration establishes the new LCA and
 stability-flexibility baseline. Historical result files remain useful for the

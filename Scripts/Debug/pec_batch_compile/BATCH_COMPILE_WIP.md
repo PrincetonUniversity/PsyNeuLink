@@ -4,10 +4,12 @@
 > intermediate conclusions, so older sections below intentionally describe
 > behavior that no longer exists. The authoritative current semantic contract
 > and fail-closed support boundary are maintained in
-> `docs/source/BatchedCompilation.rst` and executable tests. As of the exact-LCA
-> checkpoint, CSI and all generic `Always`/`WhenFinished` co-evolution cases are
-> rejected until scheduler predicates, conditional pass regions, and control
-> values are explicit in `KernelIR`.
+> `docs/source/BatchedCompilation.rst` and executable tests. The current
+> checkpoint executes an exactly authenticated deterministic CSI subset through
+> typed control operations and a lane-local co-evolving `KernelIR` region.
+> Delayed ITI, stochastic CSI, generalized cue/control transforms, and other
+> co-evolving topologies still fail closed. Older statements below that CSI is
+> wholly rejected describe the preceding exact-LCA checkpoint.
 
 This branch is `feat/pec_batch_compile`, currently based on `origin/devel`.
 The work is experimental and opt-in. Existing PEC fitting, `Composition.run`,
@@ -111,8 +113,8 @@ PsyNeuLink itself is the correctness oracle, not a hand-written twin:
   independence.
 - Triton-interpreter and compiled-GPU pytest cases run in separate processes.
   The historical `pec_grid_correctness_check.py` script is useful for research
-  exploration but is not the executable support gate. CSI currently fails
-  closed in both modes.
+  exploration but is not the executable support gate. The deterministic CSI
+  acceptance case runs in both modes; unsupported CSI variants fail closed.
 
 `ParameterEstimationComposition.can_compile_batched(..., backend="triton")` is
 diagnostic-only. It calls `BatchedCompositionCompiler.diagnose()` on the model
@@ -338,9 +340,11 @@ Supported mechanisms:
   absorbed into the DDM)
 - `LCAMechanism`, an exact deterministic width-2 subset with either a static
   `TimeScale.TRIAL` execution-count threshold or the narrowly validated scalar
-  identity cue -> `OVERRIDE` threshold path; see "LCA Caveats"
+  cue -> `OVERRIDE` threshold paths; see "LCA Caveats"
 - `ControlMechanism` — recognized for LCA-termination and DDM-threshold OVERRIDE
-  routing; not lowered as its own executable op
+  routing. Exact scheduler-visible LCA control lowers to registered controller
+  compute plus `ApplyModulation`; absorbed threshold control remains part of the
+  authenticated DDM boundary.
 
 Supported functions:
 
@@ -358,17 +362,17 @@ Supported input combines: single input, `SUM`, `PRODUCT`.
 Supported executable schedules / fusions:
 
 - `static_graph` schedule, including `AtPass(0)` origins.
-- Generic `Always`/`WhenFinished` co-evolution and `AtPass(n>0)` delayed onset
-  are recognized but fail closed until their predicates and conditional pass
-  regions are represented in `KernelIR`.
+- finite stateless precomputed traces and fixed-count stateful
+  `Always`/`WhenFinished` producer/follower traces;
+- `dynamic_lane_local` for the exact scalar-controlled LCA/follower chain and
+  the exact deterministic CSI co-evolving topology;
 - Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
   stateful execution with a static threshold or the validated scalar identity
-  cue -> `OVERRIDE` threshold path). The old `coevolving_graph` emitter is not
-  currently advertised as semantically executable. See "Fusion and Lane
-  Layout" for its historical implementation.
+  cue -> `OVERRIDE` threshold path), and `coevolving_graph` for the authenticated
+  deterministic CSI graph.
 
-Recognized but not executable yet: `precomputed_trace` (`EveryNCalls`),
-`dynamic_lane_local`.
+Generic `Always`/`WhenFinished` co-evolution, multiple dynamic controllers,
+and `AtPass(n>0)` onset are recognized where possible but are not executable.
 
 Unsupported scheduler conditions should return diagnostics. Do not silently
 fall back to Python or LLVM inside this stack.
@@ -382,14 +386,16 @@ researcher actually runs is the **CSI surrogate** stability-flexibility model in
 target for "supporting researchers' models," and the roadmap in "Good Next
 Steps" is scoped to close the gap to it.
 
-`BatchedCompositionCompiler.diagnose()` currently **rejects** the CSI surrogate
-even after its `driftRate` op is registered. This is intentional: the generic
-compiler does not yet represent the LCA finished predicate, effective
-termination-threshold control, or conditional `Always`/`WhenFinished` pass
-regions. Older measurements below describe the retired heuristic co-evolution
-path and are not current correctness evidence. The component-level work remains
-useful, but CSI becomes supported only when those general semantics pass the
-Python oracle without a model recognizer.
+`BatchedCompositionCompiler.diagnose()` now accepts the exact deterministic
+surrogate after its drift UDF is registered when `iti=0`, `csi_repeat=0`,
+`csi_switch=1`, `ddm_noise=0`, and `lca_noise=0`. The public compiler lowers it
+to explicit effective-parameter/control operations and one authenticated
+`lane_local_coevolving` pass region; Triton interpreter and compiled CUDA both
+match fresh Python oracle cases. This is the first narrow CSI checkpoint, not
+full research-model support: nonzero ITI, fitted/generalized CSI cue transforms,
+and stochastic DDM/LCA execution still reject. Older measurements below
+describe the retired heuristic emitter and are not evidence for the current
+typed path.
 
 1. **Custom / UDF reduction op** (`driftRate`, a nested-logistic reducing a
    7-vector to a scalar) — RESOLVED (step 6). `batched_node_op("<node name>")`
@@ -400,16 +406,17 @@ Python oracle without a model recognizer.
    A fires-once (`AtPass`), reset-each-trial (`AtTrialStart`) integrator advances
    one affine step from its initializer and lowers statelessly as
    `function(a*input + b)`.
-3. **`AtPass` multi-pass timing** — RESOLVED (step 4, `iti=0`). `AtPass(0)` lowers
-   as a static graph; `AtPass(n>0)` (the ITI onset) is still deferred.
+3. **`AtPass` multi-pass timing** — PARTIAL. `AtPass(0)` is executable, including
+   the deterministic CSI origins. `AtPass(n>0)` (the ITI onset) is still
+   deferred.
 4. **Collapsing DDM threshold** (`threshold_collapse`) — RESOLVED (step 8). The
    DDM kernel boundary is now `threshold(step) = threshold + collapse*step`.
 5. **Control routing** (`csiOverride`/`thresholdOverride` OVERRIDE a target
-   param) — RESOLVED. `csiOverride` -> LCA `termination_threshold` was already
-   handled by the LCA cue extraction; `thresholdOverride` -> DDM `threshold`
-   (monitoring the `thresholdMechanism` SimpleIntegrator) is recognized in step 8
-   and the `thresholdMechanism` is **absorbed** into the DDM boundary (not lowered
-   as its own op).
+   param) — RESOLVED FOR THE EXACT SLICE. `csiOverride` -> LCA
+   `termination_threshold` is represented by a held effective value and
+   `ApplyModulation`; `thresholdOverride` -> DDM `threshold` (monitoring the
+   `thresholdMechanism` SimpleIntegrator) is authenticated and absorbed into
+   the DDM boundary. The latter retains its held override across trials.
 
 ### Historical CSI experiment (not current support)
 
@@ -422,7 +429,9 @@ matching** PNL Python mode (RT within ~1 DDM step). That path required the
 activation feeds the drift, so the LCA and DDM step together each timestep. For
 `iti>0` the fused loop gated the `AtPass(iti)` task-input onset per step. These
 terminal-output checks did not establish general scheduler/control fidelity,
-so the current compiler rejects the model pending generic KernelIR support.
+so that emitter was retired. The current deterministic `iti=0` checkpoint uses
+a different, typed `KernelIR` region; the historical `iti>0` result below is
+not current support.
 
 **Benchmark (vs LLVM PEC).** `csi_triton_vs_llvm.py` compares the co-evolving
 CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
@@ -472,9 +481,10 @@ not the checksum, is the real accuracy check.
 > checksum gap. Treat any pre-fix co-evolving multi-parameter number as void.
 
 asv retains a `CSISurrogate` benchmark identifier for historical continuity,
-but the builder now skips it until the generic scheduler/control IR is ready.
-Its recorded results predate the parameter-set fix and are void
-(`PARAM_SETS = 8`); there is no current CSI baseline.
+but the builder still skips it because its original research configuration is
+broader than the newly admitted deterministic slice. Its recorded results
+predate the parameter-set fix and are void (`PARAM_SETS = 8`); there is no
+current CSI baseline.
 
 ## Fusion and Lane Layout
 
@@ -499,11 +509,14 @@ Current fusion kinds:
   - Trials run inside the Triton lane so LCA state persists across trials.
 
 - `coevolving_graph`
-  - Historical optimization for coupled stateful ops. It inferred the
-    `Always`/`WhenFinished` schedule and a shared finished flag in the emitter,
-    so it is not currently accepted as semantic support.
-  - A replacement must express generic loop regions, predicates, scheduling,
-    and effective controlled values in `KernelIR` before CSI can use it.
+  - Current typed optimization for the exactly authenticated deterministic CSI
+    graph. Its `lane_local_coevolving` `ForPasses` region carries explicit LCA
+    and DDM finished identities, effective controlled count, trial-local DDM
+    state, persistent LCA state, and a persistent held threshold override.
+  - The retired emitter inferred `Always`/`WhenFinished` behavior from op order.
+    That history is documented below, but it is not used by the current path.
+    Other coupled stateful graphs still require their own complete semantic
+    admission and typed region contract.
 
 Fusion kind is a dispatch/optimization detail. It should not encode model
 architecture semantics.
@@ -520,9 +533,12 @@ schedule_kind="static_graph"
 ```
 
 The **CSI surrogate** (the realistic model, with an `Always`-scheduled LCA
-co-evolving with the DDM) currently fails closed. Supporting it requires the
-same generic scheduler, control, and state semantics that any composition with
-that topology requires; there is no CSI recognizer or special fusion rule.
+co-evolving with the DDM) now executes for the deterministic identity-cue,
+zero-ITI slice. Admission authenticates the complete typed graph and the same
+scheduler, control, and state semantics required of any composition with that
+topology; there is no public CSI model kind or display-name dispatch. Research
+variants with delayed ITI, fitted affine cue transforms, or noise still fail
+closed.
 
 There should be no `STABILITY_FLEXIBILITY_MODEL`, no
 `stability_flexibility_roles` metadata, no forced `cue`/`correct` aliases, and
@@ -597,7 +613,8 @@ It does not yet cover:
 - convergence or other termination measures;
 - stochastic noise, clipping, nonzero/custom initialization, or trial reset;
 - non-identity or otherwise general termination-threshold control;
-- generic co-evolving `Always`/`WhenFinished` scheduling and control.
+- generic co-evolving `Always`/`WhenFinished` scheduling and control outside
+  the exact deterministic CSI topology.
 
 The old handwritten recurrence test and heuristic co-evolution checks are not
 semantic support evidence. Fresh Python and batched compositions now compare
@@ -1220,10 +1237,10 @@ environments to persist results.
   recovery** for the CSI surrogate runs via
   `csi_batched_parameter_recovery.py` (see below).
 
-### Planned (in execution order; scoped to close the Capability Gaps above)
+### Roadmap status (original execution order)
 
-The end goal is the **CSI surrogate model**: steps 1-8 make it *compilable*;
-steps 9-10 make the full PEC fit run on the batched path.
+The deterministic CSI slice now compiles and runs. The remaining north-star is
+the broader **CSI research configuration** and its full PEC fitting workflow.
 
 1. **Reject `integrator_mode` transfers** — DONE (see Done above). Rejected in
    `graph.py:_node_support_diagnostic` with a clear diagnostic instead of being
@@ -1237,19 +1254,18 @@ steps 9-10 make the full PEC fit run on the batched path.
 3. **Split `graph_emit.py`** into a `backend/triton/emit/` package — DONE (see
    Done above). New `KernelOp` emitters are added in `emit/ops.py`.
 
-4. **Tiered scheduling** (pay only when needed) — OPEN beyond static execution.
-   `AtPass(0)` origins are executable. `Always` LCA / `WhenFinished(LCA)`,
-   `AtPass(n>0)`, and precomputed per-trial traces remain fail-closed until
-   their generic predicates and regions are explicit in `KernelIR`.
-   Prefer static erasure / precomputed traces over dynamic lane-local scheduler
-   state (which would recreate the LLVM/PTX overhead problem).
+4. **Tiered scheduling** (pay only when needed) — PARTIAL. Static execution,
+   finite precomputed traces, fixed-count stateful producer/follower traces,
+   scalar-controlled lane-local counts, and the exact deterministic CSI region
+   are executable. `AtPass(n>0)`, additional finished dependencies, and generic
+   dynamic consideration-set evaluation remain fail-closed.
 
-5. **Co-evolution loop for coupled stateful mechanisms** — OPEN. The old fused
-   emitter inferred one terminator and one shared finished flag, so it is no
-   longer accepted as semantic support. The new path must lower generic loop
-   regions, per-node finished predicates, scheduler ordering, and effective
-   controlled values. Exact deterministic LCA initialization is a separate
-   concern; width-N and arbitrary recurrent matrices remain separate open work.
+5. **Co-evolution loop for coupled stateful mechanisms** — DONE FOR THE EXACT
+   DETERMINISTIC CSI SLICE. `lane_local_coevolving` carries explicit LCA/DDM
+   finished identities, scheduler ordering, effective controlled count,
+   private DDM trial state, persistent LCA state, and persistent threshold
+   control. General coupled graphs, delayed ITI, stochastic CSI, width-N LCA,
+   and arbitrary recurrent matrices remain separate open work.
 
 6. **UDF / instance-level ops** (gap 1) — DONE (see Done above). Researchers
    register an op for a specific node via `batched_node_op("<node name>")`; the
