@@ -444,6 +444,17 @@ slower in absolute warm time and its GPU/LLVM speedup is about 21% lower. This
 is directionally useful, but not an exact regression comparison because the
 old stochastic/zero-cue model is outside the current executable boundary.
 
+For a strict equal-output comparison, both implementations were also run with
+the same constant cue count 1, zero LCA/DDM noise, zero threshold collapse, and
+otherwise identical 262,144-simulation workload. Both GPU checksums were
+exactly `453365.75`. Against one common current LLVM median of 1.550 s, the
+retired GPU kernel took 14.9 ms (**104.3x**) and the typed GPU kernel took
+20.2 ms (**76.7x**). At equal work and output, the typed path is therefore about
+36% slower in warm GPU time and the speedup ratio is about 26% lower. The cost
+buys explicit scheduler/control/state semantics and fail-closed authentication;
+profiling is still needed to apportion it among the emitted loop and state
+operations.
+
 A common-size GPU-only sweep used 8 parameter rows x 1,024 estimates x 128
 trials = 1,048,576 simulations for each model:
 
