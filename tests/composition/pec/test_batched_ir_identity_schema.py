@@ -133,6 +133,7 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
         ops=(),
         execution_order=("node",),
         rng_streams=(rng_stream,),
+        executable=False,
     )
     kernel = KernelIR(
         model_kind="graph",
@@ -148,6 +149,7 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
         max_steps=1,
         graph=graph,
         op_specs=BatchedOpSpecSnapshot({}),
+        executable=False,
     )
 
     assert kernel.params[0].parameter_id == 0

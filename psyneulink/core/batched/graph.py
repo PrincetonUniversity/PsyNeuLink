@@ -56,6 +56,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.pathway.mappingprojection import (
     MappingProjection,
 )
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import (
     ControlMechanism,
 )
@@ -1413,6 +1414,12 @@ def _input_port_function_support_diagnostic(node, input_port) -> BatchedDiagnost
 
     function = getattr(input_port, "function", None)
     port_name = getattr(input_port, "name", "InputPort")
+    if type(input_port) is not InputPort:
+        return BatchedDiagnostic(
+            _node_name(node),
+            "unsupported InputPort type for batched v2",
+            f"{port_name}: {type(input_port).__name__}",
+        )
     default_input = _parameter_value(input_port, "default_input", None)
     internal_only = bool(_parameter_value(input_port, "internal_only", False))
     if default_input is not None:

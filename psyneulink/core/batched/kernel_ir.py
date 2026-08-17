@@ -464,6 +464,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
     # can be silently collapsed by Python's mapping-key equality.
     _validate_kernel_parameters(kernel)
     _validate_kernel_ports(kernel)
+    _validate_kernel_io_declarations(kernel)
     _validate_kernel_finished_scheduler(kernel)
 
     semantic_fields = (
@@ -498,10 +499,49 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
     _validate_kernel_reset_declarations(kernel)
     step_counts: dict[int, int] = {}
     precomputed_regions: list[KernelOp] = []
+    input_loads: list[KernelOp] = []
     output_stores: list[KernelOp] = []
+    value_lineage: dict[
+        tuple[str, int, str],
+        tuple[frozenset[int], frozenset[int]],
+    ] = {}
+    lineage_at_store: dict[
+        int,
+        tuple[frozenset[int], frozenset[int]],
+    ] = {}
     reset_ops: list[KernelOp] = []
 
-    def visit(op: KernelOp, *, in_precomputed_region: bool = False) -> None:
+    def visit(
+        op: KernelOp,
+        *,
+        in_precomputed_region: bool = False,
+        in_trials: bool = False,
+    ) -> None:
+        for value in (*op.inputs, *op.outputs):
+            if (
+                type(value) is not KernelValue
+                or type(value.name) is not str
+                or not value.name
+                or type(value.width) is not int
+                or value.width <= 0
+                or type(value.dtype) is not str
+                or not value.dtype
+            ):
+                raise ValueError(
+                    f"KernelIR {op.kind} values require nonempty names and "
+                    "dtypes plus positive non-bool widths."
+                )
+        if op.kind != "StoreOutput":
+            missing_inputs = tuple(
+                value.name
+                for value in op.inputs
+                if _kernel_value_key(value) not in value_lineage
+            )
+            if missing_inputs:
+                raise ValueError(
+                    f"KernelIR {op.kind} input value(s) {missing_inputs} must "
+                    "be defined by a dominating operation."
+                )
         if op.kind == "StepMechanism":
             if not in_precomputed_region:
                 raise ValueError(
@@ -545,13 +585,44 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                     f"{expected_execution_index}."
                 )
             step_counts[component_id] = expected_execution_index + 1
+        elif op.kind == "LoadInput":
+            input_loads.append(op)
         elif op.kind == "StoreOutput":
+            if (
+                kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
+                and not in_trials
+            ):
+                raise ValueError(
+                    "Stateful KernelIR StoreOutput operations must be inside "
+                    "the ForTrials body."
+                )
+            if kernel.lane_layout.kind == TRIAL_LANE_LAYOUT and in_trials:
+                raise ValueError(
+                    "Trial-lane KernelIR StoreOutput operations cannot be "
+                    "inside a ForTrials body."
+                )
             output_stores.append(op)
+            lineage_at_store[id(op)] = (
+                value_lineage.get(
+                    _kernel_value_key(op.inputs[0]),
+                    (frozenset(), frozenset()),
+                )
+                if len(op.inputs) == 1 and type(op.inputs[0]) is KernelValue
+                else (frozenset(), frozenset())
+            )
         elif op.kind == "ResetState":
             # attrs is a Mapping and may have been mutated after construction;
             # source emission re-runs this complete-IR boundary.
             _validate_reset_state(op)
             reset_ops.append(op)
+
+        value_lineage.update(
+            _kernel_op_output_lineage(
+                kernel,
+                op,
+                value_lineage,
+            )
+        )
 
         child_precomputed = in_precomputed_region
         if op.kind == "ForPasses":
@@ -562,47 +633,24 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             if child_precomputed:
                 precomputed_regions.append(op)
         for child in op.attrs.get("body", ()):
-            visit(child, in_precomputed_region=child_precomputed)
+            visit(
+                child,
+                in_precomputed_region=child_precomputed,
+                in_trials=in_trials or op.kind == "ForTrials",
+            )
 
     for op in kernel.ops:
         visit(op)
 
-    if kernel.schedule_trace is not None:
-        # This first executable schedule tier has a compiler-owned epilogue.
-        # Enforce it here so a hand-forged scheduled body cannot add or replace
-        # a host-buffer write.  Ordinary KernelIR remains extensible: custom
-        # lowering may legitimately feed a declared output from a different
-        # SSA value (for example after AddConstant/Clamp transforms).
-        if len(output_stores) != len(kernel.graph.outputs):
-            raise ValueError(
-                "KernelIR precomputed schedule must contain exactly one "
-                "StoreOutput for each declared GraphIR output."
-            )
-        for store, output in zip(output_stores, kernel.graph.outputs):
-            expected_input = KernelValue(
-                node_output_value_name(kernel.graph, output.node, output.port),
-                output.width,
-            )
-            expected_attrs = {
-                "node": output.node,
-                "port": output.port,
-                "width": output.width,
-                "component_id": output.component_id,
-                "port_id": output.port_id,
-                "flat_start": output.flat_start,
-                "flat_stop": output.flat_stop,
-            }
-            if (
-                store.target != output.name
-                or store.inputs != (expected_input,)
-                or store.outputs
-                or dict(store.attrs) != expected_attrs
-            ):
-                raise ValueError(
-                    "KernelIR StoreOutput does not exactly match its declared "
-                    f"GraphIR output '{output.name}'."
-                )
+    if kernel.executable:
+        _validate_executable_kernel_io_ops(
+            kernel,
+            input_loads=input_loads,
+            output_stores=output_stores,
+            lineage_at_store=lineage_at_store,
+        )
 
+    if kernel.schedule_trace is not None:
         if len(precomputed_regions) != 1:
             raise ValueError(
                 "KernelIR schedule_trace requires exactly one executable "
@@ -970,6 +1018,448 @@ def _validate_kernel_ports(kernel: KernelIR) -> None:
             raise ValueError(
                 f"KernelIR node '{node.name}' port anchors must exactly match "
                 "its ordered typed port inventory."
+            )
+
+
+def _has_typed_port_inventory(kernel: KernelIR) -> bool:
+    """Whether this KernelIR uses the evolved, identity-bearing Port schema."""
+
+    return bool(
+        kernel.ports
+        or any(
+            node.input_port_ids
+            or node.output_port_ids
+            or node.parameter_port_ids
+            for node in kernel.graph.nodes
+        )
+        or (
+            kernel.executable
+            and bool(kernel.inputs or kernel.outputs)
+        )
+    )
+
+
+def _exact_graph_node(kernel: KernelIR, *, node: str, component_id: int):
+    if type(node) is not str or not node or type(component_id) is not int:
+        return None
+    matches = tuple(
+        candidate
+        for candidate in _nodes_resolving_component_id(
+            kernel.graph,
+            component_id,
+        )
+        if candidate.name == node
+    )
+    return matches[0] if len(matches) == 1 else None
+
+
+def _validate_kernel_io_declarations(kernel: KernelIR) -> None:
+    """Tie public input/output records to the complete typed Port inventory."""
+
+    # Preserve direct construction of the original experimental dataclasses,
+    # whose legacy records have no numeric Port inventory.  Composition
+    # lowering always emits that inventory, and any partially typed graph is
+    # rejected by ``_validate_kernel_ports`` before reaching this boundary.
+    if not _has_typed_port_inventory(kernel):
+        return
+
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    input_port_ids = []
+    input_component_ids = []
+    input_names = []
+    projected_receiver_port_ids = {
+        projection.receiver_port_id for projection in kernel.graph.projections
+    }
+    for input_spec in kernel.inputs:
+        node = _exact_graph_node(
+            kernel,
+            node=input_spec.node,
+            component_id=input_spec.component_id,
+        )
+        port = ports_by_id.get(input_spec.port_id)
+        expected_name = (
+            input_spec.node
+            if node is not None and len(node.input_port_ids) == 1
+            else f"{input_spec.node}.{input_spec.port}"
+        )
+        if (
+            node is None
+            or type(input_spec.port_id) is not int
+            or type(input_spec.width) is not int
+            or input_spec.width <= 0
+            or type(input_spec.port) is not str
+            or not input_spec.port
+            or type(input_spec.name) is not str
+            or not input_spec.name
+            or port is None
+            or port.kind != "InputPort"
+            or port.owner != input_spec.node
+            or port.owner_component_id != input_spec.component_id
+            or port.name != input_spec.port
+            or port.width != input_spec.width
+            or input_spec.port_id not in node.input_port_ids
+            or input_spec.port_id in projected_receiver_port_ids
+            or input_spec.name != expected_name
+        ):
+            raise ValueError(
+                f"KernelIR input '{input_spec.name}' must match its exact typed "
+                "GraphIR node and external InputPort identity, width, and label."
+            )
+        input_port_ids.append(input_spec.port_id)
+        input_component_ids.append(input_spec.component_id)
+        input_names.append(input_spec.name)
+    if (
+        len(set(input_port_ids)) != len(input_port_ids)
+        or len(set(input_component_ids)) != len(input_component_ids)
+        or len(set(input_names)) != len(input_names)
+    ):
+        raise ValueError(
+            "KernelIR inputs must have unique external Port, component, and "
+            "public-name identities."
+        )
+    expected_external_port_ids = tuple(
+        port_id
+        for node in kernel.graph.nodes
+        if node.component_type != "ControlMechanism"
+        for port_id in node.input_port_ids
+        if port_id not in projected_receiver_port_ids
+    )
+    if kernel.executable and tuple(input_port_ids) != expected_external_port_ids:
+        raise ValueError(
+            "KernelIR inputs must cover every external typed InputPort exactly "
+            "once and in GraphIR declaration order."
+        )
+
+    expected_output_names = []
+    flat_cursor = 0
+    for output in kernel.outputs:
+        node = _exact_graph_node(
+            kernel,
+            node=output.node,
+            component_id=output.component_id,
+        )
+        port = ports_by_id.get(output.port_id)
+        expected_name = f"{output.node}.{output.port}"
+        if (
+            node is None
+            or type(output.port_id) is not int
+            or type(output.width) is not int
+            or output.width <= 0
+            or type(output.port) is not str
+            or not output.port
+            or type(output.name) is not str
+            or not output.name
+            or type(output.flat_start) is not int
+            or type(output.flat_stop) is not int
+            or port is None
+            or port.kind != "OutputPort"
+            or port.owner != output.node
+            or port.owner_component_id != output.component_id
+            or port.name != output.port
+            or port.width != output.width
+            or output.port_id not in node.output_port_ids
+            or output.name != expected_name
+        ):
+            raise ValueError(
+                f"KernelIR output '{output.name}' must match its exact typed "
+                "GraphIR node and OutputPort identity, width, and label."
+            )
+        if (
+            output.flat_start != flat_cursor
+            or output.flat_stop != flat_cursor + output.width
+        ):
+            raise ValueError(
+                "KernelIR output flattened slices must be contiguous, ordered, "
+                "non-overlapping, and match each declared width."
+            )
+        flat_cursor = output.flat_stop
+        expected_output_names.append(output.name)
+
+    if (
+        type(kernel.output_names) is not tuple
+        or kernel.output_names != tuple(expected_output_names)
+        or any(type(name) is not str for name in kernel.output_names)
+    ):
+        raise ValueError(
+            "KernelIR output_names must exactly match declared outputs in "
+            "flattened buffer order."
+        )
+
+
+def _expected_input_load(kernel: KernelIR, input_spec: BatchedInputSpec):
+    node = _exact_graph_node(
+        kernel,
+        node=input_spec.node,
+        component_id=input_spec.component_id,
+    )
+    assert node is not None
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    port_slot = node.input_port_ids.index(input_spec.port_id)
+    flat_start = sum(
+        ports_by_id[port_id].width
+        for port_id in node.input_port_ids[:port_slot]
+    )
+    flat_stop = flat_start + input_spec.width
+    value_name = (
+        node_input_value_name(kernel.graph, node)
+        if len(node.input_port_ids) == 1
+        else f"{component_symbol(kernel.graph, node)}:input-port:{port_slot}"
+    )
+    return (
+        node,
+        KernelValue(value_name, input_spec.width),
+        {
+            "node": input_spec.node,
+            "input_name": input_spec.name,
+            "width": input_spec.width,
+            "component_id": input_spec.component_id,
+            "port": input_spec.port,
+            "port_id": input_spec.port_id,
+            "flat_start": flat_start,
+            "flat_stop": flat_stop,
+        },
+    )
+
+
+def _attrs_match_exactly(actual: Mapping[str, Any], expected: Mapping[str, Any]) -> bool:
+    """Mapping equality that does not let bool values alias integer IDs."""
+
+    if set(actual) != set(expected):
+        return False
+    return all(
+        type(actual[key]) is type(value) and actual[key] == value
+        for key, value in expected.items()
+    )
+
+
+def _kernel_value_matches(actual: KernelValue, expected: KernelValue) -> bool:
+    return bool(
+        type(actual) is KernelValue
+        and type(actual.name) is str
+        and actual.name == expected.name
+        and type(actual.width) is int
+        and actual.width == expected.width
+        and type(actual.dtype) is str
+        and actual.dtype == expected.dtype
+    )
+
+
+def _kernel_value_key(value: KernelValue) -> tuple[str, int, str]:
+    return (value.name, value.width, value.dtype)
+
+
+def _kernel_output_port(kernel: KernelIR, node, *, name: str, port_id: int | None = None):
+    matches = tuple(
+        port
+        for port in kernel.ports
+        if port.owner_component_id == _component_id(kernel.graph, node)
+        and port.kind == "OutputPort"
+        and port.name == name
+        and (port_id is None or port.port_id == port_id)
+    )
+    return matches[0] if len(matches) == 1 else None
+
+
+def _kernel_op_output_lineage(
+    kernel: KernelIR,
+    op: KernelOp,
+    value_lineage: Mapping[
+        tuple[str, int, str],
+        tuple[frozenset[int], frozenset[int]],
+    ],
+) -> dict[tuple[str, int, str], tuple[frozenset[int], frozenset[int]]]:
+    """Track exact component and OutputPort provenance through typed ops."""
+
+    empty = (frozenset(), frozenset())
+    output_lineage = {_kernel_value_key(value): empty for value in op.outputs}
+    try:
+        node = kernel.graph.node(op.target)
+    except KeyError:
+        return output_lineage
+    component_id = _component_id(kernel.graph, node)
+
+    if op.kind in {"CallFunction", "CallMechanism", "StepMechanism"}:
+        for index, value in enumerate(op.outputs):
+            port = None
+            if op.kind == "CallFunction" and len(op.outputs) == 1:
+                port_name = op.attrs.get("output_port")
+                if type(port_name) is str:
+                    port = _kernel_output_port(kernel, node, name=port_name)
+            else:
+                op_outputs = tuple(node.attrs.get("op_outputs", ()))
+                if index < len(op_outputs):
+                    port_name, port_width = op_outputs[index]
+                    if value.width == port_width:
+                        port = _kernel_output_port(kernel, node, name=port_name)
+            port_ids = (
+                frozenset((port.port_id,))
+                if port is not None and value.width == port.width
+                else frozenset()
+            )
+            output_lineage[_kernel_value_key(value)] = (
+                frozenset((component_id,)),
+                port_ids,
+            )
+        if op.kind == "CallMechanism":
+            for diagnostic_value in op.attrs.get("diagnostic_values", ()):
+                if type(diagnostic_value) is str and diagnostic_value:
+                    output_lineage[(diagnostic_value, 1, "float32")] = (
+                        frozenset((component_id,)),
+                        frozenset(),
+                    )
+        return output_lineage
+
+    if op.kind not in {"AddConstant", "Clamp", "ExtractSlice"}:
+        return output_lineage
+
+    input_components = frozenset().union(
+        *(value_lineage.get(_kernel_value_key(value), empty)[0] for value in op.inputs)
+    )
+    input_ports = frozenset().union(
+        *(value_lineage.get(_kernel_value_key(value), empty)[1] for value in op.inputs)
+    )
+    if component_id not in input_components:
+        return output_lineage
+
+    if op.kind == "ExtractSlice":
+        port_id = op.attrs.get("port_id")
+        port_name = op.attrs.get("port")
+        port = (
+            _kernel_output_port(
+                kernel,
+                node,
+                name=port_name,
+                port_id=port_id,
+            )
+            if type(port_name) is str and type(port_id) is int
+            else None
+        )
+        matching_slice = next(
+            (
+                item
+                for item in _node_output_port_slices(node)
+                if item
+                == (
+                    port_name,
+                    port.width if port is not None else -1,
+                    port_id,
+                    op.attrs.get("start"),
+                    op.attrs.get("stop"),
+                )
+            ),
+            None,
+        )
+        propagated_ports = (
+            frozenset((port.port_id,))
+            if port is not None and matching_slice is not None
+            else frozenset()
+        )
+    else:
+        propagated_ports = input_ports
+
+    propagated = (input_components, propagated_ports)
+    return {_kernel_value_key(value): propagated for value in op.outputs}
+
+
+def _validate_executable_kernel_io_ops(
+    kernel: KernelIR,
+    *,
+    input_loads: list[KernelOp],
+    output_stores: list[KernelOp],
+    lineage_at_store: Mapping[
+        int,
+        tuple[frozenset[int], frozenset[int]],
+    ],
+) -> None:
+    """Require executable host-buffer effects to implement typed IO exactly."""
+
+    if not _has_typed_port_inventory(kernel):
+        return
+
+    inputs_by_port_id = {input_spec.port_id: input_spec for input_spec in kernel.inputs}
+    actual_load_counts = {port_id: 0 for port_id in inputs_by_port_id}
+    for load in input_loads:
+        port_id = load.attrs.get("port_id")
+        input_spec = inputs_by_port_id.get(port_id)
+        if input_spec is None:
+            raise ValueError(
+                "Executable KernelIR LoadInput references no declared external "
+                "InputPort."
+            )
+        node, expected_output, expected_attrs = _expected_input_load(
+            kernel,
+            input_spec,
+        )
+        if (
+            load.target != node.name
+            or load.inputs
+            or len(load.outputs) != 1
+            or not _kernel_value_matches(load.outputs[0], expected_output)
+            or not _attrs_match_exactly(load.attrs, expected_attrs)
+        ):
+            raise ValueError(
+                f"Executable KernelIR LoadInput does not exactly match declared "
+                f"input '{input_spec.name}'."
+            )
+        actual_load_counts[port_id] += 1
+
+    expected_load_counts = {
+        input_spec.port_id: (
+            sum(
+                input_spec.component_id in step.component_ids
+                for step in kernel.schedule_trace.steps
+            )
+            if kernel.schedule_trace is not None
+            else 1
+        )
+        for input_spec in kernel.inputs
+    }
+    if actual_load_counts != expected_load_counts:
+        raise ValueError(
+            "Executable KernelIR must contain the exact scheduled LoadInput "
+            "count for every declared external InputPort."
+        )
+
+    if len(output_stores) != len(kernel.outputs):
+        raise ValueError(
+            "Executable KernelIR must contain exactly one StoreOutput for each "
+            "declared output."
+        )
+    for store, output in zip(output_stores, kernel.outputs):
+        expected_attrs = {
+            "node": output.node,
+            "port": output.port,
+            "width": output.width,
+            "component_id": output.component_id,
+            "port_id": output.port_id,
+            "flat_start": output.flat_start,
+            "flat_stop": output.flat_stop,
+        }
+        stored_value = store.inputs[0] if len(store.inputs) == 1 else None
+        stored_value_is_typed = bool(
+            type(stored_value) is KernelValue
+            and type(stored_value.name) is str
+            and stored_value.name
+            and type(stored_value.width) is int
+            and stored_value.width == output.width
+            and type(stored_value.dtype) is str
+            and stored_value.dtype == "float32"
+        )
+        component_lineage, port_lineage = lineage_at_store.get(
+            id(store),
+            (frozenset(), frozenset()),
+        )
+        if (
+            store.target != output.name
+            or not stored_value_is_typed
+            or output.component_id not in component_lineage
+            or output.port_id not in port_lineage
+            or store.outputs
+            or not _attrs_match_exactly(store.attrs, expected_attrs)
+        ):
+            raise ValueError(
+                "Executable KernelIR StoreOutput does not exactly match its "
+                f"declared output '{output.name}'."
             )
 
 

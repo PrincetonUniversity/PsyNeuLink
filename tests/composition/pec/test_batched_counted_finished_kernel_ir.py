@@ -165,6 +165,19 @@ def test_counted_finished_stateful_trace_uses_one_step_mechanism_ops():
     )
 
 
+def test_stateful_store_output_cannot_escape_the_trial_loop():
+    kernel, _, _ = _counted_finished_kernel()
+    initialize, trials = kernel.ops
+    passes, store = trials.attrs["body"]
+    trials_without_store = replace(
+        trials,
+        attrs={**trials.attrs, "body": (passes,)},
+    )
+
+    with pytest.raises(ValueError, match="must be inside the ForTrials body"):
+        replace(kernel, ops=(initialize, trials_without_store, store))
+
+
 def test_counted_finished_steps_use_the_frozen_mechanism_spec():
     kernel, producer, _ = _counted_finished_kernel()
     producer_node = kernel.graph.node(producer.name)

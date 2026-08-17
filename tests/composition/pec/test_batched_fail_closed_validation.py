@@ -557,6 +557,33 @@ def test_rejects_input_port_function_class_name_spoof():
 
 
 @pytest.mark.composition
+def test_rejects_input_port_class_name_spoof():
+    class InputPort(pnl.InputPort):
+        def _execute(self, variable=None, context=None, runtime_params=None):
+            return 2.0 * super()._execute(
+                variable=variable,
+                context=context,
+                runtime_params=runtime_params,
+            )
+
+    node = pnl.TransferMechanism(
+        default_variable=[[0.0]],
+        input_ports=[{"name": "X", "port_type": InputPort}],
+        function=pnl.Linear(),
+        name="spoofed input port",
+    )
+    composition = pnl.Composition(pathways=node)
+
+    report = BatchedCompositionCompiler.diagnose(composition)
+    assert not report.model_supported
+    assert "unsupported InputPort type" in "; ".join(
+        report.unsupported_reasons
+    )
+    with pytest.raises(BatchedCompileError):
+        BatchedCompositionCompiler.compile(composition)
+
+
+@pytest.mark.composition
 def test_rejects_mapping_function_class_name_spoof():
     class MatrixTransform(pnl.MatrixTransform):
         def _function(self, variable=None, context=None, params=None):
