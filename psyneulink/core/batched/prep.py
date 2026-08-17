@@ -80,6 +80,9 @@ def prepare_inputs(
         for node in ir.graph.nodes
         if node.attrs.get("termination_input_node") is not None
     }
+    termination_step_sources.update(
+        modulation.source for modulation in ir.graph.modulations
+    )
     values = {}
     for input_spec in ir.graph.inputs:
         raw_value = _extract_bound_input(
@@ -93,7 +96,13 @@ def prepare_inputs(
         coerced = _coerce_trials(raw_value, width=input_spec.width)
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
-    return _split_subject_trials(values, subject_slices)
+    return _split_subject_trials(
+        values,
+        subject_slices,
+        require_equal_trials=(
+            ir.graph.metadata.get("schedule_kind") == "dynamic_lane_local"
+        ),
+    )
 
 
 def _validate_dynamic_lca_step_counts(value, input_name: str) -> None:
@@ -148,15 +157,47 @@ def lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> in
     return max(1, metadata_limit, static_limit, input_limit)
 
 
-def _split_subject_trials(values: dict[str, np.ndarray], subject_slices) -> dict[str, np.ndarray]:
-    first = next(iter(values.values()))
-    num_trials = len(first)
+def _split_subject_trials(
+    values: dict[str, np.ndarray],
+    subject_slices,
+    *,
+    require_equal_trials: bool = False,
+) -> dict[str, np.ndarray]:
     if subject_slices is None:
-        subject_slices = [slice(0, num_trials)]
+        subject_slices = [slice(None)]
+    subject_slices = tuple(subject_slices)
+    if not subject_slices:
+        raise ValueError("Batched execution requires at least one subject slice.")
+
+    split_values = {
+        name: tuple(
+            np.asarray(array[subject_slice], dtype=np.float32)
+            for subject_slice in subject_slices
+        )
+        for name, array in values.items()
+    }
+    trial_counts_by_input = {
+        name: tuple(len(subject_array) for subject_array in subject_arrays)
+        for name, subject_arrays in split_values.items()
+    }
+    subject_trial_counts = next(iter(trial_counts_by_input.values()))
+    if any(
+        trial_counts != subject_trial_counts
+        for trial_counts in trial_counts_by_input.values()
+    ):
+        raise ValueError(
+            "Batched execution requires every input to provide the same trial "
+            "counts for each subject slice."
+        )
+    if require_equal_trials and len(set(subject_trial_counts)) > 1:
+        raise ValueError(
+            "Dynamic lane-local batched execution currently requires every "
+            "subject slice to contain the same number of trials; unequal "
+            "slices would execute padded trials."
+        )
 
     result = {}
-    for name, array in values.items():
-        subject_arrays = [np.asarray(array[subject_slice], dtype=np.float32) for subject_slice in subject_slices]
+    for name, subject_arrays in split_values.items():
         max_trials = max(len(subject_array) for subject_array in subject_arrays)
         if subject_arrays[0].ndim == 1:
             padded = np.zeros((len(subject_arrays), max_trials), dtype=np.float32)

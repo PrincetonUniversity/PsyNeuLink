@@ -1,9 +1,4 @@
-"""Typed KernelIR lowering for lane-local controlled finished counts.
-
-The graph capability remains intentionally non-executable in this checkpoint.
-These tests pin the complete automatically lowered effect inventory and
-placement that a later emitter may consume without rediscovering semantics.
-"""
+"""Typed KernelIR lowering for lane-local controlled finished counts."""
 
 from dataclasses import replace
 import itertools
@@ -32,7 +27,12 @@ pytestmark = [pytest.mark.batched, pytest.mark.composition]
 _BUILD_NUMBERS = itertools.count()
 
 
-def _dynamic_control_kernel(*, controller_function=None, reset_when=None):
+def _dynamic_control_kernel(
+    *,
+    controller_function=None,
+    reset_when=None,
+    expect_executable=True,
+):
     stem = f"direct dynamic control KIR {next(_BUILD_NUMBERS)}"
     cue = pnl.TransferMechanism(
         input_shapes=1,
@@ -94,7 +94,7 @@ def _dynamic_control_kernel(*, controller_function=None, reset_when=None):
     lowering = lower_composition(composition, outputs=(follower.output_port,))
     graph = lowering.graph
     assert graph is not None
-    assert not graph.executable
+    assert graph.executable is expect_executable
     semantic_ir = BatchedCompositionIR(
         model_kind=lowering.model_kind,
         node_names=tuple(node.name for node in graph.nodes),
@@ -104,7 +104,7 @@ def _dynamic_control_kernel(*, controller_function=None, reset_when=None):
         graph=graph,
     )
     kernel = lower_to_kernel_ir(semantic_ir)
-    assert not kernel.executable
+    assert kernel.executable is expect_executable
     return kernel
 
 
@@ -141,11 +141,11 @@ def _lower_replaced_graph(kernel, graph):
     )
 
 
-def test_dynamic_control_kernel_ir_is_fully_lowered_but_not_executable():
+def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
     kernel = _dynamic_control_kernel()
 
-    assert not kernel.graph.executable
-    assert not kernel.executable
+    assert kernel.graph.executable
+    assert kernel.executable
     assert tuple(op.kind for op in kernel.ops) == (
         "InitializeState",
         "InitializeEffectiveParameter",
@@ -171,8 +171,26 @@ def test_dynamic_control_kernel_ir_is_fully_lowered_but_not_executable():
     assert trial_body[apply_index + 2].kind == "StoreFlag"
     assert trial_body[apply_index + 2].inputs == (dynamic_region.outputs[-1],)
     assert diag_slots(kernel) == ((dynamic_step.target, "truncated"),)
-    with pytest.raises(ValueError, match="non-executable"):
-        triton_graph_kernel_source(kernel)
+    source = triton_graph_kernel_source(kernel)
+    compile(source, "<dynamic-control-kernel>", "exec")
+    assert source.index("n_effective_0_0 = tl.full") < source.index("trial_idx = 0")
+    assert source.index("while trial_idx < num_trials") < source.index(
+        "# reset component"
+    )
+    assert "n_n1_output_0_0 = _pnl_triton_linear(" in source
+    assert "n_effective_0_0 = tl.where(mask, n_n1_output_0_0" in source
+    assert "tl.ceil(n_effective_0_0)" in source
+    assert "16777216.0" in source
+    block_passes_line = next(
+        line for line in source.splitlines() if "_block_passes =" in line
+    )
+    assert "tl.max(tl.where(mask," in block_passes_line
+    assert "MAX_STEPS" in block_passes_line
+    assert "LCA_MAX_STEPS" not in block_passes_line
+    assert source.count(" = _pnl_triton_lca_width2_step(") == 1
+    assert "_finished = tl.where(mask & (" in source
+    assert "_required_passes > MAX_STEPS" in source
+    assert source.index("tl.store(diag") < source.index("tl.store(out")
 
 
 def test_identity_controller_is_lowered_without_a_registry_key():
@@ -184,6 +202,12 @@ def test_identity_controller_is_lowered_without_a_registry_key():
     assert controller_call.attrs["function_type"] == "Identity"
     assert controller_call.attrs["spec_key"] == ""
     assert controller_call.attrs["params"] == {}
+    source = triton_graph_kernel_source(kernel)
+    modulation = kernel.modulations[0]
+    source_value = f"n_n{modulation.source_component_id}_output_0_0"
+    controller_value = f"n_n{modulation.controller_component_id}_output_0_0"
+    assert f"{controller_value} = {source_value}" in source
+    assert f"n_effective_0_0 = tl.where(mask, {controller_value}" in source
 
 
 def test_never_reset_omits_the_trial_reset_prefix():
@@ -362,7 +386,10 @@ def test_lane_local_region_requires_one_final_dynamic_step():
 def test_partial_dynamic_effect_inventory_is_rejected():
     kernel = _dynamic_control_kernel()
 
-    with pytest.raises(ValueError, match="dominating operation|initialize exactly once"):
+    with pytest.raises(
+        ValueError,
+        match="complete typed|dominating operation|initialize exactly once",
+    ):
         replace(kernel, ops=(kernel.ops[0], kernel.ops[-1]))
 
 
@@ -418,7 +445,10 @@ def test_dynamic_program_cannot_erase_follower_and_output_effects():
         if op.target != output_node and op.kind != "StoreOutput"
     )
 
-    with pytest.raises(ValueError, match="complete compiler-derived"):
+    with pytest.raises(
+        ValueError,
+        match="complete compiler-derived|exactly one StoreOutput",
+    ):
         _replace_trial_body(kernel, body)
 
 
@@ -524,3 +554,451 @@ def test_duplicate_trial_termination_does_not_materialize_dynamic_program():
 
     assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
     assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_non_boolean_frozen_inputs_do_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    consideration_sets = (
+        replace(kernel.graph.consideration_sets[0], inputs_frozen=1),
+        *kernel.graph.consideration_sets[1:],
+    )
+    graph = replace(kernel.graph, consideration_sets=consideration_sets)
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_nonexact_termination_dependency_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    trial_termination = kernel.graph.termination[0]
+    dependency_ids = (False, *trial_termination.dependency_component_ids[1:])
+    termination = (
+        replace(
+            trial_termination,
+            dependency_component_ids=dependency_ids,
+        ),
+        *kernel.graph.termination[1:],
+    )
+    graph = replace(kernel.graph, termination=termination)
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    "termination_index, changes",
+    [
+        (0, {"attrs": []}),
+        (1, {"dependency_component_ids": []}),
+    ],
+    ids=("trial-attrs-list", "run-dependencies-list"),
+)
+def test_untyped_empty_termination_fields_do_not_materialize_dynamic_program(
+    termination_index,
+    changes,
+):
+    kernel = _dynamic_control_kernel()
+    termination = list(kernel.graph.termination)
+    termination[termination_index] = replace(
+        termination[termination_index],
+        **changes,
+    )
+    graph = replace(kernel.graph, termination=tuple(termination))
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"projection_id": 0.0},
+        {"sender_port_id": 1016},
+        {"receiver_port_id": "float-current"},
+    ],
+    ids=("projection-id-float", "sender-port-wrong-owner", "receiver-port-float"),
+)
+def test_forged_ordinary_projection_identity_is_rejected(changes):
+    kernel = _dynamic_control_kernel()
+    projection = kernel.graph.projections[0]
+    if changes.get("receiver_port_id") == "float-current":
+        changes = {
+            "receiver_port_id": float(projection.receiver_port_id),
+        }
+    projections = (
+        replace(projection, **changes),
+        *kernel.graph.projections[1:],
+    )
+    graph = replace(kernel.graph, projections=projections)
+
+    with pytest.raises(ValueError, match="ordinary projection"):
+        _lower_replaced_graph(kernel, graph)
+
+
+def test_forged_ordinary_projection_implementation_is_rejected():
+    kernel = _dynamic_control_kernel()
+    projection = kernel.graph.projections[0]
+    linear_key = kernel.graph.node(projection.sender).attrs["spec_key"]
+    graph = replace(
+        kernel.graph,
+        projections=(
+            replace(projection, spec_key=linear_key),
+            *kernel.graph.projections[1:],
+        ),
+    )
+
+    with pytest.raises(ValueError, match="ordinary projection"):
+        _lower_replaced_graph(kernel, graph)
+
+
+def test_sub_float32_controller_count_transform_is_not_executable():
+    kernel = _dynamic_control_kernel(
+        controller_function=pnl.Linear(slope=1.0, intercept=1e-8),
+        expect_executable=False,
+    )
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in kernel.ops)
+    assert kernel.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_removed_typed_count_source_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    target = kernel.graph.node(kernel.modulations[0].target)
+    attrs = dict(target.attrs)
+    attrs.pop("termination_input_node")
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replace(node, attrs=attrs) if node.name == target.name else node
+            for node in kernel.graph.nodes
+        ),
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert not declaration.executable
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    ("role", "mutation"),
+    [
+        ("follower", "wrong-spec"),
+        ("follower", "missing-slope"),
+        ("target", "missing-leak"),
+    ],
+    ids=("ordinary-spec", "ordinary-binding", "mechanism-binding"),
+)
+def test_forged_node_implementation_is_rejected(role, mutation):
+    kernel = _dynamic_control_kernel()
+    target = kernel.graph.node(kernel.modulations[0].target)
+    follower = kernel.graph.node(kernel.outputs[0].node)
+    node = target if role == "target" else follower
+    if mutation == "wrong-spec":
+        logistic_key = next(
+            state.function_initializer.spec_key
+            for state in kernel.states
+            if state.function_initializer is not None
+        )
+        replacement = replace(
+            node,
+            attrs={**node.attrs, "spec_key": logistic_key},
+        )
+    else:
+        missing = "leak" if mutation == "missing-leak" else "slope"
+        replacement = replace(
+            node,
+            params={
+                argument: parameter
+                for argument, parameter in node.params.items()
+                if argument != missing
+            },
+        )
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replacement if candidate.name == node.name else candidate
+            for candidate in kernel.graph.nodes
+        ),
+    )
+
+    with pytest.raises(ValueError, match="executable node"):
+        _lower_replaced_graph(kernel, graph)
+
+
+def test_forged_target_input_width_is_rejected():
+    kernel = _dynamic_control_kernel()
+    target = kernel.graph.node(kernel.modulations[0].target)
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replace(node, input_width=1) if node.name == target.name else node
+            for node in kernel.graph.nodes
+        ),
+    )
+
+    with pytest.raises(ValueError, match="parameter/shape signature"):
+        _lower_replaced_graph(kernel, graph)
+
+
+def test_extra_controller_input_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    modulation = kernel.modulations[0]
+    controller = kernel.graph.node(modulation.controller)
+    controller_input = next(
+        port
+        for port in kernel.graph.ports
+        if port.port_id == modulation.controller_input_port_id
+    )
+    extra_input = replace(
+        controller_input,
+        port_id=max(port.port_id for port in kernel.graph.ports) + 1,
+        name=f"{controller_input.name} forged extra",
+    )
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replace(
+                node,
+                input_width=2,
+                input_port_ids=(*node.input_port_ids, extra_input.port_id),
+            )
+            if node.name == controller.name
+            else node
+            for node in kernel.graph.nodes
+        ),
+        ports=(*kernel.graph.ports, extra_input),
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert not declaration.executable
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("input_width", True),
+        ("input_width", 1.0),
+        ("output_width", True),
+        ("output_width", 1.0),
+    ),
+    ids=("input-bool", "input-float", "output-bool", "output-float"),
+)
+def test_noninteger_controller_width_does_not_materialize_dynamic_program(
+    field,
+    value,
+):
+    kernel = _dynamic_control_kernel()
+    controller = kernel.graph.node(kernel.modulations[0].controller)
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replace(node, **{field: value})
+            if node.name == controller.name
+            else node
+            for node in kernel.graph.nodes
+        ),
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert not declaration.executable
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_duplicate_first_set_member_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    first_set = kernel.graph.consideration_sets[0]
+    duplicated_set = replace(
+        first_set,
+        nodes=(*first_set.nodes, first_set.nodes[0]),
+        component_ids=(*first_set.component_ids, first_set.component_ids[0]),
+    )
+    graph = replace(
+        kernel.graph,
+        consideration_sets=(
+            duplicated_set,
+            *kernel.graph.consideration_sets[1:],
+        ),
+        execution_order=(
+            *duplicated_set.nodes,
+            *kernel.graph.execution_order[2:],
+        ),
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize("condition_type", ("AtPass", "WhenFinished"))
+def test_non_pass_scheduler_region_does_not_materialize_dynamic_program(
+    condition_type,
+):
+    kernel = _dynamic_control_kernel()
+    scheduler = tuple(
+        replace(condition, region="trial")
+        if condition.condition_type == condition_type
+        else condition
+        for condition in kernel.graph.scheduler
+    )
+    graph = replace(kernel.graph, scheduler=scheduler)
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_at_pass_dependency_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    source_id = kernel.modulations[0].source_component_id
+    target = kernel.graph.node(kernel.modulations[0].target)
+    scheduler = tuple(
+        replace(
+            condition,
+            dependencies=(target.name,),
+            dependency_component_ids=(target.component_id,),
+        )
+        if condition.component_id == source_id
+        else condition
+        for condition in kernel.graph.scheduler
+    )
+    graph = replace(kernel.graph, scheduler=scheduler)
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_untyped_follower_attrs_do_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    scheduler = tuple(
+        replace(
+            condition,
+            attrs=[("predicate", "is_finished")],
+        )
+        if condition.condition_type == "WhenFinished"
+        else condition
+        for condition in kernel.graph.scheduler
+    )
+    graph = replace(kernel.graph, scheduler=scheduler)
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+def test_executable_flags_require_exact_booleans():
+    kernel = _dynamic_control_kernel()
+    graph = replace(kernel.graph, executable=1)
+
+    with pytest.raises(ValueError, match="exact booleans"):
+        _lower_replaced_graph(kernel, graph)
+
+
+def test_kernel_cannot_override_graph_capability_rejection():
+    kernel = _dynamic_control_kernel()
+    rejected_graph = replace(kernel.graph, executable=False)
+    nonexecutable = replace(
+        kernel,
+        graph=rejected_graph,
+        executable=False,
+    )
+
+    with pytest.raises(ValueError, match="GraphIR capability authority"):
+        replace(nonexecutable, executable=True)
+
+
+def test_boolean_graph_component_identity_does_not_materialize_dynamic_program():
+    kernel = _dynamic_control_kernel()
+    controller_id = kernel.modulations[0].controller_component_id
+    nodes = tuple(
+        replace(node, component_id=True)
+        if node.component_id == controller_id
+        else node
+        for node in kernel.graph.nodes
+    )
+    trial_termination = kernel.graph.termination[0]
+    dependency_ids = tuple(
+        True if component_id == controller_id else component_id
+        for component_id in trial_termination.dependency_component_ids
+    )
+    termination = (
+        replace(
+            trial_termination,
+            dependency_component_ids=dependency_ids,
+        ),
+        *kernel.graph.termination[1:],
+    )
+    graph = replace(
+        kernel.graph,
+        nodes=nodes,
+        termination=termination,
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"component_id": 3.0},
+        {"initial_value": (0.0,)},
+        {"name": "forged retained state"},
+        {"node": "missing retained-state owner"},
+    ],
+    ids=("component-id-float", "initializer-width", "name", "owner"),
+)
+def test_forged_retained_state_declaration_is_rejected(changes):
+    kernel = _dynamic_control_kernel()
+    states = (
+        replace(kernel.graph.states[0], **changes),
+        *kernel.graph.states[1:],
+    )
+    graph = replace(kernel.graph, states=states)
+
+    with pytest.raises(ValueError, match="retained state"):
+        _lower_replaced_graph(kernel, graph)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"input_value": (0.0,)},
+        {"params": {}},
+    ],
+    ids=("input-width", "parameter-bindings"),
+)
+def test_forged_retained_state_function_initializer_is_rejected(changes):
+    kernel = _dynamic_control_kernel()
+    state_index = next(
+        index
+        for index, state in enumerate(kernel.graph.states)
+        if state.function_initializer is not None
+    )
+    state = kernel.graph.states[state_index]
+    initializer = replace(state.function_initializer, **changes)
+    states = list(kernel.graph.states)
+    states[state_index] = replace(state, function_initializer=initializer)
+    graph = replace(kernel.graph, states=tuple(states))
+
+    with pytest.raises(ValueError, match="retained-state function initializer"):
+        _lower_replaced_graph(kernel, graph)

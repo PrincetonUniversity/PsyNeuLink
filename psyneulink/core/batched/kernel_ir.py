@@ -14,6 +14,7 @@ from psyneulink.core.batched.graph import (
     projection_inputs,
 )
 from psyneulink.core.batched.ir import (
+    FP32_EXACT_INTEGER_LIMIT,
     BatchedAbsorbedProjectionSpec,
     BatchedCompositionIR,
     BatchedConsiderationSetSpec,
@@ -29,6 +30,7 @@ from psyneulink.core.batched.ir import (
     BatchedScheduleTraceSpec,
     BatchedScheduleRegionSpec,
     BatchedSchedulerSpec,
+    BatchedStateFunctionInitializer,
     BatchedStateSpec,
     BatchedTerminationSpec,
 )
@@ -39,6 +41,7 @@ from psyneulink.core.batched.schedule import (
 from psyneulink.core.batched.specs import (
     BatchedOpSpecError,
     BatchedOpSpecSnapshot,
+    DenseProjectionSpec,
     ElementwiseFunctionSpec,
     MechanismOpSpec,
     snapshot_batched_op_specs,
@@ -754,11 +757,26 @@ class KernelIR:
 def validate_kernel_ir(kernel: KernelIR) -> None:
     """Validate cross-op identity and effect invariants in a complete KernelIR."""
 
+    if (
+        type(kernel.executable) is not bool
+        or type(kernel.graph.executable) is not bool
+    ):
+        raise ValueError(
+            "KernelIR and GraphIR executable flags must be exact booleans."
+        )
+    if kernel.executable and not kernel.graph.executable:
+        raise ValueError(
+            "Executable KernelIR requires executable GraphIR capability authority."
+        )
+
     # Validate identity-bearing declaration sequences before constructing any
     # lookup dictionaries from them.  Otherwise duplicate or bool-valued IDs
     # can be silently collapsed by Python's mapping-key equality.
     _validate_kernel_parameters(kernel)
     _validate_kernel_ports(kernel)
+    _validate_kernel_node_implementations(kernel)
+    _validate_kernel_states(kernel)
+    _validate_kernel_projections(kernel)
     _validate_kernel_io_declarations(kernel)
     _validate_kernel_finished_scheduler(kernel)
 
@@ -1271,6 +1289,119 @@ def _validate_kernel_parameters(kernel: KernelIR) -> None:
             )
 
 
+def _validate_kernel_node_implementations(kernel: KernelIR) -> None:
+    """Tie executable node declarations to frozen implementations and params."""
+
+    if (
+        not kernel.graph.executable
+        or kernel.graph.metadata.get("schedule_kind") != "dynamic_lane_local"
+    ):
+        return
+
+    parameters_by_name = {parameter.name: parameter for parameter in kernel.params}
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    for node in kernel.graph.nodes:
+        spec_kind = node.attrs.get("spec_kind")
+        spec_key = node.attrs.get("spec_key", "")
+        if spec_kind == "control":
+            # Absorbed controllers have a separate identity/binding validator
+            # because the exact Identity form deliberately has no registry key.
+            continue
+        if (
+            spec_kind not in {"elementwise", "mechanism"}
+            or type(spec_key) is not str
+            or not spec_key
+            or not isinstance(node.params, Mapping)
+        ):
+            raise ValueError(
+                f"KernelIR executable node '{node.name}' requires a typed frozen "
+                "implementation declaration."
+            )
+        try:
+            implementation = kernel.op_specs.lookup_spec(spec_key)
+        except BatchedOpSpecError as error:
+            raise ValueError(
+                f"KernelIR executable node '{node.name}' has no frozen "
+                "implementation."
+            ) from error
+
+        if spec_kind == "elementwise":
+            implementation_matches = bool(
+                isinstance(implementation, ElementwiseFunctionSpec)
+                and implementation.function_class.__name__ == node.function_type
+            )
+        else:
+            implementation_matches = bool(
+                isinstance(implementation, MechanismOpSpec)
+                and implementation.mechanism_class.__name__
+                == node.component_type
+                and (
+                    implementation.function_class is None
+                    or implementation.function_class.__name__
+                    == node.function_type
+                )
+            )
+        bindings = implementation.params if implementation_matches else ()
+        expected_arguments = tuple(binding.arg for binding in bindings)
+        input_ports = tuple(
+            ports_by_id.get(port_id) for port_id in node.input_port_ids
+        )
+        output_ports = tuple(
+            ports_by_id.get(port_id) for port_id in node.output_port_ids
+        )
+        if isinstance(implementation, MechanismOpSpec) and implementation.outputs:
+            expected_op_outputs = tuple(
+                (declaration.port, declaration.width)
+                for declaration in implementation.outputs
+            )
+            output_shape_matches = bool(
+                node.output_width == implementation.outputs[0].width
+                and _kernel_attribute_matches_exactly(
+                    node.attrs.get("op_outputs"),
+                    expected_op_outputs,
+                )
+            )
+        elif output_ports:
+            output_shape_matches = bool(
+                node.output_width == output_ports[0].width
+                if isinstance(implementation, MechanismOpSpec)
+                else node.output_width == node.input_width
+            )
+        else:
+            output_shape_matches = False
+        if (
+            not implementation_matches
+            or tuple(node.params) != expected_arguments
+            or any(
+                type(parameter_name) is not str or not parameter_name
+                for parameter_name in node.params.values()
+            )
+            or type(node.input_width) is not int
+            or node.input_width <= 0
+            or any(port is None for port in input_ports)
+            or node.input_width != sum(port.width for port in input_ports)
+            or type(node.output_width) is not int
+            or node.output_width <= 0
+            or any(port is None for port in output_ports)
+            or not output_shape_matches
+        ):
+            raise ValueError(
+                f"KernelIR executable node '{node.name}' implementation and "
+                "parameter/shape signature must exactly match its frozen spec."
+            )
+        for binding in bindings:
+            parameter = parameters_by_name.get(node.params[binding.arg])
+            if (
+                parameter is None
+                or parameter.owner_component_id != node.component_id
+                or parameter.owner_scope != binding.scope
+            ):
+                raise ValueError(
+                    f"KernelIR executable node '{node.name}' parameter "
+                    f"'{binding.arg}' must resolve to its exact owned binding."
+                )
+
+
 def _validate_kernel_ports(kernel: KernelIR) -> None:
     """Validate the complete typed port inventory for every KernelIR shape."""
 
@@ -1365,6 +1496,192 @@ def _validate_kernel_ports(kernel: KernelIR) -> None:
             raise ValueError(
                 f"KernelIR node '{node.name}' port anchors must exactly match "
                 "its ordered typed port inventory."
+            )
+
+
+def _validate_kernel_projections(kernel: KernelIR) -> None:
+    """Authenticate ordinary dense projection endpoint identities and shapes."""
+
+    if not _has_typed_port_inventory(kernel):
+        return
+
+    projection_ids = tuple(
+        projection.projection_id for projection in kernel.graph.projections
+    )
+    if (
+        any(type(projection_id) is not int for projection_id in projection_ids)
+        or projection_ids != tuple(range(len(kernel.graph.projections)))
+    ):
+        raise ValueError(
+            "KernelIR ordinary projection IDs must be exact, unique, contiguous "
+            "non-bool integers in declaration order."
+        )
+
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    for projection in kernel.graph.projections:
+        ids = (
+            projection.sender_component_id,
+            projection.sender_port_id,
+            projection.receiver_component_id,
+            projection.receiver_port_id,
+        )
+        sender = _exact_graph_node(
+            kernel,
+            node=projection.sender,
+            component_id=projection.sender_component_id,
+        )
+        receiver = _exact_graph_node(
+            kernel,
+            node=projection.receiver,
+            component_id=projection.receiver_component_id,
+        )
+        sender_port = ports_by_id.get(projection.sender_port_id)
+        receiver_port = ports_by_id.get(projection.receiver_port_id)
+        matrix = projection.matrix
+        try:
+            implementation = kernel.op_specs.lookup_spec(projection.spec_key)
+        except BatchedOpSpecError:
+            implementation = None
+        if (
+            any(type(value) is not int or value < 0 for value in ids)
+            or sender is None
+            or receiver is None
+            or sender_port is None
+            or sender_port.kind != "OutputPort"
+            or sender_port.owner != projection.sender
+            or sender_port.owner_component_id
+            != projection.sender_component_id
+            or sender_port.name != projection.sender_port
+            or receiver_port is None
+            or receiver_port.kind != "InputPort"
+            or receiver_port.owner != projection.receiver
+            or receiver_port.owner_component_id
+            != projection.receiver_component_id
+            or receiver_port.name != projection.receiver_port
+            or type(projection.spec_key) is not str
+            or not projection.spec_key
+            or not isinstance(implementation, DenseProjectionSpec)
+            or implementation.projection_class.__name__ != "MappingProjection"
+            or not callable(implementation.triton_emit)
+            or type(matrix) is not np.ndarray
+            or matrix.dtype != np.dtype(np.float32)
+            or matrix.shape != (sender_port.width, receiver_port.width)
+            or not bool(np.all(np.isfinite(matrix)))
+        ):
+            raise ValueError(
+                "KernelIR ordinary projection must match exact GraphIR node/port "
+                "ownership and a finite dense float32 matrix shape."
+            )
+
+
+def _validate_kernel_states(kernel: KernelIR) -> None:
+    """Authenticate retained state against frozen mechanism declarations."""
+
+    if not _has_typed_port_inventory(kernel):
+        return
+
+    state_ids = tuple(state.state_id for state in kernel.states)
+    if (
+        any(type(state_id) is not int for state_id in state_ids)
+        or state_ids != tuple(range(len(kernel.states)))
+    ):
+        raise ValueError(
+            "KernelIR retained-state IDs must be exact, unique, contiguous "
+            "non-bool integers in declaration order."
+        )
+
+    # Deep mechanism-declaration authentication is currently part of the
+    # executable controlled-pass boundary.  Legacy hand-built KernelIR
+    # fixtures may intentionally omit frozen mechanism keys; their state
+    # identity/effect invariants remain covered by the complete validator.
+    if kernel.graph.metadata.get("schedule_kind") != "dynamic_lane_local":
+        return
+
+    expected = []
+    for node in kernel.graph.nodes:
+        spec_key = node.attrs.get("spec_key")
+        if type(spec_key) is not str or not spec_key:
+            continue
+        try:
+            spec = kernel.op_specs.lookup_spec(spec_key)
+        except BatchedOpSpecError:
+            continue
+        if not isinstance(spec, MechanismOpSpec):
+            continue
+        expected.extend((node, declaration) for declaration in spec.states)
+    if len(kernel.states) != len(expected):
+        raise ValueError(
+            "KernelIR retained-state declarations must form an exact bijection "
+            "with frozen mechanism state declarations."
+        )
+
+    for state, (node, declaration) in zip(kernel.states, expected):
+        width = declaration.width or node.output_width
+        initial_value = tuple(declaration.initial for _ in range(width))
+        if (
+            type(state.component_id) is not int
+            or state.component_id != node.component_id
+            or type(state.node) is not str
+            or state.node != node.name
+            or type(state.name) is not str
+            or state.name != f"{node.name}.{declaration.name}"
+            or type(state.width) is not int
+            or state.width != width
+            or not _kernel_attribute_matches_exactly(
+                state.initial_value,
+                initial_value,
+            )
+        ):
+            raise ValueError(
+                "KernelIR retained state does not exactly match its frozen "
+                f"mechanism declaration for '{node.name}.{declaration.name}'."
+            )
+
+        initializer = state.function_initializer
+        if not declaration.initialize_with_function:
+            if initializer is not None:
+                raise ValueError(
+                    "KernelIR retained state has an undeclared function "
+                    f"initializer for '{state.name}'."
+                )
+            continue
+        if type(initializer) is not BatchedStateFunctionInitializer:
+            raise ValueError(
+                "KernelIR retained state requires its typed function "
+                f"initializer for '{state.name}'."
+            )
+        try:
+            initializer_spec = kernel.op_specs.lookup_spec(initializer.spec_key)
+        except BatchedOpSpecError as error:
+            raise ValueError(
+                "KernelIR retained-state initializer has no frozen "
+                f"implementation for '{state.name}'."
+            ) from error
+        expected_params = (
+            {
+                binding.arg: node.params[binding.arg]
+                for binding in initializer_spec.params
+            }
+            if isinstance(initializer_spec, ElementwiseFunctionSpec)
+            and all(binding.arg in node.params for binding in initializer_spec.params)
+            else None
+        )
+        if (
+            not isinstance(initializer_spec, ElementwiseFunctionSpec)
+            or initializer_spec.function_class.__name__ != node.function_type
+            or not _kernel_attribute_matches_exactly(
+                initializer.input_value,
+                initial_value,
+            )
+            or expected_params is None
+            or not _kernel_attribute_matches_exactly(
+                initializer.params,
+                expected_params,
+            )
+        ):
+            raise ValueError(
+                "KernelIR retained-state function initializer does not exactly "
+                f"match '{state.name}'."
             )
 
 
@@ -2054,7 +2371,7 @@ def _validate_kernel_reset_declarations(kernel: KernelIR) -> None:
 
 
 def _validate_kernel_modulations(kernel: KernelIR) -> None:
-    """Validate the declaration-only scalar ``OVERRIDE`` identity boundary."""
+    """Validate the scalar ``OVERRIDE`` identity and execution boundary."""
 
     typed_controller_ids = {
         _component_id(kernel.graph, node)
@@ -2084,11 +2401,33 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
         and not kernel.absorbed_projections
     ):
         return
-    if kernel.graph.executable or kernel.executable:
-        raise ValueError(
-            "KernelIR effective-parameter modulation is declaration-only until "
-            "ApplyModulation and lane-local scheduler effects are lowered."
-        )
+    if kernel.executable:
+        records = []
+
+        def collect(ops: tuple[KernelOp, ...]) -> None:
+            for op in ops:
+                records.append(op)
+                body = op.attrs.get("body", ())
+                if type(body) is tuple:
+                    collect(body)
+
+        collect(kernel.ops)
+        if not (
+            sum(op.kind == "InitializeEffectiveParameter" for op in records)
+            == len(kernel.effective_parameters)
+            and sum(op.kind == "ApplyModulation" for op in records)
+            == len(kernel.modulations)
+            and sum(
+                op.kind == "ForPasses"
+                and op.attrs.get("trace_kind") == "lane_local_counted"
+                for op in records
+            )
+            == len(kernel.modulations)
+        ):
+            raise ValueError(
+                "Executable KernelIR modulation requires the complete typed "
+                "effective-parameter and lane-local scheduler effect inventory."
+            )
 
     modulation_ids = tuple(
         modulation.modulation_id for modulation in kernel.modulations
@@ -2475,7 +2814,10 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             "minimum": 1,
             "maximum": 2 ** 24,
         }
-        if len(matches) != 1 or dict(matches[0].attrs) != expected_attrs:
+        if len(matches) != 1 or not _kernel_attribute_matches_exactly(
+            dict(matches[0].attrs),
+            expected_attrs,
+        ):
             raise ValueError(
                 "KernelIR modulation must own exactly one matching dynamic "
                 "finished-value declaration."
@@ -2490,12 +2832,11 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
 
 
 def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
-    """Authenticate the first declaration-safe lane-local control op suite.
+    """Authenticate the exact declaration or executable lane-local op suite.
 
-    This checkpoint deliberately does not make a controlled graph executable.
-    It does make a directly constructed, non-executable KernelIR carry every
-    eventual effect exactly once, in the only placement the backend may later
-    implement without re-inferring scheduler or modulation semantics.
+    Partial plans remain non-executable and carry no inferred effects.  A
+    complete canonical suite may execute only after the whole graph boundary
+    and every placement/identity invariant below have also been authenticated.
     """
 
     records: list[tuple[KernelOp, KernelOp | None]] = []
@@ -3309,6 +3650,7 @@ def lower_to_kernel_ir(
         return replace(
             kernel,
             ops=_canonical_dynamic_modulation_kernel_ops(kernel),
+            executable=graph.executable,
         )
     return kernel
 
@@ -3316,10 +3658,9 @@ def lower_to_kernel_ir(
 def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
     """Whether the first exact controlled-finished program can be materialized.
 
-    Materialization remains non-executable until a backend implements every
-    effect.  Keeping this gate separate from GraphIR capability admission lets
-    the compiler publish and authenticate the complete structured program
-    without accidentally enabling source emission.
+    Structural eligibility is independent of executable flags so the same
+    predicate can authenticate the provisional declaration and its final
+    executable replacement.
     """
 
     dynamic_finished = tuple(
@@ -3328,17 +3669,20 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
         if value.predicate_kind
         == "execution_count_at_least_effective_parameter"
     )
+    node_component_ids = tuple(
+        node.component_id for node in kernel.graph.nodes
+    )
     if not (
         kernel.graph.metadata.get("schedule_kind") == "dynamic_lane_local"
         and kernel.graph.fusion_kind == STATEFUL_GRAPH_FUSION
         and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
-        and not kernel.graph.executable
-        and not kernel.executable
         and not kernel.rng_streams
         and kernel.schedule_trace is None
         and len(kernel.modulations) == 1
         and len(kernel.effective_parameters) == 1
         and len(dynamic_finished) == 1
+        and all(type(component_id) is int for component_id in node_component_ids)
+        and node_component_ids == tuple(range(len(kernel.graph.nodes)))
     ):
         return False
 
@@ -3353,6 +3697,13 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
     if not (
         isinstance(target_spec, MechanismOpSpec)
         and target_spec.can_step
+        and _dynamic_count_controller_eligible(kernel, controller)
+        and _dynamic_controller_shape_eligible(
+            kernel,
+            controller,
+            modulation,
+        )
+        and target.attrs.get("termination_input_node") == source.name
         and not target.attrs.get("diagnostics")
         and modulation.controller not in kernel.graph.execution_order
         and modulation.target in kernel.graph.execution_order
@@ -3407,31 +3758,38 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
     if prelude is None:
         return False
 
+    def condition_matches(condition, condition_type, attrs) -> bool:
+        return bool(
+            condition.condition_type == condition_type
+            and condition.region == "pass"
+            and not condition.dependencies
+            and not condition.dependency_component_ids
+            and not condition.finished_value_ids
+            and _kernel_attribute_matches_exactly(
+                condition.attrs,
+                attrs,
+            )
+        )
+
     at_pass_zero = {
         "pass_index": 0,
         "time_scale": "ENVIRONMENT_STATE_UPDATE",
     }
     prelude_condition = scheduler_by_id[prelude_id]
     if not (
-        source_condition.condition_type == "AtPass"
-        and _kernel_attribute_matches_exactly(
-            dict(source_condition.attrs),
-            at_pass_zero,
-        )
-        and controller_condition.condition_type == "AtPass"
-        and _kernel_attribute_matches_exactly(
-            dict(controller_condition.attrs),
-            at_pass_zero,
-        )
-        and prelude_condition.condition_type == "AtPass"
-        and _kernel_attribute_matches_exactly(
-            dict(prelude_condition.attrs),
-            at_pass_zero,
-        )
-        and target_condition.condition_type == "Always"
-        and not target_condition.attrs
+        condition_matches(source_condition, "AtPass", at_pass_zero)
+        and condition_matches(controller_condition, "AtPass", at_pass_zero)
+        and condition_matches(prelude_condition, "AtPass", at_pass_zero)
+        and condition_matches(target_condition, "Always", {})
+        and follower_condition.region == "pass"
         and follower_condition.dependencies == (target.name,)
-        and dict(follower_condition.attrs) == {"predicate": "is_finished"}
+        and follower_condition.dependency_component_ids
+        == (modulation.target_component_id,)
+        and follower_condition.finished_value_ids == (finished.value_id,)
+        and _kernel_attribute_matches_exactly(
+            follower_condition.attrs,
+            {"predicate": "is_finished"},
+        )
     ):
         return False
 
@@ -3446,15 +3804,30 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
         or tuple(item.consideration_set_id for item in consideration_sets)
         != (0, 1, 2, 3)
         or any(
-            item.region != "pass" or not item.inputs_frozen
+            item.region != "pass" or item.inputs_frozen is not True
+            for item in consideration_sets
+        )
+        or any(
+            item.component_ids
+            != tuple(
+                kernel.graph.node(name).component_id
+                for name in item.nodes
+            )
             for item in consideration_sets
         )
         or set(consideration_sets[0].component_ids)
         != {modulation.source_component_id, prelude_id}
+        or len(consideration_sets[0].nodes) != 2
+        or len(set(consideration_sets[0].nodes)) != 2
+        or len(consideration_sets[0].component_ids) != 2
+        or len(set(consideration_sets[0].component_ids)) != 2
+        or consideration_sets[1].nodes != (controller.name,)
         or consideration_sets[1].component_ids
         != (modulation.controller_component_id,)
+        or consideration_sets[2].nodes != (target.name,)
         or consideration_sets[2].component_ids
         != (modulation.target_component_id,)
+        or consideration_sets[3].nodes != (follower.name,)
         or consideration_sets[3].component_ids
         != (follower_condition.component_id,)
     ):
@@ -3494,12 +3867,24 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
         len(termination_by_scale) == len(kernel.termination)
         and trial_termination is not None
         and trial_termination.condition_type == "AllHaveRun"
-        and trial_termination.dependency_component_ids == all_component_ids
-        and not trial_termination.attrs
+        and _kernel_attribute_matches_exactly(
+            trial_termination.dependency_component_ids,
+            all_component_ids,
+        )
+        and _kernel_attribute_matches_exactly(
+            trial_termination.attrs,
+            {},
+        )
         and run_termination is not None
         and run_termination.condition_type == "Never"
-        and not run_termination.dependency_component_ids
-        and not run_termination.attrs
+        and _kernel_attribute_matches_exactly(
+            run_termination.dependency_component_ids,
+            (),
+        )
+        and _kernel_attribute_matches_exactly(
+            run_termination.attrs,
+            {},
+        )
     ):
         return False
 
@@ -3518,6 +3903,8 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
         or kernel.resets[0].component_id != modulation.target_component_id
         or kernel.resets[0].state_ids != target_state_ids
         or kernel.resets[0].condition_type not in {"AtTrialStart", "Never"}
+        or kernel.resets[0].region != "trial"
+        or not _kernel_attribute_matches_exactly(kernel.resets[0].attrs, {})
     ):
         return False
 
@@ -3527,18 +3914,129 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
     )
     return bool(
         len(kernel.graph.nodes) == 5
+        and prelude.component_type == "TransferMechanism"
+        and follower.component_type == "TransferMechanism"
         and source.component_id == modulation.source_component_id
         and controller.component_id == modulation.controller_component_id
         and target.component_id == modulation.target_component_id
-        and projection_pairs
-        == (
-            (prelude_id, modulation.target_component_id),
-            (modulation.target_component_id, follower_condition.component_id),
+        and _kernel_attribute_matches_exactly(
+            projection_pairs,
+            (
+                (prelude_id, modulation.target_component_id),
+                (modulation.target_component_id, follower_condition.component_id),
+            ),
         )
         and {input_spec.component_id for input_spec in kernel.inputs}
         == {modulation.source_component_id, prelude_id}
         and len(kernel.outputs) == 1
         and kernel.outputs[0].component_id == follower_condition.component_id
+    )
+
+
+def _dynamic_count_controller_eligible(kernel: KernelIR, controller) -> bool:
+    """Require a count transform whose fp32 ceil is semantically stable."""
+
+    spec_key = controller.attrs.get("spec_key", "")
+    if not spec_key:
+        return bool(
+            controller.function_type == "Identity"
+            and not controller.params
+            and controller.attrs.get("spec_kind") == "control"
+            and controller.attrs.get("control_function") == "identity"
+        )
+    try:
+        implementation = kernel.op_specs.lookup_spec(spec_key)
+    except BatchedOpSpecError:
+        return False
+    if (
+        not isinstance(implementation, ElementwiseFunctionSpec)
+        or implementation.function_class.__name__ != "Linear"
+        or controller.function_type != "Linear"
+        or controller.attrs.get("spec_kind") != "control"
+        or controller.attrs.get("control_function") != "registered"
+    ):
+        return False
+
+    expected_arguments = tuple(binding.arg for binding in implementation.params)
+    if (
+        expected_arguments != ("slope", "intercept", "scale", "offset")
+        or tuple(controller.params) != expected_arguments
+    ):
+        return False
+    parameters_by_name = {parameter.name: parameter for parameter in kernel.params}
+    try:
+        bound = {
+            argument: parameters_by_name[controller.params[argument]]
+            for argument in expected_arguments
+        }
+    except KeyError:
+        return False
+    if any(
+        parameter.owner_component_id != controller.component_id
+        or parameter.owner_scope != binding.scope
+        or parameter.runtime_mutable
+        for parameter, binding in zip(bound.values(), implementation.params)
+    ):
+        return False
+
+    intercept = bound["intercept"].default
+    return bool(
+        all(type(parameter.default) is float for parameter in bound.values())
+        and bound["slope"].default == 1.0
+        and bound["scale"].default == 1.0
+        and bound["offset"].default == 0.0
+        and np.isfinite(intercept)
+        and 0.0 <= intercept <= FP32_EXACT_INTEGER_LIMIT
+        and float(intercept).is_integer()
+        and (
+            intercept == 0.0
+            or kernel.max_steps < FP32_EXACT_INTEGER_LIMIT
+        )
+    )
+
+
+def _dynamic_controller_shape_eligible(
+    kernel: KernelIR,
+    controller,
+    modulation: BatchedModulationSpec,
+) -> bool:
+    """Authenticate the complete scalar absorbed-controller port surface."""
+
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    input_port = ports_by_id.get(modulation.controller_input_port_id)
+    signal_port = ports_by_id.get(modulation.control_signal_port_id)
+    if input_port is None or signal_port is None:
+        return False
+    expected_absorbed_control = {
+        "source": modulation.source,
+        "target": modulation.target,
+        "parameter": modulation.target_parameter,
+        "modulation": modulation.mode,
+    }
+    return bool(
+        type(controller.input_width) is int
+        and controller.input_width == 1
+        and type(controller.output_width) is int
+        and controller.output_width == 1
+        and controller.combine == "sum"
+        and controller.input_port_ids
+        == (modulation.controller_input_port_id,)
+        and controller.output_port_ids == (modulation.control_signal_port_id,)
+        and len(controller.parameter_port_ids) == len(controller.params)
+        and {name for name, _ in controller.parameter_port_ids}
+        == set(controller.params)
+        and _kernel_attribute_matches_exactly(
+            controller.attrs.get("input_ports"),
+            ((input_port.name, 1, "sum", input_port.port_id, 0, 1),),
+        )
+        and _kernel_attribute_matches_exactly(
+            controller.attrs.get("output_ports"),
+            (signal_port.name,),
+        )
+        and _kernel_attribute_matches_exactly(
+            controller.attrs.get("absorbed_control"),
+            expected_absorbed_control,
+        )
     )
 
 

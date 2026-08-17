@@ -58,6 +58,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         }
         self.param_vars: dict[str, str] = {}
         self.state_vars: dict[tuple[str, int], str] = {}
+        self.effective_parameter_vars: dict[int, str] = {}
         self.value_vars: dict[str, list[str]] = {}
         self.rng_stream_slot: dict[str, int] = {}
         self.rng_stream_count = 0
@@ -197,6 +198,31 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
                 self._emit_state_initializer_value(state, idx, value, var)
         if self.kernel.states:
             self.builder.line()
+
+    def _emit_initialize_effective_parameter(self, op: KernelOp) -> None:
+        """Declare one lane-persistent effective value outside ``ForTrials``.
+
+        ``value_vars`` only records source-level value aliases.  Modulation needs
+        an actual Triton variable declared before the trial loop so assigning the
+        same identifier inside the loop creates loop-carried storage.
+        """
+
+        effective_parameter_id = op.attrs["effective_parameter_id"]
+        if effective_parameter_id in self.effective_parameter_vars:
+            raise ValueError(
+                "Triton effective parameter "
+                f"{effective_parameter_id} was initialized more than once."
+            )
+        output = op.outputs[0]
+        storage_var = self._component_vars(output.name, output.width)[0]
+        initial_value = op.attrs["initial_modulation_value"][0]
+        self.builder.line(
+            f"{storage_var} = tl.full((BLOCK,), "
+            f"{float_literal(initial_value)}, tl.float32)"
+        )
+        self.effective_parameter_vars[effective_parameter_id] = storage_var
+        self._set_value(output.name, [storage_var])
+        self.builder.line()
 
     def _emit_reset_state(self, op: KernelOp) -> None:
         states_by_id = {state.state_id: state for state in self.kernel.states}

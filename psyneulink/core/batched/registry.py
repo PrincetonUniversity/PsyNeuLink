@@ -169,6 +169,9 @@ def _triton_spec_diagnostics(graph) -> list[BatchedDiagnostic]:
 
     diagnostics: list[BatchedDiagnostic] = []
 
+    dynamic_target_ids = {
+        modulation.target_component_id for modulation in graph.modulations
+    }
     for node_name in graph.execution_order:
         node = graph.node(node_name)
         spec_key = node.attrs.get("spec_key")
@@ -187,20 +190,63 @@ def _triton_spec_diagnostics(graph) -> list[BatchedDiagnostic]:
                     )
                 )
         elif isinstance(spec, specs.MechanismOpSpec):
-            if not spec.has_triton:
+            if (
+                node.component_id in dynamic_target_ids
+                and not spec.can_step
+            ) or not spec.has_triton:
                 diagnostics.append(
                     BatchedDiagnostic(
                         component=node.name,
                         reason="missing Triton implementation for batched op",
-                        detail=node.component_type,
+                        detail=(
+                            f"{node.component_type} one-step implementation"
+                            if node.component_id in dynamic_target_ids
+                            and not spec.can_step
+                            else node.component_type
+                        ),
                         code=BatchedDiagnosticCode.CODEGEN_OP_MISSING,
                         component_id=f"node:{node.name}",
                     )
                 )
 
+    # Absorbed controllers intentionally do not appear in execution_order, but
+    # executable modulation still emits their registered function body.
+    for modulation in graph.modulations:
+        controller = graph.node(modulation.controller)
+        if controller.attrs.get("control_function") == "identity":
+            continue
+        spec_key = modulation.controller_function_spec_key
+        try:
+            spec = specs.lookup_spec(spec_key)
+        except specs.BatchedOpSpecError:
+            spec = None
+        if (
+            not isinstance(spec, specs.ElementwiseFunctionSpec)
+            or spec.triton_template is None
+        ):
+            diagnostics.append(
+                BatchedDiagnostic(
+                    component=controller.name,
+                    reason="missing Triton implementation for batched op",
+                    detail=controller.function_type,
+                    code=BatchedDiagnosticCode.CODEGEN_OP_MISSING,
+                    component_id=f"node:{controller.name}",
+                )
+            )
+
     for projection in graph.projections:
-        spec = specs.lookup_spec(projection.spec_key) if projection.spec_key else None
-        if spec is None or spec.triton_emit is None:
+        try:
+            spec = (
+                specs.lookup_spec(projection.spec_key)
+                if projection.spec_key
+                else None
+            )
+        except specs.BatchedOpSpecError:
+            spec = None
+        if (
+            not isinstance(spec, specs.DenseProjectionSpec)
+            or spec.triton_emit is None
+        ):
             component = (
                 f"{projection.sender}.{projection.sender_port}->"
                 f"{projection.receiver}.{projection.receiver_port}"

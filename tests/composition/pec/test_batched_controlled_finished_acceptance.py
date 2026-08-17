@@ -7,10 +7,9 @@ when that LCA is finished.  The LCA is the first supported stateful producer;
 its class and names are not model-recognition signals.
 
 Fresh Python compositions pin the semantic oracle, including trial-varying and
-control-parameter-varying execution counts.  Batched compilation must continue
-to reject this boundary structurally until the effective controlled threshold
-is represented in executable IR.  The rejection assertions are the conversion
-point for later Python/interpreter/GPU parity tests.
+control-parameter-varying execution counts.  The exact one-controller topology
+is executable; nearby control and dynamic-scheduler shapes remain structured
+fail-closed boundaries.
 """
 
 from collections.abc import Callable
@@ -35,6 +34,9 @@ from psyneulink.core.batched import (
 from psyneulink.core.batched import specs as batched_specs
 from psyneulink.core.batched.backend.triton.graph_emit import (
     triton_graph_kernel_source,
+)
+from psyneulink.core.batched.backend.triton.runtime import (
+    BatchedTruncationError,
 )
 from psyneulink.core.batched.graph import STATEFUL_GRAPH_FUSION, lower_composition
 from psyneulink.core.batched.ir import (
@@ -527,7 +529,7 @@ def test_controlled_finished_rejects_controller_type_name_spoof():
     CONTROLLED_FINISHED_CASES,
     ids=lambda case: case.name,
 )
-def test_batched_controlled_finished_schedule_remains_structured_rejection(case):
+def test_batched_controlled_finished_schedule_is_executable(case):
     model = case.build()
     history_before = _scheduler_history(model.composition)
 
@@ -537,7 +539,7 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
     )
     graph = lowering.graph
     assert graph is not None
-    assert not graph.executable
+    assert graph.executable
     assert graph.fusion_kind == STATEFUL_GRAPH_FUSION
     assert graph.metadata["schedule_kind"] == "dynamic_lane_local"
     assert not graph.rng_streams
@@ -756,14 +758,14 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
         graph=graph,
     )
     kernel_ir = lower_to_kernel_ir(semantic_ir)
-    assert not kernel_ir.executable
+    assert kernel_ir.executable
     assert kernel_ir.ports == graph.ports
     assert kernel_ir.absorbed_projections == graph.absorbed_projections
     assert kernel_ir.effective_parameters == graph.effective_parameters
     assert kernel_ir.modulations == graph.modulations
     assert kernel_ir.finished_values == graph.finished_values
-    with pytest.raises(ValueError, match="non-executable"):
-        triton_graph_kernel_source(kernel_ir)
+    source = triton_graph_kernel_source(kernel_ir)
+    compile(source, "<controlled-finished-kernel>", "exec")
 
     report = BatchedCompositionCompiler.diagnose(
         model.composition,
@@ -772,29 +774,239 @@ def test_batched_controlled_finished_schedule_remains_structured_rejection(case)
         max_steps=16,
     )
     assert _scheduler_history(model.composition) == history_before
-    assert not report.model_supported
-    assert report.codegen_ready is None
+    assert report.model_supported
+    assert report.codegen_ready is True
     assert report.metadata["fusion_kind"] == STATEFUL_GRAPH_FUSION
     assert report.metadata["schedule_kind"] == "dynamic_lane_local"
-    assert len(report.model_diagnostics) == 1
-
-    diagnostic = report.model_diagnostics[0]
-    assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
-    assert diagnostic.component == model.follower.name
-    assert diagnostic.component_id == f"node:{model.follower.name}"
-    assert diagnostic.reason == "batched schedule kind is not executable yet"
-    assert diagnostic.detail == "WhenFinished requires dynamic_lane_local"
-
-    with pytest.raises(BatchedCompileError) as error:
-        BatchedCompositionCompiler.compile(
-            model.composition,
-            backend="triton_cpu",
-            outputs=(model.output,),
-            max_steps=16,
-        )
-    assert error.value.capability_report == report
-    assert diagnostic.formatted_reason in str(error.value)
+    assert not report.model_diagnostics
+    assert not report.codegen_diagnostics
     assert _scheduler_history(model.composition) == history_before
+
+
+@pytest.mark.parametrize(
+    "case",
+    CONTROLLED_FINISHED_CASES,
+    ids=lambda case: case.name,
+)
+def test_batched_controlled_finished_matches_fresh_python(case, batched_backend):
+    python_model = case.build()
+    python_values, python_trace = _run_python(python_model)
+    assert python_trace == _expected_role_trace(case.expected_counts)
+
+    compiled_model = case.build()
+    plan = BatchedCompositionCompiler.compile(
+        compiled_model.composition,
+        backend=batched_backend,
+        outputs=(compiled_model.output,),
+        max_steps=16,
+    )
+    result = plan.run(
+        inputs=compiled_model.inputs,
+        parameter_sets=({},),
+        num_estimates=1,
+        seed=0,
+    )
+
+    assert result.values.shape == (1, 1, len(_TASK_INPUTS), 1, 1)
+    np.testing.assert_allclose(
+        result.values[0, 0, :, 0, :],
+        python_values,
+        rtol=1e-5,
+        atol=1e-6,
+    )
+    assert result.metadata["truncation"][compiled_model.producer.name] == 0.0
+
+
+def test_identity_controller_freezes_shorter_subject_lane(batched_backend):
+    task_inputs = np.asarray([[1.0, -1.0], [1.0, -1.0]], dtype=float)
+    cue_inputs = np.asarray([[1.0], [3.0]], dtype=float)
+
+    python_model = RESET_INTERCEPT_ZERO.build(
+        controller_function=pnl.Identity(),
+    )
+    python_model.inputs[python_model.task] = task_inputs
+    python_model.inputs[python_model.cue] = cue_inputs
+    python_values, python_trace = _run_python(python_model)
+    assert python_trace == _expected_role_trace((1, 3))
+
+    compiled_model = RESET_INTERCEPT_ZERO.build(
+        controller_function=pnl.Identity(),
+    )
+    compiled_model.inputs[compiled_model.task] = task_inputs
+    compiled_model.inputs[compiled_model.cue] = cue_inputs
+    plan = BatchedCompositionCompiler.compile(
+        compiled_model.composition,
+        backend=batched_backend,
+        outputs=(compiled_model.output,),
+        max_steps=16,
+    )
+    result = plan.run(
+        inputs=compiled_model.inputs,
+        parameter_sets=({},),
+        num_estimates=1,
+        subject_slices=(slice(0, 1), slice(1, 2)),
+        seed=0,
+    )
+
+    assert result.values.shape == (1, 2, 1, 1, 1)
+    np.testing.assert_allclose(
+        result.values[0, :, 0, 0, :],
+        python_values,
+        rtol=1e-5,
+        atol=1e-6,
+    )
+    assert result.metadata["truncation"][compiled_model.producer.name] == 0.0
+
+
+def test_dynamic_control_rejects_unequal_subject_trial_counts(batched_backend):
+    model = RESET_INTERCEPT_ZERO.build(controller_function=pnl.Identity())
+    model.inputs[model.task] = np.repeat([[1.0, -1.0]], 3, axis=0)
+    model.inputs[model.cue] = np.asarray([[3.0], [1.0], [1.0]], dtype=float)
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        backend=batched_backend,
+        outputs=(model.output,),
+        max_steps=2,
+    )
+
+    with pytest.raises(ValueError, match="same number of trials"):
+        plan.run(
+            inputs=model.inputs,
+            parameter_sets=({},),
+            num_estimates=1,
+            subject_slices=(slice(0, 1), slice(1, 3)),
+            seed=0,
+        )
+
+
+@pytest.mark.parametrize(
+    ("task_trials", "cue_trials"),
+    ((2, 3), (3, 2)),
+    ids=("longer-count-source", "longer-task-input"),
+)
+def test_dynamic_control_rejects_mismatched_input_trial_counts(
+    batched_backend,
+    task_trials,
+    cue_trials,
+):
+    model = RESET_INTERCEPT_ZERO.build(controller_function=pnl.Identity())
+    model.inputs[model.task] = np.repeat(
+        [[1.0, -1.0]],
+        task_trials,
+        axis=0,
+    )
+    model.inputs[model.cue] = np.arange(1, cue_trials + 1, dtype=float)[:, None]
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        backend=batched_backend,
+        outputs=(model.output,),
+        max_steps=3,
+    )
+
+    with pytest.raises(ValueError, match="same trial counts"):
+        plan.run(
+            inputs=model.inputs,
+            parameter_sets=({},),
+            num_estimates=1,
+            seed=0,
+        )
+
+
+def test_dynamic_control_rejects_fractional_typed_count_source(batched_backend):
+    model = RESET_INTERCEPT_ONE.build()
+    model.inputs[model.task] = np.asarray([[1.0, -1.0]], dtype=float)
+    model.inputs[model.cue] = np.asarray([[1.0 + 2.0**-25]], dtype=float)
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        backend=batched_backend,
+        outputs=(model.output,),
+        max_steps=4,
+    )
+
+    with pytest.raises(ValueError, match="nonnegative integer values"):
+        plan.run(
+            inputs=model.inputs,
+            parameter_sets=({},),
+            num_estimates=1,
+            seed=0,
+        )
+
+
+def test_dynamic_count_cap_reports_only_lane_strictly_above_cap(
+    batched_backend,
+):
+    task_inputs = np.repeat([[1.0, -1.0]], 3, axis=0)
+    cue_inputs = np.asarray([[1.0], [2.0], [3.0]], dtype=float)
+
+    python_model = RESET_INTERCEPT_ZERO.build(
+        controller_function=pnl.Identity(),
+    )
+    python_model.inputs[python_model.task] = task_inputs
+    python_model.inputs[python_model.cue] = cue_inputs
+    python_values, _ = _run_python(python_model)
+
+    compiled_model = RESET_INTERCEPT_ZERO.build(
+        controller_function=pnl.Identity(),
+    )
+    compiled_model.inputs[compiled_model.task] = task_inputs
+    compiled_model.inputs[compiled_model.cue] = cue_inputs
+    plan = BatchedCompositionCompiler.compile(
+        compiled_model.composition,
+        backend=batched_backend,
+        outputs=(compiled_model.output,),
+        max_steps=2,
+    )
+    with pytest.warns(UserWarning, match="truncated bounded loops"):
+        result = plan.run(
+            inputs=compiled_model.inputs,
+            parameter_sets=({},),
+            num_estimates=1,
+            seed=0,
+        )
+
+    np.testing.assert_allclose(
+        result.values[0, 0, :2, 0, :],
+        python_values[:2],
+        rtol=1e-5,
+        atol=1e-6,
+    )
+    assert result.metadata["truncation"][compiled_model.producer.name] == (
+        pytest.approx(1.0 / 3.0)
+    )
+    with pytest.raises(BatchedTruncationError, match="max_steps=2"):
+        plan.run(
+            inputs=compiled_model.inputs,
+            parameter_sets=({},),
+            num_estimates=1,
+            seed=0,
+            strict_truncation=True,
+        )
+
+
+def test_absorbed_controller_missing_triton_template_is_reported(monkeypatch):
+    batched_specs.ensure_builtin_specs()
+    spec = batched_specs._FUNCTION_SPECS[pnl.Linear]
+    monkeypatch.setitem(
+        batched_specs._SPECS_BY_KEY,
+        spec.key,
+        replace(spec, triton_template=None),
+    )
+    model = RESET_INTERCEPT_ZERO.build()
+
+    report = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        backend="triton",
+        outputs=(model.output,),
+        max_steps=16,
+    )
+
+    assert report.model_supported
+    assert report.codegen_ready is False
+    assert any(
+        diagnostic.component == model.controller.name
+        and diagnostic.code == BatchedDiagnosticCode.CODEGEN_OP_MISSING
+        for diagnostic in report.codegen_diagnostics
+    )
 
 
 @pytest.mark.parametrize(
@@ -954,9 +1166,14 @@ def test_kernel_ir_rejects_erased_dynamic_finished_binding():
         )
 
 
-def test_executable_graph_cannot_erase_declared_modulation_effect():
-    with pytest.raises(ValueError, match="declaration-only"):
-        _lower_replaced_controlled_graph(graph_changes={"executable": True})
+def test_executable_graph_materializes_declared_modulation_effect():
+    kernel = _lower_replaced_controlled_graph()
+
+    assert kernel.executable
+    assert sum(op.kind == "InitializeEffectiveParameter" for op in kernel.ops) == 1
+    trial_body = kernel.ops[-1].attrs["body"]
+    assert sum(op.kind == "ApplyModulation" for op in trial_body) == 1
+    assert sum(op.kind == "ForPasses" for op in trial_body) == 1
 
 
 def test_kernel_ir_rejects_complete_control_effect_ledger_erasure():

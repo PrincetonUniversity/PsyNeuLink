@@ -30,6 +30,8 @@ class OpEmitMixin:
             for op in self.kernel.ops:
                 if op.kind == "InitializeState":
                     self._emit_initialize_state()
+                elif op.kind == "InitializeEffectiveParameter":
+                    self._emit_initialize_effective_parameter(op)
                 elif op.kind == "ForTrials":
                     self._emit_trial_loop(tuple(op.attrs["body"]))
                 else:
@@ -268,6 +270,8 @@ class OpEmitMixin:
             self._emit_function_call(op)
         elif op.kind == "CallMechanism":
             self._emit_mechanism_call(op)
+        elif op.kind == "ApplyModulation":
+            self._emit_apply_modulation(op)
         elif op.kind == "StepMechanism":
             self._emit_scheduled_step_mechanism(op)
         elif op.kind == "ResetState":
@@ -277,7 +281,7 @@ class OpEmitMixin:
         elif op.kind == "StoreFlag":
             self._emit_store_flag(op)
         elif op.kind == "ForPasses":
-            self._emit_precomputed_passes(op)
+            self._emit_for_passes(op)
         elif op.kind == "ExecuteConsiderationSet":
             self._emit_precomputed_consideration_set(op)
         else:
@@ -301,6 +305,102 @@ class OpEmitMixin:
             "tl.zeros((BLOCK,), tl.float32)",
             require_outputs=True,
         )
+        self.builder.line()
+
+    def _emit_for_passes(self, op: KernelOp) -> None:
+        if op.attrs.get("trace_kind") == "lane_local_counted":
+            self._emit_lane_local_counted_passes(op)
+            return
+        self._emit_precomputed_passes(op)
+
+    def _emit_lane_local_counted_passes(self, op: KernelOp) -> None:
+        """Emit the exact lane-local counted region authenticated by KernelIR."""
+
+        body = tuple(op.attrs["body"])
+        step_op = body[-1]
+        if step_op.kind != "StepMechanism":
+            raise ValueError(
+                "Triton lane-local ForPasses requires a final StepMechanism."
+            )
+        spec = self._spec_for_op(step_op)
+        if not spec.can_step:
+            raise ValueError(
+                "Batched op spec for lane-local mechanism "
+                f"'{step_op.target}' has no one-step Triton implementation."
+            )
+
+        # The exact region contract freezes the target's projected/combined
+        # input for all of its passes.  Hoisting the pure prefix also keeps its
+        # temporaries in the outer trial scope rather than recreating them on
+        # each pass.
+        outer_values = dict(self.value_vars)
+        for child in body[:-1]:
+            self._emit_op(child)
+
+        held_var = self._get_value(op.inputs[0].name)[0]
+        target_symbol = component_symbol(self.graph, step_op.target)
+        finished_value_id = op.attrs["finished_value_id"]
+        loop_symbol = f"{target_symbol}_dynamic_{finished_value_id}"
+        required_var = f"{loop_symbol}_required_passes"
+        block_passes_var = f"{loop_symbol}_block_passes"
+        pass_var = f"{loop_symbol}_pass"
+        finished_var = f"{loop_symbol}_finished"
+        minimum = float_literal(op.attrs["minimum"])
+        maximum = float_literal(op.attrs["maximum"])
+
+        self.builder.line(
+            f"{required_var} = tl.minimum(tl.maximum(tl.ceil({held_var}), "
+            f"{minimum}), {maximum})"
+        )
+        self.builder.line(
+            f"{block_passes_var} = tl.minimum("
+            f"tl.max(tl.where(mask, {required_var}, 0.0)), MAX_STEPS)"
+        )
+        self.builder.line(f"{pass_var} = 0")
+        with self.builder.block(f"while {pass_var} < {block_passes_var}"):
+            self.builder.line(
+                f"{finished_var} = tl.where("
+                f"mask & ({pass_var} < {required_var}), 0.0, 1.0)"
+            )
+            self._emit_step_mechanism(
+                step_op,
+                spec,
+                pass_var,
+                finished_var,
+                require_outputs=True,
+            )
+            self.builder.line(f"{pass_var} += 1")
+
+        # Only the region's explicit results escape its value scope.  The final
+        # result is the truncation flag; preceding results yield the final
+        # StepMechanism outputs for downstream projections and stores.
+        yielded_values = []
+        for region_output, step_output in zip(
+            op.outputs[:-1],
+            step_op.outputs,
+        ):
+            values = list(self._get_value(step_output.name))
+            if len(values) != region_output.width:
+                raise ValueError(
+                    "Triton lane-local ForPasses yielded output width does not "
+                    f"match '{region_output.name}'."
+                )
+            yielded_values.append((region_output.name, values))
+
+        truncation_output = op.outputs[-1]
+        truncation_var = self._component_vars(
+            truncation_output.name,
+            truncation_output.width,
+        )[0]
+        self.builder.line(
+            f"{truncation_var} = tl.where("
+            f"mask & ({required_var} > MAX_STEPS), 1.0, 0.0)"
+        )
+        self.value_vars.clear()
+        self.value_vars.update(outer_values)
+        for output_name, values in yielded_values:
+            self._set_value(output_name, values)
+        self._set_value(truncation_output.name, [truncation_var])
         self.builder.line()
 
     def _emit_precomputed_passes(self, op: KernelOp) -> None:
@@ -434,6 +534,9 @@ class OpEmitMixin:
 
     def _emit_function_call(self, op: KernelOp) -> None:
         node = self.graph.node(op.target)
+        if op.attrs.get("spec_key") == "":
+            self._emit_identity_function_call(op, node)
+            return
         spec = self._spec_for_op(op)
         if spec.triton_template is None:
             raise ValueError(
@@ -468,6 +571,60 @@ class OpEmitMixin:
             for output_var in output_vars:
                 self.builder.line(f"{output_var} = tl.where(step >= {onset}, {output_var}, 0.0)")
         self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_identity_function_call(self, op: KernelOp, node) -> None:
+        """Emit the sole keyless function form: an absorbed Identity control."""
+
+        if (
+            node.component_type != "ControlMechanism"
+            or node.function_type != "Identity"
+            or node.attrs.get("control_function") != "identity"
+            or op.attrs.get("component_type") != "ControlMechanism"
+            or op.attrs.get("function_type") != "Identity"
+            or op.attrs.get("params") != {}
+            or node.params
+            or len(op.inputs) != 1
+            or len(op.outputs) != 1
+            or op.inputs[0].width != op.outputs[0].width
+        ):
+            raise ValueError(
+                "Triton only accepts an authenticated absorbed Identity "
+                "ControlMechanism without a registry key."
+            )
+        input_values = self._get_value(op.inputs[0].name)
+        output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        for input_value, output_var in zip(input_values, output_vars):
+            self.builder.line(f"{output_var} = {input_value}")
+        self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_apply_modulation(self, op: KernelOp) -> None:
+        """Assign an OVERRIDE into real, outer-scope effective storage."""
+
+        effective_parameter_id = op.attrs["effective_parameter_id"]
+        try:
+            storage_var = self.effective_parameter_vars[effective_parameter_id]
+        except KeyError as error:
+            raise ValueError(
+                "Triton ApplyModulation has no dominating effective-parameter "
+                f"initializer for id {effective_parameter_id}."
+            ) from error
+        held_values = self._get_value(op.inputs[0].name)
+        controller_values = self._get_value(op.inputs[1].name)
+        if (
+            op.attrs.get("mode") != "OVERRIDE"
+            or held_values != [storage_var]
+            or len(controller_values) != 1
+        ):
+            raise ValueError(
+                "Triton ApplyModulation requires exact scalar OVERRIDE storage."
+            )
+        self.builder.line(
+            f"{storage_var} = tl.where("
+            f"mask, {controller_values[0]}, {storage_var})"
+        )
+        self._set_value(op.outputs[0].name, [storage_var])
         self.builder.line()
 
     def _emit_mechanism_call(self, op: KernelOp) -> None:
