@@ -9,7 +9,14 @@ PNL -> MDF -> generated-script -> PNL round-trip does not yet re-emit
 ``element_names`` (the script generator serializes ports by name only);
 that is tracked as a follow-up.
 """
-import psyneulink as pnl
+import pytest
+
+pytest.importorskip(
+    'modeci_mdf',
+    reason='MDF methods require modeci_mdf package',
+)
+
+import psyneulink as pnl  # noqa: E402
 
 
 def _port_md(port):
