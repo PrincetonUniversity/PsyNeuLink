@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Distributed Fitting &mdash; PsyNeuLink 0.19.1.0+44.g1c14c96f5 documentation</title>
+  <title>Distributed Fitting &mdash; PsyNeuLink 0.19.1.0+51.gc2522d2cd documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.19.1.0+44
+                  0.19.1.0+51
                 </div>
               
             
@@ -221,7 +221,7 @@ to the <a class="reference internal" href="ParameterEstimationComposition.html">
     <span class="n">method</span><span class="o">=</span><span class="n">optuna</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">CmaEsSampler</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">popsize</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
     <span class="n">max_iterations</span><span class="o">=</span><span class="mi">480</span><span class="p">,</span>
     <span class="n">distributed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">distributed_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pec_factory&quot;</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">},</span>
+    <span class="n">distributed_options</span><span class="o">=</span><span class="p">{</span><span class="s2">"pec_factory"</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -297,8 +297,8 @@ one-node cluster automatically, with no launcher; <code class="docutils literal 
 <p>If you already run your own Dask cluster – for example in a notebook or outside
 SLURM – pass it as <code class="docutils literal notranslate"><span class="pre">client</span></code> and PsyNeuLink uses it instead of creating one:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">&quot;tcp://scheduler-address:8786&quot;</span><span class="p">)</span>
-<span class="n">distributed_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;client&quot;</span><span class="p">:</span> <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;pec_factory&quot;</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">}</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">"tcp://scheduler-address:8786"</span><span class="p">)</span>
+<span class="n">distributed_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"client"</span><span class="p">:</span> <span class="n">client</span><span class="p">,</span> <span class="s2">"pec_factory"</span><span class="p">:</span> <span class="n">pec_factory</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>This is optional; the launcher above covers the usual SLURM case. PsyNeuLink does
@@ -393,7 +393,7 @@ Dask is never imported.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=a0844064"></script>
+         <script src="_static/documentation_options.js?v=93228d72"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

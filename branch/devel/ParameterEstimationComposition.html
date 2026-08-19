@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.19.1.0+44.g1c14c96f5 documentation</title>
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.19.1.0+51.gc2522d2cd documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.19.1.0+44
+                  0.19.1.0+51
                 </div>
               
             
@@ -349,14 +349,14 @@ is a pandas DataFrame with columns matching the requested outcome variables.</p>
 
 <span class="n">pec</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ParameterEstimationComposition</span><span class="p">(</span>
     <span class="n">nodes</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
-    <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)},</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">"threshold"</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)},</span>
     <span class="n">outcome_variables</span><span class="o">=</span><span class="p">[</span>
         <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_OUTCOME</span><span class="p">],</span>
         <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span>
     <span class="p">],</span>
     <span class="n">data</span><span class="o">=</span><span class="n">data_to_fit</span><span class="p">,</span>
     <span class="n">optimization_function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">PECOptimizationFunction</span><span class="p">(</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;differential_evolution&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"differential_evolution"</span><span class="p">,</span>
         <span class="n">max_iterations</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">num_estimates</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -376,7 +376,7 @@ is a pandas DataFrame with columns matching the requested outcome variables.</p>
 
 <span class="n">pec</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ParameterEstimationComposition</span><span class="p">(</span>
     <span class="n">nodes</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
-    <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)},</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">"threshold"</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)},</span>
     <span class="n">outcome_variables</span><span class="o">=</span><span class="p">[</span>
         <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_OUTCOME</span><span class="p">],</span>
         <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span>
@@ -384,9 +384,9 @@ is a pandas DataFrame with columns matching the requested outcome variables.</p>
     <span class="n">objective_function</span><span class="o">=</span><span class="n">reward_rate</span><span class="p">,</span>
     <span class="n">optimization_function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">PECOptimizationFunction</span><span class="p">(</span>
         <span class="n">method</span><span class="o">=</span><span class="n">optuna</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">TPESampler</span><span class="p">,</span>
-        <span class="n">optuna_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+        <span class="n">optuna_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"seed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
         <span class="n">max_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-        <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span>
+        <span class="n">direction</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">num_estimates</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
 <span class="p">)</span>
@@ -399,13 +399,13 @@ is a pandas DataFrame with columns matching the requested outcome variables.</p>
 
 <span class="n">study</span> <span class="o">=</span> <span class="n">optuna</span><span class="o">.</span><span class="n">create_study</span><span class="p">(</span>
     <span class="n">sampler</span><span class="o">=</span><span class="n">optuna</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">RandomSampler</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PECOptimizationFunction</span><span class="p">(</span>
     <span class="n">method</span><span class="o">=</span><span class="n">study</span><span class="p">,</span>
     <span class="n">max_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -900,7 +900,7 @@ have been specified in the <a class="reference internal" href="#psyneulink.core.
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=a0844064"></script>
+         <script src="_static/documentation_options.js?v=93228d72"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

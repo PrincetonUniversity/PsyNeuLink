@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.19.1.0+44.g1c14c96f5 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.19.1.0+51.gc2522d2cd documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.1.0+44
+                  0.19.1.0+51
                 </div>
               
             
@@ -501,11 +501,11 @@ shadowed; b) specify <a class="reference internal" href="Composition.html#psyneu
 <p><span class="caption-text"><strong>Simple case of shadowing</strong>. The figure above shows a simple case in which <code class="docutils literal notranslate"><span class="pre">Shadowing</span> <span class="pre">Mech</span></code> is configured
 to shadow the input to <code class="docutils literal notranslate"><span class="pre">Shadowed</span> <span class="pre">Mech</span></code>, as specified below:</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 <div class="legend">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowed Mech&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span> <span class="n">input_ports</span><span class="o">=</span><span class="n">B</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Mech'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Shadowed Mech'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Shadowing Mech'</span><span class="p">,</span> <span class="n">input_ports</span><span class="o">=</span><span class="n">B</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span> <span class="n">C</span><span class="p">],</span>
-<span class="gp">... </span>                    <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direction&#39;</span><span class="p">:</span><span class="s1">&#39;LR&#39;</span><span class="p">})</span>
+<span class="gp">... </span>                    <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">'direction'</span><span class="p">:</span><span class="s1">'LR'</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_node_structure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -522,13 +522,13 @@ to shadow the input to <code class="docutils literal notranslate"><span class="p
 is executed (as noted <a class="reference internal" href="#inputport-shadow-nested-note"><span class="std std-ref">above</span></a>, only the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> can be shadowed):</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
 <div class="legend">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">shadowing_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Mech'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shadowing_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Shadowing Mech'</span><span class="p">,</span>
 <span class="gp">... </span>                                     <span class="n">input_ports</span><span class="o">=</span><span class="n">mech</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">([</span><span class="n">mech</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Nested Composition&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">([</span><span class="n">mech</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">'Nested Composition'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">nested_comp</span><span class="p">,</span> <span class="n">shadowing_mech</span><span class="p">],</span>
-<span class="gp">... </span>                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Outer Composition&#39;</span><span class="p">)</span>
-<span class="gp">... </span>                             <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direction&#39;</span><span class="p">:</span><span class="s1">&#39;LR&#39;</span><span class="p">})</span>
+<span class="gp">... </span>                             <span class="n">name</span><span class="o">=</span><span class="s1">'Outer Composition'</span><span class="p">)</span>
+<span class="gp">... </span>                             <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">'direction'</span><span class="p">:</span><span class="s1">'LR'</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_node_structure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_cim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1141,7 +1141,7 @@ can’t be called by _parse_port_spec since the InputPort itself may not yet hav
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=a0844064"></script>
+         <script src="_static/documentation_options.js?v=93228d72"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

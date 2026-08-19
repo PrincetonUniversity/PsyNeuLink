@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.19.1.0+44.g1c14c96f5 documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.19.1.0+51.gc2522d2cd documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.1.0+44
+                  0.19.1.0+51
                 </div>
               
             
@@ -353,8 +353,8 @@ see <a class="reference internal" href="Component.html#component-lazy-updating">
 <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of one Mechanism, and the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
 of another:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mechanism A&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mechanism B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Mechanism A"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Mechanism B"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gate</span><span class="o">=</span><span class="p">[</span><span class="n">my_mechanism_A</span><span class="o">.</span><span class="n">input_port</span><span class="p">,</span>
 <span class="gp">... </span>                                                <span class="n">my_mechanism_B</span><span class="o">.</span><span class="n">output_port</span><span class="p">])</span>
 </pre></div>
@@ -375,7 +375,7 @@ it <em>adds</em> the <a class="reference internal" href="#psyneulink.core.compon
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_input_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_hidden_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_output_layer</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATE_ALL&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'GATE_ALL'</span><span class="p">,</span>
 <span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_input_layer</span><span class="p">,</span>
 <span class="gp">... </span>                                                                             <span class="n">my_hidden_layer</span><span class="p">,</span>
 <span class="gp">... </span>                                                                             <span class="n">my_output_layer</span><span class="p">]}],</span>
@@ -394,10 +394,10 @@ that amount to the input to the Port before determining its <a class="reference 
 <p><strong>Gate InputPorts differentially</strong>.  In the example above, the InputPorts for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputPort of each
 Mechanism:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'GATING_SIGNAL_A'</span><span class="p">,</span>
 <span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">MODULATION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
 <span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="n">my_input_layer</span><span class="p">},</span>
-<span class="gp">... </span>                                                          <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                                          <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'GATING_SIGNAL_B'</span><span class="p">,</span>
 <span class="gp">... </span>                                                           <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
 <span class="gp">... </span>                                                                             <span class="n">my_output_layer</span><span class="p">]}])</span>
 </pre></div>
@@ -413,10 +413,10 @@ the InputPorts of <code class="docutils literal notranslate"><span class="pre">m
 <p><strong>Creating and assigning stand-alone GatingSignals</strong>.  GatingSignals can also be created on their own, and then later
 assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
 created directly and then assigned to <code class="docutils literal notranslate"><span class="pre">my_gating_mechanism</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'GATING_SIGNAL_A'</span><span class="p">,</span>
 <span class="gp">... </span>                                      <span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
 <span class="gp">... </span>                                      <span class="n">projections</span><span class="o">=</span><span class="n">my_input_layer</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_signal_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'GATING_SIGNAL_B'</span><span class="p">,</span>
 <span class="gp">... </span>                                      <span class="n">projections</span><span class="o">=</span><span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
 <span class="gp">... </span>                                                   <span class="n">my_output_layer</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_gating_signal_A</span><span class="p">,</span>
@@ -643,7 +643,7 @@ Costs not used by Gating Mechanism, and method on ControlSignal doesn’t suppor
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=a0844064"></script>
+         <script src="_static/documentation_options.js?v=93228d72"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
