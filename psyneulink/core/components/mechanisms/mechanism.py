@@ -1813,14 +1813,22 @@ class Mechanism_Base(Mechanism):
                 _validate_element_names_length,
             )
             shorthand = list(element_names)
+
+            def _apply_shorthand(port):
+                # Set both the default and the (override) value so the
+                # shorthand behaves identically to an explicit per-port
+                # element_names: readable via ``port.element_names`` AND
+                # serialized (MDF reads the parameter default).
+                port.defaults.element_names = list(shorthand)
+                port.parameters.element_names.set(list(shorthand), override=True)
+                _validate_element_names_length(port)
+
             if (getattr(self, 'input_ports', None)
                     and self.input_ports[0].element_names is None):
-                self.input_ports[0].parameters.element_names.set(shorthand, override=True)
-                _validate_element_names_length(self.input_ports[0])
+                _apply_shorthand(self.input_ports[0])
             if (getattr(self, 'output_ports', None)
                     and self.output_ports[0].element_names is None):
-                self.output_ports[0].parameters.element_names.set(shorthand, override=True)
-                _validate_element_names_length(self.output_ports[0])
+                _apply_shorthand(self.output_ports[0])
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
