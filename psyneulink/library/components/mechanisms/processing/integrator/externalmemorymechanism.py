@@ -132,7 +132,8 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                                           function_parameter_name='scores_metric',
                                           primary=True,
                                           stateful=False)
-        normalize_memories = Parameter(True, stateful=True, loggable=True)
+        memory = FunctionParameter(None, aliases='field_memory')
+        normalize_memories = FunctionParameter(True, stateful=True, loggable=True)
         # normalize_memories = FunctionParameter(True,
         #                                        BREADCRUMB:  THESE getter/setter MIGHT BE THE PROBLEM:
         #                                        # getter = _normalize_memories_getter,
@@ -147,7 +148,9 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                                        function_parameter_name='decay_rate',
                                        primary=True,
                                        modulable=True,
-                                       stateful=True)
+                                       stateful=True,
+                                       dependencies=memory,
+                                       )
         storage_prob = FunctionParameter(1.0,
                                          function_name='function',
                                          function_parameter_name='storage_prob',
@@ -162,6 +165,13 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
                 return None
             if not is_numeric_scalar(decay_rate) or not 0 <= decay_rate <= 1:
                 return "must be a float in the interval [0, 1]."
+
+        def _parse_decay_rate(self, decay_rate):
+            if decay_rate == AUTO:
+                if self._owner.defaults.memory is not None:
+                    # not catching div0 error on purpose (unexpected input)
+                    return 1 / len(self._owner.defaults.memory)
+            return decay_rate
 
     @check_user_specified
     def __init__(
@@ -197,17 +207,6 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
             np.zeros(1),
         ], dtype=object)
 
-        function = MatrixMemory(default_variable=default_variable,
-                                memory=field_memory,
-                                normalize_memories=normalize_memories,
-                                scores_metric=scores_metric,
-                                decay_rate=decay_rate,
-                                storage_prob=storage_prob,
-                                params=params,
-                                owner=self,
-                                prefs=prefs
-                                )
-
         # EM2 BREADCRUMB: MOVE THESE BACK INTO _instantiate_<input/output>_ports():
         input_ports = [{NAME: QUERY, VARIABLE: np.zeros(field_shape)},
                        {NAME: COMBINED_SCORES, VARIABLE: np.zeros(self.memory_capacity)},
@@ -224,8 +223,11 @@ class ExternalMemoryMechanism(EpisodicMemoryMechanism):
             input_ports=input_ports,
             output_ports=output_ports,
             # EM2 BREADCRUMB END
-            function=function,
             # distance_function=distance_function,
+            decay_rate=decay_rate,
+            storage_prob=storage_prob,
+            normalize_memories=normalize_memories,
+            scores_metric=scores_metric,
             memory=field_memory,
             params=params,
             name=name,
