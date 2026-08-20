@@ -282,6 +282,7 @@ def test_state_ids_are_unique_and_owned_by_the_stateful_component():
 
     assert {state.name.removeprefix(f"{stateful.name}.") for state in graph.states} == {
         "act",
+        "initialized",
         "pre",
     }
     _assert_contiguous_ids(state.state_id for state in graph.states)

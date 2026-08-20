@@ -325,7 +325,7 @@ def _assert_executable_ir_contract(acceptance, model, backend):
         reset for reset in graph.resets
         if reset.component_id == producer_spec.component_id
     )
-    assert len(producer_states) == 2
+    assert len(producer_states) == 3
     assert len(producer_resets) == 1
     assert producer_resets[0].condition_type == "Never"
     assert producer_resets[0].state_ids == tuple(

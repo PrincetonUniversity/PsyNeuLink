@@ -5,11 +5,15 @@
 > behavior that no longer exists. The authoritative current semantic contract
 > and fail-closed support boundary are maintained in
 > `docs/source/BatchedCompilation.rst` and executable tests. The current
-> checkpoint executes an exactly authenticated deterministic CSI subset through
-> typed control operations and a lane-local co-evolving `KernelIR` region.
-> Delayed ITI, stochastic CSI, generalized cue/control transforms, and other
-> co-evolving topologies still fail closed. Older statements below that CSI is
-> wholly rejected describe the preceding exact-LCA checkpoint.
+> checkpoint executes the complete CSI research-model boundary through typed
+> control operations and one lane-local co-evolving `KernelIR` region. That
+> boundary includes affine repeat/switch cue counts, fixed integral ITI,
+> numeric LCA noise, fixed finite DDM noise with lane-local RNG, and both the
+> reduced three-parameter and full historical five-parameter PEC surfaces. It is
+> still an exact, fail-closed model boundary rather than a generic scheduler:
+> the authenticated 11-node/six-consideration-set topology, registered drift
+> UDF, and restrictions documented below are part of the contract. Older
+> statements below that CSI was wholly rejected describe preceding milestones.
 
 This branch is `feat/pec_batch_compile`, currently based on `origin/devel`.
 The work is experimental and opt-in. Existing PEC fitting, `Composition.run`,
@@ -63,10 +67,9 @@ The serial PEC data-fitting objective can be routed through this path (opt-in):
 pnl.PECOptimizationFunction(method=..., batched_backend="triton")
 ```
 
-PEC entry points are not unified behind one simulation engine yet; objective
-mode, distributed workers, and the public log-likelihood path still require the
-post-CSI interface cleanup. Use the direct compiler API above when strict
-no-fallback behavior is required.
+The opt-in PEC data-fitting objective and the direct compiler/log-likelihood
+APIs use this path without silent fallback. Distributed PEC workers and the
+default non-batched objective remain separate execution paths.
 
 Researcher-facing op registration (see "Code Map / specs.py"):
 
@@ -113,8 +116,11 @@ PsyNeuLink itself is the correctness oracle, not a hand-written twin:
   independence.
 - Triton-interpreter and compiled-GPU pytest cases run in separate processes.
   The historical `pec_grid_correctness_check.py` script is useful for research
-  exploration but is not the executable support gate. The deterministic CSI
-  acceptance case runs in both modes; unsupported CSI variants fail closed.
+  exploration but is not the executable support gate. CSI acceptance covers
+  deterministic parity, delayed/affine timing, stochastic DDM replay and
+  common-random-number behavior, runtime parameter lanes, and the three- and
+  five-parameter PEC objectives in Triton interpreter and compiled-GPU modes.
+  Variants outside the exact boundary fail closed.
 
 `ParameterEstimationComposition.can_compile_batched(..., backend="triton")` is
 diagnostic-only. It calls `BatchedCompositionCompiler.diagnose()` on the model
@@ -146,8 +152,9 @@ scheduling; step 6 instance-level UDF ops (`batched_node_op`); step 7 fires-once
 integrating transfers; step 8 collapsing DDM threshold + control routing (CSI
 compiles); step 5 **co-evolution loop** (CSI decision **and** RT match PNL
 Python); a refactor factoring the LCA/DDM recurrence into one shared
-`@triton.jit` helper each; and a `CSISurrogate` asv benchmark + a triton-vs-LLVM
-comparison (`csi_triton_vs_llvm.py`; ~100x steady state, ~1.3x cold one-shot).
+`@triton.jit` helper each; and a `CSISurrogate` asv series plus a
+historical triton-vs-LLVM comparison (`csi_triton_vs_llvm.py`; ~100x steady
+state, ~1.3x cold one-shot in that recorded run).
 
 After `4fd3be6718`, stability-flexibility is no longer a special model family
 in the batched compiler. It is just an example of a supported static stateful
@@ -338,9 +345,10 @@ Supported mechanisms:
 - `DDM` (fixed **or** collapsing boundary; a control mechanism OVERRIDE'ing the
   threshold from a SimpleIntegrator transfer is recognized and that transfer is
   absorbed into the DDM)
-- `LCAMechanism`, an exact deterministic width-2 subset with either a static
-  `TimeScale.TRIAL` execution-count threshold or the narrowly validated scalar
-  cue -> `OVERRIDE` threshold paths; see "LCA Caveats"
+- `LCAMechanism`, an exact width-2 subset with finite numeric scalar/broadcast
+  noise and either a static `TimeScale.TRIAL` execution-count threshold or the
+  narrowly validated scalar cue -> `OVERRIDE` threshold paths; see "LCA
+  Caveats"
 - `ControlMechanism` — recognized for LCA-termination and DDM-threshold OVERRIDE
   routing. Exact scheduler-visible LCA control lowers to registered controller
   compute plus `ApplyModulation`; absorbed threshold control remains part of the
@@ -365,66 +373,109 @@ Supported executable schedules / fusions:
 - finite stateless precomputed traces and fixed-count stateful
   `Always`/`WhenFinished` producer/follower traces;
 - `dynamic_lane_local` for the exact scalar-controlled LCA/follower chain and
-  the exact deterministic CSI co-evolving topology;
+  the exact CSI co-evolving topology, including fixed integral delayed ITI;
 - Fusions: `stateless_graph`, `ddm_graph`, `stateful_graph` (sequential
   stateful execution with a static threshold or the validated scalar identity
   cue -> `OVERRIDE` threshold path), and `coevolving_graph` for the authenticated
-  deterministic CSI graph.
+  CSI research graph.
 
 Generic `Always`/`WhenFinished` co-evolution, multiple dynamic controllers,
-and `AtPass(n>0)` onset are recognized where possible but are not executable.
+and arbitrary `AtPass(n>0)` onset are recognized where possible but are not
+executable. The exact CSI task onset at its fixed integral ITI is executable.
 
 Unsupported scheduler conditions should return diagnostics. Do not silently
 fall back to Python or LLVM inside this stack.
 
-## Capability Gaps — Real Research Models
+## CSI Research Model — Current Exact Boundary
 
-The stability-flexibility model in the test suite is a *toy*. The model a
-researcher actually runs is the **CSI surrogate** stability-flexibility model in
-`csi_model_surrogate.py` (fit at PEC scale by `csi_fit_parameter_recovery.py`:
-128 trials x 10k estimates, CMA-ES over 5 parameters). It is the north-star
-target for "supporting researchers' models," and the roadmap in "Good Next
-Steps" is scoped to close the gap to it.
+The stability-flexibility model in the older test suite is a *toy*. The model a
+researcher actually runs is the **CSI surrogate** in `csi_model_surrogate.py`,
+fit at PEC scale by the recovery scripts. That north-star boundary is now
+executable after registering its `Drift Rate Value` 7-to-1 reduction with
+`batched_node_op`.
 
-`BatchedCompositionCompiler.diagnose()` now accepts the exact deterministic
-surrogate after its drift UDF is registered when `iti=0`, `csi_repeat=0`,
-`csi_switch=1`, `ddm_noise=0`, and `lca_noise=0`. The public compiler lowers it
-to explicit effective-parameter/control operations and one authenticated
-`lane_local_coevolving` pass region; Triton interpreter and compiled CUDA both
-match fresh Python oracle cases. This is the first narrow CSI checkpoint, not
-full research-model support: nonzero ITI, fitted/generalized CSI cue transforms,
-and stochastic DDM/LCA execution still reject. Older measurements below
-describe the retired heuristic emitter and are not evidence for the current
-typed path.
+`BatchedCompositionCompiler.diagnose()` and `compile()` authenticate the whole
+CSI contract before admitting it. The executable graph has exactly 11 lowered
+nodes in six consideration sets, including the two intrinsic OVERRIDE control
+chains, one persistent width-2 LCA stepper, one DDM terminator, and the two
+finished-gated outputs. It lowers to explicit effective-parameter/control
+operations and one `lane_local_coevolving` pass region. Similar-looking graphs
+with different topology, ordering, ports, conditions, or control provenance
+still fail closed.
 
-1. **Custom / UDF reduction op** (`driftRate`, a nested-logistic reducing a
-   7-vector to a scalar) — RESOLVED (step 6). `batched_node_op("<node name>")`
-   registers an instance-level op whose `tl` body takes the node's whole input
-   vector. (A cross-element reduction, so it rides the mechanism/`triton_emit`
-   path, not the scalar→scalar elementwise path.)
-2. **Stateful integrating `TransferMechanism`** (`taskInput`) — RESOLVED (step 7).
-   A fires-once (`AtPass`), reset-each-trial (`AtTrialStart`) integrator advances
-   one affine step from its initializer and lowers statelessly as
-   `function(a*input + b)`.
-3. **`AtPass` multi-pass timing** — PARTIAL. `AtPass(0)` is executable, including
-   the deterministic CSI origins. `AtPass(n>0)` (the ITI onset) is still
-   deferred.
-4. **Collapsing DDM threshold** (`threshold_collapse`) — RESOLVED (step 8). The
-   DDM kernel boundary is now `threshold(step) = threshold + collapse*step`.
-5. **Control routing** (`csiOverride`/`thresholdOverride` OVERRIDE a target
-   param) — RESOLVED FOR THE EXACT SLICE. `csiOverride` -> LCA
-   `termination_threshold` is represented by a held effective value and
-   `ApplyModulation`; `thresholdOverride` -> DDM `threshold` (monitoring the
-   `thresholdMechanism` SimpleIntegrator) is authenticated and absorbed into
-   the DDM boundary. The latter retains its held override across trials.
+The supported CSI parameter/timing surface is:
 
-### Typed CSI performance checkpoint (2026-08-17)
+- an affine cue count `csi_switch * cue + csi_repeat`; the source Linear's
+  `slope` (switch) and `intercept` (repeat) are runtime lanes, while its
+  `scale=1` and `offset=0` remain fixed. Coefficients and resulting counts must
+  be finite, nonnegative exact integers representable without loss in fp32
+  (bounded by `2**24`);
+- a fixed, finite, nonnegative integral ITI no larger than `2**24`. The Task
+  Input `AtPass(iti)`, CSI controller intercept, and co-evolving timing metadata
+  must agree exactly;
+- finite numeric scalar or uniform-broadcast LCA noise. This is PsyNeuLink's
+  deterministic additive numeric-noise term and is runtime mutable; callable
+  or distribution-valued LCA noise remains unsupported, and the mechanism and
+  integrator numeric values must agree when compiled;
+- finite nonnegative DDM noise, fixed when the plan is compiled. Nonzero noise
+  uses the DDM's declared lane-local Philox stream, supports seeded replay and
+  common random numbers, and does not change when step caps or ITI change; and
+- runtime lanes for LCA gain, cue switch/slope, cue repeat/intercept, DDM
+  non-decision time, folded starting threshold, folded threshold collapse, and
+  numeric LCA noise. Starting threshold is nonnegative and collapse is
+  nonpositive.
 
-The current typed deterministic path was measured on an RTX 2080 Ti with a
-fresh Triton cache. The CSI workload was 4 parameter values x 512 estimates x
-128 trials = 262,144 simulations, with `iti=0`, `csi_repeat=0`,
-`csi_switch=1`, alternating cue counts 1/3, `ddm_noise=0`, and `lca_noise=0`.
-Seven warm sweeps were reduced by their median:
+PEC-injected fitting `ControlMechanism`s do not execute inside this static GPU
+graph. The compiler may ignore only authenticated external PEC parameter
+controls, reconstructs the original six-set scheduler without them, and binds
+their candidate values directly to the runtime lanes. The reduced
+three-parameter surface (gain, switch, non-decision time) and the full
+historical five-parameter surface (those three plus Threshold Mechanism
+intercept and integrator offset/collapse) both compile and score. The recovery
+script now uses all five. Intrinsic CSI controls cannot be erased through this
+interface.
+
+Fresh-Python parity cases cover zero and delayed ITI, repeat/switch affine cue
+counts, mixed cue trials, boundary transitions, persistent threshold state,
+and runtime parameter rows. Interpreter and physical-GPU tests also cover the
+three- and five-parameter PEC objectives, stochastic DDM replay/common-random-
+number behavior, and cap/onset-independent random draws. Older measurements
+below remain historical; the original stochastic apples-to-apples workload has
+now also been rerun through the completed boundary.
+
+### Current stochastic CSI vs LLVM checkpoint (2026-08-17)
+
+The original comparison workload is executable again without weakening the
+typed boundary: `iti=0`, `csi_repeat=0`, `csi_switch=0`, zero cue inputs,
+`threshold_collapse=-0.001`, `ddm_noise=0.1`, and `lca_noise=0`. The sweep uses
+4 non-decision-time values x 512 estimates x 128 trials = 262,144 simulations.
+Five warm sweeps were reduced by their median on the RTX 2080 Ti:
+
+| | compile estimate | warm sweep | cold total | warm simulations/s |
+| --- | ---: | ---: | ---: | ---: |
+| current typed Triton GPU | 2.792 s | 22.3 ms | 2.814 s | 11.74 M |
+| LLVM PEC | 3.341 s | 1.275 s | 4.616 s | 0.206 M |
+
+That is **57.1x steady-state** and **1.6x cold one-shot**. This is the direct
+comparison requested against the old broader implementation: detached commit
+`7ad3d0637d` measured 16.5 ms Triton, 1.539 s LLVM, and **93.5x** on the same
+configuration. The authenticated compiler's GPU sweep is therefore about 35%
+slower in absolute warm time; the LLVM measurement in the current environment
+is about 17% faster, and the combined speedup ratio is about 39% lower. The
+new benchmark script reports checksums only as a smoke test because the two
+stochastic backends use different random streams; elementwise deterministic
+parity and stochastic replay/statistical acceptance tests remain the accuracy
+authority.
+
+### Historical typed deterministic CSI performance checkpoint (2026-08-17)
+
+The then-current typed deterministic checkpoint was measured on an RTX 2080 Ti
+with a fresh Triton cache. These figures predate full CSI support and have not
+been rerun after affine/delayed/stochastic and five-parameter PEC support. The
+workload was 4 parameter values x 512 estimates x 128 trials = 262,144
+simulations, with `iti=0`, `csi_repeat=0`, `csi_switch=1`, alternating cue
+counts 1/3, `ddm_noise=0`, and `lca_noise=0`. Seven warm sweeps were reduced by
+their median:
 
 | | compile estimate | warm sweep | cold total | warm simulations/s |
 | --- | ---: | ---: | ---: | ---: |
@@ -436,13 +487,12 @@ excluding trial 0 match exactly (`410972.2`). LLVM retains its known first-trial
 initialization artifact, so its all-trial checksum is not an accuracy oracle;
 the elementwise Python/interpreter/GPU acceptance tests remain authoritative.
 
-For context, detached historical commit `7ad3d0637d` was rerun on the same GPU
-and software environment with its original broader configuration
-(`csi_switch=0`, `ddm_noise=.1`). It measured 16.5 ms Triton, 1.539 s LLVM, and
-**93.5x steady-state**. Relative to that run, the typed GPU path is about 16%
-slower in absolute warm time and its GPU/LLVM speedup is about 21% lower. This
-is directionally useful, but not an exact regression comparison because the
-old stochastic/zero-cue model is outside the current executable boundary.
+Before the stochastic/zero-cue configuration was re-enabled, detached commit
+`7ad3d0637d` supplied only a contextual historical point: 16.5 ms Triton,
+1.539 s LLVM, and **93.5x steady-state**. Comparing that workload with the
+different deterministic checkpoint above suggested a 16% GPU slowdown, but it
+was not an exact regression comparison. The direct stochastic checkpoint in
+the preceding section now supersedes that cross-configuration estimate.
 
 For a strict equal-output comparison, both implementations were also run with
 the same constant cue count 1, zero LCA/DDM noise, zero threshold collapse, and
@@ -469,7 +519,7 @@ trials = 1,048,576 simulations for each model:
 These rates compare complete simulations, not equal amounts of mechanism work;
 they are useful for capacity planning, not per-operation efficiency claims.
 
-### Historical CSI experiment (not current support)
+### Historical CSI experiment (retired emitter; not a current benchmark)
 
 The following measurements describe the retired heuristic emitter and are kept
 only as performance history. `make_stab_flex` previously compiled and ran on
@@ -480,16 +530,19 @@ matching** PNL Python mode (RT within ~1 DDM step). That path required the
 activation feeds the drift, so the LCA and DDM step together each timestep. For
 `iti>0` the fused loop gated the `AtPass(iti)` task-input onset per step. These
 terminal-output checks did not establish general scheduler/control fidelity,
-so that emitter was retired. The current deterministic `iti=0` checkpoint uses
-a different, typed `KernelIR` region; the historical `iti>0` result below is
-not current support.
+so that emitter was retired. The current compiler uses a different, typed
+`KernelIR` region and now supports the delayed/stochastic research boundary.
+The result below is retained as history, not validation or timing of the
+current implementation.
 
 **Benchmark (vs LLVM PEC).** `csi_triton_vs_llvm.py` compares the co-evolving
 CSI on the `triton` GPU path against PNL's PEC `grid_evaluate` LLVM baseline on
 the same workload (sweeping `non_decision_time` — the DDM `threshold` is already
-controlled, so PEC cannot also modulate it; that conflict raises
-`len(mod_afferents) <= 1` in LLVM). At PEC scale (4 params x 512 estimates x 128
-trials = 262k sims, RTX 2080 Ti), **quote the steady-state figure**:
+controlled, so the LLVM PEC comparison cannot also modulate it; that conflict
+raises `len(mod_afferents) <= 1`). The batched compiler now binds fitted
+threshold/collapse values directly to authenticated folded DDM lanes and does
+not share that limitation. At PEC scale (4 params x 512 estimates x 128 trials
+= 262k sims, RTX 2080 Ti), the historical steady-state figure was:
 
 | | cold compile (one-time) | steady state, per parameter eval |
 | --- | --- | --- |
@@ -531,10 +584,9 @@ not the checksum, is the real accuracy check.
 > speedup — the GPU was nowhere near saturated at 262k lanes — and collapsed the
 > checksum gap. Treat any pre-fix co-evolving multi-parameter number as void.
 
-asv retains a `CSISurrogate` benchmark identifier for historical continuity,
-but the builder still skips it because its original research configuration is
-broader than the newly admitted deterministic slice. Its recorded results
-predate the parameter-set fix and are void (`PARAM_SETS = 8`); there is no
+asv retains a `CSISurrogate` benchmark identifier for historical continuity.
+Its existing recorded results predate the parameter-set fix and are void
+(`PARAM_SETS = 8`); a fresh result is required before calling any entry a
 current CSI baseline.
 
 ## Fusion and Lane Layout
@@ -560,10 +612,11 @@ Current fusion kinds:
   - Trials run inside the Triton lane so LCA state persists across trials.
 
 - `coevolving_graph`
-  - Current typed optimization for the exactly authenticated deterministic CSI
+  - Current typed optimization for the exactly authenticated CSI research
     graph. Its `lane_local_coevolving` `ForPasses` region carries explicit LCA
-    and DDM finished identities, effective controlled count, trial-local DDM
-    state, persistent LCA state, and a persistent held threshold override.
+    and DDM finished identities, affine effective controlled count, integral
+    ITI timing, trial-local DDM state/RNG, persistent LCA state, and a persistent
+    held threshold override.
   - The retired emitter inferred `Always`/`WhenFinished` behavior from op order.
     That history is documented below, but it is not used by the current path.
     Other coupled stateful graphs still require their own complete semantic
@@ -584,12 +637,12 @@ schedule_kind="static_graph"
 ```
 
 The **CSI surrogate** (the realistic model, with an `Always`-scheduled LCA
-co-evolving with the DDM) now executes for the deterministic identity-cue,
-zero-ITI slice. Admission authenticates the complete typed graph and the same
-scheduler, control, and state semantics required of any composition with that
-topology; there is no public CSI model kind or display-name dispatch. Research
-variants with delayed ITI, fitted affine cue transforms, or noise still fail
-closed.
+co-evolving with the DDM) now executes across its research boundary: delayed
+integral ITI, affine repeat/switch cue counts, finite numeric LCA noise, and
+fixed finite stochastic DDM noise. Admission authenticates the complete
+11-node/six-set typed graph and the same scheduler, control, and state semantics
+required of any composition with that topology; there is no public CSI model
+kind or display-name dispatch.
 
 There should be no `STABILITY_FLEXIBILITY_MODEL`, no
 `stability_flexibility_roles` metadata, no forced `cue`/`correct` aliases, and
@@ -599,10 +652,18 @@ Parameter sets should use generic node-qualified names, for example:
 
 ```python
 {
-    "DDM.threshold": 0.05,
-    "DDM.noise": 0.0,
+    "Task Activations [C1, C2].gain": 10.0,
+    "Task Activations [C1, C2].noise": 0.05,
+    "Cue Stimulus Interval.slope": 10.0,       # switch count
+    "Cue Stimulus Interval.intercept": 0.0,    # repeat count
+    "DDM.non_decision_time": 0.2,
+    "Threshold Mechanism.intercept": 0.12,
+    "Threshold Mechanism.offset-integrator_function": -0.001,
 }
 ```
+
+`DDM.noise` is deliberately absent from this runtime surface: a finite
+nonnegative value is supported, but it is fixed at plan compilation.
 
 Old SF-only names such as `threshold`, `ddm_noise`, `lca_noise`,
 `automaticity`, or `scale` should not be reintroduced as special compiler
@@ -611,9 +672,10 @@ parameter naming/alias policy, not a model-specific shortcut.
 
 ## LCA Caveats
 
-The current batched LCA hook is exact for a narrow deterministic width-2
-`LCAMechanism` subset. It is not an approximation: accepted configurations
-must match Python PsyNeuLink, and all other configurations fail closed.
+The current batched LCA hook is exact for a narrow width-2 `LCAMechanism`
+subset, including finite numeric noise. It is not an approximation: accepted
+configurations must match Python PsyNeuLink, and all other configurations fail
+closed.
 
 The real PsyNeuLink `LCAMechanism` is implemented through:
 
@@ -634,10 +696,12 @@ The batched hook currently handles:
   including lane-specific fitted values;
 - finite recurrent parameters within the fp32 range that are scalar or exactly
   uniform broadcasts, with a strictly positive `time_step_size`;
-- activation initialization as `Logistic(0)` through the registered decorated
-  Logistic implementation;
-- zero integrator initializer and offset, deterministic zero noise, no clip,
-  canonical recurrent matrix, and `Never` reset;
+- activation initialization through the registered Logistic implementation,
+  including PsyNeuLink's construction-time `Logistic(noise * sqrt(dt))` sender
+  value for a never-reset numeric-noise LCA;
+- zero integrator initializer and offset, finite numeric scalar or exactly
+  uniform-broadcast noise, no clip, a canonical recurrent matrix, and the
+  authenticated `Never`/`AtTrialStart` reset behavior;
 - a nonnegative `TimeScale.TRIAL` execution-count threshold, either static or
   supplied through a narrowly validated scalar identity cue -> `OVERRIDE`
   control chain;
@@ -646,12 +710,13 @@ The batched hook currently handles:
   by `2**24`, and runtime cues must already be exact nonnegative integers before
   fp32 conversion;
 - a positive-integer `max_executions_before_finished` cap for each LCA node,
-  with persistent state between trials; and
+  with persistent state between trials;
 - an absorbed identity cue whose lowered Linear parameters are
-  validated-default-only in runtime parameter rows. Only an absent explicit
-  condition or `AtPass(0)` at the default `ENVIRONMENT_STATE_UPDATE` time scale
-  on that cue is accepted; other explicit cue/controller/target conditions or
-  time scales fail closed.
+  validated-default-only in runtime parameter rows for the sequential LCA
+  subset; and
+- for the exact co-evolving CSI topology only, an affine cue source with
+  runtime `slope`/`intercept` and fixed `scale=1`/`offset=0`. Only the
+  authenticated cue/controller/target conditions and time scales are accepted.
 
 It does not yet cover:
 
@@ -662,10 +727,11 @@ It does not yet cover:
 - learning;
 - full output-port variants;
 - convergence or other termination measures;
-- stochastic noise, clipping, nonzero/custom initialization, or trial reset;
+- distribution/function-valued or non-broadcast noise, clipping, and
+  nonzero/custom initialization;
 - non-identity or otherwise general termination-threshold control;
 - generic co-evolving `Always`/`WhenFinished` scheduling and control outside
-  the exact deterministic CSI topology.
+  the exact CSI topology.
 
 The old handwritten recurrence test and heuristic co-evolution checks are not
 semantic support evidence. Fresh Python and batched compositions now compare
@@ -675,10 +741,11 @@ Logistic parameters, and distinct parameter lanes.
 
 ## RNG and Common Random Numbers
 
-The Triton backend uses `tl.randn` in stochastic component helpers. The exact
-supported LCA subset is deterministic and declares no RNG stream; DDM remains
-the active stochastic mechanism. RNG offsets are derived from lane indices and
-stream layout.
+The Triton backend uses `tl.randn` in stochastic component helpers. Supported
+numeric LCA noise is a deterministic additive value and declares no RNG stream;
+the DDM is the active stochastic mechanism in CSI. Its finite nonnegative noise
+value is fixed at compile time, and each simulation lane receives its own
+declared DDM stream. RNG offsets are derived from lane indices and stream layout.
 
 ### Stream layout
 
@@ -751,9 +818,10 @@ the parameter/input regime.
 
 ### Bounded-loop early exit (DDM; historical co-evolution measurements)
 
-The run-to-completion DDM body (`components/ddm.py`) stops as soon as every
-in-range lane of the **block** has finished, instead of always running to the
-cap. The retired fused co-evolution loop used the same optimization:
+The run-to-completion DDM body (`components/ddm.py`) and the current typed
+co-evolving CSI region stop as soon as every in-range lane of the **block** has
+finished, instead of always running to the cap. The historical measurements
+below used the same optimization:
 
 ```python
 step = 0
@@ -780,7 +848,8 @@ Two things the test must get right, and both are easy to get wrong:
 Consequence: **`MAX_STEPS` is now free to set generously** — in both senses.
 Raising it costs almost nothing (this section), and it does not change your
 draws (see "Stream layout"; before that change it did). So prefer a cap that
-avoids truncation over one tuned for speed. Measured on an RTX 2080 Ti:
+avoids truncation over one tuned for speed. The following historical
+measurements were taken on an RTX 2080 Ti:
 
 | workload | cap | before | after |
 | --- | --- | --- | --- |
@@ -802,15 +871,14 @@ The lowering emits a `StoreFlag` KernelOp per diagnostic into a separate per-lan
 golden is unchanged); the runtime aggregates the truncated fraction per node into
 `result.metadata["truncation"]`, **warns** by default and **raises**
 `BatchedTruncationError` under `run(..., strict_truncation=True)`. The channel is
-node-generic. The retired co-evolving DDM emitter also used it; a future
-KernelIR-based coupled terminator may reuse the same channel once that execution
-path is semantically supported.
+node-generic, and the typed co-evolving CSI DDM terminator uses the same channel.
 
 The supported LCA sizes `LCA_MAX_STEPS` from metadata and either the largest
 host-discretized static threshold or the validated integer runtime cues. Each
 node's `max_executions_before_finished` is also applied, and every trial still
-executes at least once. General controlled thresholds and co-evolving execution
-are rejected rather than assigned an inferred cap.
+executes at least once. The exact affine CSI count surface contributes its
+validated runtime counts to this sizing; general controlled thresholds and
+other co-evolving graphs are rejected rather than assigned an inferred cap.
 
 ## Contrast With LLVM/PTX
 
@@ -850,6 +918,16 @@ Focused checks used during this work:
 ```bash
 .venv/bin/python -m compileall -q psyneulink/core/batched tests/composition/pec Scripts/Debug/pec_batch_compile
 .venv/bin/python -m pytest tests/composition/pec/test_batched_compile.py tests/composition/pec/test_batched_reference.py -q -n 0
+
+TRITON_INTERPRET=1 .venv/bin/python -m pytest -q -n 0 \
+    --require-batched-backend triton_interpreter -m triton_interpreter \
+    tests/composition/pec/test_batched_csi_coevolving_acceptance.py \
+    tests/composition/pec/test_batched_lca_numeric_noise.py
+
+.venv/bin/python -m pytest -q -n 0 \
+    --require-batched-backend triton_gpu -m triton_gpu \
+    tests/composition/pec/test_batched_csi_coevolving_acceptance.py \
+    tests/composition/pec/test_batched_lca_numeric_noise.py
 ```
 
 Numeric tests run the real kernels on CPU through Triton interpret mode and so
@@ -874,24 +952,30 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_batched_
     --trials 128 --estimates 8000 --max-iterations 400 --seed 1
 ```
 
-Recovers `gain` / `csi_switch` / `non_decision_time` (the params that map cleanly
-onto the batched IR; the DDM `threshold` is left fixed — it is already driven by
-the collapse control, the same `mod_afferents<=1` conflict that blocks fitting it
-under LLVM PEC). A 128-trial x 8000-estimate x 400-iteration fit (~410M sims) runs
-in ~22 s on an RTX 2080 Ti; `non_decision_time` recovers tightly, `gain`/`csi_switch`
-within the expected identifiability of a single 128-trial data set. Use
-`--backend triton_cpu` only for a tiny interpret-mode smoke test.
+The current script recovers the historical five-parameter surface: `gain`,
+`csi_switch`, `threshold`, `threshold_collapse`, and `non_decision_time`.
+The compiler binds `Threshold Mechanism.intercept` and
+`Threshold Mechanism.offset-integrator_function` to the folded DDM threshold
+and collapse lanes; unlike LLVM PEC, this binding does not add a second
+modulating afferent to the live DDM ParameterPort. The previously recorded
+128-trial x 8000-estimate x 400-iteration three-parameter fit (~410M sims) ran
+in ~22 s on an RTX 2080 Ti; this is a historical timing, not a new benchmark of
+the completed surface. `non_decision_time` recovered tightly and
+`gain`/`csi_switch` were within the expected identifiability of a single
+128-trial data set. Use `--backend triton_cpu` only for a tiny interpret-mode
+smoke test.
 
-**Identifiability (not a bug).** With the experimental-data-anchored bins, recovery
-is stable across `num_estimates`. `non_decision_time` is strongly identified — its
-log-likelihood varies by hundreds of units across its range, so it recovers tightly
-and sharpens with more estimates. `gain` (and to a lesser degree `csi_switch`) are
-**weakly identified** in a single 128-trial data set: sweeping `gain` over 6-20
-moves the log-likelihood by only ~8 units and the surface is nearly flat/bumpy for
-`gain >= 10`, so the MLE sits ~2-3 above the true value and more estimates cannot
-create a gradient that the data does not contain. Recovering `gain`/`csi_switch`
-well needs more trials or a design that makes the LCA dynamics matter, not more
-estimates.
+**Historical three-parameter identifiability note (not a five-parameter
+recovery result).** With the experimental-data-anchored bins, the recorded
+recovery was stable across `num_estimates`. `non_decision_time` was strongly
+identified — its log-likelihood varied by hundreds of units across its range,
+so it recovered tightly and sharpened with more estimates. `gain` (and to a
+lesser degree `csi_switch`) were **weakly identified** in a single 128-trial
+data set: sweeping `gain` over 6-20 moved the log-likelihood by only ~8 units,
+and the surface was nearly flat/bumpy for `gain >= 10`, so the MLE sat ~2-3
+above the true value. More estimates could not create a gradient that the data
+did not contain. Recovering `gain`/`csi_switch` well needs more trials or a
+design that makes the LCA dynamics matter, not more estimates.
 
 ## Benchmarking Methodology
 
@@ -992,10 +1076,13 @@ PYTHONUNBUFFERED=1 .venv/bin/python Scripts/Debug/pec_batch_compile/csi_triton_v
     --trials 128 --estimates 512 --param-evals 4
 ```
 
-It sweeps `non_decision_time` (the DDM `threshold` is already controlled, so PEC
-cannot also modulate it → LLVM `mod_afferents<=1`). It reports compile, warm
-sweep and cold total per side: ~100x steady state, ~1.3x cold one-shot. See
-"Benchmark (vs LLVM PEC)" and "Benchmarking Methodology".
+It deliberately preserves the original comparison workload and sweeps only
+`non_decision_time` (LLVM PEC cannot add a threshold fit control to the already
+controlled DDM → `mod_afferents<=1`; the batched five-parameter route does not
+share that limitation). It reports compile, warm sweep, and cold total per side.
+The ~100x steady-state and ~1.3x cold one-shot figures above are historical;
+rerun the script before making a current performance claim. See "Benchmark (vs
+LLVM PEC)" and "Benchmarking Methodology".
 
 The one-off scripts above give ad-hoc triton-vs-LLVM numbers. To **track**
 batched-compiler performance across commits, use the asv suite in `benchmarks/`
@@ -1054,15 +1141,15 @@ environments to persist results.
   `graph.py:_condition_schedule_kind` now recognizes `AtPass`: `AtPass(0)` ("fire
   only on pass 0") lowers as `static_graph` — exactly the batched origin default
   (each node computes once per trial) — so the CSI surrogate's four `AtPass(0)`
-  origins plus `csiOverride` are accepted instead of rejected. `AtPass(n>0)` (the
-  ITI-delayed `taskInput` onset) is recognized but deferred as `precomputed_trace`
-  rather than silently mis-timed as static. `schedule_kind` is informational only
-  (fusion is driven by node types), so no emit/runtime/golden changes were needed.
-  Tested in `test_batched_compile.py` (accept `AtPass(0)` / defer `AtPass(n>0)`)
+  origins plus `csiOverride` were accepted instead of rejected. At this first
+  milestone, `AtPass(n>0)` (the ITI-delayed `taskInput` onset) was recognized but
+  deferred as `precomputed_trace` rather than silently mis-timed as static; the
+  exact CSI delayed onset is supported by the current co-evolving region. Tested
+  in `test_batched_compile.py` (accept `AtPass(0)` / defer unsupported generic
+  `AtPass(n>0)`)
   and `test_batched_reference.py` (deterministic stab-flex with explicit
-  `AtPass(0)` origins still matches PNL Python). With `iti=0`, the CSI model's 5
-  `AtPass` scheduler rejections are gone; only the node-level gaps (steps 5-8)
-  remain.
+  `AtPass(0)` origins still matches PNL Python). This entry records the first
+  scheduling increment, not the current CSI boundary.
 
 - **UDF / instance-level ops** (roadmap step 6). The op registry is now resolvable
   per **node instance**, not just per component class: `specs._INSTANCE_SPECS`
@@ -1075,9 +1162,10 @@ environments to persist results.
   element-wise scalar→scalar. Instance ops reuse the existing `MechanismOpSpec` +
   `triton_emit` machinery (auto-generated from the body), so `kernel_ir`/`emit`
   are unchanged (they dispatch on `spec_kind`/`spec_key`, never node class) and
-  the goldens are untouched. This clears the CSI `Drift Rate Value` (nested-logistic
-  7→1 reduction) rejection; the two `integrator_mode` transfers still block a full
-  CSI compile (step 7). Tested in `test_batched_compile.py` (numeric 2→1 reducer
+  the goldens are untouched. At this milestone it cleared the CSI `Drift Rate
+  Value` (nested-logistic 7→1 reduction) rejection; the remaining integrating
+  transfers were resolved in steps 7-8. Tested in `test_batched_compile.py`
+  (numeric 2→1 reducer
   on `triton_cpu`; instance-scoped, reversible registration) and
   `test_batched_reference.py` (real CSI drift-rate node leaves the rejected set).
   Binding extra `tl` args to node Parameters/RNG is a future extension
@@ -1112,8 +1200,9 @@ environments to persist results.
   schedule entry) from the lowered graph, since its effect lives entirely in the
   DDM boundary. Instance-op matching is now suffix-insensitive
   (`mechanism_spec_for` strips a `-\d+` rebuild suffix) so a registered op keeps
-  matching across in-process model rebuilds. **Completes CSI compilation**
-  (`iti=0`): `test_batched_reference.py` asserts the surrogate compiles + runs
+  matching across in-process model rebuilds. This completed the historical
+  zero-ITI compilation checkpoint: `test_batched_reference.py` asserts the
+  surrogate compiles + runs
   with decision outcomes matching PNL, and that a collapsing threshold shortens
   RT vs a fixed one.
 
@@ -1141,20 +1230,15 @@ environments to persist results.
 
 - **`AtPass(n>0)` ITI onset in the co-evolution loop** (rest of roadmap step 4).
   A delayed within-trial onset (`Task Input` at `AtPass(iti)`) is now executable
-  in a co-evolving graph: `graph.py` accepts `AtPass(n>0)` when `coevolving`
-  (still deferred otherwise), records `onset_step` on the node and
-  `coevolve_warmup=max(onset)` in graph metadata. In the fused loop, the onset
-  node's output is gated `where(step >= onset, val, 0)` (so the `Always`-LCA
-  integrates 0 and *decays* during the ITI), and the DDM terminator is frozen
-  until `step >= warmup` with its collapse step counting from there
-  (`_pnl_triton_ddm_step` gained a `start` arg). Onset nodes become loop-variant
-  (partition), so they + downstream run inside the loop. `make_stab_flex(iti>0)`
-  now matches PNL decision + RT (RT rises with ITI then saturates, as in PNL);
-  `csi>0` also matches (its RT contribution is the `cueStimulusInterval ->
-  responseGate` term, and the LCA-convergence effect of the extra delay is within
-  the ~1-step tolerance). Tested in `test_batched_reference.py` (iti=10 RT parity)
-  and `test_batched_compile.py` (AtPass(n>0) accepted when co-evolving, deferred
-  otherwise). Coevolving golden regenerated for the DDM step `start` arg.
+  in the authenticated co-evolving graph: `graph.py` accepts `AtPass(n>0)` for
+  that region (still deferred otherwise), records `onset_step`, and requires it
+  to match both the fixed integral controller intercept and
+  `coevolve_warmup`. The Task output is gated until `step >= iti`, while the
+  LCA's affine effective count determines the DDM start pass as
+  `max(1, ceil(iti + csi_count)) - 1`. This intentionally preserves the Python
+  scheduler edge case: at ITI 10 and CSI count 0, the DDM begins on pass 9, one
+  pass before Task fires at `AtPass(10)`. Fresh-Python parity tests cover that
+  case and a mixed-cue ITI 2/repeat 3/switch 4 case on interpreter and GPU.
 
 - **Shared recurrence helpers** (code-quality). The LCA and DDM each had their
   math duplicated (a run-to-completion body and a step body); each now lives in
@@ -1206,8 +1290,9 @@ environments to persist results.
   triton-vs-LLVM CSI speedup and the recorded asv `CSISurrogate` timings and
   checksums (`PARAM_SETS = 8`). `ddm_graph` and `stateful_graph` were verified
   unaffected, as is PEC fit routing (its objective passes one parameter set per
-  call). Add a regression test before trusting this path again — the gap that let
-  this through is that no test varies parameter sets on a co-evolving model.
+  call). The current CSI acceptance suite includes distinct co-evolving
+  parameter rows and asserts that gain, switch, non-decision time, threshold,
+  collapse, and LCA-noise lanes do not collapse onto parameter set 0.
 
 - **Cap-independent RNG stream layout** (correctness). Streams are allocated a
   fixed `RNG_STREAM_STRIDE` of Philox counter space instead of being packed by
@@ -1229,13 +1314,15 @@ environments to persist results.
   `lane_mask` body argument so a kernel body can exclude out-of-range lanes from
   the exit test. Goldens regenerated for all three affected kernels.
 
-- **Benchmarks** (regression + comparison). `benchmarks/batched.py` gains a
-  `CSISurrogate` asv case (the `coevolving_graph` path). `csi_triton_vs_llvm.py`
+- **Benchmarks** (regression + comparison). `benchmarks/batched.py` maintains a
+  `CSISurrogate` asv series. `csi_triton_vs_llvm.py`
   compares the co-evolving CSI (triton GPU) vs PNL PEC `grid_evaluate` (LLVM) on
-  the same workload — **~100x** steady state at PEC scale (262k sims), triton
-  throughput rising with lane count. Finding: the CSI model **cannot fit `threshold` in LLVM PEC**
-  (already controlled → `mod_afferents<=1`), so the comparison sweeps
-  `non_decision_time`; the batched path also runs a fit config LLVM can't.
+  the same historical workload. The completed typed boundary currently measures
+  **57.1x** steady state at PEC scale (262k simulations); the detached retired
+  implementation measured about **93.5x**. The CSI model **cannot fit
+  `threshold` in LLVM PEC** (already controlled → `mod_afferents<=1`), so the
+  comparison sweeps `non_decision_time`; the batched path also runs a
+  five-parameter fit configuration LLVM cannot express directly.
 
 - **GPU histogram likelihood** (roadmap step 9). `batched/likelihood.py` provides
   `histogram_likelihood` / `histogram_log_likelihood`: the histogram analogue of
@@ -1267,10 +1354,11 @@ environments to persist results.
   `batched_max_steps`, `batched_bin_range`, `batched_seed`). When set in
   data-fitting mode, `_make_objective_func` returns a batched objective that
   compiles the model once (cached), feeds the **raw stimulus** as batched inputs,
-  supplies the fitting parameters as **parameter sets** (the PEC's dummy
-  control mechanisms are absorbed by the compiler as OVERRIDE routing, so
-  `fit_param_names` — already `"{mech.name}.{param}"` — are exactly the batched
-  parameter keys, no mapping needed), and returns the on-device histogram total
+  supplies the fitting parameters as **parameter sets**. Authenticated external
+  PEC fitting controls are ignored during lowering, their scheduler effects are
+  removed by reconstructing the original model's consideration sets, and their
+  `fit_param_names` bind directly to batched parameter lanes. Intrinsic model
+  controls remain mandatory. The objective returns the on-device histogram total
   log-likelihood — the *same quantity* as the default objective, so the optimizer
   / direction handling is unchanged. It never silently falls back: an unsupported
   model raises `OptimizationFunctionError`, and trial-conditional (`depends_on`)
@@ -1288,10 +1376,24 @@ environments to persist results.
   recovery** for the CSI surrogate runs via
   `csi_batched_parameter_recovery.py` (see below).
 
+- **Complete authenticated CSI research boundary.** The typed co-evolving path
+  now admits affine repeat/switch cue counts, fixed integral delayed ITI,
+  runtime finite numeric LCA noise, and fixed finite nonnegative DDM noise with
+  lane-local RNG. Runtime parameter rows cover gain, switch, repeat,
+  non-decision time, folded threshold/collapse, and LCA noise. The real PEC
+  objective compiles and scores both the reduced three-parameter surface and
+  the full historical five-parameter threshold/collapse recovery, with
+  interpreter and physical-GPU acceptance tests. This completion remains
+  deliberately scoped to the exact 11-node/six-set CSI topology and registered
+  drift UDF.
+
 ### Roadmap status (original execution order)
 
-The deterministic CSI slice now compiles and runs. The remaining north-star is
-the broader **CSI research configuration** and its full PEC fitting workflow.
+The **CSI research configuration and its PEC fitting workflow are complete for
+the exact authenticated boundary described above**. Remaining work is broader
+compiler generality (arbitrary coupled graphs/schedules, width-N LCA,
+distribution-valued LCA noise, runtime-mutable DDM noise, and KDE scoring), not
+a missing feature of the CSI surrogate itself.
 
 1. **Reject `integrator_mode` transfers** — DONE (see Done above). Rejected in
    `graph.py:_node_support_diagnostic` with a clear diagnostic instead of being
@@ -1307,16 +1409,20 @@ the broader **CSI research configuration** and its full PEC fitting workflow.
 
 4. **Tiered scheduling** (pay only when needed) — PARTIAL. Static execution,
    finite precomputed traces, fixed-count stateful producer/follower traces,
-   scalar-controlled lane-local counts, and the exact deterministic CSI region
-   are executable. `AtPass(n>0)`, additional finished dependencies, and generic
-   dynamic consideration-set evaluation remain fail-closed.
+   scalar-controlled lane-local counts, and the exact CSI region are executable.
+   The CSI Task Input's fixed integral `AtPass(iti)` is supported, including its
+   Python-accurate interaction with the affine LCA count. Arbitrary
+   `AtPass(n>0)`, additional finished dependencies, and generic dynamic
+   consideration-set evaluation remain fail-closed.
 
 5. **Co-evolution loop for coupled stateful mechanisms** — DONE FOR THE EXACT
-   DETERMINISTIC CSI SLICE. `lane_local_coevolving` carries explicit LCA/DDM
-   finished identities, scheduler ordering, effective controlled count,
-   private DDM trial state, persistent LCA state, and persistent threshold
-   control. General coupled graphs, delayed ITI, stochastic CSI, width-N LCA,
-   and arbitrary recurrent matrices remain separate open work.
+   CSI RESEARCH BOUNDARY. `lane_local_coevolving` carries explicit LCA/DDM
+   finished identities, six-set scheduler ordering, affine effective controlled
+   count, fixed integral ITI, private DDM trial/RNG state, persistent LCA state,
+   and persistent threshold control. It supports finite numeric LCA noise and
+   fixed finite stochastic DDM noise. General coupled graphs, width-N LCA,
+   arbitrary recurrent matrices, distribution-valued LCA noise, and mutable DDM
+   noise remain separate work.
 
 6. **UDF / instance-level ops** (gap 1) — DONE (see Done above). Researchers
    register an op for a specific node via `batched_node_op("<node name>")`; the
@@ -1327,15 +1433,17 @@ the broader **CSI research configuration** and its full PEC fitting workflow.
    integrator_mode transfer that resets each trial (`AtTrialStart`) and fires
    once per trial (`AtPass`) advances its integrator a single affine step from
    its initializer, so it lowers *statelessly* as `function(a*input + b)` — no
-   lane state needed. Clears the CSI `Task Input`. *Remaining for a multi-step
-   integrating transfer* (one that accumulates within a trial, e.g. the CSI
-   `Threshold Mechanism`, which steps with the DDM): folded into step 8.
+   lane state needed. Clears the CSI `Task Input`. The CSI multi-step
+   `Threshold Mechanism` effect is folded into the DDM boundary in step 8;
+   arbitrary multi-step integrating transfers remain outside this narrow form.
 
 8. **Time-varying DDM boundary + control routing** (gaps 4-5) — DONE (see Done
    above). The DDM kernel boundary is `threshold(step)=threshold+collapse*step`;
    a control mechanism OVERRIDE'ing the DDM `threshold` from a SimpleIntegrator
-   transfer is recognized and that transfer is absorbed into the DDM. Completes
-   CSI compilation (`iti=0`).
+   transfer is recognized and that transfer is absorbed into the DDM. Runtime
+   aliases for `Threshold Mechanism.intercept` and
+   `Threshold Mechanism.offset-integrator_function` bind directly to the folded
+   threshold/collapse lanes and preserve the historical five-parameter fit.
 
 9. **GPU histogram likelihood** — DONE (see Done above). `batched/likelihood.py`
    scores experimental data with a Torch **histogram** density estimate (not KDE)
@@ -1345,9 +1453,12 @@ the broader **CSI research configuration** and its full PEC fitting workflow.
 10. **PEC fit routing** — DONE (see Done above). `PECOptimizationFunction(
     batched_backend=...)` routes the data-fitting objective through the batched
     plan + histogram likelihood, guarded by the batched compiler; unsupported
-    models raise (never silently fall back). *Remaining:* a KDE option (histogram
-    only for now) and generalizing input reconstruction beyond
-    node-qualified/absorbed-control models.
+    models raise (never silently fall back). Authenticated external PEC fitting
+    controls are removed from the static schedule and their values bind directly
+    to runtime lanes; both the three-parameter and five-parameter CSI objectives
+    are acceptance-tested in interpreter and GPU modes. *Remaining:* a KDE
+    option (histogram only for now) and generalizing this routing beyond the
+    authenticated parameter-control forms.
 
 ### Design invariants (do not regress)
 

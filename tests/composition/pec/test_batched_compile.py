@@ -11,7 +11,6 @@ from psyneulink.core.batched import (
     BatchedGraphIR,
     BatchedCompileError,
     BatchedCompositionCompiler,
-    BatchedDiagnosticCode,
     batched_node_op,
     unregister_batched_instance_op,
 )
@@ -48,6 +47,16 @@ def _test_pnl_triton_add(x, limit):
 
 def _test_pnl_triton_uses_global(x):
     return x + _TRITON_TEST_GLOBAL
+
+
+def _test_csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
+    a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
+    b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))
+    c = 1.0 / (1.0 + tl.exp(-((x2 - x3) + 4.0 * x5 - 4.0)))
+    d = 1.0 / (1.0 + tl.exp(-((x3 - x2) + 4.0 * x5 - 4.0)))
+    positive = 1.0 / (1.0 + tl.exp(-(a - b + c - d)))
+    negative = 1.0 / (1.0 + tl.exp(-(-a + b - c + d)))
+    return (positive - negative) * x6
 
 
 def _make_ddm_comp(noise=0.0):
@@ -603,39 +612,28 @@ def test_batched_compiler_accepts_stateless_transfer():
 
 
 @pytest.mark.composition
-def test_csi_surrogate_with_iti_reports_each_remaining_semantic_blocker():
+def test_csi_surrogate_with_iti_compiles_after_drift_udf_registration():
     # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset.
-    # Diagnosis recognizes that condition instead of reporting it independently,
-    # but the composition still fails closed: generic co-evolving
-    # Always/WhenFinished regions and the controlled LCA-finished predicate that
-    # starts the DDM are not executable in KernelIR. Its drift-rate UDF also has
-    # no instance op in this test. CSI is an acceptance composition, not a model
-    # kind or special compiler path.
+    # The typed co-evolving region now models that schedule, affine CSI count,
+    # and controlled LCA-finished edge. CSI remains a structurally admitted
+    # composition, not a name-based model kind or special compiler path.
     csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
 
     comp = make_stab_flex(iti=10, csi_repeat=10, csi_switch=10, threshold_collapse=-0.001)
-    report = BatchedCompositionCompiler.diagnose(comp)
+    batched_node_op("Drift Rate Value")(_test_csi_drift_rate)
+    try:
+        report = BatchedCompositionCompiler.diagnose(comp)
 
-    assert not report.is_supported
-    assert "AtPass" not in "; ".join(report.unsupported_reasons)
-    assert not report.rejected_conditions
-    rejected = {d.component for d in report.rejected_nodes}
-    assert not any("Threshold Mechanism" in name for name in rejected)
-    assert not any(
-        "Task Input" in d.component and "integrator_mode" in d.reason
-        for d in report.rejected_nodes
-    )
-    assert any("Drift Rate Value" in name for name in rejected)
-    schedule_diagnostic = next(
-        diagnostic
-        for diagnostic in report.rejected_nodes
-        if diagnostic.component.startswith("CSI Override")
-    )
-    assert schedule_diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
-    assert "typed controlled-finished subset" in schedule_diagnostic.detail
-    assert "conditional pass regions" in schedule_diagnostic.detail
+        assert report.is_supported
+        assert report.can_execute
+        assert not report.rejected_nodes
+        assert not report.rejected_conditions
+        plan = BatchedCompositionCompiler.compile(comp, max_steps=800)
+        assert plan.kernel_ir.executable
+    finally:
+        unregister_batched_instance_op("Drift Rate Value")
 
 
 @pytest.mark.composition

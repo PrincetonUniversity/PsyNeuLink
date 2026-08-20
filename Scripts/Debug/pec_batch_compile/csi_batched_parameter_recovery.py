@@ -15,11 +15,12 @@ LLVM ``grid_evaluate``:
      scored by the on-device histogram likelihood);
   4. report recovered vs. true parameters.
 
-The recovered parameters are the ones that map cleanly onto the batched IR:
-``gain`` (LCA control gain), ``csi_switch`` (Cue Stimulus Interval slope), and
-``non_decision_time`` (DDM). The DDM ``threshold`` is left fixed because it is
-already driven by the model's threshold-collapse control (the same
-``mod_afferents<=1`` conflict that blocks fitting it under LLVM PEC).
+The recovery uses the historical five-parameter surface: ``gain`` (LCA control
+gain), ``csi_switch`` (Cue Stimulus Interval slope), ``threshold`` (the
+Threshold Mechanism's Linear intercept), ``threshold_collapse`` (its
+SimpleIntegrator ``offset-integrator_function``), and ``non_decision_time``
+(DDM). The batched compiler folds the Threshold Mechanism into the DDM kernel
+while retaining both public PEC parameter names as runtime lane aliases.
 
 Usage (requires CUDA + triton):
 
@@ -28,13 +29,11 @@ Usage (requires CUDA + triton):
 
 Use ``--backend triton_cpu`` only for a tiny smoke test (interpret mode is slow).
 
-Note on identifiability: ``non_decision_time`` is strongly identified and recovers
-tightly (and sharpens with more estimates). ``gain`` / ``csi_switch`` are only
-weakly identified from a single ~128-trial data set -- their log-likelihood surface
-is nearly flat, so the recovered value can sit a couple of units off the truth and
-more estimates will not fix that (it is a property of the data, not the fitter).
-The histogram bins are anchored to the experimental data, so recovery is stable as
-``--estimates`` is varied.
+Note on identifiability: the five parameters have overlapping effects on choice
+and response-time distributions. Tiny smoke-test settings only verify the code
+path; meaningful recovery requires enough trials, estimates, and optimizer
+iterations. The histogram bins are anchored to the experimental data, so the
+objective remains comparable as ``--estimates`` is varied.
 """
 import argparse
 import re
@@ -47,12 +46,12 @@ import pandas as pd
 warnings.filterwarnings("ignore", category=FutureWarning, module="graph_scheduler.condition")
 warnings.filterwarnings("ignore", message=r"The following arg\(s\) were not specified.*")
 
-import optuna
+import optuna  # noqa: E402
 
-import psyneulink as pnl
-from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op
+import psyneulink as pnl  # noqa: E402
+from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op  # noqa: E402
 
-from csi_model_surrogate import make_stab_flex, generate_mixed_task_sequence
+from csi_model_surrogate import make_stab_flex, generate_mixed_task_sequence  # noqa: E402
 
 
 # The CSI drift-rate node is a UserDefinedFunction (nested logistic, 7 -> 1); it
@@ -71,7 +70,6 @@ def _drift_rate(x0, x1, x2, x3, x4, x5, x6):
 # Structural parameters held fixed across data generation and fitting.
 FIXED = dict(
     iti=0, csi_repeat=0, leak=7.0, competition=3.0,
-    threshold=0.12, threshold_collapse=-0.001,
     ddm_noise=0.1, lca_noise=0.0,
     lca_time_step_size=0.01, ddm_time_step_size=0.01,
 )
@@ -101,8 +99,14 @@ def generate_data(true, trials, backend, max_steps, seed, subject):
     """One realization per trial from the batched simulator at the true parameters."""
     from psyneulink.core.batched import BatchedCompositionCompiler
 
-    comp = make_stab_flex(gain=true["gain"], csi_switch=true["csi_switch"],
-                          non_decision_time=true["non_decision_time"], **FIXED)
+    comp = make_stab_flex(
+        gain=true["gain"],
+        csi_switch=true["csi_switch"],
+        threshold=true["threshold"],
+        threshold_collapse=true["threshold_collapse"],
+        non_decision_time=true["non_decision_time"],
+        **FIXED,
+    )
     task, stim, correct, _ = generate_mixed_task_sequence(trials, 0.5, 0.5, subject)
     inputs = _inputs(comp, task, stim, correct)
     plan = BatchedCompositionCompiler.compile(comp, backend=backend, max_steps=max_steps)
@@ -115,10 +119,17 @@ def generate_data(true, trials, backend, max_steps, seed, subject):
 
 def fit(data, seq, true, trials, estimates, backend, max_steps, max_iterations, seed, subject):
     task, stim, correct = seq
-    comp = make_stab_flex(gain=true["gain"], csi_switch=true["csi_switch"],
-                          non_decision_time=true["non_decision_time"], **FIXED)
+    comp = make_stab_flex(
+        gain=true["gain"],
+        csi_switch=true["csi_switch"],
+        threshold=true["threshold"],
+        threshold_collapse=true["threshold_collapse"],
+        non_decision_time=true["non_decision_time"],
+        **FIXED,
+    )
     controlExecution = _node(comp, "Task Activations [C1, C2]")
     cueStimulusInterval = _node(comp, "Cue Stimulus Interval")
+    thresholdMechanism = _node(comp, "Threshold Mechanism")
     decisionMaker = _node(comp, "DDM")
     decisionGate = _node(comp, "DECISION_GATE")
     responseGate = _node(comp, "RESPONSE_GATE")
@@ -126,6 +137,12 @@ def fit(data, seq, true, trials, estimates, backend, max_steps, max_iterations, 
     fit_parameters = {
         ("gain", controlExecution): np.linspace(5.0, 20.0, 151),
         ("slope", cueStimulusInterval): np.linspace(0.0, 50.0, 51),
+        ("intercept", thresholdMechanism): np.linspace(0.08, 0.25, 341),
+        ("offset-integrator_function", thresholdMechanism): np.linspace(
+            -0.003,
+            0.0,
+            301,
+        ),
         ("non_decision_time", decisionMaker): np.linspace(0.0, 0.6, 601),
     }
 
@@ -169,6 +186,8 @@ def main():
     true = dict(
         gain=float(rng.uniform(5.0, 20.0)),
         csi_switch=float(rng.integers(0, 51)),
+        threshold=float(rng.uniform(0.08, 0.25)),
+        threshold_collapse=float(rng.uniform(-0.003, 0.0)),
         non_decision_time=float(rng.uniform(0.0, 0.6)),
     )
 
@@ -193,6 +212,8 @@ def main():
     name_map = {
         "gain": "gain",
         "slope": "csi_switch",
+        "intercept": "threshold",
+        "offset-integrator_function": "threshold_collapse",
         "non_decision_time": "non_decision_time",
     }
     print(f"\nDone in {elapsed:.1f}s.  Recovered vs true (log-likelihood={ll:.2f}):")

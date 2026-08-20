@@ -70,6 +70,7 @@ def prepare_inputs(
     inputs,
     subject_slices=None,
     *,
+    parameter_sets: list[dict[str, float]] | None = None,
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
 ) -> dict[str, np.ndarray]:
     if ir.graph is None:
@@ -92,7 +93,13 @@ def prepare_inputs(
             fallback_first=len(ir.graph.inputs) == 1,
         )
         if input_spec.node in termination_step_sources:
-            _validate_dynamic_lca_step_counts(raw_value, input_spec.name)
+            _validate_dynamic_lca_step_counts(
+                raw_value,
+                input_spec.name,
+                ir=ir,
+                source=input_spec.node,
+                parameter_sets=parameter_sets,
+            )
         coerced = _coerce_trials(raw_value, width=input_spec.width)
         values[input_spec.node] = coerced[:, 0] if input_spec.width == 1 else coerced
 
@@ -105,7 +112,14 @@ def prepare_inputs(
     )
 
 
-def _validate_dynamic_lca_step_counts(value, input_name: str) -> None:
+def _validate_dynamic_lca_step_counts(
+    value,
+    input_name: str,
+    *,
+    ir: BatchedCompositionIR | None = None,
+    source: str | None = None,
+    parameter_sets: list[dict[str, float]] | None = None,
+) -> None:
     """Keep controlled LCA execution counts exact through the fp32 input ABI."""
 
     try:
@@ -127,12 +141,157 @@ def _validate_dynamic_lca_step_counts(value, input_name: str) -> None:
             f"{FP32_EXACT_INTEGER_LIMIT}."
         )
 
+    if ir is None or ir.graph is None or source is None:
+        return
+    matching_modulations = tuple(
+        modulation
+        for modulation in ir.graph.modulations
+        if modulation.source == source
+    )
+    if not matching_modulations:
+        return
+    if len(matching_modulations) != 1:
+        raise ValueError(
+            f"Batched LCA step-count source '{source}' must own exactly one "
+            "typed modulation."
+        )
 
-def lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> int:
+    rows = parameter_sets
+    if rows is None:
+        rows = [dict(ir.param_defaults)]
+    effective_counts = _dynamic_lca_effective_counts(
+        ir,
+        source,
+        array,
+        rows,
+    )
+    if (
+        effective_counts.size == 0
+        or not np.all(np.isfinite(effective_counts))
+        or np.any(effective_counts < 0)
+        or np.any(effective_counts != np.floor(effective_counts))
+        or np.any(effective_counts > FP32_EXACT_INTEGER_LIMIT)
+    ):
+        raise ValueError(
+            f"Batched LCA effective step count derived from '{input_name}' "
+            "requires finite, nonnegative integer values no greater than "
+            f"{FP32_EXACT_INTEGER_LIMIT} for every parameter row."
+        )
+
+
+def _dynamic_lca_effective_counts(
+    ir: BatchedCompositionIR,
+    source: str,
+    values,
+    parameter_sets: list[dict[str, float]],
+) -> np.ndarray:
+    """Evaluate one typed source/controller count chain in host precision.
+
+    Execution counts are discrete scheduler data, even though the kernel ABI is
+    currently fp32.  The first affine CSI boundary therefore accepts only
+    nonnegative integer Linear coefficients and inputs whose intermediate and
+    final values stay in fp32's exact-integer range.  Validating every parameter
+    row here prevents a fitted ``csi_switch`` from changing ``ceil`` semantics
+    after it is packed into the device parameter buffer.
+    """
+
+    graph = ir.graph
+    if graph is None:
+        return np.asarray(values, dtype=float)
+    matching = tuple(
+        modulation for modulation in graph.modulations if modulation.source == source
+    )
+    if len(matching) != 1:
+        return np.asarray(values, dtype=float)
+    modulation = matching[0]
+    source_node = graph.node(modulation.source)
+    controller_node = graph.node(modulation.controller)
+    parameter_defaults = {
+        parameter.name: parameter.default for parameter in ir.params
+    }
+    results = []
+    for row in parameter_sets:
+        source_values = _exact_count_linear_transform(
+            np.asarray(values, dtype=float),
+            source_node,
+            row,
+            parameter_defaults,
+        )
+        effective_values = _exact_count_linear_transform(
+            source_values,
+            controller_node,
+            row,
+            parameter_defaults,
+        )
+        results.append(effective_values)
+    return np.asarray(results, dtype=float)
+
+
+def _exact_count_linear_transform(values, node, row, defaults) -> np.ndarray:
+    if node.function_type == "Identity" and not node.params:
+        return np.asarray(values, dtype=float)
+    if (
+        node.function_type != "Linear"
+        or tuple(node.params) != ("slope", "intercept", "scale", "offset")
+    ):
+        raise ValueError(
+            f"Batched LCA count source '{node.name}' requires an authenticated "
+            "Identity or Linear transform."
+        )
+    coefficients = tuple(
+        float(row.get(parameter_name, defaults[parameter_name]))
+        for parameter_name in node.params.values()
+    )
+    if any(
+        not np.isfinite(coefficient)
+        or coefficient < 0
+        or coefficient != np.floor(coefficient)
+        or coefficient > FP32_EXACT_INTEGER_LIMIT
+        for coefficient in coefficients
+    ):
+        raise ValueError(
+            f"Batched LCA count transform '{node.name}' requires finite, "
+            "nonnegative integer Linear parameters no greater than "
+            f"{FP32_EXACT_INTEGER_LIMIT}."
+        )
+    slope, intercept, scale, offset = coefficients
+    transformed = scale * (np.asarray(values, dtype=float) * slope + intercept) + offset
+    if (
+        not np.all(np.isfinite(transformed))
+        or np.any(transformed < 0)
+        or np.any(transformed != np.floor(transformed))
+        or np.any(transformed > FP32_EXACT_INTEGER_LIMIT)
+    ):
+        raise ValueError(
+            f"Batched LCA count transform '{node.name}' must remain a finite, "
+            "nonnegative exact fp32 integer for every input and parameter row."
+        )
+    return transformed
+
+
+def lca_max_steps(
+    ir: BatchedCompositionIR,
+    inputs: dict[str, np.ndarray],
+    parameter_sets: list[dict[str, float]] | None = None,
+) -> int:
     metadata_limit = int(ir.metadata.get("lca_max_steps", 0) or 0)
     static_limit = 0
     input_limit = 0
     if ir.graph is not None:
+        dynamic_sources = {
+            modulation.source for modulation in ir.graph.modulations
+        }
+        rows = parameter_sets or [dict(ir.param_defaults)]
+        for source in dynamic_sources:
+            if source not in inputs or not np.size(inputs[source]):
+                continue
+            counts = _dynamic_lca_effective_counts(
+                ir,
+                source,
+                inputs[source],
+                rows,
+            )
+            input_limit = max(input_limit, int(np.ceil(np.max(counts))))
         for node in ir.graph.nodes:
             execution_cap = int(
                 node.attrs.get("max_executions_before_finished", np.iinfo(np.int64).max)
@@ -146,7 +305,11 @@ def lca_max_steps(ir: BatchedCompositionIR, inputs: dict[str, np.ndarray]) -> in
                         min(int(step_count), execution_cap),
                     )
                 continue
-            if termination_input_node in inputs and np.size(inputs[termination_input_node]):
+            if (
+                termination_input_node in inputs
+                and termination_input_node not in dynamic_sources
+                and np.size(inputs[termination_input_node])
+            ):
                 input_limit = max(
                     input_limit,
                     min(

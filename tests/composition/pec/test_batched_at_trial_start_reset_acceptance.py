@@ -342,7 +342,7 @@ def _assert_reset_ir_contract(acceptance: _ResetAcceptance):
         for state in graph.states
         if state.component_id == producer_spec.component_id
     )
-    assert len(producer_states) == 2
+    assert len(producer_states) == 3
     state_ids = tuple(state.state_id for state in producer_states)
     assert len(graph.resets) == 1
     reset = graph.resets[0]

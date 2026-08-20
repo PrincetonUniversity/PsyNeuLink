@@ -8,8 +8,8 @@ representative models, swept over the number of estimates (GPU lanes):
 - `LCA`         — deterministic width-2 LCA with a static trial threshold
   (stateful_graph fusion)
 - `StabilityFlexibility` — toy LCA + DDM (stateful_graph fusion)
-- `CSISurrogate`  — reserved for the realistic co-evolving model; its historical
-  stochastic configuration remains outside the deterministic acceptance slice
+- `CSISurrogate` — stochastic co-evolving CSI research model with the historical
+  five-parameter recovery surface (coevolving_graph fusion)
 
 The kernel is compiled and warmed up in `setup()`, so the timed methods measure
 only the batched simulation (not one-time compilation). Each warmup records an
@@ -21,6 +21,7 @@ Requires CUDA + triton (compiled GPU path); benchmarks skip otherwise. Run with:
     .venv/bin/asv publish && .venv/bin/asv preview
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -137,12 +138,77 @@ def _build_stab_flex():
 
 
 def _build_csi():
-    """Reserve the CSI series until its research configuration is supported."""
+    """Build the stochastic CSI surrogate and its five recovery parameters."""
 
-    raise NotImplementedError(
-        "the CSI benchmark's stochastic research configuration is broader "
-        "than the deterministic typed co-evolution boundary"
+    from csi_model_surrogate import generate_mixed_task_sequence, make_stab_flex
+
+    comp = make_stab_flex(
+        iti=0,
+        csi_repeat=0,
+        csi_switch=10,
+        threshold=0.12,
+        threshold_collapse=-0.001,
+        non_decision_time=0.3,
+        ddm_noise=0.1,
+        lca_noise=0.0,
+        lca_time_step_size=0.01,
+        ddm_time_step_size=0.01,
     )
+
+    def node(base):
+        return next(
+            candidate
+            for candidate in comp.nodes
+            if re.sub(r"-\d+$", "", candidate.name) == base
+        )
+
+    tasks, stimuli, correct, _ = generate_mixed_task_sequence(
+        TRIALS,
+        switch_frequency=0.5,
+        incongruence_frequency=0.5,
+        seed=3,
+    )
+    task_values = np.asarray(tasks, dtype=float)
+    cue_values = np.zeros((TRIALS, 1), dtype=float)
+    cue_values[1:, 0] = np.any(task_values[1:] != task_values[:-1], axis=1)
+    inputs = {
+        node("Stimulus Input"): np.asarray(stimuli, dtype=float),
+        node("Task Input"): task_values,
+        node("Correct Response"): np.asarray(correct, dtype=float).reshape(TRIALS, 1),
+        node("Cue Stimulus Interval"): cue_values,
+    }
+    plan = BatchedCompositionCompiler.compile(
+        comp,
+        backend="triton",
+        max_steps=512,
+    )
+
+    lca = node("Task Activations [C1, C2]")
+    cue = node("Cue Stimulus Interval")
+    threshold_source = node("Threshold Mechanism")
+    ddm = node("DDM")
+    gains = np.linspace(5.0, 20.0, PARAM_SETS)
+    switch_steps = np.rint(np.linspace(0.0, 50.0, PARAM_SETS))
+    thresholds = np.linspace(0.08, 0.25, PARAM_SETS)
+    collapses = np.linspace(-0.003, 0.0, PARAM_SETS)
+    non_decision_times = np.linspace(0.0, 0.6, PARAM_SETS)
+    param_sets = [
+        {
+            f"{lca.name}.gain": float(gain),
+            f"{cue.name}.slope": float(switch_step),
+            f"{threshold_source.name}.intercept": float(threshold),
+            f"{threshold_source.name}.offset-integrator_function": float(collapse),
+            f"{ddm.name}.non_decision_time": float(non_decision_time),
+        }
+        for gain, switch_step, threshold, collapse, non_decision_time in zip(
+            gains,
+            switch_steps,
+            thresholds,
+            collapses,
+            non_decision_times,
+        )
+    ]
+    return plan, inputs, param_sets
 
 
 class _BatchedBenchmark:
@@ -196,7 +262,7 @@ class StabilityFlexibility(_BatchedBenchmark):
 
 
 class CSISurrogate(_BatchedBenchmark):
-    """Reserved for the broader CSI research benchmark."""
+    """Stochastic co-evolving CSI model with five runtime recovery parameters."""
 
     params = STATEFUL_ESTIMATES
     _seed = 3

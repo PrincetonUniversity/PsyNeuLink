@@ -90,6 +90,7 @@ def run_triton(
         ir,
         inputs,
         subject_slices,
+        parameter_sets=params,
         component_bindings=component_bindings,
     )
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
@@ -279,7 +280,7 @@ def _run_stateful_graph_kernel(
         dtype=torch.float32, device=device,
     )
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
-    lca_steps = lca_max_steps(ir, inputs)
+    lca_steps = lca_max_steps(ir, inputs, params)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
     block = 128
     grid = (triton.cdiv(total_lanes, block),)

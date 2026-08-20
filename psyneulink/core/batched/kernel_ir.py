@@ -13,6 +13,7 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
     _dynamic_controlled_coevolving_graph_eligible,
+    _node_param_aliases,
     projection_inputs,
 )
 from psyneulink.core.batched.ir import (
@@ -1710,6 +1711,49 @@ def _validate_kernel_states(kernel: KernelIR) -> None:
             "non-bool integers in declaration order."
         )
 
+    # Numeric-noise LCA construction has one semantic bit that is not implied
+    # by its numeric state initializer: a Never-reset LCA exposes
+    # Logistic(noise * sqrt(dt)) as its initial recurrent sender, whereas an
+    # AtTrialStart reset replaces that sender with Logistic(initializer).
+    # Authenticate the bit for every executable LCA fusion, including ordinary
+    # stateful graphs that do not use the dynamic-pass validator below.
+    for node in kernel.graph.nodes:
+        spec_key = node.attrs.get("spec_key")
+        if type(spec_key) is not str or not spec_key:
+            continue
+        try:
+            implementation = kernel.op_specs.lookup_spec(spec_key)
+        except BatchedOpSpecError:
+            continue
+        if not (
+            isinstance(implementation, MechanismOpSpec)
+            and implementation.mechanism_class is not None
+            and implementation.mechanism_class.__name__ == "LCAMechanism"
+            and tuple(state.name for state in implementation.states)
+            == ("pre", "act", "initialized")
+        ):
+            continue
+        resets = tuple(
+            reset
+            for reset in kernel.resets
+            if reset.component_id == node.component_id
+        )
+        if (
+            len(resets) != 1
+            or resets[0].node != node.name
+            or resets[0].condition_type not in {"Never", "AtTrialStart"}
+        ):
+            raise ValueError(
+                f"KernelIR numeric-noise LCA '{node.name}' requires one exact "
+                "Never or AtTrialStart reset declaration."
+            )
+        expected = resets[0].condition_type == "Never"
+        if node.attrs.get("initialize_noise_sender") is not expected:
+            raise ValueError(
+                f"KernelIR numeric-noise LCA '{node.name}' initialization "
+                "policy must exactly match its reset declaration."
+            )
+
     # Deep mechanism-declaration authentication is currently part of the
     # executable controlled-pass boundary.  Legacy hand-built KernelIR
     # fixtures may intentionally omit frozen mechanism keys; their state
@@ -2727,6 +2771,37 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             argument: params_by_name.get(parameter_name)
             for argument, parameter_name in dict(source.params).items()
         }
+        # The source schema is local typed data, not a whole-program capability
+        # decision.  A declaration-only co-evolving graph may legitimately
+        # carry this affine source even when another forged/unsupported edge
+        # keeps the graph non-executable; final materialization separately
+        # reauthenticates the complete graph boundary.
+        coevolving_affine_source = (
+            kernel.graph.fusion_kind == COEVOLVING_GRAPH_FUSION
+        )
+        if coevolving_affine_source:
+            source_parameter_semantics_match = all(
+                parameter is not None
+                and type(parameter.default) is float
+                and np.isfinite(parameter.default)
+                and 0.0 <= parameter.default <= FP32_EXACT_INTEGER_LIMIT
+                and parameter.default.is_integer()
+                and parameter.runtime_mutable
+                is (argument in {"slope", "intercept"})
+                and parameter.owner_component_id
+                == modulation.source_component_id
+                for argument, parameter in source_parameters.items()
+            )
+        else:
+            source_parameter_semantics_match = all(
+                source_parameters[argument].default == expected_default
+                and not source_parameters[argument].runtime_mutable
+                and source_parameters[argument].owner_component_id
+                == modulation.source_component_id
+                for argument, expected_default in expected_source_defaults.items()
+            ) if all(
+                parameter is not None for parameter in source_parameters.values()
+            ) else False
         if (
             source.function_type != "Linear"
             or source.attrs.get("spec_kind") != "elementwise"
@@ -2750,17 +2825,11 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             or source_implementation.function_class.__name__ != "Linear"
             or set(source_parameters) != set(expected_source_defaults)
             or any(parameter is None for parameter in source_parameters.values())
-            or any(
-                source_parameters[argument].default != expected_default
-                or source_parameters[argument].runtime_mutable
-                or source_parameters[argument].owner_component_id
-                != modulation.source_component_id
-                for argument, expected_default in expected_source_defaults.items()
-            )
+            or not source_parameter_semantics_match
         ):
             raise ValueError(
-                "KernelIR controlled-finished source must be the frozen scalar "
-                "identity Linear origin declared by GraphIR."
+                "KernelIR controlled-finished source must be the authenticated "
+                "scalar Linear count origin declared by GraphIR."
             )
         endpoint_expectations = (
             (
@@ -4067,7 +4136,7 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
         and len(kernel.consideration_sets) == 6
         and len(kernel.schedule_regions) == 2
         and len(kernel.termination) == 2
-        and len(kernel.states) == 2
+        and len(kernel.states) == 3
         and len(kernel.resets) == 1
         and len(kernel.inputs) == 4
         and len(kernel.outputs) == 2
@@ -4181,12 +4250,18 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
     except (BatchedOpSpecError, KeyError):
         return False
     parameters_by_name = {parameter.name: parameter for parameter in kernel.params}
-    frozen_ddm_arguments = (
+    runtime_ddm_arguments = (
         "threshold",
         "threshold_collapse",
+    )
+    frozen_ddm_arguments = (
         "noise",
         "starting_value",
         "offset",
+    )
+    runtime_ddm_parameters = tuple(
+        parameters_by_name.get(terminator.params.get(argument))
+        for argument in runtime_ddm_arguments
     )
     frozen_ddm_parameters = tuple(
         parameters_by_name.get(terminator.params.get(argument))
@@ -4256,6 +4331,52 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
         and not middle_spec.rng
         and middle.input_width == 7
         and middle.output_width == 1
+        and all(parameter is not None for parameter in runtime_ddm_parameters)
+        and runtime_ddm_parameters[0].name
+        == f"{terminator.name}.threshold"
+        and runtime_ddm_parameters[0].aliases
+        == (
+            "ddm.threshold",
+            "DDM.threshold",
+            *_node_param_aliases(terminator.name, "threshold"),
+            *_node_param_aliases(absorbed_control["source"], "intercept"),
+        )
+        and type(runtime_ddm_parameters[0].default) is float
+        and np.isfinite(runtime_ddm_parameters[0].default)
+        and runtime_ddm_parameters[0].default >= 0.0
+        and runtime_ddm_parameters[0].minimum == 0.0
+        and runtime_ddm_parameters[0].minimum_inclusive is True
+        and runtime_ddm_parameters[0].maximum is None
+        and runtime_ddm_parameters[0].maximum_inclusive is True
+        and runtime_ddm_parameters[1].name
+        == f"{terminator.name}.threshold_collapse"
+        and runtime_ddm_parameters[1].aliases
+        == (
+            "ddm.threshold_collapse",
+            "DDM.threshold_collapse",
+            *_node_param_aliases(
+                terminator.name,
+                "threshold_collapse",
+            ),
+            *_node_param_aliases(
+                absorbed_control["source"],
+                "offset-integrator_function",
+            ),
+        )
+        and type(runtime_ddm_parameters[1].default) is float
+        and np.isfinite(runtime_ddm_parameters[1].default)
+        and runtime_ddm_parameters[1].default <= 0.0
+        and runtime_ddm_parameters[1].minimum is None
+        and runtime_ddm_parameters[1].minimum_inclusive is True
+        and runtime_ddm_parameters[1].maximum == 0.0
+        and runtime_ddm_parameters[1].maximum_inclusive is True
+        and all(
+            parameter.owner_component_id == terminator.component_id
+            and parameter.owner_scope == "function"
+            and parameter.runtime_mutable is True
+            and parameter.runtime_constraint == ""
+            for parameter in runtime_ddm_parameters
+        )
         and all(parameter is not None for parameter in frozen_ddm_parameters)
         and all(
             parameter.owner_component_id == terminator.component_id
@@ -4325,13 +4446,32 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
         "pass_index": 0,
         "time_scale": "ENVIRONMENT_STATE_UPDATE",
     }
+    stepper_senders = tuple(
+        projection.sender_component_id
+        for projection in graph.projections
+        if projection.receiver_component_id == stepper.component_id
+    )
+    if len(stepper_senders) != 1:
+        return False
+    task_origin_id = stepper_senders[0]
+    warmup = kernel.metadata.get("coevolve_warmup")
+    if type(warmup) is not int or warmup < 0:
+        return False
+
+    def origin_condition_matches(component_id: int) -> bool:
+        pass_index = warmup if component_id == task_origin_id else 0
+        return simple_condition_matches(
+            scheduler_by_id.get(component_id),
+            "AtPass",
+            {
+                "pass_index": pass_index,
+                "time_scale": "ENVIRONMENT_STATE_UPDATE",
+            },
+        )
+
     if not (
         all(
-            simple_condition_matches(
-                scheduler_by_id.get(component_id),
-                "AtPass",
-                at_pass_zero,
-            )
+            origin_condition_matches(component_id)
             for component_id in consideration_sets[0].component_ids
         )
         and simple_condition_matches(
@@ -4415,7 +4555,11 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
     stream = kernel.rng_streams[0] if len(kernel.rng_streams) == 1 else None
     if not (
         state_component_ids
-        == (modulation.target_component_id, modulation.target_component_id)
+        == (
+            modulation.target_component_id,
+            modulation.target_component_id,
+            modulation.target_component_id,
+        )
         and reset.component_id == modulation.target_component_id
         and reset.state_ids == tuple(state.state_id for state in kernel.states)
         and reset.condition_type == "Never"

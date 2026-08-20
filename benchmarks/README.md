@@ -5,35 +5,38 @@ batched Triton simulator across commits (`benchmarks/batched.py`): `DDM`,
 `DDMGraph` (transfer→DDM), deterministic `LCA` (width-2 with a static trial
 threshold), and `StabilityFlexibility` (the narrow scalar identity
 cue→`OVERRIDE` threshold path feeding the deterministic LCA, followed by a
-stochastic DDM; `stateful_graph`) — each `time_run` + `track_checksum`, swept
-over the number of estimates (GPU lanes). Runtime LCA cues must be exact
-nonnegative integers no larger than `2**24`; static thresholds are
-host-discretized, and either form honors the LCA node's execution cap. The
-compiler now has an executable deterministic CSI acceptance slice, but the
-historical `CSISurrogate` series remains disabled because its research
-configuration (including stochastic execution and a broader cue transform)
-falls outside that exact boundary.
+stochastic DDM; `stateful_graph`), and `CSISurrogate` (the stochastic
+co-evolving CSI research model with realistic mixed cues and its five-parameter
+recovery surface; `coevolving_graph`) — each `time_run` + `track_checksum`,
+swept over the number of estimates (GPU lanes). Runtime LCA step counts and CSI
+cue-slope rows must be exact nonnegative integers no larger than `2**24`;
+static thresholds are host-discretized, and either form honors the LCA node's
+execution cap. `CSISurrogate` fixes DDM noise at the historical `0.1` and
+sweeps gain, CSI switch duration, threshold, threshold collapse, and
+non-decision time as runtime parameter rows.
 
-## Exact deterministic LCA boundary
+## Current LCA and CSI boundaries
 
 Results recorded before the exact deterministic LCA migration are not directly
 comparable for `LCA` or `StabilityFlexibility`. Historical `CSISurrogate`
-results have no current baseline because that benchmark is intentionally
-disabled:
+results are also not directly comparable with the newly re-enabled full CSI
+workload:
 
 - recurrent activation now starts from the PsyNeuLink value `Logistic(0)` rather
   than from zero;
-- the supported LCA subset rejects noise and therefore declares no RNG stream;
+- the supported LCA subset accepts finite numeric (constant) noise but not a
+  stochastic/callable noise source, so it declares no RNG stream;
 - removing that stream changes the DDM stream slot, and hence stochastic draws,
   in mixed LCA+DDM kernels;
 - the standalone LCA benchmark is now deterministic; and
-- the deterministic CSI acceptance slice is executable through typed scheduler
-  and control semantics, but the historical stochastic benchmark configuration
-  is still unsupported; CSI is not a compiler-recognized model kind.
+- the CSI benchmark now executes through typed scheduler/control semantics with
+  fixed stochastic DDM noise, mixed repeat/switch cues, and five runtime
+  recovery parameters.
 
 The first result recorded after this migration establishes the new LCA and
-stability-flexibility baseline. Historical result files remain useful for the
-older implementation and should not be rewritten.
+stability-flexibility baseline. The first result from the re-enabled full CSI
+series likewise establishes its new baseline. Historical result files remain
+useful for the older implementation and should not be rewritten.
 
 ## Baseline reset at `504319d70d`
 
@@ -46,6 +49,9 @@ should not be read as regressions or improvements:
 - `CSISurrogate` results are additionally **void**: it uses `PARAM_SETS = 8`,
   and the co-evolving kernel was computing only parameter set 0, so those runs
   measured an eighth of the work and checksummed uninitialised memory.
+
+The re-enabled full CSI series runs all eight parameter rows and should be
+treated as a fresh baseline, not a continuation of those void measurements.
 
 Older points also sit in a separate asv series: the environment key includes the
 interpreter path, and they were recorded under `.venv/bin/python` where current

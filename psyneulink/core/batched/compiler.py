@@ -28,24 +28,40 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
-    def diagnose(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedCapabilityReport:
+    def diagnose(
+        composition,
+        backend: str = "triton_cpu",
+        outputs=None,
+        max_steps: int | None = None,
+        *,
+        ignored_control_nodes=(),
+    ) -> BatchedCapabilityReport:
         _validate_backend(backend)
         report, _, _, _ = analyze_composition(
             composition,
             backend=backend,
             outputs=outputs,
             max_steps=max_steps,
+            ignored_control_nodes=ignored_control_nodes,
         )
         return report
 
     @staticmethod
-    def compile(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None) -> BatchedSimulationPlan:
+    def compile(
+        composition,
+        backend: str = "triton_cpu",
+        outputs=None,
+        max_steps: int | None = None,
+        *,
+        ignored_control_nodes=(),
+    ) -> BatchedSimulationPlan:
         _validate_backend(backend)
         report, ir, bindings, kernel_ir = analyze_composition(
             composition,
             backend=backend,
             outputs=outputs,
             max_steps=max_steps,
+            ignored_control_nodes=ignored_control_nodes,
         )
         if not report.can_execute or ir is None or kernel_ir is None:
             blockers = report.execution_blockers or (

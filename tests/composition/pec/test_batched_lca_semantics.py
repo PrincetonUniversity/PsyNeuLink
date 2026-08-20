@@ -738,13 +738,6 @@ REJECTION_CASES = (
         LCA_RESET_PROVENANCE,
     ),
     _RejectionCase(
-        "near_zero_noise",
-        _lca_rejection_builder("near-zero noise lca", lambda: {"noise": 1e-9}),
-        "unsupported LCA noise for batched v2",
-        "requires numeric zero",
-        LCI_LLVM_PROVENANCE,
-    ),
-    _RejectionCase(
         "nearly_scalar_leak",
         _lca_rejection_builder(
             "nearly scalar leak lca",
@@ -782,17 +775,10 @@ REJECTION_CASES = (
         LOGISTIC_LLVM_PROVENANCE,
     ),
     _RejectionCase(
-        "nonzero_numeric_noise",
-        _lca_rejection_builder("numeric noise lca", lambda: {"noise": 0.125}),
-        "unsupported LCA noise for batched v2",
-        "requires numeric zero",
-        LCI_LLVM_PROVENANCE,
-    ),
-    _RejectionCase(
         "callable_noise",
         _lca_rejection_builder("callable noise lca", lambda: {"noise": _constant_noise}),
         "unsupported LCA noise for batched v2",
-        "requires numeric zero",
+        "requires a finite float32 scalar or broadcast-scalar numeric value",
         LCI_LLVM_PROVENANCE,
     ),
     _RejectionCase(

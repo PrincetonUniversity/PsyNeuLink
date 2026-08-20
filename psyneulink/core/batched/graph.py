@@ -105,8 +105,21 @@ class LoweringResult:
     rejected_conditions: tuple[BatchedDiagnostic, ...]
 
 
-def lower_composition(composition, outputs=None) -> LoweringResult:
+def lower_composition(
+    composition,
+    outputs=None,
+    *,
+    ignored_control_nodes=(),
+) -> LoweringResult:
     specs.ensure_builtin_specs()
+    ignored_control_nodes = tuple(ignored_control_nodes)
+    if len({id(node) for node in ignored_control_nodes}) != len(
+        ignored_control_nodes
+    ):
+        raise ValueError(
+            "Batched lowering ignored_control_nodes must contain unique "
+            "component identities."
+        )
 
     # PsyNeuLink completes deferred control projections, CIM routing, node
     # roles, and the scheduler dependency graph during normal Composition
@@ -119,6 +132,33 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
     composition._analyze_graph()
 
     nodes = _composition_nodes(composition)
+    ignored_control_ids = {id(node) for node in ignored_control_nodes}
+    scheduler_dependency_dict = None
+    scheduler_consideration_queue = None
+    if ignored_control_ids:
+        known_ids = {id(node) for node in nodes}
+        if not ignored_control_ids <= known_ids or any(
+            type(node) is not ControlMechanism
+            for node in ignored_control_nodes
+        ):
+            raise ValueError(
+                "Batched lowering may ignore only exact ControlMechanisms "
+                "owned by the Composition."
+            )
+        # PEC injects one generic ControlMechanism for every fitted parameter.
+        # The batched objective supplies those same values through parameter
+        # rows, so retaining the injected controls would apply each fit twice
+        # and would also change the model's scheduler topology.  The caller
+        # passes the PEC-owned controls by identity; ordinary compilation never
+        # takes this path.
+        nodes = [node for node in nodes if id(node) not in ignored_control_ids]
+        (
+            scheduler_dependency_dict,
+            scheduler_consideration_queue,
+        ) = _scheduler_view_without_nodes(
+            composition,
+            ignored_control_ids,
+        )
     # Nodes absorbed into another op's kernel (e.g. a collapsing-threshold
     # integrator folded into the DDM boundary) are not lowered as graph nodes.
     absorbed = _absorbed_nodes(composition, nodes)
@@ -160,6 +200,8 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
         composition,
         topological_nodes,
         component_ids,
+        dependency_dict=scheduler_dependency_dict,
+        consideration_queue=scheduler_consideration_queue,
     )
     finished_values_by_component_id = {
         value.component_id: value
@@ -302,6 +344,26 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                     )
                 )
 
+    if ignored_control_nodes:
+        unsupported_ignored_controls = tuple(
+            control
+            for control in ignored_control_nodes
+            if not _ignored_parameter_control_is_lowered(
+                control,
+                composition,
+                params,
+            )
+        )
+        if unsupported_ignored_controls:
+            raise ValueError(
+                "Batched lowering may ignore only external parameter controls "
+                "whose exact target Parameter is represented by a runtime lane: "
+                + ", ".join(
+                    _node_name(control)
+                    for control in unsupported_ignored_controls
+                )
+            )
+
     if coevolving:
         # The coupled stepper/terminator region is the single unsupported
         # semantic unit.  Replace derivative per-node lane-local diagnostics
@@ -334,7 +396,15 @@ def lower_composition(composition, outputs=None) -> LoweringResult:
                 )
             )
 
-    _freeze_absorbed_control_parameters(node_specs, params)
+    _freeze_absorbed_control_parameters(
+        node_specs,
+        params,
+        dynamic_coevolving_target_ids=(
+            dynamic_controlled_finished_component_ids
+            if coevolving
+            else frozenset()
+        ),
+    )
     (
         absorbed_projection_specs,
         effective_parameter_specs,
@@ -674,6 +744,8 @@ class _ParamBuilder:
 def _freeze_absorbed_control_parameters(
     node_specs: list[BatchedNodeSpec],
     params: _ParamBuilder,
+    *,
+    dynamic_coevolving_target_ids: frozenset[int] = frozenset(),
 ) -> None:
     """Freeze values whose compile-time identity semantics are intentionally erased."""
 
@@ -694,12 +766,24 @@ def _freeze_absorbed_control_parameters(
         source = nodes_by_name.get(source_name)
         if source is None:
             continue
-        for parameter_name in source.params.values():
+        dynamic_coevolving_source = (
+            node.component_id in dynamic_coevolving_target_ids
+        )
+        for argument, parameter_name in source.params.items():
+            # A co-evolving CSI cue is not erased: its Linear computation is
+            # emitted before the lane-local pass loop, so the fitted slope and
+            # intercept must remain ordinary runtime lane parameters.  Scale
+            # and offset stay fixed to keep this first affine boundary narrow.
+            if dynamic_coevolving_source and argument in {
+                "slope",
+                "intercept",
+            }:
+                continue
             params.freeze(
                 parameter_name,
                 (
-                    f"absorbed identity termination-threshold source for "
-                    f"{node.name}"
+                    f"absorbed {'affine' if dynamic_coevolving_source else 'identity'} "
+                    f"termination-threshold source for {node.name}"
                 ),
             )
 
@@ -708,13 +792,13 @@ def _freeze_dynamic_coevolving_parameters(
     graph: BatchedGraphIR,
     params: _ParamBuilder,
 ) -> None:
-    """Freeze DDM values whose first coevolving form assumes their defaults.
+    """Freeze DDM values whose coevolving form assumes their defaults.
 
-    The folded threshold control owns ``threshold``/``threshold_collapse``;
-    accepting target-side overrides would bypass that OVERRIDE edge.  The first
-    executable boundary is deterministic, and its region-local DDM state is
-    initialized from the frozen op declaration, so noise, starting value, and
-    offset must also remain at the values authenticated during admission.
+    The folded threshold control is represented by runtime ``threshold`` and
+    ``threshold_collapse`` lanes (with aliases for the absorbed source), so
+    those two values deliberately remain mutable.  Noise is fixed when the
+    graph is compiled, while region-local state is initialized from the frozen
+    starting value and offset.
     """
 
     finished = next(
@@ -725,8 +809,6 @@ def _freeze_dynamic_coevolving_parameters(
     terminator = graph.node(finished.node)
     reason = "first coevolving DDM boundary is frozen in KernelIR"
     for argument in (
-        "threshold",
-        "threshold_collapse",
         "noise",
         "starting_value",
         "offset",
@@ -765,7 +847,19 @@ def _typed_dynamic_control_chain_supported(
         # and controlled target to occupy strictly ordered sets.  Same-set
         # control would make the target observe the prior held value.
         and 0 <= source_set < controller_set < target_set
-        and _supported_lca_termination_source(composition, source)
+        and (
+            _supported_lca_termination_source(composition, source)
+            or (
+                _is_unmodeled_coevolving_lca_termination(
+                    composition,
+                    target,
+                )
+                and _supported_dynamic_lca_termination_source(
+                    composition,
+                    source,
+                )
+            )
+        )
         and all(
             _port_width(port) == 1
             for port in (
@@ -1170,7 +1264,6 @@ def _dynamic_controlled_coevolving_graph_eligible(
     node_component_ids = tuple(node.component_id for node in graph.nodes)
     if not (
         graph.metadata.get("schedule_kind") == DYNAMIC_LANE_LOCAL_SCHEDULE
-        and graph.metadata.get("coevolve_warmup") == 0
         and graph.fusion_kind == COEVOLVING_GRAPH_FUSION
         and len(graph.nodes) == 11
         and all(type(component_id) is int for component_id in node_component_ids)
@@ -1248,6 +1341,95 @@ def _dynamic_controlled_coevolving_graph_eligible(
                 for binding, parameter in bound
             )
         )
+
+    def registered_affine_count_source(node) -> bool:
+        """Authenticate the emitted CSI cue transform and its mutability."""
+
+        try:
+            function_spec = lookup_spec(node.attrs["spec_key"])
+        except (KeyError, specs.BatchedOpSpecError):
+            return False
+        if not (
+            isinstance(function_spec, specs.ElementwiseFunctionSpec)
+            and function_spec.function_class is Linear
+            and node.function_type == "Linear"
+            and tuple(node.params)
+            == ("slope", "intercept", "scale", "offset")
+        ):
+            return False
+        bound = {
+            binding.arg: (binding, parameter_for(node, binding.arg))
+            for binding in function_spec.params
+        }
+        if tuple(bound) != ("slope", "intercept", "scale", "offset"):
+            return False
+        if any(parameter is None for _, parameter in bound.values()):
+            return False
+        defaults = {
+            argument: parameter.default
+            for argument, (_, parameter) in bound.items()
+        }
+        return bool(
+            all(
+                type(value) is float
+                and np.isfinite(value)
+                for value in defaults.values()
+            )
+            and all(
+                0.0 <= defaults[argument] <= FP32_EXACT_INTEGER_LIMIT
+                and defaults[argument].is_integer()
+                for argument in ("slope", "intercept")
+            )
+            and defaults["scale"] == 1.0
+            and defaults["offset"] == 0.0
+            and all(
+                parameter.owner_scope == binding.scope
+                and parameter.runtime_mutable
+                is (argument in {"slope", "intercept"})
+                for argument, (binding, parameter) in bound.items()
+            )
+        )
+
+    def registered_count_controller_intercept(node) -> int | None:
+        """Return a frozen integral CSI-controller intercept, if exact."""
+
+        try:
+            function_spec = lookup_spec(node.attrs["spec_key"])
+        except (KeyError, specs.BatchedOpSpecError):
+            return None
+        if not (
+            isinstance(function_spec, specs.ElementwiseFunctionSpec)
+            and function_spec.function_class is Linear
+            and node.function_type == "Linear"
+            and tuple(node.params)
+            == ("slope", "intercept", "scale", "offset")
+        ):
+            return None
+        bound = tuple(
+            (binding, parameter_for(node, binding.arg))
+            for binding in function_spec.params
+        )
+        if (
+            tuple(binding.arg for binding, _ in bound)
+            != ("slope", "intercept", "scale", "offset")
+            or any(parameter is None for _, parameter in bound)
+            or any(
+                parameter.owner_scope != binding.scope
+                or parameter.runtime_mutable
+                for binding, parameter in bound
+            )
+        ):
+            return None
+        defaults = tuple(parameter.default for _, parameter in bound)
+        if not (
+            all(type(value) is float and np.isfinite(value) for value in defaults)
+            and defaults[0] == 1.0
+            and defaults[2:] == (1.0, 0.0)
+            and 0.0 <= defaults[1] <= FP32_EXACT_INTEGER_LIMIT
+            and defaults[1].is_integer()
+        ):
+            return None
+        return int(defaults[1])
 
     modulation = graph.modulations[0]
     effective = graph.effective_parameters[0]
@@ -1338,18 +1520,19 @@ def _dynamic_controlled_coevolving_graph_eligible(
     except specs.BatchedOpSpecError:
         return False
     controller_arguments = ("slope", "intercept", "scale", "offset")
+    controller_intercept = registered_count_controller_intercept(controller)
     if not (
         source.component_type == "ProcessingMechanism"
         and source.input_width == 1
         and source.output_width == 1
         and source.attrs.get("spec_kind") == "elementwise"
-        and registered_identity_linear(source, frozen=True)
+        and registered_affine_count_source(source)
         and controller.component_type == "ControlMechanism"
         and controller.input_width == 1
         and controller.output_width == 1
         and controller.attrs.get("spec_kind") == "control"
         and controller.attrs.get("control_function") == "registered"
-        and registered_identity_linear(controller, frozen=True)
+        and controller_intercept is not None
         and isinstance(controller_spec, specs.ElementwiseFunctionSpec)
         and controller_spec.function_class is Linear
         and tuple(
@@ -1484,6 +1667,7 @@ def _dynamic_controlled_coevolving_graph_eligible(
         and stepper.output_width == 2
         and stepper.attrs.get("spec_kind") == "mechanism"
         and stepper.attrs.get("termination_input_node") == source.name
+        and stepper.attrs.get("initialize_noise_sender") is True
         and stepper.attrs.get("diagnostics") == ()
         and stepper.attrs.get("rng_streams") == ()
         and isinstance(terminator_spec, specs.MechanismOpSpec)
@@ -1523,28 +1707,108 @@ def _dynamic_controlled_coevolving_graph_eligible(
         argument: parameter_for(terminator, argument)
         for argument in terminator.params
     }
+    stepper_noise = parameter_for(stepper, "noise")
+    threshold = ddm_parameters.get("threshold")
     noise = ddm_parameters.get("noise")
     threshold_collapse = ddm_parameters.get("threshold_collapse")
     starting_value = ddm_parameters.get("starting_value")
     offset = ddm_parameters.get("offset")
     time_step_size = ddm_parameters.get("time_step_size")
+    frozen_ddm_parameters = (noise, starting_value, offset)
+    frozen_reason = "first coevolving DDM boundary is frozen in KernelIR"
+    ddm_parameters_are_pre_freeze = all(
+        parameter is not None
+        and parameter.runtime_mutable is True
+        and parameter.runtime_constraint == ""
+        for parameter in frozen_ddm_parameters
+    )
+    ddm_parameters_are_post_freeze = all(
+        parameter is not None
+        and parameter.runtime_mutable is False
+        and parameter.runtime_constraint == frozen_reason
+        for parameter in frozen_ddm_parameters
+    )
+    threshold_source_name = threshold_control["source"]
     if not (
-        all(parameter is not None for parameter in ddm_parameters.values())
+        stepper_noise is not None
+        and stepper_noise.name == f"{stepper.name}.noise"
+        and stepper_noise.aliases
+        == _node_param_aliases(stepper.name, "noise")
+        and type(stepper_noise.default) is float
+        and np.isfinite(stepper_noise.default)
+        and np.isfinite(np.float32(stepper_noise.default))
+        and stepper_noise.minimum is None
+        and stepper_noise.minimum_inclusive is True
+        and stepper_noise.maximum is None
+        and stepper_noise.maximum_inclusive is True
+        and stepper_noise.owner_component_id == stepper.component_id
+        and stepper_noise.owner_scope == "mechanism"
+        and stepper_noise.runtime_mutable is True
+        and stepper_noise.runtime_constraint == ""
+        and all(parameter is not None for parameter in ddm_parameters.values())
+        and threshold is not None
+        and threshold.name == f"{terminator.name}.threshold"
+        and threshold.aliases
+        == (
+            "ddm.threshold",
+            "DDM.threshold",
+            *_node_param_aliases(terminator.name, "threshold"),
+            *_node_param_aliases(threshold_source_name, "intercept"),
+        )
+        and type(threshold.default) is float
+        and np.isfinite(threshold.default)
+        and threshold.default >= 0.0
+        and threshold.minimum == 0.0
+        and threshold.minimum_inclusive is True
+        and threshold.maximum is None
+        and threshold.maximum_inclusive is True
+        and threshold.owner_component_id == terminator.component_id
+        and threshold.owner_scope == "function"
+        and threshold.runtime_mutable is True
+        and threshold.runtime_constraint == ""
         and noise is not None
         and type(noise.default) is float
-        and noise.default == 0.0
+        and np.isfinite(noise.default)
+        and noise.default >= 0.0
         and threshold_collapse is not None
+        and threshold_collapse.name
+        == f"{terminator.name}.threshold_collapse"
+        and threshold_collapse.aliases
+        == (
+            "ddm.threshold_collapse",
+            "DDM.threshold_collapse",
+            *_node_param_aliases(terminator.name, "threshold_collapse"),
+            *_node_param_aliases(
+                threshold_source_name,
+                "offset-integrator_function",
+            ),
+        )
         and type(threshold_collapse.default) is float
         and np.isfinite(threshold_collapse.default)
         and threshold_collapse.default <= 0.0
+        and threshold_collapse.minimum is None
+        and threshold_collapse.minimum_inclusive is True
+        and threshold_collapse.maximum == 0.0
+        and threshold_collapse.maximum_inclusive is True
+        and threshold_collapse.owner_component_id
+        == terminator.component_id
+        and threshold_collapse.owner_scope == "function"
+        and threshold_collapse.runtime_mutable is True
+        and threshold_collapse.runtime_constraint == ""
         and starting_value is not None
+        and type(starting_value.default) is float
         and starting_value.default == 0.0
         and offset is not None
+        and type(offset.default) is float
         and offset.default == 0.0
         and time_step_size is not None
         and type(time_step_size.default) is float
         and np.isfinite(time_step_size.default)
         and time_step_size.default > 0.0
+        and (
+            ddm_parameters_are_pre_freeze
+            or ddm_parameters_are_post_freeze
+        )
     ):
         return False
 
@@ -1627,13 +1891,39 @@ def _dynamic_controlled_coevolving_graph_eligible(
         for condition in graph.scheduler
         if condition.condition_type == "AtPass"
         and condition.consideration_set_id == 0
-        and exact_attrs(condition.attrs, at_pass_zero)
     )
     if len(origin_conditions) != 4:
         return False
     try:
         origins = tuple(graph.node(condition.node) for condition in origin_conditions)
     except KeyError:
+        return False
+
+    stepper_inputs = tuple(
+        projection
+        for projection in graph.projections
+        if projection.receiver_component_id == stepper.component_id
+    )
+    if len(stepper_inputs) != 1:
+        return False
+    task_projection = stepper_inputs[0]
+    try:
+        task = graph.node(task_projection.sender)
+    except KeyError:
+        return False
+    task_condition = scheduler_by_id.get(task.component_id)
+    task_at_pass = {
+        "pass_index": controller_intercept,
+        "time_scale": "ENVIRONMENT_STATE_UPDATE",
+    }
+    warmup = graph.metadata.get("coevolve_warmup")
+    if (
+        task not in origins
+        or task_condition is None
+        or controller_intercept is None
+        or type(warmup) is not int
+        or warmup != controller_intercept
+    ):
         return False
 
     role_ids = {
@@ -1659,6 +1949,14 @@ def _dynamic_controlled_coevolving_graph_eligible(
                 attrs=at_pass_zero,
             )
             for node in origins
+            if node is not task
+        )
+        and condition_matches(
+            task_condition,
+            task,
+            "AtPass",
+            0,
+            attrs=task_at_pass,
         )
         and condition_matches(
             scheduler_by_id[controller.component_id],
@@ -1806,21 +2104,27 @@ def _dynamic_controlled_coevolving_graph_eligible(
         state for state in graph.states if state.component_id == stepper.component_id
     )
     if not (
-        len(graph.states) == 2
-        and len(stepper_states) == 2
-        and tuple(state.state_id for state in stepper_states) == (0, 1)
-        and tuple(state.name.rsplit(".", 1)[-1] for state in stepper_states)
-        == ("pre", "act")
-        and all(
-            state.node == stepper.name
-            and state.width == 2
-            and state.initial_value == (0.0, 0.0)
+        len(graph.states) == 3
+        and len(stepper_states) == 3
+        and tuple(state.state_id for state in stepper_states) == (0, 1, 2)
+        and tuple(
+            (
+                state.name.rsplit(".", 1)[-1],
+                state.node,
+                state.width,
+                state.initial_value,
+            )
             for state in stepper_states
+        )
+        == (
+            ("pre", stepper.name, 2, (0.0, 0.0)),
+            ("act", stepper.name, 2, (0.0, 0.0)),
+            ("initialized", stepper.name, 1, (0.0,)),
         )
         and len(graph.resets) == 1
         and graph.resets[0].node == stepper.name
         and graph.resets[0].component_id == stepper.component_id
-        and graph.resets[0].state_ids == (0, 1)
+        and graph.resets[0].state_ids == (0, 1, 2)
         and graph.resets[0].condition_type == "Never"
         and graph.resets[0].region == "trial"
         and exact_attrs(graph.resets[0].attrs, {})
@@ -1851,20 +2155,6 @@ def _dynamic_controlled_coevolving_graph_eligible(
             and projection.receiver == receiver.name
         )
 
-    stepper_inputs = tuple(
-        projection
-        for projection in projections
-        if projection.receiver_component_id == stepper.component_id
-    )
-    if len(stepper_inputs) != 1:
-        return False
-    task_projection = stepper_inputs[0]
-    try:
-        task = graph.node(task_projection.sender)
-    except KeyError:
-        return False
-    if task not in origins:
-        return False
     remaining_origins = tuple(
         origin
         for origin in origins
@@ -2047,6 +2337,14 @@ def _dynamic_controlled_coevolving_graph_eligible(
         and all(
             "onset_step" not in node.attrs
             for node in graph.nodes
+            if node is not task
+        )
+        and (
+            task.attrs.get("onset_step", 0) == controller_intercept
+            and (
+                controller_intercept > 0
+                or "onset_step" not in task.attrs
+            )
         )
         and not any(
             projection.sender_component_id == threshold_controller.component_id
@@ -2220,10 +2518,25 @@ def _modulation_ir_specs(
             )
         except KeyError:
             continue
-        for parameter_name in source_node_spec.params.values():
+        dynamic_coevolving_source = (
+            _is_unmodeled_coevolving_lca_termination(
+                composition,
+                target,
+            )
+        )
+        for argument, parameter_name in source_node_spec.params.items():
+            if dynamic_coevolving_source and argument in {
+                "slope",
+                "intercept",
+            }:
+                continue
             params.freeze(
                 parameter_name,
-                "absorbed identity source for typed OVERRIDE modulation",
+                (
+                    "absorbed affine source for typed OVERRIDE modulation"
+                    if dynamic_coevolving_source
+                    else "absorbed identity source for typed OVERRIDE modulation"
+                ),
             )
         node_specs[node_index] = replace(
             node_spec,
@@ -2495,6 +2808,24 @@ def _node_spec(
     mechanism_spec = specs.mechanism_spec_for(node)
     function_spec = specs.function_spec_for(function)
     output_width = _node_output_width(node, mechanism_spec)
+    threshold_source = None
+    threshold_source_parameter = None
+    threshold_collapse_parameter = None
+    if component_type == "DDM":
+        # The threshold source is absent from GraphIR because its integrating
+        # transfer and OVERRIDE controller are folded into the coevolving DDM
+        # step.  Preserve the source's public fitting names as aliases for the
+        # two kernel arguments that carry those exact semantics.
+        threshold_binding = _exact_ddm_threshold_runtime_binding(
+            composition,
+            node,
+        )
+        if threshold_binding is not None:
+            (
+                threshold_source,
+                threshold_source_parameter,
+                threshold_collapse_parameter,
+            ) = threshold_binding
 
     if mechanism_spec is not None:
         attrs["spec_kind"] = "mechanism"
@@ -2507,15 +2838,39 @@ def _node_spec(
             aliases = tuple(
                 f"{prefix}.{binding.arg}" for prefix in mechanism_spec.param_alias_prefixes
             ) + _node_param_aliases(node_name, binding.arg)
+            minimum = binding.minimum
+            minimum_inclusive = binding.minimum_inclusive
+            maximum = binding.maximum
+            maximum_inclusive = binding.maximum_inclusive
+            live_parameter = _bound_parameter(binding, node)
+            if threshold_source is not None and binding.arg == "threshold":
+                aliases += _node_param_aliases(
+                    _node_name(threshold_source),
+                    "intercept",
+                )
+                minimum = 0.0
+                minimum_inclusive = True
+                live_parameter = threshold_source_parameter
+            elif (
+                threshold_source is not None
+                and binding.arg == "threshold_collapse"
+            ):
+                aliases += _node_param_aliases(
+                    _node_name(threshold_source),
+                    "offset-integrator_function",
+                )
+                maximum = 0.0
+                maximum_inclusive = True
+                live_parameter = threshold_collapse_parameter
             param_map[binding.arg] = params.add(
                 public_name,
                 binding.resolve(node),
                 aliases=aliases,
-                parameter=_bound_parameter(binding, node),
-                minimum=binding.minimum,
-                minimum_inclusive=binding.minimum_inclusive,
-                maximum=binding.maximum,
-                maximum_inclusive=binding.maximum_inclusive,
+                parameter=live_parameter,
+                minimum=minimum,
+                minimum_inclusive=minimum_inclusive,
+                maximum=maximum,
+                maximum_inclusive=maximum_inclusive,
                 owner_component_id=component_id,
                 owner_scope=binding.scope,
             )
@@ -3478,6 +3833,10 @@ def _parameter_port_has_canonical_source(target, parameter_name, port) -> bool:
     """Whether ``port`` is backed by the named live Parameter on its owner."""
 
     source = getattr(port, "source", None)
+    names = [parameter_name]
+    integrator_suffix = "-integrator_function"
+    if parameter_name.endswith(integrator_suffix):
+        names.append(parameter_name.removesuffix(integrator_suffix))
     owners = (
         target,
         getattr(target, "function", None),
@@ -3487,11 +3846,47 @@ def _parameter_port_has_canonical_source(target, parameter_name, port) -> bool:
         source
         is getattr(
             getattr(owner, "parameters", None),
-            parameter_name,
+            candidate_name,
             None,
         )
         for owner in owners
         if owner is not None
+        for candidate_name in names
+    )
+
+
+def _ignored_parameter_control_is_lowered(
+    control,
+    composition,
+    params: _ParamBuilder,
+) -> bool:
+    """Authenticate one PEC control erased in favor of a parameter lane.
+
+    Ignoring an arbitrary ControlMechanism would silently remove model
+    semantics.  The PEC path is safe only because its generated controller
+    monitors an external scalar parameter input and writes the exact live
+    Parameter already bound to one mutable IR parameter.
+    """
+
+    chain, diagnostic = _resolve_control_chain(control, composition)
+    if (
+        diagnostic is not None
+        or chain is None
+        or not chain.monitor_is_parameter_input
+        or type(getattr(control, "function", None)) is not Identity
+    ):
+        return False
+    public_name = f"{_node_name(chain.target)}.{chain.target_port}"
+    matches = tuple(
+        parameter
+        for parameter in params.specs
+        if public_name in (parameter.name, *parameter.aliases)
+    )
+    return bool(
+        len(matches) == 1
+        and matches[0].runtime_mutable is True
+        and params.bindings_by_id.get(matches[0].parameter_id)
+        is getattr(chain.target_parameter_port, "source", None)
     )
 
 
@@ -3708,10 +4103,24 @@ def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | Non
                 if candidate is not target
             )
         )
+        source_supported = _supported_lca_termination_source(
+            composition,
+            source,
+        ) or (
+            registered_dynamic_transform
+            and _is_unmodeled_coevolving_lca_termination(
+                composition,
+                target,
+            )
+            and _supported_dynamic_lca_termination_source(
+                composition,
+                source,
+            )
+        )
         if (
             (identity or registered_dynamic_transform)
             and _control_monitor_source_for(composition, target) is source
-            and _supported_lca_termination_source(composition, source)
+            and source_supported
         ):
             return None
         if _is_unmodeled_coevolving_lca_termination(composition, target):
@@ -3948,6 +4357,41 @@ def _supported_lca_termination_source(composition, source) -> bool:
     )
 
 
+def _supported_dynamic_lca_termination_source(composition, source) -> bool:
+    """Whether a co-evolving count source is an emitted scalar Linear op.
+
+    Atomic controlled-finished graphs deliberately continue to use
+    :func:`_supported_lca_termination_source` and therefore remain
+    identity-only.  CSI keeps the source in the fused program, so its slope
+    (switch CSI) and intercept (repeat CSI) may be affine lane parameters.
+    """
+
+    function = getattr(source, "function", None)
+    values = tuple(
+        _finite_fp32_scalar_value(_parameter_value(function, argument, None))
+        for argument in ("slope", "intercept", "scale", "offset")
+    )
+    return bool(
+        specs.passthrough_spec_for(source) is not None
+        and len(tuple(getattr(source, "input_ports", ()))) == 1
+        and not _has_active_node_afferents(composition, source)
+        and type(function) is Linear
+        and isinstance(
+            specs.function_spec_for(function),
+            specs.ElementwiseFunctionSpec,
+        )
+        and _function_parameter_support_diagnostic(
+            _node_name(source),
+            function,
+        )
+        is None
+        and all(value is not None for value in values)
+        and not _integrator_mode_enabled(source)
+        and _numeric_exact(_parameter_value(source, "noise", 0.0), 0.0)
+        and _parameter_value(source, "clip", None) is None
+    )
+
+
 def _supported_ddm_threshold_override(composition, control, source, target) -> bool:
     from psyneulink.core.batched.components.ddm import threshold_override_collapse
 
@@ -3971,7 +4415,11 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
         return False
     if _function_parameter_support_diagnostic(_node_name(source), function) is not None:
         return False
-    if not _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0):
+    if (
+        not _numeric_equal(_parameter_value(function, "slope", 1.0), 1.0)
+        or not _numeric_equal(_parameter_value(function, "scale", 1.0), 1.0)
+        or not _numeric_equal(_parameter_value(function, "offset", 0.0), 0.0)
+    ):
         return False
     if not _is_zero(_parameter_value(source, "noise", 0.0)) or _parameter_value(source, "clip", None) is not None:
         return False
@@ -3994,6 +4442,88 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
     return _same_condition(source_condition, control_condition) and _same_condition(
         source_condition, target_condition
     )
+
+
+def _exact_ddm_threshold_runtime_binding(composition, target):
+    """Resolve direct runtime lanes for one absorbed CSI threshold chain.
+
+    The public source parameters can alias the folded DDM arguments only when
+    the omitted source/controller transform is an exact identity around the
+    source Linear intercept and SimpleIntegrator offset.  Broader affine
+    chains may still be described by declaration-only IR, but exposing their
+    raw source names as direct kernel parameters would change their semantics.
+    """
+
+    matches = []
+    for control in _composition_nodes(composition):
+        if type(control) is not ControlMechanism:
+            continue
+        chain, diagnostic = _resolve_control_chain(control, composition)
+        if (
+            diagnostic is not None
+            or chain is None
+            or chain.target is not target
+            or chain.target_port != "threshold"
+            or type(getattr(control, "function", None)) is not Identity
+            or not _supported_ddm_threshold_override(
+                composition,
+                control,
+                chain.source,
+                target,
+            )
+        ):
+            continue
+        source = chain.source
+        function = getattr(source, "function", None)
+        integrator = getattr(source, "integrator_function", None)
+        source_intercept = _finite_fp32_scalar_value(
+            _parameter_value(function, "intercept", None)
+        )
+        collapse = _finite_fp32_scalar_value(
+            _parameter_value(integrator, "offset", None)
+        )
+        target_threshold = _finite_fp32_scalar_value(
+            _parameter_value(
+                getattr(target, "function", None),
+                "threshold",
+                None,
+            )
+        )
+        threshold_parameter = getattr(
+            getattr(function, "parameters", None),
+            "intercept",
+            None,
+        )
+        collapse_parameter = getattr(
+            getattr(integrator, "parameters", None),
+            "offset",
+            None,
+        )
+        if (
+            threshold_parameter is None
+            or collapse_parameter is None
+            or not _numeric_scalar_exact(
+                _parameter_value(function, "slope", None),
+                1.0,
+            )
+            or not _numeric_scalar_exact(
+                _parameter_value(function, "scale", None),
+                1.0,
+            )
+            or not _numeric_scalar_exact(
+                _parameter_value(function, "offset", None),
+                0.0,
+            )
+            or source_intercept is None
+            or collapse is None
+            or target_threshold is None
+            or source_intercept != target_threshold
+        ):
+            continue
+        matches.append(
+            (source, threshold_parameter, collapse_parameter)
+        )
+    return matches[0] if len(matches) == 1 else None
 
 
 def _same_condition(left, right) -> bool:
@@ -4475,7 +5005,81 @@ def _terminal_node_names(composition) -> list[str]:
     return terminal
 
 
-def _scheduler_ir_specs(composition, nodes, component_ids):
+def _scheduler_view_without_nodes(composition, ignored_node_ids):
+    """Build a read-only scheduler view with selected nodes and edges removed.
+
+    PEC adds one origin ControlMechanism per fitted parameter.  Removing those
+    mechanisms only from the lowered node list is insufficient: their outgoing
+    dependency edges have already moved controlled mechanisms into later live
+    consideration sets.  Rebuild topological levels from the scheduler's
+    analyzed dependency graph so the resulting view has the schedule the model
+    would have had without those host-side fit controls.
+
+    The level graph deliberately retains every non-ignored Composition node,
+    including nodes later absorbed into a batched op.  Such a node may order a
+    surviving controller even though it has no component ID of its own.  The
+    normal consideration-set snapshot projects these full levels onto lowered
+    component IDs and compresses empty levels.  No live scheduler or
+    Composition state is mutated.
+    """
+
+    scheduler = getattr(composition, "scheduler", None)
+    live_dependency_dict = getattr(scheduler, "dependency_dict", None)
+    if not isinstance(live_dependency_dict, Mapping):
+        # An empty queue makes the subsequent declaration incomplete and keeps
+        # compilation fail-closed if an analyzed scheduler cannot be inspected.
+        return {}, ()
+
+    active_nodes = tuple(
+        node
+        for node in _composition_nodes(composition)
+        if id(node) not in ignored_node_ids
+    )
+    active_node_ids = {id(node) for node in active_nodes}
+    dependency_dict = {
+        node: frozenset(
+            dependency
+            for dependency in live_dependency_dict.get(node, ())
+            if (
+                id(dependency) in active_node_ids
+                and dependency is not node
+            )
+        )
+        for node in active_nodes
+    }
+
+    remaining = {
+        node: set(dependencies)
+        for node, dependencies in dependency_dict.items()
+    }
+    consideration_queue = []
+    while remaining:
+        ready = frozenset(
+            node
+            for node, dependencies in remaining.items()
+            if not dependencies
+        )
+        if not ready:
+            # Preserve the acyclic prefix.  Projection will observe the missing
+            # components and mark the scheduler declaration incomplete.
+            break
+        consideration_queue.append(ready)
+        for node in ready:
+            del remaining[node]
+        for dependencies in remaining.values():
+            dependencies.difference_update(ready)
+
+    return dependency_dict, tuple(consideration_queue)
+
+
+def _scheduler_ir_specs(
+    composition,
+    nodes,
+    component_ids,
+    *,
+    dependency_dict=None,
+    consideration_queue=None,
+):
     """Lower typed explicit predicates and the scheduler's implicit defaults.
 
     This is semantic declaration only: whether a backend can execute the
@@ -4497,9 +5101,19 @@ def _scheduler_ir_specs(composition, nodes, component_ids):
         ),
     )
     conditions = _scheduler_conditions(composition)
-    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    if dependency_dict is None:
+        dependency_dict = getattr(
+            composition.graph_processing,
+            "dependency_dict",
+            {},
+        )
     consideration_sets, consideration_set_ids, queue_complete = (
-        _scheduler_consideration_set_specs(composition, nodes, component_ids)
+        _scheduler_consideration_set_specs(
+            composition,
+            nodes,
+            component_ids,
+            consideration_queue=consideration_queue,
+        )
     )
     declared = []
     finished_dependencies = {}
@@ -4784,11 +5398,20 @@ def _termination_ir_specs(composition, component_ids):
     ), ()
 
 
-def _scheduler_consideration_set_specs(composition, nodes, component_ids):
+def _scheduler_consideration_set_specs(
+    composition,
+    nodes,
+    component_ids,
+    *,
+    consideration_queue=None,
+):
     """Snapshot the scheduler's ordered consideration queue without live objects."""
 
-    scheduler = getattr(composition, "scheduler", None)
-    queue = getattr(scheduler, "consideration_queue", None)
+    if consideration_queue is None:
+        scheduler = getattr(composition, "scheduler", None)
+        queue = getattr(scheduler, "consideration_queue", None)
+    else:
+        queue = consideration_queue
     if queue is None:
         return (), {}, False
 

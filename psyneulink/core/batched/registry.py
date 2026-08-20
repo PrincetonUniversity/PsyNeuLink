@@ -18,10 +18,21 @@ from psyneulink.core.batched.ir import BatchedCompositionIR
 from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
 
 
-def analyze_composition(composition, backend: str = "triton_cpu", outputs=None, max_steps: int | None = None):
+def analyze_composition(
+    composition,
+    backend: str = "triton_cpu",
+    outputs=None,
+    max_steps: int | None = None,
+    *,
+    ignored_control_nodes=(),
+):
     """Return capability, semantic IR, live bindings, and preflighted KernelIR."""
 
-    lowering = lower_composition(composition, outputs=outputs)
+    lowering = lower_composition(
+        composition,
+        outputs=outputs,
+        ignored_control_nodes=ignored_control_nodes,
+    )
     backend_available, backend_diagnostics = _backend_availability(backend)
 
     rejected_nodes = [_normalize_model_diagnostic(d) for d in lowering.rejected_nodes]

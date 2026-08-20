@@ -765,9 +765,15 @@ class PECOptimizationFunction(OptimizationFunction):
             )
 
         model = self.owner.composition.model
+        ignored_control_nodes = tuple(
+            self.owner.composition.pec_control_mechs.values()
+        )
         try:
             self._batched_plan = BatchedCompositionCompiler.compile(
-                model, backend=self.batched_backend, max_steps=self.batched_max_steps
+                model,
+                backend=self.batched_backend,
+                max_steps=self.batched_max_steps,
+                ignored_control_nodes=ignored_control_nodes,
             )
         except BatchedCompileError as error:
             raise OptimizationFunctionError(

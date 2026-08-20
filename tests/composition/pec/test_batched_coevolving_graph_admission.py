@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 from psyneulink.core.batched import (
     batched_node_op,
     unregister_batched_instance_op,
@@ -41,6 +42,12 @@ def lower_csi():
     from csi_model_surrogate import make_stab_flex
 
     def lower(**overrides):
+        controller_intercept = overrides.pop(
+            "controller_intercept_override",
+            None,
+        )
+        task_onset = overrides.pop("task_onset_override", None)
+        cue_scale = overrides.pop("cue_scale_override", None)
         threshold_scale = overrides.pop("threshold_source_scale", None)
         threshold_offset = overrides.pop("threshold_source_offset", None)
         threshold_integrator_mode = overrides.pop(
@@ -65,6 +72,30 @@ def lower_csi():
         }
         options.update(overrides)
         composition = make_stab_flex(**options)
+        cue_source = next(
+            node
+            for node in composition.nodes
+            if node.name.startswith("Cue Stimulus Interval")
+        )
+        controller = next(
+            node
+            for node in composition.nodes
+            if node.name.startswith("CSI Override")
+        )
+        task = next(
+            node
+            for node in composition.nodes
+            if node.name.startswith("Task Input")
+        )
+        if controller_intercept is not None:
+            controller.function.parameters.intercept.set(
+                controller_intercept,
+            )
+        if task_onset is not None:
+            composition.scheduler.remove_condition(task)
+            composition.scheduler.add_condition(task, pnl.AtPass(task_onset))
+        if cue_scale is not None:
+            cue_source.function.parameters.scale.set(cue_scale)
         threshold_source = next(
             node
             for node in composition.nodes
@@ -361,13 +392,94 @@ def test_coevolving_kernel_lowering_reauthenticates_projection_values(lower_csi)
 @pytest.mark.parametrize(
     "overrides",
     [
-        pytest.param({"csi_switch": 0}, id="nonidentity_cue_slope"),
-        pytest.param({"csi_repeat": 1}, id="nonzero_cue_intercept"),
-        pytest.param({"iti": 1}, id="delayed_task_and_controller_intercept"),
-        pytest.param({"ddm_noise": 0.1}, id="stochastic_ddm_not_yet_admitted"),
+        pytest.param({"csi_switch": 0}, id="zero_switch_csi"),
+        pytest.param({"csi_repeat": 2}, id="nonzero_repeat_csi"),
+        pytest.param({"iti": 3}, id="delayed_task_onset"),
+        pytest.param(
+            {"iti": 2, "csi_repeat": 3, "csi_switch": 4},
+            id="combined_affine_count",
+        ),
     ],
 )
-def test_noncanonical_csi_variants_remain_fail_closed(lower_csi, overrides):
+def test_affine_csi_counts_and_nonzero_iti_are_admitted(lower_csi, overrides):
+    lowering = lower_csi(**overrides)
+
+    assert lowering.graph is not None
+    assert lowering.graph.executable
+    assert lowering.graph.metadata["scheduler_executable"]
+    assert not lowering.rejected_nodes
+    assert not lowering.rejected_conditions
+    assert _dynamic_controlled_coevolving_graph_eligible(
+        lowering.graph,
+        lowering.params,
+    )
+
+
+def test_affine_csi_graph_exposes_mutable_counts_and_exact_iti(lower_csi):
+    lowering = lower_csi(iti=2, csi_repeat=3, csi_switch=4)
+    graph = lowering.graph
+    role = _roles(graph)
+    parameters = {parameter.name: parameter for parameter in lowering.params}
+    source_parameters = {
+        argument: parameters[name]
+        for argument, name in role["source"].params.items()
+    }
+    controller_parameters = {
+        argument: parameters[name]
+        for argument, name in role["controller"].params.items()
+    }
+
+    assert source_parameters["slope"].default == 4.0
+    assert source_parameters["intercept"].default == 3.0
+    assert source_parameters["slope"].runtime_mutable
+    assert source_parameters["intercept"].runtime_mutable
+    assert not source_parameters["scale"].runtime_mutable
+    assert not source_parameters["offset"].runtime_mutable
+    assert all(
+        not parameter.runtime_mutable
+        for parameter in controller_parameters.values()
+    )
+    assert controller_parameters["intercept"].default == 2.0
+
+    task = next(
+        node
+        for node in role["origins"]
+        if node.component_type == "TransferMechanism"
+    )
+    task_condition = next(
+        condition
+        for condition in graph.scheduler
+        if condition.component_id == task.component_id
+    )
+    assert task.attrs["onset_step"] == 2
+    assert task_condition.condition_type == "AtPass"
+    assert task_condition.attrs == {
+        "pass_index": 2,
+        "time_scale": "ENVIRONMENT_STATE_UPDATE",
+    }
+    assert graph.metadata["coevolve_warmup"] == 2
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        pytest.param(
+            {"iti": 2, "controller_intercept_override": 3},
+            id="controller_task_onset_mismatch",
+        ),
+        pytest.param(
+            {"iti": 2, "task_onset_override": 3},
+            id="task_controller_onset_mismatch",
+        ),
+        pytest.param({"csi_switch": -1}, id="negative_switch_default"),
+        pytest.param({"csi_switch": 1.5}, id="fractional_switch_default"),
+        pytest.param({"cue_scale_override": 2}, id="nonidentity_cue_scale"),
+    ],
+)
+def test_invalid_affine_count_or_iti_contract_remains_fail_closed(
+    lower_csi,
+    overrides,
+):
     lowering = lower_csi(**overrides)
 
     assert lowering.graph is not None

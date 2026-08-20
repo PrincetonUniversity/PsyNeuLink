@@ -1,19 +1,22 @@
-"""Compare deterministic CSI co-evolution on Triton GPU and the LLVM PEC path.
+"""Compare stochastic CSI co-evolution on Triton GPU and the LLVM PEC path.
 
 Both run ``param_evals`` parameter values x ``estimates`` x ``trials`` independent
 simulations of the CSI surrogate (LCA co-evolving with a collapsing-threshold
-DDM).  This benchmark uses the compiler's current exact executable boundary:
-``iti=0``, ``csi_repeat=0``, ``csi_switch=1``, ``ddm_noise=0``, and
-``lca_noise=0``.  The swept parameter is ``non_decision_time`` (the DDM
-``threshold`` is already controlled by the model, so PEC cannot also modulate
-it).
+DDM). It restores the historical apples-to-apples research configuration used
+by the original speedup measurement: ``iti=0``, ``csi_repeat=0``,
+``csi_switch=0``, zero cue inputs, ``ddm_noise=0.1``, ``lca_noise=0``, and a
+``-0.001`` threshold collapse. The swept parameter remains
+``non_decision_time`` so results stay comparable with that baseline. The full
+five-parameter recovery surface is now supported, but changing the benchmark's
+sweep would change the workload being compared.
 
 Both sides are measured the same way -- compilation separately from steady state
 -- because they cost about the same to compile and mixing the two is misleading:
 
 * **steady-state** (warm vs warm) is the number that matters for fitting, where
   one compilation is amortised over hundreds of objective evaluations;
-* **cold one-shot** includes compilation for both, and is close to a wash.
+* **cold one-shot** includes compilation for both and therefore has a much
+  smaller speedup than steady-state fitting.
 
 An earlier version of this script timed triton warm but LLVM cold, which
 overstated the speedup roughly threefold.
@@ -62,7 +65,7 @@ def _csi_inputs(comp, trials):
         _node(comp, "Stimulus Input"): np.tile([[1, 0, 1, 0], [0, 1, 0, 1]], (half, 1))[:trials],
         _node(comp, "Task Input"): np.tile([[1, 0], [0, 1]], (half, 1))[:trials],
         _node(comp, "Correct Response"): np.tile([[1], [-1]], (half, 1))[:trials],
-        _node(comp, "Cue Stimulus Interval"): np.tile([[1], [3]], (half, 1))[:trials],
+        _node(comp, "Cue Stimulus Interval"): np.zeros((trials, 1)),
     }
 
 
@@ -70,8 +73,8 @@ def _ndt_values(param_evals):
     return list(np.linspace(0.25, 0.35, param_evals))
 
 
-def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.0, repeats=5):
-    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=1, threshold_collapse=-0.001,
+def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.1, repeats=5):
+    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
                           ddm_noise=noise, lca_noise=0.0)
     inputs = _csi_inputs(comp, trials)
     param_sets = [{"DDM.non_decision_time": float(v)} for v in _ndt_values(param_evals)]
@@ -105,8 +108,8 @@ def run_triton(trials, estimates, param_evals, max_steps, seed, noise=0.0, repea
     }
 
 
-def run_llvm(trials, estimates, param_evals, seed, noise=0.0, repeats=5):
-    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=1, threshold_collapse=-0.001,
+def run_llvm(trials, estimates, param_evals, seed, noise=0.1, repeats=5):
+    comp = make_stab_flex(iti=0, csi_repeat=0, csi_switch=0, threshold_collapse=-0.001,
                           ddm_noise=noise, lca_noise=0.0)
     inputs = _csi_inputs(comp, trials)
     decision, dg, rg = _node(comp, "DDM"), _node(comp, "DECISION_GATE"), _node(comp, "RESPONSE_GATE")
@@ -167,20 +170,26 @@ def main():
     ap.add_argument(
         "--noise",
         type=float,
-        default=0.0,
-        help="DDM noise; the current typed CSI boundary requires 0",
+        default=0.1,
+        help=(
+            "fixed DDM noise used by both backends; historical baseline is 0.1"
+        ),
     )
     ap.add_argument("--repeats", type=int, default=5,
                     help="warm sweeps per backend to median over")
     ap.add_argument("--skip-llvm", action="store_true")
     ap.add_argument("--skip-triton", action="store_true")
     args = ap.parse_args()
-    if args.noise != 0.0:
-        ap.error("the current typed CSI benchmark requires --noise 0")
+    if not np.isfinite(args.noise) or args.noise < 0.0:
+        ap.error("--noise must be a finite nonnegative value")
 
     sims = args.param_evals * args.estimates * args.trials
-    print(f"CSI surrogate: {args.param_evals} params x {args.estimates} estimates x "
-          f"{args.trials} trials = {sims:,} simulations\n")
+    print(
+        "CSI surrogate "
+        f"(iti=0, csi_repeat=0, csi_switch=0, ddm_noise={args.noise:g}): "
+        f"{args.param_evals} params x {args.estimates} estimates x "
+        f"{args.trials} trials = {sims:,} simulations\n"
+    )
     try:
         tri = llvm = None
         header = f"  {'':<24}{'compile':>12}{'warm sweep':>14}{'cold total':>13}   {'warm sims/s':>14}"
@@ -211,7 +220,7 @@ def main():
                   "over many objective evaluations)")
             print(f"  -> cold one-shot speedup:{llvm['cold']/tri['cold']:6.1f}x   "
                   "(compile + one sweep; the two compile costs are comparable, so "
-                  "a single ad-hoc run is close to a wash)")
+                  "the fitting advantage is much smaller for one ad-hoc run)")
             print("\n  Note: the checksum sums decisions and response times together, so "
                   "errors in one\n  can cancel the other -- it is a smoke test, not an "
                   "accuracy measure.  The executable support gate is\n  "

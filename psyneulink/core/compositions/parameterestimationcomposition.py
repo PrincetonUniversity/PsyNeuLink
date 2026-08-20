@@ -1222,7 +1222,11 @@ class ParameterEstimationComposition(Composition):
         """
         from psyneulink.core.batched import BatchedCompositionCompiler
 
-        return BatchedCompositionCompiler.diagnose(self.model, backend=backend)
+        return BatchedCompositionCompiler.diagnose(
+            self.model,
+            backend=backend,
+            ignored_control_nodes=tuple(self.pec_control_mechs.values()),
+        )
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass

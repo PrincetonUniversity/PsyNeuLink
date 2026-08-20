@@ -2,8 +2,9 @@
 
 The op implements canonical recurrent ``LCAMechanism`` semantics for the
 validated deterministic configuration. Broader widths, nonzero/custom state
-initialization, noise, reset policies beyond exact ``Never``/``AtTrialStart``,
-clipping, and scheduler behavior remain fail-closed until represented.
+initialization, function-valued or non-broadcast noise, reset policies beyond
+exact ``Never``/``AtTrialStart``, clipping, and scheduler behavior remain
+fail-closed until represented.
 """
 
 import numpy as np
@@ -35,12 +36,15 @@ def _pnl_triton_lca_width2_recurrence(
     pre1,
     act0,
     act1,
+    initialized,
+    initialize_noise_sender,
     active,
     gain,
     leak,
     competition,
     self_excitation,
     dt,
+    noise,
     bias,
     x_0,
     scale,
@@ -50,12 +54,32 @@ def _pnl_triton_lca_width2_recurrence(
     # run-to-completion integrate loop and the co-evolution step call this, so
     # the recurrence math lives in exactly one place.  `active` masks the update
     # (lanes that are past their step budget / whose terminator finished freeze);
-    # Deterministic numeric LCI noise and offset are not yet represented by the
-    # accepted subset and are rejected during capability analysis.
+    # Numeric LCI noise is deterministic: PNL adds the same
+    # ``noise * sqrt(dt)`` term to each accumulator on every integration step.
+    # Distribution/function-valued noise remains outside the accepted subset.
+    # PNL also evaluates the integrator once while initializing the mechanism:
+    # that call exposes Logistic(noise * sqrt(dt)) as the initial recurrent
+    # sender value without advancing ``previous_value``.  Reconstruct that
+    # parameter-lane-specific activity on the first real integration step.
+    noise_step = noise * tl.sqrt(dt)
+    initial_act = (
+        scale / (1.0 + tl.exp(-gain * (noise_step + bias - x_0))) + offset
+    )
+    initialize_sender = (initialized == 0.0) & (initialize_noise_sender != 0.0)
+    act0 = tl.where(initialize_sender, initial_act, act0)
+    act1 = tl.where(initialize_sender, initial_act, act1)
     rec0 = self_excitation * act0 - competition * act1
     rec1 = -competition * act0 + self_excitation * act1
-    pre0 = tl.where(active, pre0 + (input0 + rec0 - leak * pre0) * dt, pre0)
-    pre1 = tl.where(active, pre1 + (input1 + rec1 - leak * pre1) * dt, pre1)
+    pre0 = tl.where(
+        active,
+        pre0 + (input0 + rec0 - leak * pre0) * dt + noise_step,
+        pre0,
+    )
+    pre1 = tl.where(
+        active,
+        pre1 + (input1 + rec1 - leak * pre1) * dt + noise_step,
+        pre1,
+    )
     act0 = tl.where(
         active,
         scale / (1.0 + tl.exp(-gain * (pre0 + bias - x_0))) + offset,
@@ -66,7 +90,8 @@ def _pnl_triton_lca_width2_recurrence(
         scale / (1.0 + tl.exp(-gain * (pre1 + bias - x_0))) + offset,
         act1,
     )
-    return pre0, pre1, act0, act1
+    initialized = tl.where(active, 1.0, initialized)
+    return pre0, pre1, act0, act1, initialized
 
 
 @pnl_triton_op(
@@ -80,11 +105,14 @@ def _pnl_triton_lca_width2_integrate(
     pre1,
     act0,
     act1,
+    initialized,
+    initialize_noise_sender,
     gain,
     leak,
     competition,
     self_excitation,
     dt,
+    noise,
     bias,
     x_0,
     scale,
@@ -107,13 +135,14 @@ def _pnl_triton_lca_width2_integrate(
     step = 0
     while step < block_steps:
         active = step < lca_steps
-        pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
-            input0, input1, pre0, pre1, act0, act1, active,
+        pre0, pre1, act0, act1, initialized = _pnl_triton_lca_width2_recurrence(
+            input0, input1, pre0, pre1, act0, act1, initialized,
+            initialize_noise_sender, active,
             gain, leak, competition, self_excitation, dt,
-            bias, x_0, scale, offset,
+            noise, bias, x_0, scale, offset,
         )
         step += 1
-    return pre0, pre1, act0, act1
+    return pre0, pre1, act0, act1, initialized
 
 
 @pnl_triton_op(
@@ -126,12 +155,15 @@ def _pnl_triton_lca_width2_step(
     pre1,
     act0,
     act1,
+    initialized,
+    initialize_noise_sender,
     finished,
     gain,
     leak,
     competition,
     self_excitation,
     dt,
+    noise,
     bias,
     x_0,
     scale,
@@ -142,12 +174,13 @@ def _pnl_triton_lca_width2_step(
     # persisted state carried to the next trial matches when the trial ended.
     #
     active = finished == 0.0
-    pre0, pre1, act0, act1 = _pnl_triton_lca_width2_recurrence(
-        input0, input1, pre0, pre1, act0, act1, active,
+    pre0, pre1, act0, act1, initialized = _pnl_triton_lca_width2_recurrence(
+        input0, input1, pre0, pre1, act0, act1, initialized,
+        initialize_noise_sender, active,
         gain, leak, competition, self_excitation, dt,
-        bias, x_0, scale, offset,
+        noise, bias, x_0, scale, offset,
     )
-    return pre0, pre1, act0, act1
+    return pre0, pre1, act0, act1, initialized
 
 
 def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
@@ -163,10 +196,11 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     pre1 = ctx.state(pre_state, 1)
     act0 = ctx.state(act_state, 0)
     act1 = ctx.state(act_state, 1)
+    initialized = ctx.state(f"{node_spec.name}.initialized", 0)
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_lca_width2_step,
-            outputs=(pre0, pre1, act0, act1),
+            outputs=(pre0, pre1, act0, act1, initialized),
             args=(
                 inputs[0],
                 inputs[1],
@@ -174,12 +208,15 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 pre1,
                 act0,
                 act1,
+                initialized,
+                "1.0" if node_spec.attrs["initialize_noise_sender"] else "0.0",
                 finished_var,
                 ctx.param(node_spec, "gain"),
                 ctx.param(node_spec, "leak"),
                 ctx.param(node_spec, "competition"),
                 ctx.param(node_spec, "self_excitation"),
                 ctx.param(node_spec, "time_step_size"),
+                ctx.param(node_spec, "noise"),
                 ctx.param(node_spec, "bias"),
                 ctx.param(node_spec, "x_0"),
                 ctx.param(node_spec, "scale"),
@@ -241,13 +278,22 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
             "unsupported LCA integrator offset for batched v2",
             "requires zero",
         )
+    noise_values = []
     for noise_owner in (node, integrator):
-        if not _parameter_matches(noise_owner, "noise", 0.0):
+        noise_value = _finite_broadcast_scalar_parameter(noise_owner, "noise")
+        if noise_value is None:
             return BatchedDiagnostic(
                 name,
                 "unsupported LCA noise for batched v2",
-                "requires numeric zero",
+                "requires a finite float32 scalar or broadcast-scalar numeric value",
             )
+        noise_values.append(noise_value)
+    if noise_values[0] != noise_values[1]:
+        return BatchedDiagnostic(
+            name,
+            "unsupported LCA noise for batched v2",
+            "mechanism and integrator noise values must agree",
+        )
 
     function = getattr(node, "function", None)
     logistic_defaults = {
@@ -412,6 +458,25 @@ def _parameter_matches(component, name, expected) -> bool:
     return _numeric_array_matches(default_value, expected)
 
 
+def _finite_broadcast_scalar_parameter(component, name) -> float | None:
+    """Resolve an exactly broadcast numeric parameter as one fp32-safe scalar."""
+
+    try:
+        value = np.asarray(_raw_parameter(component, name, None))
+        if value.size == 0 or value.dtype.kind not in "biuf":
+            return None
+        scalar = value.reshape(-1)[0]
+        if (
+            not np.isfinite(scalar)
+            or not np.all(value == scalar)
+            or abs(scalar) > np.finfo(np.float32).max
+        ):
+            return None
+        return float(scalar)
+    except Exception:
+        return None
+
+
 def _lca_extract_attrs(node, composition) -> dict:
     termination_input_node = _control_monitor_source_for(composition, node)
     threshold = _raw_parameter(node, "termination_threshold", 1200)
@@ -437,6 +502,13 @@ def _lca_extract_attrs(node, composition) -> dict:
             else min(max(1, int(np.ceil(float(threshold)))), max_executions)
         ),
         "max_executions_before_finished": max_executions,
+        # Construction initializes a Never-reset LCA's recurrent sender from
+        # Logistic(noise * sqrt(dt)) without advancing previous_value.  An
+        # AtTrialStart reset replaces that sender with Logistic(initializer),
+        # including before trial zero, so it must not replay construction.
+        "initialize_noise_sender": type(
+            getattr(node, "reset_stateful_function_when", None)
+        ) is Never,
     }
 
 
@@ -476,6 +548,7 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     pre1 = ctx.state(pre_state, 1)
     act0 = ctx.state(act_state, 0)
     act1 = ctx.state(act_state, 1)
+    initialized = ctx.state(f"{node_spec.name}.initialized", 0)
     termination_node = node_spec.attrs.get("termination_input_node")
     if termination_node:
         cue_value = ctx.raw_input_value(termination_node)
@@ -503,7 +576,7 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_lca_width2_integrate,
-            outputs=(pre0, pre1, act0, act1),
+            outputs=(pre0, pre1, act0, act1, initialized),
             args=(
                 inputs[0],
                 inputs[1],
@@ -511,11 +584,14 @@ def _lca_triton_emit(ctx, node_spec, inputs, outputs):
                 pre1,
                 act0,
                 act1,
+                initialized,
+                "1.0" if node_spec.attrs["initialize_noise_sender"] else "0.0",
                 ctx.param(node_spec, "gain"),
                 ctx.param(node_spec, "leak"),
                 ctx.param(node_spec, "competition"),
                 ctx.param(node_spec, "self_excitation"),
                 ctx.param(node_spec, "time_step_size"),
+                ctx.param(node_spec, "noise"),
                 ctx.param(node_spec, "bias"),
                 ctx.param(node_spec, "x_0"),
                 ctx.param(node_spec, "scale"),
@@ -605,6 +681,13 @@ register_batched_op(
                 minimum=0.0,
                 minimum_inclusive=False,
             ),
+            ParamBinding(
+                arg="noise",
+                pnl_name="noise",
+                default=0.0,
+                scope="mechanism",
+                get=lambda node: _finite_broadcast_scalar_parameter(node, "noise"),
+            ),
         ),
         states=(
             StateDecl("pre", width=None, initial=0.0),
@@ -614,6 +697,7 @@ register_batched_op(
                 initial=0.0,
                 initialize_with_function=True,
             ),
+            StateDecl("initialized", width=1, initial=0.0),
         ),
         rng=(),
         outputs=None,

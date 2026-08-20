@@ -24,12 +24,12 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.batched import (
-    BatchedCompileError,
     BatchedCompositionCompiler,
     BatchedDiagnosticCode,
     batched_node_op,
     unregister_batched_instance_op,
 )
+from psyneulink.core.batched.prep import normalize_parameter_sets
 
 
 pytestmark = [
@@ -250,10 +250,6 @@ def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python(
 
 
 _CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
-_UNMODELED_CSI_CONTROL_DETAIL = (
-    "coevolving Always/WhenFinished execution falls outside the typed "
-    "controlled-finished subset and requires executable conditional pass regions"
-)
 
 
 def _make_csi_surrogate(**kwargs):
@@ -278,46 +274,27 @@ def _register_csi_drift_rate():
         return (pos - neg) * x6
 
 
-def _lca_termination_override(composition):
-    """Find the semantic control edge without relying on CSI component names."""
-
-    matches = []
-    for node in composition.nodes:
-        if not isinstance(node, pnl.ControlMechanism):
-            continue
-        for signal in node.control_signals:
-            for projection in signal.efferents:
-                receiver = projection.receiver
-                if (
-                    isinstance(receiver.owner, pnl.LCAMechanism)
-                    and receiver.name == pnl.TERMINATION_THRESHOLD
-                ):
-                    matches.append(node)
-    assert len(matches) == 1
-    return matches[0]
-
-
-def _assert_csi_control_rejection(composition):
-    controller = _lca_termination_override(composition)
+def _assert_csi_supported(composition):
     report = BatchedCompositionCompiler.diagnose(
         composition,
         backend="triton_cpu",
         max_steps=800,
     )
 
-    assert not report.model_supported
-    assert len(report.model_diagnostics) == 1
-    diagnostic = report.model_diagnostics[0]
-    assert diagnostic.component == controller.name
-    assert diagnostic.component_id == f"node:{controller.name}"
-    assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
-    assert diagnostic.reason == "batched schedule kind is not executable yet"
-    assert diagnostic.detail == _UNMODELED_CSI_CONTROL_DETAIL
-    return report
+    assert report.model_supported
+    assert report.can_execute
+    assert not report.model_diagnostics
+    plan = BatchedCompositionCompiler.compile(
+        composition,
+        backend="triton_cpu",
+        max_steps=800,
+    )
+    assert plan.kernel_ir.executable
+    return plan
 
 
-def test_csi_drift_rate_udf_registration_exposes_schedule_rejection():
-    """The UDF clears its blocker; CSI remains outside executable control IR."""
+def test_csi_drift_rate_udf_registration_clears_final_model_blocker():
+    """Registering the drift UDF exposes an executable controlled CSI plan."""
 
     comp = _make_csi_surrogate(iti=0, csi_repeat=0, csi_switch=0)
     before = BatchedCompositionCompiler.diagnose(comp, backend="triton_cpu")
@@ -331,7 +308,7 @@ def test_csi_drift_rate_udf_registration_exposes_schedule_rejection():
 
     try:
         _register_csi_drift_rate()
-        _assert_csi_control_rejection(comp)
+        _assert_csi_supported(comp)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
@@ -345,15 +322,11 @@ def test_csi_drift_rate_udf_registration_exposes_schedule_rejection():
         pytest.param(10, -0.001, id="delayed_iti_collapsing_threshold"),
     ],
 )
-def test_csi_noise_free_model_variants_reject_unmodeled_control(
+def test_csi_noise_free_model_variants_compile(
     iti,
     threshold_collapse,
 ):
-    """Retain the former end-to-end, ITI, collapse, and Python/LLVM variants.
-
-    These deterministic variants cannot honestly reach an execution-mode
-    oracle until KernelIR executes their controlled LCA/DDM pass region.
-    """
+    """Fixed/collapsing boundaries and delayed ITI reach executable KernelIR."""
 
     try:
         _register_csi_drift_rate()
@@ -365,7 +338,7 @@ def test_csi_noise_free_model_variants_reject_unmodeled_control(
             ddm_noise=0.0,
             lca_noise=0.0,
         )
-        _assert_csi_control_rejection(comp)
+        _assert_csi_supported(comp)
     finally:
         unregister_batched_instance_op("Drift Rate Value")
 
@@ -405,8 +378,8 @@ def test_ddm_stochastic_matches_pnl_python_statistics():
     assert np.all(np.isfinite(bvals))
 
 
-def test_csi_multi_parameter_lane_model_rejects_before_launch():
-    """The former non-decision-time lane sweep must not bypass model analysis."""
+def test_csi_multi_parameter_lane_model_compiles():
+    """CSI exposes fitted cue-slope and DDM NDT as runtime lane parameters."""
 
     try:
         _register_csi_drift_rate()
@@ -418,17 +391,27 @@ def test_csi_multi_parameter_lane_model_rejects_before_launch():
             ddm_noise=0.0,
             lca_noise=0.0,
         )
-        diagnosed = _assert_csi_control_rejection(comp)
+        plan = _assert_csi_supported(comp)
+        cue = next(
+            node
+            for node in comp.nodes
+            if node.name.startswith("Cue Stimulus Interval")
+        )
+        ddm = next(node for node in comp.nodes if node.name.startswith("DDM"))
+        cue_slope = f"{cue.name}.slope"
+        non_decision_time = f"{ddm.name}.non_decision_time"
+        parameters = {parameter.name: parameter for parameter in plan.ir.params}
 
-        with pytest.raises(BatchedCompileError) as error:
-            BatchedCompositionCompiler.compile(
-                comp,
-                backend="triton_cpu",
-                max_steps=400,
-            )
-
-        assert error.value.capability_report == diagnosed
-        diagnostic = diagnosed.model_diagnostics[0]
-        assert diagnostic.formatted_reason in str(error.value)
+        assert parameters[cue_slope].runtime_mutable
+        assert parameters[non_decision_time].runtime_mutable
+        rows = normalize_parameter_sets(
+            [
+                {cue_slope: 0.0, non_decision_time: 0.2},
+                {cue_slope: 10.0, non_decision_time: 0.5},
+            ],
+            plan.ir,
+        )
+        assert [row[cue_slope] for row in rows] == [0.0, 10.0]
+        assert [row[non_decision_time] for row in rows] == [0.2, 0.5]
     finally:
         unregister_batched_instance_op("Drift Rate Value")
