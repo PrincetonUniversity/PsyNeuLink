@@ -10,6 +10,7 @@ from psyneulink.core.batched.kernel_ir import (
     KernelDynamicScheduleProgram,
     KernelLoopCarry,
     KernelOp,
+    KernelPublication,
     KernelScheduledComponent,
     KernelSchedulePredicate,
     KernelSchedulerStateSlot,
@@ -25,7 +26,7 @@ def _value(name, dtype="float32"):
 
 
 def _member(component_id, predicate):
-    output = _value(f"component:{component_id}:output")
+    output = _value(f"component:{component_id}:candidate")
     return KernelScheduledComponent(
         component_id=component_id,
         predicate=predicate,
@@ -37,20 +38,45 @@ def _member(component_id, predicate):
                 attrs={"component_id": component_id},
             ),
         ),
-        published_values=(output,),
+        publications=(
+            KernelPublication(output, "output", component_id, 10 + component_id),
+        ),
     )
 
 
-def _slot(kind, *, owner=None, dependency=None, finished=None, dtype="int32"):
+def _slot(
+    kind,
+    *,
+    owner=None,
+    producer=None,
+    consumer=None,
+    finished=None,
+    rng_stream=None,
+    dtype="int32",
+):
     suffix = ":".join(
-        str(value) for value in (owner, dependency, finished) if value is not None
+        str(value)
+        for value in (owner, producer, consumer, finished, rng_stream)
+        if value is not None
     )
     return KernelSchedulerStateSlot(
         kind=kind,
         value=_value(f"schedule:{kind}:{suffix}", dtype),
         owner_component_id=owner,
-        dependency_component_id=dependency,
+        producer_component_id=producer,
+        consumer_component_id=consumer,
         finished_value_id=finished,
+        rng_stream_id=rng_stream,
+    )
+
+
+def _carry(member):
+    publication = member.publications[0]
+    return KernelLoopCarry(
+        publication.kind,
+        publication.owner_component_id,
+        publication.value_id,
+        _value(f"component:{member.component_id}:snapshot"),
     )
 
 
@@ -84,9 +110,9 @@ def _program():
                 _slot("has_run", owner=component_id, dtype="bool"),
             )
         ),
-        _slot("usable_call", owner=1, dependency=0),
+        _slot("usable_call", producer=0, consumer=1),
         _slot("finished", owner=1, finished=7, dtype="bool"),
-        _slot("rng_clock", owner=0),
+        _slot("rng_clock", owner=0, rng_stream=0),
     )
     return KernelDynamicScheduleProgram(
         consideration_sets=tuple(
@@ -94,9 +120,7 @@ def _program():
             for index, member in enumerate(members)
         ),
         scheduler_state_slots=slots,
-        loop_carries=(
-            KernelLoopCarry("output", 0, 10, members[0].published_values[0]),
-        ),
+        loop_carries=tuple(_carry(member) for member in members),
         execution_budgets=(KernelComponentExecutionBudget(0, 100),),
         trial_termination=KernelSchedulePredicate(
             "AllHaveRun",
@@ -111,6 +135,11 @@ def test_dynamic_schedule_records_are_frozen_typed_and_attr_free():
         program,
         *program.consideration_sets,
         *(item.members[0] for item in program.consideration_sets),
+        *(
+            publication
+            for item in program.consideration_sets
+            for publication in item.members[0].publications
+        ),
         *program.scheduler_state_slots,
         *program.loop_carries,
         *program.execution_budgets,
@@ -123,6 +152,7 @@ def test_dynamic_schedule_records_are_frozen_typed_and_attr_free():
         for record in records
     )
     assert program.scheduler_state_slots[-1].kind == "rng_clock"
+    assert program.scheduler_state_slots[-1].rng_stream_id == 0
     with pytest.raises(FrozenInstanceError):
         program.loop_carries = ()
 
@@ -134,7 +164,7 @@ def test_dynamic_schedule_records_are_frozen_typed_and_attr_free():
         KernelSchedulePredicate("AtPass", pass_index=3),
         KernelSchedulePredicate("AtTrialStart", pass_index=0),
         KernelSchedulePredicate(
-            "AllEveryNCalls", dependency_component_ids=(0, 1), call_count=2
+            "AllEveryNCalls", dependency_component_ids=(0, 1), call_count=1
         ),
         KernelSchedulePredicate(
             "WhenFinished", dependency_component_ids=(0,), finished_value_ids=(4,)
@@ -158,6 +188,7 @@ def test_predicate_forms_have_only_typed_operands(predicate):
         {"kind": "AtPass", "pass_index": True},
         {"kind": "AtTrialStart", "pass_index": 1},
         {"kind": "EveryNCalls", "dependency_component_ids": (0,), "call_count": 0},
+        {"kind": "EveryNCalls", "dependency_component_ids": (0,), "call_count": 2},
         {"kind": "WhenFinished", "dependency_component_ids": (0,)},
     ],
 )
@@ -170,7 +201,12 @@ def test_member_requires_exact_ops_and_body_defined_publications():
     member = _member(0, KernelSchedulePredicate("Always"))
 
     with pytest.raises(ValueError, match="published values"):
-        replace(member, published_values=(_value("forged"),))
+        replace(
+            member,
+            publications=(
+                replace(member.publications[0], source=_value("forged")),
+            ),
+        )
     with pytest.raises(ValueError, match="fields"):
         replace(member, body=list(member.body))
     with pytest.raises(ValueError, match="fields"):
@@ -190,7 +226,11 @@ def test_member_requires_exact_ops_and_body_defined_publications():
         replace(
             member,
             effects=(
-                KernelOp("StoreOutput", "result", inputs=member.published_values),
+                KernelOp(
+                    "StoreOutput",
+                    "result",
+                    inputs=(member.publications[0].source,),
+                ),
             ),
         )
 
@@ -207,8 +247,10 @@ def test_member_requires_exact_ops_and_body_defined_publications():
             owner_component_id=0,
         ),
         lambda: _slot("pass_index", owner=0),
-        lambda: _slot("usable_call", owner=0, dependency=0),
+        lambda: _slot("usable_call", producer=0, consumer=0),
         lambda: _slot("finished", owner=0),
+        lambda: _slot("rng_clock", owner=0),
+        lambda: _slot("rng_clock", owner=0, rng_stream=0, dtype="bool"),
         lambda: KernelLoopCarry("output", True, 0, _value("carry")),
         lambda: KernelLoopCarry("topology", 0, 0, _value("carry")),
         lambda: KernelLoopCarry("output", 0, 0, object()),
@@ -264,3 +306,121 @@ def test_program_authenticates_coverage_references_and_ownership():
     duplicate = replace(program.consideration_sets[1], consideration_set_id=0)
     with pytest.raises(ValueError, match="ordered sets"):
         replace(program, consideration_sets=(program.consideration_sets[0], duplicate))
+
+
+def test_member_inputs_require_snapshot_or_earlier_local_definition():
+    program = _program()
+    first_set = program.consideration_sets[0]
+    member = first_set.members[0]
+    forged = replace(
+        member,
+        body=(replace(member.body[0], inputs=(_value("undefined"),)),),
+    )
+
+    with pytest.raises(ValueError, match="snapshot carry or an earlier"):
+        replace(
+            program,
+            consideration_sets=(
+                replace(first_set, members=(forged,)),
+                *program.consideration_sets[1:],
+            ),
+        )
+
+
+def test_same_set_member_cannot_read_another_members_candidate():
+    program = _program()
+    first = program.consideration_sets[0].members[0]
+    second = program.consideration_sets[1].members[0]
+    forged_second = replace(
+        second,
+        body=(
+            replace(second.body[0], inputs=(first.publications[0].source,)),
+        ),
+    )
+    combined = KernelConsiderationSetProgram(0, (first, forged_second))
+    final = replace(program.consideration_sets[2], consideration_set_id=1)
+
+    with pytest.raises(ValueError, match="snapshot carry or an earlier"):
+        replace(program, consideration_sets=(combined, final))
+
+
+def test_publications_require_owned_type_matched_nonconflicting_carries():
+    program = _program()
+    first_set = program.consideration_sets[0]
+    member = first_set.members[0]
+    publication = member.publications[0]
+
+    cross_owner = replace(
+        member,
+        publications=(
+            replace(publication, owner_component_id=1, value_id=11),
+        ),
+    )
+    with pytest.raises(ValueError, match="owned carry destinations"):
+        replace(
+            program,
+            consideration_sets=(
+                replace(first_set, members=(cross_owner,)),
+                *program.consideration_sets[1:],
+            ),
+        )
+
+    mismatched_carry = replace(program.loop_carries[0], value=_value("wrong", "bool"))
+    with pytest.raises(ValueError, match="type-matched"):
+        replace(
+            program,
+            loop_carries=(mismatched_carry, *program.loop_carries[1:]),
+        )
+
+    second_source = _value("component:0:second-candidate")
+    conflicting = replace(
+        member,
+        body=(
+            *member.body,
+            KernelOp("CallFunction", "component 0", outputs=(second_source,)),
+        ),
+        publications=(
+            publication,
+            replace(publication, source=second_source),
+        ),
+    )
+    with pytest.raises(ValueError, match="carry destinations"):
+        replace(
+            program,
+            consideration_sets=(
+                replace(first_set, members=(conflicting,)),
+                *program.consideration_sets[1:],
+            ),
+        )
+
+
+def test_rng_clocks_have_unique_explicit_stream_identities():
+    program = _program()
+    second_stream = _slot("rng_clock", owner=0, rng_stream=1)
+    extended = replace(
+        program,
+        scheduler_state_slots=(*program.scheduler_state_slots, second_stream),
+    )
+    assert extended.scheduler_state_slots[-1].rng_stream_id == 1
+
+    with pytest.raises(ValueError, match="identities"):
+        replace(
+            program,
+            scheduler_state_slots=(
+                *program.scheduler_state_slots,
+                _slot("rng_clock", owner=1, rng_stream=0),
+            ),
+        )
+
+
+def test_schema_equality_does_not_recurse_into_mutable_op_attrs():
+    member = _member(0, KernelSchedulePredicate("Always"))
+    clone = replace(
+        member,
+        body=(replace(member.body[0], attrs=dict(member.body[0].attrs)),),
+    )
+
+    assert member != clone
+    assert type(hash(member)) is int
+    member.body[0].attrs["component_id"] = 999
+    assert member != clone
