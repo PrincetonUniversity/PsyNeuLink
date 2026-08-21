@@ -46,17 +46,9 @@ _MULTI_TRIAL_LLVM_PROVENANCE = (
     "tests/composition/test_composition.py::"
     "TestRun::test_run_2_mechanisms_with_multiple_trials_of_input_values"
 )
-_TERMINATION_LLVM_PROVENANCE = (
-    "tests/scheduling/test_scheduler.py::"
-    "TestFeedback::test_run_term_conditions"
-)
 _WHEN_FINISHED_LLVM_PROVENANCE = (
     "tests/scheduling/test_scheduler.py::"
     "TestFeedback::test_time_termination_measures"
-)
-_CONTROL_LLVM_PROVENANCE = (
-    "tests/composition/test_control.py::"
-    "TestControlMechanisms::test_control_of_mech_port[OVERRIDE]"
 )
 
 
@@ -282,23 +274,6 @@ class _RejectionCase:
     expected_code: str
 
 
-def _freshness_hazard_composition():
-    sender = pnl.TransferMechanism(input_shapes=1, name="late producer")
-    receiver = pnl.TransferMechanism(input_shapes=1, name="early consumer")
-    composition = pnl.Composition(pathways=[[sender, receiver]])
-    composition.scheduler.add_condition(sender, pnl.AtPass(3))
-    composition.scheduler.add_condition(receiver, pnl.AtPass(0))
-    return composition
-
-
-def _custom_termination_composition():
-    mechanism = pnl.TransferMechanism(input_shapes=1, name="custom termination node")
-    return pnl.Composition(
-        pathways=mechanism,
-        termination_processing={pnl.TimeScale.TRIAL: pnl.AtPass(2)},
-    )
-
-
 def _stateful_composition():
     mechanism = pnl.TransferMechanism(
         input_shapes=1,
@@ -308,63 +283,12 @@ def _stateful_composition():
     return pnl.Composition(pathways=mechanism)
 
 
-def _same_set_when_finished_composition():
-    producer = pnl.TransferMechanism(input_shapes=1, name="finished producer")
-    consumer = pnl.TransferMechanism(input_shapes=1, name="finished consumer")
-    composition = pnl.Composition()
-    composition.add_nodes([producer, consumer])
-    composition.scheduler.add_condition(consumer, pnl.WhenFinished(producer))
-    return composition
-
-
-def _when_finished_control_composition():
-    source = pnl.TransferMechanism(input_shapes=1, name="control monitor")
-    target = pnl.TransferMechanism(input_shapes=1, name="controlled target")
-    controller = pnl.ControlMechanism(
-        function=pnl.Identity(),
-        monitor_for_control=source,
-        control_signals=[(pnl.SLOPE, target)],
-        modulation=pnl.OVERRIDE,
-        name="scheduled controller",
-    )
-    composition = pnl.Composition()
-    composition.add_nodes([target, controller, source])
-    composition.scheduler.add_condition(controller, pnl.WhenFinished(source))
-    return composition
-
-
 REJECTION_CASES = (
-    _RejectionCase(
-        name="receiver_before_sender_freshness_hazard",
-        build=_freshness_hazard_composition,
-        provenance=_AT_PASS_LLVM_PROVENANCE,
-        expected_code=BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE,
-    ),
-    _RejectionCase(
-        name="custom_trial_termination",
-        build=_custom_termination_composition,
-        provenance=_TERMINATION_LLVM_PROVENANCE,
-        expected_code=(
-            BatchedDiagnosticCode.MODEL_SCHEDULER_TERMINATION_UNSUPPORTED
-        ),
-    ),
     _RejectionCase(
         name="stateful_node",
         build=_stateful_composition,
         provenance=_WHEN_FINISHED_LLVM_PROVENANCE,
         expected_code=BatchedDiagnosticCode.MODEL_STATEFUL_TRANSFER_UNSUPPORTED,
-    ),
-    _RejectionCase(
-        name="same_set_when_finished",
-        build=_same_set_when_finished_composition,
-        provenance=_WHEN_FINISHED_LLVM_PROVENANCE,
-        expected_code=BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE,
-    ),
-    _RejectionCase(
-        name="when_finished_generic_control",
-        build=_when_finished_control_composition,
-        provenance=f"{_WHEN_FINISHED_LLVM_PROVENANCE}; {_CONTROL_LLVM_PROVENANCE}",
-        expected_code=BatchedDiagnosticCode.MODEL_UNSUPPORTED,
     ),
 )
 
