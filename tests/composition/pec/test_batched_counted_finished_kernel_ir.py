@@ -123,6 +123,7 @@ def test_counted_finished_stateful_trace_uses_one_step_mechanism_ops():
     assert tuple(value.name for value in initialize.outputs) == (
         "n0:state:0",
         "n0:state:1",
+        "n0:state:2",
     )
     assert passes.attrs["declaration_only"] is False
     assert passes.attrs["trace_kind"] == "precomputed"
@@ -143,7 +144,7 @@ def test_counted_finished_stateful_trace_uses_one_step_mechanism_ops():
     assert tuple(op.attrs["execution_index"] for op in producer_steps) == tuple(
         range(_FINISHED_AFTER)
     )
-    assert all(op.attrs["state_ids"] == (0, 1) for op in producer_steps)
+    assert all(op.attrs["state_ids"] == (0, 1, 2) for op in producer_steps)
     assert all(op.attrs["active_lanes"] == "all" for op in producer_steps)
     assert not any(
         op.kind == "CallMechanism" and op.target == producer.name
@@ -200,7 +201,7 @@ def test_counted_finished_steps_use_the_frozen_mechanism_spec():
     "attr, value, message",
     (
         ("component_id", 1, "component id 1, expected 0"),
-        ("state_ids", (1,), "state IDs \\(1,\\), expected \\(0, 1\\)"),
+        ("state_ids", (1,), "state IDs \\(1,\\), expected \\(0, 1, 2\\)"),
         ("execution_index", 1, "execution index 1, expected 0"),
     ),
 )

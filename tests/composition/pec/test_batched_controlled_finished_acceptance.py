@@ -970,6 +970,23 @@ def test_dynamic_count_cap_reports_only_lane_strictly_above_cap(
         rtol=1e-5,
         atol=1e-6,
     )
+    exact_inputs = {
+        component: values[1:2]
+        for component, values in compiled_model.inputs.items()
+    }
+    exact_result = plan.run(
+        inputs=exact_inputs,
+        parameter_sets=({},),
+        num_estimates=1,
+        seed=0,
+    )
+    np.testing.assert_allclose(
+        exact_result.values[0, 0, 0, 0, :],
+        python_values[1],
+        rtol=1e-5,
+        atol=1e-6,
+    )
+    assert exact_result.metadata["truncation"][compiled_model.producer.name] == 0.0
     assert result.metadata["truncation"][compiled_model.producer.name] == (
         pytest.approx(1.0 / 3.0)
     )
@@ -1172,8 +1189,20 @@ def test_executable_graph_materializes_declared_modulation_effect():
     assert kernel.executable
     assert sum(op.kind == "InitializeEffectiveParameter" for op in kernel.ops) == 1
     trial_body = kernel.ops[-1].attrs["body"]
-    assert sum(op.kind == "ApplyModulation" for op in trial_body) == 1
-    assert sum(op.kind == "ForPasses" for op in trial_body) == 1
+    dynamic_region = next(
+        op
+        for op in trial_body
+        if op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
+    )
+    assert all(op.kind != "ApplyModulation" for op in trial_body)
+    program = dynamic_region.attrs["program"]
+    assert sum(
+        effect.kind == "ApplyModulation"
+        for consideration_set in program.consideration_sets
+        for member in consideration_set.members
+        for effect in member.effects
+    ) == 1
 
 
 def test_kernel_ir_rejects_complete_control_effect_ledger_erasure():

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from numbers import Real
 import re
 from typing import Any
@@ -1062,89 +1062,54 @@ def _validate_for_passes(op: KernelOp) -> None:
             )
         return
     trace_kind = op.attrs.get("trace_kind")
-    if trace_kind == "lane_local_counted":
+    if trace_kind == "lane_local_dynamic":
         expected_keys = {
             "region",
             "body",
             "declaration_only",
             "trace_kind",
-            "finished_value_id",
-            "effective_parameter_id",
-            "target_component_id",
-            "target_parameter_port_id",
-            "producer_consideration_set_id",
-            "rounding",
-            "minimum",
-            "maximum",
-            "max_steps",
+            "program",
+            "max_passes",
         }
-        integer_keys = {
-            "finished_value_id",
-            "effective_parameter_id",
-            "target_component_id",
-            "target_parameter_port_id",
-            "producer_consideration_set_id",
-            "minimum",
-            "maximum",
-            "max_steps",
-        }
+        program = op.attrs.get("program")
+        max_passes = op.attrs.get("max_passes")
+        if type(program) is KernelDynamicScheduleProgram:
+            # Re-run the complete record validator because nested mappings in
+            # KernelOps can be mutated after their dataclass construction.
+            _validate_dynamic_schedule_program(program)
+            persistent_values = tuple(
+                carry.value
+                for carry in program.loop_carries
+                if carry.kind in {"state", "effective_parameter"}
+            )
+            carried_values = tuple(
+                carry.value for carry in program.loop_carries
+            )
+        else:
+            persistent_values = ()
+            carried_values = ()
         if (
             set(op.attrs) != expected_keys
             or op.target != "passes"
-            or len(op.inputs) != 1
-            or not body
-            or len(op.outputs) < 2
-            or len(op.outputs[:-1]) != len(body[-1].outputs)
+            or body
+            or type(program) is not KernelDynamicScheduleProgram
+            or type(max_passes) is not int
+            or not 0 < max_passes <= FP32_EXACT_INTEGER_LIMIT
+            or len(op.inputs) != len(persistent_values)
             or any(
-                not _kernel_value_matches(region_output, step_output)
-                for region_output, step_output in zip(
-                    op.outputs[:-1],
-                    body[-1].outputs,
-                )
+                not _kernel_value_matches(actual, expected)
+                for actual, expected in zip(op.inputs, persistent_values)
             )
-            or not _kernel_value_matches(
-                op.inputs[0],
-                KernelValue(
-                    f"effective:{op.attrs.get('effective_parameter_id')}",
-                    1,
-                    "float32",
-                ),
-            )
-            or not _kernel_value_matches(
-                op.outputs[-1],
-                KernelValue(
-                    f"dynamic-truncated:{op.attrs.get('finished_value_id')}",
-                    1,
-                    "float32",
-                ),
-            )
+            or len(op.outputs) != len(carried_values)
             or any(
-                type(op.attrs.get(key)) is not int or op.attrs[key] < 0
-                for key in integer_keys
-            )
-            or op.attrs["minimum"] != 1
-            or op.attrs["maximum"] != 2 ** 24
-            or op.attrs["max_steps"] <= 0
-            or op.attrs.get("rounding") != "ceil"
-            or len(tuple(child for child in body if child.kind == "StepMechanism"))
-            != 1
-            or body[-1].kind != "StepMechanism"
-            or any(
-                child.kind
-                in {
-                    "InitializeEffectiveParameter",
-                    "ApplyModulation",
-                    "ForPasses",
-                    "ExecuteConsiderationSet",
-                    "StoreOutput",
-                    "StoreFlag",
-                }
-                for child in body
+                not _kernel_value_matches(actual, expected)
+                for actual, expected in zip(op.outputs, carried_values)
             )
         ):
             raise ValueError(
-                "Executable lane-local counted KernelIR ForPasses requires "
-                "exact held-value, truncation, bound, and one-step structure."
+                "Executable lane-local dynamic KernelIR ForPasses requires "
+                "one exact typed program, global pass cap, persistent inputs, "
+                "and the complete ordered carry result set."
             )
         return
     if trace_kind == "lane_local_coevolving":
@@ -1258,7 +1223,7 @@ def _validate_for_passes(op: KernelOp) -> None:
     if trace_kind != "precomputed":
         raise ValueError(
             "Executable KernelIR ForPasses requires trace_kind='precomputed' "
-            "'lane_local_counted', or 'lane_local_coevolving'."
+            "'lane_local_dynamic', or 'lane_local_coevolving'."
         )
     if not body or any(child.kind != "ExecuteConsiderationSet" for child in body):
         raise ValueError(
@@ -1314,10 +1279,9 @@ def _validate_execute_consideration_set(op: KernelOp) -> None:
 
 
 def _validate_step_mechanism(op: KernelOp) -> None:
-    if len(op.inputs) != 1 or not op.outputs:
+    if not op.inputs or not op.outputs:
         raise ValueError(
-            "KernelIR StepMechanism requires exactly one input and at least one "
-            "output."
+            "KernelIR StepMechanism requires at least one input and output."
         )
     component_id = op.attrs.get("component_id")
     state_ids = op.attrs.get("state_ids")
@@ -1339,10 +1303,14 @@ def _validate_step_mechanism(op: KernelOp) -> None:
     active_lanes = op.attrs.get("active_lanes")
     if active_lanes == "all":
         execution_index = op.attrs.get("execution_index")
-        if type(execution_index) is not int or execution_index < 0:
+        if (
+            len(op.inputs) != 1
+            or type(execution_index) is not int
+            or execution_index < 0
+        ):
             raise ValueError(
-                "KernelIR precomputed StepMechanism execution_index must be a "
-                "non-negative non-bool integer."
+                "KernelIR precomputed StepMechanism requires one data input and "
+                "a non-negative non-bool execution_index."
             )
         if any(
             key in op.attrs
@@ -1357,28 +1325,28 @@ def _validate_step_mechanism(op: KernelOp) -> None:
                 "KernelIR precomputed StepMechanism cannot carry lane-local "
                 "scheduler identities."
             )
-    elif active_lanes == "parent_finished_predicate":
-        identity_keys = (
+    elif active_lanes == "parent_member_predicate":
+        legacy_identity_keys = (
             "finished_value_id",
             "effective_parameter_id",
             "target_parameter_port_id",
         )
         if (
-            op.attrs.get("loop_counter") != "parent_pass_index"
+            op.attrs.get("loop_counter") != "component_execution_count"
             or "execution_index" in op.attrs
-            or any(
-                type(op.attrs.get(key)) is not int or op.attrs[key] < 0
-                for key in identity_keys
-            )
+            or any(key in op.attrs for key in legacy_identity_keys)
+            or len(op.inputs) != 1 + len(state_ids)
+            or len(op.outputs) <= len(state_ids)
         ):
             raise ValueError(
-                "KernelIR lane-local StepMechanism requires exact parent pass "
-                "counter and finished/effective-parameter identities."
+                "KernelIR dynamic member StepMechanism requires one data input, "
+                "exact state input/output suffixes, and no topology-specific "
+                "finished or control identities."
             )
     else:
         raise ValueError(
             "KernelIR StepMechanism active_lanes must be 'all' or "
-            "'parent_finished_predicate'."
+            "'parent_member_predicate'."
         )
     if not isinstance(op.attrs.get("spec_key"), str) or not op.attrs["spec_key"]:
         raise ValueError("KernelIR StepMechanism requires a nonempty spec_key.")
@@ -1534,7 +1502,6 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
         op: KernelOp,
         *,
         in_precomputed_region: bool = False,
-        in_lane_local_region: bool = False,
         in_trials: bool = False,
     ) -> None:
         for value in (*op.inputs, *op.outputs):
@@ -1571,19 +1538,12 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                     "be defined by a dominating operation."
                 )
         if op.kind == "StepMechanism":
-            if not in_precomputed_region and not in_lane_local_region:
+            if not in_precomputed_region:
                 raise ValueError(
-                    "KernelIR StepMechanism must belong to an executable "
-                    "precomputed or lane-local counted ForPasses region."
+                    "Top-level KernelIR StepMechanism must belong to an "
+                    "executable precomputed ForPasses region."
                 )
-            if (
-                in_precomputed_region
-                and op.attrs.get("active_lanes") != "all"
-            ) or (
-                in_lane_local_region
-                and op.attrs.get("active_lanes")
-                != "parent_finished_predicate"
-            ):
+            if op.attrs.get("active_lanes") != "all":
                 raise ValueError(
                     "KernelIR StepMechanism active-lane policy must match its "
                     "parent ForPasses trace kind."
@@ -1617,15 +1577,14 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                     f"KernelIR StepMechanism target '{op.target}' does not use "
                     "its frozen graph implementation key."
                 )
-            if in_precomputed_region:
-                expected_execution_index = step_counts.get(component_id, 0)
-                if op.attrs["execution_index"] != expected_execution_index:
-                    raise ValueError(
-                        f"KernelIR StepMechanism target '{op.target}' has execution "
-                        f"index {op.attrs['execution_index']}, expected "
-                        f"{expected_execution_index}."
-                    )
-                step_counts[component_id] = expected_execution_index + 1
+            expected_execution_index = step_counts.get(component_id, 0)
+            if op.attrs["execution_index"] != expected_execution_index:
+                raise ValueError(
+                    f"KernelIR StepMechanism target '{op.target}' has execution "
+                    f"index {op.attrs['execution_index']}, expected "
+                    f"{expected_execution_index}."
+                )
+            step_counts[component_id] = expected_execution_index + 1
         elif op.kind == "LoadInput":
             input_loads.append(op)
         elif op.kind == "StoreOutput":
@@ -1657,30 +1616,38 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             _validate_reset_state(op)
             reset_ops.append(op)
 
-        lane_local_region = bool(
-            op.kind == "ForPasses"
+        dynamic_program = (
+            op.attrs.get("program")
+            if op.kind == "ForPasses"
             and op.attrs.get("declaration_only") is False
-            and op.attrs.get("trace_kind") == "lane_local_counted"
+            and op.attrs.get("trace_kind") == "lane_local_dynamic"
+            else None
         )
-        outer_lineage = dict(value_lineage) if lane_local_region else None
-        region_output_lineage = _kernel_op_output_lineage(
-            kernel,
-            op,
-            value_lineage,
-        )
-        if not lane_local_region:
+        if type(dynamic_program) is KernelDynamicScheduleProgram:
+            for consideration_set in dynamic_program.consideration_sets:
+                for member in consideration_set.members:
+                    for member_op in member.body:
+                        if member_op.kind == "LoadInput":
+                            input_loads.append(member_op)
+            region_output_lineage = _dynamic_schedule_region_output_lineage(
+                dynamic_program
+            )
+            value_lineage.update(region_output_lineage)
+        else:
+            region_output_lineage = _kernel_op_output_lineage(
+                kernel,
+                op,
+                value_lineage,
+            )
+
+        if dynamic_program is None:
             value_lineage.update(region_output_lineage)
 
         child_precomputed = in_precomputed_region
-        child_lane_local = in_lane_local_region
         if op.kind == "ForPasses":
             child_precomputed = (
                 op.attrs.get("declaration_only") is False
                 and op.attrs.get("trace_kind") == "precomputed"
-            )
-            child_lane_local = (
-                op.attrs.get("declaration_only") is False
-                and op.attrs.get("trace_kind") == "lane_local_counted"
             )
             if child_precomputed:
                 precomputed_regions.append(op)
@@ -1688,28 +1655,15 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             visit(
                 child,
                 in_precomputed_region=child_precomputed,
-                in_lane_local_region=child_lane_local,
                 in_trials=in_trials or op.kind == "ForTrials",
             )
-        if lane_local_region:
-            assert outer_lineage is not None
-            yielded_lineage = {}
-            for output in op.outputs[:-1]:
-                output_key = _kernel_value_key(output)
-                try:
-                    yielded_lineage[output_key] = value_lineage[output_key]
-                except KeyError as error:
-                    raise ValueError(
-                        "KernelIR lane-local ForPasses result values must be "
-                        "defined by its body."
-                    ) from error
-            value_lineage.clear()
-            value_lineage.update(outer_lineage)
-            value_lineage.update(region_output_lineage)
-            value_lineage.update(yielded_lineage)
 
     for op in kernel.ops:
         visit(op)
+
+    # Authenticate compiler-owned dynamic member bodies before relaxing the
+    # ordinary top-level IO walk for their intentionally local candidate names.
+    _validate_dynamic_modulation_ops(kernel)
 
     if kernel.executable:
         _validate_executable_kernel_io_ops(
@@ -1866,8 +1820,6 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             "KernelIR AtTrialStart reset effects require a stateful lane "
             "layout."
         )
-
-    _validate_dynamic_modulation_ops(kernel)
 
     counted_finished = {
         value.component_id: value.attrs.get("count")
@@ -2680,7 +2632,7 @@ def _kernel_output_port(kernel: KernelIR, node, *, name: str, port_id: int | Non
         port
         for port in kernel.ports
         if port.owner_component_id == _component_id(kernel.graph, node)
-        and port.kind == "OutputPort"
+        and port.kind in {"OutputPort", "ControlSignal"}
         and port.name == name
         and (port_id is None or port.port_id == port_id)
     )
@@ -2803,6 +2755,11 @@ def _validate_executable_kernel_io_ops(
     if not _has_typed_port_inventory(kernel):
         return
 
+    has_dynamic_program = any(
+        op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
+        for op in iter_kernel_ops(kernel)
+    )
     inputs_by_port_id = {input_spec.port_id: input_spec for input_spec in kernel.inputs}
     actual_load_counts = {port_id: 0 for port_id in inputs_by_port_id}
     for load in input_loads:
@@ -2817,11 +2774,23 @@ def _validate_executable_kernel_io_ops(
             kernel,
             input_spec,
         )
+        candidate_output_matches = bool(
+            has_dynamic_program
+            and len(load.outputs) == 1
+            and load.outputs[0].name.startswith(
+                f"{expected_output.name}:candidate:c{node.component_id}:v"
+            )
+            and load.outputs[0].width == expected_output.width
+            and load.outputs[0].dtype == expected_output.dtype
+        )
         if (
             load.target != node.name
             or load.inputs
             or len(load.outputs) != 1
-            or not _kernel_value_matches(load.outputs[0], expected_output)
+            or not (
+                _kernel_value_matches(load.outputs[0], expected_output)
+                or candidate_output_matches
+            )
             or not _attrs_match_exactly(load.attrs, expected_attrs)
         ):
             raise ValueError(
@@ -3175,10 +3144,11 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
                     collect(body)
 
         collect(kernel.ops)
-        counted_regions = sum(
-            op.kind == "ForPasses"
-            and op.attrs.get("trace_kind") == "lane_local_counted"
+        dynamic_regions = tuple(
+            op
             for op in records
+            if op.kind == "ForPasses"
+            and op.attrs.get("trace_kind") == "lane_local_dynamic"
         )
         coevolving_regions = sum(
             op.kind == "ForPasses"
@@ -3187,19 +3157,28 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
         )
         has_complete_schedule_effects = bool(
             (
-                counted_regions == len(kernel.modulations)
+                len(dynamic_regions) == 1
                 and coevolving_regions == 0
             )
             or (
-                counted_regions == 0
+                not dynamic_regions
                 and coevolving_regions == 1
                 and len(kernel.modulations) == 1
             )
+        )
+        dynamic_effects = tuple(
+            effect
+            for region in dynamic_regions
+            if type(region.attrs.get("program")) is KernelDynamicScheduleProgram
+            for consideration_set in region.attrs["program"].consideration_sets
+            for member in consideration_set.members
+            for effect in member.effects
         )
         if not (
             sum(op.kind == "InitializeEffectiveParameter" for op in records)
             == len(kernel.effective_parameters)
             and sum(op.kind == "ApplyModulation" for op in records)
+            + sum(op.kind == "ApplyModulation" for op in dynamic_effects)
             == len(kernel.modulations)
             and has_complete_schedule_effects
         ):
@@ -3637,12 +3616,7 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
 
 
 def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
-    """Authenticate the exact declaration or executable lane-local op suite.
-
-    Partial plans remain non-executable and carry no inferred effects.  A
-    complete canonical suite may execute only after the whole graph boundary
-    and every placement/identity invariant below have also been authenticated.
-    """
+    """Authenticate the selected complete lane-local schedule implementation."""
 
     records: list[tuple[KernelOp, KernelOp | None]] = []
 
@@ -3660,367 +3634,138 @@ def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
         if op.kind == "ForPasses"
         and op.attrs.get("trace_kind") == "lane_local_coevolving"
     )
+    dynamic_regions = tuple(
+        op
+        for op, _ in records
+        if op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
+    )
     if coevolving_regions:
+        if dynamic_regions:
+            raise ValueError(
+                "KernelIR cannot mix dynamic and coevolving schedule regions."
+            )
         _validate_dynamic_coevolving_modulation_ops(
             kernel,
             coevolving_regions=coevolving_regions,
             records=records,
         )
         return
-
-    effect_kinds = {
-        "InitializeEffectiveParameter",
-        "ApplyModulation",
-    }
-    has_dynamic_ops = any(
-        op.kind in effect_kinds
-        or (
-            op.kind == "ForPasses"
-            and op.attrs.get("trace_kind") == "lane_local_counted"
+    if dynamic_regions:
+        _validate_dynamic_schedule_modulation_ops(
+            kernel,
+            dynamic_regions=dynamic_regions,
         )
-        or (
-            op.kind == "StepMechanism"
-            and op.attrs.get("active_lanes") == "parent_finished_predicate"
-        )
-        for op, _ in records
-    )
-    if not has_dynamic_ops:
         return
 
-    dynamic_finished = tuple(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    )
-    if (
-        kernel.lane_layout.kind != STATEFUL_LANE_LAYOUT
-        or len(kernel.modulations) != 1
-        or len(kernel.modulations) != len(kernel.effective_parameters)
-        or len(kernel.modulations) != len(dynamic_finished)
-    ):
-        raise ValueError(
-            "KernelIR lane-local modulation ops require exactly one stateful "
-            "modulation/effective-parameter/finished-value declaration suite."
-        )
-    if not _dynamic_modulation_lowering_eligible(kernel):
-        raise ValueError(
-            "KernelIR lane-local modulation operations fall outside the exact "
-            "first controlled-finished lowering boundary."
-        )
-
-    expected_top_kinds = (
-        "InitializeState",
-        *("InitializeEffectiveParameter" for _ in kernel.effective_parameters),
-        "ForTrials",
-    )
-    if tuple(op.kind for op in kernel.ops) != expected_top_kinds:
-        raise ValueError(
-            "KernelIR lane-local effective parameters must initialize exactly "
-            "once after state initialization and before one trial region."
-        )
-
-    initializer_ops = tuple(
-        op for op in kernel.ops if op.kind == "InitializeEffectiveParameter"
-    )
-    all_initializer_ops = tuple(
-        op for op, _ in records if op.kind == "InitializeEffectiveParameter"
-    )
-    if initializer_ops != all_initializer_ops:
-        raise ValueError(
-            "KernelIR InitializeEffectiveParameter operations must be top-level."
-        )
-    for op, parameter in zip(initializer_ops, kernel.effective_parameters):
-        expected_value = effective_parameter_value(parameter)
-        if (
-            op.target != parameter.target
-            or op.inputs
-            or len(op.outputs) != 1
-            or not _kernel_value_matches(op.outputs[0], expected_value)
-            or not _attrs_match_exactly(
-                op.attrs,
-                _effective_parameter_initializer_attrs(parameter),
-            )
-        ):
-            raise ValueError(
-                "KernelIR InitializeEffectiveParameter does not exactly match "
-                f"effective parameter {parameter.effective_parameter_id}."
-            )
-
-    trials = kernel.ops[-1]
-    trial_body = trials.attrs.get("body")
-    if type(trial_body) is not tuple or any(
-        type(op) is not KernelOp for op in trial_body
-    ):
-        raise ValueError(
-            "KernelIR lane-local modulation requires one typed ForTrials body."
-        )
-
-    direct_apply_ops = tuple(
-        op for op in trial_body if op.kind == "ApplyModulation"
-    )
-    all_apply_ops = tuple(op for op, _ in records if op.kind == "ApplyModulation")
-    direct_pass_regions = tuple(
-        op
-        for op in trial_body
-        if op.kind == "ForPasses"
-        and op.attrs.get("trace_kind") == "lane_local_counted"
-    )
-    all_pass_regions = tuple(
-        op
+    effectful = any(
+        op.kind in {"InitializeEffectiveParameter", "ApplyModulation"}
+        or op.kind == "StepMechanism"
+        and op.attrs.get("active_lanes") != "all"
         for op, _ in records
-        if op.kind == "ForPasses"
-        and op.attrs.get("trace_kind") == "lane_local_counted"
     )
+    if effectful:
+        raise ValueError(
+            "KernelIR dynamic effects require one authenticated lane-local "
+            "dynamic or coevolving schedule region."
+        )
+
+
+def _validate_dynamic_schedule_modulation_ops(
+    kernel: KernelIR,
+    *,
+    dynamic_regions: tuple[KernelOp, ...],
+) -> None:
+    """Cross-authenticate the complete generic controlled-finished program."""
+
     if (
-        len(direct_apply_ops) != len(kernel.modulations)
-        or direct_apply_ops != all_apply_ops
-        or len(direct_pass_regions) != len(kernel.modulations)
-        or direct_pass_regions != all_pass_regions
+        len(dynamic_regions) != 1
+        or not _dynamic_modulation_lowering_eligible(kernel)
     ):
         raise ValueError(
-            "KernelIR must place exactly one ApplyModulation and one lane-local "
-            "ForPasses region per modulation directly in the trial body."
+            "KernelIR lane-local dynamic operations fall outside the exact "
+            "controlled-finished migration boundary."
         )
-
-    pass_regions = tuple(
-        region for region in kernel.schedule_regions if region.kind == "pass"
-    )
-    if len(pass_regions) != 1:
+    region = dynamic_regions[0]
+    program = region.attrs.get("program")
+    if (
+        type(program) is not KernelDynamicScheduleProgram
+        or region.attrs.get("max_passes") != kernel.max_steps
+    ):
         raise ValueError(
-            "KernelIR lane-local counted execution requires exactly one typed "
-            "pass schedule region."
+            "KernelIR lane-local dynamic region requires its exact typed "
+            "schedule and trial-global pass cap."
         )
-    pass_region = pass_regions[0]
-    effective_by_id = {
-        parameter.effective_parameter_id: parameter
-        for parameter in kernel.effective_parameters
-    }
-    finished_by_effective_id = {
-        value.attrs["effective_parameter_id"]: value
-        for value in dynamic_finished
-    }
-    body_indices = {id(op): index for index, op in enumerate(trial_body)}
-
-    for modulation in kernel.modulations:
-        parameter = effective_by_id[modulation.effective_parameter_id]
-        finished = finished_by_effective_id[modulation.effective_parameter_id]
-        apply_matches = tuple(
-            op
-            for op in direct_apply_ops
-            if op.attrs.get("modulation_id") == modulation.modulation_id
-        )
-        region_matches = tuple(
-            op
-            for op in direct_pass_regions
-            if op.attrs.get("effective_parameter_id")
-            == modulation.effective_parameter_id
-        )
-        if len(apply_matches) != 1 or len(region_matches) != 1:
-            raise ValueError(
-                "KernelIR lane-local modulation operations must form an exact "
-                "declaration-ID bijection."
-            )
-        apply = apply_matches[0]
-        region = region_matches[0]
-        apply_index = body_indices[id(apply)]
-        if (
-            apply_index == 0
-            or apply_index + 1 >= len(trial_body)
-            or trial_body[apply_index + 1] is not region
-        ):
-            raise ValueError(
-                "KernelIR ApplyModulation must immediately follow its controller "
-                "call and immediately precede its lane-local pass region."
-            )
-
-        controller = kernel.graph.node(modulation.controller)
-        source = kernel.graph.node(modulation.source)
-        controller_value = KernelValue(
-            node_output_value_name(
-                kernel.graph,
-                controller,
-                modulation.control_signal_port,
-            ),
-            modulation.width,
-            modulation.dtype,
-        )
-        source_value = KernelValue(
-            node_output_value_name(
-                kernel.graph,
-                source,
-                modulation.source_port,
-            ),
-            modulation.width,
-            modulation.dtype,
-        )
-        controller_call = trial_body[apply_index - 1]
-        expected_controller_attrs = {
-            "component_type": controller.component_type,
-            "function_type": controller.function_type,
-            "component_id": modulation.controller_component_id,
-            "params": dict(controller.params),
-            "output_port": modulation.control_signal_port,
-            "spec_key": modulation.controller_function_spec_key,
-        }
-        if (
-            controller_call.kind != "CallFunction"
-            or controller_call.target != modulation.controller
-            or len(controller_call.inputs) != 1
-            or not _kernel_value_matches(controller_call.inputs[0], source_value)
-            or len(controller_call.outputs) != 1
-            or not _kernel_value_matches(
-                controller_call.outputs[0],
-                controller_value,
-            )
-            or not _attrs_match_exactly(
-                controller_call.attrs,
-                expected_controller_attrs,
-            )
-        ):
-            raise ValueError(
-                "KernelIR ApplyModulation must consume its exact typed "
-                "controller CallFunction output."
-            )
-
-        held_value = effective_parameter_value(parameter)
-        expected_apply = apply_modulation_op(
-            modulation,
-            held_effective=held_value,
-            controller_value=controller_value,
-        )
-        if (
-            apply.target != expected_apply.target
-            or len(apply.inputs) != 2
-            or any(
-                not _kernel_value_matches(actual, expected)
-                for actual, expected in zip(apply.inputs, expected_apply.inputs)
-            )
-            or len(apply.outputs) != 1
-            or not _kernel_value_matches(
-                apply.outputs[0],
-                expected_apply.outputs[0],
-            )
-            or not _attrs_match_exactly(apply.attrs, expected_apply.attrs)
-        ):
-            raise ValueError(
-                "KernelIR ApplyModulation does not exactly match modulation "
-                f"{modulation.modulation_id}."
-            )
-
-        target = kernel.graph.node(modulation.target)
-        output_slices = _node_output_port_slices(target)
-        expected_outputs = tuple(
-            KernelValue(
-                node_output_value_name(kernel.graph, target, port_name),
-                port_width,
-            )
-            for port_name, port_width, _, _, _ in output_slices
-        )
-        expected_region_attrs = {
-            "region": pass_region,
-            "body": region.attrs["body"],
-            "declaration_only": False,
-            "trace_kind": "lane_local_counted",
-            "finished_value_id": finished.value_id,
-            "effective_parameter_id": parameter.effective_parameter_id,
-            "target_component_id": modulation.target_component_id,
-            "target_parameter_port_id": modulation.target_parameter_port_id,
-            "producer_consideration_set_id": (
-                finished.producer_consideration_set_id
-            ),
-            "rounding": finished.attrs["rounding"],
-            "minimum": finished.attrs["minimum"],
-            "maximum": finished.attrs["maximum"],
-            "max_steps": kernel.max_steps,
-        }
-        if (
-            region.target != "passes"
-            or len(region.inputs) != 1
-            or not _kernel_value_matches(region.inputs[0], held_value)
-            or len(region.outputs) != len(expected_outputs) + 1
-            or any(
-                not _kernel_value_matches(actual, expected)
-                for actual, expected in zip(
-                    region.outputs[:-1],
-                    expected_outputs,
-                )
-            )
-            or not _kernel_value_matches(
-                region.outputs[-1],
-                dynamic_truncation_value(finished),
-            )
-            or not _attrs_match_exactly(region.attrs, expected_region_attrs)
-        ):
-            raise ValueError(
-                "KernelIR lane-local ForPasses does not exactly match its typed "
-                "effective parameter and finished value."
-            )
-
-        region_body = region.attrs["body"]
-        steps = tuple(op for op in region_body if op.kind == "StepMechanism")
-        expected_state_ids = tuple(
-            sorted(
-                state.state_id
-                for state in kernel.states
-                if _state_component_id(kernel.graph, state)
-                == modulation.target_component_id
-            )
-        )
-        expected_step_attrs = {
-            "component_type": target.component_type,
-            "function_type": target.function_type,
-            "component_id": modulation.target_component_id,
-            "params": dict(target.params),
-            "spec_key": target.attrs["spec_key"],
-            "state_ids": expected_state_ids,
-            "active_lanes": "parent_finished_predicate",
-            "loop_counter": "parent_pass_index",
-            "finished_value_id": finished.value_id,
-            "effective_parameter_id": parameter.effective_parameter_id,
-            "target_parameter_port_id": modulation.target_parameter_port_id,
-        }
-        supported_body_kinds = {
-            "CallProjection",
-            "CombineSum",
-            "CombineProduct",
-            "Concatenate",
-            "StepMechanism",
-        }
-        if (
-            len(steps) != 1
-            or region_body[-1] is not steps[0]
-            or any(op.target != target.name for op in region_body)
-            or any(op.kind not in supported_body_kinds for op in region_body)
-            or len(steps[0].inputs) != 1
-            or not _kernel_value_matches(
-                steps[0].inputs[0],
-                KernelValue(
-                    node_input_value_name(kernel.graph, target),
-                    target.input_width,
-                ),
-            )
-            or len(steps[0].outputs) != len(expected_outputs)
-            or any(
-                not _kernel_value_matches(actual, expected)
-                for actual, expected in zip(steps[0].outputs, expected_outputs)
-            )
-            or not _attrs_match_exactly(
-                steps[0].attrs,
-                expected_step_attrs,
-            )
-        ):
-            raise ValueError(
-                "KernelIR lane-local ForPasses must end in exactly one dynamic "
-                "StepMechanism matching its finished-value owner."
-            )
-
-    expected_ops = _canonical_dynamic_modulation_kernel_ops(kernel)
+    expected_ops = _canonical_dynamic_schedule_kernel_ops(kernel)
     if not _kernel_op_sequences_match_exactly(kernel.ops, expected_ops):
         raise ValueError(
-            "KernelIR lane-local modulation operations must exactly match the "
-            "complete compiler-derived trial program."
+            "KernelIR lane-local dynamic operations must exactly match the "
+            "complete compiler-derived schedule program."
         )
+    _validate_dynamic_schedule_local_lineage(kernel, program)
+
+
+def _validate_dynamic_schedule_local_lineage(
+    kernel: KernelIR,
+    program: KernelDynamicScheduleProgram,
+) -> None:
+    """Prove each candidate publication has its declared component/port origin."""
+
+    carry_lineage = {}
+    for carry in program.loop_carries:
+        ports = (
+            frozenset((carry.value_id,))
+            if carry.kind == "output"
+            else frozenset()
+        )
+        carry_lineage[_kernel_value_key(carry.value)] = (
+            frozenset((carry.owner_component_id,)),
+            ports,
+        )
+
+    for consideration_set in program.consideration_sets:
+        for member in consideration_set.members:
+            local_lineage = dict(carry_lineage)
+            for op in member.body:
+                local_lineage.update(
+                    _kernel_op_output_lineage(kernel, op, local_lineage)
+                )
+            for publication in member.publications:
+                actual = local_lineage.get(
+                    _kernel_value_key(publication.source),
+                    (frozenset(), frozenset()),
+                )
+                expected = (
+                    frozenset((publication.owner_component_id,)),
+                    (
+                        frozenset((publication.value_id,))
+                        if publication.kind == "output"
+                        else frozenset()
+                    ),
+                )
+                if actual != expected:
+                    raise ValueError(
+                        "KernelIR dynamic publication lineage does not match "
+                        "its declared carry destination."
+                    )
+
+
+def _dynamic_schedule_region_output_lineage(
+    program: KernelDynamicScheduleProgram,
+):
+    """Return authenticated carry ownership for the enclosing region results."""
+
+    return {
+        _kernel_value_key(carry.value): (
+            frozenset((carry.owner_component_id,)),
+            (
+                frozenset((carry.value_id,))
+                if carry.kind == "output"
+                else frozenset()
+            ),
+        )
+        for carry in program.loop_carries
+    }
 
 
 def _validate_dynamic_coevolving_modulation_ops(
@@ -4244,216 +3989,584 @@ def _canonical_dynamic_coevolving_kernel_ops(
     )
 
 
-def _canonical_dynamic_modulation_kernel_ops(
+
+
+def _canonical_dynamic_schedule_program(
+    kernel: KernelIR,
+) -> KernelDynamicScheduleProgram:
+    """Rebuild the exact typed schedule owned by the controlled-finished tier."""
+
+    if not _dynamic_modulation_lowering_eligible(kernel):
+        raise ValueError(
+            "KernelIR graph is not eligible for generic dynamic scheduling."
+        )
+    graph = kernel.graph
+    nodes_by_id = {node.component_id: node for node in graph.nodes}
+    ports_by_id = {port.port_id: port for port in kernel.ports}
+    conditions_by_id = {
+        condition.component_id: condition for condition in kernel.scheduler
+    }
+    finished_by_id = {
+        value.value_id: value for value in kernel.finished_values
+    }
+    if (
+        len(nodes_by_id) != len(graph.nodes)
+        or len(ports_by_id) != len(kernel.ports)
+        or len(conditions_by_id) != len(kernel.scheduler)
+        or len(finished_by_id) != len(kernel.finished_values)
+    ):
+        raise ValueError(
+            "KernelIR dynamic scheduling requires exact unique GraphIR inventory."
+        )
+
+    state_values = _state_kernel_values(graph)
+    state_carries = tuple(
+        KernelLoopCarry(
+            "state",
+            _state_component_id(graph, state),
+            state.state_id,
+            value,
+        )
+        for state, value in zip(kernel.states, state_values)
+    )
+    effective_carries = tuple(
+        KernelLoopCarry(
+            "effective_parameter",
+            parameter.target_component_id,
+            parameter.effective_parameter_id,
+            effective_parameter_value(parameter),
+        )
+        for parameter in kernel.effective_parameters
+    )
+    output_carries = []
+    for node in graph.nodes:
+        for port_id in node.output_port_ids:
+            port = ports_by_id[port_id]
+            if (
+                port.owner_component_id != node.component_id
+                or port.owner != node.name
+                or port.kind not in {"OutputPort", "ControlSignal"}
+            ):
+                raise ValueError(
+                    "KernelIR dynamic output carry does not match its typed port."
+                )
+            output_carries.append(
+                KernelLoopCarry(
+                    "output",
+                    node.component_id,
+                    port.port_id,
+                    KernelValue(
+                        node_output_value_name(graph, node, port.name),
+                        port.width,
+                    ),
+                )
+            )
+    dynamic_finished = tuple(
+        value
+        for value in kernel.finished_values
+        if value.predicate_kind
+        == "execution_count_at_least_effective_parameter"
+    )
+    diagnostic_carries = tuple(
+        KernelLoopCarry(
+            "diagnostic",
+            value.component_id,
+            value.value_id,
+            dynamic_truncation_value(value),
+        )
+        for value in dynamic_finished
+    )
+    carries = (
+        *state_carries,
+        *effective_carries,
+        *output_carries,
+        *diagnostic_carries,
+    )
+    carries_by_key = {_dynamic_carry_key(carry): carry for carry in carries}
+    if len(carries_by_key) != len(carries):
+        raise ValueError("KernelIR dynamic carry inventory is not unique.")
+
+    modulation = kernel.modulations[0]
+    effective_by_id = {
+        parameter.effective_parameter_id: parameter
+        for parameter in kernel.effective_parameters
+    }
+    covered_component_ids = []
+    set_programs = []
+    for item in kernel.consideration_sets:
+        members = []
+        for component_id in item.component_ids:
+            node = nodes_by_id[component_id]
+            predicate = _canonical_dynamic_member_predicate(
+                conditions_by_id[component_id],
+                nodes_by_id=nodes_by_id,
+                finished_by_id=finished_by_id,
+            )
+            if component_id == modulation.controller_component_id:
+                body, publications, effects = _dynamic_controller_member(
+                    kernel,
+                    node,
+                    modulation=modulation,
+                    parameter=effective_by_id[modulation.effective_parameter_id],
+                    carries_by_key=carries_by_key,
+                )
+            else:
+                body, publications = _dynamic_ordinary_member(
+                    kernel,
+                    node,
+                    modulation=modulation,
+                    carries_by_key=carries_by_key,
+                    state_carries=state_carries,
+                )
+                effects = ()
+            members.append(
+                KernelScheduledComponent(
+                    component_id=component_id,
+                    predicate=predicate,
+                    body=body,
+                    publications=publications,
+                    effects=effects,
+                )
+            )
+            covered_component_ids.append(component_id)
+        set_programs.append(
+            KernelConsiderationSetProgram(
+                item.consideration_set_id,
+                tuple(members),
+                inputs_frozen=item.inputs_frozen,
+            )
+        )
+    if set(covered_component_ids) != set(nodes_by_id) or len(
+        covered_component_ids
+    ) != len(nodes_by_id):
+        raise ValueError(
+            "KernelIR dynamic schedule must cover every GraphIR component once."
+        )
+
+    member_ids = tuple(sorted(covered_component_ids))
+    slots = [
+        KernelSchedulerStateSlot(
+            "pass_index",
+            KernelValue("schedule:pass-index", 1, "int32"),
+        )
+    ]
+    for component_id in member_ids:
+        slots.extend((
+            KernelSchedulerStateSlot(
+                "execution_count",
+                KernelValue(
+                    f"schedule:execution-count:{component_id}",
+                    1,
+                    "int32",
+                ),
+                owner_component_id=component_id,
+            ),
+            KernelSchedulerStateSlot(
+                "has_run",
+                KernelValue(f"schedule:has-run:{component_id}", 1, "bool"),
+                owner_component_id=component_id,
+            ),
+        ))
+    predicates = {
+        member.component_id: member.predicate
+        for item in set_programs
+        for member in item.members
+    }
+    for consumer_id in member_ids:
+        predicate = predicates[consumer_id]
+        if predicate.kind in {"EveryNCalls", "AllEveryNCalls"}:
+            for producer_id in predicate.dependency_component_ids:
+                slots.append(
+                    KernelSchedulerStateSlot(
+                        "usable_call",
+                        KernelValue(
+                            f"schedule:usable-call:{producer_id}:{consumer_id}",
+                            1,
+                            "int32",
+                        ),
+                        producer_component_id=producer_id,
+                        consumer_component_id=consumer_id,
+                    )
+                )
+    finished_slot_keys = set()
+    for predicate in predicates.values():
+        if predicate.kind != "WhenFinished":
+            continue
+        key = (
+            predicate.dependency_component_ids[0],
+            predicate.finished_value_ids[0],
+        )
+        if key in finished_slot_keys:
+            continue
+        finished_slot_keys.add(key)
+        owner_id, value_id = key
+        slots.append(
+            KernelSchedulerStateSlot(
+                "finished",
+                KernelValue(
+                    f"schedule:finished:{owner_id}:{value_id}",
+                    1,
+                    "bool",
+                ),
+                owner_component_id=owner_id,
+                finished_value_id=value_id,
+            )
+        )
+    for stream in kernel.rng_streams:
+        slots.append(
+            KernelSchedulerStateSlot(
+                "rng_clock",
+                KernelValue(
+                    f"schedule:rng-clock:{stream.component_id}:{stream.stream_id}",
+                    1,
+                    "int32",
+                ),
+                owner_component_id=stream.component_id,
+                rng_stream_id=stream.stream_id,
+            )
+        )
+
+    return KernelDynamicScheduleProgram(
+        consideration_sets=tuple(set_programs),
+        scheduler_state_slots=tuple(slots),
+        loop_carries=tuple(carries),
+        execution_budgets=tuple(
+            KernelComponentExecutionBudget(
+                component_id,
+                (
+                    kernel.max_steps
+                    if predicates[component_id].kind == "Always"
+                    else 1
+                ),
+            )
+            for component_id in member_ids
+        ),
+        trial_termination=KernelSchedulePredicate(
+            "AllHaveRun",
+            dependency_component_ids=member_ids,
+        ),
+    )
+
+
+def _canonical_dynamic_member_predicate(
+    condition,
+    *,
+    nodes_by_id,
+    finished_by_id,
+) -> KernelSchedulePredicate:
+    if (
+        condition.region != "pass"
+        or condition.node != nodes_by_id[condition.component_id].name
+        or type(condition.dependencies) is not tuple
+        or type(condition.dependency_component_ids) is not tuple
+        or type(condition.finished_value_ids) is not tuple
+        or len(condition.dependencies) != len(condition.dependency_component_ids)
+        or any(
+            dependency_id not in nodes_by_id
+            or nodes_by_id[dependency_id].name != dependency
+            for dependency, dependency_id in zip(
+                condition.dependencies,
+                condition.dependency_component_ids,
+            )
+        )
+    ):
+        raise ValueError("KernelIR dynamic predicate identity is invalid.")
+    kind = condition.condition_type
+    attrs = dict(condition.attrs)
+    if kind == "Always":
+        if condition.dependency_component_ids or condition.finished_value_ids or attrs:
+            raise ValueError("KernelIR dynamic Always predicate is invalid.")
+        return KernelSchedulePredicate(kind)
+    if kind in {"AtPass", "AtTrialStart"}:
+        if (
+            condition.dependency_component_ids
+            or condition.finished_value_ids
+            or set(attrs) != {"pass_index", "time_scale"}
+            or attrs["time_scale"] != "ENVIRONMENT_STATE_UPDATE"
+        ):
+            raise ValueError("KernelIR dynamic pass predicate is invalid.")
+        return KernelSchedulePredicate(kind, pass_index=attrs["pass_index"])
+    if kind in {"EveryNCalls", "AllEveryNCalls"}:
+        if (
+            condition.finished_value_ids
+            or attrs
+            != {
+                "implicit": True,
+                "calls": 1,
+                "time_scale": "ENVIRONMENT_STATE_UPDATE",
+            }
+        ):
+            raise ValueError("KernelIR dynamic call predicate is invalid.")
+        return KernelSchedulePredicate(
+            kind,
+            dependency_component_ids=condition.dependency_component_ids,
+            call_count=1,
+        )
+    if (
+        kind != "WhenFinished"
+        or attrs != {"predicate": "is_finished"}
+        or len(condition.dependency_component_ids) != 1
+        or len(condition.finished_value_ids) != 1
+    ):
+        raise ValueError("KernelIR dynamic finished predicate is invalid.")
+    finished = finished_by_id[condition.finished_value_ids[0]]
+    if finished.component_id != condition.dependency_component_ids[0]:
+        raise ValueError("KernelIR dynamic finished predicate owner is invalid.")
+    return KernelSchedulePredicate(
+        kind,
+        dependency_component_ids=condition.dependency_component_ids,
+        finished_value_ids=condition.finished_value_ids,
+    )
+
+
+def _dynamic_controller_member(
+    kernel,
+    controller,
+    *,
+    modulation,
+    parameter,
+    carries_by_key,
+):
+    graph = kernel.graph
+    source = graph.node(modulation.source)
+    output_carry = carries_by_key[
+        ("output", controller.component_id, modulation.control_signal_port_id)
+    ]
+    candidate = KernelValue(
+        f"{output_carry.value.name}:candidate:c{controller.component_id}:v0",
+        output_carry.value.width,
+        output_carry.value.dtype,
+    )
+    call = KernelOp(
+        "CallFunction",
+        controller.name,
+        inputs=(
+            KernelValue(
+                node_output_value_name(graph, source, modulation.source_port),
+                modulation.width,
+                modulation.dtype,
+            ),
+        ),
+        outputs=(candidate,),
+        attrs={
+            "component_type": controller.component_type,
+            "function_type": controller.function_type,
+            "component_id": controller.component_id,
+            "params": dict(controller.params),
+            "output_port": modulation.control_signal_port,
+            "spec_key": modulation.controller_function_spec_key,
+        },
+    )
+    effect = apply_modulation_op(
+        modulation,
+        held_effective=carries_by_key[
+            (
+                "effective_parameter",
+                parameter.target_component_id,
+                parameter.effective_parameter_id,
+            )
+        ].value,
+        controller_value=candidate,
+    )
+    return (
+        (call,),
+        (
+            KernelPublication(
+                candidate,
+                "output",
+                controller.component_id,
+                modulation.control_signal_port_id,
+            ),
+        ),
+        (effect,),
+    )
+
+
+def _dynamic_ordinary_member(
+    kernel,
+    node,
+    *,
+    modulation,
+    carries_by_key,
+    state_carries,
+):
+    graph = kernel.graph
+    canonical_body = _component_trial_body_ops(graph, node.name)
+    local_values = {}
+    body = []
+    state_candidates = ()
+    candidate_index = 0
+
+    def local_input(value):
+        return local_values.get(_kernel_value_key(value), value)
+
+    def candidate(value):
+        nonlocal candidate_index
+        result = KernelValue(
+            f"{value.name}:candidate:c{node.component_id}:v{candidate_index}",
+            value.width,
+            value.dtype,
+        )
+        candidate_index += 1
+        local_values[_kernel_value_key(value)] = result
+        return result
+
+    for op in canonical_body:
+        if op.kind == "StoreFlag":
+            raise ValueError(
+                "KernelIR generic member diagnostics require typed carry lowering."
+            )
+        inputs = tuple(local_input(value) for value in op.inputs)
+        outputs = tuple(candidate(value) for value in op.outputs)
+        if op.kind != "CallMechanism":
+            body.append(
+                KernelOp(
+                    op.kind,
+                    op.target,
+                    inputs=inputs,
+                    outputs=outputs,
+                    attrs=dict(op.attrs),
+                )
+            )
+            continue
+        if node.component_id != modulation.target_component_id:
+            raise ValueError(
+                "KernelIR generic schedule has an unrepresented mechanism member."
+            )
+        owned_states = tuple(
+            carry
+            for carry in state_carries
+            if carry.owner_component_id == node.component_id
+        )
+        state_ids = tuple(carry.value_id for carry in owned_states)
+        state_candidates = tuple(
+            KernelValue(
+                f"{carry.value.name}:candidate:c{node.component_id}:s{index}",
+                carry.value.width,
+                carry.value.dtype,
+            )
+            for index, carry in enumerate(owned_states)
+        )
+        body.append(
+            KernelOp(
+                "StepMechanism",
+                op.target,
+                inputs=(*inputs, *(carry.value for carry in owned_states)),
+                outputs=(*outputs, *state_candidates),
+                attrs={
+                    **op.attrs,
+                    "state_ids": state_ids,
+                    "active_lanes": "parent_member_predicate",
+                    "loop_counter": "component_execution_count",
+                },
+            )
+        )
+
+    publications = []
+    for port_id in node.output_port_ids:
+        carry = carries_by_key[("output", node.component_id, port_id)]
+        try:
+            source = local_values[_kernel_value_key(carry.value)]
+        except KeyError as error:
+            raise ValueError(
+                "KernelIR dynamic member did not define its declared output."
+            ) from error
+        publications.append(
+            KernelPublication(source, "output", node.component_id, port_id)
+        )
+    owned_states = tuple(
+        carry
+        for carry in state_carries
+        if carry.owner_component_id == node.component_id
+    )
+    if len(state_candidates) != len(owned_states):
+        raise ValueError(
+            "KernelIR dynamic stateful member did not yield every state carry."
+        )
+    publications.extend(
+        KernelPublication(
+            source,
+            "state",
+            node.component_id,
+            carry.value_id,
+        )
+        for source, carry in zip(state_candidates, owned_states)
+    )
+    return tuple(body), tuple(publications)
+
+
+def _canonical_dynamic_schedule_kernel_ops(
     kernel: KernelIR,
 ) -> tuple[KernelOp, ...]:
-    """Build the only complete lane-local modulation program accepted so far.
+    """Build the complete generic schedule region for controlled-finished."""
 
-    The declaration checkpoint is intentionally hand-constructible, but that
-    must not let a caller erase or rewrite ordinary dataflow around the new
-    effects.  Rebuild every non-control operation from GraphIR, replace each
-    controlled target's atomic mechanism call with its authenticated dynamic
-    region, and insert the absorbed controller immediately before that region.
-    The same builder is also the lowering path for the later executable
-    checkpoint, so validation and construction cannot drift apart.
-    """
-
+    program = _canonical_dynamic_schedule_program(kernel)
     graph = kernel.graph
     pass_regions = tuple(
         region for region in kernel.schedule_regions if region.kind == "pass"
     )
     if len(pass_regions) != 1:
         raise ValueError(
-            "KernelIR lane-local counted execution requires exactly one typed "
-            "pass schedule region."
+            "KernelIR dynamic schedule requires exactly one pass region."
         )
-    pass_region = pass_regions[0]
-
-    canonical_trial_ops = _trial_body_ops(graph)
-    replacements: dict[int, tuple[KernelOp, ...]] = {}
-    replaced_indices: set[int] = set()
-    effective_by_id = {
-        parameter.effective_parameter_id: parameter
-        for parameter in kernel.effective_parameters
-    }
-    finished_by_effective_id = {
-        value.attrs["effective_parameter_id"]: value
-        for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    }
-
-    for modulation in kernel.modulations:
-        parameter = effective_by_id[modulation.effective_parameter_id]
-        finished = finished_by_effective_id[modulation.effective_parameter_id]
-        target = graph.node(modulation.target)
-        target_indices = tuple(
-            index
-            for index, op in enumerate(canonical_trial_ops)
-            if op.target == target.name
+    persistent_values = tuple(
+        carry.value
+        for carry in program.loop_carries
+        if carry.kind in {"state", "effective_parameter"}
+    )
+    carried_values = tuple(carry.value for carry in program.loop_carries)
+    region = KernelOp(
+        "ForPasses",
+        "passes",
+        inputs=persistent_values,
+        outputs=carried_values,
+        attrs={
+            "region": pass_regions[0],
+            "body": (),
+            "declaration_only": False,
+            "trace_kind": "lane_local_dynamic",
+            "program": program,
+            "max_passes": kernel.max_steps,
+        },
+    )
+    diagnostic_carries = tuple(
+        carry for carry in program.loop_carries if carry.kind == "diagnostic"
+    )
+    if len(diagnostic_carries) != 1:
+        raise ValueError(
+            "KernelIR controlled dynamic schedule requires one diagnostic carry."
         )
-        if (
-            not target_indices
-            or target_indices
-            != tuple(range(target_indices[0], target_indices[-1] + 1))
-            or replaced_indices.intersection(target_indices)
-        ):
-            raise ValueError(
-                "KernelIR lane-local target operations must form one unique "
-                "contiguous compiler-derived component body."
-            )
-        target_ops = tuple(canonical_trial_ops[index] for index in target_indices)
-        target_calls = tuple(
-            op for op in target_ops if op.kind == "CallMechanism"
-        )
-        if len(target_calls) != 1:
-            raise ValueError(
-                "KernelIR lane-local target requires exactly one compiler-derived "
-                "CallMechanism operation."
-            )
-        target_call = target_calls[0]
-        state_ids = tuple(
-            sorted(
-                state.state_id
-                for state in kernel.states
-                if _state_component_id(graph, state)
-                == modulation.target_component_id
-            )
-        )
-        dynamic_step = KernelOp(
-            kind="StepMechanism",
-            target=target_call.target,
-            inputs=target_call.inputs,
-            outputs=target_call.outputs,
-            attrs={
-                **target_call.attrs,
-                "state_ids": state_ids,
-                "active_lanes": "parent_finished_predicate",
-                "loop_counter": "parent_pass_index",
-                "finished_value_id": finished.value_id,
-                "effective_parameter_id": parameter.effective_parameter_id,
-                "target_parameter_port_id": (
-                    modulation.target_parameter_port_id
-                ),
-            },
-        )
-        dynamic_body = tuple(
-            dynamic_step if op is target_call else op for op in target_ops
-        )
-
-        controller = graph.node(modulation.controller)
-        source = graph.node(modulation.source)
-        controller_value = KernelValue(
-            node_output_value_name(
-                graph,
-                controller,
-                modulation.control_signal_port,
-            ),
-            modulation.width,
-            modulation.dtype,
-        )
-        controller_call = KernelOp(
-            kind="CallFunction",
-            target=controller.name,
-            inputs=(
-                KernelValue(
-                    node_output_value_name(
-                        graph,
-                        source,
-                        modulation.source_port,
-                    ),
-                    modulation.width,
-                    modulation.dtype,
-                ),
-            ),
-            outputs=(controller_value,),
-            attrs={
-                "component_type": controller.component_type,
-                "function_type": controller.function_type,
-                "component_id": modulation.controller_component_id,
-                "params": dict(controller.params),
-                "output_port": modulation.control_signal_port,
-                "spec_key": modulation.controller_function_spec_key,
-            },
-        )
-        held_value = effective_parameter_value(parameter)
-        apply = apply_modulation_op(
-            modulation,
-            held_effective=held_value,
-            controller_value=controller_value,
-        )
-        dynamic_region = KernelOp(
-            kind="ForPasses",
-            target="passes",
-            inputs=(held_value,),
-            outputs=(*dynamic_step.outputs, dynamic_truncation_value(finished)),
-            attrs={
-                "region": pass_region,
-                "body": dynamic_body,
-                "declaration_only": False,
-                "trace_kind": "lane_local_counted",
-                "finished_value_id": finished.value_id,
-                "effective_parameter_id": parameter.effective_parameter_id,
-                "target_component_id": modulation.target_component_id,
-                "target_parameter_port_id": (
-                    modulation.target_parameter_port_id
-                ),
-                "producer_consideration_set_id": (
-                    finished.producer_consideration_set_id
-                ),
-                "rounding": finished.attrs["rounding"],
-                "minimum": finished.attrs["minimum"],
-                "maximum": finished.attrs["maximum"],
-                "max_steps": kernel.max_steps,
-            },
-        )
-        truncation_store = KernelOp(
-            kind="StoreFlag",
-            target=target.name,
-            inputs=(dynamic_region.outputs[-1],),
-            attrs={
-                "node": target.name,
-                "name": "truncated",
-                "slot": sum(
-                    op.kind == "StoreFlag" for op in canonical_trial_ops
-                )
-                + modulation.modulation_id,
-            },
-        )
-        replacements[target_indices[0]] = (
-            controller_call,
-            apply,
-            dynamic_region,
-            truncation_store,
-        )
-        replaced_indices.update(target_indices)
-
-    scheduled_trial_ops = []
-    for index, op in enumerate(canonical_trial_ops):
-        replacement = replacements.get(index)
-        if replacement is not None:
-            scheduled_trial_ops.extend(replacement)
-        if index not in replaced_indices:
-            scheduled_trial_ops.append(op)
-
+    diagnostic = diagnostic_carries[0]
+    target = next(
+        node
+        for node in graph.nodes
+        if node.component_id == diagnostic.owner_component_id
+    )
     state_values = _state_kernel_values(graph)
     trial_body = (
         *_trial_reset_ops(graph, state_values),
-        *scheduled_trial_ops,
+        region,
+        KernelOp(
+            "StoreFlag",
+            target.name,
+            inputs=(diagnostic.value,),
+            attrs={
+                "node": target.name,
+                "name": "truncated",
+                "slot": 0,
+            },
+        ),
+        *_trial_output_ops(graph),
     )
     return (
-        KernelOp(
-            kind="InitializeState",
-            target="lane",
-            outputs=state_values,
-        ),
+        KernelOp("InitializeState", "lane", outputs=state_values),
         *(
             initialize_effective_parameter_op(parameter)
             for parameter in kernel.effective_parameters
         ),
         KernelOp(
-            kind="ForTrials",
-            target="trials",
+            "ForTrials",
+            "trials",
             attrs={"body": trial_body},
         ),
     )
@@ -4516,6 +4629,14 @@ def _kernel_attribute_matches_exactly(actual: Any, expected: Any) -> bool:
 
     if type(actual) is not type(expected):
         return False
+    if is_dataclass(expected):
+        return all(
+            _kernel_attribute_matches_exactly(
+                getattr(actual, declaration.name),
+                getattr(expected, declaration.name),
+            )
+            for declaration in fields(expected)
+        )
     if isinstance(expected, Mapping):
         return bool(
             set(actual) == set(expected)
@@ -4545,6 +4666,8 @@ def _kernel_attribute_matches_exactly(actual: Any, expected: Any) -> bool:
         return bool(comparison.all())
     except AttributeError:
         return bool(comparison)
+
+
 
 
 def lower_to_kernel_ir(
@@ -4689,7 +4812,7 @@ def lower_to_kernel_ir(
     if _dynamic_modulation_lowering_eligible(kernel):
         return replace(
             kernel,
-            ops=_canonical_dynamic_modulation_kernel_ops(kernel),
+            ops=_canonical_dynamic_schedule_kernel_ops(kernel),
             executable=graph.executable,
         )
     if _dynamic_coevolving_lowering_eligible(kernel):
@@ -5254,6 +5377,10 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
         and len(dynamic_finished) == 1
         and all(type(component_id) is int for component_id in node_component_ids)
         and node_component_ids == tuple(range(len(kernel.graph.nodes)))
+        and all(
+            {"integrator_pre", "onset_step"}.isdisjoint(node.attrs)
+            for node in kernel.graph.nodes
+        )
     ):
         return False
 

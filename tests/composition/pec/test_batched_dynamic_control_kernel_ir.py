@@ -13,10 +13,11 @@ from psyneulink.core.batched.backend.triton.graph_emit import (
 from psyneulink.core.batched.graph import lower_composition
 from psyneulink.core.batched.ir import BatchedCompositionIR
 from psyneulink.core.batched.kernel_ir import (
+    KernelDynamicScheduleProgram,
+    KernelLoopCarry,
     KernelValue,
     diag_slots,
     lower_to_kernel_ir,
-    node_input_value_name,
     validate_kernel_ir,
 )
 
@@ -120,12 +121,65 @@ def _trial_body(kernel):
     return kernel.ops[-1].attrs["body"]
 
 
-def _trial_op_index(kernel, kind):
-    matches = tuple(
-        index for index, op in enumerate(_trial_body(kernel)) if op.kind == kind
+def _dynamic_region(kernel):
+    return next(
+        op
+        for op in _trial_body(kernel)
+        if op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
     )
-    assert len(matches) == 1
-    return matches[0]
+
+
+def _dynamic_program(kernel):
+    program = _dynamic_region(kernel).attrs["program"]
+    assert type(program) is KernelDynamicScheduleProgram
+    return program
+
+
+def _program_members(program):
+    return tuple(
+        member
+        for consideration_set in program.consideration_sets
+        for member in consideration_set.members
+    )
+
+
+def _program_member(program, component_id):
+    return next(
+        member
+        for member in _program_members(program)
+        if member.component_id == component_id
+    )
+
+
+def _replace_program_member(program, component_id, replacement):
+    consideration_sets = tuple(
+        replace(
+            item,
+            members=tuple(
+                replacement if member.component_id == component_id else member
+                for member in item.members
+            ),
+        )
+        for item in program.consideration_sets
+    )
+    return replace(program, consideration_sets=consideration_sets)
+
+
+def _replace_dynamic_region(
+    kernel,
+    *,
+    program=None,
+    outputs=None,
+    **attr_changes,
+):
+    body = list(_trial_body(kernel))
+    region = _dynamic_region(kernel)
+    program = region.attrs["program"] if program is None else program
+    attrs = {**region.attrs, "program": program, **attr_changes}
+    outputs = region.outputs if outputs is None else outputs
+    body[body.index(region)] = replace(region, outputs=outputs, attrs=attrs)
+    return _replace_trial_body(kernel, body)
 
 
 def _lower_replaced_graph(kernel, graph):
@@ -143,71 +197,180 @@ def _lower_replaced_graph(kernel, graph):
 
 def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
     kernel = _dynamic_control_kernel()
+    region = _dynamic_region(kernel)
+    program = _dynamic_program(kernel)
+    members = _program_members(program)
+    by_id = {member.component_id: member for member in members}
 
-    assert kernel.graph.executable
-    assert kernel.executable
+    assert kernel.graph.executable and kernel.executable
     assert tuple(op.kind for op in kernel.ops) == (
         "InitializeState",
         "InitializeEffectiveParameter",
         "ForTrials",
     )
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    trial_body = _trial_body(kernel)
-    assert trial_body[apply_index - 1].kind == "CallFunction"
-    assert trial_body[apply_index + 1].attrs["trace_kind"] == "lane_local_counted"
-    dynamic_region = trial_body[apply_index + 1]
-    dynamic_step = dynamic_region.attrs["body"][-1]
-    assert dynamic_region.inputs[0].name == "effective:0"
-    assert dynamic_region.outputs[:-1] == dynamic_step.outputs
-    assert dynamic_region.outputs[-1].name == "dynamic-truncated:0"
-    assert dynamic_step.attrs["active_lanes"] == "parent_finished_predicate"
-    assert dynamic_step.attrs["loop_counter"] == "parent_pass_index"
-    assert dynamic_step.attrs["finished_value_id"] == 0
-    assert dynamic_step.attrs["effective_parameter_id"] == 0
-    assert dynamic_step.attrs["target_parameter_port_id"] == (
-        kernel.modulations[0].target_parameter_port_id
+    assert set(region.attrs) == {
+        "region", "body", "declaration_only", "trace_kind", "program", "max_passes"
+    }
+    assert (
+        region.attrs["body"],
+        region.attrs["trace_kind"],
+        region.attrs["program"],
+        region.attrs["max_passes"],
+    ) == ((), "lane_local_dynamic", program, 16)
+    set_signature = "|".join(
+        f"{item.consideration_set_id}:"
+        f"{','.join(str(member.component_id) for member in item.members)}"
+        for item in program.consideration_sets
     )
-    assert "execution_index" not in dynamic_step.attrs
-    assert trial_body[apply_index + 2].kind == "StoreFlag"
-    assert trial_body[apply_index + 2].inputs == (dynamic_region.outputs[-1],)
-    assert diag_slots(kernel) == ((dynamic_step.target, "truncated"),)
+    assert set_signature == "0:0,2|1:1|2:3|3:4"
+    predicate_signature = "|".join(
+        f"{component_id}:{member.predicate.kind}:"
+        f"{member.predicate.pass_index}:"
+        f"{member.predicate.dependency_component_ids}:"
+        f"{member.predicate.finished_value_ids}"
+        for component_id, member in sorted(by_id.items())
+    )
+    assert predicate_signature == (
+        "0:AtPass:0:():()|1:AtPass:0:():()|2:AtPass:0:():()|"
+        "3:Always:None:():()|4:WhenFinished:None:(3,):(0,)"
+    )
+    assert (
+        program.trial_termination.kind,
+        program.trial_termination.dependency_component_ids,
+    ) == ("AllHaveRun", (0, 1, 2, 3, 4))
+
+    slot_signature = "|".join(
+        f"{slot.value.name}:{slot.value.dtype}"
+        for slot in program.scheduler_state_slots
+    )
+    assert slot_signature == (
+        "schedule:pass-index:int32|schedule:execution-count:0:int32|"
+        "schedule:has-run:0:bool|schedule:execution-count:1:int32|"
+        "schedule:has-run:1:bool|schedule:execution-count:2:int32|"
+        "schedule:has-run:2:bool|schedule:execution-count:3:int32|"
+        "schedule:has-run:3:bool|schedule:execution-count:4:int32|"
+        "schedule:has-run:4:bool|schedule:finished:3:0:bool"
+    )
+    assert all(slot.value.width == 1 for slot in program.scheduler_state_slots)
+    carry_signature = "|".join(
+        f"{carry.kind}:{carry.owner_component_id}:"
+        f"{carry.value_id}:{carry.value.name}"
+        for carry in program.loop_carries
+    )
+    assert carry_signature == (
+        "state:3:0:n3:state:0|state:3:1:n3:state:1|"
+        "state:3:2:n3:state:2|effective_parameter:3:0:effective:0|"
+        "output:0:1:n0:output:0|output:1:10:n1:output:0|"
+        "output:2:16:n2:output:0|output:3:25:n3:output:0|"
+        "output:4:40:n4:output:0|diagnostic:3:0:dynamic-truncated:0"
+    )
+    assert region.inputs == tuple(
+        carry.value
+        for carry in program.loop_carries
+        if carry.kind in {"state", "effective_parameter"}
+    )
+    assert region.outputs == tuple(carry.value for carry in program.loop_carries)
+
+    publications = tuple(
+        (member.component_id, publication)
+        for member in members
+        for publication in member.publications
+    )
+    publication_signature = "|".join(sorted(
+        f"{item.kind}:{item.owner_component_id}:{item.value_id}"
+        for _, item in publications
+    ))
+    assert publication_signature == (
+        "output:0:1|output:1:10|output:2:16|output:3:25|output:4:40|"
+        "state:3:0|state:3:1|state:3:2"
+    )
+    assert all(
+        owner == publication.owner_component_id
+        and f":candidate:c{owner}" in publication.source.name
+        for owner, publication in publications
+    )
+    body_signature = "|".join(
+        f"{component_id}:{','.join(op.kind for op in by_id[component_id].body)}"
+        for component_id in range(5)
+    )
+    assert body_signature == (
+        "0:LoadInput,CallFunction|1:CallFunction|2:LoadInput,CallFunction|"
+        "3:CallProjection,CombineSum,StepMechanism|"
+        "4:CallProjection,CombineSum,CallFunction"
+    )
+    effect = by_id[1].effects[0]
+    assert (
+        effect.kind,
+        effect.attrs["modulation_id"],
+        effect.attrs["controller_component_id"],
+        effect.attrs["effective_parameter_id"],
+    ) == ("ApplyModulation", 0, 1, 0)
+    step = next(op for op in by_id[3].body if op.kind == "StepMechanism")
+    assert step.attrs["active_lanes"] == "parent_member_predicate"
+    assert step.attrs["state_ids"] == (0, 1, 2)
+    assert step.inputs[-3:] == tuple(
+        carry.value for carry in program.loop_carries[:3]
+    )
+    assert tuple(
+        (budget.component_id, budget.maximum)
+        for budget in program.execution_budgets
+    ) == ((0, 1), (1, 1), (2, 1), (3, 16), (4, 1))
+
+    candidates = {
+        value.name for member in members for op in member.body for value in op.outputs
+    }
+    carries = {carry.value.name for carry in program.loop_carries}
+    stores = tuple(
+        op
+        for op in _trial_body(kernel)
+        if op.kind in {"StoreFlag", "StoreOutput"}
+    )
+    assert {op.kind for op in stores} == {"StoreFlag", "StoreOutput"}
+    assert all(
+        value.name in carries - candidates
+        for op in stores
+        for value in op.inputs
+    )
+    assert diag_slots(kernel) == ((kernel.finished_values[0].node, "truncated"),)
+
     source = triton_graph_kernel_source(kernel)
     compile(source, "<dynamic-control-kernel>", "exec")
-    assert source.index("n_effective_0_0 = tl.full") < source.index("trial_idx = 0")
-    assert source.index("while trial_idx < num_trials") < source.index(
-        "# reset component"
+    markers = tuple(
+        f"# dynamic scheduler consideration set {set_id}" for set_id in range(4)
     )
-    assert "n_n1_output_0_0 = _pnl_triton_linear(" in source
-    assert "n_effective_0_0 = tl.where(mask, n_n1_output_0_0" in source
-    assert "tl.ceil(n_effective_0_0)" in source
-    assert "16777216.0" in source
-    block_passes_line = next(
-        line for line in source.splitlines() if "_block_passes =" in line
+    assert tuple(source.index(marker) for marker in markers) == tuple(
+        sorted(source.index(marker) for marker in markers)
     )
-    assert "tl.max(tl.where(mask," in block_passes_line
-    assert "MAX_STEPS" in block_passes_line
-    assert "LCA_MAX_STEPS" not in block_passes_line
+    assert "dynamic_round = 0" in source
+    assert "dynamic_round < MAX_STEPS" in source
+    assert source.index("dynamic_s0_n2_active =") < source.index(
+        "n_n0_output_0_candidate"
+    )
+    assert source.index("n_n2_output_0_candidate") < source.index(
+        "n_n0_output_0_dynamic_current_0 = tl.where"
+    )
+    assert "tl.where(mask & (dynamic_done == 0), 1.0, 0.0)" in source
     assert source.count(" = _pnl_triton_lca_width2_step(") == 1
-    assert "_finished = tl.where(mask & (" in source
-    assert "_required_passes > MAX_STEPS" in source
+    assert all(
+        marker not in source
+        for marker in ("lane_local_counted", "_block_passes", "_required_passes")
+    )
     assert source.index("tl.store(diag") < source.index("tl.store(out")
 
 
 def test_identity_controller_is_lowered_without_a_registry_key():
     kernel = _dynamic_control_kernel(controller_function=pnl.Identity())
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    controller_call = _trial_body(kernel)[apply_index - 1]
+    controller_id = kernel.modulations[0].controller_component_id
+    controller_member = _program_member(_dynamic_program(kernel), controller_id)
+    controller_call = controller_member.body[-1]
 
     assert controller_call.kind == "CallFunction"
     assert controller_call.attrs["function_type"] == "Identity"
     assert controller_call.attrs["spec_key"] == ""
     assert controller_call.attrs["params"] == {}
     source = triton_graph_kernel_source(kernel)
-    modulation = kernel.modulations[0]
-    source_value = f"n_n{modulation.source_component_id}_output_0_0"
-    controller_value = f"n_n{modulation.controller_component_id}_output_0_0"
-    assert f"{controller_value} = {source_value}" in source
-    assert f"n_effective_0_0 = tl.where(mask, {controller_value}" in source
+    assert "_pnl_triton_identity(" not in source
+    assert f"candidate_c{controller_id}" in source
 
 
 def test_never_reset_omits_the_trial_reset_prefix():
@@ -215,7 +378,7 @@ def test_never_reset_omits_the_trial_reset_prefix():
 
     assert kernel.resets[0].condition_type == "Never"
     assert all(op.kind != "ResetState" for op in _trial_body(kernel))
-    assert _trial_body(kernel)[0].kind == "LoadInput"
+    assert _trial_body(kernel)[0].attrs["trace_kind"] == "lane_local_dynamic"
 
 
 def test_dynamic_materialization_falls_back_atomically_outside_boundary():
@@ -257,254 +420,147 @@ def test_complete_kernel_rejects_forged_effective_initializer(field, forged_valu
     attrs = {**initializer.attrs, field: forged_value}
     forged = replace(initializer, attrs=attrs)
 
-    with pytest.raises(ValueError, match="does not exactly match"):
+    with pytest.raises(ValueError, match="exactly match|must exactly match"):
         replace(kernel, ops=(kernel.ops[0], forged, kernel.ops[2]))
 
 
 @pytest.mark.parametrize(
-    "field",
-    [
-        "modulation_id",
-        "controller_component_id",
-        "control_signal_port_id",
-        "target_component_id",
-        "target_parameter_port_id",
-        "effective_parameter_id",
-    ],
+    "forgery",
+    (
+        "set-order",
+        "predicate",
+        "slot",
+        "carry",
+        "budget",
+        "effect",
+        "state",
+    ),
 )
-def test_complete_kernel_rejects_forged_apply_identity(field):
+def test_complete_kernel_rejects_forged_dynamic_program(forgery):
     kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    apply = body[apply_index]
+    program = _dynamic_program(kernel)
+    region_outputs = None
+    producer_id = kernel.modulations[0].target_component_id
+    controller_id = kernel.modulations[0].controller_component_id
 
-    with pytest.raises(
-        ValueError,
-        match="held-value|declaration-ID|does not exactly match",
-    ):
-        body[apply_index] = replace(
-            apply,
-            attrs={**apply.attrs, field: apply.attrs[field] + 1},
+    if forgery == "set-order":
+        first, second, *remainder = program.consideration_sets
+        program = replace(
+            program,
+            consideration_sets=(
+                replace(first, members=second.members),
+                replace(second, members=first.members),
+                *remainder,
+            ),
         )
-        _replace_trial_body(kernel, body)
-
-
-def test_complete_kernel_rejects_apply_outside_controller_region_boundary():
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    apply = body.pop(apply_index)
-    body.insert(apply_index + 1, apply)
-
-    with pytest.raises(ValueError, match="immediately follow"):
-        _replace_trial_body(kernel, body)
-
-
-@pytest.mark.parametrize(
-    "field, forged_value",
-    [
-        ("finished_value_id", 1),
-        ("target_component_id", 0),
-        ("target_parameter_port_id", 0),
-        ("producer_consideration_set_id", 0),
-        ("max_steps", 15),
-    ],
-)
-def test_complete_kernel_rejects_forged_lane_local_region_identity(
-    field,
-    forged_value,
-):
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    region_index = _trial_op_index(kernel, "ForPasses")
-    region = body[region_index]
-    attrs = {**region.attrs, field: forged_value}
-    outputs = region.outputs
-    if field == "finished_value_id":
-        outputs = (*outputs[:-1], KernelValue("dynamic-truncated:1", 1))
-    body[region_index] = replace(region, outputs=outputs, attrs=attrs)
-
-    with pytest.raises(ValueError, match="does not exactly match|dominating operation"):
-        _replace_trial_body(kernel, body)
-
-
-@pytest.mark.parametrize(
-    "field, forged_value",
-    [
-        ("finished_value_id", 1),
-        ("effective_parameter_id", 1),
-        ("target_parameter_port_id", 0),
-        ("component_id", 0),
-    ],
-)
-def test_complete_kernel_rejects_forged_dynamic_step_identity(field, forged_value):
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    region_index = _trial_op_index(kernel, "ForPasses")
-    region = body[region_index]
-    region_body = list(region.attrs["body"])
-    step = region_body[-1]
-    region_body[-1] = replace(
-        step,
-        attrs={**step.attrs, field: forged_value},
-    )
-    body[region_index] = replace(
-        region,
-        attrs={**region.attrs, "body": tuple(region_body)},
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="target|finished-value owner|effective parameter",
-    ):
-        _replace_trial_body(kernel, body)
-
-
-def test_lane_local_step_requires_parent_loop_counter_sentinel():
-    kernel = _dynamic_control_kernel()
-    region = _trial_body(kernel)[_trial_op_index(kernel, "ForPasses")]
-    step = region.attrs["body"][-1]
-
-    with pytest.raises(ValueError, match="parent pass counter"):
-        replace(
-            step,
-            attrs={**step.attrs, "loop_counter": "execution_index"},
+    elif forgery == "predicate":
+        member = _program_member(program, producer_id)
+        predicate = replace(member.predicate, kind="AtPass", pass_index=0)
+        program = _replace_program_member(
+            program, producer_id, replace(member, predicate=predicate)
         )
-
-
-def test_lane_local_region_requires_one_final_dynamic_step():
-    kernel = _dynamic_control_kernel()
-    region = _trial_body(kernel)[_trial_op_index(kernel, "ForPasses")]
-
-    with pytest.raises(ValueError, match="one-step structure"):
-        replace(
-            region,
-            attrs={**region.attrs, "body": region.attrs["body"][:-1]},
+    elif forgery == "slot":
+        first, *remainder = program.scheduler_state_slots
+        value = replace(first.value, name=f"{first.value.name}:forged")
+        program = replace(
+            program,
+            scheduler_state_slots=(replace(first, value=value), *remainder),
         )
-
-
-def test_partial_dynamic_effect_inventory_is_rejected():
-    kernel = _dynamic_control_kernel()
-
-    with pytest.raises(
-        ValueError,
-        match="complete typed|dominating operation|initialize exactly once",
-    ):
-        replace(kernel, ops=(kernel.ops[0], kernel.ops[-1]))
-
-
-def test_dynamic_step_cannot_claim_a_precomputed_active_lane_policy():
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    region_index = _trial_op_index(kernel, "ForPasses")
-    region = body[region_index]
-    region_body = list(region.attrs["body"])
-    step = region_body[-1]
-    attrs = {
-        key: value
-        for key, value in step.attrs.items()
-        if key
-        not in {
-            "loop_counter",
-            "finished_value_id",
-            "effective_parameter_id",
-            "target_parameter_port_id",
+    elif forgery == "carry":
+        forged = KernelLoopCarry(
+            kind="diagnostic",
+            owner_component_id=controller_id,
+            value_id=max(carry.value_id for carry in program.loop_carries) + 1,
+            value=KernelValue("forged:diagnostic", 1),
+        )
+        program = replace(program, loop_carries=(*program.loop_carries, forged))
+        region_outputs = (*_dynamic_region(kernel).outputs, forged.value)
+    elif forgery == "budget":
+        budget = next(
+            item
+            for item in program.execution_budgets
+            if item.component_id == producer_id
+        )
+        program = replace(
+            program,
+            execution_budgets=tuple(
+                replace(item, maximum=item.maximum - 1)
+                if item is budget
+                else item
+                for item in program.execution_budgets
+            ),
+        )
+    elif forgery == "effect":
+        member = _program_member(program, controller_id)
+        effect = member.effects[0]
+        attrs = {
+            **effect.attrs,
+            "modulation_id": effect.attrs["modulation_id"] + 1,
         }
-    }
-    attrs.update(active_lanes="all", execution_index=0)
-    region_body[-1] = replace(step, attrs=attrs)
-    body[region_index] = replace(
-        region,
-        attrs={**region.attrs, "body": tuple(region_body)},
-    )
+        program = _replace_program_member(
+            program,
+            controller_id,
+            replace(member, effects=(replace(effect, attrs=attrs),)),
+        )
+    else:
+        member = _program_member(program, producer_id)
+        step = next(op for op in member.body if op.kind == "StepMechanism")
+        forged_step = replace(
+            step,
+            attrs={
+                **step.attrs,
+                "state_ids": tuple(
+                    state_id + len(step.attrs["state_ids"]) + 1
+                    for state_id in step.attrs["state_ids"]
+                ),
+            },
+        )
+        body = tuple(forged_step if op is step else op for op in member.body)
+        program = _replace_program_member(
+            program, producer_id, replace(member, body=body)
+        )
 
-    with pytest.raises(ValueError, match="active-lane policy"):
-        _replace_trial_body(kernel, body)
+    with pytest.raises(ValueError, match="compiler-derived|exact|dominating"):
+        _replace_dynamic_region(
+            kernel,
+            program=program,
+            outputs=region_outputs,
+        )
 
 
-def test_dynamic_controller_must_consume_exact_declared_source_value():
+def test_complete_kernel_rejects_forged_dynamic_global_cap():
     kernel = _dynamic_control_kernel()
+
+    with pytest.raises(ValueError, match="compiler-derived|global pass cap|exact"):
+        _replace_dynamic_region(kernel, max_passes=kernel.max_steps - 1)
+
+
+@pytest.mark.parametrize("store_kind", ("StoreFlag", "StoreOutput"))
+def test_member_local_candidate_cannot_escape_dynamic_region(store_kind):
+    kernel = _dynamic_control_kernel()
+    candidate = next(
+        publication.source
+        for member in _program_members(_dynamic_program(kernel))
+        for publication in member.publications
+        if publication.source.width == 1
+    )
     body = list(_trial_body(kernel))
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    controller_call = body[apply_index - 1]
-    body[apply_index - 1] = replace(
-        controller_call,
-        inputs=(KernelValue(node_input_value_name(kernel.graph, controller_call.target), 1),),
+    store_index = next(
+        index for index, op in enumerate(body) if op.kind == store_kind
     )
+    body[store_index] = replace(body[store_index], inputs=(candidate,))
 
-    with pytest.raises(ValueError, match="dominating operation|exact typed"):
-        _replace_trial_body(kernel, body)
-
-
-def test_dynamic_program_cannot_erase_follower_and_output_effects():
-    kernel = _dynamic_control_kernel()
-    output_node = kernel.outputs[0].node
-    body = tuple(
-        op
-        for op in _trial_body(kernel)
-        if op.target != output_node and op.kind != "StoreOutput"
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="complete compiler-derived|exactly one StoreOutput",
-    ):
-        _replace_trial_body(kernel, body)
-
-
-def test_dynamic_program_cannot_duplicate_controller_execution():
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    apply_index = _trial_op_index(kernel, "ApplyModulation")
-    controller_call = body[apply_index - 1]
-    body.insert(apply_index - 1, controller_call)
-
-    with pytest.raises(ValueError, match="complete compiler-derived"):
-        _replace_trial_body(kernel, body)
-
-
-@pytest.mark.parametrize(
-    "forge",
-    [
-        lambda matrix: np.zeros_like(matrix),
-        lambda matrix: matrix.astype(np.float64),
-        lambda matrix: matrix[None, ...],
-    ],
-    ids=("values", "dtype", "shape"),
-)
-def test_dynamic_program_cannot_forge_target_projection_matrix(forge):
-    kernel = _dynamic_control_kernel()
-    body = list(_trial_body(kernel))
-    region_index = _trial_op_index(kernel, "ForPasses")
-    region = body[region_index]
-    region_body = list(region.attrs["body"])
-    projection_index = next(
-        index
-        for index, op in enumerate(region_body)
-        if op.kind == "CallProjection"
-    )
-    projection = region_body[projection_index]
-    region_body[projection_index] = replace(
-        projection,
-        attrs={
-            **projection.attrs,
-            "matrix": forge(projection.attrs["matrix"]),
-        },
-    )
-    body[region_index] = replace(
-        region,
-        attrs={**region.attrs, "body": tuple(region_body)},
-    )
-
-    with pytest.raises(ValueError, match="complete compiler-derived"):
+    with pytest.raises(ValueError, match="dominating|compiler-derived|carry"):
         _replace_trial_body(kernel, body)
 
 
 def test_kernel_projection_snapshot_does_not_alias_graph_authority():
     kernel = _dynamic_control_kernel()
-    region = _trial_body(kernel)[_trial_op_index(kernel, "ForPasses")]
     projection = next(
-        op for op in region.attrs["body"] if op.kind == "CallProjection"
+        op
+        for member in _program_members(_dynamic_program(kernel))
+        for op in member.body
+        if op.kind == "CallProjection"
     )
     graph_projection = next(
         item
@@ -514,7 +570,7 @@ def test_kernel_projection_snapshot_does_not_alias_graph_authority():
 
     assert not np.shares_memory(projection.attrs["matrix"], graph_projection.matrix)
     projection.attrs["matrix"][...] = 0.0
-    with pytest.raises(ValueError, match="complete compiler-derived"):
+    with pytest.raises(ValueError, match="compiler-derived|exact"):
         validate_kernel_ir(kernel)
 
 
@@ -858,6 +914,42 @@ def test_non_pass_scheduler_region_does_not_materialize_dynamic_program(
 
     declaration = _lower_replaced_graph(kernel, graph)
 
+    assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
+    assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
+
+
+@pytest.mark.parametrize(
+    ("node_index", "attr", "value"),
+    (
+        (0, "onset_step", 5),
+        (1, "onset_step", 5),
+        (2, "onset_step", 5),
+        (3, "onset_step", 5),
+        (4, "onset_step", 5),
+        (2, "integrator_pre", (1.0,)),
+        (4, "integrator_pre", (1.0,)),
+    ),
+)
+def test_forged_component_execution_attr_does_not_materialize_dynamic_program(
+    node_index,
+    attr,
+    value,
+):
+    kernel = _dynamic_control_kernel()
+    forged_node = kernel.graph.nodes[node_index]
+    graph = replace(
+        kernel.graph,
+        nodes=tuple(
+            replace(node, attrs={**node.attrs, attr: value})
+            if node is forged_node
+            else node
+            for node in kernel.graph.nodes
+        ),
+    )
+
+    declaration = _lower_replaced_graph(kernel, graph)
+
+    assert not declaration.executable
     assert all(op.kind != "InitializeEffectiveParameter" for op in declaration.ops)
     assert declaration.ops[-1].attrs["body"][-1].attrs["declaration_only"] is True
 

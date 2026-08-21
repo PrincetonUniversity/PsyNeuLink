@@ -60,6 +60,12 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.state_vars: dict[tuple[str, int], str] = {}
         self.effective_parameter_vars: dict[int, str] = {}
         self.value_vars: dict[str, list[str]] = {}
+        # Dynamic consideration-set emission temporarily narrows the ordinary
+        # lane mask and supplies a component-local execution clock while a
+        # member body is emitted.  Outside that region both retain their
+        # ordinary whole-kernel defaults.
+        self.dynamic_active_mask = "mask"
+        self.dynamic_execution_index: str | None = None
         self.rng_stream_slot: dict[str, int] = {}
         self.rng_stream_count = 0
         self.output_cursor = 0

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION, STATEFUL_GRAPH_FUSION
 from psyneulink.core.batched.kernel_ir import (
+    KernelDynamicScheduleProgram,
     KernelOp,
     component_symbol,
     node_output_value_name,
@@ -267,11 +268,14 @@ class OpEmitMixin:
         finished_var: str,
         *,
         require_outputs: bool = False,
+        model_outputs=None,
     ) -> None:
         node = self.graph.node(op.target)
         input_values = self._get_value(op.inputs[0].name)
+        if model_outputs is None:
+            model_outputs = op.outputs
         output_vars = []
-        for output in op.outputs:
+        for output in model_outputs:
             output_vars.extend(self._component_vars(output.name, output.width))
         result = spec.step_emit(
             TritonEmitContext(self), node, input_values, output_vars, step_var, finished_var
@@ -287,14 +291,14 @@ class OpEmitMixin:
                     f"One-step mechanism '{op.target}' returned a non-iterable "
                     "result."
                 ) from error
-            expected_values = sum(output.width for output in op.outputs)
+            expected_values = sum(output.width for output in model_outputs)
             if len(values) != expected_values:
                 raise ValueError(
                     f"One-step mechanism '{op.target}' returned {len(values)} "
                     f"value(s), expected {expected_values}."
                 )
             cursor = 0
-            for output in op.outputs:
+            for output in model_outputs:
                 self._set_value(output.name, values[cursor : cursor + output.width])
                 cursor += output.width
         elif require_outputs:
@@ -399,10 +403,14 @@ class OpEmitMixin:
                 "Batched op spec for scheduled mechanism "
                 f"'{op.target}' has no one-step Triton implementation."
             )
+        if op.attrs.get("active_lanes") == "parent_member_predicate":
+            self._emit_dynamic_step_mechanism(op, spec)
+            self.builder.line()
+            return
         # A precomputed trace is lane-invariant: every in-range lane executes
         # this occurrence.  The existing one-step adapter accepts a 0/1
         # finished mask (0 means active), so pass an all-zero tensor.  Dynamic
-        # schedules will replace this with a typed lane-local active value.
+        # schedules take the member-masked path above.
         self._emit_step_mechanism(
             op,
             spec,
@@ -412,101 +420,515 @@ class OpEmitMixin:
         )
         self.builder.line()
 
+    def _emit_dynamic_step_mechanism(self, op: KernelOp, spec) -> None:
+        """Emit one member-masked step with explicit state candidates.
+
+        Registered component step adapters still address state through
+        ``TritonEmitContext.state``.  Seed distinct candidate variables from
+        the region's current state and temporarily bind the context to those
+        variables; the consideration-set publisher commits them only after all
+        members have run against the same frozen snapshot.
+        """
+
+        state_ids = tuple(op.attrs["state_ids"])
+        state_inputs = tuple(op.inputs[1:])
+        if len(state_inputs) != len(state_ids) or len(op.outputs) <= len(state_ids):
+            raise ValueError(
+                "Triton dynamic StepMechanism requires one explicit current and "
+                "candidate value per state ID."
+            )
+        model_outputs = tuple(op.outputs[:-len(state_ids)])
+        state_outputs = tuple(op.outputs[-len(state_ids):])
+        states_by_id = {state.state_id: state for state in self.kernel.states}
+        saved_state_vars = {}
+        try:
+            for state_id, state_input, state_output in zip(
+                state_ids,
+                state_inputs,
+                state_outputs,
+            ):
+                try:
+                    state = states_by_id[state_id]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton dynamic StepMechanism references undeclared "
+                        f"state ID {state_id}."
+                    ) from error
+                current_values = self._get_value(state_input.name)
+                candidate_values = self._component_vars(
+                    state_output.name,
+                    state_output.width,
+                )
+                if (
+                    state.component_id != op.attrs["component_id"]
+                    or len(current_values) != state_output.width
+                    or state.width != state_output.width
+                ):
+                    raise ValueError(
+                        "Triton dynamic StepMechanism state ownership or width "
+                        "does not match its explicit candidate."
+                    )
+                for index, (candidate, current) in enumerate(
+                    zip(candidate_values, current_values)
+                ):
+                    self.builder.line(f"{candidate} = {current}")
+                    key = (state.name, index)
+                    saved_state_vars[key] = self.state_vars[key]
+                    self.state_vars[key] = candidate
+                self._set_value(state_output.name, candidate_values)
+
+            if self.dynamic_execution_index is None:
+                raise ValueError(
+                    "Triton dynamic StepMechanism has no parent component clock."
+                )
+            finished_var = (
+                f"{component_symbol(self.graph, op.target)}_dynamic_member_finished"
+            )
+            self.builder.line(
+                f"{finished_var} = tl.where({self.dynamic_active_mask}, 0.0, 1.0)"
+            )
+            self._emit_step_mechanism(
+                op,
+                spec,
+                self.dynamic_execution_index,
+                finished_var,
+                require_outputs=True,
+                model_outputs=model_outputs,
+            )
+        finally:
+            self.state_vars.update(saved_state_vars)
+
     def _emit_for_passes(self, op: KernelOp) -> None:
-        if op.attrs.get("trace_kind") == "lane_local_counted":
-            self._emit_lane_local_counted_passes(op)
+        if op.attrs.get("trace_kind") == "lane_local_dynamic":
+            self._emit_lane_local_dynamic_passes(op)
             return
         self._emit_precomputed_passes(op)
 
-    def _emit_lane_local_counted_passes(self, op: KernelOp) -> None:
-        """Emit the exact lane-local counted region authenticated by KernelIR."""
+    @staticmethod
+    def _dynamic_slot_key(slot):
+        return (
+            slot.kind,
+            slot.owner_component_id,
+            slot.producer_component_id,
+            slot.consumer_component_id,
+            slot.finished_value_id,
+            slot.rng_stream_id,
+        )
 
-        body = tuple(op.attrs["body"])
-        step_op = body[-1]
-        if step_op.kind != "StepMechanism":
+    @staticmethod
+    def _dynamic_carry_key(carry):
+        return (carry.kind, carry.owner_component_id, carry.value_id)
+
+    def _emit_lane_local_dynamic_passes(self, op: KernelOp) -> None:
+        """Emit one typed, lane-local consideration-set scheduler."""
+
+        program = op.attrs.get("program")
+        if type(program) is not KernelDynamicScheduleProgram:
             raise ValueError(
-                "Triton lane-local ForPasses requires a final StepMechanism."
+                "Triton lane-local dynamic ForPasses requires a typed program."
             )
-        spec = self._spec_for_op(step_op)
-        if not spec.can_step:
+        if op.attrs.get("max_passes") != self.kernel.max_steps:
             raise ValueError(
-                "Batched op spec for lane-local mechanism "
-                f"'{step_op.target}' has no one-step Triton implementation."
+                "Triton lane-local dynamic max_passes must match KernelIR max_steps."
             )
 
-        # The exact region contract freezes the target's projected/combined
-        # input for all of its passes.  Hoisting the pure prefix also keeps its
-        # temporaries in the outer trial scope rather than recreating them on
-        # each pass.
         outer_values = dict(self.value_vars)
-        for child in body[:-1]:
-            self._emit_op(child)
-
-        held_var = self._get_value(op.inputs[0].name)[0]
-        target_symbol = component_symbol(self.graph, step_op.target)
-        finished_value_id = op.attrs["finished_value_id"]
-        loop_symbol = f"{target_symbol}_dynamic_{finished_value_id}"
-        required_var = f"{loop_symbol}_required_passes"
-        block_passes_var = f"{loop_symbol}_block_passes"
-        pass_var = f"{loop_symbol}_pass"
-        finished_var = f"{loop_symbol}_finished"
-        minimum = float_literal(op.attrs["minimum"])
-        maximum = float_literal(op.attrs["maximum"])
-
+        carry_vars = self._emit_dynamic_carry_initializers(program)
+        slot_vars = self._emit_dynamic_scheduler_initializers(program)
+        done_var = "dynamic_done"
+        round_var = "dynamic_round"
         self.builder.line(
-            f"{required_var} = tl.minimum(tl.maximum(tl.ceil({held_var}), "
-            f"{minimum}), {maximum})"
+            f"{done_var} = tl.zeros((BLOCK,), dtype=tl.int32)"
         )
-        self.builder.line(
-            f"{block_passes_var} = tl.minimum("
-            f"tl.max(tl.where(mask, {required_var}, 0.0)), MAX_STEPS)"
-        )
-        self.builder.line(f"{pass_var} = 0")
-        with self.builder.block(f"while {pass_var} < {block_passes_var}"):
-            self.builder.line(
-                f"{finished_var} = tl.where("
-                f"mask & ({pass_var} < {required_var}), 0.0, 1.0)"
-            )
-            self._emit_step_mechanism(
-                step_op,
-                spec,
-                pass_var,
-                finished_var,
-                require_outputs=True,
-            )
-            self.builder.line(f"{pass_var} += 1")
-
-        # Only the region's explicit results escape its value scope.  The final
-        # result is the truncation flag; preceding results yield the final
-        # StepMechanism outputs for downstream projections and stores.
-        yielded_values = []
-        for region_output, step_output in zip(
-            op.outputs[:-1],
-            step_op.outputs,
+        self.builder.line(f"{round_var} = 0")
+        with self.builder.block(
+            f"while ({round_var} < MAX_STEPS) & "
+            f"(tl.max(tl.where(mask & ({done_var} == 0), 1, 0)) > 0)"
         ):
-            values = list(self._get_value(step_output.name))
-            if len(values) != region_output.width:
-                raise ValueError(
-                    "Triton lane-local ForPasses yielded output width does not "
-                    f"match '{region_output.name}'."
+            for consideration_set in program.consideration_sets:
+                self._emit_dynamic_termination(program, slot_vars, done_var)
+                self._emit_dynamic_consideration_set(
+                    program,
+                    consideration_set,
+                    slot_vars,
+                    carry_vars,
+                    done_var,
                 )
-            yielded_values.append((region_output.name, values))
+            self._emit_dynamic_termination(program, slot_vars, done_var)
+            pass_var = self._dynamic_slot_var(
+                slot_vars,
+                "pass_index",
+            )
+            self.builder.line(
+                f"{pass_var} = tl.where(mask & ({done_var} == 0), "
+                f"{pass_var} + 1, {pass_var})"
+            )
+            self.builder.line(f"{round_var} += 1")
 
-        truncation_output = op.outputs[-1]
-        truncation_var = self._component_vars(
-            truncation_output.name,
-            truncation_output.width,
-        )[0]
-        self.builder.line(
-            f"{truncation_var} = tl.where("
-            f"mask & ({required_var} > MAX_STEPS), 1.0, 0.0)"
-        )
+        # Exhaustion is a region-level safety result, not a fabricated
+        # scheduler `finished` value.  Exactly-at-cap lanes have already
+        # visited every set in the final round and therefore reach `done` when
+        # their later WhenFinished member executes.
+        for carry in program.loop_carries:
+            if carry.kind != "diagnostic":
+                continue
+            values = carry_vars[self._dynamic_carry_key(carry)]
+            if carry.value.width != 1 or len(values) != 1:
+                raise ValueError(
+                    "Triton dynamic exhaustion diagnostics must be scalar."
+                )
+            self.builder.line(
+                f"{values[0]} = tl.where(mask & ({done_var} == 0), 1.0, 0.0)"
+            )
+
         self.value_vars.clear()
         self.value_vars.update(outer_values)
-        for output_name, values in yielded_values:
-            self._set_value(output_name, values)
-        self._set_value(truncation_output.name, [truncation_var])
+        for carry in program.loop_carries:
+            values = carry_vars[self._dynamic_carry_key(carry)]
+            self._set_value(carry.value.name, values)
+        for output in op.outputs:
+            if output.name not in self.value_vars:
+                raise ValueError(
+                    "Triton dynamic ForPasses output is not a declared loop carry: "
+                    f"'{output.name}'."
+                )
+        self.dynamic_active_mask = "mask"
+        self.dynamic_execution_index = None
         self.builder.line()
+
+    def _emit_dynamic_carry_initializers(self, program):
+        carry_vars = {}
+        states_by_id = {state.state_id: state for state in self.kernel.states}
+        for carry in program.loop_carries:
+            key = self._dynamic_carry_key(carry)
+            if carry.kind == "state":
+                try:
+                    state = states_by_id[carry.value_id]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton dynamic carry references undeclared state ID "
+                        f"{carry.value_id}."
+                    ) from error
+                values = [
+                    self.state_vars[(state.name, index)]
+                    for index in range(state.width)
+                ]
+            elif carry.kind == "effective_parameter":
+                try:
+                    values = [self.effective_parameter_vars[carry.value_id]]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton dynamic carry references uninitialized effective "
+                        f"parameter ID {carry.value_id}."
+                    ) from error
+            else:
+                base = f"{safe_ident(carry.value.name)}_dynamic_current"
+                values = [f"{base}_{index}" for index in range(carry.value.width)]
+                for value in values:
+                    self.builder.line(
+                        f"{value} = tl.zeros((BLOCK,), dtype=tl.float32)"
+                    )
+            carry_vars[key] = values
+            self._set_value(carry.value.name, values)
+        self.builder.line()
+        return carry_vars
+
+    def _emit_dynamic_scheduler_initializers(self, program):
+        slot_vars = {}
+        for slot in program.scheduler_state_slots:
+            key = self._dynamic_slot_key(slot)
+            value = self._component_vars(slot.value.name, 1)[0]
+            self.builder.line(
+                f"{value} = tl.zeros((BLOCK,), dtype=tl.int32)"
+            )
+            slot_vars[key] = value
+            self._set_value(slot.value.name, [value])
+        self.builder.line()
+        return slot_vars
+
+    @staticmethod
+    def _dynamic_slot_var(
+        slot_vars,
+        kind,
+        *,
+        owner=None,
+        producer=None,
+        consumer=None,
+        finished=None,
+        rng_stream=None,
+    ):
+        key = (kind, owner, producer, consumer, finished, rng_stream)
+        try:
+            return slot_vars[key]
+        except KeyError as error:
+            raise ValueError(
+                f"Triton dynamic scheduler has no declared slot {key}."
+            ) from error
+
+    def _emit_dynamic_termination(self, program, slot_vars, done_var: str) -> None:
+        has_run = [
+            self._dynamic_slot_var(slot_vars, "has_run", owner=component_id)
+            for component_id in program.trial_termination.dependency_component_ids
+        ]
+        expression = " & ".join(f"({value} != 0)" for value in has_run)
+        if not expression:
+            raise ValueError(
+                "Triton dynamic AllHaveRun termination requires dependencies."
+            )
+        self.builder.line(
+            f"{done_var} = tl.where(mask & ({expression}), 1, {done_var})"
+        )
+
+    def _emit_dynamic_consideration_set(
+        self,
+        program,
+        consideration_set,
+        slot_vars,
+        carry_vars,
+        done_var: str,
+    ) -> None:
+        set_id = consideration_set.consideration_set_id
+        component_ids = tuple(member.component_id for member in consideration_set.members)
+        self.builder.line(
+            f"# dynamic scheduler consideration set {set_id}, components {component_ids}"
+        )
+        frozen_values = dict(self.value_vars)
+        budget_by_component = {
+            budget.component_id: budget.maximum
+            for budget in program.execution_budgets
+        }
+        member_masks = {}
+        for member in consideration_set.members:
+            predicate = self._dynamic_predicate_expression(
+                member.predicate,
+                slot_vars,
+                member.component_id,
+            )
+            count_var = self._dynamic_slot_var(
+                slot_vars,
+                "execution_count",
+                owner=member.component_id,
+            )
+            try:
+                maximum = budget_by_component[member.component_id]
+            except KeyError as error:
+                raise ValueError(
+                    "Triton dynamic member has no execution budget."
+                ) from error
+            mask_var = f"dynamic_s{set_id}_n{member.component_id}_active"
+            self.builder.line(
+                f"{mask_var} = mask & ({done_var} == 0) & ({predicate}) & "
+                f"({count_var} < {maximum})"
+            )
+            member_masks[member.component_id] = mask_var
+
+        member_values = {}
+        for member in consideration_set.members:
+            self.value_vars.clear()
+            self.value_vars.update(frozen_values)
+            self.dynamic_active_mask = member_masks[member.component_id]
+            self.dynamic_execution_index = self._dynamic_slot_var(
+                slot_vars,
+                "execution_count",
+                owner=member.component_id,
+            )
+            for child in member.body:
+                self._emit_op(child)
+            member_values[member.component_id] = dict(self.value_vars)
+
+        self.value_vars.clear()
+        self.value_vars.update(frozen_values)
+        carries_by_key = {
+            self._dynamic_carry_key(carry): carry
+            for carry in program.loop_carries
+        }
+        for member in consideration_set.members:
+            active = member_masks[member.component_id]
+            values = member_values[member.component_id]
+            for publication in member.publications:
+                key = (
+                    publication.kind,
+                    publication.owner_component_id,
+                    publication.value_id,
+                )
+                try:
+                    carry = carries_by_key[key]
+                    destinations = carry_vars[key]
+                    sources = values[publication.source.name]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton dynamic publication does not resolve to its "
+                        "declared candidate and carry."
+                    ) from error
+                if len(destinations) != len(sources):
+                    raise ValueError(
+                        "Triton dynamic publication candidate/carry widths differ."
+                    )
+                for destination, source in zip(destinations, sources):
+                    self.builder.line(
+                        f"{destination} = tl.where({active}, {source}, {destination})"
+                    )
+                self._set_value(carry.value.name, destinations)
+
+        # Effects read the same frozen carry bank plus their owner's local
+        # candidates, and become visible only after every member body has been
+        # emitted.
+        for member in consideration_set.members:
+            if not member.effects:
+                continue
+            effect_values = dict(frozen_values)
+            effect_values.update(member_values[member.component_id])
+            self.value_vars.clear()
+            self.value_vars.update(effect_values)
+            self.dynamic_active_mask = member_masks[member.component_id]
+            for effect in member.effects:
+                self._emit_apply_modulation(effect)
+
+        self.value_vars.clear()
+        self.value_vars.update(frozen_values)
+        for carry in program.loop_carries:
+            self._set_value(
+                carry.value.name,
+                carry_vars[self._dynamic_carry_key(carry)],
+            )
+        self._emit_dynamic_scheduler_updates(
+            program,
+            consideration_set,
+            slot_vars,
+            member_masks,
+        )
+        self.dynamic_active_mask = "mask"
+        self.dynamic_execution_index = None
+        self.builder.line()
+
+    def _dynamic_predicate_expression(
+        self,
+        predicate,
+        slot_vars,
+        consumer_component_id: int,
+    ) -> str:
+        if predicate.kind == "Always":
+            return "True"
+        if predicate.kind in {"AtPass", "AtTrialStart"}:
+            pass_var = self._dynamic_slot_var(slot_vars, "pass_index")
+            return f"{pass_var} == {predicate.pass_index}"
+        if predicate.kind in {"EveryNCalls", "AllEveryNCalls"}:
+            credits = [
+                self._dynamic_slot_var(
+                    slot_vars,
+                    "usable_call",
+                    producer=dependency_id,
+                    consumer=consumer_component_id,
+                )
+                for dependency_id in predicate.dependency_component_ids
+            ]
+            return " & ".join(
+                f"({credit} >= {predicate.call_count})" for credit in credits
+            )
+        if predicate.kind == "WhenFinished":
+            return self._dynamic_slot_var(
+                slot_vars,
+                "finished",
+                owner=predicate.dependency_component_ids[0],
+                finished=predicate.finished_value_ids[0],
+            ) + " != 0"
+        raise ValueError(
+            f"Unsupported Triton dynamic predicate '{predicate.kind}'."
+        )
+
+    def _emit_dynamic_scheduler_updates(
+        self,
+        program,
+        consideration_set,
+        slot_vars,
+        member_masks,
+    ) -> None:
+        for member in consideration_set.members:
+            active = member_masks[member.component_id]
+            count_var = self._dynamic_slot_var(
+                slot_vars,
+                "execution_count",
+                owner=member.component_id,
+            )
+            has_run_var = self._dynamic_slot_var(
+                slot_vars,
+                "has_run",
+                owner=member.component_id,
+            )
+            self.builder.line(
+                f"{count_var} = tl.where({active}, {count_var} + 1, {count_var})"
+            )
+            self.builder.line(
+                f"{has_run_var} = tl.where({active}, 1, {has_run_var})"
+            )
+            for slot in program.scheduler_state_slots:
+                if (
+                    slot.kind == "rng_clock"
+                    and slot.owner_component_id == member.component_id
+                ):
+                    rng_var = slot_vars[self._dynamic_slot_key(slot)]
+                    self.builder.line(
+                        f"{rng_var} = tl.where({active}, {rng_var} + 1, {rng_var})"
+                    )
+
+        for slot in program.scheduler_state_slots:
+            if slot.kind != "usable_call":
+                continue
+            credit_var = slot_vars[self._dynamic_slot_key(slot)]
+            produced = member_masks.get(slot.producer_component_id)
+            consumed = member_masks.get(slot.consumer_component_id)
+            produced_delta = f"tl.where({produced}, 1, 0)" if produced else "0"
+            consumed_delta = f"tl.where({consumed}, 1, 0)" if consumed else "0"
+            self.builder.line(
+                f"{credit_var} = {credit_var} + {produced_delta} - {consumed_delta}"
+            )
+
+        finished_by_id = {
+            value.value_id: value for value in self.kernel.finished_values
+        }
+        for slot in program.scheduler_state_slots:
+            if slot.kind != "finished":
+                continue
+            try:
+                finished = finished_by_id[slot.finished_value_id]
+            except KeyError as error:
+                raise ValueError(
+                    "Triton dynamic finished slot references an undeclared value."
+                ) from error
+            count_var = self._dynamic_slot_var(
+                slot_vars,
+                "execution_count",
+                owner=slot.owner_component_id,
+            )
+            if finished.predicate_kind == "execution_count_at_least":
+                required = str(finished.attrs["count"])
+            elif (
+                finished.predicate_kind
+                == "execution_count_at_least_effective_parameter"
+            ):
+                effective_parameter_id = finished.attrs["effective_parameter_id"]
+                try:
+                    effective = self.effective_parameter_vars[effective_parameter_id]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton dynamic finished value references an uninitialized "
+                        "effective parameter."
+                    ) from error
+                required = (
+                    "tl.minimum(tl.maximum(tl.ceil("
+                    f"{effective}), {float_literal(finished.attrs['minimum'])}), "
+                    f"{float_literal(finished.attrs['maximum'])})"
+                )
+            else:
+                raise ValueError(
+                    "Triton dynamic scheduler cannot evaluate finished predicate "
+                    f"'{finished.predicate_kind}'."
+                )
+            finished_var = slot_vars[self._dynamic_slot_key(slot)]
+            self.builder.line(
+                f"{finished_var} = tl.where(mask & ({count_var} >= {required}), "
+                f"1, 0)"
+            )
 
     def _emit_precomputed_passes(self, op: KernelOp) -> None:
         if op.attrs.get("declaration_only") is not False:
@@ -727,7 +1149,7 @@ class OpEmitMixin:
             )
         self.builder.line(
             f"{storage_var} = tl.where("
-            f"mask, {controller_values[0]}, {storage_var})"
+            f"{self.dynamic_active_mask}, {controller_values[0]}, {storage_var})"
         )
         self._set_value(op.outputs[0].name, [storage_var])
         self.builder.line()
@@ -819,7 +1241,7 @@ class OpEmitMixin:
             elif binding.role == "max_steps":
                 args.append("MAX_STEPS")
             elif binding.role == "lane_mask":
-                args.append("mask")
+                args.append(self.dynamic_active_mask)
             else:
                 raise ValueError(
                     f"Batched op for '{node.name}' has an unsupported Triton arg "
