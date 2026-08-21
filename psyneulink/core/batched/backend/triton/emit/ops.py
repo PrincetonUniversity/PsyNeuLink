@@ -577,8 +577,15 @@ class OpEmitMixin:
                 raise ValueError(
                     "Triton dynamic exhaustion diagnostics must be scalar."
                 )
+            finished_var = self._dynamic_slot_var(
+                slot_vars,
+                "finished",
+                owner=carry.owner_component_id,
+                finished=carry.value_id,
+            )
             self.builder.line(
-                f"{values[0]} = tl.where(mask & ({done_var} == 0), 1.0, 0.0)"
+                f"{values[0]} = tl.where(mask & ({finished_var} == 0), "
+                "1.0, 0.0)"
             )
 
         self.value_vars.clear()

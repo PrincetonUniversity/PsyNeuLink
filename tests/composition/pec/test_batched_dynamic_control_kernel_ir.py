@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 import itertools
+import re
 
 import numpy as np
 import pytest
@@ -314,7 +315,7 @@ def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
     assert tuple(
         (budget.component_id, budget.maximum)
         for budget in program.execution_budgets
-    ) == ((0, 1), (1, 1), (2, 1), (3, 16), (4, 1))
+    ) == ((0, 1), (1, 1), (2, 1), (3, 16), (4, 16))
 
     candidates = {
         value.name for member in members for op in member.body for value in op.outputs
@@ -349,7 +350,11 @@ def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
     assert source.index("n_n2_output_0_candidate") < source.index(
         "n_n0_output_0_dynamic_current_0 = tl.where"
     )
-    assert "tl.where(mask & (dynamic_done == 0), 1.0, 0.0)" in source
+    assert re.search(
+        r"dynamic_truncated_0_dynamic_current_0 = tl\.where\(mask & "
+        r"\(n_schedule_finished_\d+_0_0 == 0\), 1\.0, 0\.0\)",
+        source,
+    )
     assert source.count(" = _pnl_triton_lca_width2_step(") == 1
     assert all(
         marker not in source

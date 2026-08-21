@@ -900,15 +900,12 @@ def _typed_dynamic_control_chain_supported(
 def _dynamic_controlled_finished_graph_eligible(
     graph: BatchedGraphIR,
     parameters: tuple[BatchedParamSpec, ...],
+    *,
+    op_specs: specs.BatchedOpSpecSnapshot | None = None,
 ) -> bool:
-    """Recognize the first executable lane-local controlled schedule.
+    """Recognize a disjoint union of executable controlled-finished chains."""
 
-    This is intentionally a whole-graph boundary.  The earlier chain helper
-    decides whether typed declarations may be preserved; this helper decides
-    whether every surrounding scheduler and dataflow effect has exactly the
-    one-controller shape implemented by KernelIR and Triton.
-    """
-
+    lookup_spec = specs.lookup_spec if op_specs is None else op_specs.lookup_spec
     dynamic_finished = tuple(
         value
         for value in graph.finished_values
@@ -916,161 +913,46 @@ def _dynamic_controlled_finished_graph_eligible(
         == "execution_count_at_least_effective_parameter"
     )
     node_component_ids = tuple(node.component_id for node in graph.nodes)
+    chain_count = len(graph.modulations)
     if not (
         graph.metadata.get("schedule_kind") == DYNAMIC_LANE_LOCAL_SCHEDULE
         and graph.fusion_kind == STATEFUL_GRAPH_FUSION
         and not graph.rng_streams
-        and len(graph.modulations) == 1
-        and len(graph.effective_parameters) == 1
-        and len(dynamic_finished) == 1
-        and len(graph.nodes) == 5
+        and chain_count > 0
+        and len(graph.effective_parameters) == chain_count
+        and len(dynamic_finished) == chain_count
+        and len(graph.finished_values) == chain_count
+        and len(graph.nodes) == 5 * chain_count
+        and tuple(item.modulation_id for item in graph.modulations)
+        == tuple(range(chain_count))
+        and tuple(
+            item.effective_parameter_id for item in graph.effective_parameters
+        )
+        == tuple(range(chain_count))
+        and tuple(item.value_id for item in dynamic_finished)
+        == tuple(range(chain_count))
+        and tuple(
+            item.effective_parameter_id for item in graph.modulations
+        )
+        == tuple(
+            item.effective_parameter_id for item in graph.effective_parameters
+        )
         and all(type(component_id) is int for component_id in node_component_ids)
         and node_component_ids == tuple(range(len(graph.nodes)))
     ):
         return False
 
-    modulation = graph.modulations[0]
-    finished = dynamic_finished[0]
-    try:
-        source = graph.node(modulation.source)
-        controller = graph.node(modulation.controller)
-        target = graph.node(modulation.target)
-        target_spec = specs.lookup_spec(target.attrs["spec_key"])
-        controller_spec_key = controller.attrs.get("spec_key", "")
-        controller_spec = (
-            specs.lookup_spec(controller_spec_key)
-            if controller_spec_key
-            else None
-        )
-    except (KeyError, specs.BatchedOpSpecError):
-        return False
-
     parameters_by_name = {parameter.name: parameter for parameter in parameters}
-    controller_bindings = (
-        tuple(binding.arg for binding in controller_spec.params)
-        if isinstance(controller_spec, specs.ElementwiseFunctionSpec)
-        else ()
-    )
-    controller_parameters = tuple(
-        parameters_by_name.get(name) for name in controller.params.values()
-    )
-    identity_controller = bool(
-        controller.function_type == "Identity"
-        and controller_spec is None
-        and not controller.params
-        and controller.attrs.get("spec_kind") == "control"
-        and controller.attrs.get("control_function") == "identity"
-    )
-    linear_count_controller = False
-    if (
-        isinstance(controller_spec, specs.ElementwiseFunctionSpec)
-        and controller_spec.function_class is Linear
-        and controller.function_type == "Linear"
-        and controller.attrs.get("spec_kind") == "control"
-        and controller.attrs.get("control_function") == "registered"
-        and tuple(controller.params) == controller_bindings
-        and controller_bindings == ("slope", "intercept", "scale", "offset")
-        and all(parameter is not None for parameter in controller_parameters)
-        and all(
-            parameter.owner_component_id == controller.component_id
-            and parameter.owner_scope == binding.scope
-            and not parameter.runtime_mutable
-            for parameter, binding in zip(
-                controller_parameters,
-                controller_spec.params,
-            )
-        )
-    ):
-        defaults = {
-            argument: parameters_by_name[name].default
-            for argument, name in controller.params.items()
-        }
-        intercept = defaults["intercept"]
-        linear_count_controller = bool(
-            all(type(value) is float for value in defaults.values())
-            and defaults["slope"] == 1.0
-            and defaults["scale"] == 1.0
-            and defaults["offset"] == 0.0
-            and np.isfinite(intercept)
-            and 0.0 <= intercept <= FP32_EXACT_INTEGER_LIMIT
-            and float(intercept).is_integer()
-        )
-    if not (
-        isinstance(target_spec, specs.MechanismOpSpec)
-        and target_spec.can_step
-        and (identity_controller or linear_count_controller)
-        and target.attrs.get("termination_input_node") == source.name
-        and not target.attrs.get("diagnostics")
-        and modulation.controller not in graph.execution_order
-        and modulation.source in graph.execution_order
-        and modulation.target in graph.execution_order
-        and source.component_id == modulation.source_component_id
-        and controller.component_id == modulation.controller_component_id
-        and target.component_id == modulation.target_component_id
-        and type(controller.input_width) is int
-        and controller.input_width == 1
-        and type(controller.output_width) is int
-        and controller.output_width == 1
-        and controller.input_port_ids
-        == (modulation.controller_input_port_id,)
-        and controller.output_port_ids == (modulation.control_signal_port_id,)
-        and len(controller.parameter_port_ids) == len(controller.params)
-        and {name for name, _ in controller.parameter_port_ids}
-        == set(controller.params)
-    ):
+    if len(parameters_by_name) != len(parameters):
         return False
 
     scheduler_by_id = {
         condition.component_id: condition for condition in graph.scheduler
     }
-    if len(scheduler_by_id) != len(graph.nodes):
-        return False
-    source_condition = scheduler_by_id.get(modulation.source_component_id)
-    controller_condition = scheduler_by_id.get(
-        modulation.controller_component_id
-    )
-    target_condition = scheduler_by_id.get(modulation.target_component_id)
-    followers = tuple(
-        condition
-        for condition in graph.scheduler
-        if condition.condition_type == "WhenFinished"
-        and condition.dependency_component_ids
-        == (modulation.target_component_id,)
-        and condition.finished_value_ids == (finished.value_id,)
-    )
     if (
-        source_condition is None
-        or controller_condition is None
-        or target_condition is None
-        or len(followers) != 1
+        len(graph.scheduler) != len(graph.nodes)
+        or set(scheduler_by_id) != set(node_component_ids)
     ):
-        return False
-    follower_condition = followers[0]
-    try:
-        follower = graph.node(follower_condition.node)
-    except KeyError:
-        return False
-
-    role_ids = {
-        modulation.source_component_id,
-        modulation.controller_component_id,
-        modulation.target_component_id,
-        follower_condition.component_id,
-    }
-    prelude_ids = tuple(
-        node.component_id
-        for node in graph.nodes
-        if node.component_id not in role_ids
-    )
-    if len(role_ids) != 4 or len(prelude_ids) != 1:
-        return False
-    prelude_id = prelude_ids[0]
-    prelude_condition = scheduler_by_id.get(prelude_id)
-    if prelude_condition is None:
-        return False
-    try:
-        prelude = graph.node(prelude_condition.node)
-    except KeyError:
         return False
 
     def exact_attrs(actual, expected) -> bool:
@@ -1093,26 +975,6 @@ def _dynamic_controlled_finished_graph_eligible(
             and exact_attrs(condition.attrs, attrs)
         )
 
-    at_pass_zero = {
-        "pass_index": 0,
-        "time_scale": "ENVIRONMENT_STATE_UPDATE",
-    }
-    if not (
-        condition_matches(source_condition, "AtPass", at_pass_zero)
-        and condition_matches(controller_condition, "AtPass", at_pass_zero)
-        and condition_matches(prelude_condition, "AtPass", at_pass_zero)
-        and condition_matches(target_condition, "Always", {})
-        and follower_condition.region == "pass"
-        and follower_condition.dependencies == (target.name,)
-        and follower_condition.dependency_component_ids == (target.component_id,)
-        and follower_condition.finished_value_ids == (finished.value_id,)
-        and exact_attrs(
-            follower_condition.attrs,
-            {"predicate": "is_finished"},
-        )
-    ):
-        return False
-
     consideration_sets = tuple(
         sorted(
             graph.consideration_sets,
@@ -1120,9 +982,9 @@ def _dynamic_controlled_finished_graph_eligible(
         )
     )
     if (
-        len(consideration_sets) != 4
+        not consideration_sets
         or tuple(item.consideration_set_id for item in consideration_sets)
-        != (0, 1, 2, 3)
+        != tuple(range(len(consideration_sets)))
         or any(
             item.region != "pass"
             or item.inputs_frozen is not True
@@ -1130,23 +992,17 @@ def _dynamic_controlled_finished_graph_eligible(
             != tuple(graph.node(name).component_id for name in item.nodes)
             for item in consideration_sets
         )
-        or set(consideration_sets[0].component_ids)
-        != {modulation.source_component_id, prelude_id}
-        or len(consideration_sets[0].nodes) != 2
-        or len(set(consideration_sets[0].nodes)) != 2
-        or len(consideration_sets[0].component_ids) != 2
-        or len(set(consideration_sets[0].component_ids)) != 2
-        or consideration_sets[1].nodes != (controller.name,)
-        or consideration_sets[1].component_ids
-        != (modulation.controller_component_id,)
-        or consideration_sets[2].nodes != (target.name,)
-        or consideration_sets[2].component_ids
-        != (modulation.target_component_id,)
-        or consideration_sets[3].nodes != (follower.name,)
-        or consideration_sets[3].component_ids
-        != (follower_condition.component_id,)
-        or graph.execution_order
-        != (*consideration_sets[0].nodes, target.name, follower.name)
+    ):
+        return False
+    component_set_ids = {}
+    for item in consideration_sets:
+        for component_id in item.component_ids:
+            if component_id in component_set_ids:
+                return False
+            component_set_ids[component_id] = item.consideration_set_id
+    if set(component_set_ids) != set(node_component_ids) or any(
+        scheduler_by_id[component_id].consideration_set_id != set_id
+        for component_id, set_id in component_set_ids.items()
     ):
         return False
 
@@ -1192,55 +1048,262 @@ def _dynamic_controlled_finished_graph_eligible(
     ):
         return False
 
-    target_state_ids = tuple(
-        state.state_id
-        for state in graph.states
-        if state.component_id == modulation.target_component_id
-    )
-    if (
-        not target_state_ids
-        or any(
-            state.component_id != modulation.target_component_id
-            for state in graph.states
-        )
-        or len(graph.resets) != 1
-        or graph.resets[0].node != target.name
-        or graph.resets[0].component_id != modulation.target_component_id
-        or graph.resets[0].state_ids != target_state_ids
-        or graph.resets[0].condition_type not in {"AtTrialStart", "Never"}
-        or graph.resets[0].region != "trial"
-        or not exact_attrs(graph.resets[0].attrs, {})
-    ):
-        return False
-
-    projection_pairs = tuple(
+    projection_pairs = [
         (projection.sender_component_id, projection.receiver_component_id)
         for projection in graph.projections
-    )
-    return bool(
-        len(projection_pairs) == 2
-        and prelude.component_type == "TransferMechanism"
-        and follower.component_type == "TransferMechanism"
-        and all(
-            type(actual_id) is type(expected_id)
-            and actual_id == expected_id
-            for actual_pair, expected_pair in zip(
-                projection_pairs,
-                (
-                    (prelude.component_id, modulation.target_component_id),
-                    (
-                        modulation.target_component_id,
-                        follower_condition.component_id,
-                    ),
-                ),
+    ]
+    effective_by_id = {
+        item.effective_parameter_id: item
+        for item in graph.effective_parameters
+    }
+    resets_by_id = {item.component_id: item for item in graph.resets}
+    if len(resets_by_id) != len(graph.resets):
+        return False
+
+    at_pass_zero = {
+        "pass_index": 0,
+        "time_scale": "ENVIRONMENT_STATE_UPDATE",
+    }
+    used_component_ids = set()
+    expected_projection_pairs = []
+    expected_input_ids = set()
+    expected_output_ids = set()
+    target_ids = set()
+    follower_ids = set()
+    controller_ids = set()
+
+    for modulation in graph.modulations:
+        try:
+            source = graph.node(modulation.source)
+            controller = graph.node(modulation.controller)
+            target = graph.node(modulation.target)
+            target_spec = lookup_spec(target.attrs["spec_key"])
+            parameter = effective_by_id[modulation.effective_parameter_id]
+            source_condition = scheduler_by_id[modulation.source_component_id]
+            controller_condition = scheduler_by_id[
+                modulation.controller_component_id
+            ]
+            target_condition = scheduler_by_id[modulation.target_component_id]
+        except (KeyError, specs.BatchedOpSpecError):
+            return False
+
+        controller_spec_key = controller.attrs.get("spec_key", "")
+        try:
+            controller_spec = (
+                lookup_spec(controller_spec_key)
+                if controller_spec_key
+                else None
             )
-            for actual_id, expected_id in zip(actual_pair, expected_pair)
+        except specs.BatchedOpSpecError:
+            return False
+        controller_bindings = (
+            tuple(binding.arg for binding in controller_spec.params)
+            if isinstance(controller_spec, specs.ElementwiseFunctionSpec)
+            else ()
         )
-        and len(graph.inputs) == 2
-        and {input_spec.component_id for input_spec in graph.inputs}
-        == {modulation.source_component_id, prelude.component_id}
-        and len(graph.outputs) == 1
-        and graph.outputs[0].component_id == follower_condition.component_id
+        controller_parameters = tuple(
+            parameters_by_name.get(name) for name in controller.params.values()
+        )
+        identity_controller = bool(
+            controller.function_type == "Identity"
+            and controller_spec is None
+            and not controller.params
+            and controller.attrs.get("spec_kind") == "control"
+            and controller.attrs.get("control_function") == "identity"
+        )
+        linear_count_controller = False
+        if (
+            isinstance(controller_spec, specs.ElementwiseFunctionSpec)
+            and controller_spec.function_class is Linear
+            and controller.function_type == "Linear"
+            and controller.attrs.get("spec_kind") == "control"
+            and controller.attrs.get("control_function") == "registered"
+            and tuple(controller.params) == controller_bindings
+            and controller_bindings
+            == ("slope", "intercept", "scale", "offset")
+            and all(
+                parameter is not None for parameter in controller_parameters
+            )
+            and all(
+                parameter.owner_component_id == controller.component_id
+                and parameter.owner_scope == binding.scope
+                and not parameter.runtime_mutable
+                for parameter, binding in zip(
+                    controller_parameters,
+                    controller_spec.params,
+                )
+            )
+        ):
+            defaults = {
+                argument: parameters_by_name[name].default
+                for argument, name in controller.params.items()
+            }
+            intercept = defaults["intercept"]
+            linear_count_controller = bool(
+                all(type(value) is float for value in defaults.values())
+                and defaults["slope"] == 1.0
+                and defaults["scale"] == 1.0
+                and defaults["offset"] == 0.0
+                and np.isfinite(intercept)
+                and 0.0 <= intercept <= FP32_EXACT_INTEGER_LIMIT
+                and float(intercept).is_integer()
+            )
+
+        finished_matches = tuple(
+            value
+            for value in dynamic_finished
+            if value.component_id == modulation.target_component_id
+        )
+        followers = tuple(
+            condition
+            for condition in graph.scheduler
+            if condition.condition_type == "WhenFinished"
+            and condition.dependency_component_ids
+            == (modulation.target_component_id,)
+            and len(finished_matches) == 1
+            and condition.finished_value_ids == (finished_matches[0].value_id,)
+        )
+        inbound = tuple(
+            projection
+            for projection in graph.projections
+            if projection.receiver_component_id
+            == modulation.target_component_id
+        )
+        if len(finished_matches) != 1 or len(followers) != 1 or len(inbound) != 1:
+            return False
+        finished = finished_matches[0]
+        follower_condition = followers[0]
+        try:
+            follower = graph.node(follower_condition.node)
+            prelude = next(
+                node
+                for node in graph.nodes
+                if node.component_id == inbound[0].sender_component_id
+            )
+            prelude_condition = scheduler_by_id[prelude.component_id]
+        except (KeyError, StopIteration):
+            return False
+
+        role_ids = {
+            source.component_id,
+            controller.component_id,
+            target.component_id,
+            follower.component_id,
+            prelude.component_id,
+        }
+        if len(role_ids) != 5 or used_component_ids.intersection(role_ids):
+            return False
+        used_component_ids.update(role_ids)
+        target_ids.add(target.component_id)
+        follower_ids.add(follower.component_id)
+        controller_ids.add(controller.component_id)
+
+        expected_finished_attrs = {
+            "effective_parameter_id": modulation.effective_parameter_id,
+            "target_parameter_port_id": modulation.target_parameter_port_id,
+            "rounding": "ceil",
+            "minimum": 1,
+            "maximum": 2 ** 24,
+        }
+        if not (
+            isinstance(target_spec, specs.MechanismOpSpec)
+            and target_spec.can_step
+            and (identity_controller or linear_count_controller)
+            and target.attrs.get("termination_input_node") == source.name
+            and not target.attrs.get("diagnostics")
+            and source.component_id == modulation.source_component_id
+            and controller.component_id == modulation.controller_component_id
+            and target.component_id == modulation.target_component_id
+            and modulation.controller not in graph.execution_order
+            and modulation.source in graph.execution_order
+            and modulation.target in graph.execution_order
+            and type(controller.input_width) is int
+            and controller.input_width == 1
+            and type(controller.output_width) is int
+            and controller.output_width == 1
+            and controller.input_port_ids
+            == (modulation.controller_input_port_id,)
+            and controller.output_port_ids
+            == (modulation.control_signal_port_id,)
+            and len(controller.parameter_port_ids) == len(controller.params)
+            and {name for name, _ in controller.parameter_port_ids}
+            == set(controller.params)
+            and parameter.target == target.name
+            and parameter.target_component_id == target.component_id
+            and parameter.target_parameter == modulation.target_parameter
+            and parameter.target_parameter_port_id
+            == modulation.target_parameter_port_id
+            and finished.node == target.name
+            and finished.producer_consideration_set_id
+            == target_condition.consideration_set_id
+            and exact_attrs(finished.attrs, expected_finished_attrs)
+            and condition_matches(source_condition, "AtPass", at_pass_zero)
+            and condition_matches(controller_condition, "AtPass", at_pass_zero)
+            and condition_matches(prelude_condition, "AtPass", at_pass_zero)
+            and condition_matches(target_condition, "Always", {})
+            and follower_condition.region == "pass"
+            and follower_condition.dependencies == (target.name,)
+            and follower_condition.dependency_component_ids
+            == (target.component_id,)
+            and follower_condition.finished_value_ids == (finished.value_id,)
+            and exact_attrs(
+                follower_condition.attrs,
+                {"predicate": "is_finished"},
+            )
+            and component_set_ids[source.component_id]
+            == component_set_ids[prelude.component_id]
+            and component_set_ids[source.component_id]
+            < component_set_ids[controller.component_id]
+            < component_set_ids[target.component_id]
+            < component_set_ids[follower.component_id]
+            and prelude.component_type == "TransferMechanism"
+            and follower.component_type == "TransferMechanism"
+        ):
+            return False
+
+        target_state_ids = tuple(
+            state.state_id
+            for state in graph.states
+            if state.component_id == target.component_id
+        )
+        reset = resets_by_id.get(target.component_id)
+        if (
+            not target_state_ids
+            or reset is None
+            or reset.node != target.name
+            or reset.state_ids != target_state_ids
+            or reset.condition_type not in {"AtTrialStart", "Never"}
+            or reset.region != "trial"
+            or not exact_attrs(reset.attrs, {})
+        ):
+            return False
+
+        expected_projection_pairs.extend((
+            (prelude.component_id, target.component_id),
+            (target.component_id, follower.component_id),
+        ))
+        expected_input_ids.update((source.component_id, prelude.component_id))
+        expected_output_ids.add(follower.component_id)
+
+    execution_order = tuple(
+        node.name
+        for node in graph.nodes
+        if node.component_id not in controller_ids
+    )
+    input_ids = tuple(item.component_id for item in graph.inputs)
+    output_ids = tuple(item.component_id for item in graph.outputs)
+    return bool(
+        used_component_ids == set(node_component_ids)
+        and all(state.component_id in target_ids for state in graph.states)
+        and set(resets_by_id) == target_ids
+        and graph.execution_order == execution_order
+        and sorted(projection_pairs) == sorted(expected_projection_pairs)
+        and len(input_ids) == 2 * chain_count
+        and len(set(input_ids)) == len(input_ids)
+        and set(input_ids) == expected_input_ids
+        and len(output_ids) == chain_count
+        and len(set(output_ids)) == len(output_ids)
+        and set(output_ids) == expected_output_ids == follower_ids
     )
 
 

@@ -13,6 +13,7 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
     _dynamic_controlled_coevolving_graph_eligible,
+    _dynamic_controlled_finished_graph_eligible,
     _node_param_aliases,
     projection_inputs,
 )
@@ -4086,7 +4087,21 @@ def _canonical_dynamic_schedule_program(
     if len(carries_by_key) != len(carries):
         raise ValueError("KernelIR dynamic carry inventory is not unique.")
 
-    modulation = kernel.modulations[0]
+    modulation_by_controller_id = {
+        modulation.controller_component_id: modulation
+        for modulation in kernel.modulations
+    }
+    modulation_by_target_id = {
+        modulation.target_component_id: modulation
+        for modulation in kernel.modulations
+    }
+    if (
+        len(modulation_by_controller_id) != len(kernel.modulations)
+        or len(modulation_by_target_id) != len(kernel.modulations)
+    ):
+        raise ValueError(
+            "KernelIR dynamic control and target identities must be unique."
+        )
     effective_by_id = {
         parameter.effective_parameter_id: parameter
         for parameter in kernel.effective_parameters
@@ -4102,19 +4117,23 @@ def _canonical_dynamic_schedule_program(
                 nodes_by_id=nodes_by_id,
                 finished_by_id=finished_by_id,
             )
-            if component_id == modulation.controller_component_id:
+            controller_modulation = modulation_by_controller_id.get(component_id)
+            target_modulation = modulation_by_target_id.get(component_id)
+            if controller_modulation is not None:
                 body, publications, effects = _dynamic_controller_member(
                     kernel,
                     node,
-                    modulation=modulation,
-                    parameter=effective_by_id[modulation.effective_parameter_id],
+                    modulation=controller_modulation,
+                    parameter=effective_by_id[
+                        controller_modulation.effective_parameter_id
+                    ],
                     carries_by_key=carries_by_key,
                 )
             else:
                 body, publications = _dynamic_ordinary_member(
                     kernel,
                     node,
-                    modulation=modulation,
+                    modulation=target_modulation,
                     carries_by_key=carries_by_key,
                     state_carries=state_carries,
                 )
@@ -4234,9 +4253,10 @@ def _canonical_dynamic_schedule_program(
             KernelComponentExecutionBudget(
                 component_id,
                 (
-                    kernel.max_steps
-                    if predicates[component_id].kind == "Always"
-                    else 1
+                    1
+                    if predicates[component_id].kind
+                    in {"AtPass", "AtTrialStart"}
+                    else kernel.max_steps
                 ),
             )
             for component_id in member_ids
@@ -4429,7 +4449,10 @@ def _dynamic_ordinary_member(
                 )
             )
             continue
-        if node.component_id != modulation.target_component_id:
+        if (
+            modulation is None
+            or node.component_id != modulation.target_component_id
+        ):
             raise ValueError(
                 "KernelIR generic schedule has an unrepresented mechanism member."
             )
@@ -4532,29 +4555,28 @@ def _canonical_dynamic_schedule_kernel_ops(
     diagnostic_carries = tuple(
         carry for carry in program.loop_carries if carry.kind == "diagnostic"
     )
-    if len(diagnostic_carries) != 1:
+    if len(diagnostic_carries) != len(kernel.modulations):
         raise ValueError(
-            "KernelIR controlled dynamic schedule requires one diagnostic carry."
+            "KernelIR controlled dynamic schedule requires one diagnostic "
+            "carry per modulation."
         )
-    diagnostic = diagnostic_carries[0]
-    target = next(
-        node
-        for node in graph.nodes
-        if node.component_id == diagnostic.owner_component_id
-    )
+    nodes_by_id = {node.component_id: node for node in graph.nodes}
     state_values = _state_kernel_values(graph)
     trial_body = (
         *_trial_reset_ops(graph, state_values),
         region,
-        KernelOp(
-            "StoreFlag",
-            target.name,
-            inputs=(diagnostic.value,),
-            attrs={
-                "node": target.name,
-                "name": "truncated",
-                "slot": 0,
-            },
+        *(
+            KernelOp(
+                "StoreFlag",
+                nodes_by_id[diagnostic.owner_component_id].name,
+                inputs=(diagnostic.value,),
+                attrs={
+                    "node": nodes_by_id[diagnostic.owner_component_id].name,
+                    "name": "truncated",
+                    "slot": slot,
+                },
+            )
+            for slot, diagnostic in enumerate(diagnostic_carries)
         ),
         *_trial_output_ops(graph),
     )
@@ -5350,33 +5372,17 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
 
 
 def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
-    """Whether the first exact controlled-finished program can be materialized.
+    """Whether a complete typed controlled-finished program can materialize."""
 
-    Structural eligibility is independent of executable flags so the same
-    predicate can authenticate the provisional declaration and its final
-    executable replacement.
-    """
-
-    dynamic_finished = tuple(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    )
-    node_component_ids = tuple(
-        node.component_id for node in kernel.graph.nodes
-    )
     if not (
-        kernel.graph.metadata.get("schedule_kind") == "dynamic_lane_local"
-        and kernel.graph.fusion_kind == STATEFUL_GRAPH_FUSION
+        _dynamic_controlled_finished_graph_eligible(
+            kernel.graph,
+            kernel.params,
+            op_specs=kernel.op_specs,
+        )
         and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
         and not kernel.rng_streams
         and kernel.schedule_trace is None
-        and len(kernel.modulations) == 1
-        and len(kernel.effective_parameters) == 1
-        and len(dynamic_finished) == 1
-        and all(type(component_id) is int for component_id in node_component_ids)
-        and node_component_ids == tuple(range(len(kernel.graph.nodes)))
         and all(
             {"integrator_pre", "onset_step"}.isdisjoint(node.attrs)
             for node in kernel.graph.nodes
@@ -5384,251 +5390,28 @@ def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
     ):
         return False
 
-    modulation = kernel.modulations[0]
-    try:
-        source = kernel.graph.node(modulation.source)
-        controller = kernel.graph.node(modulation.controller)
-        target = kernel.graph.node(modulation.target)
-        target_spec = kernel.op_specs.lookup_spec(target.attrs["spec_key"])
-    except (BatchedOpSpecError, KeyError):
-        return False
-    if not (
-        isinstance(target_spec, MechanismOpSpec)
-        and target_spec.can_step
-        and _dynamic_count_controller_eligible(kernel, controller)
-        and _dynamic_controller_shape_eligible(
-            kernel,
-            controller,
-            modulation,
-        )
-        and target.attrs.get("termination_input_node") == source.name
-        and not target.attrs.get("diagnostics")
-        and modulation.controller not in kernel.graph.execution_order
-        and modulation.target in kernel.graph.execution_order
-        and modulation.source in kernel.graph.execution_order
-    ):
-        return False
-
-    scheduler_by_id = {
-        condition.component_id: condition for condition in kernel.scheduler
-    }
-    source_condition = scheduler_by_id.get(modulation.source_component_id)
-    controller_condition = scheduler_by_id.get(
-        modulation.controller_component_id
-    )
-    target_condition = scheduler_by_id.get(modulation.target_component_id)
-    finished = dynamic_finished[0]
-    followers = tuple(
-        condition
-        for condition in kernel.scheduler
-        if condition.condition_type == "WhenFinished"
-        and condition.dependency_component_ids
-        == (modulation.target_component_id,)
-        and condition.finished_value_ids == (finished.value_id,)
-    )
-    if (
-        source_condition is None
-        or controller_condition is None
-        or target_condition is None
-        or len(followers) != 1
-    ):
-        return False
-    follower_condition = followers[0]
-    follower = kernel.graph.node(follower_condition.node)
-
-    role_ids = {
-        modulation.source_component_id,
-        modulation.controller_component_id,
-        modulation.target_component_id,
-        follower_condition.component_id,
-    }
-    prelude_ids = tuple(
-        node.component_id
-        for node in kernel.graph.nodes
-        if node.component_id not in role_ids
-    )
-    if len(prelude_ids) != 1:
-        return False
-    prelude_id = prelude_ids[0]
-    prelude = kernel.graph.node(
-        scheduler_by_id[prelude_id].node
-    ) if prelude_id in scheduler_by_id else None
-    if prelude is None:
-        return False
-
-    def condition_matches(condition, condition_type, attrs) -> bool:
-        return bool(
-            condition.condition_type == condition_type
-            and condition.region == "pass"
-            and not condition.dependencies
-            and not condition.dependency_component_ids
-            and not condition.finished_value_ids
-            and _kernel_attribute_matches_exactly(
-                condition.attrs,
-                attrs,
+    for modulation in kernel.modulations:
+        try:
+            source = kernel.graph.node(modulation.source)
+            controller = kernel.graph.node(modulation.controller)
+            target = kernel.graph.node(modulation.target)
+            target_spec = kernel.op_specs.lookup_spec(target.attrs["spec_key"])
+        except (BatchedOpSpecError, KeyError):
+            return False
+        if not (
+            isinstance(target_spec, MechanismOpSpec)
+            and target_spec.can_step
+            and _dynamic_count_controller_eligible(kernel, controller)
+            and _dynamic_controller_shape_eligible(
+                kernel,
+                controller,
+                modulation,
             )
-        )
-
-    at_pass_zero = {
-        "pass_index": 0,
-        "time_scale": "ENVIRONMENT_STATE_UPDATE",
-    }
-    prelude_condition = scheduler_by_id[prelude_id]
-    if not (
-        condition_matches(source_condition, "AtPass", at_pass_zero)
-        and condition_matches(controller_condition, "AtPass", at_pass_zero)
-        and condition_matches(prelude_condition, "AtPass", at_pass_zero)
-        and condition_matches(target_condition, "Always", {})
-        and follower_condition.region == "pass"
-        and follower_condition.dependencies == (target.name,)
-        and follower_condition.dependency_component_ids
-        == (modulation.target_component_id,)
-        and follower_condition.finished_value_ids == (finished.value_id,)
-        and _kernel_attribute_matches_exactly(
-            follower_condition.attrs,
-            {"predicate": "is_finished"},
-        )
-    ):
-        return False
-
-    consideration_sets = tuple(
-        sorted(
-            kernel.consideration_sets,
-            key=lambda item: item.consideration_set_id,
-        )
-    )
-    if (
-        len(consideration_sets) != 4
-        or tuple(item.consideration_set_id for item in consideration_sets)
-        != (0, 1, 2, 3)
-        or any(
-            item.region != "pass" or item.inputs_frozen is not True
-            for item in consideration_sets
-        )
-        or any(
-            item.component_ids
-            != tuple(
-                kernel.graph.node(name).component_id
-                for name in item.nodes
-            )
-            for item in consideration_sets
-        )
-        or set(consideration_sets[0].component_ids)
-        != {modulation.source_component_id, prelude_id}
-        or len(consideration_sets[0].nodes) != 2
-        or len(set(consideration_sets[0].nodes)) != 2
-        or len(consideration_sets[0].component_ids) != 2
-        or len(set(consideration_sets[0].component_ids)) != 2
-        or consideration_sets[1].nodes != (controller.name,)
-        or consideration_sets[1].component_ids
-        != (modulation.controller_component_id,)
-        or consideration_sets[2].nodes != (target.name,)
-        or consideration_sets[2].component_ids
-        != (modulation.target_component_id,)
-        or consideration_sets[3].nodes != (follower.name,)
-        or consideration_sets[3].component_ids
-        != (follower_condition.component_id,)
-    ):
-        return False
-    expected_execution_order = (
-        *consideration_sets[0].nodes,
-        target.name,
-        follower.name,
-    )
-    if kernel.graph.execution_order != expected_execution_order:
-        return False
-
-    if (
-        len(kernel.schedule_regions) != 2
-        or tuple(
-            (region.name, region.kind, region.time_scale, region.parent)
-            for region in kernel.schedule_regions
-        )
-        != (
-            ("trial", "trial", "ENVIRONMENT_STATE_UPDATE", ""),
-            ("pass", "pass", "PASS", "trial"),
-        )
-    ):
-        return False
-    if len(kernel.termination) != 2:
-        return False
-    termination_by_scale = {
-        termination.time_scale: termination
-        for termination in kernel.termination
-    }
-    trial_termination = termination_by_scale.get("ENVIRONMENT_STATE_UPDATE")
-    run_termination = termination_by_scale.get("ENVIRONMENT_SEQUENCE")
-    all_component_ids = tuple(
-        node.component_id for node in kernel.graph.nodes
-    )
-    if not (
-        len(termination_by_scale) == len(kernel.termination)
-        and trial_termination is not None
-        and trial_termination.condition_type == "AllHaveRun"
-        and _kernel_attribute_matches_exactly(
-            trial_termination.dependency_component_ids,
-            all_component_ids,
-        )
-        and _kernel_attribute_matches_exactly(
-            trial_termination.attrs,
-            {},
-        )
-        and run_termination is not None
-        and run_termination.condition_type == "Never"
-        and _kernel_attribute_matches_exactly(
-            run_termination.dependency_component_ids,
-            (),
-        )
-        and _kernel_attribute_matches_exactly(
-            run_termination.attrs,
-            {},
-        )
-    ):
-        return False
-
-    target_state_ids = tuple(
-        state.state_id
-        for state in kernel.states
-        if state.component_id == modulation.target_component_id
-    )
-    if (
-        not target_state_ids
-        or any(
-            state.component_id != modulation.target_component_id
-            for state in kernel.states
-        )
-        or len(kernel.resets) != 1
-        or kernel.resets[0].component_id != modulation.target_component_id
-        or kernel.resets[0].state_ids != target_state_ids
-        or kernel.resets[0].condition_type not in {"AtTrialStart", "Never"}
-        or kernel.resets[0].region != "trial"
-        or not _kernel_attribute_matches_exactly(kernel.resets[0].attrs, {})
-    ):
-        return False
-
-    projection_pairs = tuple(
-        (projection.sender_component_id, projection.receiver_component_id)
-        for projection in kernel.graph.projections
-    )
-    return bool(
-        len(kernel.graph.nodes) == 5
-        and prelude.component_type == "TransferMechanism"
-        and follower.component_type == "TransferMechanism"
-        and source.component_id == modulation.source_component_id
-        and controller.component_id == modulation.controller_component_id
-        and target.component_id == modulation.target_component_id
-        and _kernel_attribute_matches_exactly(
-            projection_pairs,
-            (
-                (prelude_id, modulation.target_component_id),
-                (modulation.target_component_id, follower_condition.component_id),
-            ),
-        )
-        and {input_spec.component_id for input_spec in kernel.inputs}
-        == {modulation.source_component_id, prelude_id}
-        and len(kernel.outputs) == 1
-        and kernel.outputs[0].component_id == follower_condition.component_id
-    )
+            and target.attrs.get("termination_input_node") == source.name
+            and not target.attrs.get("diagnostics")
+        ):
+            return False
+    return True
 
 
 def _dynamic_count_controller_eligible(kernel: KernelIR, controller) -> bool:
