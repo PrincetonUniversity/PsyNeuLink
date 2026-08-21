@@ -45,6 +45,64 @@ PsyNeuLink execution machinery. That generality is useful, but it also carries
 scheduler, port, state, and `is_finished` overhead that is often unnecessary for
 static stochastic PEC batches.
 
+## Next Architecture: Generic Co-Evolving Consideration Sets
+
+The current CSI path is a correctness reference, not the desired final
+architecture. It authenticates one exact 11-node/six-consideration-set graph,
+and its `lane_local_coevolving` emitter assumes one controlled stepper, one
+terminator, and CSI's held threshold-control cleanup. Supporting another
+co-evolving topology must not require another topology-specific eligibility
+predicate, KernelIR builder, validator, or emitter.
+
+The next milestone is a generic lane-local consideration-set executor. Its
+success criterion is that CSI and new topology fixtures lower through the same
+typed scheduler machinery, after which the CSI-specific graph boundary and
+loop implementation can be deleted.
+
+Initial topology acceptance corpus:
+
+1. two independent stateful chains in one trial;
+2. branching and fan-in `WhenFinished` dependencies;
+3. multiple finished predicates and a trial terminator;
+4. delayed `AtPass` execution with termination between consideration sets;
+5. multiple stochastic mechanisms with component-local RNG clocks; and
+6. CSI, retained as the full state/control/RNG regression case.
+
+Implementation skeleton:
+
+1. Lower every dynamic consideration set explicitly, with typed component IDs,
+   ordered bodies, predicate expressions, and dependency/finished-value IDs.
+2. Allocate per-lane scheduler state: execution counts, `has_run`, finished
+   values, pass index, and trial termination state.
+3. Give pass regions explicit arguments, yielded values, loop-carried mechanism
+   state, held control values, and diagnostics; do not allow nested definitions
+   to escape through implicit emitter scope.
+4. Emit consideration sets in scheduler order under lane masks, update counters
+   and effects at the declared point, and evaluate termination between sets.
+5. Address each RNG stream by its owning component's local execution count, so
+   draws remain independent of unrelated onset, divergence, and safety caps.
+6. Replace whole-topology authentication with compositional validation of each
+   predicate, state/effect declaration, consideration set, and region edge.
+7. Add a fusion policy only after semantics are generic: begin with one fused
+   dynamic region, then use profiling to decide when code size/register pressure
+   warrants splitting it.
+
+Migration and deletion gate:
+
+- No topology names, node-count checks, or CSI-only roles in the generic path.
+- Adding a fixture composed of registered ops and supported predicates requires
+  no production-code change.
+- Python scheduler traces and outputs match per lane, including mid-pass
+  termination, resets, persistent effects, truncation, and stochastic replay.
+- CSI's deterministic, stochastic, three-parameter, and five-parameter PEC
+  acceptance suites pass through the generic executor.
+- Delete `_dynamic_controlled_coevolving_graph_eligible`, the canonical
+  CSI-specific KernelIR program builder/validator, and the specialized
+  `_emit_coevolving_trial_loop` once the generic path reaches parity.
+
+Until that deletion gate is met, the compiler should be described as having a
+typed CSI specialization rather than arbitrary co-evolving graph support.
+
 ## Current Public Surface
 
 The public experimental API is in `psyneulink.core.batched`.
