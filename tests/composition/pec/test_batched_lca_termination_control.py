@@ -6,11 +6,10 @@ This module keeps only the semantic pattern relevant to the batched compiler:
 
 ``AtPass(n) input -> Always LCA -> WhenFinished(LCA) DDM``
 
-The current KernelIR records the static onset ``n``, but this LCA-to-DDM
-topology is outside the first typed controlled-finished subset and still lacks
-an executable conditional pass region.  Even constant-zero and statically
-matching controls must therefore fail closed until generic scheduler/control
-lowering can preserve those semantics.
+This reduced topology is outside the exact CSI coevolving boundary and still
+lacks a generic executable conditional pass region.  Even constant-zero and
+statically matching controls must therefore fail closed with the single
+coupled-region diagnostic used for coevolving schedules.
 """
 
 from dataclasses import dataclass
@@ -30,10 +29,6 @@ pytestmark = [
 ]
 
 
-_UNMODELED_CONTROL_DETAIL = (
-    "coevolving Always/WhenFinished execution falls outside the typed "
-    "controlled-finished subset and requires executable conditional pass regions"
-)
 _UNMODELED_COEVOLUTION_DETAIL = (
     "coevolving Always/WhenFinished execution requires explicit finished "
     "predicates and conditional pass regions in KernelIR"
@@ -203,25 +198,6 @@ TERMINATION_TIMING_CASES = (
 )
 
 
-def _termination_override(composition):
-    """Find the relevant control edge by its receiver semantics, not its name."""
-
-    matches = []
-    for node in composition.nodes:
-        if not isinstance(node, pnl.ControlMechanism):
-            continue
-        for signal in node.control_signals:
-            for projection in signal.efferents:
-                receiver = projection.receiver
-                if (
-                    isinstance(receiver.owner, pnl.LCAMechanism)
-                    and receiver.name == pnl.TERMINATION_THRESHOLD
-                ):
-                    matches.append(node)
-    assert len(matches) == 1
-    return matches[0]
-
-
 def _make_uncontrolled_coevolving_model():
     stepper = pnl.LCAMechanism(
         input_shapes=2,
@@ -261,29 +237,33 @@ def _make_uncontrolled_coevolving_model():
     return composition, stepper, tuple(terminator.output_ports)
 
 
-def _assert_unmodeled_control_diagnostic(report, controller):
+def _assert_unmodeled_control_diagnostic(report, composition):
+    steppers = tuple(
+        node for node in composition.nodes if isinstance(node, pnl.LCAMechanism)
+    )
+    assert len(steppers) == 1
+    stepper = steppers[0]
     assert not report.model_supported
     assert len(report.model_diagnostics) == 1
     diagnostic = report.model_diagnostics[0]
-    assert diagnostic.component == controller.name
+    assert diagnostic.component == stepper.name
     assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
-    assert diagnostic.component_id == f"node:{controller.name}"
+    assert diagnostic.component_id == f"node:{stepper.name}"
     assert diagnostic.reason == "batched schedule kind is not executable yet"
-    assert diagnostic.detail == _UNMODELED_CONTROL_DETAIL
+    assert diagnostic.detail == _UNMODELED_COEVOLUTION_DETAIL
     return diagnostic
 
 
 @pytest.mark.parametrize("timing", TERMINATION_TIMING_CASES)
 def test_controlled_lca_when_finished_has_structured_rejection(timing):
     model = _make_coevolving_model(timing)
-    controller = _termination_override(model.composition)
     report = BatchedCompositionCompiler.diagnose(
         model.composition,
         outputs=model.outputs,
         max_steps=128,
     )
 
-    _assert_unmodeled_control_diagnostic(report, controller)
+    _assert_unmodeled_control_diagnostic(report, model.composition)
 
 
 def test_controlled_lca_compile_error_carries_capability_report():
@@ -291,7 +271,6 @@ def test_controlled_lca_compile_error_carries_capability_report():
     # bypass capability analysis merely because a sampled execution can appear
     # equivalent while this coevolving predicate remains non-executable.
     model = _make_coevolving_model(_TerminationTiming(onset=0))
-    controller = _termination_override(model.composition)
     diagnosed = BatchedCompositionCompiler.diagnose(
         model.composition,
         outputs=model.outputs,
@@ -307,7 +286,10 @@ def test_controlled_lca_compile_error_carries_capability_report():
 
     report = error.value.capability_report
     assert report == diagnosed
-    diagnostic = _assert_unmodeled_control_diagnostic(report, controller)
+    diagnostic = _assert_unmodeled_control_diagnostic(
+        report,
+        model.composition,
+    )
     assert diagnostic.formatted_reason in str(error.value)
 
 
