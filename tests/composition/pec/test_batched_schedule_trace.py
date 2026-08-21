@@ -15,6 +15,8 @@ from psyneulink.core.batched.ir import (
 )
 from psyneulink.core.batched.schedule import (
     BatchedScheduleTraceError,
+    _ConditionSnapshot,
+    _validate_condition_program,
     plan_precomputed_schedule_trace,
 )
 
@@ -352,6 +354,43 @@ def test_when_finished_later_set_observes_owner_finishing_in_same_pass():
         (0, 0, (0,)),
         (0, 1, (1,)),
     )
+
+
+def test_validated_condition_program_evaluates_one_frozen_snapshot():
+    scheduler = (
+        _always(0, 0),
+        _at_pass(1, 0, 0),
+        _implicit_calls(2, 1, 0, 1),
+        _when_finished(3, 1, 0),
+    )
+    program = _validate_condition_program(
+        scheduler,
+        {0: 0, 1: 0, 2: 1, 3: 1},
+        {component_id: _name(component_id) for component_id in range(4)},
+        (_count_finished(0, 0, 2),),
+    )
+
+    first_snapshot = _ConditionSnapshot(
+        pass_index=0,
+        usable_counts={(0, 2): 1, (1, 2): 0},
+        execution_counts={0: 1, 1: 0, 2: 0, 3: 0},
+    )
+    assert program.component_ids == (0, 1, 2, 3)
+    assert program.usable_count_slots == ((0, 2), (1, 2))
+    assert tuple(
+        program.is_satisfied(component_id, first_snapshot)
+        for component_id in program.component_ids
+    ) == (True, True, False, False)
+
+    later_snapshot = _ConditionSnapshot(
+        pass_index=1,
+        usable_counts={(0, 2): 1, (1, 2): 1},
+        execution_counts={0: 2, 1: 1, 2: 0, 3: 0},
+    )
+    assert tuple(
+        program.is_satisfied(component_id, later_snapshot)
+        for component_id in program.component_ids
+    ) == (True, False, True, True)
 
 
 def test_when_finished_same_set_remains_fail_closed():

@@ -5739,10 +5739,15 @@ def _state_component_id(graph: BatchedGraphIR, state: BatchedStateSpec) -> int:
     return _component_id(graph, state.node)
 
 
-def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
+def _compose_component_trial_body_ops(
+    graph: BatchedGraphIR,
+    component_names: Iterable[str],
+    *,
+    diagnostic_slot: int = 0,
+) -> tuple[KernelOp, ...]:
     ops: list[KernelOp] = []
-    diag_slot = 0
-    for node_name in graph.execution_order:
+    diag_slot = diagnostic_slot
+    for node_name in component_names:
         node = graph.node(node_name)
         node_input = KernelValue(node_input_value_name(graph, node), node.input_width)
         input_ports = _node_input_port_layout(graph, node)
@@ -6032,6 +6037,27 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
                 f"Batched graph node '{node.name}' has no registered batched op spec."
             )
 
+    return tuple(ops)
+
+
+def _component_trial_body_ops(
+    graph: BatchedGraphIR,
+    node_name: str,
+    *,
+    diagnostic_slot: int = 0,
+) -> tuple[KernelOp, ...]:
+    """Build one component body with an explicit first diagnostic slot."""
+
+    return _compose_component_trial_body_ops(
+        graph,
+        (node_name,),
+        diagnostic_slot=diagnostic_slot,
+    )
+
+
+def _trial_output_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
+    ops = []
+
     for output in graph.outputs:
         ops.append(
             KernelOp(
@@ -6055,6 +6081,13 @@ def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
             )
         )
     return tuple(ops)
+
+
+def _trial_body_ops(graph: BatchedGraphIR) -> tuple[KernelOp, ...]:
+    return (
+        *_compose_component_trial_body_ops(graph, graph.execution_order),
+        *_trial_output_ops(graph),
+    )
 
 
 def _primary_output_port_name(node) -> str:

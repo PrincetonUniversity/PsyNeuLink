@@ -9,6 +9,8 @@ precomputed-schedule subset; other pass-wise semantics remain fail-closed.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
 
 from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
@@ -53,6 +55,69 @@ class BatchedScheduleTraceError(ValueError):
         self.code = code
         self.detail = detail
         self.component_ids = component_ids
+
+
+@dataclass(frozen=True)
+class _ConditionSnapshot:
+    """Beginning-of-consideration-set values read by every predicate."""
+
+    pass_index: int
+    usable_counts: Mapping[tuple[int, int], int]
+    execution_counts: Mapping[int, int]
+
+
+@dataclass(frozen=True)
+class _ValidatedConditionProgram:
+    """Validated typed predicates and their backend-neutral interpretation.
+
+    This is the shared semantic seam between the precomputed trace planner and
+    a future lane-local scheduler.  Callers own scheduler state transitions;
+    this object defines which state slots predicates read and evaluates every
+    condition against one frozen beginning-of-consideration-set snapshot.
+    """
+
+    conditions: Mapping[int, BatchedSchedulerSpec]
+    finished_predicates: Mapping[int, tuple[int, int]]
+
+    @property
+    def component_ids(self) -> tuple[int, ...]:
+        return tuple(sorted(self.conditions))
+
+    @property
+    def usable_count_slots(self) -> tuple[tuple[int, int], ...]:
+        return tuple(
+            (dependency_id, component_id)
+            for component_id, condition in sorted(self.conditions.items())
+            if condition.condition_type in {"EveryNCalls", "AllEveryNCalls"}
+            for dependency_id in condition.dependency_component_ids
+        )
+
+    def is_satisfied(
+        self,
+        component_id: int,
+        snapshot: _ConditionSnapshot,
+    ) -> bool:
+        condition = self.conditions[component_id]
+        if condition.condition_type == "Always":
+            return True
+        if condition.condition_type in {"AtPass", "AtTrialStart"}:
+            return snapshot.pass_index == condition.attrs["pass_index"]
+        if condition.condition_type == "WhenFinished":
+            owner_component_id, count = self.finished_predicates[component_id]
+            return snapshot.execution_counts[owner_component_id] >= count
+        return all(
+            snapshot.usable_counts[(dependency_id, component_id)] >= 1
+            for dependency_id in condition.dependency_component_ids
+        )
+
+    def next_exact_pass_after(self, pass_index: int) -> int | None:
+        future_passes = tuple(
+            condition.attrs["pass_index"]
+            for condition in self.conditions.values()
+            if condition.condition_type == "AtPass"
+            and condition.attrs["pass_index"] > pass_index
+        )
+        return min(future_passes) if future_passes else None
 
 
 def plan_precomputed_schedule_trace(
@@ -119,20 +184,15 @@ def plan_precomputed_schedule_trace(
         component_set_ids,
         component_names,
     ) = _validate_consideration_sets(consideration_sets)
-    finished_values_by_id = _validate_finished_values(
-        finished_values,
-        component_set_ids,
-        component_names,
-    )
-    conditions, finished_predicates = _validate_scheduler(
+    condition_program = _validate_condition_program(
         scheduler,
         component_set_ids,
         component_names,
-        finished_values_by_id,
+        finished_values,
     )
     terminating_components = _validate_termination(
         termination,
-        tuple(sorted(conditions)),
+        condition_program.component_ids,
     )
     incoming_senders = _validate_projection_edges(
         projections,
@@ -141,13 +201,8 @@ def plan_precomputed_schedule_trace(
 
     # Only dependency pairs consumed by a supported condition need storage.
     # Their counts begin at zero at the start of every trial.
-    usable_counts = {
-        (dependency_id, component_id): 0
-        for component_id, condition in conditions.items()
-        if condition.condition_type in {"EveryNCalls", "AllEveryNCalls"}
-        for dependency_id in condition.dependency_component_ids
-    }
-    execution_counts = dict.fromkeys(conditions, 0)
+    usable_counts = dict.fromkeys(condition_program.usable_count_slots, 0)
+    execution_counts = dict.fromkeys(condition_program.component_ids, 0)
     executed_this_trial: set[int] = set()
     trace_steps: list[BatchedScheduleTraceStepSpec] = []
     component_execution_count = 0
@@ -168,17 +223,17 @@ def plan_precomputed_schedule_trace(
 
             # Select the entire set against one snapshot.  Do not let an
             # earlier member's count update make a later member eligible.
-            usable_snapshot = dict(usable_counts)
-            execution_count_snapshot = dict(execution_counts)
+            condition_snapshot = _ConditionSnapshot(
+                pass_index=pass_index,
+                usable_counts=dict(usable_counts),
+                execution_counts=dict(execution_counts),
+            )
             selected = tuple(
                 component_id
                 for component_id in consideration_set.component_ids
-                if _condition_is_satisfied(
-                    conditions[component_id],
-                    pass_index,
-                    usable_snapshot,
-                    execution_count_snapshot,
-                    finished_predicates,
+                if condition_program.is_satisfied(
+                    component_id,
+                    condition_snapshot,
                 )
             )
             if not selected:
@@ -239,13 +294,8 @@ def plan_precomputed_schedule_trace(
         # An entirely empty pass cannot change a usable-call predicate.  Jump
         # directly to the next exact AtPass event instead of materializing an
         # arbitrary number of empty visits.
-        future_passes = tuple(
-            condition.attrs["pass_index"]
-            for condition in conditions.values()
-            if condition.condition_type == "AtPass"
-            and condition.attrs["pass_index"] > pass_index
-        )
-        if not future_passes:
+        next_pass_index = condition_program.next_exact_pass_after(pass_index)
+        if next_pass_index is None:
             _raise(
                 "schedule.nonterminating",
                 "default AllHaveRun cannot become satisfied from the declared "
@@ -254,7 +304,7 @@ def plan_precomputed_schedule_trace(
                     sorted(terminating_components - executed_this_trial)
                 ),
             )
-        pass_index = min(future_passes)
+        pass_index = next_pass_index
 
 
 def _typed_tuple(values, expected_type, label: str):
@@ -434,12 +484,17 @@ def _validate_finished_values(
     return by_id
 
 
-def _validate_scheduler(
+def _validate_condition_program(
     scheduler,
     component_set_ids,
     component_names,
-    finished_values_by_id,
+    finished_values,
 ):
+    finished_values_by_id = _validate_finished_values(
+        finished_values,
+        component_set_ids,
+        component_names,
+    )
     conditions: dict[int, BatchedSchedulerSpec] = {}
     finished_predicates: dict[int, tuple[int, int]] = {}
     referenced_finished_value_ids: set[int] = set()
@@ -515,7 +570,10 @@ def _validate_scheduler(
             "finished-value declarations must be consumed by a WhenFinished "
             f"predicate; unreferenced value IDs={orphan_finished_values}",
         )
-    return conditions, finished_predicates
+    return _ValidatedConditionProgram(
+        conditions=MappingProxyType(conditions),
+        finished_predicates=MappingProxyType(finished_predicates),
+    )
 
 
 def _validate_condition(
@@ -813,26 +871,6 @@ def _validate_fresh_reads(
                 f"{missing} have executed in this trial",
                 component_ids=missing + (receiver_id,),
             )
-
-
-def _condition_is_satisfied(
-    condition,
-    pass_index,
-    usable_counts,
-    execution_counts,
-    finished_predicates,
-):
-    if condition.condition_type == "Always":
-        return True
-    if condition.condition_type in {"AtPass", "AtTrialStart"}:
-        return pass_index == condition.attrs["pass_index"]
-    if condition.condition_type == "WhenFinished":
-        owner_component_id, count = finished_predicates[condition.component_id]
-        return execution_counts[owner_component_id] >= count
-    return all(
-        usable_counts[(dependency_id, condition.component_id)] >= 1
-        for dependency_id in condition.dependency_component_ids
-    )
 
 
 def _trace(steps, final_pass_index, component_execution_count):

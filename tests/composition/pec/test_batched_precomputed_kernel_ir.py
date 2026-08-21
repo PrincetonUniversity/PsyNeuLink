@@ -15,6 +15,11 @@ from psyneulink.core.batched.ir import (
     BatchedTerminationSpec,
 )
 from psyneulink.core.batched.kernel_ir import (
+    _component_trial_body_ops,
+    _compose_component_trial_body_ops,
+    _kernel_op_sequences_match_exactly,
+    _trial_body_ops,
+    _trial_output_ops,
     iter_kernel_ops,
     lower_to_kernel_ir,
 )
@@ -80,6 +85,35 @@ def _future_executable_graph(lowering, **metadata):
         executable=True,
         termination=_default_termination(graph),
         metadata={**graph.metadata, **metadata},
+    )
+
+
+def test_component_builders_compose_to_the_canonical_trial_program():
+    lowering, _, _ = _scheduled_lowering()
+    graph = lowering.graph
+    assert graph is not None
+
+    component_ops = []
+    diagnostic_slot = 0
+    for node_name in graph.execution_order:
+        body = _component_trial_body_ops(
+            graph,
+            node_name,
+            diagnostic_slot=diagnostic_slot,
+        )
+        assert body
+        assert all(op.kind != "StoreOutput" for op in body)
+        component_ops.extend(body)
+        diagnostic_slot += sum(op.kind == "StoreFlag" for op in body)
+
+    ordered_ops = _compose_component_trial_body_ops(
+        graph,
+        graph.execution_order,
+    )
+    assert _kernel_op_sequences_match_exactly(tuple(component_ops), ordered_ops)
+    assert _kernel_op_sequences_match_exactly(
+        (*ordered_ops, *_trial_output_ops(graph)),
+        _trial_body_ops(graph),
     )
 
 
