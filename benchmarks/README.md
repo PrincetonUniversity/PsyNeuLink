@@ -82,8 +82,9 @@ points stay in one series.
 .venv/bin/asv preview              # serve it locally
 ```
 
-`.asv/results/` is committed (the data); `.asv/env/` and `.asv/html/` are
-git-ignored (regenerable). Results are machine-tagged (`DavePC`).
+`.asv/results/`, `.asv/env/`, and `.asv/html/` are local, regenerable artifacts
+and are git-ignored. Store benchmark results in the PR description or another
+explicitly reviewed report instead of committing machine-specific ASV data.
 
 ## Inspect
 
@@ -92,7 +93,8 @@ git-ignored (regenerable). Results are machine-tagged (`DavePC`).
 .venv/bin/asv compare <c1> <c2>    # regression/improvement between two commits
 ```
 
-Check `nvidia-smi` before a run. These benchmarks are sensitive to other GPU
-work — see "Benchmarking Methodology" in
-`Scripts/Debug/pec_batch_compile/BATCH_COMPILE_WIP.md` for the traps, several of
-which produced credible-looking numbers that were wrong by 2.5x to 30x.
+Check `nvidia-smi` before a run. These benchmarks are sensitive to competing GPU
+work. Report cold compilation and warm execution separately, state every lane
+dimension, exclude correctness-only repeats from timed work, and compare
+semantically equivalent workloads. The CSI Triton/LLVM comparison in
+`Scripts/Debug/pec_batch_compile/csi_triton_vs_llvm.py` follows that convention.

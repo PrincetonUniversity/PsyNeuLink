@@ -9,10 +9,9 @@ reference: the oracle is the real component math.
 - Stochastic cases match PNL summary statistics over many samples (the batched
   RNG is deterministic-per-kernel, not bitwise-identical to PNL's streams).
 
-PEC-scale stochastic / GPU-compiled validation lives in
-``Scripts/Debug/pec_batch_compile/pec_grid_correctness_check.py`` (PNL LLVM
-oracle), which runs as its own process because Triton interpret (CPU) and
-compiled (GPU) modes cannot coexist in one process.
+Physical-GPU validation lives in the backend-specific acceptance suites, which
+run separately because Triton interpret (CPU) and compiled (GPU) modes cannot
+coexist in one process.
 """
 
 import sys

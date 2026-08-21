@@ -209,8 +209,7 @@ class _PECGridStabilityFlexibilityPlan:
         if subject_slices is not None:
             raise ValueError("PEC grid stability-flexibility benchmark supports one unsliced subject.")
 
-        # Raw per-node stimulus: PEC expands it internally (see the note in
-        # pec_grid_correctness_check._pec_grid_sf_values).
+        # Raw per-node stimulus; PEC expands it internally for each estimate.
         pec_inputs = inputs
 
         parameter_values = []
