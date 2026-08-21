@@ -1,9 +1,0 @@
-{
-    "arch": "x86_64",
-    "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
-    "machine": "DavePC",
-    "num_cpu": "8",
-    "os": "Linux 5.15.167.4-microsoft-standard-WSL2",
-    "ram": "32782344",
-    "version": 1
-}

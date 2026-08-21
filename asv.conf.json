@@ -3,7 +3,7 @@
     "project": "psyneulink-batched",
     "project_url": "https://github.com/PrincetonUniversity/PsyNeuLink",
     "repo": ".",
-    "branches": ["feat/pec_batch_compile"],
+    "branches": ["devel"],
     "environment_type": "existing",
     "show_commit_url": "https://github.com/PrincetonUniversity/PsyNeuLink/commit/",
     "benchmark_dir": "benchmarks",

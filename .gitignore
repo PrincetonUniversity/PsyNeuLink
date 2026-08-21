@@ -203,9 +203,10 @@ tests/*.pdf
 # VSCode settings
 .vscode/
 
-# asv benchmark environments and generated dashboard (results/ is tracked)
+# asv benchmark environments and generated output
 .asv/env/
 .asv/html/
+.asv/results/
 
 # Output of show_graph() calls during test runs
 pnl-show_graph-output/
