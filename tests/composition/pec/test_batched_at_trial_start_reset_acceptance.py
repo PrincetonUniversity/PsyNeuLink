@@ -5,8 +5,7 @@ stepwise LCA scheduled ``Always`` projects to a stateless TransferMechanism in
 a strictly later consideration set, scheduled ``WhenFinished(LCA)``.  This
 module requires ``AtTrialStart`` to reset the LCA's exact retained states before
 pass zero of every trial.  ``Never`` is retained as a contrasting persistence
-case.  Dynamic scheduling, control, and an LCA-to-DDM follower remain explicit
-fail-closed boundaries.
+case.  Unsupported LCA reset policies remain explicit fail-closed boundaries.
 """
 
 from collections.abc import Callable
@@ -62,15 +61,6 @@ _MULTI_TRIAL_LLVM_PROVENANCE = (
     "tests/composition/test_composition.py::"
     "TestRun::test_run_2_mechanisms_with_multiple_trials_of_input_values"
 )
-_DDM_LLVM_PROVENANCE = (
-    "tests/mechanisms/test_ddm_mechanism.py::"
-    "test_ddm_is_finished_with_dependency"
-)
-_CONTROL_LLVM_PROVENANCE = (
-    "tests/composition/test_control.py::"
-    "TestControlMechanisms::test_control_of_mech_port[OVERRIDE]"
-)
-
 _TRIAL_INPUTS = np.array(
     [[1.0, -1.0], [0.5, 0.25], [-0.5, 1.5]],
     dtype=float,
@@ -91,12 +81,6 @@ _ONE_TRIAL_TRACE = (
     frozenset({"follower"}),
 )
 _EXPECTED_TRACE = _ONE_TRIAL_TRACE * len(_TRIAL_INPUTS)
-
-_UNMODELED_COEVOLUTION_DETAIL = (
-    "coevolving Always/WhenFinished execution requires explicit finished "
-    "predicates and conditional pass regions in KernelIR"
-)
-
 
 def _stepwise_lca(*, name: str, reset_condition, function_bias: float = 0.25):
     return pnl.LCAMechanism(
@@ -542,69 +526,6 @@ class _RejectionCase:
     detail_contains: str
 
 
-def _dynamic_same_set_dependency():
-    producer = pnl.TransferMechanism(input_shapes=1, name="dynamic producer")
-    follower = pnl.TransferMechanism(input_shapes=1, name="dynamic follower")
-    composition = pnl.Composition(name="dynamic same-set reset boundary")
-    composition.add_nodes([producer, follower])
-    composition.scheduler.add_condition(follower, pnl.WhenFinished(producer))
-    return _DiagnosticModel(composition, (follower.output_port,), follower)
-
-
-def _controlled_finished_dependency():
-    source = pnl.TransferMechanism(input_shapes=1, name="reset control monitor")
-    target = pnl.TransferMechanism(input_shapes=1, name="reset control target")
-    controller = pnl.ControlMechanism(
-        function=pnl.Identity(),
-        monitor_for_control=source,
-        control_signals=[(pnl.SLOPE, target)],
-        modulation=pnl.OVERRIDE,
-        name="reset boundary controller",
-    )
-    composition = pnl.Composition(name="controlled reset boundary")
-    composition.add_nodes([target, controller, source])
-    composition.scheduler.add_condition(controller, pnl.WhenFinished(source))
-    return _DiagnosticModel(composition, (target.output_port,), controller)
-
-
-def _lca_to_ddm_dependency():
-    producer = _stepwise_lca(
-        name="reset boundary LCA producer",
-        reset_condition=pnl.Never(),
-    )
-    follower = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(
-            starting_value=0.0,
-            rate=1.0,
-            noise=0.0,
-            threshold=1.0,
-            non_decision_time=0.0,
-            time_step_size=0.01,
-        ),
-        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-        execute_until_finished=False,
-        reset_stateful_function_when=pnl.AtTrialStart(),
-        name="reset boundary DDM follower",
-    )
-    composition = pnl.Composition(name="LCA DDM reset boundary")
-    composition.add_nodes([producer, follower])
-    composition.add_projection(
-        sender=producer,
-        receiver=follower,
-        projection=pnl.MappingProjection(matrix=[[1.0], [-1.0]]),
-    )
-    composition.scheduler.add_condition(producer, pnl.Always())
-    composition.scheduler.add_condition(follower, pnl.WhenFinished(producer))
-    return _DiagnosticModel(
-        composition,
-        (
-            follower.output_ports[pnl.DECISION_OUTCOME],
-            follower.output_ports[pnl.RESPONSE_TIME],
-        ),
-        producer,
-    )
-
-
 def _unsupported_lca_reset(reset_condition, name):
     producer = _stepwise_lca(
         name=f"{name} producer",
@@ -637,38 +558,6 @@ def _reset_condition_name_impostor():
 
 REJECTION_CASES = (
     _RejectionCase(
-        name="dynamic_same_set_dependency",
-        build=_dynamic_same_set_dependency,
-        provenance=_WHEN_FINISHED_LLVM_PROVENANCE,
-        code=BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE,
-        component_kind="node",
-        reason="batched schedule kind is not executable yet",
-        detail_contains="WhenFinished requires dynamic_lane_local",
-    ),
-    _RejectionCase(
-        name="controlled_finished_dependency",
-        build=_controlled_finished_dependency,
-        provenance=(
-            f"{_WHEN_FINISHED_LLVM_PROVENANCE}; {_CONTROL_LLVM_PROVENANCE}"
-        ),
-        code=BatchedDiagnosticCode.MODEL_UNSUPPORTED,
-        component_kind="component",
-        reason="unsupported generic ControlMechanism for batched v2",
-        detail_contains="->",
-    ),
-    _RejectionCase(
-        name="lca_to_ddm_dependency",
-        build=_lca_to_ddm_dependency,
-        provenance=(
-            f"{_LCA_LLVM_PROVENANCE}; {_WHEN_FINISHED_LLVM_PROVENANCE}; "
-            f"{_DDM_LLVM_PROVENANCE}"
-        ),
-        code=BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE,
-        component_kind="node",
-        reason="batched schedule kind is not executable yet",
-        detail_contains=_UNMODELED_COEVOLUTION_DETAIL,
-    ),
-    _RejectionCase(
         name="at_pass_reset",
         build=_at_pass_reset,
         provenance=_RESET_LLVM_PROVENANCE,
@@ -690,7 +579,7 @@ REJECTION_CASES = (
 
 
 @pytest.mark.parametrize("case", REJECTION_CASES, ids=lambda case: case.name)
-def test_reset_slice_keeps_dynamic_control_and_ddm_fail_closed(case):
+def test_unsupported_lca_reset_policy_has_structured_rejection(case):
     model = case.build()
     report = BatchedCompositionCompiler.diagnose(
         model.composition,

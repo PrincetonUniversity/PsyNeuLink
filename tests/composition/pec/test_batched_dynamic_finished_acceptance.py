@@ -4,11 +4,11 @@ The primary cases deliberately use an ordinary stateless follower.  A dynamic
 finished-state executor must therefore be a scheduler capability, not a hidden
 LCA/DDM pairing rule.  Each semantic case builds a fresh Python oracle and a
 fresh compiler input.  Nearby scheduler, reset, control, and co-evolution
-semantics remain structured fail-closed boundaries.
+semantics have dedicated authority suites.  Multiple finished producers remain
+an explicit fail-closed boundary here.
 
 The provenance strings point to existing execution-mode-expanded tests whose
-LCA, ``WhenFinished``, multi-trial, DDM, termination, and control semantics this
-corpus combines.
+LCA, ``WhenFinished``, multi-trial, and DDM semantics this corpus combines.
 """
 
 from collections.abc import Callable
@@ -56,14 +56,6 @@ _DDM_LLVM_PROVENANCE = (
     "tests/mechanisms/test_ddm_mechanism.py::"
     "test_ddm_is_finished_with_dependency"
 )
-_TERMINATION_LLVM_PROVENANCE = (
-    "tests/scheduling/test_scheduler.py::TestFeedback::test_run_term_conditions"
-)
-_CONTROL_LLVM_PROVENANCE = (
-    "tests/composition/test_control.py::"
-    "TestControlMechanisms::test_control_of_mech_port[OVERRIDE]"
-)
-
 _TRIAL_INPUTS = np.array(
     [[1.0, -1.0], [0.5, 0.25], [-0.5, 1.5]],
     dtype=float,
@@ -604,15 +596,6 @@ class _RejectionCase:
     detail_contains: str
 
 
-def _same_set_finished_dependency():
-    producer = pnl.TransferMechanism(input_shapes=1, name="same-set producer")
-    follower = pnl.TransferMechanism(input_shapes=1, name="same-set follower")
-    composition = pnl.Composition(name="same-set finished dependency")
-    composition.add_nodes([producer, follower])
-    composition.scheduler.add_condition(follower, pnl.WhenFinished(producer))
-    return _DiagnosticModel(composition, (follower.output_port,), follower)
-
-
 def _multiple_finished_producers():
     left = pnl.TransferMechanism(input_shapes=1, name="left finished producer")
     right = pnl.TransferMechanism(input_shapes=1, name="right finished producer")
@@ -628,45 +611,7 @@ def _multiple_finished_producers():
     return _DiagnosticModel(composition, (follower.output_port,), follower)
 
 
-def _unsupported_trial_termination():
-    mechanism = pnl.TransferMechanism(
-        input_shapes=1,
-        name="custom termination mechanism",
-    )
-    composition = pnl.Composition(
-        pathways=mechanism,
-        termination_processing={pnl.TimeScale.TRIAL: pnl.AtPass(4)},
-        name="custom finished termination",
-    )
-    return _DiagnosticModel(composition, (mechanism.output_port,), composition)
-
-
-def _unsupported_finished_control():
-    source = pnl.TransferMechanism(input_shapes=1, name="finished control monitor")
-    target = pnl.TransferMechanism(input_shapes=1, name="finished control target")
-    controller = pnl.ControlMechanism(
-        function=pnl.Identity(),
-        monitor_for_control=source,
-        control_signals=[(pnl.SLOPE, target)],
-        modulation=pnl.OVERRIDE,
-        name="finished-state controller",
-    )
-    composition = pnl.Composition(name="finished control boundary")
-    composition.add_nodes([target, controller, source])
-    composition.scheduler.add_condition(controller, pnl.WhenFinished(source))
-    return _DiagnosticModel(composition, (target.output_port,), controller)
-
-
 REJECTION_CASES = (
-    _RejectionCase(
-        name="same_set_dependency",
-        build=_same_set_finished_dependency,
-        provenance=_WHEN_FINISHED_LLVM_PROVENANCE,
-        code=BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE,
-        component_kind="node",
-        reason="batched schedule kind is not executable yet",
-        detail_contains="WhenFinished requires dynamic_lane_local",
-    ),
     _RejectionCase(
         name="multiple_finished_producers",
         build=_multiple_finished_producers,
@@ -676,31 +621,11 @@ REJECTION_CASES = (
         reason="unsupported scheduler condition for static batched graph",
         detail_contains="All",
     ),
-    _RejectionCase(
-        name="custom_trial_termination",
-        build=_unsupported_trial_termination,
-        provenance=_TERMINATION_LLVM_PROVENANCE,
-        code=BatchedDiagnosticCode.MODEL_SCHEDULER_TERMINATION_UNSUPPORTED,
-        component_kind="composition",
-        reason="unsupported scheduler termination for batched v2",
-        detail_contains="AtPass(args=(4,)",
-    ),
-    _RejectionCase(
-        name="finished_control",
-        build=_unsupported_finished_control,
-        provenance=(
-            f"{_WHEN_FINISHED_LLVM_PROVENANCE}; {_CONTROL_LLVM_PROVENANCE}"
-        ),
-        code=BatchedDiagnosticCode.MODEL_UNSUPPORTED,
-        component_kind="component",
-        reason="unsupported generic ControlMechanism for batched v2",
-        detail_contains=".slope",
-    ),
 )
 
 
 @pytest.mark.parametrize("case", REJECTION_CASES, ids=lambda case: case.name)
-def test_dynamic_finished_boundaries_have_structured_rejections(case):
+def test_multiple_finished_producers_have_structured_rejection(case):
     model = case.build()
     report = BatchedCompositionCompiler.diagnose(
         model.composition,
