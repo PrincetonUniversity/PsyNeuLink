@@ -106,13 +106,17 @@ class TritonEmitContext:
     def lca_max_steps(self) -> str:
         return "LCA_MAX_STEPS"
 
-    def coevolve_warmup(self) -> int:
-        """Warm-up (ITI) steps before the co-evolving terminator begins."""
-        return self._emitter.coevolve_warmup
+    def sampled_effective_parameter(
+        self,
+        node_spec,
+        target_parameter: str,
+    ) -> str | None:
+        """A typed effective value sampled by the active dynamic member."""
 
-    def coevolve_terminator_control_value(self) -> str:
-        """Lane-persistent folded control value seen by the terminator."""
-        return self._emitter.coevolve_terminator_control_value
+        return self._emitter.sampled_effective_parameter(
+            node_spec,
+            target_parameter,
+        )
 
     def float_literal(self, value: float) -> str:
         return repr(float(value))

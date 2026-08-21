@@ -1,4 +1,4 @@
-"""Structural admission tests for the first executable CSI GraphIR subset."""
+"""Focused GraphIR admission contracts for the generic CSI schedule."""
 
 from dataclasses import replace
 from pathlib import Path
@@ -14,11 +14,11 @@ from psyneulink.core.batched import (
 )
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
-    _dynamic_controlled_coevolving_graph_eligible,
+    _dynamic_scheduled_graph_eligible,
     lower_composition,
 )
 from psyneulink.core.batched.ir import BatchedCompositionIR
-from psyneulink.core.batched.kernel_ir import lower_to_kernel_ir
+from psyneulink.core.batched.kernel_ir import iter_kernel_ops, lower_to_kernel_ir
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
@@ -130,221 +130,189 @@ def lower_csi():
         unregister_batched_instance_op("Drift Rate Value")
 
 
-def _roles(graph):
+def _count_control_nodes(graph):
     modulation = graph.modulations[0]
-    stepper = graph.node(modulation.target)
-    controller = graph.node(modulation.controller)
-    source = graph.node(modulation.source)
-    terminator_finished = next(
-        value for value in graph.finished_values if value.predicate_kind == "dynamic"
+    return tuple(
+        graph.node(name)
+        for name in (modulation.source, modulation.controller, modulation.target)
     )
-    terminator = graph.node(terminator_finished.node)
-    threshold_controller = next(
-        node
-        for node in graph.nodes
-        if node.component_type == "ControlMechanism"
-        and node.component_id != controller.component_id
-    )
-    sets = {
-        item.consideration_set_id: item for item in graph.consideration_sets
-    }
-    drift = graph.node(sets[3].nodes[0])
-    gates = tuple(graph.node(name) for name in sets[5].nodes)
-    origins = tuple(graph.node(name) for name in sets[0].nodes)
-    return {
-        "source": source,
-        "controller": controller,
-        "threshold_controller": threshold_controller,
-        "stepper": stepper,
-        "drift": drift,
-        "terminator": terminator,
-        "gates": gates,
-        "origins": origins,
-        "sets": sets,
-    }
 
 
-def test_canonical_csi_graph_is_admitted_with_exact_six_set_schedule(lower_csi):
+def test_canonical_csi_is_admitted_by_the_generic_scheduler(lower_csi):
     lowering = lower_csi()
-    graph = lowering.graph
 
-    assert graph is not None
-    assert graph.executable
-    assert graph.metadata["scheduler_executable"]
-    assert graph.fusion_kind == COEVOLVING_GRAPH_FUSION
+    assert lowering.graph is not None
+    assert lowering.graph.executable
+    assert lowering.graph.fusion_kind == COEVOLVING_GRAPH_FUSION
     assert not lowering.rejected_nodes
     assert not lowering.rejected_conditions
-    assert _dynamic_controlled_coevolving_graph_eligible(graph, lowering.params)
-
-    role = _roles(graph)
-    sets = role["sets"]
-    assert tuple(sorted(sets)) == tuple(range(6))
-    assert sets[0].component_ids == tuple(
-        node.component_id for node in role["origins"]
-    )
-    assert sets[1].component_ids == tuple(
-        node.component_id
-        for node in graph.nodes
-        if node.component_id
-        in {
-            role["threshold_controller"].component_id,
-            role["controller"].component_id,
-        }
-    )
-    assert sets[2].component_ids == (role["stepper"].component_id,)
-    assert sets[3].component_ids == (role["drift"].component_id,)
-    assert sets[4].component_ids == (role["terminator"].component_id,)
-    assert sets[5].component_ids == tuple(
-        node.component_id for node in role["gates"]
-    )
-    assert all(item.region == "pass" and item.inputs_frozen for item in sets.values())
-
-    conditions = {
-        condition.component_id: condition for condition in graph.scheduler
-    }
-    assert all(
-        conditions[node.component_id].condition_type == "AtPass"
-        and conditions[node.component_id].attrs["pass_index"] == 0
-        for node in role["origins"]
-    )
-    assert conditions[role["controller"].component_id].condition_type == "AtPass"
-    assert conditions[role["stepper"].component_id].condition_type == "Always"
-    for node in (
-        role["threshold_controller"],
-        role["drift"],
-        role["terminator"],
-    ):
-        condition = conditions[node.component_id]
-        assert condition.condition_type == "WhenFinished"
-        assert condition.dependency_component_ids == (role["stepper"].component_id,)
-        assert condition.finished_value_ids == (0,)
-    for gate in role["gates"]:
-        condition = conditions[gate.component_id]
-        assert condition.condition_type == "WhenFinished"
-        assert condition.dependency_component_ids == (role["terminator"].component_id,)
-        assert condition.finished_value_ids == (1,)
+    assert _dynamic_scheduled_graph_eligible(lowering.graph, lowering.params)
 
 
-def test_canonical_csi_graph_authenticates_control_count_and_ddm_rng(lower_csi):
-    lowering = lower_csi()
+def test_generic_csi_folded_affine_control_rejects_authority_forgeries(
+    lower_csi,
+):
+    lowering = lower_csi(iti=3)
     graph = lowering.graph
-    role = _roles(graph)
-
-    assert len(graph.modulations) == 1
-    modulation = graph.modulations[0]
-    effective = graph.effective_parameters[0]
-    assert modulation.source_component_id == role["source"].component_id
-    assert modulation.controller_component_id == role["controller"].component_id
-    assert modulation.target_component_id == role["stepper"].component_id
-    assert modulation.target_parameter == "termination_threshold"
-    assert effective.target_component_id == role["stepper"].component_id
-    assert effective.base_value == (1.0,)
-    assert effective.initial_modulation_value == (1.0,)
-    assert effective.reset == "Never"
-
-    stepper_finished = graph.finished_values[0]
-    assert stepper_finished.predicate_kind == (
-        "execution_count_at_least_effective_parameter"
-    )
-    assert stepper_finished.attrs == {
-        "effective_parameter_id": 0,
-        "target_parameter_port_id": effective.target_parameter_port_id,
-        "rounding": "ceil",
-        "minimum": 1,
-        "maximum": 2 ** 24,
-    }
-    assert graph.finished_values[1].predicate_kind == "dynamic"
-
-    threshold_control = role["threshold_controller"].attrs["absorbed_control"]
-    assert threshold_control == {
-        "source": threshold_control["source"],
-        "target": role["terminator"].name,
-        "parameter": "threshold",
-        "modulation": "OVERRIDE",
-    }
-    assert role["threshold_controller"].attrs[
-        "absorbed_control_initial_value"
-    ] == 1.0
-    assert len(graph.rng_streams) == 1
-    rng = graph.rng_streams[0]
-    assert rng.name == f"{role['terminator'].name}.rng"
-    assert rng.node == role["terminator"].name
-    assert rng.component_id == role["terminator"].component_id
-    assert rng.stream_id == 0
-    assert rng.width == 1
-    assert rng.step_extent == "MAX_STEPS"
-
-
-def test_coevolving_admission_rejects_structural_forgeries(lower_csi):
-    lowering = lower_csi()
-    graph = lowering.graph
-    role = _roles(graph)
-    eligible = _dynamic_controlled_coevolving_graph_eligible
-    assert eligible(graph, lowering.params)
-
-    stepper_id = role["stepper"].component_id
-    scheduler = tuple(
-        replace(condition, consideration_set_id=3)
-        if condition.component_id == stepper_id
-        else condition
-        for condition in graph.scheduler
-    )
-    assert not eligible(replace(graph, scheduler=scheduler), lowering.params)
-
-    finished = tuple(
-        replace(value, attrs={**value.attrs, "rounding": "floor"})
-        if value.component_id == stepper_id
-        else value
-        for value in graph.finished_values
-    )
-    assert not eligible(replace(graph, finished_values=finished), lowering.params)
-
-    threshold_id = role["threshold_controller"].component_id
-    nodes = tuple(
-        replace(
-            node,
-            attrs={
-                **node.attrs,
-                "absorbed_control": {
-                    **node.attrs["absorbed_control"],
-                    "parameter": "noise",
-                },
-            },
-        )
-        if node.component_id == threshold_id
-        else node
-        for node in graph.nodes
-    )
-    assert not eligible(replace(graph, nodes=nodes), lowering.params)
-
-    nodes = tuple(
-        replace(
-            node,
-            attrs={
-                **node.attrs,
-                "absorbed_control_initial_value": 0.5,
-            },
-        )
-        if node.component_id == threshold_id
-        else node
-        for node in graph.nodes
-    )
-    assert not eligible(replace(graph, nodes=nodes), lowering.params)
-
-    rng_streams = (replace(graph.rng_streams[0], step_extent="TRIAL"),)
-    assert not eligible(replace(graph, rng_streams=rng_streams), lowering.params)
-
-    controller_intercept = role["controller"].params["intercept"]
-    parameters = tuple(
-        replace(parameter, default=1.0)
-        if parameter.name == controller_intercept
-        else parameter
+    folded = graph.folded_affine_controls[0]
+    folded_effective = graph.effective_parameters[folded.effective_parameter_id]
+    foreign_parameter = next(
+        parameter
         for parameter in lowering.params
+        if parameter.owner_component_id != folded.target_component_id
     )
-    assert not eligible(graph, parameters)
+
+    for forged in (
+        replace(graph, folded_affine_controls=()),
+        replace(
+            graph,
+            folded_affine_controls=(
+                replace(folded, effective_parameter_id=0),
+            ),
+        ),
+        replace(
+            graph,
+            folded_affine_controls=(
+                replace(folded, controller_output_port_id=0),
+            ),
+        ),
+        replace(
+            graph,
+            folded_affine_controls=(
+                replace(
+                    folded,
+                    delta_parameter=foreign_parameter.name,
+                    delta_parameter_id=foreign_parameter.parameter_id,
+                ),
+            ),
+        ),
+        replace(
+            graph,
+            folded_affine_controls=(
+                replace(folded, initial_value=(0.5,)),
+            ),
+        ),
+        replace(
+            graph,
+            effective_parameters=(
+                graph.effective_parameters[0],
+                replace(
+                    folded_effective,
+                    initial_modulation_value=(0.5,),
+                ),
+            ),
+        ),
+    ):
+        assert not _dynamic_scheduled_graph_eligible(forged, lowering.params)
+
+    with pytest.raises(ValueError, match="affine scheduler-update policy"):
+        replace(folded, update_expression="base_plus_delta")
+    with pytest.raises(ValueError, match="affine scheduler-update policy"):
+        replace(folded, clock_component_id=folded.target_component_id)
 
 
-def test_coevolving_kernel_lowering_reauthenticates_projection_values(lower_csi):
+def test_generic_csi_folded_parameters_require_exact_mutable_contract(lower_csi):
+    lowering = lower_csi(iti=3)
+    graph = lowering.graph
+    folded = graph.folded_affine_controls[0]
+    target = graph.node(folded.target)
+    controller = graph.node(folded.controller)
+    source_name = controller.attrs["absorbed_control"]["source"]
+    params = {parameter.parameter_id: parameter for parameter in lowering.params}
+    base = params[folded.base_parameter_id]
+    delta = params[folded.delta_parameter_id]
+
+    assert base.aliases == tuple(dict.fromkeys((
+        "ddm.threshold",
+        "DDM.threshold",
+        f"{target.name}.threshold",
+        f"{source_name}.intercept",
+    )))
+    assert delta.aliases == tuple(dict.fromkeys((
+        "ddm.threshold_collapse",
+        "DDM.threshold_collapse",
+        f"{target.name}.threshold_collapse",
+        f"{source_name}.offset-integrator_function",
+    )))
+
+    for parameter_id, changes, effective_base in (
+        (base.parameter_id, {"default": -0.01}, (-0.01,)),
+        (base.parameter_id, {"minimum": None}, None),
+        (base.parameter_id, {"minimum_inclusive": False}, None),
+        (base.parameter_id, {"maximum": 1.0}, None),
+        (base.parameter_id, {"maximum_inclusive": False}, None),
+        (base.parameter_id, {"aliases": base.aliases[1:]}, None),
+        (base.parameter_id, {"owner_scope": "mechanism"}, None),
+        (base.parameter_id, {"runtime_mutable": False}, None),
+        (base.parameter_id, {"runtime_constraint": "forged"}, None),
+        (delta.parameter_id, {"default": 0.01}, None),
+        (delta.parameter_id, {"minimum": -1.0}, None),
+        (delta.parameter_id, {"minimum_inclusive": False}, None),
+        (delta.parameter_id, {"maximum": None}, None),
+        (delta.parameter_id, {"maximum_inclusive": False}, None),
+        (delta.parameter_id, {"aliases": delta.aliases[:-1]}, None),
+    ):
+        forged_params = tuple(
+            replace(parameter, **changes)
+            if parameter.parameter_id == parameter_id
+            else parameter
+            for parameter in lowering.params
+        )
+        forged_graph = graph
+        if effective_base is not None:
+            forged_graph = replace(
+                graph,
+                effective_parameters=tuple(
+                    replace(parameter, base_value=effective_base)
+                    if parameter.effective_parameter_id
+                    == folded.effective_parameter_id
+                    else parameter
+                    for parameter in graph.effective_parameters
+                ),
+            )
+        assert not _dynamic_scheduled_graph_eligible(
+            forged_graph,
+            forged_params,
+        )
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        pytest.param({"threshold": -0.01}, id="negative-threshold"),
+        pytest.param({"threshold_collapse": 0.01}, id="positive-collapse"),
+    ),
+)
+def test_invalid_live_folded_parameter_sign_is_diagnosed_fail_closed(
+    lower_csi,
+    overrides,
+):
+    lowering = lower_csi(**overrides)
+
+    assert lowering.graph is not None
+    assert not lowering.graph.executable
+    assert not lowering.graph.metadata["scheduler_executable"]
+    assert lowering.rejected_nodes or lowering.rejected_conditions
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        pytest.param({"threshold": 0.0}, id="zero-threshold"),
+        pytest.param({"threshold_collapse": 0.0}, id="zero-collapse"),
+    ),
+)
+def test_live_folded_parameter_zero_boundaries_are_admitted(lower_csi, overrides):
+    lowering = lower_csi(**overrides)
+
+    assert lowering.graph is not None
+    assert lowering.graph.executable
+    assert _dynamic_scheduled_graph_eligible(lowering.graph, lowering.params)
+
+
+def test_generic_scheduler_preserves_supported_dense_projection(
+    lower_csi,
+):
     lowering = lower_csi()
     graph = lowering.graph
     task_projection = next(
@@ -376,16 +344,25 @@ def test_coevolving_kernel_lowering_reauthenticates_projection_values(lower_csi)
         )
     )
 
-    assert not _dynamic_controlled_coevolving_graph_eligible(
-        forged_graph,
-        lowering.params,
+    assert _dynamic_scheduled_graph_eligible(forged_graph, lowering.params)
+    assert kernel.executable
+    dynamic_region = next(
+        op
+        for op in iter_kernel_ops(kernel)
+        if op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
     )
-    assert not kernel.executable
-    assert not any(
-        op.kind == "ForPasses"
-        and op.attrs.get("trace_kind") == "lane_local_coevolving"
-        for trial_op in kernel.ops
-        for op in trial_op.attrs.get("body", ())
+    projection_call = next(
+        op
+        for consideration_set in dynamic_region.attrs["program"].consideration_sets
+        for member in consideration_set.members
+        for op in member.body
+        if op.kind == "CallProjection"
+        and op.attrs["projection_id"] == task_projection.projection_id
+    )
+    np.testing.assert_array_equal(
+        projection_call.attrs["matrix"],
+        np.eye(2, dtype=np.float32) * np.float32(2.0),
     )
 
 
@@ -409,7 +386,7 @@ def test_affine_csi_counts_and_nonzero_iti_are_admitted(lower_csi, overrides):
     assert lowering.graph.metadata["scheduler_executable"]
     assert not lowering.rejected_nodes
     assert not lowering.rejected_conditions
-    assert _dynamic_controlled_coevolving_graph_eligible(
+    assert _dynamic_scheduled_graph_eligible(
         lowering.graph,
         lowering.params,
     )
@@ -418,15 +395,15 @@ def test_affine_csi_counts_and_nonzero_iti_are_admitted(lower_csi, overrides):
 def test_affine_csi_graph_exposes_mutable_counts_and_exact_iti(lower_csi):
     lowering = lower_csi(iti=2, csi_repeat=3, csi_switch=4)
     graph = lowering.graph
-    role = _roles(graph)
+    source, controller, _ = _count_control_nodes(graph)
     parameters = {parameter.name: parameter for parameter in lowering.params}
     source_parameters = {
         argument: parameters[name]
-        for argument, name in role["source"].params.items()
+        for argument, name in source.params.items()
     }
     controller_parameters = {
         argument: parameters[name]
-        for argument, name in role["controller"].params.items()
+        for argument, name in controller.params.items()
     }
 
     assert source_parameters["slope"].default == 4.0
@@ -443,8 +420,8 @@ def test_affine_csi_graph_exposes_mutable_counts_and_exact_iti(lower_csi):
 
     task = next(
         node
-        for node in role["origins"]
-        if node.component_type == "TransferMechanism"
+        for node in graph.nodes
+        if node.name.startswith("Task Input")
     )
     task_condition = next(
         condition
@@ -457,7 +434,6 @@ def test_affine_csi_graph_exposes_mutable_counts_and_exact_iti(lower_csi):
         "pass_index": 2,
         "time_scale": "ENVIRONMENT_STATE_UPDATE",
     }
-    assert graph.metadata["coevolve_warmup"] == 2
 
 
 @pytest.mark.parametrize(

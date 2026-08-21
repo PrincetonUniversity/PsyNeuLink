@@ -145,6 +145,22 @@ class LaneEmitMixin:
     def _index_rng_streams(self) -> None:
         # One flat pool: every stream gets the same stride, so which step cap
         # bounds a stream no longer affects where it lives.
+        component_ids = tuple(
+            stream.component_id for stream in self.kernel.rng_streams
+        )
+        node_names = tuple(stream.node for stream in self.kernel.rng_streams)
+        if (
+            len(set(component_ids)) != len(component_ids)
+            or len(set(node_names)) != len(node_names)
+        ):
+            raise ValueError(
+                "Triton RNG lowering supports at most one stream declaration "
+                "per component."
+            )
+        stream_slot = {}
+        stream_count = 0
         for stream in self.kernel.rng_streams:
-            self.rng_stream_slot[stream.node] = self.rng_stream_count
-            self.rng_stream_count += stream.width
+            stream_slot[stream.node] = stream_count
+            stream_count += stream.width
+        self.rng_stream_slot = stream_slot
+        self.rng_stream_count = stream_count

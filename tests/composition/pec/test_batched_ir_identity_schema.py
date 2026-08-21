@@ -17,7 +17,11 @@ from psyneulink.core.batched import (
     BatchedStateSpec,
 )
 from psyneulink.core.batched.bindings import BatchedComponentBindings
-from psyneulink.core.batched.kernel_ir import KernelIR, KernelLaneLayout
+from psyneulink.core.batched.kernel_ir import (
+    KernelIR,
+    KernelLaneLayout,
+    KernelRngStream,
+)
 from psyneulink.core.batched.ir import (
     BatchedScheduleTraceSpec,
     BatchedScheduleTraceStepSpec,
@@ -120,7 +124,7 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
         2,
         "MAX_STEPS",
         component_id=10,
-        stream_id=60,
+        stream_id=0,
     )
     node = BatchedNodeSpec("node", "TransferMechanism", "Linear", 2, 2, component_id=10)
     graph = BatchedGraphIR(
@@ -138,12 +142,24 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
     kernel = KernelIR(
         model_kind="graph",
         fusion_kind=None,
-        lane_layout=KernelLaneLayout("trial", ("trial",)),
+        lane_layout=KernelLaneLayout(
+            "trial",
+            ("parameter_set", "subject", "trial", "estimate"),
+        ),
         inputs=graph.inputs,
         params=(parameter,),
         states=graph.states,
         outputs=graph.outputs,
-        rng_streams=(),
+        rng_streams=(
+            KernelRngStream(
+                rng_stream.name,
+                rng_stream.node,
+                rng_stream.width,
+                rng_stream.step_extent,
+                component_id=rng_stream.component_id,
+                stream_id=rng_stream.stream_id,
+            ),
+        ),
         ops=(),
         output_names=(output.name,),
         max_steps=1,
@@ -158,7 +174,7 @@ def test_numeric_identity_and_output_slice_survive_direct_kernel_structure():
     assert kernel.outputs[0].flat_slice == slice(3, 5)
     assert kernel.graph.projections[0].projection_id == 40
     assert kernel.states[0].state_id == 50
-    assert kernel.graph.rng_streams[0].stream_id == 60
+    assert kernel.graph.rng_streams[0].stream_id == 0
 
 
 def test_output_slice_validation_rejects_partial_reversed_and_wrong_width_bounds():

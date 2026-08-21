@@ -1,27 +1,32 @@
-"""Fail-closed boundary for LCA-controlled termination in co-evolving graphs.
+"""Acceptance boundary for LCA-controlled generic dynamic schedules.
 
 The CSI surrogate in ``Scripts/Debug/pec_batch_compile/csi_model_surrogate.py``
-motivates these cases, but it also contains a UDF and a second control chain.
-This module keeps only the semantic pattern relevant to the batched compiler:
+motivates these cases.  This module isolates its first control chain:
 
 ``AtPass(n) input -> Always LCA -> WhenFinished(LCA) DDM``
 
-This reduced topology is outside the exact CSI coevolving boundary and still
-lacks a generic executable conditional pass region.  Even constant-zero and
-statically matching controls must therefore fail closed with the single
-coupled-region diagnostic used for coevolving schedules.
+The generic executor accepts affine controls whose static onset relationship
+is sound and matches their multi-trial Python semantics.  Deliberately
+mismatched controller thresholds remain structured, fail-closed rejections.
 """
 
 from dataclasses import dataclass
 
+import numpy as np
 import pytest
 
 import psyneulink as pnl
+from tests.composition.pec.batched_semantic_test_support import (
+    SemanticCase,
+    SemanticModel,
+    assert_matches_python,
+)
 from psyneulink.core.batched import (
     BatchedCompileError,
     BatchedCompositionCompiler,
     BatchedDiagnosticCode,
 )
+from psyneulink.core.batched.kernel_ir import iter_kernel_ops
 
 pytestmark = [
     pytest.mark.batched,
@@ -29,10 +34,16 @@ pytestmark = [
 ]
 
 
-_UNMODELED_COEVOLUTION_DETAIL = (
+_UNSUPPORTED_SCHEDULE_DETAIL = (
     "coevolving Always/WhenFinished execution requires explicit finished "
     "predicates and conditional pass regions in KernelIR"
 )
+
+_VECTOR_INPUTS = np.asarray(
+    [[1.0, -0.5], [-0.25, 1.25], [0.75, -1.0]],
+    dtype=float,
+)
+_TIMING_INPUTS = np.asarray([[0.0], [1.0], [2.0]], dtype=float)
 
 
 @dataclass(frozen=True)
@@ -49,13 +60,7 @@ class _TerminationTiming:
         return float(self.controller_intercept)
 
 
-@dataclass(frozen=True)
-class _CoevolvingModel:
-    composition: pnl.Composition
-    outputs: tuple
-
-
-def _make_coevolving_model(timing: _TerminationTiming) -> _CoevolvingModel:
+def _make_scheduled_model(timing: _TerminationTiming) -> SemanticModel:
     """Build the target graph shape without relying on any CSI-specific name."""
 
     delayed_input = pnl.TransferMechanism(
@@ -164,8 +169,12 @@ def _make_coevolving_model(timing: _TerminationTiming) -> _CoevolvingModel:
         pnl.WhenFinished(terminator),
     )
 
-    return _CoevolvingModel(
+    return SemanticModel(
         composition=composition,
+        inputs={
+            delayed_input: _VECTOR_INPUTS,
+            timing_source: _TIMING_INPUTS,
+        },
         outputs=(decision_readout.output_port, response_time_readout.output_port),
     )
 
@@ -197,8 +206,11 @@ TERMINATION_TIMING_CASES = (
     ),
 )
 
+SUPPORTED_TIMING_CASES = TERMINATION_TIMING_CASES[:4]
+MISMATCHED_TIMING_CASES = TERMINATION_TIMING_CASES[4:]
 
-def _make_uncontrolled_coevolving_model():
+
+def _make_uncontrolled_dynamic_model():
     stepper = pnl.LCAMechanism(
         input_shapes=2,
         function=pnl.Logistic(gain=2.0),
@@ -237,7 +249,16 @@ def _make_uncontrolled_coevolving_model():
     return composition, stepper, tuple(terminator.output_ports)
 
 
-def _assert_unmodeled_control_diagnostic(report, composition):
+def _dynamic_regions(kernel):
+    return tuple(
+        op
+        for op in iter_kernel_ops(kernel)
+        if op.kind == "ForPasses"
+        and op.attrs.get("trace_kind") == "lane_local_dynamic"
+    )
+
+
+def _assert_mismatched_control_diagnostic(report, composition):
     steppers = tuple(
         node for node in composition.nodes if isinstance(node, pnl.LCAMechanism)
     )
@@ -250,51 +271,80 @@ def _assert_unmodeled_control_diagnostic(report, composition):
     assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
     assert diagnostic.component_id == f"node:{stepper.name}"
     assert diagnostic.reason == "batched schedule kind is not executable yet"
-    assert diagnostic.detail == _UNMODELED_COEVOLUTION_DETAIL
+    assert diagnostic.detail == _UNSUPPORTED_SCHEDULE_DETAIL
     return diagnostic
 
 
-@pytest.mark.parametrize("timing", TERMINATION_TIMING_CASES)
-def test_controlled_lca_when_finished_has_structured_rejection(timing):
-    model = _make_coevolving_model(timing)
+@pytest.mark.parametrize("timing", SUPPORTED_TIMING_CASES)
+def test_controlled_lca_schedule_matches_fresh_python(timing, batched_backend):
+    compiled_model = _make_scheduled_model(timing)
+    report = BatchedCompositionCompiler.diagnose(
+        compiled_model.composition,
+        backend=batched_backend,
+        outputs=compiled_model.outputs,
+        max_steps=128,
+    )
+    assert report.can_execute
+    assert report.metadata["schedule_kind"] == "dynamic_lane_local"
+    assert not report.model_diagnostics
+    assert not report.codegen_diagnostics
+
+    plan = BatchedCompositionCompiler.compile(
+        compiled_model.composition,
+        backend=batched_backend,
+        outputs=compiled_model.outputs,
+        max_steps=128,
+    )
+    assert len(_dynamic_regions(plan.kernel_ir)) == 1
+    comparison = assert_matches_python(
+        SemanticCase(
+            name=repr(timing),
+            build=lambda: _make_scheduled_model(timing),
+            provenance=__file__,
+            max_steps=128,
+        ),
+        backend=batched_backend,
+    )
+
+    assert comparison.python_values.shape == (
+        len(_VECTOR_INPUTS),
+        len(compiled_model.outputs),
+    )
+
+
+def test_controlled_lca_compile_reports_generic_schedule_capability():
+    model = _make_scheduled_model(_TerminationTiming(onset=0))
+    diagnosed = BatchedCompositionCompiler.diagnose(
+        model.composition,
+        outputs=model.outputs,
+        max_steps=128,
+    )
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        outputs=model.outputs,
+        max_steps=128,
+    )
+
+    assert plan.capability_report == diagnosed
+    assert diagnosed.can_execute
+    assert diagnosed.metadata["schedule_kind"] == "dynamic_lane_local"
+    assert len(_dynamic_regions(plan.kernel_ir)) == 1
+
+
+@pytest.mark.parametrize("timing", MISMATCHED_TIMING_CASES)
+def test_mismatched_lca_control_remains_structured_rejection(timing):
+    model = _make_scheduled_model(timing)
     report = BatchedCompositionCompiler.diagnose(
         model.composition,
         outputs=model.outputs,
         max_steps=128,
     )
 
-    _assert_unmodeled_control_diagnostic(report, model.composition)
+    _assert_mismatched_control_diagnostic(report, model.composition)
 
 
-def test_controlled_lca_compile_error_carries_capability_report():
-    # Use the most tempting special case (zero monitor, zero onset): it must not
-    # bypass capability analysis merely because a sampled execution can appear
-    # equivalent while this coevolving predicate remains non-executable.
-    model = _make_coevolving_model(_TerminationTiming(onset=0))
-    diagnosed = BatchedCompositionCompiler.diagnose(
-        model.composition,
-        outputs=model.outputs,
-        max_steps=128,
-    )
-
-    with pytest.raises(BatchedCompileError) as error:
-        BatchedCompositionCompiler.compile(
-            model.composition,
-            outputs=model.outputs,
-            max_steps=128,
-        )
-
-    report = error.value.capability_report
-    assert report == diagnosed
-    diagnostic = _assert_unmodeled_control_diagnostic(
-        report,
-        model.composition,
-    )
-    assert diagnostic.formatted_reason in str(error.value)
-
-
-def test_uncontrolled_lca_when_finished_rejects_missing_generic_schedule_ir():
-    composition, stepper, outputs = _make_uncontrolled_coevolving_model()
+def test_uncontrolled_lca_when_finished_remains_structured_rejection():
+    composition, stepper, outputs = _make_uncontrolled_dynamic_model()
     report = BatchedCompositionCompiler.diagnose(
         composition,
         outputs=outputs,
@@ -312,7 +362,7 @@ def test_uncontrolled_lca_when_finished_rejects_missing_generic_schedule_ir():
     diagnostic = matches[0]
     assert diagnostic.code == BatchedDiagnosticCode.MODEL_SCHEDULE_NOT_EXECUTABLE
     assert diagnostic.component_id == f"node:{stepper.name}"
-    assert diagnostic.detail == _UNMODELED_COEVOLUTION_DETAIL
+    assert diagnostic.detail == _UNSUPPORTED_SCHEDULE_DETAIL
 
     with pytest.raises(BatchedCompileError) as error:
         BatchedCompositionCompiler.compile(

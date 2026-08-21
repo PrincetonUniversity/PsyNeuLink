@@ -244,7 +244,7 @@ class MechanismOpSpec:
     display_name: str = ""
     params: tuple[ParamBinding, ...] = ()
     states: tuple[StateDecl, ...] = ()
-    # Per-trial state for the co-evolution step form: reset at the start of each
+    # Per-trial state for a scheduled step form: reset at the start of each
     # trial (unlike ``states``, which persist across trials).  E.g. a DDM's
     # accumulated value / step count / finished flag.
     trial_states: tuple[StateDecl, ...] = ()

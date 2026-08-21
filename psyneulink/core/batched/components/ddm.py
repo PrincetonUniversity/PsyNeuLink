@@ -152,8 +152,9 @@ def _pnl_triton_ddm_update(
     step,
 ):
     # The single shared DDM integration step.  Both the run-to-completion loop
-    # and the co-evolution step call this, so the accumulate/clamp/terminate math
-    # lives in one place.  Accumulate the (possibly time-varying) drift toward a
+    # and the scheduled one-step path call this, so the
+    # accumulate/clamp/terminate math lives in one place.  Accumulate the
+    # (possibly time-varying) drift toward a
     # (possibly collapsing) boundary; a lane that crosses it sets `finished` and
     # freezes (`draw` is the caller-drawn noise sample).
     sqrt_dt = tl.sqrt(time_step_size)
@@ -187,22 +188,15 @@ def _pnl_triton_ddm_step(
     seed,
     rng_base,
     step,
-    start,
     max_steps,
-    held_threshold,
 ):
-    # One DDM step for the fused co-evolution loop: draw noise, then apply the
-    # shared update.  `start` is the warm-up (ITI): the terminator is frozen until
-    # `step >= start`, and its own step index (for the collapsing boundary) counts
-    # from `start`, so an ITI shifts *when* the DDM runs without changing its
-    # decision dynamics.
-    local_step = tl.maximum(step - start, 0)
-    active_time = (step >= start) & (local_step < max_steps)
-    draw = tl.randn(seed, rng_base + local_step)
-    active_threshold = tl.where(local_step == 0, held_threshold, threshold)
+    # The scheduler supplies the DDM's component-local execution clock, so cue
+    # onset and other inter-member timing do not leak into the integrator.
+    active_time = step < max_steps
+    draw = tl.randn(seed, rng_base + step)
     new_value, new_steps, new_finished = _pnl_triton_ddm_update(
-        value, steps, finished, drift, rate, noise, active_threshold,
-        threshold_collapse, time_step_size, offset, draw, local_step,
+        value, steps, finished, drift, rate, noise, threshold,
+        threshold_collapse, time_step_size, offset, draw, step,
     )
     value = tl.where(active_time, new_value, value)
     steps = tl.where(active_time, new_steps, steps)
@@ -215,12 +209,17 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     value = ctx.state(f"{name}.value", 0)
     steps = ctx.state(f"{name}.steps", 0)
     finished = ctx.state(f"{name}.finished", 0)
-    held_threshold = ctx.coevolve_terminator_control_value()
-    if not held_threshold:
-        # In the generic dynamic scheduler there is no legacy folded-control
-        # register.  The scheduler controls *when* the DDM steps, while an
-        # unmodulated DDM starts from its bound threshold.
-        held_threshold = ctx.param(node_spec, "threshold")
+    sampled_threshold = ctx.sampled_effective_parameter(node_spec, "threshold")
+    if sampled_threshold is not None:
+        # The generic scheduler materializes the folded threshold controller as
+        # an explicit persistent effective carry.  Its value already includes
+        # the affine collapse for the current DDM execution count, so sample it
+        # on every step and do not apply the component's collapse a second time.
+        threshold = sampled_threshold
+        threshold_collapse = "0.0"
+    else:
+        threshold = ctx.param(node_spec, "threshold")
+        threshold_collapse = ctx.param(node_spec, "threshold_collapse")
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_ddm_step,
@@ -232,16 +231,14 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 inputs[0],
                 ctx.param(node_spec, "rate"),
                 ctx.param(node_spec, "noise"),
-                ctx.param(node_spec, "threshold"),
-                ctx.param(node_spec, "threshold_collapse"),
+                threshold,
+                threshold_collapse,
                 ctx.param(node_spec, "time_step_size"),
                 ctx.param(node_spec, "offset"),
                 ctx.seed,
                 ctx.rng_base(name),
                 step_var,
-                str(ctx.coevolve_warmup()),
                 "MAX_STEPS",
-                held_threshold,
             ),
         )
     )

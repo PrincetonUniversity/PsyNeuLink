@@ -34,7 +34,7 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
             if len(lengths) == 1:
                 rows = []
                 for idx in range(next(iter(lengths))):
-                    row = dict(defaults)
+                    row = {}
                     for key, value in parameter_sets.items():
                         row[_normalize_param_key(key)] = _as_scalar(
                             np.asarray(value).reshape(-1)[idx]
@@ -42,14 +42,14 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
                     rows.append(_canonicalize_param_set(row, ir))
                 return rows
 
-        row = dict(defaults)
+        row = {}
         for key, value in parameter_sets.items():
             row[_normalize_param_key(key)] = _as_scalar(value)
         return [_canonicalize_param_set(row, ir)]
 
     rows = []
     for parameter_set in parameter_sets:
-        row = dict(defaults)
+        row = {}
         if isinstance(parameter_set, Mapping):
             for key, value in parameter_set.items():
                 row[_normalize_param_key(key)] = _as_scalar(value)
@@ -468,23 +468,38 @@ def _unwrap_singletons(value):
 def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> dict[str, float]:
     canonical = dict(ir.param_defaults)
     matched = set()
-    for spec in ir.params:
-        candidate_names = (spec.name,) + spec.aliases
-        for name in candidate_names:
-            if name in row:
-                canonical[spec.name] = _as_scalar(row[name])
-                matched.add(name)
-        for name, value in row.items():
-            if isinstance(name, str) and any(name.endswith(f".{candidate}") for candidate in candidate_names):
-                canonical[spec.name] = _as_scalar(value)
-                matched.add(name)
+    for name, value in row.items():
+        matching_specs = [spec for spec in ir.params if name == spec.name]
+        if not matching_specs:
+            matching_specs = [spec for spec in ir.params if name in spec.aliases]
+        if not matching_specs and isinstance(name, str):
+            matching_specs = [
+                spec
+                for spec in ir.params
+                if any(
+                    name.endswith(f".{candidate}")
+                    for candidate in (spec.name,) + spec.aliases
+                )
+            ]
+        if len(matching_specs) > 1:
+            targets = ", ".join(spec.name for spec in matching_specs)
+            raise ValueError(
+                f"Ambiguous batched parameter '{name}' matches: {targets}. "
+                "Use a component-qualified parameter name."
+            )
+        if matching_specs:
+            canonical[matching_specs[0].name] = _as_scalar(value)
+            matched.add(name)
     unknown = sorted(
         str(name)
         for name in row
         if name not in matched and name not in canonical
     )
     if unknown:
-        available = sorted({spec.name for spec in ir.params} | {alias for spec in ir.params for alias in spec.aliases})
+        available = sorted(
+            {spec.name for spec in ir.params}
+            | {alias for spec in ir.params for alias in spec.aliases}
+        )
         raise ValueError(
             "Unknown batched parameter(s): "
             f"{', '.join(unknown)}. Available parameters: {', '.join(available)}"

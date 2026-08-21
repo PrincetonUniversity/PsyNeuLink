@@ -14,6 +14,7 @@ whole schedule, including the upstream LCA and downstream readouts.
 
 from dataclasses import dataclass, replace
 import itertools
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -23,6 +24,11 @@ from psyneulink.core.batched import BatchedCompileError, BatchedCompositionCompi
 from psyneulink.core.batched.backend.triton.graph_emit import (
     triton_graph_kernel_source,
 )
+from psyneulink.core.batched.backend.triton.emit.emitter import (
+    TritonGraphEmitter,
+)
+from psyneulink.core.batched.backend.triton.emit.lanes import RNG_STREAM_STRIDE
+from psyneulink.core.batched.graph import _dynamic_scheduled_graph_eligible
 from psyneulink.core.batched.kernel_ir import (
     KernelDynamicScheduleProgram,
     iter_kernel_ops,
@@ -464,7 +470,7 @@ def test_scheduled_terminator_has_typed_dynamic_program():
         if " = _pnl_triton_ddm_step(" in line
     )
     assert len(ddm_step_calls) == 1
-    assert "draw = tl.randn(seed, rng_base + local_step)" in source
+    assert "draw = tl.randn(seed, rng_base + step)" in source
     assert rng_clock_var in ddm_step_calls[0]
     assert all(
         forbidden not in ddm_step_calls[0]
@@ -474,6 +480,79 @@ def test_scheduled_terminator_has_typed_dynamic_program():
             f"schedule_execution_count_{terminator_id}",
         )
     )
+
+
+def test_distinct_scheduled_rng_owners_use_global_stream_inventory():
+    model = _build_scheduled_terminator(noise=0.25)
+    second_terminator = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0,
+            rate=1.0,
+            noise=0.35,
+            threshold=0.3,
+            non_decision_time=0.1,
+            time_step_size=0.1,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        execute_until_finished=False,
+        reset_stateful_function_when=pnl.AtTrialStart(),
+        name=f"{model.composition.name} second terminator",
+    )
+    second_gate = pnl.TransferMechanism(
+        input_shapes=1,
+        name=f"{model.composition.name} second gate",
+    )
+    model.composition.add_nodes([second_terminator, second_gate])
+    model.composition.add_projection(
+        sender=model.stepper,
+        receiver=second_terminator,
+        projection=pnl.MappingProjection(matrix=[[1.0], [-1.0]]),
+    )
+    model.composition.add_projection(
+        sender=second_terminator.output_ports[pnl.DECISION_OUTCOME],
+        receiver=second_gate,
+    )
+    model.composition.scheduler.add_condition(
+        second_terminator,
+        pnl.WhenFinished(model.stepper),
+    )
+    model.composition.scheduler.add_condition(
+        second_gate,
+        pnl.WhenFinished(second_terminator),
+    )
+
+    plan = BatchedCompositionCompiler.compile(
+        model.composition,
+        backend="triton_cpu",
+        outputs=(*model.outputs, second_gate.output_port),
+        max_steps=4,
+    )
+    streams = plan.kernel_ir.rng_streams
+    assert tuple(stream.stream_id for stream in streams) == (0, 1)
+    assert {stream.node for stream in streams} == {
+        model.terminator.name,
+        second_terminator.name,
+    }
+    with pytest.raises(ValueError, match="RNG stream"):
+        replace(plan.kernel_ir, rng_streams=streams[::-1])
+
+    emitter = TritonGraphEmitter(plan.kernel_ir)
+    emitter._index_rng_streams()
+    assert tuple(emitter.rng_stream_offset(stream.node) for stream in streams) == (
+        0,
+        RNG_STREAM_STRIDE,
+    )
+
+    duplicate_owner = replace(
+        streams[1],
+        node=streams[0].node,
+        component_id=streams[0].component_id,
+    )
+    emitter.kernel = SimpleNamespace(
+        rng_streams=(streams[0], duplicate_owner),
+    )
+    with pytest.raises(ValueError, match="at most one stream declaration"):
+        emitter._index_rng_streams()
 
 
 def test_scheduled_terminator_schema_rejects_semantic_forgeries():
@@ -486,6 +565,65 @@ def test_scheduled_terminator_schema_rejects_semantic_forgeries():
     ).kernel_ir
     program = _dynamic_region(kernel).attrs["program"]
     terminator_id = kernel.graph.node(model.terminator.name).component_id
+
+    forged_fusion = None if kernel.fusion_kind is not None else "forged"
+    with pytest.raises(ValueError, match="fusion kind"):
+        replace(kernel, fusion_kind=forged_fusion)
+
+    for dimensions in (
+        kernel.lane_layout.dimensions[:-1],
+        list(kernel.lane_layout.dimensions),
+    ):
+        forged_layout = replace(kernel.lane_layout, dimensions=dimensions)
+        with pytest.raises(ValueError, match="lane layout"):
+            replace(kernel, lane_layout=forged_layout)
+
+    stream = kernel.rng_streams[0]
+    rng_forgeries = (
+        ("stream_id", stream.stream_id + 1),
+        ("name", f"{stream.name}.forged"),
+        ("node", f"{stream.node}.forged"),
+        ("component_id", stream.component_id + 1),
+        ("width", stream.width + 1),
+        ("width", float(stream.width)),
+        ("step_extent", f"{stream.step_extent}.forged"),
+    )
+    for field, value in rng_forgeries:
+        forged_stream = replace(stream, **{field: value})
+        with pytest.raises(ValueError, match="RNG stream"):
+            replace(kernel, rng_streams=(forged_stream,))
+
+    graph_stream = kernel.graph.rng_streams[0]
+    for field, value in (
+        ("name", ""),
+        ("node", ""),
+        ("width", 0),
+        ("step_extent", ""),
+        ("component_id", -1),
+        ("stream_id", -1),
+    ):
+        forged_kernel_stream = replace(stream, **{field: value})
+        forged_graph = replace(
+            kernel.graph,
+            rng_streams=(replace(graph_stream, **{field: value}),),
+        )
+        with pytest.raises(ValueError, match="RNG stream"):
+            replace(
+                kernel,
+                graph=forged_graph,
+                rng_streams=(forged_kernel_stream,),
+            )
+
+    for field, value in (
+        ("stream_id", False),
+        ("node", f"{graph_stream.node}.forged"),
+        ("width", True),
+    ):
+        forged_graph = replace(
+            kernel.graph,
+            rng_streams=(replace(graph_stream, **{field: value}),),
+        )
+        assert not _dynamic_scheduled_graph_eligible(forged_graph, kernel.params)
 
     with pytest.raises(ValueError, match="schedule fuel"):
         replace(program, schedule_fuel=program.schedule_fuel - 1)

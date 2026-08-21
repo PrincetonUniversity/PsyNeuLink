@@ -18,6 +18,7 @@ from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
     BatchedEffectiveParameterSpec,
     BatchedFinishedValueSpec,
+    BatchedFoldedAffineControlSpec,
     BatchedGraphIR,
     BatchedInputSpec,
     BatchedModulationSpec,
@@ -420,6 +421,22 @@ def lower_composition(
         port_ids,
         consideration_set_ids,
     )
+    (
+        folded_effective_parameter_specs,
+        folded_affine_control_specs,
+    ) = _folded_affine_control_ir_specs(
+        composition,
+        topological_nodes,
+        node_specs,
+        params,
+        component_ids,
+        port_ids,
+        first_effective_parameter_id=len(effective_parameter_specs),
+    )
+    effective_parameter_specs = (
+        *effective_parameter_specs,
+        *folded_effective_parameter_specs,
+    )
     finished_values = _controlled_finished_value_specs(
         finished_values,
         modulation_specs,
@@ -524,12 +541,6 @@ def lower_composition(
                 "schedule_trace_component_budget": (
                     PRECOMPUTED_TRACE_COMPONENT_BUDGET
                 ),
-                # Warm-up steps before the co-evolving terminator begins (the ITI:
-                # the LCA decays / integrates onset inputs first). = max node
-                # onset; 0 when there is none.
-                "coevolve_warmup": max(
-                    (spec.attrs.get("onset_step", 0) for spec in node_specs), default=0
-                ),
             },
             rng_streams=_rng_stream_specs(node_specs),
             ports=port_specs,
@@ -539,6 +550,7 @@ def lower_composition(
             finished_values=finished_values,
             effective_parameters=effective_parameter_specs,
             modulations=modulation_specs,
+            folded_affine_controls=folded_affine_control_specs,
             resets=reset_specs,
             termination=termination_specs,
         )
@@ -564,6 +576,8 @@ def lower_composition(
             graph,
             tuple(params.specs),
         ):
+            if graph.folded_affine_controls:
+                _freeze_dynamic_terminator_parameters(graph, params)
             follower_names = {
                 condition.node
                 for condition in graph.scheduler
@@ -584,32 +598,6 @@ def lower_composition(
                         or diagnostic.detail
                         == _COEVOLVING_SCHEDULE_DIAGNOSTIC_DETAIL
                     )
-                )
-            ]
-            graph = replace(
-                graph,
-                executable=not rejected_nodes and not rejected_conditions,
-                metadata={
-                    **graph.metadata,
-                    "scheduler_executable": (
-                        not rejected_nodes and not rejected_conditions
-                    ),
-                },
-            )
-
-        if _dynamic_controlled_coevolving_graph_eligible(
-            graph,
-            tuple(params.specs),
-        ):
-            _freeze_dynamic_coevolving_parameters(graph, params)
-            rejected_conditions = [
-                diagnostic
-                for diagnostic in rejected_conditions
-                if not (
-                    diagnostic.reason
-                    == "batched schedule kind is not executable yet"
-                    and diagnostic.detail
-                    == _COEVOLVING_SCHEDULE_DIAGNOSTIC_DETAIL
                 )
             ]
             graph = replace(
@@ -794,11 +782,11 @@ def _freeze_absorbed_control_parameters(
             )
 
 
-def _freeze_dynamic_coevolving_parameters(
+def _freeze_dynamic_terminator_parameters(
     graph: BatchedGraphIR,
     params: _ParamBuilder,
 ) -> None:
-    """Freeze DDM values whose coevolving form assumes their defaults.
+    """Freeze folded-target values not represented as runtime dynamic lanes.
 
     The folded threshold control is represented by runtime ``threshold`` and
     ``threshold_collapse`` lanes (with aliases for the absorbed source), so
@@ -807,19 +795,20 @@ def _freeze_dynamic_coevolving_parameters(
     starting value and offset.
     """
 
-    finished = next(
-        value
-        for value in graph.finished_values
-        if value.predicate_kind == "dynamic"
+    reason = "dynamic scheduled terminator parameter is frozen in KernelIR"
+    target_ids = dict.fromkeys(
+        control.target_component_id
+        for control in graph.folded_affine_controls
     )
-    terminator = graph.node(finished.node)
-    reason = "first coevolving DDM boundary is frozen in KernelIR"
-    for argument in (
-        "noise",
-        "starting_value",
-        "offset",
-    ):
-        params.freeze(terminator.params[argument], reason)
+    targets_by_id = {node.component_id: node for node in graph.nodes}
+    for target_id in target_ids:
+        terminator = targets_by_id[target_id]
+        for argument in (
+            "noise",
+            "starting_value",
+            "offset",
+        ):
+            params.freeze(terminator.params[argument], reason)
 
 
 def _typed_dynamic_control_chain_supported(
@@ -1335,16 +1324,23 @@ def _dynamic_scheduled_graph_eligible(
 
     lookup_spec = specs.lookup_spec if op_specs is None else op_specs.lookup_spec
     component_ids = tuple(node.component_id for node in graph.nodes)
+    controller_component_ids = {
+        node.component_id
+        for node in graph.nodes
+        if node.component_type == "ControlMechanism"
+    }
     if not (
         graph.metadata.get("schedule_kind") == DYNAMIC_LANE_LOCAL_SCHEDULE
         and graph.fusion_kind == COEVOLVING_GRAPH_FUSION
         and graph.nodes
         and all(type(component_id) is int for component_id in component_ids)
         and component_ids == tuple(range(len(graph.nodes)))
-        and graph.execution_order == tuple(node.name for node in graph.nodes)
-        and not graph.modulations
-        and not graph.effective_parameters
-        and not graph.absorbed_projections
+        and graph.execution_order
+        == tuple(
+            node.name
+            for node in graph.nodes
+            if node.component_id not in controller_component_ids
+        )
         and len(graph.scheduler) == len(graph.nodes)
     ):
         return False
@@ -1387,6 +1383,9 @@ def _dynamic_scheduled_graph_eligible(
     try:
         for node in graph.nodes:
             spec_key = node.attrs.get("spec_key")
+            if not spec_key and node.component_type == "ControlMechanism":
+                node_specs[node.component_id] = None
+                continue
             if type(spec_key) is not str or not spec_key:
                 return False
             node_specs[node.component_id] = lookup_spec(spec_key)
@@ -1441,6 +1440,10 @@ def _dynamic_scheduled_graph_eligible(
         return False
 
     referenced_finished_ids = set()
+    folded_controller_ids = {
+        control.controller_component_id
+        for control in graph.folded_affine_controls
+    }
     for component_id, condition in scheduler_by_id.items():
         node = nodes_by_id[component_id]
         if not (
@@ -1474,6 +1477,28 @@ def _dynamic_scheduled_graph_eligible(
             ):
                 return False
             continue
+        if condition.condition_type == "AtPass":
+            pass_index = condition.attrs.get("pass_index")
+            onset_step = node.attrs.get("onset_step", 0)
+            if (
+                condition.dependencies
+                or condition.dependency_component_ids
+                or condition.finished_value_ids
+                or not exact_attrs(
+                    condition.attrs,
+                    {
+                        "pass_index": pass_index,
+                        "time_scale": "ENVIRONMENT_STATE_UPDATE",
+                    },
+                )
+                or type(pass_index) is not int
+                or not 0 <= pass_index <= FP32_EXACT_INTEGER_LIMIT
+                or type(onset_step) is not int
+                or onset_step != pass_index
+                or (pass_index == 0 and "onset_step" in node.attrs)
+            ):
+                return False
+            continue
         if condition.condition_type != "WhenFinished" or not exact_attrs(
             condition.attrs,
             {"predicate": "is_finished"},
@@ -1494,14 +1519,28 @@ def _dynamic_scheduled_graph_eligible(
             and finished is not None
             and condition.dependencies == (dependency.name,)
             and finished.component_id == dependency_id
-            and set_by_component_id[dependency_id]
-            < set_by_component_id[component_id]
+            and (
+                set_by_component_id[dependency_id]
+                < set_by_component_id[component_id]
+                or (
+                    component_id in folded_controller_ids
+                    and set_by_component_id[component_id]
+                    < set_by_component_id[dependency_id]
+                )
+            )
         ):
             return False
         referenced_finished_ids.add(finished_id)
 
     dynamic_finished_ids = set()
     count_finished_ids = set()
+    effective_count_finished_ids = set()
+    effective_by_id = {
+        parameter.effective_parameter_id: parameter
+        for parameter in graph.effective_parameters
+    }
+    if len(effective_by_id) != len(graph.effective_parameters):
+        return False
     for finished in graph.finished_values:
         owner = nodes_by_id.get(finished.component_id)
         owner_spec = node_specs.get(finished.component_id)
@@ -1529,6 +1568,36 @@ def _dynamic_scheduled_graph_eligible(
             ):
                 return False
             count_finished_ids.add(finished.value_id)
+        elif (
+            finished.predicate_kind
+            == "execution_count_at_least_effective_parameter"
+        ):
+            effective_parameter_id = finished.attrs.get(
+                "effective_parameter_id"
+            )
+            target_parameter_port_id = finished.attrs.get(
+                "target_parameter_port_id"
+            )
+            effective = effective_by_id.get(effective_parameter_id)
+            expected = {
+                "effective_parameter_id": effective_parameter_id,
+                "target_parameter_port_id": target_parameter_port_id,
+                "rounding": "ceil",
+                "minimum": 1,
+                "maximum": FP32_EXACT_INTEGER_LIMIT,
+            }
+            if not (
+                exact_attrs(finished.attrs, expected)
+                and type(effective_parameter_id) is int
+                and type(target_parameter_port_id) is int
+                and effective is not None
+                and effective.target_component_id == finished.component_id
+                and effective.target_parameter_port_id
+                == target_parameter_port_id
+            ):
+                return False
+            count_finished_ids.add(finished.value_id)
+            effective_count_finished_ids.add(finished.value_id)
         elif finished.predicate_kind == "dynamic":
             trial_state_names = tuple(state.name for state in owner_spec.trial_states)
             if not (
@@ -1548,14 +1617,42 @@ def _dynamic_scheduled_graph_eligible(
     ):
         return False
 
-    mechanism_ids = {
-        component_id
-        for component_id, op_spec in node_specs.items()
-        if isinstance(op_spec, specs.MechanismOpSpec)
-    }
-    if mechanism_ids != {
+    finished_owner_ids = {
         finished.component_id for finished in graph.finished_values
-    }:
+    }
+    always_component_ids = {
+        component_id
+        for component_id, condition in scheduler_by_id.items()
+        if condition.condition_type == "Always"
+    }
+    dynamic_owner_ids = {
+        finished_by_id[value_id].component_id
+        for value_id in dynamic_finished_ids
+    }
+    if (
+        not always_component_ids <= finished_owner_ids
+        or any(
+            not isinstance(node_specs[component_id], specs.MechanismOpSpec)
+            or not node_specs[component_id].can_step
+            for component_id in finished_owner_ids
+        )
+        or any(
+            not node_specs[component_id].is_terminator
+            for component_id in dynamic_owner_ids
+        )
+    ):
+        return False
+
+    if not _dynamic_control_declarations_supported(
+        graph,
+        parameters,
+        node_specs=node_specs,
+        nodes_by_id=nodes_by_id,
+        scheduler_by_id=scheduler_by_id,
+        consideration_set_by_component_id=set_by_component_id,
+        effective_count_finished_ids=effective_count_finished_ids,
+        exact_attrs=exact_attrs,
+    ):
         return False
 
     expected_state_owners = {
@@ -1585,25 +1682,54 @@ def _dynamic_scheduled_graph_eligible(
     ):
         return False
 
+    rng_declarations = tuple(
+        (component_id, declaration)
+        for component_id, op_spec in node_specs.items()
+        if isinstance(op_spec, specs.MechanismOpSpec)
+        for declaration in op_spec.rng
+    )
+    # The current backend API addresses a stream by owning component, so a
+    # component with multiple independently named streams would be ambiguous.
+    # Distinct components still share one globally numbered stream inventory.
+    if any(
+        isinstance(op_spec, specs.MechanismOpSpec) and len(op_spec.rng) > 1
+        for op_spec in node_specs.values()
+    ):
+        return False
+    if (
+        type(graph.rng_streams) is not tuple
+        or any(
+            type(stream) is not BatchedRngStreamSpec
+            or type(stream.name) is not str
+            or type(stream.node) is not str
+            or type(stream.width) is not int
+            or stream.width <= 0
+            or type(stream.step_extent) is not str
+            or type(stream.component_id) is not int
+            or type(stream.stream_id) is not int
+            for stream in graph.rng_streams
+        )
+    ):
+        return False
     expected_rng = tuple(
         (
             component_id,
-            index,
+            stream_id,
             f"{nodes_by_id[component_id].name}.{declaration.name}",
+            nodes_by_id[component_id].name,
             declaration.step_extent,
             declaration.width
             if declaration.width is not None
             else nodes_by_id[component_id].output_width,
         )
-        for component_id, op_spec in node_specs.items()
-        if isinstance(op_spec, specs.MechanismOpSpec)
-        for index, declaration in enumerate(op_spec.rng)
+        for stream_id, (component_id, declaration) in enumerate(rng_declarations)
     )
     actual_rng = tuple(
         (
             stream.component_id,
             stream.stream_id,
             stream.name,
+            stream.node,
             stream.step_extent,
             stream.width,
         )
@@ -1648,1114 +1774,610 @@ def _dynamic_scheduled_graph_eligible(
     )
 
 
-def _dynamic_controlled_coevolving_graph_eligible(
+def _dynamic_control_declarations_supported(
     graph: BatchedGraphIR,
     parameters: tuple[BatchedParamSpec, ...],
     *,
-    op_specs: specs.BatchedOpSpecSnapshot | None = None,
+    node_specs,
+    nodes_by_id,
+    scheduler_by_id,
+    consideration_set_by_component_id,
+    effective_count_finished_ids,
+    exact_attrs,
 ) -> bool:
-    """Recognize the first executable CSI co-evolving graph exactly.
+    """Authenticate ordinary and folded producers of effective parameters.
 
-    Co-evolution changes scheduler timing, retained state, random-stream
-    indexing, and which values may be observed after an early lane-local exit.
-    Admission is therefore intentionally based on the complete lowered graph,
-    not just on the presence of an ``Always`` LCA and a ``WhenFinished`` DDM.
-    Every role below is recovered from typed identities and dataflow; public
-    component names are used only to cross-check those identities.
+    The dynamic scheduler consumes one uniform held-value inventory.  Each
+    value must have exactly one producer: either a typed scalar modulation or
+    a typed folded affine scheduler effect.  The latter keeps an omitted
+    stateful source auditable without reintroducing a model-shaped graph
+    recognizer.
     """
 
-    lookup_spec = specs.lookup_spec if op_specs is None else op_specs.lookup_spec
-    node_component_ids = tuple(node.component_id for node in graph.nodes)
+    effective_ids = tuple(
+        parameter.effective_parameter_id
+        for parameter in graph.effective_parameters
+    )
+    modulation_ids = tuple(
+        modulation.modulation_id for modulation in graph.modulations
+    )
+    folded_ids = tuple(
+        control.folded_control_id
+        for control in graph.folded_affine_controls
+    )
+    modulation_effective_ids = tuple(
+        modulation.effective_parameter_id
+        for modulation in graph.modulations
+    )
+    folded_effective_ids = tuple(
+        control.effective_parameter_id
+        for control in graph.folded_affine_controls
+    )
+    producer_controller_ids = tuple(
+        modulation.controller_component_id for modulation in graph.modulations
+    ) + tuple(
+        control.controller_component_id
+        for control in graph.folded_affine_controls
+    )
+    effective_target_ports = tuple(
+        (parameter.target_component_id, parameter.target_parameter_port_id)
+        for parameter in graph.effective_parameters
+    )
     if not (
-        graph.metadata.get("schedule_kind") == DYNAMIC_LANE_LOCAL_SCHEDULE
-        and graph.fusion_kind == COEVOLVING_GRAPH_FUSION
-        and len(graph.nodes) == 11
-        and all(type(component_id) is int for component_id in node_component_ids)
-        and node_component_ids == tuple(range(len(graph.nodes)))
-        and len(graph.scheduler) == len(graph.nodes)
-        and len(graph.consideration_sets) == 6
-        and len(graph.modulations) == 1
-        and len(graph.effective_parameters) == 1
-        and len(graph.finished_values) == 2
-        and len(graph.absorbed_projections) == 2
-        and len(graph.rng_streams) == 1
-        and len(graph.inputs) == 4
-        and len(graph.projections) == 8
-        and len(graph.outputs) == 2
+        effective_ids == tuple(range(len(effective_ids)))
+        and modulation_ids == tuple(range(len(modulation_ids)))
+        and folded_ids == tuple(range(len(folded_ids)))
+        and modulation_effective_ids
+        == tuple(range(len(modulation_effective_ids)))
+        and folded_effective_ids
+        == tuple(range(len(modulation_effective_ids), len(effective_ids)))
+        and len(set((*modulation_effective_ids, *folded_effective_ids)))
+        == len(effective_ids)
+        and len(set(producer_controller_ids)) == len(producer_controller_ids)
+        and len(set(effective_target_ports)) == len(effective_target_ports)
     ):
         return False
 
-    def exact_attrs(actual, expected) -> bool:
-        return bool(
-            isinstance(actual, Mapping)
-            and set(actual) == set(expected)
-            and all(
-                type(actual[key]) is type(value) and actual[key] == value
-                for key, value in expected.items()
-            )
-        )
-
-    parameters_by_name = {parameter.name: parameter for parameter in parameters}
-    if len(parameters_by_name) != len(parameters):
-        return False
-    nodes_by_component_id = {node.component_id: node for node in graph.nodes}
-
-    def parameter_for(node, argument):
-        parameter_name = node.params.get(argument)
-        if type(parameter_name) is not str:
-            return None
-        parameter = parameters_by_name.get(parameter_name)
-        if (
-            parameter is None
-            or parameter.owner_component_id != node.component_id
-        ):
-            return None
-        return parameter
-
-    def registered_identity_linear(node, *, frozen: bool) -> bool:
-        try:
-            function_spec = lookup_spec(node.attrs["spec_key"])
-        except (KeyError, specs.BatchedOpSpecError):
-            return False
-        if not (
-            isinstance(function_spec, specs.ElementwiseFunctionSpec)
-            and function_spec.function_class is Linear
-            and node.function_type == "Linear"
-            and tuple(node.params)
-            == ("slope", "intercept", "scale", "offset")
-        ):
-            return False
-        bound = tuple(
-            (binding, parameter_for(node, binding.arg))
-            for binding in function_spec.params
-        )
-        if (
-            tuple(binding.arg for binding, _ in bound)
-            != ("slope", "intercept", "scale", "offset")
-            or any(parameter is None for _, parameter in bound)
-        ):
-            return False
-        defaults = tuple(parameter.default for _, parameter in bound)
-        return bool(
-            all(type(value) is float for value in defaults)
-            and defaults == (1.0, 0.0, 1.0, 0.0)
-            and all(
-                parameter.owner_scope == binding.scope
-                and parameter.runtime_mutable is (not frozen)
-                for binding, parameter in bound
-            )
-        )
-
-    def registered_affine_count_source(node) -> bool:
-        """Authenticate the emitted CSI cue transform and its mutability."""
-
-        try:
-            function_spec = lookup_spec(node.attrs["spec_key"])
-        except (KeyError, specs.BatchedOpSpecError):
-            return False
-        if not (
-            isinstance(function_spec, specs.ElementwiseFunctionSpec)
-            and function_spec.function_class is Linear
-            and node.function_type == "Linear"
-            and tuple(node.params)
-            == ("slope", "intercept", "scale", "offset")
-        ):
-            return False
-        bound = {
-            binding.arg: (binding, parameter_for(node, binding.arg))
-            for binding in function_spec.params
-        }
-        if tuple(bound) != ("slope", "intercept", "scale", "offset"):
-            return False
-        if any(parameter is None for _, parameter in bound.values()):
-            return False
-        defaults = {
-            argument: parameter.default
-            for argument, (_, parameter) in bound.items()
-        }
-        return bool(
-            all(
-                type(value) is float
-                and np.isfinite(value)
-                for value in defaults.values()
-            )
-            and all(
-                0.0 <= defaults[argument] <= FP32_EXACT_INTEGER_LIMIT
-                and defaults[argument].is_integer()
-                for argument in ("slope", "intercept")
-            )
-            and defaults["scale"] == 1.0
-            and defaults["offset"] == 0.0
-            and all(
-                parameter.owner_scope == binding.scope
-                and parameter.runtime_mutable
-                is (argument in {"slope", "intercept"})
-                for argument, (binding, parameter) in bound.items()
-            )
-        )
-
-    def registered_count_controller_intercept(node) -> int | None:
-        """Return a frozen integral CSI-controller intercept, if exact."""
-
-        try:
-            function_spec = lookup_spec(node.attrs["spec_key"])
-        except (KeyError, specs.BatchedOpSpecError):
-            return None
-        if not (
-            isinstance(function_spec, specs.ElementwiseFunctionSpec)
-            and function_spec.function_class is Linear
-            and node.function_type == "Linear"
-            and tuple(node.params)
-            == ("slope", "intercept", "scale", "offset")
-        ):
-            return None
-        bound = tuple(
-            (binding, parameter_for(node, binding.arg))
-            for binding in function_spec.params
-        )
-        if (
-            tuple(binding.arg for binding, _ in bound)
-            != ("slope", "intercept", "scale", "offset")
-            or any(parameter is None for _, parameter in bound)
-            or any(
-                parameter.owner_scope != binding.scope
-                or parameter.runtime_mutable
-                for binding, parameter in bound
-            )
-        ):
-            return None
-        defaults = tuple(parameter.default for _, parameter in bound)
-        if not (
-            all(type(value) is float and np.isfinite(value) for value in defaults)
-            and defaults[0] == 1.0
-            and defaults[2:] == (1.0, 0.0)
-            and 0.0 <= defaults[1] <= FP32_EXACT_INTEGER_LIMIT
-            and defaults[1].is_integer()
-        ):
-            return None
-        return int(defaults[1])
-
-    modulation = graph.modulations[0]
-    effective = graph.effective_parameters[0]
-    dynamic_finished = tuple(
-        value
-        for value in graph.finished_values
-        if value.predicate_kind == "dynamic"
-    )
-    counted_finished = tuple(
-        value
-        for value in graph.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    )
-    if len(dynamic_finished) != 1 or len(counted_finished) != 1:
-        return False
-    stepper_finished = counted_finished[0]
-    terminator_finished = dynamic_finished[0]
-    try:
-        source = graph.node(modulation.source)
-        controller = graph.node(modulation.controller)
-        stepper = graph.node(modulation.target)
-        terminator = graph.node(terminator_finished.node)
-        stepper_spec = lookup_spec(stepper.attrs["spec_key"])
-        terminator_spec = lookup_spec(terminator.attrs["spec_key"])
-    except (KeyError, specs.BatchedOpSpecError):
-        return False
-
-    expected_count_attrs = {
-        "effective_parameter_id": effective.effective_parameter_id,
-        "target_parameter_port_id": effective.target_parameter_port_id,
-        "rounding": "ceil",
-        "minimum": 1,
-        "maximum": FP32_EXACT_INTEGER_LIMIT,
+    parameters_by_id = {
+        parameter.parameter_id: parameter for parameter in parameters
     }
-    if not (
-        modulation.modulation_id == 0
-        and modulation.mode == "OVERRIDE"
-        and modulation.width == 1
-        and modulation.dtype == "float32"
-        and modulation.absorbed_identity_chain is True
-        and modulation.source == source.name
-        and modulation.source_component_id == source.component_id
-        and modulation.controller == controller.name
-        and modulation.controller_component_id == controller.component_id
-        and modulation.target == stepper.name
-        and modulation.target_component_id == stepper.component_id
-        and modulation.target_parameter == "termination_threshold"
-        and modulation.effective_parameter_id
-        == effective.effective_parameter_id
-        and modulation.target_parameter_port_id
-        == effective.target_parameter_port_id
-        and effective.effective_parameter_id == 0
-        and effective.target == stepper.name
-        and effective.target_component_id == stepper.component_id
-        and effective.target_parameter == "termination_threshold"
-        and effective.base_value == (1.0,)
-        and effective.initial_modulation_value == (1.0,)
-        and effective.width == 1
-        and effective.dtype == "float32"
-        and effective.storage == "lane_persistent"
-        and effective.reset == "Never"
-        and effective.update_event == "after_controller_execution"
-        and effective.sample_event == "at_target_parameter_update"
-        and stepper_finished.value_id == 0
-        and stepper_finished.node == stepper.name
-        and stepper_finished.component_id == stepper.component_id
-        and stepper_finished.width == 1
-        and stepper_finished.dtype == "bool"
-        and stepper_finished.storage == "combinational"
-        and stepper_finished.producer_consideration_set_id == 2
-        and exact_attrs(stepper_finished.attrs, expected_count_attrs)
-        and terminator_finished.value_id == 1
-        and terminator_finished.node == terminator.name
-        and terminator_finished.component_id == terminator.component_id
-        and terminator_finished.width == 1
-        and terminator_finished.dtype == "bool"
-        and terminator_finished.storage == "combinational"
-        and terminator_finished.producer_consideration_set_id == 4
-        and exact_attrs(terminator_finished.attrs, {})
+    parameters_by_name = {parameter.name: parameter for parameter in parameters}
+    if (
+        len(parameters_by_id) != len(parameters)
+        or len(parameters_by_name) != len(parameters)
+        or tuple(parameters_by_id) != tuple(range(len(parameters)))
+    ):
+        return False
+    effective_by_id = {
+        parameter.effective_parameter_id: parameter
+        for parameter in graph.effective_parameters
+    }
+    ports_by_id = {port.port_id: port for port in graph.ports}
+    if (
+        len(ports_by_id) != len(graph.ports)
+        or tuple(sorted(ports_by_id)) != tuple(range(len(graph.ports)))
     ):
         return False
 
-    try:
-        controller_spec = lookup_spec(
-            modulation.controller_function_spec_key
-        )
-    except specs.BatchedOpSpecError:
-        return False
-    controller_arguments = ("slope", "intercept", "scale", "offset")
-    controller_intercept = registered_count_controller_intercept(controller)
-    if not (
-        source.component_type == "ProcessingMechanism"
-        and source.input_width == 1
-        and source.output_width == 1
-        and source.attrs.get("spec_kind") == "elementwise"
-        and registered_affine_count_source(source)
-        and controller.component_type == "ControlMechanism"
-        and controller.input_width == 1
-        and controller.output_width == 1
-        and controller.attrs.get("spec_kind") == "control"
-        and controller.attrs.get("control_function") == "registered"
-        and controller_intercept is not None
-        and isinstance(controller_spec, specs.ElementwiseFunctionSpec)
-        and controller_spec.function_class is Linear
-        and tuple(
-            binding.argument for binding in modulation.controller_param_bindings
-        )
-        == controller_arguments
-        and tuple(
-            binding.parameter for binding in modulation.controller_param_bindings
-        )
-        == tuple(controller.params[argument] for argument in controller_arguments)
-        and tuple(
-            binding.parameter_id
-            for binding in modulation.controller_param_bindings
-        )
-        == tuple(
-            parameters_by_name[controller.params[argument]].parameter_id
-            for argument in controller_arguments
-        )
-        and controller.input_port_ids
-        == (modulation.controller_input_port_id,)
-        and controller.output_port_ids
-        == (modulation.control_signal_port_id,)
-        and source.output_port_ids == (modulation.source_port_id,)
-        and dict(stepper.parameter_port_ids).get("termination_threshold")
-        == modulation.target_parameter_port_id
-        and exact_attrs(
-            controller.attrs.get("absorbed_control"),
-            {
-                "source": source.name,
-                "target": stepper.name,
-                "parameter": "termination_threshold",
-                "modulation": "OVERRIDE",
-            },
-        )
-    ):
+    finished_effective_ids = {
+        graph.finished_values[value_id].attrs["effective_parameter_id"]
+        for value_id in effective_count_finished_ids
+    }
+    if finished_effective_ids != set(modulation_effective_ids):
         return False
 
     absorbed_by_id = {
         projection.projection_id: projection
         for projection in graph.absorbed_projections
     }
-    if set(absorbed_by_id) != {0, 1}:
-        return False
-    monitor_projection = absorbed_by_id.get(modulation.monitor_projection_id)
-    control_projection = absorbed_by_id.get(modulation.control_projection_id)
-    if not (
-        monitor_projection is not None
-        and monitor_projection.kind == "MappingProjection"
-        and monitor_projection.sender == source.name
-        and monitor_projection.sender_component_id == source.component_id
-        and monitor_projection.sender_port_id == modulation.source_port_id
-        and monitor_projection.receiver == controller.name
-        and monitor_projection.receiver_component_id == controller.component_id
-        and monitor_projection.receiver_port_id
-        == modulation.controller_input_port_id
-        and monitor_projection.width == 1
-        and monitor_projection.reason == "typed_scalar_override"
-        and monitor_projection.initial_value == ()
-        and control_projection is not None
-        and control_projection.kind == "ControlProjection"
-        and control_projection.sender == controller.name
-        and control_projection.sender_component_id == controller.component_id
-        and control_projection.sender_port_id
-        == modulation.control_signal_port_id
-        and control_projection.receiver == stepper.name
-        and control_projection.receiver_component_id == stepper.component_id
-        and control_projection.receiver_port_id
-        == modulation.target_parameter_port_id
-        and control_projection.width == 1
-        and control_projection.reason == "typed_scalar_override"
-        and control_projection.initial_value == (1.0,)
+    if (
+        len(absorbed_by_id) != len(graph.absorbed_projections)
+        or tuple(sorted(absorbed_by_id))
+        != tuple(range(len(graph.absorbed_projections)))
+        or len(graph.absorbed_projections) != 2 * len(graph.modulations)
     ):
         return False
 
-    control_nodes = tuple(
-        node for node in graph.nodes if node.component_type == "ControlMechanism"
-    )
-    if len(control_nodes) != 2 or controller not in control_nodes:
+    referenced_absorbed_ids = []
+    for modulation in graph.modulations:
+        controller = nodes_by_id.get(modulation.controller_component_id)
+        source = nodes_by_id.get(modulation.source_component_id)
+        target = nodes_by_id.get(modulation.target_component_id)
+        effective = effective_by_id.get(modulation.effective_parameter_id)
+        monitor = absorbed_by_id.get(modulation.monitor_projection_id)
+        control_projection = absorbed_by_id.get(
+            modulation.control_projection_id
+        )
+        controller_input = ports_by_id.get(
+            modulation.controller_input_port_id
+        )
+        controller_output = ports_by_id.get(
+            modulation.control_signal_port_id
+        )
+        source_output = ports_by_id.get(modulation.source_port_id)
+        target_parameter_port = ports_by_id.get(
+            modulation.target_parameter_port_id
+        )
+        if not (
+            controller is not None
+            and source is not None
+            and target is not None
+            and effective is not None
+            and monitor is not None
+            and control_projection is not None
+            and controller_input is not None
+            and controller_output is not None
+            and source_output is not None
+            and target_parameter_port is not None
+            and controller.component_type == "ControlMechanism"
+            and modulation.controller == controller.name
+            and modulation.source == source.name
+            and modulation.target == target.name
+            and len(
+                {
+                    controller.component_id,
+                    source.component_id,
+                    target.component_id,
+                }
+            )
+            == 3
+            and modulation.mode == "OVERRIDE"
+            and modulation.width == 1
+            and modulation.dtype == "float32"
+            and modulation.absorbed_identity_chain is True
+            and controller.input_port_ids
+            == (modulation.controller_input_port_id,)
+            and controller.output_port_ids
+            == (modulation.control_signal_port_id,)
+            and source.output_port_ids == (modulation.source_port_id,)
+            and dict(target.parameter_port_ids).get(
+                modulation.target_parameter
+            )
+            == modulation.target_parameter_port_id
+            and controller_input.owner_component_id == controller.component_id
+            and controller_input.name == modulation.controller_input_port
+            and controller_input.width == 1
+            and controller_output.owner_component_id == controller.component_id
+            and controller_output.name == modulation.control_signal_port
+            and controller_output.width == 1
+            and source_output.owner_component_id == source.component_id
+            and source_output.name == modulation.source_port
+            and source_output.width == 1
+            and target_parameter_port.owner_component_id == target.component_id
+            and target_parameter_port.name == modulation.target_parameter
+            and target_parameter_port.width == 1
+            and effective.target == target.name
+            and effective.target_component_id == target.component_id
+            and effective.target_parameter == modulation.target_parameter
+            and effective.target_parameter_port_id
+            == modulation.target_parameter_port_id
+            and effective.width == 1
+            and effective.dtype == "float32"
+            and effective.storage == "lane_persistent"
+            and effective.reset == "Never"
+            and effective.update_event == "after_controller_execution"
+            and effective.sample_event == "at_target_parameter_update"
+            and exact_attrs(
+                controller.attrs.get("absorbed_control"),
+                {
+                    "source": source.name,
+                    "target": target.name,
+                    "parameter": modulation.target_parameter,
+                    "modulation": "OVERRIDE",
+                },
+            )
+            and consideration_set_by_component_id[source.component_id]
+            < consideration_set_by_component_id[controller.component_id]
+            < consideration_set_by_component_id[target.component_id]
+            and scheduler_by_id[source.component_id].condition_type == "AtPass"
+            and scheduler_by_id[controller.component_id].condition_type == "AtPass"
+            and scheduler_by_id[target.component_id].condition_type == "Always"
+        ):
+            return False
+
+        controller_spec_key = modulation.controller_function_spec_key
+        if controller_spec_key:
+            controller_spec = node_specs.get(controller.component_id)
+            if not isinstance(controller_spec, specs.ElementwiseFunctionSpec):
+                return False
+            spec_arguments = tuple(
+                binding.arg for binding in controller_spec.params
+            )
+            bindings = modulation.controller_param_bindings
+            if not (
+                controller.attrs.get("spec_kind") == "control"
+                and controller.attrs.get("control_function") == "registered"
+                and controller.attrs.get("spec_key") == controller_spec_key
+                and tuple(binding.argument for binding in bindings)
+                == spec_arguments
+                and tuple(controller.params) == spec_arguments
+            ):
+                return False
+            for binding, spec_binding in zip(bindings, controller_spec.params):
+                parameter = parameters_by_id.get(binding.parameter_id)
+                if not (
+                    parameter is not None
+                    and binding.argument == spec_binding.arg
+                    and binding.parameter == parameter.name
+                    and controller.params[binding.argument] == parameter.name
+                    and parameter.owner_component_id == controller.component_id
+                    and parameter.owner_scope == spec_binding.scope
+                    and parameter.runtime_mutable is False
+                    and parameter.runtime_constraint
+                    == "absorbed control parameters are frozen in KernelIR"
+                ):
+                    return False
+        elif not (
+            not modulation.controller_param_bindings
+            and not controller.params
+            and controller.function_type == "Identity"
+            and controller.attrs.get("spec_kind") == "control"
+            and controller.attrs.get("control_function") == "identity"
+        ):
+            return False
+
+        source_spec = node_specs.get(source.component_id)
+        target_spec = node_specs.get(target.component_id)
+        count_finished = tuple(
+            value
+            for value in graph.finished_values
+            if value.predicate_kind
+            == "execution_count_at_least_effective_parameter"
+            and value.attrs.get("effective_parameter_id")
+            == modulation.effective_parameter_id
+        )
+
+        def registered_linear_parameters(node, op_spec):
+            if not (
+                isinstance(op_spec, specs.ElementwiseFunctionSpec)
+                and op_spec.function_class is Linear
+                and node.function_type == "Linear"
+                and tuple(node.params)
+                == tuple(binding.arg for binding in op_spec.params)
+            ):
+                return None
+            result = {}
+            for binding in op_spec.params:
+                parameter = parameters_by_name.get(node.params[binding.arg])
+                if not (
+                    parameter is not None
+                    and parameter.owner_component_id == node.component_id
+                    and parameter.owner_scope == binding.scope
+                ):
+                    return None
+                result[binding.arg] = parameter
+            return result
+
+        source_parameters = registered_linear_parameters(source, source_spec)
+        controller_parameters = registered_linear_parameters(
+            controller,
+            node_specs.get(controller.component_id),
+        )
+        if source_parameters is None or controller_parameters is None:
+            return False
+        source_defaults = {
+            name: parameter.default
+            for name, parameter in source_parameters.items()
+        }
+        controller_defaults = {
+            name: parameter.default
+            for name, parameter in controller_parameters.items()
+        }
+        inbound = tuple(
+            projection
+            for projection in graph.projections
+            if projection.receiver_component_id == target.component_id
+        )
+        prelude = (
+            nodes_by_id.get(inbound[0].sender_component_id)
+            if len(inbound) == 1
+            else None
+        )
+        prelude_condition = (
+            scheduler_by_id.get(prelude.component_id)
+            if prelude is not None
+            else None
+        )
+        controller_intercept = controller_defaults.get("intercept")
+        if not (
+            len(count_finished) == 1
+            and count_finished[0].component_id == target.component_id
+            and isinstance(target_spec, specs.MechanismOpSpec)
+            and target_spec.can_step
+            and target.attrs.get("termination_input_node") == source.name
+            and set(source_parameters)
+            == {"slope", "intercept", "scale", "offset"}
+            and all(
+                type(value) is float and np.isfinite(value)
+                for value in source_defaults.values()
+            )
+            and all(
+                0.0 <= source_defaults[name] <= FP32_EXACT_INTEGER_LIMIT
+                and source_defaults[name].is_integer()
+                for name in ("slope", "intercept")
+            )
+            and source_defaults["scale"] == 1.0
+            and source_defaults["offset"] == 0.0
+            and all(
+                parameter.runtime_mutable
+                is (name in {"slope", "intercept"})
+                for name, parameter in source_parameters.items()
+            )
+            and set(controller_parameters)
+            == {"slope", "intercept", "scale", "offset"}
+            and all(
+                type(value) is float and np.isfinite(value)
+                for value in controller_defaults.values()
+            )
+            and controller_defaults["slope"] == 1.0
+            and controller_defaults["scale"] == 1.0
+            and controller_defaults["offset"] == 0.0
+            and type(controller_intercept) is float
+            and 0.0 <= controller_intercept <= FP32_EXACT_INTEGER_LIMIT
+            and controller_intercept.is_integer()
+            and all(
+                parameter.runtime_mutable is False
+                for parameter in controller_parameters.values()
+            )
+            and scheduler_by_id[source.component_id].attrs["pass_index"] == 0
+            and scheduler_by_id[controller.component_id].attrs["pass_index"] == 0
+            and prelude is not None
+            and prelude_condition is not None
+            and prelude_condition.condition_type == "AtPass"
+            and prelude_condition.attrs.get("pass_index")
+            == int(controller_intercept)
+            and target.attrs.get("onset_step", 0) == 0
+        ):
+            return False
+
+        if not (
+            monitor.kind == "MappingProjection"
+            and monitor.sender == source.name
+            and monitor.sender_component_id == source.component_id
+            and monitor.sender_port == modulation.source_port
+            and monitor.sender_port_id == modulation.source_port_id
+            and monitor.receiver == controller.name
+            and monitor.receiver_component_id == controller.component_id
+            and monitor.receiver_port == modulation.controller_input_port
+            and monitor.receiver_port_id == modulation.controller_input_port_id
+            and monitor.width == 1
+            and monitor.reason == "typed_scalar_override"
+            and monitor.initial_value == ()
+            and control_projection.kind == "ControlProjection"
+            and control_projection.sender == controller.name
+            and control_projection.sender_component_id == controller.component_id
+            and control_projection.sender_port == modulation.control_signal_port
+            and control_projection.sender_port_id
+            == modulation.control_signal_port_id
+            and control_projection.receiver == target.name
+            and control_projection.receiver_component_id == target.component_id
+            and control_projection.receiver_port == modulation.target_parameter
+            and control_projection.receiver_port_id
+            == modulation.target_parameter_port_id
+            and control_projection.width == 1
+            and control_projection.reason == "typed_scalar_override"
+            and control_projection.initial_value
+            == effective.initial_modulation_value
+        ):
+            return False
+        referenced_absorbed_ids.extend(
+            (monitor.projection_id, control_projection.projection_id)
+        )
+
+    if sorted(referenced_absorbed_ids) != list(range(len(absorbed_by_id))):
         return False
-    threshold_controller = next(
-        (node for node in control_nodes if node.component_id != controller.component_id),
-        None,
-    )
-    threshold_control = (
-        threshold_controller.attrs.get("absorbed_control")
-        if threshold_controller is not None
-        else None
-    )
-    if (
-        threshold_controller is None
-        or not isinstance(threshold_control, Mapping)
-        or not (
-            threshold_controller.function_type == "Identity"
-            and threshold_controller.input_width == 1
-            and threshold_controller.output_width == 1
-            and not threshold_controller.params
-            and not threshold_controller.parameter_port_ids
-            and set(threshold_controller.attrs)
+
+    dynamic_finished_owner_ids = {
+        value.component_id
+        for value in graph.finished_values
+        if value.predicate_kind == "dynamic"
+    }
+    for folded in graph.folded_affine_controls:
+        controller = nodes_by_id.get(folded.controller_component_id)
+        target = nodes_by_id.get(folded.target_component_id)
+        clock = nodes_by_id.get(folded.clock_component_id)
+        effective = effective_by_id.get(folded.effective_parameter_id)
+        controller_input = (
+            ports_by_id.get(controller.input_port_ids[0])
+            if controller is not None and len(controller.input_port_ids) == 1
+            else None
+        )
+        controller_output = ports_by_id.get(
+            folded.controller_output_port_id
+        )
+        target_parameter_port = ports_by_id.get(
+            folded.target_parameter_port_id
+        )
+        base_parameter = parameters_by_id.get(folded.base_parameter_id)
+        delta_parameter = parameters_by_id.get(folded.delta_parameter_id)
+        frozen_parameters = tuple(
+            parameters_by_name.get(target.params.get(argument))
+            if target is not None
+            else None
+            for argument in ("noise", "starting_value", "offset")
+        )
+        noise_parameter = frozen_parameters[0]
+        frozen_reason = (
+            "dynamic scheduled terminator parameter is frozen in KernelIR"
+        )
+        frozen_parameters_are_pre_freeze = all(
+            parameter is not None
+            and parameter.runtime_mutable is True
+            and parameter.runtime_constraint == ""
+            for parameter in frozen_parameters
+        )
+        frozen_parameters_are_post_freeze = all(
+            parameter is not None
+            and parameter.runtime_mutable is False
+            and parameter.runtime_constraint == frozen_reason
+            for parameter in frozen_parameters
+        )
+        controller_condition = scheduler_by_id.get(
+            folded.controller_component_id
+        )
+        target_condition = scheduler_by_id.get(folded.target_component_id)
+        target_spec = node_specs.get(folded.target_component_id)
+        absorbed_control = (
+            controller.attrs.get("absorbed_control")
+            if controller is not None
+            else None
+        )
+        absorbed_source = (
+            absorbed_control.get("source")
+            if isinstance(absorbed_control, Mapping)
+            else None
+        )
+        if not (
+            controller is not None
+            and target is not None
+            and clock is controller
+            and effective is not None
+            and controller_input is not None
+            and controller_output is not None
+            and target_parameter_port is not None
+            and base_parameter is not None
+            and delta_parameter is not None
+            and type(absorbed_source) is str
+            and bool(absorbed_source)
+            and _folded_ddm_parameter_contract_supported(
+                base_parameter,
+                delta_parameter,
+                target_component_id=target.component_id,
+                target_name=target.name,
+                source_name=absorbed_source,
+            )
+            and noise_parameter is not None
+            and type(noise_parameter.default) is float
+            and np.isfinite(noise_parameter.default)
+            and np.isfinite(np.float32(noise_parameter.default))
+            and noise_parameter.default >= 0.0
+            and all(
+                parameter is not None
+                and parameter.owner_component_id == target.component_id
+                and type(parameter.default) is float
+                and np.isfinite(parameter.default)
+                and np.isfinite(np.float32(parameter.default))
+                for parameter in frozen_parameters
+            )
+            and (
+                frozen_parameters_are_pre_freeze
+                or frozen_parameters_are_post_freeze
+            )
+            and controller_condition is not None
+            and target_condition is not None
+            and isinstance(target_spec, specs.MechanismOpSpec)
+            and target_spec.can_step
+            and target_spec.is_terminator
+            and target.component_id in dynamic_finished_owner_ids
+            and controller.component_type == "ControlMechanism"
+            and controller.function_type == "Identity"
+            and not controller.params
+            and not controller.parameter_port_ids
+            and controller.input_width == 1
+            and controller.output_width == 1
+            and controller_input.owner_component_id == controller.component_id
+            and controller_input.width == 1
+            and controller.output_port_ids
+            == (folded.controller_output_port_id,)
+            and controller_output.owner_component_id == controller.component_id
+            and controller_output.width == 1
+            and folded.controller == controller.name
+            and folded.target == target.name
+            and folded.clock_component_id == controller.component_id
+            and dict(target.parameter_port_ids).get(folded.target_parameter)
+            == folded.target_parameter_port_id
+            and target_parameter_port.owner_component_id == target.component_id
+            and target_parameter_port.name == folded.target_parameter
+            and target_parameter_port.width == 1
+            and folded.target_parameter == "threshold"
+            and target.params.get(folded.target_parameter)
+            == folded.base_parameter
+            and target.params.get("threshold_collapse")
+            == folded.delta_parameter
+            and base_parameter.name == folded.base_parameter
+            and base_parameter.owner_component_id == target.component_id
+            and type(base_parameter.default) is float
+            and np.isfinite(base_parameter.default)
+            and np.isfinite(np.float32(base_parameter.default))
+            and delta_parameter.name == folded.delta_parameter
+            and delta_parameter.owner_component_id == target.component_id
+            and type(delta_parameter.default) is float
+            and np.isfinite(delta_parameter.default)
+            and np.isfinite(np.float32(delta_parameter.default))
+            and folded.delta_parameter in target.params.values()
+            and base_parameter.parameter_id != delta_parameter.parameter_id
+            and effective.target == target.name
+            and effective.target_component_id == target.component_id
+            and effective.target_parameter == folded.target_parameter
+            and effective.target_parameter_port_id
+            == folded.target_parameter_port_id
+            and effective.base_value == (base_parameter.default,)
+            and effective.initial_modulation_value == folded.initial_value
+            and effective.width == folded.width == 1
+            and effective.dtype == folded.dtype == "float32"
+            and effective.storage == folded.storage == "lane_persistent"
+            and effective.reset == folded.reset == "Never"
+            and effective.update_event
+            == folded.update_event
+            == "after_controller_execution"
+            and folded.update_expression
+            == "base_plus_delta_times_controller_execution_ordinal"
+            and effective.sample_event
+            == folded.sample_event
+            == "at_target_parameter_update"
+            and controller_condition.condition_type == "WhenFinished"
+            and target_condition.condition_type == "WhenFinished"
+            and controller_condition.dependencies == target_condition.dependencies
+            and controller_condition.dependency_component_ids
+            == target_condition.dependency_component_ids
+            and controller_condition.finished_value_ids
+            == target_condition.finished_value_ids
+            and len(controller_condition.dependency_component_ids) == 1
+            and consideration_set_by_component_id[controller.component_id]
+            < consideration_set_by_component_id[
+                controller_condition.dependency_component_ids[0]
+            ]
+            < consideration_set_by_component_id[target.component_id]
+            and not any(
+                projection.sender_component_id == controller.component_id
+                or projection.receiver_component_id == controller.component_id
+                for projection in graph.projections
+            )
+        ):
+            return False
+        if not (
+            set(controller.attrs)
             == {
                 "input_ports",
                 "output_ports",
                 "absorbed_control",
                 "absorbed_control_initial_value",
             }
-            and type(
-                threshold_controller.attrs["absorbed_control_initial_value"]
-            ) is float
-            and threshold_controller.attrs["absorbed_control_initial_value"]
-            == 1.0
+            and isinstance(absorbed_control, Mapping)
+            and type(absorbed_control.get("source")) is str
+            and bool(absorbed_control["source"])
             and exact_attrs(
-                threshold_control,
+                absorbed_control,
                 {
-                    "source": threshold_control.get("source"),
-                    "target": terminator.name,
-                    "parameter": "threshold",
+                    "source": absorbed_control["source"],
+                    "target": target.name,
+                    "parameter": folded.target_parameter,
                     "modulation": "OVERRIDE",
                 },
             )
-            and type(threshold_control["source"]) is str
-            and bool(threshold_control["source"])
-        )
-    ):
-        return False
-
-    if not (
-        isinstance(stepper_spec, specs.MechanismOpSpec)
-        and stepper_spec.can_step
-        and not stepper_spec.is_terminator
-        and stepper.component_type == "LCAMechanism"
-        and stepper.function_type == "Logistic"
-        and stepper.input_width == 2
-        and stepper.output_width == 2
-        and stepper.attrs.get("spec_kind") == "mechanism"
-        and stepper.attrs.get("termination_input_node") == source.name
-        and stepper.attrs.get("initialize_noise_sender") is True
-        and stepper.attrs.get("diagnostics") == ()
-        and stepper.attrs.get("rng_streams") == ()
-        and isinstance(terminator_spec, specs.MechanismOpSpec)
-        and terminator_spec.can_step
-        and terminator_spec.is_terminator
-        and terminator.component_type == "DDM"
-        and terminator.function_type == "DriftDiffusionIntegrator"
-        and terminator.input_width == 1
-        and terminator.output_width == 1
-        and terminator.attrs.get("spec_kind") == "mechanism"
-        and terminator.attrs.get("diagnostics") == ("truncated",)
-        and terminator.attrs.get("rng_streams")
-        == (("rng", "MAX_STEPS", 1),)
-        and tuple(state.name for state in terminator_spec.trial_states)
-        == ("value", "steps", "finished")
-        and terminator_spec.finished_output == "finished"
-    ):
-        return False
-
-    rng = graph.rng_streams[0]
-    rng_decl = terminator_spec.rng[0] if len(terminator_spec.rng) == 1 else None
-    if not (
-        rng_decl is not None
-        and rng.stream_id == 0
-        and rng.name == f"{terminator.name}.{rng_decl.name}"
-        and rng.node == terminator.name
-        and rng.component_id == terminator.component_id
-        and rng.width == 1
-        and rng.step_extent == "MAX_STEPS"
-        and rng_decl.name == "rng"
-        and rng_decl.width == 1
-        and rng_decl.step_extent == "MAX_STEPS"
-    ):
-        return False
-
-    ddm_parameters = {
-        argument: parameter_for(terminator, argument)
-        for argument in terminator.params
-    }
-    stepper_noise = parameter_for(stepper, "noise")
-    threshold = ddm_parameters.get("threshold")
-    noise = ddm_parameters.get("noise")
-    threshold_collapse = ddm_parameters.get("threshold_collapse")
-    starting_value = ddm_parameters.get("starting_value")
-    offset = ddm_parameters.get("offset")
-    time_step_size = ddm_parameters.get("time_step_size")
-    frozen_ddm_parameters = (noise, starting_value, offset)
-    frozen_reason = "first coevolving DDM boundary is frozen in KernelIR"
-    ddm_parameters_are_pre_freeze = all(
-        parameter is not None
-        and parameter.runtime_mutable is True
-        and parameter.runtime_constraint == ""
-        for parameter in frozen_ddm_parameters
-    )
-    ddm_parameters_are_post_freeze = all(
-        parameter is not None
-        and parameter.runtime_mutable is False
-        and parameter.runtime_constraint == frozen_reason
-        for parameter in frozen_ddm_parameters
-    )
-    threshold_source_name = threshold_control["source"]
-    if not (
-        stepper_noise is not None
-        and stepper_noise.name == f"{stepper.name}.noise"
-        and stepper_noise.aliases
-        == _node_param_aliases(stepper.name, "noise")
-        and type(stepper_noise.default) is float
-        and np.isfinite(stepper_noise.default)
-        and np.isfinite(np.float32(stepper_noise.default))
-        and stepper_noise.minimum is None
-        and stepper_noise.minimum_inclusive is True
-        and stepper_noise.maximum is None
-        and stepper_noise.maximum_inclusive is True
-        and stepper_noise.owner_component_id == stepper.component_id
-        and stepper_noise.owner_scope == "mechanism"
-        and stepper_noise.runtime_mutable is True
-        and stepper_noise.runtime_constraint == ""
-        and all(parameter is not None for parameter in ddm_parameters.values())
-        and threshold is not None
-        and threshold.name == f"{terminator.name}.threshold"
-        and threshold.aliases
-        == (
-            "ddm.threshold",
-            "DDM.threshold",
-            *_node_param_aliases(terminator.name, "threshold"),
-            *_node_param_aliases(threshold_source_name, "intercept"),
-        )
-        and type(threshold.default) is float
-        and np.isfinite(threshold.default)
-        and threshold.default >= 0.0
-        and threshold.minimum == 0.0
-        and threshold.minimum_inclusive is True
-        and threshold.maximum is None
-        and threshold.maximum_inclusive is True
-        and threshold.owner_component_id == terminator.component_id
-        and threshold.owner_scope == "function"
-        and threshold.runtime_mutable is True
-        and threshold.runtime_constraint == ""
-        and noise is not None
-        and type(noise.default) is float
-        and np.isfinite(noise.default)
-        and noise.default >= 0.0
-        and threshold_collapse is not None
-        and threshold_collapse.name
-        == f"{terminator.name}.threshold_collapse"
-        and threshold_collapse.aliases
-        == (
-            "ddm.threshold_collapse",
-            "DDM.threshold_collapse",
-            *_node_param_aliases(terminator.name, "threshold_collapse"),
-            *_node_param_aliases(
-                threshold_source_name,
-                "offset-integrator_function",
-            ),
-        )
-        and type(threshold_collapse.default) is float
-        and np.isfinite(threshold_collapse.default)
-        and threshold_collapse.default <= 0.0
-        and threshold_collapse.minimum is None
-        and threshold_collapse.minimum_inclusive is True
-        and threshold_collapse.maximum == 0.0
-        and threshold_collapse.maximum_inclusive is True
-        and threshold_collapse.owner_component_id
-        == terminator.component_id
-        and threshold_collapse.owner_scope == "function"
-        and threshold_collapse.runtime_mutable is True
-        and threshold_collapse.runtime_constraint == ""
-        and starting_value is not None
-        and type(starting_value.default) is float
-        and starting_value.default == 0.0
-        and offset is not None
-        and type(offset.default) is float
-        and offset.default == 0.0
-        and time_step_size is not None
-        and type(time_step_size.default) is float
-        and np.isfinite(time_step_size.default)
-        and time_step_size.default > 0.0
-        and (
-            ddm_parameters_are_pre_freeze
-            or ddm_parameters_are_post_freeze
-        )
-    ):
-        return False
-
-    scheduler_by_id = {
-        condition.component_id: condition for condition in graph.scheduler
-    }
-    if set(scheduler_by_id) != set(node_component_ids):
-        return False
-
-    def condition_matches(
-        condition,
-        node,
-        condition_type,
-        consideration_set_id,
-        *,
-        dependencies=(),
-        dependency_component_ids=(),
-        finished_value_ids=(),
-        attrs=None,
-    ) -> bool:
-        return bool(
-            condition is not None
-            and condition.node == node.name
-            and condition.component_id == node.component_id
-            and condition.condition_type == condition_type
-            and condition.region == "pass"
-            and condition.consideration_set_id == consideration_set_id
-            and condition.dependencies == dependencies
-            and condition.dependency_component_ids == dependency_component_ids
-            and condition.finished_value_ids == finished_value_ids
-            and exact_attrs(condition.attrs, {} if attrs is None else attrs)
-        )
-
-    when_stepper_finished = tuple(
-        condition
-        for condition in graph.scheduler
-        if condition.condition_type == "WhenFinished"
-        and condition.dependencies == (stepper.name,)
-        and condition.dependency_component_ids == (stepper.component_id,)
-        and condition.finished_value_ids == (stepper_finished.value_id,)
-    )
-    if len(when_stepper_finished) != 3:
-        return False
-    drift_conditions = tuple(
-        condition
-        for condition in when_stepper_finished
-        if condition.component_id
-        not in {threshold_controller.component_id, terminator.component_id}
-    )
-    if len(drift_conditions) != 1:
-        return False
-    drift_condition = drift_conditions[0]
-    try:
-        drift = graph.node(drift_condition.node)
-        drift_spec = lookup_spec(drift.attrs["spec_key"])
-    except (KeyError, specs.BatchedOpSpecError):
-        return False
-
-    gate_conditions = tuple(
-        condition
-        for condition in graph.scheduler
-        if condition.condition_type == "WhenFinished"
-        and condition.dependencies == (terminator.name,)
-        and condition.dependency_component_ids == (terminator.component_id,)
-        and condition.finished_value_ids == (terminator_finished.value_id,)
-    )
-    if len(gate_conditions) != 2:
-        return False
-    try:
-        gates = tuple(graph.node(condition.node) for condition in gate_conditions)
-    except KeyError:
-        return False
-
-    at_pass_zero = {
-        "pass_index": 0,
-        "time_scale": "ENVIRONMENT_STATE_UPDATE",
-    }
-    origin_conditions = tuple(
-        condition
-        for condition in graph.scheduler
-        if condition.condition_type == "AtPass"
-        and condition.consideration_set_id == 0
-    )
-    if len(origin_conditions) != 4:
-        return False
-    try:
-        origins = tuple(graph.node(condition.node) for condition in origin_conditions)
-    except KeyError:
-        return False
-
-    stepper_inputs = tuple(
-        projection
-        for projection in graph.projections
-        if projection.receiver_component_id == stepper.component_id
-    )
-    if len(stepper_inputs) != 1:
-        return False
-    task_projection = stepper_inputs[0]
-    try:
-        task = graph.node(task_projection.sender)
-    except KeyError:
-        return False
-    task_condition = scheduler_by_id.get(task.component_id)
-    task_at_pass = {
-        "pass_index": controller_intercept,
-        "time_scale": "ENVIRONMENT_STATE_UPDATE",
-    }
-    warmup = graph.metadata.get("coevolve_warmup")
-    if (
-        task not in origins
-        or task_condition is None
-        or controller_intercept is None
-        or type(warmup) is not int
-        or warmup != controller_intercept
-    ):
-        return False
-
-    role_ids = {
-        *(node.component_id for node in origins),
-        threshold_controller.component_id,
-        controller.component_id,
-        stepper.component_id,
-        drift.component_id,
-        terminator.component_id,
-        *(node.component_id for node in gates),
-    }
-    if len(role_ids) != len(graph.nodes) or source not in origins:
-        return False
-
-    when_finished_attrs = {"predicate": "is_finished"}
-    if not (
-        all(
-            condition_matches(
-                scheduler_by_id[node.component_id],
-                node,
-                "AtPass",
-                0,
-                attrs=at_pass_zero,
-            )
-            for node in origins
-            if node is not task
-        )
-        and condition_matches(
-            task_condition,
-            task,
-            "AtPass",
-            0,
-            attrs=task_at_pass,
-        )
-        and condition_matches(
-            scheduler_by_id[controller.component_id],
-            controller,
-            "AtPass",
-            1,
-            attrs=at_pass_zero,
-        )
-        and condition_matches(
-            scheduler_by_id[threshold_controller.component_id],
-            threshold_controller,
-            "WhenFinished",
-            1,
-            dependencies=(stepper.name,),
-            dependency_component_ids=(stepper.component_id,),
-            finished_value_ids=(stepper_finished.value_id,),
-            attrs=when_finished_attrs,
-        )
-        and condition_matches(
-            scheduler_by_id[stepper.component_id],
-            stepper,
-            "Always",
-            2,
-        )
-        and condition_matches(
-            scheduler_by_id[drift.component_id],
-            drift,
-            "WhenFinished",
-            3,
-            dependencies=(stepper.name,),
-            dependency_component_ids=(stepper.component_id,),
-            finished_value_ids=(stepper_finished.value_id,),
-            attrs=when_finished_attrs,
-        )
-        and condition_matches(
-            scheduler_by_id[terminator.component_id],
-            terminator,
-            "WhenFinished",
-            4,
-            dependencies=(stepper.name,),
-            dependency_component_ids=(stepper.component_id,),
-            finished_value_ids=(stepper_finished.value_id,),
-            attrs=when_finished_attrs,
-        )
-        and all(
-            condition_matches(
-                scheduler_by_id[gate.component_id],
-                gate,
-                "WhenFinished",
-                5,
-                dependencies=(terminator.name,),
-                dependency_component_ids=(terminator.component_id,),
-                finished_value_ids=(terminator_finished.value_id,),
-                attrs=when_finished_attrs,
-            )
-            for gate in gates
-        )
-    ):
-        return False
-
-    ordered_role_ids = (
-        tuple(
-            node.component_id
-            for node in graph.nodes
-            if node.component_id in {origin.component_id for origin in origins}
-        ),
-        tuple(
-            node.component_id
-            for node in graph.nodes
-            if node.component_id
-            in {threshold_controller.component_id, controller.component_id}
-        ),
-        (stepper.component_id,),
-        (drift.component_id,),
-        (terminator.component_id,),
-        tuple(
-            node.component_id
-            for node in graph.nodes
-            if node.component_id in {gate.component_id for gate in gates}
-        ),
-    )
-    consideration_sets = tuple(
-        sorted(
-            graph.consideration_sets,
-            key=lambda item: item.consideration_set_id,
-        )
-    )
-    if any(
-        component_id not in nodes_by_component_id
-        for item in consideration_sets
-        for component_id in item.component_ids
-    ):
-        return False
-    if not (
-        tuple(item.consideration_set_id for item in consideration_sets)
-        == tuple(range(6))
-        and all(
-            item.region == "pass"
-            and item.inputs_frozen is True
-            and item.component_ids == component_ids
-            and item.nodes
-            == tuple(
-                nodes_by_component_id[component_id].name
-                for component_id in component_ids
-            )
-            for item, component_ids in zip(
-                consideration_sets,
-                ordered_role_ids,
-            )
-        )
-    ):
-        return False
-
-    if (
-        tuple(
-            (region.name, region.kind, region.time_scale, region.parent)
-            for region in graph.schedule_regions
-        )
-        != (
-            ("trial", "trial", "ENVIRONMENT_STATE_UPDATE", ""),
-            ("pass", "pass", "PASS", "trial"),
-        )
-        or len(graph.termination) != 2
-    ):
-        return False
-    termination_by_scale = {
-        termination.time_scale: termination for termination in graph.termination
-    }
-    trial_termination = termination_by_scale.get("ENVIRONMENT_STATE_UPDATE")
-    sequence_termination = termination_by_scale.get("ENVIRONMENT_SEQUENCE")
-    if not (
-        len(termination_by_scale) == 2
-        and trial_termination is not None
-        and trial_termination.condition_type == "AllHaveRun"
-        and trial_termination.dependency_component_ids == node_component_ids
-        and exact_attrs(trial_termination.attrs, {})
-        and sequence_termination is not None
-        and sequence_termination.condition_type == "Never"
-        and sequence_termination.dependency_component_ids == ()
-        and exact_attrs(sequence_termination.attrs, {})
-    ):
-        return False
-
-    stepper_states = tuple(
-        state for state in graph.states if state.component_id == stepper.component_id
-    )
-    if not (
-        len(graph.states) == 3
-        and len(stepper_states) == 3
-        and tuple(state.state_id for state in stepper_states) == (0, 1, 2)
-        and tuple(
-            (
-                state.name.rsplit(".", 1)[-1],
-                state.node,
-                state.width,
-                state.initial_value,
-            )
-            for state in stepper_states
-        )
-        == (
-            ("pre", stepper.name, 2, (0.0, 0.0)),
-            ("act", stepper.name, 2, (0.0, 0.0)),
-            ("initialized", stepper.name, 1, (0.0,)),
-        )
-        and len(graph.resets) == 1
-        and graph.resets[0].node == stepper.name
-        and graph.resets[0].component_id == stepper.component_id
-        and graph.resets[0].state_ids == (0, 1, 2)
-        and graph.resets[0].condition_type == "Never"
-        and graph.resets[0].region == "trial"
-        and exact_attrs(graph.resets[0].attrs, {})
-    ):
-        return False
-
-    projections = graph.projections
-    if tuple(projection.projection_id for projection in projections) != tuple(
-        range(len(projections))
-    ):
-        return False
-    try:
-        if not all(
-            isinstance(lookup_spec(projection.spec_key), specs.DenseProjectionSpec)
-            for projection in projections
+            and type(controller.attrs["absorbed_control_initial_value"])
+            is float
+            and controller.attrs["absorbed_control_initial_value"]
+            == folded.initial_value[0]
         ):
             return False
-    except specs.BatchedOpSpecError:
-        return False
 
-    def matching_projections(sender, receiver):
-        return tuple(
-            projection
-            for projection in projections
-            if projection.sender_component_id == sender.component_id
-            and projection.receiver_component_id == receiver.component_id
-            and projection.sender == sender.name
-            and projection.receiver == receiver.name
-        )
-
-    remaining_origins = tuple(
-        origin
-        for origin in origins
-        if origin.component_id not in {source.component_id, task.component_id}
-    )
-    if len(remaining_origins) != 2:
-        return False
-    correct = next((node for node in remaining_origins if node.output_width == 1), None)
-    stimulus = next((node for node in remaining_origins if node.output_width == 4), None)
-    if correct is None or stimulus is None:
-        return False
-
-    lca_to_drift = matching_projections(stepper, drift)
-    correct_to_drift = matching_projections(correct, drift)
-    stimulus_to_drift = matching_projections(stimulus, drift)
-    drift_to_ddm = matching_projections(drift, terminator)
-    if not all(
-        len(matches) == 1
-        for matches in (
-            lca_to_drift,
-            correct_to_drift,
-            stimulus_to_drift,
-            drift_to_ddm,
-        )
-    ):
-        return False
-
-    decision_links = tuple(
-        projection
-        for projection in projections
-        if projection.sender_component_id == terminator.component_id
-        and projection.sender_port == "DECISION_OUTCOME"
-        and projection.receiver_component_id in {gate.component_id for gate in gates}
-    )
-    response_links = tuple(
-        projection
-        for projection in projections
-        if projection.sender_component_id == terminator.component_id
-        and projection.sender_port == "RESPONSE_TIME"
-        and projection.receiver_component_id in {gate.component_id for gate in gates}
-    )
-    if len(decision_links) != 1 or len(response_links) != 1:
-        return False
-    try:
-        decision_gate = graph.node(decision_links[0].receiver)
-        response_gate = graph.node(response_links[0].receiver)
-    except KeyError:
-        return False
-    cue_to_response = matching_projections(source, response_gate)
-    if (
-        decision_gate is response_gate
-        or len(cue_to_response) != 1
-        or any(
-            projection.receiver_component_id == decision_gate.component_id
-            and projection is not decision_links[0]
-            for projection in projections
-        )
-        or {
-            projection.sender_component_id
-            for projection in projections
-            if projection.receiver_component_id == response_gate.component_id
-        }
-        != {source.component_id, terminator.component_id}
-    ):
-        return False
-
-    def matrix_matches(projection, expected) -> bool:
-        actual = np.asarray(projection.matrix)
-        expected_array = np.asarray(expected, dtype=np.float32)
-        return bool(
-            actual.dtype == np.dtype(np.float32)
-            and actual.shape == expected_array.shape
-            and np.array_equal(actual, expected_array)
-        )
-
-    expected_correct = np.zeros((1, 7), dtype=np.float32)
-    expected_correct[0, 6] = 1.0
-    expected_stimulus = np.zeros((4, 7), dtype=np.float32)
-    expected_stimulus[:, :4] = np.eye(4, dtype=np.float32)
-    expected_lca = np.zeros((2, 7), dtype=np.float32)
-    expected_lca[:, 4:6] = np.eye(2, dtype=np.float32)
-    if not (
-        matrix_matches(task_projection, np.eye(2, dtype=np.float32))
-        and matrix_matches(correct_to_drift[0], expected_correct)
-        and matrix_matches(stimulus_to_drift[0], expected_stimulus)
-        and matrix_matches(lca_to_drift[0], expected_lca)
-        and matrix_matches(drift_to_ddm[0], ((1.0,),))
-        and matrix_matches(decision_links[0], ((1.0,),))
-        and matrix_matches(response_links[0], ((1.0,),))
-        and matrix_matches(cue_to_response[0], ((time_step_size.default,),))
-    ):
-        return False
-
-    if not (
-        isinstance(drift_spec, specs.MechanismOpSpec)
-        and not drift_spec.can_step
-        and not drift_spec.is_terminator
-        and not drift_spec.states
-        and not drift_spec.trial_states
-        and not drift_spec.rng
-        and drift.component_type == "ProcessingMechanism"
-        and drift.function_type == "UserDefinedFunction"
-        and drift.input_width == 7
-        and drift.output_width == 1
-        and not drift.params
-        and drift.attrs.get("spec_kind") == "mechanism"
-        and drift.attrs.get("rng_streams") == ()
-        and drift.attrs.get("diagnostics") == ()
-        and task.component_type == "TransferMechanism"
-        and task.input_width == 2
-        and task.output_width == 2
-        and task.attrs.get("integrator_pre") == (1.0, 0.0)
-        and registered_identity_linear(task, frozen=False)
-        and correct.component_type == "ProcessingMechanism"
-        and correct.input_width == 1
-        and registered_identity_linear(correct, frozen=False)
-        and stimulus.component_type == "ProcessingMechanism"
-        and stimulus.input_width == 4
-        and stimulus.output_width == 4
-        and registered_identity_linear(stimulus, frozen=False)
-        and all(
-            gate.component_type == "ProcessingMechanism"
-            and gate.input_width == 1
-            and gate.output_width == 1
-            and registered_identity_linear(gate, frozen=False)
-            for gate in gates
-        )
-    ):
-        return False
-
-    origin_ids_in_graph_order = tuple(
-        node.component_id for node in graph.nodes if node in origins
-    )
-    if any(
-        component_id not in nodes_by_component_id
-        for component_id in (
-            *(input_spec.component_id for input_spec in graph.inputs),
-            *(output.component_id for output in graph.outputs),
-        )
-    ):
-        return False
-    if not (
-        tuple(input_spec.component_id for input_spec in graph.inputs)
-        == origin_ids_in_graph_order
-        and all(
-            input_spec.node == nodes_by_component_id[input_spec.component_id].name
-            and input_spec.width
-            == nodes_by_component_id[input_spec.component_id].input_width
-            and input_spec.port_id
-            == nodes_by_component_id[input_spec.component_id].input_port_ids[0]
-            for input_spec in graph.inputs
-        )
-        and tuple(output.component_id for output in graph.outputs)
-        == (decision_gate.component_id, response_gate.component_id)
-        and tuple(output.width for output in graph.outputs) == (1, 1)
-        and tuple((output.flat_start, output.flat_stop) for output in graph.outputs)
-        == ((0, 1), (1, 2))
-        and all(
-            output.node == nodes_by_component_id[output.component_id].name
-            and output.port_id
-            == nodes_by_component_id[output.component_id].output_port_ids[0]
-            for output in graph.outputs
-        )
-    ):
-        return False
-
-    controller_ids = {
-        controller.component_id,
-        threshold_controller.component_id,
+    typed_controller_ids = {
+        node.component_id
+        for node in graph.nodes
+        if node.component_type == "ControlMechanism"
     }
-    return bool(
-        graph.execution_order
-        == tuple(
-            node.name
-            for node in graph.nodes
-            if node.component_id not in controller_ids
-        )
-        and controller.name not in graph.execution_order
-        and threshold_controller.name not in graph.execution_order
-        and all(
-            "onset_step" not in node.attrs
-            for node in graph.nodes
-            if node is not task
-        )
-        and (
-            task.attrs.get("onset_step", 0) == controller_intercept
-            and (
-                controller_intercept > 0
-                or "onset_step" not in task.attrs
-            )
-        )
-        and not any(
-            projection.sender_component_id == threshold_controller.component_id
-            or projection.receiver_component_id == threshold_controller.component_id
-            for projection in graph.projections
-        )
-    )
+    return typed_controller_ids == set(producer_controller_ids)
 
 
 def _dynamic_controlled_finished_component_ids(
@@ -3042,6 +2664,137 @@ def _modulation_ir_specs(
     )
 
 
+def _folded_affine_control_ir_specs(
+    composition,
+    nodes,
+    node_specs: list[BatchedNodeSpec],
+    params: _ParamBuilder,
+    component_ids,
+    port_ids,
+    *,
+    first_effective_parameter_id: int,
+) -> tuple[
+    tuple[BatchedEffectiveParameterSpec, ...],
+    tuple[BatchedFoldedAffineControlSpec, ...],
+]:
+    """Declare exact affine scheduler effects whose source has been folded.
+
+    The currently recognized producer is an identity ControlMechanism around
+    the exact stateful DDM threshold-collapse pathway authenticated by
+    :func:`_exact_ddm_threshold_runtime_binding`.  The resulting record is
+    expressed only in terms of controller, target, parameter, port, and
+    scheduler-clock identities; no CSI component name or live object survives
+    in GraphIR.
+    """
+
+    node_specs_by_id = {node.component_id: node for node in node_specs}
+    parameters_by_name = {parameter.name: parameter for parameter in params.specs}
+    if len(parameters_by_name) != len(params.specs):
+        return (), ()
+
+    effective_parameters = []
+    folded_controls = []
+    used_controller_ids = set()
+    used_target_parameter_ports = set()
+    for control in nodes:
+        if type(control) is not ControlMechanism:
+            continue
+        chain, diagnostic = _resolve_control_chain(control, composition)
+        if (
+            diagnostic is not None
+            or chain is None
+            or chain.target_port != "threshold"
+            or type(getattr(control, "function", None)) is not Identity
+            or not _supported_ddm_threshold_override(
+                composition,
+                control,
+                chain.source,
+                chain.target,
+            )
+        ):
+            continue
+        runtime_binding = _exact_ddm_threshold_runtime_binding(
+            composition,
+            chain.target,
+        )
+        if runtime_binding is None or runtime_binding[0] is not chain.source:
+            continue
+
+        controller_component_id = component_ids.get(id(control))
+        target_component_id = component_ids.get(id(chain.target))
+        controller = node_specs_by_id.get(controller_component_id)
+        target = node_specs_by_id.get(target_component_id)
+        if controller is None or target is None:
+            continue
+        base_parameter_name = target.params.get("threshold")
+        delta_parameter_name = target.params.get("threshold_collapse")
+        base_parameter = parameters_by_name.get(base_parameter_name)
+        delta_parameter = parameters_by_name.get(delta_parameter_name)
+        initial_value = _finite_fp32_scalar_value(
+            _parameter_default_value(
+                chain.control_projection,
+                "value",
+                None,
+            )
+        )
+        try:
+            controller_output_port_id = port_ids[id(chain.signal)]
+            target_parameter_port_id = port_ids[id(chain.target_parameter_port)]
+        except KeyError:
+            continue
+        target_port_key = (target_component_id, target_parameter_port_id)
+        if not (
+            base_parameter is not None
+            and delta_parameter is not None
+            and initial_value is not None
+            and controller_component_id not in used_controller_ids
+            and target_port_key not in used_target_parameter_ports
+            and controller.output_port_ids == (controller_output_port_id,)
+            and dict(target.parameter_port_ids).get("threshold")
+            == target_parameter_port_id
+        ):
+            continue
+
+        folded_control_id = len(folded_controls)
+        effective_parameter_id = (
+            first_effective_parameter_id + folded_control_id
+        )
+        effective_parameters.append(
+            BatchedEffectiveParameterSpec(
+                effective_parameter_id=effective_parameter_id,
+                target=target.name,
+                target_component_id=target.component_id,
+                target_parameter="threshold",
+                target_parameter_port_id=target_parameter_port_id,
+                base_value=(base_parameter.default,),
+                initial_modulation_value=(initial_value,),
+            )
+        )
+        folded_controls.append(
+            BatchedFoldedAffineControlSpec(
+                folded_control_id=folded_control_id,
+                effective_parameter_id=effective_parameter_id,
+                controller=controller.name,
+                controller_component_id=controller.component_id,
+                controller_output_port_id=controller_output_port_id,
+                target=target.name,
+                target_component_id=target.component_id,
+                target_parameter="threshold",
+                target_parameter_port_id=target_parameter_port_id,
+                base_parameter=base_parameter.name,
+                base_parameter_id=base_parameter.parameter_id,
+                delta_parameter=delta_parameter.name,
+                delta_parameter_id=delta_parameter.parameter_id,
+                clock_component_id=controller.component_id,
+                initial_value=(initial_value,),
+            )
+        )
+        used_controller_ids.add(controller.component_id)
+        used_target_parameter_ports.add(target_port_key)
+
+    return tuple(effective_parameters), tuple(folded_controls)
+
+
 def _controlled_finished_value_specs(
     finished_values: tuple[BatchedFinishedValueSpec, ...],
     modulations: tuple[BatchedModulationSpec, ...],
@@ -3202,9 +2955,9 @@ def _node_spec(
             )
             if initial_value is not None:
                 attrs["absorbed_control_initial_value"] = initial_value
-    # A delayed within-trial onset (AtPass(n>0)): the co-evolution loop withholds
-    # this node's output until step n. Only meaningful/executable in a co-evolving
-    # graph (AtPass(n>0) is rejected at the schedule level otherwise).
+    # A delayed within-trial onset (AtPass(n>0)).  The typed dynamic scheduler
+    # selects this member only on pass n; retain the value here so GraphIR can
+    # authenticate the scheduler declaration against the live node.
     onset = _onset_step(node, composition)
     if onset > 0:
         attrs["onset_step"] = onset
@@ -3248,9 +3001,10 @@ def _node_spec(
             maximum_inclusive = binding.maximum_inclusive
             live_parameter = _bound_parameter(binding, node)
             if threshold_source is not None and binding.arg == "threshold":
-                aliases += _node_param_aliases(
-                    _node_name(threshold_source),
-                    "intercept",
+                aliases = _folded_ddm_parameter_aliases(
+                    target_name=node_name,
+                    target_parameter="threshold",
+                    source_name=_node_name(threshold_source),
                 )
                 minimum = 0.0
                 minimum_inclusive = True
@@ -3259,9 +3013,10 @@ def _node_spec(
                 threshold_source is not None
                 and binding.arg == "threshold_collapse"
             ):
-                aliases += _node_param_aliases(
-                    _node_name(threshold_source),
-                    "offset-integrator_function",
+                aliases = _folded_ddm_parameter_aliases(
+                    target_name=node_name,
+                    target_parameter="threshold_collapse",
+                    source_name=_node_name(threshold_source),
                 )
                 maximum = 0.0
                 maximum_inclusive = True
@@ -4646,11 +4401,10 @@ def _condition_label(condition) -> str:
 def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
     """Whether ``lca`` controls the start of a coupled lane-local terminator.
 
-    The current fused emitter infers a warm-up count, but KernelIR contains
-    neither the LCA's per-lane ``finished`` value nor its effective controlled
-    threshold.  Recognizing the surrounding composition as co-evolving is not
-    sufficient to preserve this scheduling edge, even when sampled control
-    values happen to be constant.
+    Despite its historical name, this helper identifies the declaration
+    boundary lowered into explicit effective-parameter, finished-value, and
+    dynamic-scheduler records.  Recognizing a graph as co-evolving alone is
+    still insufficient; the complete typed chain must pass admission.
     """
 
     conditions = _scheduler_conditions(composition)
@@ -5864,8 +5618,8 @@ def _reset_ir_specs(nodes, states, component_ids):
 
     Optimized-away per-trial state (currently the affine one-step integrating
     TransferMechanism path) has no state identity and therefore needs no reset
-    event.  Trial-local mechanism-op storage is not yet part of GraphIR; moving
-    that storage out of emitter-private declarations is the next reset slice.
+    event.  Registered trial-local mechanism storage is explicit in KernelIR
+    loop carries, but remains outside these retained GraphIR reset records.
     """
 
     states_by_component = {}
@@ -6217,10 +5971,9 @@ def _condition_schedule_kind(
         # (origins load their input once and hold it), so "fire once at trial
         # start" is exactly the batched origin semantics -> static graph.
         # AtPass(n>0) is a delayed within-trial onset (e.g. the ITI before
-        # taskInput becomes active).  The fused co-evolution loop can gate that
-        # per step (the input is withheld until step n, and the terminator is
-        # frozen), so it is executable there; without a per-step loop it is only
-        # recognized, not executable (`precomputed_trace`).
+        # taskInput becomes active).  A typed dynamic schedule can select that
+        # member at pass n; otherwise the schedule must be represented by a
+        # validated precomputed trace.
         at_pass = _at_pass_spec(condition)
         if at_pass is None:
             return UNSUPPORTED_SCHEDULE
@@ -6458,6 +6211,91 @@ def _node_param_aliases(node_name: str, param_name: str) -> tuple[str, ...]:
     if base_name == node_name:
         return (qualified,)
     return (qualified, f"{base_name}.{param_name}")
+
+
+def _folded_ddm_parameter_aliases(
+    *,
+    target_name: str,
+    target_parameter: str,
+    source_name: str,
+) -> tuple[str, ...]:
+    """Return the exact public names retained by a folded DDM control.
+
+    The DDM registry has two historical prefixes, while the absorbed source
+    owns the live Parameters used by PEC.  Keep both surfaces explicit so an
+    IR parameter cannot silently shed or invent aliases after the source node
+    has been removed from the processing graph.
+    """
+
+    source_parameters = {
+        "threshold": "intercept",
+        "threshold_collapse": "offset-integrator_function",
+    }
+    source_parameter = source_parameters.get(target_parameter)
+    if source_parameter is None:
+        return ()
+    return tuple(dict.fromkeys((
+        f"ddm.{target_parameter}",
+        f"DDM.{target_parameter}",
+        *_node_param_aliases(target_name, target_parameter),
+        *_node_param_aliases(source_name, source_parameter),
+    )))
+
+
+def _folded_ddm_parameter_contract_supported(
+    base_parameter: BatchedParamSpec,
+    delta_parameter: BatchedParamSpec,
+    *,
+    target_component_id: int,
+    target_name: str,
+    source_name: str,
+) -> bool:
+    """Authenticate the two mutable lanes behind a folded DDM threshold."""
+
+    expected_base_aliases = _folded_ddm_parameter_aliases(
+        target_name=target_name,
+        target_parameter="threshold",
+        source_name=source_name,
+    )
+    expected_delta_aliases = _folded_ddm_parameter_aliases(
+        target_name=target_name,
+        target_parameter="threshold_collapse",
+        source_name=source_name,
+    )
+
+    def finite_fp32(value) -> bool:
+        return bool(
+            type(value) is float
+            and np.isfinite(value)
+            and -np.finfo(np.float32).max <= value <= np.finfo(np.float32).max
+        )
+
+    return bool(
+        finite_fp32(base_parameter.default)
+        and base_parameter.default >= 0.0
+        and base_parameter.aliases == expected_base_aliases
+        and type(base_parameter.minimum) is float
+        and base_parameter.minimum == 0.0
+        and base_parameter.minimum_inclusive is True
+        and base_parameter.maximum is None
+        and base_parameter.maximum_inclusive is True
+        and base_parameter.owner_component_id == target_component_id
+        and base_parameter.owner_scope == "function"
+        and base_parameter.runtime_mutable is True
+        and base_parameter.runtime_constraint == ""
+        and finite_fp32(delta_parameter.default)
+        and delta_parameter.default <= 0.0
+        and delta_parameter.aliases == expected_delta_aliases
+        and delta_parameter.minimum is None
+        and delta_parameter.minimum_inclusive is True
+        and type(delta_parameter.maximum) is float
+        and delta_parameter.maximum == 0.0
+        and delta_parameter.maximum_inclusive is True
+        and delta_parameter.owner_component_id == target_component_id
+        and delta_parameter.owner_scope == "function"
+        and delta_parameter.runtime_mutable is True
+        and delta_parameter.runtime_constraint == ""
+    )
 
 
 def _unsuffixed_node_name(node_name: str) -> str:

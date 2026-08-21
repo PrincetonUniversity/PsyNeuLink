@@ -483,6 +483,104 @@ class BatchedEffectiveParameterSpec:
 
 
 @dataclass(frozen=True)
+class BatchedFoldedAffineControlSpec:
+    """A scheduler-owned affine update for an absorbed control pathway.
+
+    Some stateful control pathways have no ordinary processing edge after
+    semantic lowering.  Their observable effect is nevertheless explicit: a
+    scheduled controller publishes ``base + delta * execution_ordinal`` and
+    commits that value to one lane-persistent effective parameter.  Numeric
+    identities bind every participant without retaining the omitted source or
+    a live PsyNeuLink object in GraphIR.
+    """
+
+    folded_control_id: int
+    effective_parameter_id: int
+    controller: str
+    controller_component_id: int
+    controller_output_port_id: int
+    target: str
+    target_component_id: int
+    target_parameter: str
+    target_parameter_port_id: int
+    base_parameter: str
+    base_parameter_id: int
+    delta_parameter: str
+    delta_parameter_id: int
+    clock_component_id: int
+    initial_value: tuple[float, ...]
+    width: int = 1
+    dtype: str = "float32"
+    storage: str = "lane_persistent"
+    reset: str = "Never"
+    update_event: str = "after_controller_execution"
+    update_expression: str = "base_plus_delta_times_controller_execution_ordinal"
+    sample_event: str = "at_target_parameter_update"
+
+    def __post_init__(self) -> None:
+        ids = (
+            self.folded_control_id,
+            self.effective_parameter_id,
+            self.controller_component_id,
+            self.controller_output_port_id,
+            self.target_component_id,
+            self.target_parameter_port_id,
+            self.base_parameter_id,
+            self.delta_parameter_id,
+            self.clock_component_id,
+        )
+        if any(type(value) is not int or value < 0 for value in ids):
+            raise ValueError(
+                "Batched folded-control identities must be non-negative "
+                "non-bool integers."
+            )
+        if any(
+            type(value) is not str or not value
+            for value in (
+                self.controller,
+                self.target,
+                self.target_parameter,
+                self.base_parameter,
+                self.delta_parameter,
+            )
+        ):
+            raise ValueError(
+                "Batched folded-control labels must be nonempty strings."
+            )
+        if (
+            self.base_parameter_id == self.delta_parameter_id
+            or self.clock_component_id != self.controller_component_id
+            or self.width != 1
+            or self.dtype != "float32"
+            or self.storage != "lane_persistent"
+            or self.reset != "Never"
+            or self.update_event != "after_controller_execution"
+            or self.update_expression
+            != "base_plus_delta_times_controller_execution_ordinal"
+            or self.sample_event != "at_target_parameter_update"
+        ):
+            raise ValueError(
+                "Batched folded controls require the exact scalar affine "
+                "scheduler-update policy."
+            )
+        if type(self.initial_value) is not tuple or len(self.initial_value) != 1:
+            raise ValueError(
+                "Batched folded-control initial value must be a scalar tuple."
+            )
+        array = np.asarray(self.initial_value)
+        packed = array.astype(np.float32) if array.dtype.kind in "biuf" else array
+        if (
+            array.dtype.kind not in "biuf"
+            or not bool(np.all(np.isfinite(array)))
+            or not bool(np.all(np.isfinite(packed)))
+        ):
+            raise ValueError(
+                "Batched folded-control initial value must be finite real "
+                "scalar data representable in float32 range."
+            )
+
+
+@dataclass(frozen=True)
 class BatchedModulationSpec:
     """One object-free effective-parameter edge.
 
@@ -594,7 +692,8 @@ class BatchedResetSpec:
     ``Never`` is represented explicitly as well as reset events so a backend
     cannot accidentally turn persistent state into trial-local state.  Storage
     that has been semantically optimized away has no state ID and is omitted;
-    emitter-private trial state will move into this schema in a later slice.
+    registered trial-local mechanism state is represented by KernelIR loop
+    carries rather than these retained GraphIR reset records.
     """
 
     node: str
@@ -635,6 +734,7 @@ class BatchedGraphIR:
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
     effective_parameters: tuple[BatchedEffectiveParameterSpec, ...] = ()
     modulations: tuple[BatchedModulationSpec, ...] = ()
+    folded_affine_controls: tuple[BatchedFoldedAffineControlSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
     termination: tuple[BatchedTerminationSpec, ...] = ()
 

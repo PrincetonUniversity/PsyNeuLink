@@ -103,7 +103,10 @@ def _identity_kernel() -> KernelIR:
     return KernelIR(
         model_kind="graph",
         fusion_kind=None,
-        lane_layout=KernelLaneLayout("trial", ("trial",)),
+        lane_layout=KernelLaneLayout(
+            "trial",
+            ("parameter_set", "subject", "trial", "estimate"),
+        ),
         inputs=(),
         params=(
             BatchedParamSpec(

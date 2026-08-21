@@ -12,8 +12,8 @@ from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
-    _dynamic_controlled_coevolving_graph_eligible,
     _dynamic_scheduled_graph_eligible,
+    _folded_ddm_parameter_contract_supported,
     _node_param_aliases,
     projection_inputs,
 )
@@ -24,12 +24,14 @@ from psyneulink.core.batched.ir import (
     BatchedConsiderationSetSpec,
     BatchedEffectiveParameterSpec,
     BatchedFinishedValueSpec,
+    BatchedFoldedAffineControlSpec,
     BatchedGraphIR,
     BatchedInputSpec,
     BatchedModulationSpec,
     BatchedOutputSpec,
     BatchedParamSpec,
     BatchedPortSpec,
+    BatchedRngStreamSpec,
     BatchedResetSpec,
     BatchedScheduleTraceSpec,
     BatchedScheduleRegionSpec,
@@ -118,6 +120,8 @@ class KernelOp:
     def __post_init__(self) -> None:
         if self.kind == "AddConstant":
             _validate_constant_elementwise_op(self, ("value",))
+        elif self.kind == "AffineSchedulerValue":
+            _validate_affine_scheduler_value(self)
         elif self.kind == "Clamp":
             _validate_constant_elementwise_op(self, ("lower", "upper"))
             _validate_clamp_bounds(self)
@@ -164,6 +168,7 @@ _DYNAMIC_SCHEDULE_PUBLICATION_KINDS = (
 )
 _DYNAMIC_SCHEDULE_BODY_OP_KINDS = frozenset({
     "AddConstant",
+    "AffineSchedulerValue",
     "CallFunction",
     "CallMechanism",
     "CallProjection",
@@ -342,6 +347,8 @@ class KernelSchedulerStateSlot:
     consumer_component_id: int | None = None
     finished_value_id: int | None = None
     rng_stream_id: int | None = None
+    initialization: str = "zero"
+    initial_effective_parameter_id: int | None = None
 
     def __post_init__(self) -> None:
         owner = self.owner_component_id
@@ -349,6 +356,7 @@ class KernelSchedulerStateSlot:
         consumer = self.consumer_component_id
         finished = self.finished_value_id
         rng_stream = self.rng_stream_id
+        initial_effective = self.initial_effective_parameter_id
         values = (owner, producer, consumer, finished, rng_stream)
         identity_shape = tuple(value is not None for value in values)
         expected_shapes = {
@@ -378,6 +386,17 @@ class KernelSchedulerStateSlot:
             )
             or identity_shape != expected_shape
             or self.kind == "usable_call" and producer == consumer
+            or type(self.initialization) is not str
+            or self.initialization not in {
+                "zero",
+                "count_zero_vs_effective_parameter",
+            }
+            or self.initialization == "zero" and initial_effective is not None
+            or self.initialization == "count_zero_vs_effective_parameter"
+            and (
+                self.kind != "finished"
+                or not _valid_dynamic_id(initial_effective)
+            )
         ):
             raise ValueError("KernelIR scheduler slot has invalid typed identity.")
 
@@ -570,6 +589,7 @@ def _validate_dynamic_member_dataflow(
         raise ValueError("KernelIR loop-carry value names must be globally unique.")
 
     slot_names = {slot.value.name for slot in slots}
+    slots_by_name = {slot.value.name: slot for slot in slots}
     if len(slot_names) != len(slots) or slot_names.intersection(snapshot_by_name):
         raise ValueError(
             "KernelIR scheduler and carry value names must be globally distinct."
@@ -588,12 +608,58 @@ def _validate_dynamic_member_dataflow(
                 if available is None:
                     carry = snapshot_by_name.get(value.name)
                     available = None if carry is None else carry.value
-                if available is None or _kernel_value_key(available) != (
-                    _kernel_value_key(value)
+                slot = slots_by_name.get(value.name)
+                scheduler_read = bool(
+                    available is None
+                    and op.kind == "AffineSchedulerValue"
+                    and slot is not None
+                    and slot.kind == "execution_count"
+                    and _kernel_value_key(slot.value) == _kernel_value_key(value)
+                )
+                if (
+                    available is None
+                    and not scheduler_read
+                    or available is not None
+                    and _kernel_value_key(available) != _kernel_value_key(value)
                 ):
                     raise ValueError(
                         "KernelIR dynamic member inputs must read a snapshot "
-                        "carry or an earlier member-local output."
+                        "carry or an earlier member-local output, or the exact "
+                        "execution-count input of an affine scheduler value."
+                    )
+            if op.kind == "AffineSchedulerValue":
+                _validate_affine_scheduler_value(op)
+                slot = slots_by_name.get(op.inputs[0].name)
+                if (
+                    slot is None
+                    or slot.kind != "execution_count"
+                    or slot.owner_component_id is None
+                ):
+                    raise ValueError(
+                        "KernelIR affine scheduler values require one declared "
+                        "component execution-count slot."
+                    )
+            elif op.kind == "StepMechanism":
+                _validate_step_mechanism(op)
+                sampled_ids = op.attrs.get("sampled_effective_parameter_ids", ())
+                sampled_inputs = op.inputs[1:1 + len(sampled_ids)]
+                expected = tuple(
+                    carries_by_key.get(
+                        ("effective_parameter", member.component_id, parameter_id)
+                    )
+                    for parameter_id in sampled_ids
+                )
+                if (
+                    any(carry is None for carry in expected)
+                    or len(sampled_inputs) != len(expected)
+                    or any(
+                        not _kernel_value_matches(actual, carry.value)
+                        for actual, carry in zip(sampled_inputs, expected)
+                    )
+                ):
+                    raise ValueError(
+                        "KernelIR scheduled steps must sample exact effective "
+                        "parameter carries owned by their member."
                     )
             for value in op.outputs:
                 if (
@@ -996,8 +1062,7 @@ def _validate_initialize_effective_parameter(op: KernelOp) -> None:
 
 
 def _validate_apply_modulation(op: KernelOp) -> None:
-    expected_keys = {
-        "modulation_id",
+    common_keys = {
         "controller_component_id",
         "control_signal_port_id",
         "target_component_id",
@@ -1006,6 +1071,15 @@ def _validate_apply_modulation(op: KernelOp) -> None:
         "mode",
         "update_event",
     }
+    ordinary_keys = common_keys | {"modulation_id"}
+    folded_keys = common_keys | {"folded_control_id"}
+    expected_keys = (
+        ordinary_keys
+        if set(op.attrs) == ordinary_keys
+        else folded_keys
+        if set(op.attrs) == folded_keys
+        else set()
+    )
     integer_keys = expected_keys - {"mode", "update_event"}
     effective_parameter_id = op.attrs.get("effective_parameter_id")
     expected_held = KernelValue(
@@ -1015,7 +1089,7 @@ def _validate_apply_modulation(op: KernelOp) -> None:
     )
     controller_value = op.inputs[1] if len(op.inputs) == 2 else None
     if (
-        set(op.attrs) != expected_keys
+        not expected_keys
         or any(
             type(op.attrs.get(key)) is not int or op.attrs[key] < 0
             for key in integer_keys
@@ -1037,6 +1111,34 @@ def _validate_apply_modulation(op: KernelOp) -> None:
         raise ValueError(
             "KernelIR ApplyModulation requires exact scalar float32 held-value "
             "rebinding and typed OVERRIDE identities."
+        )
+
+
+def _validate_affine_scheduler_value(op: KernelOp) -> None:
+    """Validate ``base + delta * scheduler_clock`` without backend syntax."""
+
+    expected_keys = {
+        "folded_control_id",
+        "base_parameter_id",
+        "delta_parameter_id",
+    }
+    if (
+        set(op.attrs) != expected_keys
+        or any(
+            type(op.attrs.get(key)) is not int or op.attrs[key] < 0
+            for key in expected_keys
+        )
+        or op.attrs["base_parameter_id"] == op.attrs["delta_parameter_id"]
+        or len(op.inputs) != 1
+        or op.inputs[0].width != 1
+        or op.inputs[0].dtype != "int32"
+        or len(op.outputs) != 1
+        or op.outputs[0].width != 1
+        or op.outputs[0].dtype != "float32"
+    ):
+        raise ValueError(
+            "KernelIR AffineSchedulerValue requires one scalar int32 scheduler "
+            "clock, one scalar float32 result, and exact folded-control IDs."
         )
 
 
@@ -1212,110 +1314,6 @@ def _validate_for_passes(op: KernelOp) -> None:
                 "and the complete ordered carry result set."
             )
         return
-    if trace_kind == "lane_local_coevolving":
-        expected_keys = {
-            "region",
-            "body",
-            "declaration_only",
-            "trace_kind",
-            "stepper_component_id",
-            "stepper_finished_value_id",
-            "terminator_component_id",
-            "terminator_finished_value_id",
-            "effective_parameter_id",
-            "target_parameter_port_id",
-            "producer_consideration_set_id",
-            "rounding",
-            "minimum",
-            "maximum",
-            "max_steps",
-            "max_steps_scope",
-            "consideration_set_ids",
-            "terminator_trial_states",
-            "terminator_finished_output",
-            "terminator_initial_control_value",
-            "terminator_control_storage",
-            "terminator_control_update",
-            "completion_cleanup",
-        }
-        integer_keys = {
-            "stepper_component_id",
-            "stepper_finished_value_id",
-            "terminator_component_id",
-            "terminator_finished_value_id",
-            "effective_parameter_id",
-            "target_parameter_port_id",
-            "producer_consideration_set_id",
-            "minimum",
-            "maximum",
-            "max_steps",
-        }
-        trial_states = op.attrs.get("terminator_trial_states")
-        if (
-            set(op.attrs) != expected_keys
-            or op.target != "passes"
-            or len(op.inputs) != 1
-            or op.outputs
-            or not body
-            or not _kernel_value_matches(
-                op.inputs[0],
-                KernelValue(
-                    f"effective:{op.attrs.get('effective_parameter_id')}",
-                    1,
-                    "float32",
-                ),
-            )
-            or any(
-                type(op.attrs.get(key)) is not int or op.attrs[key] < 0
-                for key in integer_keys
-            )
-            or op.attrs["stepper_component_id"]
-            == op.attrs["terminator_component_id"]
-            or op.attrs["stepper_finished_value_id"]
-            == op.attrs["terminator_finished_value_id"]
-            or op.attrs["minimum"] != 1
-            or op.attrs["maximum"] != 2 ** 24
-            or op.attrs["max_steps"] <= 0
-            or op.attrs.get("max_steps_scope") != "terminator_local"
-            or op.attrs.get("rounding") != "ceil"
-            or type(op.attrs.get("consideration_set_ids")) is not tuple
-            or op.attrs["consideration_set_ids"]
-            != tuple(range(len(op.attrs["consideration_set_ids"])))
-            or not op.attrs["consideration_set_ids"]
-            or type(trial_states) is not tuple
-            or not trial_states
-            or any(
-                type(item) is not tuple
-                or len(item) != 3
-                or type(item[0]) is not str
-                or not item[0]
-                or type(item[1]) is not int
-                or item[1] <= 0
-                or type(item[2]) is not float
-                for item in trial_states
-            )
-            or type(op.attrs.get("terminator_finished_output")) is not str
-            or not op.attrs["terminator_finished_output"]
-            or type(op.attrs.get("terminator_initial_control_value")) is not float
-            or op.attrs["terminator_initial_control_value"] != 1.0
-            or op.attrs.get("terminator_control_storage") != "lane_persistent"
-            or op.attrs.get("terminator_control_update")
-            != "ordered_threshold_override"
-            or op.attrs.get("completion_cleanup")
-            != "fold_terminator_control_state"
-            or any(
-                child.kind in {"ForPasses", "ExecuteConsiderationSet"}
-                for child in body
-            )
-            or not any(child.kind == "CallMechanism" for child in body)
-            or not any(child.kind == "StoreOutput" for child in body)
-        ):
-            raise ValueError(
-                "Executable lane-local coevolving KernelIR ForPasses requires "
-                "exact stepper, terminator, held-value, trial-state, and bounded "
-                "region structure."
-            )
-        return
     if op.inputs or op.outputs:
         raise ValueError(
             "Precomputed KernelIR ForPasses cannot have value inputs or outputs."
@@ -1323,7 +1321,7 @@ def _validate_for_passes(op: KernelOp) -> None:
     if trace_kind != "precomputed":
         raise ValueError(
             "Executable KernelIR ForPasses requires trace_kind='precomputed' "
-            "'lane_local_dynamic', or 'lane_local_coevolving'."
+            "or 'lane_local_dynamic'."
         )
     if not body or any(child.kind != "ExecuteConsiderationSet" for child in body):
         raise ValueError(
@@ -1420,6 +1418,7 @@ def _validate_step_mechanism(op: KernelOp) -> None:
                 "trial_state_ids",
                 "finished_trial_state_id",
                 "rng_stream_ids",
+                "sampled_effective_parameter_ids",
             )
         ):
             raise ValueError(
@@ -1435,6 +1434,9 @@ def _validate_step_mechanism(op: KernelOp) -> None:
         trial_state_ids = op.attrs.get("trial_state_ids")
         finished_trial_state_id = op.attrs.get("finished_trial_state_id")
         rng_stream_ids = op.attrs.get("rng_stream_ids")
+        sampled_effective_parameter_ids = op.attrs.get(
+            "sampled_effective_parameter_ids"
+        )
         valid_trial_state_ids = bool(
             type(trial_state_ids) is tuple
             and all(
@@ -1451,6 +1453,15 @@ def _validate_step_mechanism(op: KernelOp) -> None:
             )
             and rng_stream_ids == tuple(sorted(set(rng_stream_ids)))
         )
+        valid_sampled_effective_parameter_ids = bool(
+            type(sampled_effective_parameter_ids) is tuple
+            and all(
+                type(parameter_id) is int and parameter_id >= 0
+                for parameter_id in sampled_effective_parameter_ids
+            )
+            and sampled_effective_parameter_ids
+            == tuple(sorted(set(sampled_effective_parameter_ids)))
+        )
         finished_output_count = int(finished_trial_state_id is not None)
         model_output_count = (
             len(op.outputs)
@@ -1464,12 +1475,19 @@ def _validate_step_mechanism(op: KernelOp) -> None:
             or any(key in op.attrs for key in legacy_identity_keys)
             or not valid_trial_state_ids
             or not valid_rng_stream_ids
+            or not valid_sampled_effective_parameter_ids
             or finished_trial_state_id is not None
             and (
                 type(finished_trial_state_id) is not int
                 or finished_trial_state_id not in trial_state_ids
             )
-            or len(op.inputs) != 1 + len(state_ids) + len(trial_state_ids)
+            or len(op.inputs)
+            != (
+                1
+                + len(sampled_effective_parameter_ids)
+                + len(state_ids)
+                + len(trial_state_ids)
+            )
             or model_output_count <= 0
             or finished_output_count
             and (
@@ -1479,8 +1497,9 @@ def _validate_step_mechanism(op: KernelOp) -> None:
         ):
             raise ValueError(
                 "KernelIR dynamic member StepMechanism requires one data input, "
-                "exact persistent/trial state suffixes, typed finished/RNG "
-                "identities, and no topology-specific control identities."
+                "exact sampled-effective/persistent/trial suffixes, typed "
+                "finished/RNG identities, and no topology-specific control "
+                "identities."
             )
     else:
         raise ValueError(
@@ -1561,6 +1580,7 @@ class KernelIR:
     finished_values: tuple[BatchedFinishedValueSpec, ...] = ()
     effective_parameters: tuple[BatchedEffectiveParameterSpec, ...] = ()
     modulations: tuple[BatchedModulationSpec, ...] = ()
+    folded_affine_controls: tuple[BatchedFoldedAffineControlSpec, ...] = ()
     resets: tuple[BatchedResetSpec, ...] = ()
     termination: tuple[BatchedTerminationSpec, ...] = ()
     schedule_trace: BatchedScheduleTraceSpec | None = None
@@ -1583,6 +1603,9 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
         raise ValueError(
             "Executable KernelIR requires executable GraphIR capability authority."
         )
+
+    _validate_kernel_execution_authority(kernel)
+    _validate_kernel_rng_streams(kernel)
 
     # Validate identity-bearing declaration sequences before constructing any
     # lookup dictionaries from them.  Otherwise duplicate or bool-valued IDs
@@ -1615,6 +1638,11 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             kernel.graph.effective_parameters,
         ),
         ("modulation", kernel.modulations, kernel.graph.modulations),
+        (
+            "folded-affine-control",
+            kernel.folded_affine_controls,
+            kernel.graph.folded_affine_controls,
+        ),
         ("reset", kernel.resets, kernel.graph.resets),
         ("termination", kernel.termination, kernel.graph.termination),
     )
@@ -2045,6 +2073,96 @@ def _consideration_set_owns(
             )
         )
     )
+
+
+def _validate_kernel_execution_authority(kernel: KernelIR) -> None:
+    """Tie lowering strategy and lane shape to their GraphIR authority."""
+
+    if (
+        kernel.fusion_kind is not None
+        and type(kernel.fusion_kind) is not str
+        or kernel.graph.fusion_kind is not None
+        and type(kernel.graph.fusion_kind) is not str
+        or kernel.fusion_kind != kernel.graph.fusion_kind
+    ):
+        raise ValueError("KernelIR fusion kind must exactly match GraphIR.")
+
+    expected_layout = _lane_layout_for(kernel.graph.fusion_kind)
+    if (
+        type(kernel.lane_layout) is not KernelLaneLayout
+        or type(kernel.lane_layout.kind) is not str
+        or type(kernel.lane_layout.dimensions) is not tuple
+        or any(
+            type(dimension) is not str
+            for dimension in kernel.lane_layout.dimensions
+        )
+        or kernel.lane_layout != expected_layout
+    ):
+        raise ValueError(
+            "KernelIR lane layout must exactly match the canonical GraphIR "
+            "fusion layout."
+        )
+
+
+def _validate_kernel_rng_streams(kernel: KernelIR) -> None:
+    """Require an exact typed RNG-stream mirror in declaration order."""
+
+    graph_streams = kernel.graph.rng_streams
+    if (
+        type(kernel.rng_streams) is not tuple
+        or type(graph_streams) is not tuple
+        or any(type(stream) is not KernelRngStream for stream in kernel.rng_streams)
+        or any(type(stream) is not BatchedRngStreamSpec for stream in graph_streams)
+    ):
+        raise ValueError(
+            "KernelIR RNG stream declarations require exact typed tuples."
+        )
+
+    field_types = (
+        ("name", str),
+        ("node", str),
+        ("width", int),
+        ("step_extent", str),
+        ("component_id", int),
+        ("stream_id", int),
+    )
+    if any(
+        type(getattr(stream, name)) is not expected_type
+        for stream in (*kernel.rng_streams, *graph_streams)
+        for name, expected_type in field_types
+    ) or any(
+        not stream.name
+        or not stream.node
+        or stream.width <= 0
+        or not stream.step_extent
+        or stream.component_id < 0
+        or stream.stream_id < 0
+        for stream in (*kernel.rng_streams, *graph_streams)
+    ):
+        raise ValueError(
+            "KernelIR RNG stream declarations require exact typed fields."
+        )
+
+    stream_ids = tuple(stream.stream_id for stream in kernel.rng_streams)
+    if stream_ids != tuple(range(len(kernel.rng_streams))):
+        raise ValueError(
+            "KernelIR RNG stream IDs must be contiguous and in declaration "
+            "order."
+        )
+
+    kernel_records = tuple(
+        tuple(getattr(stream, name) for name, _ in field_types)
+        for stream in kernel.rng_streams
+    )
+    graph_records = tuple(
+        tuple(getattr(stream, name) for name, _ in field_types)
+        for stream in graph_streams
+    )
+    if kernel_records != graph_records:
+        raise ValueError(
+            "KernelIR RNG stream declarations must exactly match GraphIR in "
+            "declaration order."
+        )
 
 
 def _validate_kernel_parameters(kernel: KernelIR) -> None:
@@ -2807,6 +2925,42 @@ def _kernel_op_output_lineage(
         return output_lineage
     component_id = _component_id(kernel.graph, node)
 
+    if op.kind == "AffineSchedulerValue":
+        matches = tuple(
+            control
+            for control in kernel.folded_affine_controls
+            if control.folded_control_id == op.attrs.get("folded_control_id")
+        )
+        control = matches[0] if len(matches) == 1 else None
+        port = (
+            _kernel_output_port(
+                kernel,
+                node,
+                name=next(
+                    (
+                        item.name
+                        for item in kernel.ports
+                        if control is not None
+                        and item.port_id == control.controller_output_port_id
+                    ),
+                    "",
+                ),
+                port_id=(
+                    control.controller_output_port_id
+                    if control is not None
+                    else None
+                ),
+            )
+            if control is not None
+            and control.controller_component_id == component_id
+            else None
+        )
+        lineage = (
+            frozenset((component_id,)),
+            frozenset((port.port_id,)) if port is not None else frozenset(),
+        )
+        return {_kernel_value_key(value): lineage for value in op.outputs}
+
     if op.kind in {"CallFunction", "CallMechanism", "StepMechanism"}:
         for index, value in enumerate(op.outputs):
             port = None
@@ -3255,15 +3409,22 @@ def _validate_kernel_reset_declarations(kernel: KernelIR) -> None:
 def _validate_kernel_modulations(kernel: KernelIR) -> None:
     """Validate the scalar ``OVERRIDE`` identity and execution boundary."""
 
+    folded_controller_ids = {
+        control.controller_component_id
+        for control in kernel.folded_affine_controls
+    }
     typed_controller_ids = {
         _component_id(kernel.graph, node)
         for node in kernel.graph.nodes
         if node.component_type == "ControlMechanism"
-        and node.attrs.get("control_function") in {"identity", "registered"}
+        and (
+            node.attrs.get("control_function") in {"identity", "registered"}
+            or _component_id(kernel.graph, node) in folded_controller_ids
+        )
     }
     modulation_controller_ids = {
         modulation.controller_component_id for modulation in kernel.modulations
-    }
+    } | folded_controller_ids
     if typed_controller_ids != modulation_controller_ids:
         raise ValueError(
             "KernelIR typed ControlMechanism declarations and modulation "
@@ -3279,6 +3440,7 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
     if (
         not kernel.modulations
         and not kernel.effective_parameters
+        and not kernel.folded_affine_controls
         and not dynamic_finished
         and not kernel.absorbed_projections
     ):
@@ -3300,22 +3462,7 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             if op.kind == "ForPasses"
             and op.attrs.get("trace_kind") == "lane_local_dynamic"
         )
-        coevolving_regions = sum(
-            op.kind == "ForPasses"
-            and op.attrs.get("trace_kind") == "lane_local_coevolving"
-            for op in records
-        )
-        has_complete_schedule_effects = bool(
-            (
-                len(dynamic_regions) == 1
-                and coevolving_regions == 0
-            )
-            or (
-                not dynamic_regions
-                and coevolving_regions == 1
-                and len(kernel.modulations) == 1
-            )
-        )
+        has_complete_schedule_effects = len(dynamic_regions) == 1
         dynamic_effects = tuple(
             effect
             for region in dynamic_regions
@@ -3324,12 +3471,15 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             for member in consideration_set.members
             for effect in member.effects
         )
+        expected_effect_count = len(kernel.modulations) + (
+            len(kernel.folded_affine_controls) if dynamic_regions else 0
+        )
         if not (
             sum(op.kind == "InitializeEffectiveParameter" for op in records)
             == len(kernel.effective_parameters)
             and sum(op.kind == "ApplyModulation" for op in records)
             + sum(op.kind == "ApplyModulation" for op in dynamic_effects)
-            == len(kernel.modulations)
+            == expected_effect_count
             and has_complete_schedule_effects
         ):
             raise ValueError(
@@ -3342,6 +3492,9 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
     )
     effective_parameter_ids = tuple(
         modulation.effective_parameter_id for modulation in kernel.modulations
+    ) + tuple(
+        control.effective_parameter_id
+        for control in kernel.folded_affine_controls
     )
     declared_effective_ids = tuple(
         parameter.effective_parameter_id
@@ -3756,6 +3909,14 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
                 "KernelIR modulation must own exactly one matching dynamic "
                 "finished-value declaration."
             )
+    _validate_kernel_folded_affine_controls(
+        kernel,
+        effective_by_id=effective_by_id,
+        params_by_id=params_by_id,
+        ports_by_id=ports_by_id,
+        scheduler_by_component_id=scheduler_by_component_id,
+        occupied_target_port_ids=target_port_ids,
+    )
     if tuple(sorted(referenced_absorbed_projection_ids)) != tuple(
         range(len(kernel.absorbed_projections))
     ):
@@ -3763,6 +3924,119 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
             "KernelIR modulation routes must form an exact bijection with "
             "absorbed projection declarations."
         )
+
+
+def _validate_kernel_folded_affine_controls(
+    kernel: KernelIR,
+    *,
+    effective_by_id,
+    params_by_id,
+    ports_by_id,
+    scheduler_by_component_id,
+    occupied_target_port_ids,
+) -> None:
+    """Cross-authenticate topology-neutral affine scheduler control records."""
+
+    controls = kernel.folded_affine_controls
+    params_by_name = {parameter.name: parameter for parameter in kernel.params}
+    frozen_reason = "dynamic scheduled terminator parameter is frozen in KernelIR"
+    if tuple(control.folded_control_id for control in controls) != tuple(
+        range(len(controls))
+    ):
+        raise ValueError(
+            "KernelIR folded affine control IDs must be contiguous and ordered."
+        )
+    for control in controls:
+        try:
+            controller = kernel.graph.node(control.controller)
+            target = kernel.graph.node(control.target)
+            effective = effective_by_id[control.effective_parameter_id]
+            base = params_by_id[control.base_parameter_id]
+            delta = params_by_id[control.delta_parameter_id]
+        except (KeyError, TypeError) as error:
+            raise ValueError(
+                "KernelIR folded affine control references an undeclared identity."
+            ) from error
+        output_port = ports_by_id.get(control.controller_output_port_id)
+        target_port = ports_by_id.get(control.target_parameter_port_id)
+        controller_condition = scheduler_by_component_id.get(
+            control.controller_component_id
+        )
+        target_condition = scheduler_by_component_id.get(control.target_component_id)
+        absorbed_control = controller.attrs.get("absorbed_control")
+        absorbed_source = (
+            absorbed_control.get("source")
+            if isinstance(absorbed_control, Mapping)
+            else None
+        )
+        frozen_parameters = tuple(
+            params_by_name.get(target.params.get(argument))
+            for argument in ("noise", "starting_value", "offset")
+        )
+        if (
+            _component_id(kernel.graph, controller)
+            != control.controller_component_id
+            or _component_id(kernel.graph, target) != control.target_component_id
+            or control.clock_component_id != control.controller_component_id
+            or controller.component_type != "ControlMechanism"
+            or output_port is None
+            or output_port.owner_component_id != control.controller_component_id
+            or output_port.kind != "ControlSignal"
+            or output_port.width != control.width
+            or target_port is None
+            or target_port.owner_component_id != control.target_component_id
+            or target_port.name != control.target_parameter
+            or target_port.kind != "ParameterPort"
+            or target_port.width != control.width
+            or dict(target.parameter_port_ids).get(control.target_parameter)
+            != control.target_parameter_port_id
+            or base.parameter_id != control.base_parameter_id
+            or base.name != control.base_parameter
+            or delta.parameter_id != control.delta_parameter_id
+            or delta.name != control.delta_parameter
+            or base.owner_component_id != control.target_component_id
+            or delta.owner_component_id != control.target_component_id
+            or base.name not in target.params.values()
+            or delta.name not in target.params.values()
+            or type(absorbed_source) is not str
+            or not absorbed_source
+            or not _folded_ddm_parameter_contract_supported(
+                base,
+                delta,
+                target_component_id=control.target_component_id,
+                target_name=target.name,
+                source_name=absorbed_source,
+            )
+            or any(
+                parameter is None
+                or parameter.runtime_mutable is not False
+                or parameter.runtime_constraint != frozen_reason
+                for parameter in frozen_parameters
+            )
+            or controller_condition is None
+            or target_condition is None
+            or controller_condition.consideration_set_id
+            >= target_condition.consideration_set_id
+            or effective.target != control.target
+            or effective.target_component_id != control.target_component_id
+            or effective.target_parameter != control.target_parameter
+            or effective.target_parameter_port_id
+            != control.target_parameter_port_id
+            or effective.base_value != (base.default,)
+            or effective.initial_modulation_value != control.initial_value
+            or effective.width != control.width
+            or effective.dtype != control.dtype
+            or effective.storage != control.storage
+            or effective.reset != control.reset
+            or effective.update_event != control.update_event
+            or effective.sample_event != control.sample_event
+            or control.target_parameter_port_id in occupied_target_port_ids
+        ):
+            raise ValueError(
+                "KernelIR folded affine control does not match its typed "
+                "controller, scheduler clock, parameters, target, and held value."
+            )
+        occupied_target_port_ids.add(control.target_parameter_port_id)
 
 
 def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
@@ -3778,29 +4052,12 @@ def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
                 collect(body, op)
 
     collect(kernel.ops)
-    coevolving_regions = tuple(
-        op
-        for op, _ in records
-        if op.kind == "ForPasses"
-        and op.attrs.get("trace_kind") == "lane_local_coevolving"
-    )
     dynamic_regions = tuple(
         op
         for op, _ in records
         if op.kind == "ForPasses"
         and op.attrs.get("trace_kind") == "lane_local_dynamic"
     )
-    if coevolving_regions:
-        if dynamic_regions:
-            raise ValueError(
-                "KernelIR cannot mix dynamic and coevolving schedule regions."
-            )
-        _validate_dynamic_coevolving_modulation_ops(
-            kernel,
-            coevolving_regions=coevolving_regions,
-            records=records,
-        )
-        return
     if dynamic_regions:
         _validate_dynamic_schedule_modulation_ops(
             kernel,
@@ -3817,7 +4074,7 @@ def _validate_dynamic_modulation_ops(kernel: KernelIR) -> None:
     if effectful:
         raise ValueError(
             "KernelIR dynamic effects require one authenticated lane-local "
-            "dynamic or coevolving schedule region."
+            "dynamic schedule region."
         )
 
 
@@ -3942,6 +4199,21 @@ def _validate_dynamic_schedule_stateful_capabilities(
             "owning scheduled StepMechanism."
         )
 
+    expected_effective_samples = tuple(sorted(
+        (control.target_component_id, control.effective_parameter_id)
+        for control in kernel.folded_affine_controls
+    ))
+    actual_effective_samples = tuple(sorted(
+        (member.component_id, parameter_id)
+        for member, step in steps
+        for parameter_id in step.attrs["sampled_effective_parameter_ids"]
+    ))
+    if actual_effective_samples != expected_effective_samples:
+        raise ValueError(
+            "KernelIR sampled effective parameters must be consumed exactly "
+            "once by their declared target step."
+        )
+
     expected_trial_carries = _dynamic_trial_state_carries(kernel)
     actual_trial_carries = tuple(
         carry for carry in program.loop_carries if carry.kind == "trial_state"
@@ -4017,227 +4289,6 @@ def _dynamic_schedule_region_output_lineage(
         )
         for carry in program.loop_carries
     }
-
-
-def _validate_dynamic_coevolving_modulation_ops(
-    kernel: KernelIR,
-    *,
-    coevolving_regions: tuple[KernelOp, ...],
-    records: list[tuple[KernelOp, KernelOp | None]],
-) -> None:
-    """Authenticate the first complete controlled coevolution program."""
-
-    if (
-        len(coevolving_regions) != 1
-        or not _dynamic_coevolving_lowering_eligible(kernel)
-    ):
-        raise ValueError(
-            "KernelIR lane-local coevolving operations fall outside the exact "
-            "controlled LCA/DDM lowering boundary."
-        )
-    expected_top_kinds = (
-        "InitializeState",
-        *("InitializeEffectiveParameter" for _ in kernel.effective_parameters),
-        "ForTrials",
-    )
-    top_initializers = tuple(
-        op for op in kernel.ops if op.kind == "InitializeEffectiveParameter"
-    )
-    all_initializers = tuple(
-        op for op, _ in records if op.kind == "InitializeEffectiveParameter"
-    )
-    all_apply_ops = tuple(
-        op for op, _ in records if op.kind == "ApplyModulation"
-    )
-    if (
-        tuple(op.kind for op in kernel.ops) != expected_top_kinds
-        or top_initializers != all_initializers
-        or len(all_apply_ops) != 1
-    ):
-        raise ValueError(
-            "KernelIR controlled coevolution requires top-level state/effective "
-            "initialization and exactly one nested modulation effect."
-        )
-
-    expected_ops = _canonical_dynamic_coevolving_kernel_ops(kernel)
-    if not _kernel_op_sequences_match_exactly(kernel.ops, expected_ops):
-        raise ValueError(
-            "KernelIR controlled coevolution operations must exactly match the "
-            "complete compiler-derived trial program."
-        )
-
-
-def _canonical_dynamic_coevolving_kernel_ops(
-    kernel: KernelIR,
-) -> tuple[KernelOp, ...]:
-    """Build the first typed controlled LCA/DDM coevolution program."""
-
-    if not _dynamic_coevolving_lowering_eligible(kernel):
-        raise ValueError(
-            "KernelIR graph is not eligible for controlled coevolving lowering."
-        )
-    graph = kernel.graph
-    modulation = kernel.modulations[0]
-    parameter = kernel.effective_parameters[0]
-    dynamic_finished = next(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    )
-    terminator_finished = next(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind == "dynamic"
-    )
-    controller = graph.node(modulation.controller)
-    source = graph.node(modulation.source)
-    terminator = graph.node(terminator_finished.node)
-    threshold_controller = next(
-        node
-        for node in graph.nodes
-        if node.component_type == "ControlMechanism"
-        and node.component_id != controller.component_id
-    )
-    terminator_spec = kernel.op_specs.lookup_spec(
-        terminator.attrs["spec_key"]
-    )
-    assert isinstance(terminator_spec, MechanismOpSpec)
-
-    canonical_trial_ops = _trial_body_ops(graph)
-    target_indices = tuple(
-        index
-        for index, op in enumerate(canonical_trial_ops)
-        if op.target == modulation.target
-    )
-    if not target_indices:
-        raise ValueError(
-            "KernelIR controlled coevolution target has no compiler-derived body."
-        )
-
-    controller_value = KernelValue(
-        node_output_value_name(
-            graph,
-            controller,
-            modulation.control_signal_port,
-        ),
-        modulation.width,
-        modulation.dtype,
-    )
-    controller_call = KernelOp(
-        kind="CallFunction",
-        target=controller.name,
-        inputs=(
-            KernelValue(
-                node_output_value_name(
-                    graph,
-                    source,
-                    modulation.source_port,
-                ),
-                modulation.width,
-                modulation.dtype,
-            ),
-        ),
-        outputs=(controller_value,),
-        attrs={
-            "component_type": controller.component_type,
-            "function_type": controller.function_type,
-            "component_id": modulation.controller_component_id,
-            "params": dict(controller.params),
-            "output_port": modulation.control_signal_port,
-            "spec_key": modulation.controller_function_spec_key,
-        },
-    )
-    held_value = effective_parameter_value(parameter)
-    apply = apply_modulation_op(
-        modulation,
-        held_effective=held_value,
-        controller_value=controller_value,
-    )
-    insert_at = target_indices[0]
-    coevolving_body = (
-        *canonical_trial_ops[:insert_at],
-        controller_call,
-        apply,
-        *canonical_trial_ops[insert_at:],
-    )
-    pass_regions = tuple(
-        region for region in kernel.schedule_regions if region.kind == "pass"
-    )
-    assert len(pass_regions) == 1
-    coevolving_region = KernelOp(
-        kind="ForPasses",
-        target="passes",
-        inputs=(held_value,),
-        attrs={
-            "region": pass_regions[0],
-            "body": coevolving_body,
-            "declaration_only": False,
-            "trace_kind": "lane_local_coevolving",
-            "stepper_component_id": modulation.target_component_id,
-            "stepper_finished_value_id": dynamic_finished.value_id,
-            "terminator_component_id": terminator_finished.component_id,
-            "terminator_finished_value_id": terminator_finished.value_id,
-            "effective_parameter_id": parameter.effective_parameter_id,
-            "target_parameter_port_id": modulation.target_parameter_port_id,
-            "producer_consideration_set_id": (
-                dynamic_finished.producer_consideration_set_id
-            ),
-            "rounding": dynamic_finished.attrs["rounding"],
-            "minimum": dynamic_finished.attrs["minimum"],
-            "maximum": dynamic_finished.attrs["maximum"],
-            "max_steps": kernel.max_steps,
-            "max_steps_scope": "terminator_local",
-            "consideration_set_ids": tuple(
-                item.consideration_set_id
-                for item in sorted(
-                    kernel.consideration_sets,
-                    key=lambda item: item.consideration_set_id,
-                )
-            ),
-            "terminator_trial_states": tuple(
-                (
-                    declaration.name,
-                    int(declaration.width or 1),
-                    float(declaration.initial),
-                )
-                for declaration in terminator_spec.trial_states
-            ),
-            "terminator_finished_output": terminator_spec.finished_output,
-            "terminator_initial_control_value": threshold_controller.attrs[
-                "absorbed_control_initial_value"
-            ],
-            "terminator_control_storage": "lane_persistent",
-            "terminator_control_update": "ordered_threshold_override",
-            # A one-step DDM finishes before the earlier threshold-controller
-            # set has run.  PNL's AllHaveRun cleanup visits that set after the
-            # gates; fold its only observable effect into the held control
-            # value carried to the next trial.
-            "completion_cleanup": "fold_terminator_control_state",
-        },
-    )
-    state_values = _state_kernel_values(graph)
-    return (
-        KernelOp(
-            kind="InitializeState",
-            target="lane",
-            outputs=state_values,
-        ),
-        *(
-            initialize_effective_parameter_op(item)
-            for item in kernel.effective_parameters
-        ),
-        KernelOp(
-            kind="ForTrials",
-            target="trials",
-            attrs={
-                "body": (
-                    *_trial_reset_ops(graph, state_values),
-                    coevolving_region,
-                ),
-            },
-        ),
-    )
 
 
 def _dynamic_trial_state_carries(
@@ -4436,9 +4487,21 @@ def _canonical_dynamic_schedule_program(
         modulation.target_component_id: modulation
         for modulation in kernel.modulations
     }
+    folded_by_controller_id = {
+        control.controller_component_id: control
+        for control in kernel.folded_affine_controls
+    }
+    folded_by_target_id = {
+        control.target_component_id: control
+        for control in kernel.folded_affine_controls
+    }
     if (
         len(modulation_by_controller_id) != len(kernel.modulations)
         or len(modulation_by_target_id) != len(kernel.modulations)
+        or len(folded_by_controller_id) != len(kernel.folded_affine_controls)
+        or len(folded_by_target_id) != len(kernel.folded_affine_controls)
+        or set(modulation_by_controller_id).intersection(folded_by_controller_id)
+        or set(modulation_by_target_id).intersection(folded_by_target_id)
     ):
         raise ValueError(
             "KernelIR dynamic control and target identities must be unique."
@@ -4471,6 +4534,7 @@ def _canonical_dynamic_schedule_program(
             )
             controller_modulation = modulation_by_controller_id.get(component_id)
             target_modulation = modulation_by_target_id.get(component_id)
+            folded_control = folded_by_controller_id.get(component_id)
             if controller_modulation is not None:
                 body, publications, effects = _dynamic_controller_member(
                     kernel,
@@ -4481,7 +4545,26 @@ def _canonical_dynamic_schedule_program(
                     ],
                     carries_by_key=carries_by_key,
                 )
+            elif folded_control is not None:
+                body, publications, effects = (
+                    _dynamic_folded_affine_controller_member(
+                        node,
+                        folded_control=folded_control,
+                        carries_by_key=carries_by_key,
+                    )
+                )
             else:
+                sampled_effective_parameters = tuple(
+                    carry
+                    for carry in effective_carries
+                    if carry.owner_component_id == component_id
+                    and carry.value_id
+                    in {
+                        control.effective_parameter_id
+                        for control in kernel.folded_affine_controls
+                        if control.target_component_id == component_id
+                    }
+                )
                 body, publications = _dynamic_ordinary_member(
                     kernel,
                     node,
@@ -4491,6 +4574,7 @@ def _canonical_dynamic_schedule_program(
                     trial_state_carries=trial_state_carries,
                     finished_value=finished_by_component_id.get(component_id),
                     rng_streams=streams_by_component_id[component_id],
+                    sampled_effective_parameters=sampled_effective_parameters,
                 )
                 effects = ()
             members.append(
@@ -4574,6 +4658,13 @@ def _canonical_dynamic_schedule_program(
             continue
         finished_slot_keys.add(key)
         owner_id, value_id = key
+        finished = finished_by_id[value_id]
+        initial_effective_parameter_id = (
+            finished.attrs["effective_parameter_id"]
+            if finished.predicate_kind
+            == "execution_count_at_least_effective_parameter"
+            else None
+        )
         slots.append(
             KernelSchedulerStateSlot(
                 "finished",
@@ -4584,6 +4675,12 @@ def _canonical_dynamic_schedule_program(
                 ),
                 owner_component_id=owner_id,
                 finished_value_id=value_id,
+                initialization=(
+                    "count_zero_vs_effective_parameter"
+                    if initial_effective_parameter_id is not None
+                    else "zero"
+                ),
+                initial_effective_parameter_id=initial_effective_parameter_id,
             )
         )
     for stream in kernel.rng_streams:
@@ -4790,6 +4887,80 @@ def _dynamic_controller_member(
     )
 
 
+def _dynamic_folded_affine_controller_member(
+    controller,
+    *,
+    folded_control,
+    carries_by_key,
+):
+    """Lower one scheduler-clock affine controller and its held OVERRIDE."""
+
+    output_carry = carries_by_key[
+        (
+            "output",
+            controller.component_id,
+            folded_control.controller_output_port_id,
+        )
+    ]
+    candidate = KernelValue(
+        f"{output_carry.value.name}:candidate:c{controller.component_id}:v0",
+        output_carry.value.width,
+        output_carry.value.dtype,
+    )
+    held = carries_by_key[
+        (
+            "effective_parameter",
+            folded_control.target_component_id,
+            folded_control.effective_parameter_id,
+        )
+    ].value
+    body = KernelOp(
+        "AffineSchedulerValue",
+        controller.name,
+        inputs=(
+            KernelValue(
+                f"schedule:execution-count:{folded_control.clock_component_id}",
+                1,
+                "int32",
+            ),
+        ),
+        outputs=(candidate,),
+        attrs={
+            "folded_control_id": folded_control.folded_control_id,
+            "base_parameter_id": folded_control.base_parameter_id,
+            "delta_parameter_id": folded_control.delta_parameter_id,
+        },
+    )
+    effect = KernelOp(
+        "ApplyModulation",
+        folded_control.target,
+        inputs=(held, candidate),
+        outputs=(held,),
+        attrs={
+            "folded_control_id": folded_control.folded_control_id,
+            "controller_component_id": folded_control.controller_component_id,
+            "control_signal_port_id": folded_control.controller_output_port_id,
+            "target_component_id": folded_control.target_component_id,
+            "target_parameter_port_id": folded_control.target_parameter_port_id,
+            "effective_parameter_id": folded_control.effective_parameter_id,
+            "mode": "OVERRIDE",
+            "update_event": folded_control.update_event,
+        },
+    )
+    return (
+        (body,),
+        (
+            KernelPublication(
+                candidate,
+                "output",
+                controller.component_id,
+                folded_control.controller_output_port_id,
+            ),
+        ),
+        (effect,),
+    )
+
+
 def _dynamic_ordinary_member(
     kernel,
     node,
@@ -4800,6 +4971,7 @@ def _dynamic_ordinary_member(
     trial_state_carries,
     finished_value,
     rng_streams,
+    sampled_effective_parameters,
 ):
     graph = kernel.graph
     canonical_body = _component_trial_body_ops(graph, node.name)
@@ -4839,6 +5011,11 @@ def _dynamic_ordinary_member(
             continue
         inputs = tuple(local_input(value) for value in op.inputs)
         outputs = tuple(candidate(value) for value in op.outputs)
+        attrs = {
+            key: value
+            for key, value in op.attrs.items()
+            if key != "onset_step"
+        }
         if op.kind != "CallMechanism":
             body.append(
                 KernelOp(
@@ -4846,7 +5023,7 @@ def _dynamic_ordinary_member(
                     op.target,
                     inputs=inputs,
                     outputs=outputs,
-                    attrs=dict(op.attrs),
+                    attrs=attrs,
                 )
             )
             continue
@@ -4856,12 +5033,7 @@ def _dynamic_ordinary_member(
             raise ValueError(
                 "KernelIR generic scheduled mechanism has no frozen step spec."
             ) from error
-        if (
-            not isinstance(implementation, MechanismOpSpec)
-            or not implementation.can_step
-            or modulation is not None
-            and node.component_id != modulation.target_component_id
-        ):
+        if not isinstance(implementation, MechanismOpSpec):
             raise ValueError(
                 "KernelIR generic schedule has an unrepresented mechanism member."
             )
@@ -4893,6 +5065,40 @@ def _dynamic_ordinary_member(
             )
             for index, carry in enumerate(owned_trial_states)
         )
+        if not implementation.can_step:
+            if (
+                owned_states
+                or owned_trial_states
+                or finished_value is not None
+                or rng_streams
+                or sampled_effective_parameters
+                or implementation.states
+                or implementation.trial_states
+                or implementation.rng
+                or implementation.finished_output
+                or op.attrs.get("diagnostic_values")
+            ):
+                raise ValueError(
+                    "KernelIR non-step scheduled mechanism must be stateless, "
+                    "non-terminating, deterministic, and unmodulated."
+                )
+            body.append(
+                KernelOp(
+                    op.kind,
+                    op.target,
+                    inputs=inputs,
+                    outputs=outputs,
+                    attrs=attrs,
+                )
+            )
+            continue
+        if (
+            modulation is not None
+            and node.component_id != modulation.target_component_id
+        ):
+            raise ValueError(
+                "KernelIR generic schedule has an unrepresented mechanism member."
+            )
         dynamic_finished = bool(
             finished_value is not None
             and finished_value.predicate_kind == "dynamic"
@@ -4927,6 +5133,7 @@ def _dynamic_ordinary_member(
                 op.target,
                 inputs=(
                     *inputs,
+                    *(carry.value for carry in sampled_effective_parameters),
                     *(carry.value for carry in owned_states),
                     *(carry.value for carry in owned_trial_states),
                 ),
@@ -4937,12 +5144,15 @@ def _dynamic_ordinary_member(
                     *trial_state_candidates,
                 ),
                 attrs={
-                    **op.attrs,
+                    **attrs,
                     "state_ids": state_ids,
                     "trial_state_ids": trial_state_ids,
                     "finished_trial_state_id": finished_trial_state_id,
                     "rng_stream_ids": tuple(
                         stream.stream_id for stream in rng_streams
+                    ),
+                    "sampled_effective_parameter_ids": tuple(
+                        carry.value_id for carry in sampled_effective_parameters
                     ),
                     "active_lanes": "parent_member_predicate",
                     "loop_counter": "component_execution_count",
@@ -5323,6 +5533,7 @@ def lower_to_kernel_ir(
         finished_values=graph.finished_values,
         effective_parameters=graph.effective_parameters,
         modulations=graph.modulations,
+        folded_affine_controls=graph.folded_affine_controls,
         resets=graph.resets,
         termination=graph.termination,
         schedule_trace=schedule_trace,
@@ -5333,538 +5544,7 @@ def lower_to_kernel_ir(
             ops=_canonical_dynamic_schedule_kernel_ops(kernel),
             executable=graph.executable,
         )
-    if _dynamic_coevolving_lowering_eligible(kernel):
-        return replace(
-            kernel,
-            ops=_canonical_dynamic_coevolving_kernel_ops(kernel),
-            executable=graph.executable,
-        )
     return kernel
-
-
-def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
-    """Whether the first exact controlled LCA/DDM region can materialize."""
-
-    graph = kernel.graph
-    dynamic_finished = tuple(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
-    )
-    terminator_finished = tuple(
-        value
-        for value in kernel.finished_values
-        if value.predicate_kind == "dynamic"
-    )
-    node_component_ids = tuple(node.component_id for node in graph.nodes)
-    if not (
-        _dynamic_controlled_coevolving_graph_eligible(
-            graph,
-            kernel.params,
-            op_specs=kernel.op_specs,
-        )
-        and graph.metadata.get("schedule_kind") == "dynamic_lane_local"
-        and graph.fusion_kind == COEVOLVING_GRAPH_FUSION
-        and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
-        and kernel.schedule_trace is None
-        and len(kernel.modulations) == 1
-        and len(kernel.effective_parameters) == 1
-        and len(dynamic_finished) == 1
-        and len(terminator_finished) == 1
-        and len(graph.nodes) == 11
-        and len(kernel.consideration_sets) == 6
-        and len(kernel.schedule_regions) == 2
-        and len(kernel.termination) == 2
-        and len(kernel.states) == 3
-        and len(kernel.resets) == 1
-        and len(kernel.inputs) == 4
-        and len(kernel.outputs) == 2
-        and all(type(component_id) is int for component_id in node_component_ids)
-        and node_component_ids == tuple(range(len(graph.nodes)))
-    ):
-        return False
-
-    modulation = kernel.modulations[0]
-    parameter = kernel.effective_parameters[0]
-    stepper_finished = dynamic_finished[0]
-    ddm_finished = terminator_finished[0]
-    try:
-        source = graph.node(modulation.source)
-        controller = graph.node(modulation.controller)
-        stepper = graph.node(modulation.target)
-        terminator = graph.node(ddm_finished.node)
-        stepper_spec = kernel.op_specs.lookup_spec(stepper.attrs["spec_key"])
-        terminator_spec = kernel.op_specs.lookup_spec(
-            terminator.attrs["spec_key"]
-        )
-    except (BatchedOpSpecError, KeyError):
-        return False
-    if not (
-        modulation.effective_parameter_id == parameter.effective_parameter_id
-        and stepper_finished.component_id == modulation.target_component_id
-        and stepper_finished.producer_consideration_set_id == 2
-        and ddm_finished.producer_consideration_set_id == 4
-        and _kernel_attribute_matches_exactly(ddm_finished.attrs, {})
-        and isinstance(stepper_spec, MechanismOpSpec)
-        and stepper_spec.can_step
-        and stepper_spec.persistent_state
-        and not stepper_spec.is_terminator
-        and isinstance(terminator_spec, MechanismOpSpec)
-        and terminator_spec.can_step
-        and terminator_spec.is_terminator
-        and terminator_spec.readout_emit is not None
-        and terminator_spec.finished_output == "finished"
-        and tuple(
-            (
-                declaration.name,
-                declaration.width,
-                declaration.initial,
-            )
-            for declaration in terminator_spec.trial_states
-        )
-        == (
-            ("value", 1, 0.0),
-            ("steps", 1, 0.0),
-            ("finished", 1, 0.0),
-        )
-        and _dynamic_count_controller_eligible(kernel, controller)
-        and _dynamic_controller_shape_eligible(
-            kernel,
-            controller,
-            modulation,
-        )
-        and stepper.attrs.get("termination_input_node") == source.name
-        and source in graph.nodes
-        and controller in graph.nodes
-        and stepper in graph.nodes
-        and terminator in graph.nodes
-    ):
-        return False
-
-    consideration_sets = tuple(
-        sorted(
-            kernel.consideration_sets,
-            key=lambda item: item.consideration_set_id,
-        )
-    )
-    if (
-        tuple(item.consideration_set_id for item in consideration_sets)
-        != tuple(range(6))
-        or tuple(len(item.nodes) for item in consideration_sets)
-        != (4, 2, 1, 1, 1, 2)
-        or any(
-            item.region != "pass"
-            or item.inputs_frozen is not True
-            or item.component_ids
-            != tuple(graph.node(name).component_id for name in item.nodes)
-            or len(set(item.nodes)) != len(item.nodes)
-            or len(set(item.component_ids)) != len(item.component_ids)
-            for item in consideration_sets
-        )
-        or source.name not in consideration_sets[0].nodes
-        or controller.name not in consideration_sets[1].nodes
-        or consideration_sets[2].nodes != (stepper.name,)
-        or consideration_sets[2].component_ids
-        != (modulation.target_component_id,)
-        or consideration_sets[4].nodes != (terminator.name,)
-        or consideration_sets[4].component_ids != (ddm_finished.component_id,)
-    ):
-        return False
-
-    extra_controller_name = next(
-        (
-            name
-            for name in consideration_sets[1].nodes
-            if name != controller.name
-        ),
-        None,
-    )
-    if extra_controller_name is None:
-        return False
-    extra_controller = graph.node(extra_controller_name)
-    middle = graph.node(consideration_sets[3].nodes[0])
-    followers = tuple(graph.node(name) for name in consideration_sets[5].nodes)
-    try:
-        middle_spec = kernel.op_specs.lookup_spec(middle.attrs["spec_key"])
-    except (BatchedOpSpecError, KeyError):
-        return False
-    parameters_by_name = {parameter.name: parameter for parameter in kernel.params}
-    runtime_ddm_arguments = (
-        "threshold",
-        "threshold_collapse",
-    )
-    frozen_ddm_arguments = (
-        "noise",
-        "starting_value",
-        "offset",
-    )
-    runtime_ddm_parameters = tuple(
-        parameters_by_name.get(terminator.params.get(argument))
-        for argument in runtime_ddm_arguments
-    )
-    frozen_ddm_parameters = tuple(
-        parameters_by_name.get(terminator.params.get(argument))
-        for argument in frozen_ddm_arguments
-    )
-    ports_by_id = {port.port_id: port for port in kernel.ports}
-    extra_input = (
-        ports_by_id.get(extra_controller.input_port_ids[0])
-        if len(extra_controller.input_port_ids) == 1
-        else None
-    )
-    extra_output = (
-        ports_by_id.get(extra_controller.output_port_ids[0])
-        if len(extra_controller.output_port_ids) == 1
-        else None
-    )
-    absorbed_control = extra_controller.attrs.get("absorbed_control")
-    if not (
-        extra_controller.component_type == "ControlMechanism"
-        and extra_controller.function_type == "Identity"
-        and type(extra_controller.input_width) is int
-        and extra_controller.input_width == 1
-        and type(extra_controller.output_width) is int
-        and extra_controller.output_width == 1
-        and extra_controller.combine == "sum"
-        and not extra_controller.params
-        and not extra_controller.parameter_port_ids
-        and set(extra_controller.attrs)
-        == {
-            "input_ports",
-            "output_ports",
-            "absorbed_control",
-            "absorbed_control_initial_value",
-        }
-        and type(
-            extra_controller.attrs["absorbed_control_initial_value"]
-        ) is float
-        and extra_controller.attrs["absorbed_control_initial_value"] == 1.0
-        and extra_input is not None
-        and extra_input.kind == "InputPort"
-        and extra_input.width == 1
-        and extra_output is not None
-        and extra_output.kind == "ControlSignal"
-        and extra_output.width == 1
-        and _kernel_attribute_matches_exactly(
-            extra_controller.attrs["input_ports"],
-            ((extra_input.name, 1, "sum", extra_input.port_id, 0, 1),),
-        )
-        and _kernel_attribute_matches_exactly(
-            extra_controller.attrs["output_ports"],
-            (extra_output.name,),
-        )
-        and isinstance(absorbed_control, Mapping)
-        and set(absorbed_control)
-        == {"source", "target", "parameter", "modulation"}
-        and type(absorbed_control["source"]) is str
-        and absorbed_control["source"]
-        and absorbed_control["source"] not in {node.name for node in graph.nodes}
-        and absorbed_control["target"] == terminator.name
-        and absorbed_control["parameter"] == "threshold"
-        and absorbed_control["modulation"] == "OVERRIDE"
-        and isinstance(middle_spec, MechanismOpSpec)
-        and middle_spec.has_triton
-        and not middle_spec.can_step
-        and not middle_spec.states
-        and not middle_spec.trial_states
-        and not middle_spec.rng
-        and middle.input_width == 7
-        and middle.output_width == 1
-        and all(parameter is not None for parameter in runtime_ddm_parameters)
-        and runtime_ddm_parameters[0].name
-        == f"{terminator.name}.threshold"
-        and runtime_ddm_parameters[0].aliases
-        == (
-            "ddm.threshold",
-            "DDM.threshold",
-            *_node_param_aliases(terminator.name, "threshold"),
-            *_node_param_aliases(absorbed_control["source"], "intercept"),
-        )
-        and type(runtime_ddm_parameters[0].default) is float
-        and np.isfinite(runtime_ddm_parameters[0].default)
-        and runtime_ddm_parameters[0].default >= 0.0
-        and runtime_ddm_parameters[0].minimum == 0.0
-        and runtime_ddm_parameters[0].minimum_inclusive is True
-        and runtime_ddm_parameters[0].maximum is None
-        and runtime_ddm_parameters[0].maximum_inclusive is True
-        and runtime_ddm_parameters[1].name
-        == f"{terminator.name}.threshold_collapse"
-        and runtime_ddm_parameters[1].aliases
-        == (
-            "ddm.threshold_collapse",
-            "DDM.threshold_collapse",
-            *_node_param_aliases(
-                terminator.name,
-                "threshold_collapse",
-            ),
-            *_node_param_aliases(
-                absorbed_control["source"],
-                "offset-integrator_function",
-            ),
-        )
-        and type(runtime_ddm_parameters[1].default) is float
-        and np.isfinite(runtime_ddm_parameters[1].default)
-        and runtime_ddm_parameters[1].default <= 0.0
-        and runtime_ddm_parameters[1].minimum is None
-        and runtime_ddm_parameters[1].minimum_inclusive is True
-        and runtime_ddm_parameters[1].maximum == 0.0
-        and runtime_ddm_parameters[1].maximum_inclusive is True
-        and all(
-            parameter.owner_component_id == terminator.component_id
-            and parameter.owner_scope == "function"
-            and parameter.runtime_mutable is True
-            and parameter.runtime_constraint == ""
-            for parameter in runtime_ddm_parameters
-        )
-        and all(parameter is not None for parameter in frozen_ddm_parameters)
-        and all(
-            parameter.owner_component_id == terminator.component_id
-            and parameter.runtime_mutable is False
-            and parameter.runtime_constraint
-            == "first coevolving DDM boundary is frozen in KernelIR"
-            for parameter in frozen_ddm_parameters
-        )
-        and stepper.input_width == 2
-        and stepper.output_width == 2
-        and terminator.input_width == 1
-        and len(terminator.output_port_ids) == 2
-        and all(
-            follower.input_width == 1 and follower.output_width == 1
-            for follower in followers
-        )
-        and sorted(graph.node(name).input_width for name in consideration_sets[0].nodes)
-        == [1, 1, 2, 4]
-    ):
-        return False
-
-    scheduler_by_id = {
-        condition.component_id: condition for condition in kernel.scheduler
-    }
-
-    def simple_condition_matches(condition, kind, attrs) -> bool:
-        return bool(
-            condition is not None
-            and condition.condition_type == kind
-            and condition.region == "pass"
-            and _kernel_attribute_matches_exactly(condition.dependencies, ())
-            and _kernel_attribute_matches_exactly(
-                condition.dependency_component_ids,
-                (),
-            )
-            and _kernel_attribute_matches_exactly(
-                condition.finished_value_ids,
-                (),
-            )
-            and _kernel_attribute_matches_exactly(condition.attrs, attrs)
-        )
-
-    def when_finished_matches(condition, dependency, finished) -> bool:
-        return bool(
-            condition is not None
-            and condition.condition_type == "WhenFinished"
-            and condition.region == "pass"
-            and _kernel_attribute_matches_exactly(
-                condition.dependencies,
-                (dependency.name,),
-            )
-            and _kernel_attribute_matches_exactly(
-                condition.dependency_component_ids,
-                (dependency.component_id,),
-            )
-            and _kernel_attribute_matches_exactly(
-                condition.finished_value_ids,
-                (finished.value_id,),
-            )
-            and _kernel_attribute_matches_exactly(
-                condition.attrs,
-                {"predicate": "is_finished"},
-            )
-        )
-
-    at_pass_zero = {
-        "pass_index": 0,
-        "time_scale": "ENVIRONMENT_STATE_UPDATE",
-    }
-    stepper_senders = tuple(
-        projection.sender_component_id
-        for projection in graph.projections
-        if projection.receiver_component_id == stepper.component_id
-    )
-    if len(stepper_senders) != 1:
-        return False
-    task_origin_id = stepper_senders[0]
-    warmup = kernel.metadata.get("coevolve_warmup")
-    if type(warmup) is not int or warmup < 0:
-        return False
-
-    def origin_condition_matches(component_id: int) -> bool:
-        pass_index = warmup if component_id == task_origin_id else 0
-        return simple_condition_matches(
-            scheduler_by_id.get(component_id),
-            "AtPass",
-            {
-                "pass_index": pass_index,
-                "time_scale": "ENVIRONMENT_STATE_UPDATE",
-            },
-        )
-
-    if not (
-        all(
-            origin_condition_matches(component_id)
-            for component_id in consideration_sets[0].component_ids
-        )
-        and simple_condition_matches(
-            scheduler_by_id.get(modulation.controller_component_id),
-            "AtPass",
-            at_pass_zero,
-        )
-        and simple_condition_matches(
-            scheduler_by_id.get(modulation.target_component_id),
-            "Always",
-            {},
-        )
-        and when_finished_matches(
-            scheduler_by_id.get(extra_controller.component_id),
-            stepper,
-            stepper_finished,
-        )
-        and when_finished_matches(
-            scheduler_by_id.get(middle.component_id),
-            stepper,
-            stepper_finished,
-        )
-        and when_finished_matches(
-            scheduler_by_id.get(terminator.component_id),
-            stepper,
-            stepper_finished,
-        )
-        and all(
-            when_finished_matches(
-                scheduler_by_id.get(follower.component_id),
-                terminator,
-                ddm_finished,
-            )
-            for follower in followers
-        )
-        and graph.execution_order
-        == (
-            *consideration_sets[0].nodes,
-            stepper.name,
-            middle.name,
-            terminator.name,
-            *consideration_sets[5].nodes,
-        )
-    ):
-        return False
-
-    if tuple(
-        (region.name, region.kind, region.time_scale, region.parent)
-        for region in kernel.schedule_regions
-    ) != (
-        ("trial", "trial", "ENVIRONMENT_STATE_UPDATE", ""),
-        ("pass", "pass", "PASS", "trial"),
-    ):
-        return False
-    termination_by_scale = {
-        item.time_scale: item for item in kernel.termination
-    }
-    trial_termination = termination_by_scale.get("ENVIRONMENT_STATE_UPDATE")
-    run_termination = termination_by_scale.get("ENVIRONMENT_SEQUENCE")
-    if not (
-        len(termination_by_scale) == 2
-        and trial_termination is not None
-        and trial_termination.condition_type == "AllHaveRun"
-        and _kernel_attribute_matches_exactly(
-            trial_termination.dependency_component_ids,
-            node_component_ids,
-        )
-        and _kernel_attribute_matches_exactly(trial_termination.attrs, {})
-        and run_termination is not None
-        and run_termination.condition_type == "Never"
-        and _kernel_attribute_matches_exactly(
-            run_termination.dependency_component_ids,
-            (),
-        )
-        and _kernel_attribute_matches_exactly(run_termination.attrs, {})
-    ):
-        return False
-
-    state_component_ids = tuple(state.component_id for state in kernel.states)
-    reset = kernel.resets[0]
-    stream = kernel.rng_streams[0] if len(kernel.rng_streams) == 1 else None
-    if not (
-        state_component_ids
-        == (
-            modulation.target_component_id,
-            modulation.target_component_id,
-            modulation.target_component_id,
-        )
-        and reset.component_id == modulation.target_component_id
-        and reset.state_ids == tuple(state.state_id for state in kernel.states)
-        and reset.condition_type == "Never"
-        and reset.region == "trial"
-        and _kernel_attribute_matches_exactly(reset.attrs, {})
-        and stream is not None
-        and stream.name == f"{terminator.name}.rng"
-        and stream.node == terminator.name
-        and type(stream.width) is int
-        and stream.width == 1
-        and stream.step_extent == "MAX_STEPS"
-        and type(stream.component_id) is int
-        and stream.component_id == terminator.component_id
-        and type(stream.stream_id) is int
-        and stream.stream_id == 0
-        and tuple(item.component_id for item in kernel.inputs)
-        == consideration_sets[0].component_ids
-        and tuple(item.component_id for item in kernel.outputs)
-        == consideration_sets[5].component_ids
-    ):
-        return False
-
-    edges = tuple(
-        (projection.sender_component_id, projection.receiver_component_id)
-        for projection in graph.projections
-    )
-    target_senders = tuple(
-        sender for sender, receiver in edges if receiver == stepper.component_id
-    )
-    if len(target_senders) != 1:
-        return False
-    origin_ids = set(consideration_sets[0].component_ids)
-    target_origin_id = target_senders[0]
-    middle_senders = tuple(
-        sender for sender, receiver in edges if receiver == middle.component_id
-    )
-    follower_sender_sets = sorted(
-        (
-            tuple(sorted(sender for sender, receiver in edges if receiver == follower.component_id))
-            for follower in followers
-        ),
-        key=lambda item: (len(item), item),
-    )
-    return bool(
-        len(edges) == 8
-        and target_origin_id in origin_ids
-        and target_origin_id != source.component_id
-        and set(middle_senders)
-        == {
-            stepper.component_id,
-            *(origin_ids - {source.component_id, target_origin_id}),
-        }
-        and len(middle_senders) == 3
-        and tuple(
-            sender
-            for sender, receiver in edges
-            if receiver == terminator.component_id
-        )
-        == (middle.component_id,)
-        and follower_sender_sets
-        == [
-            (terminator.component_id,),
-            tuple(sorted((source.component_id, terminator.component_id))),
-        ]
-    )
 
 
 def _dynamic_schedule_lowering_eligible(kernel: KernelIR) -> bool:
@@ -5878,10 +5558,7 @@ def _dynamic_schedule_lowering_eligible(kernel: KernelIR) -> bool:
         )
         and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
         and kernel.schedule_trace is None
-        and all(
-            {"integrator_pre", "onset_step"}.isdisjoint(node.attrs)
-            for node in kernel.graph.nodes
-        )
+        and _dynamic_scheduled_execution_attrs_eligible(kernel)
     ):
         return False
 
@@ -5906,6 +5583,42 @@ def _dynamic_schedule_lowering_eligible(kernel: KernelIR) -> bool:
             and not target.attrs.get("diagnostics")
         ):
             return False
+    return True
+
+
+def _dynamic_scheduled_execution_attrs_eligible(kernel: KernelIR) -> bool:
+    """Authenticate delayed one-shot affine nodes before stripping onset masks."""
+
+    conditions = {
+        condition.component_id: condition for condition in kernel.scheduler
+    }
+    for node in kernel.graph.nodes:
+        has_integrator = "integrator_pre" in node.attrs
+        has_onset = "onset_step" in node.attrs
+        if not has_integrator and not has_onset:
+            continue
+        affine = node.attrs.get("integrator_pre")
+        condition = conditions.get(node.component_id)
+        if (
+            not has_integrator
+            or type(affine) is not tuple
+            or len(affine) != 2
+            or any(type(value) is not float or not np.isfinite(value) for value in affine)
+            or node.component_type != "TransferMechanism"
+            or node.attrs.get("spec_kind") != "elementwise"
+            or condition is None
+            or condition.condition_type not in {"AtPass", "AtTrialStart"}
+        ):
+            return False
+        if has_onset:
+            onset = node.attrs["onset_step"]
+            if (
+                type(onset) is not int
+                or onset <= 0
+                or condition.condition_type != "AtPass"
+                or condition.attrs.get("pass_index") != onset
+            ):
+                return False
     return True
 
 

@@ -27,7 +27,10 @@ from psyneulink.core.batched.backend.triton.emit._helpers import (
 
 class OpEmitMixin:
     def _emit_top_level_ops(self) -> None:
-        if self.kernel.fusion_kind == STATEFUL_GRAPH_FUSION:
+        if self.kernel.fusion_kind in {
+            STATEFUL_GRAPH_FUSION,
+            COEVOLVING_GRAPH_FUSION,
+        }:
             for op in self.kernel.ops:
                 if op.kind == "InitializeState":
                     self._emit_initialize_state()
@@ -36,239 +39,12 @@ class OpEmitMixin:
                 elif op.kind == "ForTrials":
                     self._emit_trial_loop(tuple(op.attrs["body"]))
                 else:
-                    raise ValueError(f"Unsupported stateful top-level op '{op.kind}'.")
-            return
-
-        if self.kernel.fusion_kind == COEVOLVING_GRAPH_FUSION:
-            for op in self.kernel.ops:
-                if op.kind == "InitializeState":
-                    self._emit_initialize_state()
-                elif op.kind == "InitializeEffectiveParameter":
-                    self._emit_initialize_effective_parameter(op)
-                elif op.kind == "ForTrials":
-                    body = tuple(op.attrs["body"])
-                    dynamic_regions = tuple(
-                        child
-                        for child in body
-                        if child.kind == "ForPasses"
-                        and child.attrs.get("trace_kind") == "lane_local_dynamic"
+                    raise ValueError(
+                        f"Unsupported stateful top-level op '{op.kind}'."
                     )
-                    if len(dynamic_regions) == 1:
-                        self._emit_trial_loop(body)
-                    else:
-                        self._emit_coevolving_trials(body)
-                else:
-                    raise ValueError(f"Unsupported co-evolving top-level op '{op.kind}'.")
             return
 
         self._emit_ops(self.kernel.ops)
-
-    # ---- co-evolution (fused per-step loop over coupled stateful ops) ----
-
-    def _emit_coevolving_trials(self, body: tuple[KernelOp, ...]) -> None:
-        reset_ops = tuple(op for op in body if op.kind == "ResetState")
-        regions = tuple(
-            op
-            for op in body
-            if op.kind == "ForPasses"
-            and op.attrs.get("trace_kind") == "lane_local_coevolving"
-        )
-        if (
-            body != (*reset_ops, *regions)
-            or len(regions) != 1
-        ):
-            raise ValueError(
-                "Triton co-evolving ForTrials requires an optional ResetState "
-                "prefix and exactly one lane-local coevolving ForPasses region."
-            )
-        self._emit_coevolving_trial_loop(regions[0], reset_ops)
-
-    def _emit_coevolving_trial_loop(
-        self,
-        region: KernelOp,
-        reset_ops: tuple[KernelOp, ...],
-    ) -> None:
-        body = tuple(region.attrs["body"])
-        terminator_index = self._coevolving_terminator_index(body)
-        terminator_op = body[terminator_index]
-        # In-loop ops co-evolve each step (up to and including the terminator's
-        # step); ops after the terminator depend on its final readout (gates,
-        # store-output, truncation StoreFlag) and run once after the loop.
-        in_loop_ops = body[: terminator_index + 1]
-        post_loop_ops = body[terminator_index + 1 :]
-        terminator_spec = self._spec_for_op(terminator_op)
-        terminator_node = self.graph.node(terminator_op.target)
-        terminator_symbol = f"n{region.attrs['terminator_component_id']}"
-        control_value_var = f"{terminator_symbol}_coevolving_held_control"
-        self.builder.line(
-            f"{control_value_var} = tl.full((BLOCK,), "
-            f"{float_literal(region.attrs['terminator_initial_control_value'])}, "
-            "tl.float32)"
-        )
-        self.coevolve_terminator_control_value = control_value_var
-        self.builder.line()
-
-        self.builder.line("trial_idx = 0")
-        with self.builder.block("while trial_idx < num_trials"):
-            self._emit_stateful_random_base()
-            self.output_cursor = 0
-            self.lane_out_emitted = False
-            self.diag_lane_emitted = False
-            for reset_op in reset_ops:
-                self._emit_op(reset_op)
-            self._emit_init_trial_states(terminator_op)
-            finished_var = self.state_vars[
-                (f"{terminator_node.name}.{terminator_spec.finished_output}", 0)
-            ]
-            terminator_steps_var = self.state_vars[
-                (f"{terminator_node.name}.steps", 0)
-            ]
-            # Hoist loop-invariant ops (constant inputs and projections that do
-            # not depend on a stepper's evolving state) out of the step loop:
-            # they are computed once, and Triton loop-body variables do not
-            # escape the loop, so post-loop ops must read them from outer scope.
-            hoisted_ops, stepping_ops = self._partition_coevolving_ops(in_loop_ops)
-            for op in hoisted_ops:
-                self._emit_op(op)
-            held_var = self._get_value(region.inputs[0].name)[0]
-            target_symbol = f"n{region.attrs['stepper_component_id']}"
-            required_var = f"{target_symbol}_coevolving_required_passes"
-            start_var = f"{target_symbol}_coevolving_start_pass"
-            minimum = float_literal(region.attrs["minimum"])
-            maximum = float_literal(region.attrs["maximum"])
-            self.builder.line(
-                f"{required_var} = tl.minimum(tl.maximum(tl.ceil({held_var}), "
-                f"{minimum}), {maximum}).to(tl.int64)"
-            )
-            self.builder.line(f"{start_var} = {required_var} - 1")
-            lane_end_var = f"{target_symbol}_coevolving_lane_end"
-            block_end_var = f"{target_symbol}_coevolving_block_end"
-            scheduler_finished_var = (
-                f"{target_symbol}_coevolving_scheduler_finished"
-            )
-            self.builder.line(f"{lane_end_var} = {start_var} + MAX_STEPS")
-            self.builder.line(
-                f"{block_end_var} = tl.max(tl.where(mask, {lane_end_var}, 0))"
-            )
-            self.coevolve_warmup = start_var
-            # Early exit: every stepper freezes once the terminator reports
-            # `finished` (that is the `step_emit` contract), so iterations after
-            # the last active lane finishes are no-ops.  Stop the block as soon
-            # as none are left rather than always running MAX_STEPS, which
-            # otherwise makes runtime scale with the cap instead of with the
-            # decision times.  Lanes past `total_lanes` are excluded: they carry
-            # default parameters, never finish, and would pin the loop open.
-            self.builder.line("step = 0")
-            with self.builder.block(
-                f"while (step < {block_end_var}) & "
-                f"({self._any_running_expr(finished_var, lane_end_var)})"
-            ):
-                self.builder.line(
-                    f"{scheduler_finished_var} = tl.where("
-                    f"mask & (step < {lane_end_var}), {finished_var}, 1.0)"
-                )
-                for op in stepping_ops:
-                    self._emit_coevolving_op(
-                        op,
-                        "step",
-                        scheduler_finished_var,
-                    )
-                self.builder.line("step += 1")
-            control_updates_var = (
-                f"{terminator_symbol}_coevolving_control_updates"
-            )
-            has_control_update_var = (
-                f"{terminator_symbol}_coevolving_has_control_update"
-            )
-            self.builder.line(
-                f"{control_updates_var} = tl.where("
-                f"{terminator_steps_var} > 1.0, "
-                f"{terminator_steps_var} - 1.0, 1.0)"
-            )
-            self.builder.line(
-                f"{has_control_update_var} = "
-                f"({terminator_steps_var} > 1.0) | "
-                f"(({finished_var} != 0.0) & "
-                f"({terminator_steps_var} == 1.0))"
-            )
-            emit_context = TritonEmitContext(self)
-            threshold_var = emit_context.param(terminator_node, "threshold")
-            collapse_var = emit_context.param(
-                terminator_node,
-                "threshold_collapse",
-            )
-            self.builder.line(
-                f"{control_value_var} = tl.where("
-                f"mask & {has_control_update_var}, "
-                f"{threshold_var} + {collapse_var} * {control_updates_var}, "
-                f"{control_value_var})"
-            )
-            self.builder.line()
-            self._emit_terminator_readout(terminator_op)
-            for op in post_loop_ops:
-                self._emit_op(op)
-            self.builder.line("trial_idx += 1")
-        self.builder.line()
-
-    @staticmethod
-    def _any_running_expr(
-        finished_var: str,
-        lane_end_var: str | None = None,
-    ) -> str:
-        """Block-wide scalar test: does any in-range lane still have work to do?
-
-        Reduces to a scalar so it can drive a Triton `while` condition; the
-        exit is per lane *block*, so a block runs until its slowest lane
-        finishes (not until its own lane does).
-        """
-
-        active = f"mask & ({finished_var} == 0.0)"
-        if lane_end_var is not None:
-            active += f" & (step < {lane_end_var})"
-        return f"tl.max(tl.where({active}, 1, 0)) > 0"
-
-    def _partition_coevolving_ops(self, in_loop_ops):
-        """Split into (hoisted, stepping): an op steps each iteration if it is a
-        stepper or transitively consumes a stepper's evolving output; everything
-        else is loop-invariant and is emitted once before the loop.
-        """
-
-        variant: set[str] = set()
-        hoisted = []
-        stepping = []
-        for op in in_loop_ops:
-            is_stepper = (
-                op.kind == "CallMechanism"
-                and self._spec_for_op(op).can_step
-            )
-            # A delayed-onset node's output depends on `step` (withheld until its
-            # onset), so it and everything downstream must run inside the loop.
-            onset_step = op.attrs.get("onset_step")
-            has_onset = type(onset_step) is int and onset_step > 0
-            depends_on_variant = any(inp.name in variant for inp in op.inputs)
-            if is_stepper or has_onset or depends_on_variant:
-                stepping.append(op)
-                for output in op.outputs:
-                    variant.add(output.name)
-            else:
-                hoisted.append(op)
-        return hoisted, stepping
-
-    def _coevolving_terminator_index(self, body: tuple[KernelOp, ...]) -> int:
-        for index, op in enumerate(body):
-            if op.kind == "CallMechanism":
-                spec = self._spec_for_op(op)
-                if spec.is_terminator:
-                    return index
-        raise ValueError("co-evolving graph has no terminator op")
-
-    def _emit_coevolving_op(self, op: KernelOp, step_var: str, finished_var: str) -> None:
-        if op.kind == "CallMechanism":
-            spec = self._spec_for_op(op)
-            if spec.can_step:
-                self._emit_step_mechanism(op, spec, step_var, finished_var)
-                return
-        self._emit_op(op)
 
     def _emit_step_mechanism(
         self,
@@ -328,42 +104,6 @@ class OpEmitMixin:
             self._set_value(output.name, values[cursor : cursor + output.width])
             cursor += output.width
 
-    def _emit_init_trial_states(self, terminator_op: KernelOp) -> None:
-        spec = self._spec_for_op(terminator_op)
-        node = self.graph.node(terminator_op.target)
-        node_symbol = component_symbol(self.graph, node)
-        for state_slot, decl in enumerate(spec.trial_states):
-            state_name = f"{node.name}.{decl.name}"
-            for idx in range(decl.width or 1):
-                var = f"{node_symbol}_trial_state_{state_slot}_{idx}"
-                self.state_vars[(state_name, idx)] = var
-                self.builder.line(
-                    f"{var} = tl.full((BLOCK,), {float_literal(decl.initial)}, tl.float32)"
-                )
-        self.builder.line()
-
-    def _emit_terminator_readout(self, terminator_op: KernelOp) -> None:
-        spec = self._spec_for_op(terminator_op)
-        node = self.graph.node(terminator_op.target)
-        output_vars = []
-        for output in terminator_op.outputs:
-            output_vars.extend(self._component_vars(output.name, output.width))
-        spec.readout_emit(TritonEmitContext(self), node, output_vars)
-        cursor = 0
-        for output in terminator_op.outputs:
-            self._set_value(output.name, output_vars[cursor : cursor + output.width])
-            cursor += output.width
-        # A terminator's diagnostic (e.g. DDM "truncated") is exactly "never
-        # finished within MAX_STEPS"; route it through the existing diag channel.
-        finished_var = self.state_vars[(f"{node.name}.{spec.finished_output}", 0)]
-        diagnostic_names = tuple(terminator_op.attrs.get("diagnostics", ()))
-        diagnostic_values = tuple(terminator_op.attrs.get("diagnostic_values", ()))
-        for name, value_name in zip(diagnostic_names, diagnostic_values):
-            diag_var = self._component_vars(value_name, 1)[0]
-            self.builder.line(f"{diag_var} = tl.where({finished_var} == 0.0, 1.0, 0.0)")
-            self._set_value(value_name, [diag_var])
-        self.builder.line()
-
     def _emit_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
         self.builder.line("trial_idx = 0")
         with self.builder.block("while trial_idx < num_trials"):
@@ -398,6 +138,8 @@ class OpEmitMixin:
             self._emit_clamp(op)
         elif op.kind == "CallFunction":
             self._emit_function_call(op)
+        elif op.kind == "AffineSchedulerValue":
+            self._emit_affine_scheduler_value(op)
         elif op.kind == "CallMechanism":
             self._emit_mechanism_call(op)
         elif op.kind == "ApplyModulation":
@@ -454,12 +196,21 @@ class OpEmitMixin:
         trial_state_ids = tuple(op.attrs["trial_state_ids"])
         finished_trial_state_id = op.attrs["finished_trial_state_id"]
         rng_stream_ids = tuple(op.attrs["rng_stream_ids"])
+        sampled_effective_parameter_ids = tuple(
+            op.attrs.get("sampled_effective_parameter_ids", ())
+        )
         state_count = len(state_ids) + len(trial_state_ids)
-        state_inputs = tuple(op.inputs[1:])
-        if len(state_inputs) != state_count or len(op.outputs) <= state_count:
+        effective_count = len(sampled_effective_parameter_ids)
+        sampled_effective_inputs = tuple(op.inputs[1 : 1 + effective_count])
+        state_inputs = tuple(op.inputs[1 + effective_count :])
+        if (
+            len(sampled_effective_inputs) != effective_count
+            or len(state_inputs) != state_count
+            or len(op.outputs) <= state_count
+        ):
             raise ValueError(
-                "Triton dynamic StepMechanism requires exact persistent and "
-                "per-trial state current/candidate suffixes."
+                "Triton dynamic StepMechanism requires exact sampled-effective, "
+                "persistent-state, and per-trial-state input suffixes."
             )
 
         state_output_start = len(op.outputs) - state_count
@@ -491,6 +242,44 @@ class OpEmitMixin:
             for carry in self.dynamic_program.loop_carries
             if carry.kind == "trial_state"
         }
+        effective_carries = {
+            carry.value_id: carry
+            for carry in self.dynamic_program.loop_carries
+            if carry.kind == "effective_parameter"
+        }
+
+        sampled_effective_values = {}
+        effective_parameters = {
+            parameter.effective_parameter_id: parameter
+            for parameter in self.kernel.effective_parameters
+        }
+        for effective_id, effective_input in zip(
+            sampled_effective_parameter_ids,
+            sampled_effective_inputs,
+        ):
+            try:
+                parameter = effective_parameters[effective_id]
+                carry = effective_carries[effective_id]
+                storage_var = self.effective_parameter_vars[effective_id]
+            except KeyError as error:
+                raise ValueError(
+                    "Triton dynamic StepMechanism samples an undeclared "
+                    f"effective parameter ID {effective_id}."
+                ) from error
+            input_values = self._get_value(effective_input.name)
+            if (
+                parameter.target_component_id != op.attrs["component_id"]
+                or carry.owner_component_id != op.attrs["component_id"]
+                or carry.value.name != effective_input.name
+                or carry.value.width != 1
+                or effective_input.width != 1
+                or input_values != [storage_var]
+            ):
+                raise ValueError(
+                    "Triton dynamic StepMechanism sampled effective parameter "
+                    "does not match its typed target carry."
+                )
+            sampled_effective_values[effective_id] = storage_var
 
         saved_state_vars = {}
         new_state_keys = set()
@@ -520,8 +309,11 @@ class OpEmitMixin:
             self._set_value(state_output.name, candidate_values)
             return candidate_values
 
-        saved_warmup = self.coevolve_warmup
+        saved_sampled_effective = self.dynamic_sampled_effective_parameters
+        saved_consumed_effective = self.dynamic_consumed_effective_parameter_ids
         try:
+            self.dynamic_sampled_effective_parameters = sampled_effective_values
+            self.dynamic_consumed_effective_parameter_ids = set()
             for state_id, state_input, state_output in zip(
                 state_ids,
                 persistent_inputs,
@@ -601,9 +393,6 @@ class OpEmitMixin:
             self.builder.line(
                 f"{finished_var} = tl.where({self.dynamic_active_mask}, 0.0, 1.0)"
             )
-            # Delayed onset belongs to the scheduler in the generic executor,
-            # not to a component-owned step adapter's legacy coevolving warmup.
-            self.coevolve_warmup = 0
             self._emit_step_mechanism(
                 op,
                 spec,
@@ -634,8 +423,16 @@ class OpEmitMixin:
                     f"{finished_values[0]} = {finished_state[0]} != 0.0"
                 )
                 self._set_value(finished_output.name, finished_values)
+            if self.dynamic_consumed_effective_parameter_ids != set(
+                sampled_effective_parameter_ids
+            ):
+                raise ValueError(
+                    "Triton dynamic StepMechanism did not consume every declared "
+                    "sampled effective parameter."
+                )
         finally:
-            self.coevolve_warmup = saved_warmup
+            self.dynamic_sampled_effective_parameters = saved_sampled_effective
+            self.dynamic_consumed_effective_parameter_ids = saved_consumed_effective
             self.state_vars.update(saved_state_vars)
             for key in new_state_keys:
                 self.state_vars.pop(key, None)
@@ -815,12 +612,53 @@ class OpEmitMixin:
 
     def _emit_dynamic_scheduler_initializers(self, program):
         slot_vars = {}
+        finished_by_id = {
+            value.value_id: value for value in self.kernel.finished_values
+        }
         for slot in program.scheduler_state_slots:
             key = self._dynamic_slot_key(slot)
             value = self._component_vars(slot.value.name, 1)[0]
-            self.builder.line(
-                f"{value} = tl.zeros((BLOCK,), dtype=tl.int32)"
-            )
+            if slot.initialization == "zero":
+                self.builder.line(
+                    f"{value} = tl.zeros((BLOCK,), dtype=tl.int32)"
+                )
+            elif slot.initialization == "count_zero_vs_effective_parameter":
+                try:
+                    finished = finished_by_id[slot.finished_value_id]
+                    effective_parameter_id = (
+                        slot.initial_effective_parameter_id
+                    )
+                    effective = self.effective_parameter_vars[
+                        effective_parameter_id
+                    ]
+                except (KeyError, TypeError) as error:
+                    raise ValueError(
+                        "Triton dynamic finished initializer references an "
+                        "undeclared effective parameter."
+                    ) from error
+                if (
+                    finished.component_id != slot.owner_component_id
+                    or finished.predicate_kind
+                    != "execution_count_at_least_effective_parameter"
+                    or finished.attrs.get("effective_parameter_id")
+                    != effective_parameter_id
+                ):
+                    raise ValueError(
+                        "Triton dynamic finished initializer does not match "
+                        "its typed count-effective predicate."
+                    )
+                # PNL evaluates WhenFinished before the first owner execution
+                # against count zero and the lane-persistent effective value.
+                # Its minimum-one rule applies only after the owner executes.
+                self.builder.line(
+                    f"{value} = tl.where(mask & (0.0 >= {effective}), "
+                    "1, 0)"
+                )
+            else:
+                raise ValueError(
+                    "Triton dynamic scheduler has an unsupported slot "
+                    f"initializer '{slot.initialization}'."
+                )
             slot_vars[key] = value
             self._set_value(slot.value.name, [value])
         self.builder.line()
@@ -1126,6 +964,13 @@ class OpEmitMixin:
                 # trial state.  Re-deriving them from execution count here would
                 # overwrite the modeled termination result.
                 continue
+            owner_active = member_masks.get(slot.owner_component_id)
+            if owner_active is None:
+                # Count-derived is_finished changes only when its owner
+                # executes and samples its effective parameter.  In
+                # particular, preserve the typed count-zero value through
+                # earlier consideration sets at trial start.
+                continue
             try:
                 finished = finished_by_id[slot.finished_value_id]
             except KeyError as error:
@@ -1163,8 +1008,8 @@ class OpEmitMixin:
                 )
             finished_var = slot_vars[self._dynamic_slot_key(slot)]
             self.builder.line(
-                f"{finished_var} = tl.where(mask & ({count_var} >= {required}), "
-                f"1, 0)"
+                f"{finished_var} = tl.where({owner_active}, "
+                f"tl.where({count_var} >= {required}, 1, 0), {finished_var})"
             )
 
     def _emit_precomputed_passes(self, op: KernelOp) -> None:
@@ -1314,6 +1159,14 @@ class OpEmitMixin:
             # front of the function: function(a*input + b).
             a, b = integrator_pre
             input_values = [f"({a!r} * {value} + {b!r})" for value in input_values]
+            if self.dynamic_execution_index is not None:
+                # In a dynamic region the scheduler owns delayed onset.  Keep
+                # the absorbed fires-once integrator lane-local to the selected
+                # member; publication retains the previous output elsewhere.
+                input_values = [
+                    f"tl.where({self.dynamic_active_mask}, {value}, 0.0)"
+                    for value in input_values
+                ]
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
         param_args = tuple(
             self.param_vars[node.params[binding.arg]] for binding in spec.params
@@ -1327,14 +1180,46 @@ class OpEmitMixin:
                     args=(input_value,) + param_args,
                 )
             )
-        # Delayed within-trial onset (ITI): withhold this node's output (0) until
-        # its onset step. `step` is the fused co-evolution loop index; onset_step
-        # is only set in that context.
-        onset = op.attrs.get("onset_step")
-        if onset is not None:
-            for output_var in output_vars:
-                self.builder.line(f"{output_var} = tl.where(step >= {onset}, {output_var}, 0.0)")
         self._set_value(op.outputs[0].name, output_vars)
+        self.builder.line()
+
+    def _emit_affine_scheduler_value(self, op: KernelOp) -> None:
+        """Evaluate a folded affine controller execution ordinal."""
+
+        if len(op.inputs) != 1 or len(op.outputs) != 1:
+            raise ValueError(
+                "Triton AffineSchedulerValue requires one scheduler input and "
+                "one output."
+            )
+        count_values = self._get_value(op.inputs[0].name)
+        if len(count_values) != 1 or op.inputs[0].width != 1 or op.outputs[0].width != 1:
+            raise ValueError(
+                "Triton AffineSchedulerValue requires scalar typed values."
+            )
+        parameters = {
+            parameter.parameter_id: parameter for parameter in self.kernel.params
+        }
+        try:
+            base_parameter = parameters[op.attrs["base_parameter_id"]]
+            delta_parameter = parameters[op.attrs["delta_parameter_id"]]
+            base_var = self.param_vars[base_parameter.name]
+            delta_var = self.param_vars[delta_parameter.name]
+        except (KeyError, TypeError) as error:
+            raise ValueError(
+                "Triton AffineSchedulerValue references an unbound parameter."
+            ) from error
+        output_var = self._component_vars(
+            op.outputs[0].name,
+            op.outputs[0].width,
+        )[0]
+        # The folded source is a reset-each-trial SimpleIntegrator.  Its first
+        # execution returns ``base + delta``; the scheduler slot is the
+        # controller's pre-execution count, so add one to form that ordinal.
+        self.builder.line(
+            f"{output_var} = {base_var} + {delta_var} * "
+            f"({count_values[0]} + 1)"
+        )
+        self._set_value(op.outputs[0].name, [output_var])
         self.builder.line()
 
     def _emit_identity_function_call(self, op: KernelOp, node) -> None:

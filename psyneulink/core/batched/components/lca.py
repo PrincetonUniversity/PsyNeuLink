@@ -51,7 +51,7 @@ def _pnl_triton_lca_width2_recurrence(
     offset,
 ):
     # The single shared leaky-competing recurrence step (width 2).  Both the
-    # run-to-completion integrate loop and the co-evolution step call this, so
+    # run-to-completion integrate loop and scheduled step call this, so
     # the recurrence math lives in exactly one place.  `active` masks the update
     # (lanes that are past their step budget / whose terminator finished freeze);
     # Numeric LCI noise is deterministic: PNL adds the same
@@ -169,8 +169,8 @@ def _pnl_triton_lca_width2_step(
     scale,
     offset,
 ):
-    # One integration step for the fused co-evolution loop where the LCA steps
-    # alongside a terminator.  Lanes whose terminator has finished freeze, so the
+    # One integration step for a dynamic schedule where the LCA advances
+    # alongside a terminator.  Lanes whose terminator has finished freeze, so
     # persisted state carried to the next trial matches when the trial ended.
     #
     active = finished == 0.0

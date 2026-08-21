@@ -75,6 +75,39 @@ def test_vectorized_mapping_remains_an_explicit_parameter_lane_shorthand():
     assert [row[slope] for row in rows] == [1.0, 2.0]
 
 
+def test_ambiguous_parameter_alias_is_rejected():
+    ir, _ = _linear_ir()
+    shared_alias = "shared.parameter"
+    params = tuple(
+        replace(spec, aliases=(*spec.aliases, shared_alias))
+        if index < 2
+        else spec
+        for index, spec in enumerate(ir.params)
+    )
+    forged = replace(ir, params=params)
+
+    assert normalize_parameter_sets([{}], forged) == [dict(forged.param_defaults)]
+
+    with pytest.raises(ValueError, match="Ambiguous batched parameter"):
+        normalize_parameter_sets(
+            [{shared_alias: 2.0}],
+            forged,
+        )
+
+    exact_name = params[0].name
+    exact_wins = replace(
+        ir,
+        params=(
+            params[0],
+            replace(params[1], aliases=(*params[1].aliases, exact_name)),
+            *params[2:],
+        ),
+    )
+    normalized = normalize_parameter_sets([{exact_name: 2.0}], exact_wins)[0]
+    assert normalized[exact_name] == 2.0
+    assert normalized[params[1].name] == params[1].default
+
+
 @pytest.mark.parametrize("value", (0.0, -0.01))
 def test_runtime_parameter_respects_declared_exclusive_minimum(value):
     ir, parameter = _constrained_linear_ir()

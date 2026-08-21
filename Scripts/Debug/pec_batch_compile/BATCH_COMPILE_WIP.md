@@ -20,26 +20,48 @@ models lower through GraphIR and backend-neutral KernelIR before Triton source
 is emitted. Unsupported semantics are diagnosed and fail closed. There is no
 silent fallback to Python, LLVM, or a hand-written model implementation.
 
-The exact CSI research-model boundary currently compiles and runs. It covers:
+Controlled N-chain graphs and the real CSI research model now compile through
+one typed `ForPasses(trace_kind="lane_local_dynamic")` program. The shared
+program contains:
+
+- ordered consideration sets with beginning-of-set-frozen predicates and
+  member inputs;
+- pass index, per-component execution count, `has_run`, usable-call, finished,
+  and component-local RNG-clock scheduler slots;
+- explicit carries for retained mechanism state, per-trial mechanism state,
+  held effective parameters, current outputs, readouts, and diagnostics;
+- per-component execution/truncation budgets plus an independent
+  whole-schedule fuel bound; and
+- termination checks and result/effect publication at consideration-set
+  boundaries.
+
+CSI exercises this machinery with:
 
 - affine cue repeat/switch timing and fixed integral delayed ITI;
 - persistent LCA state and finite numeric LCA noise;
 - stochastic DDM execution with component-local, lane-local random streams;
-- folded, persistent threshold control;
+- typed folded-affine, lane-persistent threshold control;
 - runtime parameter lanes used by the three- and five-parameter PEC fits; and
 - the two `WhenFinished(DDM)` output gates.
 
-This is an authenticated specialization, not generic co-evolving scheduling.
-The accepted CSI graph has an exact 11-node, six-consideration-set structure,
-one registered drift UDF, one controlled LCA, and one terminating DDM. Changes
-outside that boundary remain declaration-only or are rejected.
+The old CSI-only graph recognizer, canonical KernelIR builder/validator,
+`lane_local_coevolving` region, and private Triton emitter loop have been
+deleted. Their typed replacements leave the migration as a net reduction in
+production code. CSI remains an exact semantic acceptance fixture, but its
+public role names and 11-node/six-set shape are no longer capability
+authorities.
+
+This checkpoint is more compositional, but it is not arbitrary PsyNeuLink
+scheduling. Conditions, component bodies, state/reset contracts, control
+forms, projections, RNG streams, and trial termination must all belong to the
+registered dynamic subset described in `BatchedCompilation.rst`.
 
 ## Goal
 
-Replace the CSI-specific path with a generic lane-local consideration-set
-executor. CSI must remain a demanding regression fixture, but adding another
-topology composed from supported mechanisms and predicates must not require a
-new topology predicate, KernelIR builder, validator, or emitter loop.
+Extend the shared lane-local executor until a new topology composed entirely
+from supported mechanisms, controls, predicates, state/reset policies, and
+projections requires only fixture code, with no new topology predicate,
+KernelIR builder, validator, or emitter loop.
 
 The compiler should continue to be narrower than general PsyNeuLink execution.
 Generality here means compositional support for explicitly represented
@@ -48,41 +70,20 @@ lowered exactly.
 
 ## Generic Co-Evolving Architecture
 
-### Acceptance corpus
+### Implemented semantic foundation
 
-The generic path must cover these topology classes before the CSI
-specialization is deleted:
-
-1. Two independent stateful chains in one trial.
-2. Branching and fan-in `WhenFinished` dependencies.
-3. Multiple finished predicates and a distinct trial terminator.
-4. Delayed `AtPass` execution and termination between consideration sets.
-5. Multiple stochastic mechanisms with component-local RNG clocks.
-6. CSI, including deterministic, stochastic, three-parameter, and
-   five-parameter PEC acceptance.
-
-Each topology fixture must lower without a production-code change after its
-mechanisms and predicates are registered.
-
-### Existing semantic foundation
-
-GraphIR already represents most of the required scheduler contract:
+GraphIR represents the scheduler contract with:
 
 - `BatchedSchedulerSpec` and ordered `BatchedConsiderationSetSpec` values;
 - typed conditions, dependency component IDs, and finished-value IDs;
 - run/trial termination declarations;
 - mechanism state and reset declarations;
-- effective parameters and modulation routes; and
+- effective parameters and ordinary modulation routes;
+- folded-affine scheduler control; and
 - RNG/state metadata owned by the relevant component.
 
-The next step should reuse and strengthen these declarations rather than add a
-parallel scheduler model.
-
-### KernelIR shape
-
-Introduce one typed dynamic schedule carried by a
-`ForPasses(trace_kind="lane_local_dynamic")` region. Its declaration should
-contain:
+KernelIR carries one typed dynamic schedule in a
+`ForPasses(trace_kind="lane_local_dynamic")` region. Its declaration contains:
 
 - the ordered consideration sets;
 - for each member, its component ID, typed condition, body operations, declared
@@ -97,7 +98,7 @@ The region must publish only declared results. Nested values may not escape
 through emitter scope, and effectful state may not be reconstructed from source
 order.
 
-### Execution semantics
+### Implemented execution semantics
 
 For each consideration set:
 
@@ -116,9 +117,19 @@ Random draws must be addressed by `(seed, lane identity, component identity,
 component-local execution count)`. Unrelated onset, divergence, or a safety cap
 must not change another component's stream.
 
-### Validation
+CSI's DDM threshold controller is represented by a typed folded-affine record.
+Its member reads its own pre-execution count, computes
+`base + delta * (count + 1)`, publishes the controller value, and updates
+lane-persistent held storage. At trial entry, a typed finished-slot initializer
+compares count zero with the previously held raw LCA threshold; the
+minimum-one rule applies after the LCA executes. The DDM samples the held
+threshold at its ParameterPort update. This preserves count-zero scheduling,
+the one-step cleanup visit, and cross-trial threshold persistence without
+embedding CSI behavior in the emitter.
 
-Validation should be compositional:
+### Validation boundary
+
+The shared dynamic path validates compositionally:
 
 - validate each condition and its referenced scheduler slots;
 - validate each component body against its registered immutable spec;
@@ -131,64 +142,66 @@ Validation should be compositional:
 Whole-topology node counts, CSI role names, and topology-shaped equality checks
 must not be capability authorities in the generic path.
 
-## Migration Sequence
+## Completed Migration
 
-### 1. Create the seam without changing execution
+The CSI-specialization replacement is complete:
 
-- Extract shared typed condition validation/evaluation from `schedule.py` so
-  precomputed traces and dynamic execution use the same predicate semantics.
-- Split `_trial_body_ops` into a per-component body builder plus an ordering
-  layer; keep current precomputed lowering behavior unchanged.
-- Add the typed dynamic-schedule KernelIR declarations and validators while the
-  existing `lane_local_counted` and `lane_local_coevolving` emitters remain in
-  service.
-- Add declaration/lowering tests for the acceptance corpus.
+- shared typed condition validation/evaluation was extracted so
+  precomputed traces and dynamic execution use the same predicate semantics;
+- per-component body construction and ordering were separated without changing
+  precomputed lowering;
+- typed dynamic-schedule declarations, validators, scheduler slots, carries,
+  budgets, and fuel were added;
+- controlled N-chain and registered scheduled-terminator fixtures were moved to
+  the generic region;
+- deterministic, stochastic, delayed-ITI, persistent-state, folded-threshold,
+  runtime-lane, and both real CSI PEC surfaces were moved to that same region;
+  and
+- the private co-evolving recognizer, KernelIR path, validation branches, and
+  emitter were removed after interpreter and physical-GPU parity.
 
-### 2. Implement the generic region
+## Remaining Generalization Sequence
 
-- Lower ordered GraphIR consideration sets into the dynamic schedule.
-- Allocate and carry scheduler slots explicitly.
-- Emit masked member bodies and publish effects only at set boundaries.
-- Add component-local RNG clocks and explicit state/output yields.
-- Compare scheduler traces as well as outputs against fresh Python executions.
+### 1. Broaden graph admission compositionally
 
-### 3. Migrate existing dynamic paths
+- Replace the remaining exact controlled-chain shape check with reusable
+  per-edge and per-component invariants.
+- Extend the existing one-finished-value output split to fan-in dependencies
+  and predicates with more than one finished dependency.
+- Admit multiple independent and interacting stateful chains without requiring
+  one count producer plus one dynamic terminator.
 
-- Move the controlled-finished producer/follower topology to the generic
-  region.
-- Move CSI without adding a CSI branch to the generic builder or emitter.
-- Keep old and new paths temporarily selectable in tests until deterministic,
-  stochastic, reset, truncation, and PEC parity are established.
+### 2. Broaden scheduler and dataflow semantics
 
-### 4. Delete specialization
+- Add the next typed predicate/time-scale forms required by real models.
+- Implement current/next output banks for safe same-set data projections.
+- Generalize trial termination beyond exact default `AllHaveRun()` while
+  retaining termination checks between consideration sets.
+- Extend reset/state initialization beyond exact `Never` and `AtTrialStart`.
 
-After parity, remove:
+### 3. Broaden mechanisms, control, and RNG
 
-- `graph.py:_dynamic_controlled_coevolving_graph_eligible`;
-- the CSI-specific canonical KernelIR builder and validator;
-- `emit/ops.py:_emit_coevolving_trial_loop` and its partition/dispatch helpers;
-- special `lane_local_coevolving` branches in modulation and pass-region
-  validation; and
-- redundant topology-specific tests that are covered by generic structural
-  invariants plus end-to-end CSI acceptance.
+- Register more stateful steppers and terminators with explicit state, readout,
+  finished, and budget contracts.
+- Cover multiple stochastic mechanisms and prove component-local stream
+  independence when their execution histories diverge.
+- Generalize ordinary modulation beyond the current scalar `OVERRIDE` chains
+  and folded-affine control beyond the authenticated DDM threshold contract.
 
-Only then should the compiler claim support for arbitrary co-evolving graphs
-within its registered mechanism and predicate subset.
+### 4. Keep CSI as a regression, not an authority
 
-## Deletion Gate
+- A new topology built only from admitted pieces must lower without production
+  code changes.
+- Python scheduler traces must match per lane for same-set freezing, mid-pass
+  termination, resets, persistent effects, and truncation.
+- Direct-IR forgeries must continue to fail before source emission.
+- Interpreter and physical-GPU parity remain required for each expanded
+  semantic boundary.
 
-The old path can be removed when all of the following are true:
-
-- no topology names or exact node counts occur in generic admission;
-- a new supported topology requires fixture code only;
-- Python scheduler traces match per lane, including same-set freezing,
-  mid-pass termination, resets, persistent effects, and truncation;
-- stochastic replay, common-random-number behavior, and stream independence
-  hold across onset and cap changes;
-- CSI interpreter and physical-GPU suites pass through the generic executor;
-- both real CSI PEC objective surfaces compile and score through it; and
-- generated source and KernelIR validation reject all tested direct-IR
-  forgeries.
+The compiler should claim arbitrary co-evolving support only within the
+explicitly registered subset, and only after the remaining branching, fan-in,
+multiple-stochastic-component, control, and state/reset fixtures satisfy these
+criteria.
 
 ## Code Map
 
@@ -214,6 +227,7 @@ Primary acceptance suites:
 - `test_batched_scheduler_ir.py` and `test_batched_schedule_execution.py`;
 - `test_batched_dynamic_control_kernel_ir.py`;
 - `test_batched_controlled_finished_acceptance.py`;
+- `test_batched_dynamic_terminator_acceptance.py`;
 - `test_batched_coevolving_graph_admission.py`;
 - `test_batched_csi_coevolving_acceptance.py`;
 - `test_batched_fail_closed_validation.py`; and

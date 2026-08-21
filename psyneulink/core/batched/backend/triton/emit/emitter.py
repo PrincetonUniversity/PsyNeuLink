@@ -72,16 +72,17 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # RNG clock declared for that member.
         self.dynamic_program = None
         self.dynamic_slot_vars = None
+        # Explicit effective-parameter inputs sampled by the currently emitted
+        # dynamic StepMechanism.  Component adapters resolve these by typed
+        # target identity; the mapping is empty outside that one member body.
+        self.dynamic_sampled_effective_parameters: dict[int, str] = {}
+        self.dynamic_consumed_effective_parameter_ids: set[int] = set()
         self.rng_stream_slot: dict[str, int] = {}
         self.rng_stream_count = 0
         self.output_cursor = 0
         self.lane_out_emitted = False
         self.diag_slot_count = len(diag_slots(kernel))
         self.diag_lane_emitted = False
-        # Warm-up steps before the co-evolving terminator begins (the ITI); 0 when
-        # there is no delayed onset.
-        self.coevolve_warmup = int(kernel.metadata.get("coevolve_warmup", 0))
-        self.coevolve_terminator_control_value = ""
 
     def emit(self) -> str:
         # KernelIR attrs are mapping-valued for an extensible public schema.
@@ -296,6 +297,43 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
 
     def component_symbol(self, node_spec) -> str:
         return component_symbol(self.graph, node_spec)
+
+    def sampled_effective_parameter(
+        self,
+        node_spec,
+        target_parameter: str,
+    ) -> str | None:
+        """Resolve one explicitly sampled dynamic effective parameter.
+
+        The dynamic KernelIR carries effective values by numeric identity.  A
+        component adapter names the parameter it implements (for example the
+        DDM ``threshold``); this boundary cross-checks both before returning the
+        currently bound Triton variable.
+        """
+
+        matches = []
+        for parameter in self.kernel.effective_parameters:
+            value = self.dynamic_sampled_effective_parameters.get(
+                parameter.effective_parameter_id
+            )
+            if value is None:
+                continue
+            if (
+                parameter.target_component_id == node_spec.component_id
+                and parameter.target == node_spec.name
+                and parameter.target_parameter == target_parameter
+            ):
+                matches.append((parameter.effective_parameter_id, value))
+        if len(matches) > 1:
+            raise ValueError(
+                "Triton dynamic StepMechanism sampled duplicate effective "
+                f"parameters for '{node_spec.name}.{target_parameter}'."
+            )
+        if not matches:
+            return None
+        parameter_id, value = matches[0]
+        self.dynamic_consumed_effective_parameter_ids.add(parameter_id)
+        return value
 
 
 def triton_graph_kernel_source(kernel: KernelIR) -> str:

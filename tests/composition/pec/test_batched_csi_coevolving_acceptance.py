@@ -6,6 +6,7 @@ execution, folded threshold control, persistent state, runtime fit lanes, and
 the two finished-gated output mechanisms.
 """
 
+from dataclasses import replace
 import importlib.util
 from pathlib import Path
 import re
@@ -27,7 +28,10 @@ from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     lower_composition,
 )
-from psyneulink.core.batched.kernel_ir import iter_kernel_ops
+from psyneulink.core.batched.kernel_ir import (
+    KernelDynamicScheduleProgram,
+    iter_kernel_ops,
+)
 from psyneulink.core.batched.prep import normalize_parameter_sets
 
 
@@ -187,7 +191,7 @@ def _selected_python_results(composition, outputs):
 
 def _run_compiled_csi(backend, **model_options):
     composition, inputs, outputs = _model(**model_options)
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend=backend,
         outputs=outputs,
@@ -200,6 +204,54 @@ def _run_compiled_csi(backend, **model_options):
         seed=0,
     )
     return result.values[0, 0, :, 0, :]
+
+
+def _assert_generic_csi_schedule(kernel):
+    """Require every CSI runtime case to use the compositional executor."""
+
+    regions = tuple(
+        op
+        for op in iter_kernel_ops(kernel)
+        if op.kind == "ForPasses"
+    )
+    dynamic = tuple(
+        op
+        for op in regions
+        if op.attrs.get("trace_kind") == "lane_local_dynamic"
+    )
+    assert len(dynamic) == 1
+    assert not any(
+        op.attrs.get("trace_kind") == "lane_local_coevolving"
+        for op in regions
+    )
+    assert type(dynamic[0].attrs.get("program")) is KernelDynamicScheduleProgram
+    return dynamic[0]
+
+
+def _compile_csi(composition, *, backend, outputs, max_steps):
+    plan = BatchedCompositionCompiler.compile(
+        composition,
+        backend=backend,
+        outputs=outputs,
+        max_steps=max_steps,
+    )
+    _assert_generic_csi_schedule(plan.kernel_ir)
+    return plan
+
+
+def _replace_csi_dynamic_program(kernel, program):
+    """Rebuild one CSI kernel around a deliberately forged schedule program."""
+
+    region = _assert_generic_csi_schedule(kernel)
+    trial = kernel.ops[-1]
+    body = tuple(
+        replace(op, attrs={**op.attrs, "program": program}) if op is region else op
+        for op in trial.attrs["body"]
+    )
+    return replace(
+        kernel,
+        ops=(*kernel.ops[:-1], replace(trial, attrs={**trial.attrs, "body": body})),
+    )
 
 
 def _recovery_surface_model():
@@ -325,11 +377,11 @@ def _recovery_pec(
     return pec
 
 
-def test_csi_compiles_to_one_lane_local_coevolving_region(
+def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     registered_csi_drift_rate,
 ):
     composition, _, outputs = _model()
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend="triton_cpu",
         outputs=outputs,
@@ -342,91 +394,382 @@ def test_csi_compiles_to_one_lane_local_coevolving_region(
     assert graph.executable
     assert kernel.fusion_kind == COEVOLVING_GRAPH_FUSION
     assert len(kernel.modulations) == 1
-    assert len(kernel.effective_parameters) == 1
+    assert len(kernel.effective_parameters) == 2
+    assert len(kernel.folded_affine_controls) == 1
     assert len(kernel.finished_values) == 2
     assert tuple(output.node for output in graph.outputs) == tuple(
         output.owner.name for output in outputs
     )
 
     all_ops = iter_kernel_ops(kernel)
-    regions = tuple(
-        op
-        for op in all_ops
-        if op.kind == "ForPasses"
-        and op.attrs.get("trace_kind") == "lane_local_coevolving"
-    )
-    assert len(regions) == 1
-    region = regions[0]
+    region = _assert_generic_csi_schedule(kernel)
+    program = region.attrs["program"]
     assert region.attrs["declaration_only"] is False
-    assert region.attrs["max_steps"] == 128
 
     stepper = graph.node(_node(composition, "Task Activations [C1, C2]").name)
     terminator = graph.node(_node(composition, "DDM").name)
-    finished_by_component = {
-        value.component_id: value for value in kernel.finished_values
-    }
-    assert region.attrs["stepper_component_id"] == stepper.component_id
-    assert region.attrs["terminator_component_id"] == terminator.component_id
-    assert region.attrs["stepper_finished_value_id"] == (
-        finished_by_component[stepper.component_id].value_id
+    members = tuple(
+        member
+        for consideration_set in program.consideration_sets
+        for member in consideration_set.members
     )
-    assert region.attrs["terminator_finished_value_id"] == (
-        finished_by_component[terminator.component_id].value_id
+    assert tuple(sorted(member.component_id for member in members)) == tuple(
+        node.component_id for node in graph.nodes
     )
+
+    terminator_member = next(
+        member for member in members if member.component_id == terminator.component_id
+    )
+    terminator_step = next(
+        op for op in terminator_member.body if op.kind == "StepMechanism"
+    )
+    trial_states = tuple(
+        carry
+        for carry in program.loop_carries
+        if carry.kind == "trial_state"
+        and carry.owner_component_id == terminator.component_id
+    )
+    assert tuple(
+        carry.value.name.rsplit(".", 1)[-1] for carry in trial_states
+    ) == ("value", "steps", "finished")
+    assert terminator_step.attrs["trial_state_ids"] == tuple(
+        carry.value_id for carry in trial_states
+    )
+    assert terminator_step.attrs["finished_trial_state_id"] == (
+        trial_states[-1].value_id
+    )
+    assert len(
+        tuple(
+            publication
+            for publication in terminator_member.publications
+            if publication.kind == "finished"
+        )
+    ) == 1
 
     modulation = kernel.modulations[0]
-    assert region.attrs["effective_parameter_id"] == (
-        modulation.effective_parameter_id
+    controller_member = next(
+        member
+        for member in members
+        if member.component_id == modulation.controller_component_id
     )
-    assert len(region.inputs) == 1
-    assert region.inputs[0].name == (
-        f"effective:{modulation.effective_parameter_id}"
+    assert tuple(effect.kind for effect in controller_member.effects) == (
+        "ApplyModulation",
     )
-    assert region.attrs["terminator_trial_states"] == (
-        ("value", 1, 0.0),
-        ("steps", 1, 0.0),
-        ("finished", 1, 0.0),
-    )
-    assert region.attrs["terminator_initial_control_value"] == 1.0
-    assert region.attrs["terminator_control_storage"] == "lane_persistent"
-    assert region.attrs["terminator_control_update"] == (
-        "ordered_threshold_override"
-    )
-    assert region.attrs["completion_cleanup"] == (
-        "fold_terminator_control_state"
+    assert any(
+        carry.kind == "effective_parameter"
+        and carry.value_id == modulation.effective_parameter_id
+        for carry in program.loop_carries
     )
 
-    region_steps = tuple(
-        op
-        for op in region.attrs["body"]
-        if op.kind in {"CallMechanism", "StepMechanism"}
+    folded = kernel.folded_affine_controls[0]
+    assert folded.clock_component_id == folded.controller_component_id
+    folded_member = next(
+        member
+        for member in members
+        if member.component_id == folded.controller_component_id
     )
-    assert {op.target for op in region_steps} >= {
-        stepper.name,
-        terminator.name,
+    affine = next(
+        op for op in folded_member.body if op.kind == "AffineSchedulerValue"
+    )
+    assert affine.attrs == {
+        "folded_control_id": folded.folded_control_id,
+        "base_parameter_id": folded.base_parameter_id,
+        "delta_parameter_id": folded.delta_parameter_id,
     }
-    assert sum(op.kind == "InitializeEffectiveParameter" for op in kernel.ops) == 1
-    assert sum(op.kind == "ApplyModulation" for op in all_ops) == 1
+    assert affine.inputs[0].name == (
+        f"schedule:execution-count:{folded.clock_component_id}"
+    )
+    assert tuple(effect.kind for effect in folded_member.effects) == (
+        "ApplyModulation",
+    )
+    assert terminator_step.attrs["sampled_effective_parameter_ids"] == (
+        folded.effective_parameter_id,
+    )
+    assert any(
+        carry.kind == "effective_parameter"
+        and carry.value_id == folded.effective_parameter_id
+        and carry.owner_component_id == folded.target_component_id
+        for carry in program.loop_carries
+    )
+    stepper_finished = next(
+        value
+        for value in kernel.finished_values
+        if value.component_id == stepper.component_id
+    )
+    stepper_finished_slot = next(
+        slot
+        for slot in program.scheduler_state_slots
+        if slot.kind == "finished"
+        and slot.owner_component_id == stepper.component_id
+    )
+    assert stepper_finished_slot.initialization == (
+        "count_zero_vs_effective_parameter"
+    )
+    assert stepper_finished_slot.initial_effective_parameter_id == (
+        stepper_finished.attrs["effective_parameter_id"]
+    )
+    assert sum(op.kind == "InitializeEffectiveParameter" for op in kernel.ops) == 2
     assert sum(op.kind == "StoreOutput" for op in all_ops) == 2
 
     source = triton_graph_kernel_source(kernel)
-    assert re.search(
-        r"n\d+_coevolving_required_passes = .*\.to\(tl\.int64\)",
-        source,
+    assert "lane_local_coevolving" not in source
+    assert "coevolving_required_passes" not in source
+    assert "draw = tl.randn(seed, rng_base + step)" in source
+
+
+@pytest.mark.parametrize(
+    "forgery",
+    (
+        "folded-base",
+        "folded-effective",
+        "affine-clock",
+        "affine-base",
+        "folded-effect",
+        "missing-sample",
+        "finished-initializer",
+    ),
+)
+def test_generic_csi_kernel_ir_rejects_folded_control_forgery(
+    registered_csi_drift_rate, forgery
+):
+    """Authenticate every CSI-only identity at the generic KIR boundary."""
+
+    composition, _, outputs = _model()
+    kernel = _compile_csi(
+        composition,
+        backend="triton_cpu",
+        outputs=outputs,
+        max_steps=128,
+    ).kernel_ir
+    region = _assert_generic_csi_schedule(kernel)
+    program = region.attrs["program"]
+    folded = kernel.folded_affine_controls[0]
+    foreign_parameter_id = next(
+        parameter.parameter_id
+        for parameter in kernel.params
+        if parameter.owner_component_id != folded.target_component_id
+        and parameter.parameter_id != folded.delta_parameter_id
     )
-    assert re.search(
-        r"n\d+_coevolving_start_pass = "
-        r"n\d+_coevolving_required_passes - 1$",
-        source,
-        flags=re.MULTILINE,
+
+    if forgery in {"folded-base", "folded-effective"}:
+        changes = (
+            {"base_parameter_id": foreign_parameter_id}
+            if forgery == "folded-base"
+            else {
+                "effective_parameter_id": max(
+                    parameter.effective_parameter_id
+                    for parameter in kernel.effective_parameters
+                )
+                + 1
+            }
+        )
+        message = "folded affine control|exact bijection"
+        forged = replace(folded, **changes)
+        with pytest.raises(ValueError, match=message):
+            replace(
+                kernel,
+                graph=replace(kernel.graph, folded_affine_controls=(forged,)),
+                folded_affine_controls=(forged,),
+            )
+        return
+
+    if forgery == "finished-initializer":
+        slot = next(
+            slot
+            for slot in program.scheduler_state_slots
+            if slot.initialization == "count_zero_vs_effective_parameter"
+        )
+        foreign_effective_id = next(
+            parameter.effective_parameter_id
+            for parameter in kernel.effective_parameters
+            if parameter.effective_parameter_id
+            != slot.initial_effective_parameter_id
+        )
+        program = replace(
+            program,
+            scheduler_state_slots=tuple(
+                replace(
+                    candidate,
+                    initial_effective_parameter_id=foreign_effective_id,
+                )
+                if candidate is slot
+                else candidate
+                for candidate in program.scheduler_state_slots
+            ),
+        )
+        with pytest.raises(ValueError, match="compiler-derived"):
+            _replace_csi_dynamic_program(kernel, program)
+        return
+
+    members = tuple(
+        member
+        for consideration_set in program.consideration_sets
+        for member in consideration_set.members
     )
-    assert re.search(
-        r"n\d+_coevolving_held_control = tl\.full\(\(BLOCK,\), 1\.0, ",
-        source,
+    member = next(
+        item
+        for item in members
+        if item.component_id
+        == (
+            folded.target_component_id
+            if forgery == "missing-sample"
+            else folded.controller_component_id
+        )
     )
-    assert "coevolving_has_control_update" in source
-    assert "local_step = tl.maximum(step - start, 0)" in source
-    assert "draw = tl.randn(seed, rng_base + local_step)" in source
+    if forgery == "folded-effect":
+        effect = member.effects[0]
+        member = replace(
+            member,
+            effects=(
+                replace(
+                    effect,
+                    attrs={
+                        **effect.attrs,
+                        "folded_control_id": effect.attrs["folded_control_id"] + 1,
+                    },
+                ),
+            ),
+        )
+    else:
+        kind = (
+            "StepMechanism" if forgery == "missing-sample" else "AffineSchedulerValue"
+        )
+        op = next(item for item in member.body if item.kind == kind)
+        if forgery == "affine-clock":
+            foreign_clock = next(
+                slot.value
+                for slot in program.scheduler_state_slots
+                if slot.kind == "execution_count"
+                and slot.owner_component_id != folded.clock_component_id
+            )
+            forged_op = replace(op, inputs=(foreign_clock,))
+        elif forgery == "affine-base":
+            forged_op = replace(
+                op,
+                attrs={**op.attrs, "base_parameter_id": foreign_parameter_id},
+            )
+        else:
+            forged_op = replace(
+                op,
+                inputs=(op.inputs[0], *op.inputs[2:]),
+                attrs={**op.attrs, "sampled_effective_parameter_ids": ()},
+            )
+        member = replace(
+            member,
+            body=tuple(forged_op if item is op else item for item in member.body),
+        )
+    program = replace(
+        program,
+        consideration_sets=tuple(
+            replace(
+                item,
+                members=tuple(
+                    member
+                    if candidate.component_id == member.component_id
+                    else candidate
+                    for candidate in item.members
+                ),
+            )
+            for item in program.consideration_sets
+        ),
+    )
+    with pytest.raises(ValueError, match="compiler-derived|sampled effective"):
+        _replace_csi_dynamic_program(kernel, program)
+
+
+def test_generic_csi_kernel_ir_rejects_coupled_folded_parameter_forgeries(
+    registered_csi_drift_rate,
+):
+    """The KIR boundary reauthenticates mutable and frozen folded lanes."""
+
+    composition, _, outputs = _model()
+    kernel = _compile_csi(
+        composition,
+        backend="triton_cpu",
+        outputs=outputs,
+        max_steps=128,
+    ).kernel_ir
+    folded = kernel.folded_affine_controls[0]
+    params = {parameter.parameter_id: parameter for parameter in kernel.params}
+    base = params[folded.base_parameter_id]
+    delta = params[folded.delta_parameter_id]
+    target = kernel.graph.node(folded.target)
+    frozen = tuple(
+        next(parameter for parameter in kernel.params if parameter.name == target.params[arg])
+        for arg in ("noise", "starting_value", "offset")
+    )
+    frozen_reason = "dynamic scheduled terminator parameter is frozen in KernelIR"
+
+    assert all(
+        parameter.runtime_mutable is False
+        and parameter.runtime_constraint == frozen_reason
+        for parameter in frozen
+    )
+
+    cases = (
+        ({base.parameter_id: {"default": -0.01}}, (-0.01,)),
+        ({delta.parameter_id: {"default": 0.01}}, None),
+        (
+            {
+                base.parameter_id: {
+                    "minimum": None,
+                    "minimum_inclusive": False,
+                    "maximum": 1.0,
+                    "maximum_inclusive": False,
+                }
+            },
+            None,
+        ),
+        (
+            {
+                delta.parameter_id: {
+                    "minimum": -1.0,
+                    "minimum_inclusive": False,
+                    "maximum": None,
+                    "maximum_inclusive": False,
+                }
+            },
+            None,
+        ),
+        ({base.parameter_id: {"aliases": base.aliases[1:]}}, None),
+        ({delta.parameter_id: {"aliases": delta.aliases[:-1]}}, None),
+        (
+            {
+                parameter.parameter_id: {
+                    "runtime_mutable": True,
+                    "runtime_constraint": "",
+                }
+                for parameter in frozen
+            },
+            None,
+        ),
+    )
+    for parameter_changes, effective_base in cases:
+        forged_params = tuple(
+            replace(parameter, **parameter_changes[parameter.parameter_id])
+            if parameter.parameter_id in parameter_changes
+            else parameter
+            for parameter in kernel.params
+        )
+        forged_effective = kernel.effective_parameters
+        if effective_base is not None:
+            forged_effective = tuple(
+                replace(parameter, base_value=effective_base)
+                if parameter.effective_parameter_id
+                == folded.effective_parameter_id
+                else parameter
+                for parameter in kernel.effective_parameters
+            )
+        with pytest.raises(ValueError, match="folded affine control"):
+            replace(
+                kernel,
+                params=forged_params,
+                effective_parameters=forged_effective,
+                graph=replace(
+                    kernel.graph,
+                    effective_parameters=forged_effective,
+                ),
+            )
 
 
 def test_csi_recovery_parameter_surface_runs_multiple_parameter_lanes(
@@ -441,7 +784,7 @@ def test_csi_recovery_parameter_surface_runs_multiple_parameter_lanes(
     """
 
     composition, inputs, parameter_sets, outputs = _recovery_surface_model()
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend=batched_backend,
         outputs=outputs,
@@ -578,7 +921,7 @@ def test_csi_historical_threshold_fit_names_bind_to_folded_ddm_lanes(
     # latter its real ``-N`` rebuild suffix and the test exercises both aliases.
     reference_composition, _, _, _ = _recovery_surface_model()
     composition, inputs, _, outputs = _recovery_surface_model()
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend=batched_backend,
         outputs=outputs,
@@ -732,13 +1075,13 @@ def test_csi_historical_threshold_fit_names_bind_to_folded_ddm_lanes(
         ("offset", 0.01),
     ),
 )
-def test_csi_first_coevolving_ddm_boundary_is_default_only(
+def test_csi_folded_ddm_boundary_parameters_are_fixed(
     registered_csi_drift_rate,
     argument,
     replacement,
 ):
     composition, _, outputs = _model()
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend="triton_cpu",
         outputs=outputs,
@@ -754,7 +1097,7 @@ def test_csi_first_coevolving_ddm_boundary_is_default_only(
 
     assert not parameter.runtime_mutable
     assert parameter.runtime_constraint == (
-        "first coevolving DDM boundary is frozen in KernelIR"
+        "dynamic scheduled terminator parameter is frozen in KernelIR"
     )
     with pytest.raises(ValueError, match="is fixed at"):
         normalize_parameter_sets(
@@ -767,7 +1110,7 @@ def test_csi_fixed_nonzero_ddm_noise_is_admitted_and_frozen(
     registered_csi_drift_rate,
 ):
     composition, _, outputs = _model(ddm_noise=0.1)
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend="triton_cpu",
         outputs=outputs,
@@ -820,7 +1163,7 @@ def test_csi_stochastic_ddm_replays_and_uses_common_random_numbers(
         {f"{ddm.name}.non_decision_time": 0.2},
         {f"{ddm.name}.non_decision_time": 0.4},
     )
-    plan = BatchedCompositionCompiler.compile(
+    plan = _compile_csi(
         composition,
         backend=batched_backend,
         outputs=outputs,
@@ -883,19 +1226,19 @@ def test_csi_stochastic_ddm_draws_are_cap_and_onset_independent(
         iti=5,
     )
     plans = (
-        BatchedCompositionCompiler.compile(
+        _compile_csi(
             base,
             backend=batched_backend,
             outputs=base_outputs,
             max_steps=64,
         ),
-        BatchedCompositionCompiler.compile(
+        _compile_csi(
             base,
             backend=batched_backend,
             outputs=base_outputs,
             max_steps=128,
         ),
-        BatchedCompositionCompiler.compile(
+        _compile_csi(
             delayed,
             backend=batched_backend,
             outputs=delayed_outputs,
@@ -947,6 +1290,37 @@ def test_csi_deterministic_interpreter_matches_fresh_python(
 
     np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
     np.testing.assert_allclose(actual, _EXPECTED, rtol=1e-5, atol=1e-6)
+
+
+@pytest.mark.triton
+@pytest.mark.triton_interpreter
+def test_csi_count_zero_trial_entry_folded_threshold_matches_fresh_python(
+    registered_csi_drift_rate,
+):
+    """A raw zero LCA count makes WhenFinished true before trial execution."""
+
+    options = {
+        "csi_switch": 0,
+        "csi_repeat": 0,
+        "iti": 0,
+        "cue_values": [[0.0], [0.0], [0.0]],
+    }
+    python_composition, python_inputs, python_outputs = _model(**options)
+    python_composition.run(
+        inputs=python_inputs,
+        execution_mode=pnl.ExecutionMode.Python,
+    )
+    expected = _selected_python_results(python_composition, python_outputs)
+    np.testing.assert_allclose(
+        expected,
+        [[1.0, 0.53], [1.0, 0.55], [1.0, 0.55]],
+        rtol=0.0,
+        atol=1e-12,
+    )
+
+    actual = _run_compiled_csi("triton_cpu", **options)
+
+    np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
 
 
 _AFFINE_TIMING_CASES = (
@@ -1089,6 +1463,18 @@ def test_csi_deterministic_gpu_matches_oracle(registered_csi_drift_rate):
     np.testing.assert_allclose(
         _run_compiled_csi("triton", ddm_rate=500.0),
         [[1.0, 0.32], [1.0, 0.34]],
+        rtol=1e-5,
+        atol=1e-6,
+    )
+    np.testing.assert_allclose(
+        _run_compiled_csi(
+            "triton",
+            csi_switch=0,
+            csi_repeat=0,
+            iti=0,
+            cue_values=[[0.0], [0.0], [0.0]],
+        ),
+        [[1.0, 0.53], [1.0, 0.55], [1.0, 0.55]],
         rtol=1e-5,
         atol=1e-6,
     )
