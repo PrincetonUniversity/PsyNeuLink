@@ -138,6 +138,402 @@ class KernelOp:
             _validate_reset_state(self)
 
 
+_DYNAMIC_MEMBER_PREDICATES = frozenset({
+    "Always",
+    "AtPass",
+    "AtTrialStart",
+    "EveryNCalls",
+    "AllEveryNCalls",
+    "WhenFinished",
+})
+_DYNAMIC_SCHEDULE_PREDICATES = _DYNAMIC_MEMBER_PREDICATES | {"AllHaveRun"}
+_DYNAMIC_SCHEDULE_SLOT_KINDS = frozenset({
+    "pass_index",
+    "execution_count",
+    "has_run",
+    "usable_call",
+    "finished",
+    "rng_clock",
+})
+_DYNAMIC_SCHEDULE_CARRY_KINDS = frozenset(
+    {"state", "effective_parameter", "output", "diagnostic"}
+)
+_NESTED_DYNAMIC_SCHEDULE_OP_KINDS = frozenset({
+    "ForPasses", "ForTrials", "ExecuteConsiderationSet", "StoreOutput", "StoreFlag",
+})
+
+
+@dataclass(frozen=True)
+class KernelSchedulePredicate:
+    """One object-free predicate over lane-local scheduler state."""
+
+    kind: str
+    dependency_component_ids: tuple[int, ...] = ()
+    finished_value_ids: tuple[int, ...] = ()
+    pass_index: int | None = None
+    call_count: int | None = None
+
+    def __post_init__(self) -> None:
+        ids = (self.dependency_component_ids, self.finished_value_ids)
+        indices = (self.pass_index, self.call_count)
+        valid_ids = all(_valid_dynamic_ids(values) for values in ids)
+        shape = (
+            (len(ids[0]), len(ids[1]), *(value is not None for value in indices))
+            if valid_ids
+            else None
+        )
+        fixed_shapes = {
+            "Always": (0, 0, False, False),
+            "AtPass": (0, 0, True, False),
+            "AtTrialStart": (0, 0, True, False),
+            "EveryNCalls": (1, 0, False, True),
+            "WhenFinished": (1, 1, False, False),
+        }
+        valid_shape = (
+            shape == fixed_shapes.get(self.kind)
+            if type(self.kind) is str
+            else False
+        ) or (
+            self.kind == "AllEveryNCalls"
+            and shape is not None
+            and shape[0] >= 2
+            and shape[1:] == (0, False, True)
+        ) or (
+            self.kind == "AllHaveRun"
+            and shape is not None
+            and shape[0] >= 1
+            and shape[1:] == (0, False, False)
+        )
+        if (
+            type(self.kind) is not str
+            or self.kind not in _DYNAMIC_SCHEDULE_PREDICATES
+            or not valid_ids
+            or any(
+                value is not None and not _valid_dynamic_index(value)
+                for value in indices
+            )
+            or not valid_shape
+            or self.kind == "AtTrialStart" and self.pass_index != 0
+            or self.call_count is not None and self.call_count == 0
+        ):
+            raise ValueError(f"KernelIR {self.kind!r} predicate operands are invalid.")
+
+
+@dataclass(frozen=True)
+class KernelScheduledComponent:
+    """One consideration-set member and its explicit publication boundary."""
+
+    component_id: int
+    predicate: KernelSchedulePredicate
+    body: tuple[KernelOp, ...]
+    published_values: tuple[KernelValue, ...]
+    effects: tuple[KernelOp, ...] = ()
+
+    def __post_init__(self) -> None:
+        if (
+            not _valid_dynamic_id(self.component_id)
+            or type(self.predicate) is not KernelSchedulePredicate
+            or self.predicate.kind not in _DYNAMIC_MEMBER_PREDICATES
+            or not _valid_dynamic_ops(self.body, nonempty=True)
+            or not _valid_dynamic_ops(self.effects, effects=True)
+            or not _valid_dynamic_values(self.published_values, nonempty=True)
+        ):
+            raise ValueError("KernelIR scheduled component fields are invalid.")
+        published = tuple(_kernel_value_key(value) for value in self.published_values)
+        defined = {
+            _kernel_value_key(value) for op in self.body for value in op.outputs
+        }
+        if len(set(published)) != len(published) or not set(published) <= defined:
+            raise ValueError(
+                "KernelIR published values must be unique outputs of their member body."
+            )
+
+
+@dataclass(frozen=True)
+class KernelConsiderationSetProgram:
+    """One ordered, beginning-of-set-frozen dynamic schedule unit."""
+
+    consideration_set_id: int
+    members: tuple[KernelScheduledComponent, ...]
+    inputs_frozen: bool = True
+
+    def __post_init__(self) -> None:
+        valid_members = _exact_tuple(
+            self.members,
+            KernelScheduledComponent,
+            nonempty=True,
+        )
+        member_ids = (
+            tuple(member.component_id for member in self.members)
+            if valid_members
+            else ()
+        )
+        if (
+            not _valid_dynamic_id(self.consideration_set_id)
+            or not valid_members
+            or member_ids != tuple(sorted(set(member_ids)))
+            or self.inputs_frozen is not True
+        ):
+            raise ValueError("KernelIR consideration set is not ordered and frozen.")
+
+
+@dataclass(frozen=True)
+class KernelSchedulerStateSlot:
+    """One typed lane-local scheduler slot with role-specific GraphIR IDs."""
+
+    kind: str
+    value: KernelValue
+    owner_component_id: int | None = None
+    dependency_component_id: int | None = None
+    finished_value_id: int | None = None
+
+    def __post_init__(self) -> None:
+        owner = self.owner_component_id
+        dependency = self.dependency_component_id
+        finished = self.finished_value_id
+        values = (owner, dependency, finished)
+        identity_shape = tuple(value is not None for value in values)
+        expected_shapes = {
+            "pass_index": (False, False, False),
+            "execution_count": (True, False, False),
+            "has_run": (True, False, False),
+            "usable_call": (True, True, False),
+            "finished": (True, False, True),
+            "rng_clock": (True, False, False),
+        }
+        expected_shape = (
+            expected_shapes.get(self.kind) if type(self.kind) is str else None
+        )
+        expected_dtype = (
+            "bool"
+            if type(self.kind) is str and self.kind in {"has_run", "finished"}
+            else "int32"
+        )
+        if (
+            expected_shape is None
+            or not _valid_dynamic_value(self.value)
+            or self.value.width != 1
+            or self.value.dtype != expected_dtype
+            or any(
+                value is not None and not _valid_dynamic_id(value)
+                for value in values
+            )
+            or identity_shape != expected_shape
+            or self.kind == "usable_call" and owner == dependency
+        ):
+            raise ValueError("KernelIR scheduler slot has invalid typed identity.")
+
+
+@dataclass(frozen=True)
+class KernelLoopCarry:
+    """One explicitly owned value carried by the future dynamic region."""
+
+    kind: str
+    owner_component_id: int
+    value_id: int
+    value: KernelValue
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.kind) is not str
+            or self.kind not in _DYNAMIC_SCHEDULE_CARRY_KINDS
+            or not _valid_dynamic_id(self.owner_component_id)
+            or not _valid_dynamic_id(self.value_id)
+            or not _valid_dynamic_value(self.value)
+        ):
+            raise ValueError("KernelIR loop carry has invalid typed identity.")
+
+
+@dataclass(frozen=True)
+class KernelComponentExecutionBudget:
+    """A bounded execution allowance owned by one scheduled component."""
+
+    component_id: int
+    maximum: int
+
+    def __post_init__(self) -> None:
+        if (
+            not _valid_dynamic_id(self.component_id)
+            or type(self.maximum) is not int
+            or not 0 < self.maximum <= FP32_EXACT_INTEGER_LIMIT
+        ):
+            raise ValueError("KernelIR component execution budget is invalid.")
+
+
+@dataclass(frozen=True)
+class KernelDynamicScheduleProgram:
+    """An inert, typed lane-local dynamic schedule declaration."""
+
+    consideration_sets: tuple[KernelConsiderationSetProgram, ...]
+    scheduler_state_slots: tuple[KernelSchedulerStateSlot, ...]
+    loop_carries: tuple[KernelLoopCarry, ...]
+    execution_budgets: tuple[KernelComponentExecutionBudget, ...]
+    trial_termination: KernelSchedulePredicate
+
+    def __post_init__(self) -> None:
+        _validate_dynamic_schedule_program(self)
+
+
+def _valid_dynamic_id(value) -> bool:
+    return type(value) is int and value >= 0
+
+
+def _valid_dynamic_ids(values) -> bool:
+    return (
+        type(values) is tuple
+        and all(_valid_dynamic_id(value) for value in values)
+        and values == tuple(sorted(set(values)))
+    )
+
+
+def _valid_dynamic_index(value) -> bool:
+    return _valid_dynamic_id(value) and value <= FP32_EXACT_INTEGER_LIMIT
+
+
+def _exact_tuple(values, expected_type, *, nonempty=False) -> bool:
+    return bool(
+        type(values) is tuple
+        and (values or not nonempty)
+        and all(type(value) is expected_type for value in values)
+    )
+
+
+def _valid_dynamic_value(value) -> bool:
+    return bool(
+        type(value) is KernelValue
+        and type(value.name) is str
+        and value.name
+        and type(value.width) is int
+        and value.width > 0
+        and type(value.dtype) is str
+        and value.dtype
+    )
+
+
+def _valid_dynamic_values(values, *, nonempty=False) -> bool:
+    return _exact_tuple(values, KernelValue, nonempty=nonempty) and all(
+        _valid_dynamic_value(value) for value in values
+    )
+
+
+def _valid_dynamic_ops(values, *, nonempty=False, effects=False) -> bool:
+    return _exact_tuple(values, KernelOp, nonempty=nonempty) and all(
+        type(op.kind) is str
+        and op.kind
+        and type(op.target) is str
+        and op.target
+        and op.kind not in _NESTED_DYNAMIC_SCHEDULE_OP_KINDS
+        and (not effects or op.kind == "ApplyModulation")
+        and _valid_dynamic_values(op.inputs)
+        and _valid_dynamic_values(op.outputs)
+        and isinstance(op.attrs, Mapping)
+        for op in values
+    )
+
+
+def _dynamic_slot_key(slot: KernelSchedulerStateSlot):
+    return (
+        slot.kind,
+        slot.owner_component_id,
+        slot.dependency_component_id,
+        slot.finished_value_id,
+    )
+
+
+def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) -> None:
+    if not (
+        _exact_tuple(
+            program.consideration_sets,
+            KernelConsiderationSetProgram,
+            nonempty=True,
+        )
+        and _exact_tuple(program.scheduler_state_slots, KernelSchedulerStateSlot)
+        and _exact_tuple(program.loop_carries, KernelLoopCarry)
+        and _exact_tuple(program.execution_budgets, KernelComponentExecutionBudget)
+        and type(program.trial_termination) is KernelSchedulePredicate
+    ):
+        raise ValueError("KernelIR dynamic schedule fields require exact typed tuples.")
+
+    set_ids = tuple(item.consideration_set_id for item in program.consideration_sets)
+    members = tuple(
+        member for item in program.consideration_sets for member in item.members
+    )
+    member_ids = tuple(member.component_id for member in members)
+    member_id_set = set(member_ids)
+    if (
+        set_ids != tuple(range(len(set_ids)))
+        or len(member_id_set) != len(member_ids)
+        or program.trial_termination.kind != "AllHaveRun"
+        or program.trial_termination.dependency_component_ids
+        != tuple(sorted(member_ids))
+        or any(
+            dependency not in member_id_set
+            for member in members
+            for dependency in member.predicate.dependency_component_ids
+        )
+    ):
+        raise ValueError(
+            "KernelIR dynamic schedule requires ordered sets, unique members, "
+            "valid predicate references, and exact AllHaveRun termination."
+        )
+
+    slot_keys = tuple(
+        _dynamic_slot_key(slot) for slot in program.scheduler_state_slots
+    )
+    slot_values = tuple(
+        _kernel_value_key(slot.value) for slot in program.scheduler_state_slots
+    )
+    expected_slots = {("pass_index", None, None, None)} | {
+        (kind, component_id, None, None)
+        for component_id in member_ids
+        for kind in ("execution_count", "has_run")
+    } | {
+        ("usable_call", member.component_id, dependency_id, None)
+        for member in members
+        if member.predicate.kind in {"EveryNCalls", "AllEveryNCalls"}
+        for dependency_id in member.predicate.dependency_component_ids
+    } | {
+        (
+            "finished",
+            member.predicate.dependency_component_ids[0],
+            None,
+            member.predicate.finished_value_ids[0],
+        )
+        for member in members
+        if member.predicate.kind == "WhenFinished"
+    }
+    carry_keys = tuple((carry.kind, carry.value_id) for carry in program.loop_carries)
+    carry_values = tuple(
+        _kernel_value_key(carry.value) for carry in program.loop_carries
+    )
+    budget_ids = tuple(budget.component_id for budget in program.execution_budgets)
+    if (
+        len(set(slot_keys)) != len(slot_keys)
+        or len(set(slot_values)) != len(slot_values)
+        or {key for key in slot_keys if key[0] != "rng_clock"} != expected_slots
+        or len(set(carry_keys)) != len(carry_keys)
+        or len(set(carry_values)) != len(carry_values)
+        or len(set(budget_ids)) != len(budget_ids)
+        or any(
+            component_id is not None and component_id not in member_id_set
+            for slot in program.scheduler_state_slots
+            for component_id in (
+                slot.owner_component_id,
+                slot.dependency_component_id,
+            )
+        )
+        or any(
+            carry.owner_component_id not in member_id_set
+            for carry in program.loop_carries
+        )
+        or any(component_id not in member_id_set for component_id in budget_ids)
+    ):
+        raise ValueError(
+            "KernelIR dynamic state, carry, and budget identities must be "
+            "unique and owned by scheduled components."
+        )
+
+
 def add_constant_op(
     *,
     target: str,
