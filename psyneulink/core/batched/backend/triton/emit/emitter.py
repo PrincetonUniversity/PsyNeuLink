@@ -66,6 +66,12 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # ordinary whole-kernel defaults.
         self.dynamic_active_mask = "mask"
         self.dynamic_execution_index: str | None = None
+        # The typed program and its currently materialized scheduler slots are
+        # available while a dynamic member body is emitted.  Stateful step
+        # adapters use them to bind per-trial state and the exact pre-increment
+        # RNG clock declared for that member.
+        self.dynamic_program = None
+        self.dynamic_slot_vars = None
         self.rng_stream_slot: dict[str, int] = {}
         self.rng_stream_count = 0
         self.output_cursor = 0

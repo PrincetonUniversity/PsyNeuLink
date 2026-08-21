@@ -13,7 +13,7 @@ from psyneulink.core.batched.graph import (
     STATEFUL_GRAPH_FUSION,
     STATELESS_GRAPH_FUSION,
     _dynamic_controlled_coevolving_graph_eligible,
-    _dynamic_controlled_finished_graph_eligible,
+    _dynamic_scheduled_graph_eligible,
     _node_param_aliases,
     projection_inputs,
 )
@@ -157,7 +157,10 @@ _DYNAMIC_SCHEDULE_SLOT_KINDS = frozenset({
     "rng_clock",
 })
 _DYNAMIC_SCHEDULE_CARRY_KINDS = frozenset(
-    {"state", "effective_parameter", "output", "diagnostic"}
+    {"state", "trial_state", "effective_parameter", "output", "diagnostic"}
+)
+_DYNAMIC_SCHEDULE_PUBLICATION_KINDS = (
+    _DYNAMIC_SCHEDULE_CARRY_KINDS | {"finished"}
 )
 _DYNAMIC_SCHEDULE_BODY_OP_KINDS = frozenset({
     "AddConstant",
@@ -236,7 +239,7 @@ class KernelSchedulePredicate:
 
 @dataclass(frozen=True, eq=False)
 class KernelPublication:
-    """Publish one member-local candidate into an identified loop carry."""
+    """Publish one member-local candidate into a carry or scheduler slot."""
 
     source: KernelValue
     kind: str
@@ -247,9 +250,11 @@ class KernelPublication:
         if (
             not _valid_dynamic_value(self.source)
             or type(self.kind) is not str
-            or self.kind not in _DYNAMIC_SCHEDULE_CARRY_KINDS
+            or self.kind not in _DYNAMIC_SCHEDULE_PUBLICATION_KINDS
             or not _valid_dynamic_id(self.owner_component_id)
             or not _valid_dynamic_id(self.value_id)
+            or self.kind == "finished"
+            and (self.source.width != 1 or self.source.dtype != "bool")
         ):
             raise ValueError("KernelIR publication has invalid typed identity.")
 
@@ -385,30 +390,70 @@ class KernelLoopCarry:
     owner_component_id: int
     value_id: int
     value: KernelValue
+    initial_value: tuple[float, ...] | None = None
+    initial_parameter_id: int | None = None
 
     def __post_init__(self) -> None:
+        static_initializer = self.initial_value is not None
+        parameter_initializer = self.initial_parameter_id is not None
         if (
             type(self.kind) is not str
             or self.kind not in _DYNAMIC_SCHEDULE_CARRY_KINDS
             or not _valid_dynamic_id(self.owner_component_id)
             or not _valid_dynamic_id(self.value_id)
             or not _valid_dynamic_value(self.value)
+            or self.kind == "trial_state"
+            and (
+                static_initializer is parameter_initializer
+                or static_initializer
+                and (
+                    type(self.initial_value) is not tuple
+                    or len(self.initial_value) != self.value.width
+                    or any(
+                        type(component) is not float or not np.isfinite(component)
+                        for component in self.initial_value
+                    )
+                )
+                or parameter_initializer
+                and not _valid_dynamic_id(self.initial_parameter_id)
+            )
+            or self.kind != "trial_state"
+            and (static_initializer or parameter_initializer)
         ):
             raise ValueError("KernelIR loop carry has invalid typed identity.")
 
 
 @dataclass(frozen=True, eq=False)
 class KernelComponentExecutionBudget:
-    """A component-local allowance, not a whole-trial termination proof."""
+    """A component-local allowance with an optional finished-value gate."""
 
     component_id: int
     maximum: int
+    finished_value_id: int | None = None
+    unfinished_maximum: int | None = None
+    post_finish: str = "unrestricted"
 
     def __post_init__(self) -> None:
+        finished_value_id = self.finished_value_id
+        unfinished_maximum = self.unfinished_maximum
+        identity_shape = (
+            finished_value_id is not None,
+            unfinished_maximum is not None,
+        )
         if (
             not _valid_dynamic_id(self.component_id)
             or type(self.maximum) is not int
             or not 0 < self.maximum <= FP32_EXACT_INTEGER_LIMIT
+            or self.post_finish == "unrestricted"
+            and identity_shape != (False, False)
+            or self.post_finish in {"continue", "stop"}
+            and (
+                identity_shape != (True, True)
+                or not _valid_dynamic_id(finished_value_id)
+                or type(unfinished_maximum) is not int
+                or not 0 < unfinished_maximum <= self.maximum
+            )
+            or self.post_finish not in {"unrestricted", "continue", "stop"}
         ):
             raise ValueError("KernelIR component execution budget is invalid.")
 
@@ -427,6 +472,7 @@ class KernelDynamicScheduleProgram:
     loop_carries: tuple[KernelLoopCarry, ...]
     execution_budgets: tuple[KernelComponentExecutionBudget, ...]
     trial_termination: KernelSchedulePredicate
+    schedule_fuel: int
 
     def __post_init__(self) -> None:
         _validate_dynamic_schedule_program(self)
@@ -514,6 +560,11 @@ def _validate_dynamic_member_dataflow(
     """Authenticate frozen snapshot reads and deferred carry publication."""
 
     carries_by_key = {_dynamic_carry_key(carry): carry for carry in carries}
+    finished_slots_by_key = {
+        (slot.owner_component_id, slot.finished_value_id): slot
+        for slot in slots
+        if slot.kind == "finished"
+    }
     snapshot_by_name = {carry.value.name: carry for carry in carries}
     if len(snapshot_by_name) != len(carries):
         raise ValueError("KernelIR loop-carry value names must be globally unique.")
@@ -562,14 +613,28 @@ def _validate_dynamic_member_dataflow(
             source = local_by_name.get(publication.source.name)
             destination_key = _dynamic_carry_key(publication)
             destination = carries_by_key.get(destination_key)
+            finished_slot = finished_slots_by_key.get(
+                (publication.owner_component_id, publication.value_id)
+            )
+            finished_publication = publication.kind == "finished"
             if (
                 publication.owner_component_id != member.component_id
                 or source is None
                 or _kernel_value_key(source) != _kernel_value_key(publication.source)
-                or destination is None
-                or publication.source.name == destination.value.name
-                or _dynamic_value_type(publication.source)
-                != _dynamic_value_type(destination.value)
+                or finished_publication
+                and (
+                    destination is not None
+                    or finished_slot is None
+                    or _dynamic_value_type(publication.source)
+                    != _dynamic_value_type(finished_slot.value)
+                )
+                or not finished_publication
+                and (
+                    destination is None
+                    or publication.source.name == destination.value.name
+                    or _dynamic_value_type(publication.source)
+                    != _dynamic_value_type(destination.value)
+                )
                 or publication.source.name in publication_source_names
                 or destination_key in destination_writers
             ):
@@ -632,6 +697,7 @@ def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) ->
         and _exact_tuple(program.loop_carries, KernelLoopCarry)
         and _exact_tuple(program.execution_budgets, KernelComponentExecutionBudget)
         and type(program.trial_termination) is KernelSchedulePredicate
+        and type(program.schedule_fuel) is int
     ):
         raise ValueError("KernelIR dynamic schedule fields require exact typed tuples.")
 
@@ -704,14 +770,25 @@ def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) ->
         for slot in program.scheduler_state_slots
         if slot.kind == "rng_clock"
     )
+    finished_slot_keys = {
+        (slot.owner_component_id, slot.finished_value_id)
+        for slot in program.scheduler_state_slots
+        if slot.kind == "finished"
+    }
+    budget_finished_keys = {
+        (budget.component_id, budget.finished_value_id)
+        for budget in program.execution_budgets
+        if budget.post_finish != "unrestricted"
+    }
     if (
         len(set(slot_keys)) != len(slot_keys)
         or len(set(slot_values)) != len(slot_values)
         or {key for key in slot_keys if key[0] != "rng_clock"} != expected_slots
         or len(set(carry_keys)) != len(carry_keys)
         or len(set(carry_values)) != len(carry_values)
-        or len(set(budget_ids)) != len(budget_ids)
+        or budget_ids != tuple(sorted(member_ids))
         or len(set(rng_stream_ids)) != len(rng_stream_ids)
+        or budget_finished_keys != finished_slot_keys
         or any(
             component_id is not None and component_id not in member_id_set
             for slot in program.scheduler_state_slots
@@ -730,6 +807,32 @@ def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) ->
         raise ValueError(
             "KernelIR dynamic state, carry, and budget identities must be "
             "unique and owned by scheduled components."
+        )
+    pass_indices = tuple(
+        member.predicate.pass_index
+        for member in members
+        if member.predicate.kind in {"AtPass", "AtTrialStart"}
+    )
+    if (
+        not 0 < program.schedule_fuel <= FP32_EXACT_INTEGER_LIMIT
+        or program.schedule_fuel <= max(pass_indices, default=-1)
+        or any(
+            budget.maximum > program.schedule_fuel
+            for budget in program.execution_budgets
+        )
+        or any(
+            budget.maximum != 1
+            for budget in program.execution_budgets
+            if next(
+                member
+                for member in members
+                if member.component_id == budget.component_id
+            ).predicate.kind in {"AtPass", "AtTrialStart"}
+        )
+    ):
+        raise ValueError(
+            "KernelIR dynamic schedule fuel must cover its latest AtPass and "
+            "every exact component-local execution budget."
         )
     _validate_dynamic_member_dataflow(
         members,
@@ -1070,10 +1173,8 @@ def _validate_for_passes(op: KernelOp) -> None:
             "declaration_only",
             "trace_kind",
             "program",
-            "max_passes",
         }
         program = op.attrs.get("program")
-        max_passes = op.attrs.get("max_passes")
         if type(program) is KernelDynamicScheduleProgram:
             # Re-run the complete record validator because nested mappings in
             # KernelOps can be mutated after their dataclass construction.
@@ -1094,8 +1195,6 @@ def _validate_for_passes(op: KernelOp) -> None:
             or op.target != "passes"
             or body
             or type(program) is not KernelDynamicScheduleProgram
-            or type(max_passes) is not int
-            or not 0 < max_passes <= FP32_EXACT_INTEGER_LIMIT
             or len(op.inputs) != len(persistent_values)
             or any(
                 not _kernel_value_matches(actual, expected)
@@ -1109,7 +1208,7 @@ def _validate_for_passes(op: KernelOp) -> None:
         ):
             raise ValueError(
                 "Executable lane-local dynamic KernelIR ForPasses requires "
-                "one exact typed program, global pass cap, persistent inputs, "
+                "one exact typed program with schedule fuel, persistent inputs, "
                 "and the complete ordered carry result set."
             )
         return
@@ -1291,21 +1390,19 @@ def _validate_step_mechanism(op: KernelOp) -> None:
             "KernelIR StepMechanism component_id must be a non-negative "
             "non-bool integer."
         )
-    if (
-        type(state_ids) is not tuple
-        or not state_ids
-        or any(type(state_id) is not int or state_id < 0 for state_id in state_ids)
-        or state_ids != tuple(sorted(set(state_ids)))
-    ):
+    if type(state_ids) is not tuple or any(
+        type(state_id) is not int or state_id < 0 for state_id in state_ids
+    ) or state_ids != tuple(sorted(set(state_ids))):
         raise ValueError(
-            "KernelIR StepMechanism state_ids must be a nonempty tuple of "
-            "unique, sorted, non-negative non-bool integers."
+            "KernelIR StepMechanism state_ids must be a tuple of unique, "
+            "sorted, non-negative non-bool integers."
         )
     active_lanes = op.attrs.get("active_lanes")
     if active_lanes == "all":
         execution_index = op.attrs.get("execution_index")
         if (
             len(op.inputs) != 1
+            or not state_ids
             or type(execution_index) is not int
             or execution_index < 0
         ):
@@ -1320,6 +1417,9 @@ def _validate_step_mechanism(op: KernelOp) -> None:
                 "finished_value_id",
                 "effective_parameter_id",
                 "target_parameter_port_id",
+                "trial_state_ids",
+                "finished_trial_state_id",
+                "rng_stream_ids",
             )
         ):
             raise ValueError(
@@ -1332,17 +1432,55 @@ def _validate_step_mechanism(op: KernelOp) -> None:
             "effective_parameter_id",
             "target_parameter_port_id",
         )
+        trial_state_ids = op.attrs.get("trial_state_ids")
+        finished_trial_state_id = op.attrs.get("finished_trial_state_id")
+        rng_stream_ids = op.attrs.get("rng_stream_ids")
+        valid_trial_state_ids = bool(
+            type(trial_state_ids) is tuple
+            and all(
+                type(state_id) is int and state_id >= 0
+                for state_id in trial_state_ids
+            )
+            and trial_state_ids == tuple(sorted(set(trial_state_ids)))
+        )
+        valid_rng_stream_ids = bool(
+            type(rng_stream_ids) is tuple
+            and all(
+                type(stream_id) is int and stream_id >= 0
+                for stream_id in rng_stream_ids
+            )
+            and rng_stream_ids == tuple(sorted(set(rng_stream_ids)))
+        )
+        finished_output_count = int(finished_trial_state_id is not None)
+        model_output_count = (
+            len(op.outputs)
+            - len(state_ids)
+            - len(trial_state_ids)
+            - finished_output_count
+        )
         if (
             op.attrs.get("loop_counter") != "component_execution_count"
             or "execution_index" in op.attrs
             or any(key in op.attrs for key in legacy_identity_keys)
-            or len(op.inputs) != 1 + len(state_ids)
-            or len(op.outputs) <= len(state_ids)
+            or not valid_trial_state_ids
+            or not valid_rng_stream_ids
+            or finished_trial_state_id is not None
+            and (
+                type(finished_trial_state_id) is not int
+                or finished_trial_state_id not in trial_state_ids
+            )
+            or len(op.inputs) != 1 + len(state_ids) + len(trial_state_ids)
+            or model_output_count <= 0
+            or finished_output_count
+            and (
+                op.outputs[model_output_count].width != 1
+                or op.outputs[model_output_count].dtype != "bool"
+            )
         ):
             raise ValueError(
                 "KernelIR dynamic member StepMechanism requires one data input, "
-                "exact state input/output suffixes, and no topology-specific "
-                "finished or control identities."
+                "exact persistent/trial state suffixes, typed finished/RNG "
+                "identities, and no topology-specific control identities."
             )
     else:
         raise ValueError(
@@ -1387,6 +1525,8 @@ def _validate_reset_state(op: KernelOp) -> None:
             "KernelIR ResetState requires condition_type='AtTrialStart' and "
             "region='trial'."
         )
+
+
 @dataclass(frozen=True)
 class KernelIR:
     """Backend-neutral batched execution plan.
@@ -1487,6 +1627,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
     _validate_kernel_reset_declarations(kernel)
     step_counts: dict[int, int] = {}
     precomputed_regions: list[KernelOp] = []
+    dynamic_regions: list[KernelOp] = []
     input_loads: list[KernelOp] = []
     output_stores: list[KernelOp] = []
     value_lineage: dict[
@@ -1625,6 +1766,7 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
             else None
         )
         if type(dynamic_program) is KernelDynamicScheduleProgram:
+            dynamic_regions.append(op)
             for consideration_set in dynamic_program.consideration_sets:
                 for member in consideration_set.members:
                     for member_op in member.body:
@@ -1827,6 +1969,13 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
         for value in kernel.finished_values
         if value.predicate_kind == "execution_count_at_least"
     }
+    if dynamic_regions:
+        if step_counts:
+            raise ValueError(
+                "KernelIR cannot mix dynamic member steps with precomputed "
+                "StepMechanism operations."
+            )
+        return
     if not step_counts:
         if kernel.executable and counted_finished:
             raise ValueError(
@@ -3677,25 +3826,24 @@ def _validate_dynamic_schedule_modulation_ops(
     *,
     dynamic_regions: tuple[KernelOp, ...],
 ) -> None:
-    """Cross-authenticate the complete generic controlled-finished program."""
+    """Cross-authenticate the complete generic lane-local schedule program."""
 
     if (
         len(dynamic_regions) != 1
-        or not _dynamic_modulation_lowering_eligible(kernel)
+        or not _dynamic_schedule_lowering_eligible(kernel)
     ):
         raise ValueError(
             "KernelIR lane-local dynamic operations fall outside the exact "
-            "controlled-finished migration boundary."
+            "declared scheduling capability boundary."
         )
     region = dynamic_regions[0]
     program = region.attrs.get("program")
     if (
         type(program) is not KernelDynamicScheduleProgram
-        or region.attrs.get("max_passes") != kernel.max_steps
     ):
         raise ValueError(
             "KernelIR lane-local dynamic region requires its exact typed "
-            "schedule and trial-global pass cap."
+            "schedule and independent schedule fuel."
         )
     expected_ops = _canonical_dynamic_schedule_kernel_ops(kernel)
     if not _kernel_op_sequences_match_exactly(kernel.ops, expected_ops):
@@ -3704,6 +3852,108 @@ def _validate_dynamic_schedule_modulation_ops(
             "complete compiler-derived schedule program."
         )
     _validate_dynamic_schedule_local_lineage(kernel, program)
+    _validate_dynamic_schedule_stateful_capabilities(kernel, program)
+
+
+def _validate_dynamic_schedule_stateful_capabilities(
+    kernel: KernelIR,
+    program: KernelDynamicScheduleProgram,
+) -> None:
+    """Authenticate trial state, finished publication, and RNG ownership."""
+
+    members = tuple(
+        member
+        for consideration_set in program.consideration_sets
+        for member in consideration_set.members
+    )
+    steps = tuple(
+        (member, op)
+        for member in members
+        for op in member.body
+        if op.kind == "StepMechanism"
+    )
+    finished_publications = tuple(
+        (member, publication)
+        for member in members
+        for publication in member.publications
+        if publication.kind == "finished"
+    )
+    expected_finished_keys = {
+        (value.component_id, value.value_id)
+        for value in kernel.finished_values
+        if value.predicate_kind == "dynamic"
+    }
+    actual_finished_keys = tuple(
+        (publication.owner_component_id, publication.value_id)
+        for _, publication in finished_publications
+    )
+    if (
+        len(set(actual_finished_keys)) != len(actual_finished_keys)
+        or set(actual_finished_keys) != expected_finished_keys
+    ):
+        raise ValueError(
+            "KernelIR dynamic finished values require exactly one owner step "
+            "publication; count-derived values cannot be published."
+        )
+
+    for member, publication in finished_publications:
+        owner_steps = tuple(
+            op for owner, op in steps if owner.component_id == member.component_id
+        )
+        if len(owner_steps) != 1:
+            raise ValueError(
+                "KernelIR dynamic finished publication requires one owner step."
+            )
+        step = owner_steps[0]
+        state_count = len(step.attrs["state_ids"])
+        trial_state_count = len(step.attrs["trial_state_ids"])
+        model_output_count = (
+            len(step.outputs) - state_count - trial_state_count - 1
+        )
+        if (
+            step.attrs["finished_trial_state_id"] is None
+            or model_output_count <= 0
+            or not _kernel_value_matches(
+                publication.source,
+                step.outputs[model_output_count],
+            )
+        ):
+            raise ValueError(
+                "KernelIR finished publication must source its owner step's "
+                "explicit boolean candidate."
+            )
+
+    expected_rng_uses = tuple(
+        sorted(
+            (stream.component_id, stream.stream_id)
+            for stream in kernel.rng_streams
+        )
+    )
+    actual_rng_uses = tuple(
+        sorted(
+            (member.component_id, stream_id)
+            for member, step in steps
+            for stream_id in step.attrs["rng_stream_ids"]
+        )
+    )
+    if actual_rng_uses != expected_rng_uses:
+        raise ValueError(
+            "KernelIR RNG streams must be consumed exactly once by their "
+            "owning scheduled StepMechanism."
+        )
+
+    expected_trial_carries = _dynamic_trial_state_carries(kernel)
+    actual_trial_carries = tuple(
+        carry for carry in program.loop_carries if carry.kind == "trial_state"
+    )
+    if not _kernel_attribute_matches_exactly(
+        actual_trial_carries,
+        expected_trial_carries,
+    ):
+        raise ValueError(
+            "KernelIR trial-state carry inventory must exactly match frozen "
+            "registered step declarations."
+        )
 
 
 def _validate_dynamic_schedule_local_lineage(
@@ -3990,6 +4240,97 @@ def _canonical_dynamic_coevolving_kernel_ops(
     )
 
 
+def _dynamic_trial_state_carries(
+    kernel: KernelIR,
+) -> tuple[KernelLoopCarry, ...]:
+    """Materialize registered per-trial step state as typed loop carries."""
+
+    carries = []
+    parameters_by_name = {parameter.name: parameter for parameter in kernel.params}
+    for node in kernel.graph.nodes:
+        spec_key = node.attrs.get("spec_key", "")
+        if not spec_key:
+            continue
+        try:
+            implementation = kernel.op_specs.lookup_spec(spec_key)
+        except BatchedOpSpecError as error:
+            raise ValueError(
+                f"KernelIR dynamic member '{node.name}' has no frozen op spec."
+            ) from error
+        if not isinstance(implementation, MechanismOpSpec):
+            continue
+        for state_id, declaration in enumerate(implementation.trial_states):
+            width = (
+                node.output_width
+                if declaration.width is None
+                else declaration.width
+            )
+            initial_parameter = declaration.initial_parameter
+            if type(initial_parameter) is not str:
+                raise ValueError(
+                    "KernelIR trial-state initial parameter must be a string."
+                )
+            initial_value = None
+            initial_parameter_id = None
+            if initial_parameter:
+                parameter_name = node.params.get(initial_parameter)
+                parameter = parameters_by_name.get(parameter_name)
+                if (
+                    parameter is None
+                    or parameter.owner_component_id != node.component_id
+                ):
+                    raise ValueError(
+                        "KernelIR trial-state initializer does not resolve to "
+                        "its owner's registered parameter binding."
+                    )
+                initial_parameter_id = parameter.parameter_id
+            else:
+                initial_value = tuple(
+                    float(declaration.initial) for _ in range(width)
+                )
+            carries.append(
+                KernelLoopCarry(
+                    "trial_state",
+                    node.component_id,
+                    state_id,
+                    KernelValue(
+                        f"{node.name}.{declaration.name}",
+                        width,
+                    ),
+                    initial_value=initial_value,
+                    initial_parameter_id=initial_parameter_id,
+                )
+            )
+    return tuple(carries)
+
+
+def _dynamic_component_execution_budget(
+    component_id: int,
+    *,
+    predicate: KernelSchedulePredicate,
+    finished: BatchedFinishedValueSpec | None,
+    schedule_fuel: int,
+    local_maximum: int,
+) -> KernelComponentExecutionBudget:
+    """Declare total and pre-finish limits without backend inference."""
+
+    one_shot = predicate.kind in {"AtPass", "AtTrialStart"}
+    if finished is None:
+        return KernelComponentExecutionBudget(
+            component_id,
+            1 if one_shot else schedule_fuel,
+        )
+    dynamic_terminator = finished.predicate_kind == "dynamic"
+    maximum = 1 if one_shot else (
+        local_maximum if dynamic_terminator else schedule_fuel
+    )
+    return KernelComponentExecutionBudget(
+        component_id,
+        maximum,
+        finished_value_id=finished.value_id,
+        unfinished_maximum=min(local_maximum, maximum),
+        post_finish="stop" if dynamic_terminator else "continue",
+    )
 
 
 def _canonical_dynamic_schedule_program(
@@ -3997,7 +4338,7 @@ def _canonical_dynamic_schedule_program(
 ) -> KernelDynamicScheduleProgram:
     """Rebuild the exact typed schedule owned by the controlled-finished tier."""
 
-    if not _dynamic_modulation_lowering_eligible(kernel):
+    if not _dynamic_schedule_lowering_eligible(kernel):
         raise ValueError(
             "KernelIR graph is not eligible for generic dynamic scheduling."
         )
@@ -4030,6 +4371,7 @@ def _canonical_dynamic_schedule_program(
         )
         for state, value in zip(kernel.states, state_values)
     )
+    trial_state_carries = _dynamic_trial_state_carries(kernel)
     effective_carries = tuple(
         KernelLoopCarry(
             "effective_parameter",
@@ -4062,11 +4404,9 @@ def _canonical_dynamic_schedule_program(
                     ),
                 )
             )
-    dynamic_finished = tuple(
+    diagnostic_finished = tuple(
         value
         for value in kernel.finished_values
-        if value.predicate_kind
-        == "execution_count_at_least_effective_parameter"
     )
     diagnostic_carries = tuple(
         KernelLoopCarry(
@@ -4075,10 +4415,11 @@ def _canonical_dynamic_schedule_program(
             value.value_id,
             dynamic_truncation_value(value),
         )
-        for value in dynamic_finished
+        for value in diagnostic_finished
     )
     carries = (
         *state_carries,
+        *trial_state_carries,
         *effective_carries,
         *output_carries,
         *diagnostic_carries,
@@ -4105,6 +4446,17 @@ def _canonical_dynamic_schedule_program(
     effective_by_id = {
         parameter.effective_parameter_id: parameter
         for parameter in kernel.effective_parameters
+    }
+    finished_by_component_id = {
+        value.component_id: value for value in kernel.finished_values
+    }
+    streams_by_component_id = {
+        component_id: tuple(
+            stream
+            for stream in kernel.rng_streams
+            if stream.component_id == component_id
+        )
+        for component_id in nodes_by_id
     }
     covered_component_ids = []
     set_programs = []
@@ -4136,6 +4488,9 @@ def _canonical_dynamic_schedule_program(
                     modulation=target_modulation,
                     carries_by_key=carries_by_key,
                     state_carries=state_carries,
+                    trial_state_carries=trial_state_carries,
+                    finished_value=finished_by_component_id.get(component_id),
+                    rng_streams=streams_by_component_id[component_id],
                 )
                 effects = ()
             members.append(
@@ -4245,26 +4600,55 @@ def _canonical_dynamic_schedule_program(
             )
         )
 
+    pass_indices = tuple(
+        predicate.pass_index
+        for predicate in predicates.values()
+        if predicate.kind in {"AtPass", "AtTrialStart"}
+    )
+    progress_obligations = []
+    for finished in kernel.finished_values:
+        if finished.predicate_kind == "execution_count_at_least":
+            count = finished.attrs.get("count")
+            if type(count) is not int or count <= 0:
+                raise ValueError(
+                    "KernelIR fixed-count finished value has no exact progress "
+                    "obligation."
+                )
+            progress_obligations.append(min(count, kernel.max_steps))
+        elif finished.predicate_kind in {
+            "dynamic",
+            "execution_count_at_least_effective_parameter",
+        }:
+            progress_obligations.append(kernel.max_steps)
+        else:
+            raise ValueError(
+                "KernelIR dynamic schedule has an unsupported finished-value "
+                f"predicate '{finished.predicate_kind}'."
+            )
+    schedule_fuel = max(pass_indices, default=0) + sum(progress_obligations)
+    finished_by_component = {
+        finished.component_id: finished for finished in kernel.finished_values
+    }
+    execution_budgets = tuple(
+        _dynamic_component_execution_budget(
+            component_id,
+            predicate=predicates[component_id],
+            finished=finished_by_component.get(component_id),
+            schedule_fuel=schedule_fuel,
+            local_maximum=kernel.max_steps,
+        )
+        for component_id in member_ids
+    )
     return KernelDynamicScheduleProgram(
         consideration_sets=tuple(set_programs),
         scheduler_state_slots=tuple(slots),
         loop_carries=tuple(carries),
-        execution_budgets=tuple(
-            KernelComponentExecutionBudget(
-                component_id,
-                (
-                    1
-                    if predicates[component_id].kind
-                    in {"AtPass", "AtTrialStart"}
-                    else kernel.max_steps
-                ),
-            )
-            for component_id in member_ids
-        ),
+        execution_budgets=execution_budgets,
         trial_termination=KernelSchedulePredicate(
             "AllHaveRun",
             dependency_component_ids=member_ids,
         ),
+        schedule_fuel=schedule_fuel,
     )
 
 
@@ -4294,7 +4678,11 @@ def _canonical_dynamic_member_predicate(
     kind = condition.condition_type
     attrs = dict(condition.attrs)
     if kind == "Always":
-        if condition.dependency_component_ids or condition.finished_value_ids or attrs:
+        if (
+            condition.dependency_component_ids
+            or condition.finished_value_ids
+            or attrs not in ({}, {"implicit": True})
+        ):
             raise ValueError("KernelIR dynamic Always predicate is invalid.")
         return KernelSchedulePredicate(kind)
     if kind in {"AtPass", "AtTrialStart"}:
@@ -4409,12 +4797,17 @@ def _dynamic_ordinary_member(
     modulation,
     carries_by_key,
     state_carries,
+    trial_state_carries,
+    finished_value,
+    rng_streams,
 ):
     graph = kernel.graph
     canonical_body = _component_trial_body_ops(graph, node.name)
     local_values = {}
     body = []
     state_candidates = ()
+    trial_state_candidates = ()
+    finished_candidate = None
     candidate_index = 0
 
     def local_input(value):
@@ -4433,9 +4826,17 @@ def _dynamic_ordinary_member(
 
     for op in canonical_body:
         if op.kind == "StoreFlag":
-            raise ValueError(
-                "KernelIR generic member diagnostics require typed carry lowering."
-            )
+            if (
+                op.attrs.get("node") != node.name
+                or op.attrs.get("name") != "truncated"
+                or finished_value is None
+                or finished_value.predicate_kind != "dynamic"
+            ):
+                raise ValueError(
+                    "KernelIR generic member diagnostics require one dynamic "
+                    "finished-value truncation carry."
+                )
+            continue
         inputs = tuple(local_input(value) for value in op.inputs)
         outputs = tuple(candidate(value) for value in op.outputs)
         if op.kind != "CallMechanism":
@@ -4449,9 +4850,17 @@ def _dynamic_ordinary_member(
                 )
             )
             continue
+        try:
+            implementation = kernel.op_specs.lookup_spec(op.attrs["spec_key"])
+        except (BatchedOpSpecError, KeyError) as error:
+            raise ValueError(
+                "KernelIR generic scheduled mechanism has no frozen step spec."
+            ) from error
         if (
-            modulation is None
-            or node.component_id != modulation.target_component_id
+            not isinstance(implementation, MechanismOpSpec)
+            or not implementation.can_step
+            or modulation is not None
+            and node.component_id != modulation.target_component_id
         ):
             raise ValueError(
                 "KernelIR generic schedule has an unrepresented mechanism member."
@@ -4470,15 +4879,71 @@ def _dynamic_ordinary_member(
             )
             for index, carry in enumerate(owned_states)
         )
+        owned_trial_states = tuple(
+            carry
+            for carry in trial_state_carries
+            if carry.owner_component_id == node.component_id
+        )
+        trial_state_ids = tuple(carry.value_id for carry in owned_trial_states)
+        trial_state_candidates = tuple(
+            KernelValue(
+                f"{carry.value.name}:candidate:c{node.component_id}:t{index}",
+                carry.value.width,
+                carry.value.dtype,
+            )
+            for index, carry in enumerate(owned_trial_states)
+        )
+        dynamic_finished = bool(
+            finished_value is not None
+            and finished_value.predicate_kind == "dynamic"
+        )
+        finished_trial_state_id = None
+        if dynamic_finished:
+            finished_trial_state_ids = tuple(
+                state_id
+                for state_id, declaration in enumerate(
+                    implementation.trial_states
+                )
+                if declaration.name == implementation.finished_output
+            )
+            if (
+                not implementation.is_terminator
+                or len(finished_trial_state_ids) != 1
+            ):
+                raise ValueError(
+                    "KernelIR dynamic finished mechanism requires one matching "
+                    "registered finished trial state."
+                )
+            finished_trial_state_id = finished_trial_state_ids[0]
+            finished_candidate = KernelValue(
+                f"schedule:finished:{node.component_id}:"
+                f"{finished_value.value_id}:candidate",
+                1,
+                "bool",
+            )
         body.append(
             KernelOp(
                 "StepMechanism",
                 op.target,
-                inputs=(*inputs, *(carry.value for carry in owned_states)),
-                outputs=(*outputs, *state_candidates),
+                inputs=(
+                    *inputs,
+                    *(carry.value for carry in owned_states),
+                    *(carry.value for carry in owned_trial_states),
+                ),
+                outputs=(
+                    *outputs,
+                    *((finished_candidate,) if finished_candidate is not None else ()),
+                    *state_candidates,
+                    *trial_state_candidates,
+                ),
                 attrs={
                     **op.attrs,
                     "state_ids": state_ids,
+                    "trial_state_ids": trial_state_ids,
+                    "finished_trial_state_id": finished_trial_state_id,
+                    "rng_stream_ids": tuple(
+                        stream.stream_id for stream in rng_streams
+                    ),
                     "active_lanes": "parent_member_predicate",
                     "loop_counter": "component_execution_count",
                 },
@@ -4515,6 +4980,33 @@ def _dynamic_ordinary_member(
         )
         for source, carry in zip(state_candidates, owned_states)
     )
+    owned_trial_states = tuple(
+        carry
+        for carry in trial_state_carries
+        if carry.owner_component_id == node.component_id
+    )
+    if len(trial_state_candidates) != len(owned_trial_states):
+        raise ValueError(
+            "KernelIR dynamic trial-stateful member did not yield every carry."
+        )
+    publications.extend(
+        KernelPublication(
+            source,
+            "trial_state",
+            node.component_id,
+            carry.value_id,
+        )
+        for source, carry in zip(trial_state_candidates, owned_trial_states)
+    )
+    if finished_candidate is not None:
+        publications.append(
+            KernelPublication(
+                finished_candidate,
+                "finished",
+                node.component_id,
+                finished_value.value_id,
+            )
+        )
     return tuple(body), tuple(publications)
 
 
@@ -4549,16 +5041,22 @@ def _canonical_dynamic_schedule_kernel_ops(
             "declaration_only": False,
             "trace_kind": "lane_local_dynamic",
             "program": program,
-            "max_passes": kernel.max_steps,
         },
     )
     diagnostic_carries = tuple(
         carry for carry in program.loop_carries if carry.kind == "diagnostic"
     )
-    if len(diagnostic_carries) != len(kernel.modulations):
+    expected_diagnostic_owners = {
+        value.component_id for value in kernel.finished_values
+    }
+    if {
+        carry.owner_component_id for carry in diagnostic_carries
+    } != expected_diagnostic_owners or len(diagnostic_carries) != len(
+        expected_diagnostic_owners
+    ):
         raise ValueError(
-            "KernelIR controlled dynamic schedule requires one diagnostic "
-            "carry per modulation."
+            "KernelIR dynamic schedule requires one truncation carry per "
+            "bounded finished-value owner."
         )
     nodes_by_id = {node.component_id: node for node in graph.nodes}
     state_values = _state_kernel_values(graph)
@@ -4688,8 +5186,6 @@ def _kernel_attribute_matches_exactly(actual: Any, expected: Any) -> bool:
         return bool(comparison.all())
     except AttributeError:
         return bool(comparison)
-
-
 
 
 def lower_to_kernel_ir(
@@ -4831,7 +5327,7 @@ def lower_to_kernel_ir(
         termination=graph.termination,
         schedule_trace=schedule_trace,
     )
-    if _dynamic_modulation_lowering_eligible(kernel):
+    if _dynamic_schedule_lowering_eligible(kernel):
         return replace(
             kernel,
             ops=_canonical_dynamic_schedule_kernel_ops(kernel),
@@ -5371,17 +5867,16 @@ def _dynamic_coevolving_lowering_eligible(kernel: KernelIR) -> bool:
     )
 
 
-def _dynamic_modulation_lowering_eligible(kernel: KernelIR) -> bool:
-    """Whether a complete typed controlled-finished program can materialize."""
+def _dynamic_schedule_lowering_eligible(kernel: KernelIR) -> bool:
+    """Whether a complete typed lane-local schedule can materialize."""
 
     if not (
-        _dynamic_controlled_finished_graph_eligible(
+        _dynamic_scheduled_graph_eligible(
             kernel.graph,
             kernel.params,
             op_specs=kernel.op_specs,
         )
         and kernel.lane_layout.kind == STATEFUL_LANE_LAYOUT
-        and not kernel.rng_streams
         and kernel.schedule_trace is None
         and all(
             {"integrator_pre", "onset_step"}.isdisjoint(node.attrs)

@@ -151,16 +151,20 @@ class StateDecl:
     """A lane-local state slot owned by a mechanism op.
 
     ``width=None`` resolves to the node's primary output width at lowering.
-    Declared states persist across trials, which selects the stateful lane
-    layout for the containing graph. ``initialize_with_function`` means the
-    registered primary elementwise function is applied to ``initial`` using
-    the lane's effective parameters; this represents initialized recurrent
-    sender values without embedding that function's formula in a backend.
+    ``initial_parameter`` optionally names a registered implementation
+    argument whose runtime lane value initializes trial-local state instead of
+    the static ``initial`` value. Declared ``states`` persist across trials,
+    which selects the stateful lane layout for the containing graph.
+    ``initialize_with_function`` means the registered primary elementwise
+    function is applied to ``initial`` using the lane's effective parameters;
+    this represents initialized recurrent sender values without embedding that
+    function's formula in a backend.
     """
 
     name: str
     width: int | None = None
     initial: float = 0.0
+    initial_parameter: str = ""
     initialize_with_function: bool = False
 
 

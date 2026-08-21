@@ -210,13 +210,13 @@ def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
         "ForTrials",
     )
     assert set(region.attrs) == {
-        "region", "body", "declaration_only", "trace_kind", "program", "max_passes"
+        "region", "body", "declaration_only", "trace_kind", "program"
     }
     assert (
         region.attrs["body"],
         region.attrs["trace_kind"],
         region.attrs["program"],
-        region.attrs["max_passes"],
+        program.schedule_fuel,
     ) == ((), "lane_local_dynamic", program, 16)
     set_signature = "|".join(
         f"{item.consideration_set_id}:"
@@ -343,7 +343,7 @@ def test_dynamic_control_kernel_ir_is_fully_lowered_and_executable():
         sorted(source.index(marker) for marker in markers)
     )
     assert "dynamic_round = 0" in source
-    assert "dynamic_round < MAX_STEPS" in source
+    assert f"dynamic_round < {program.schedule_fuel}" in source
     assert source.index("dynamic_s0_n2_active =") < source.index(
         "n_n0_output_0_candidate"
     )
@@ -461,8 +461,28 @@ def test_complete_kernel_rejects_forged_dynamic_program(forgery):
     elif forgery == "predicate":
         member = _program_member(program, producer_id)
         predicate = replace(member.predicate, kind="AtPass", pass_index=0)
-        program = _replace_program_member(
-            program, producer_id, replace(member, predicate=predicate)
+        forged_member = replace(member, predicate=predicate)
+        consideration_sets = tuple(
+            replace(
+                item,
+                members=tuple(
+                    forged_member
+                    if candidate.component_id == producer_id
+                    else candidate
+                    for candidate in item.members
+                ),
+            )
+            for item in program.consideration_sets
+        )
+        program = replace(
+            program,
+            consideration_sets=consideration_sets,
+            execution_budgets=tuple(
+                replace(item, maximum=1, unfinished_maximum=1)
+                if item.component_id == producer_id
+                else item
+                for item in program.execution_budgets
+            ),
         )
     elif forgery == "slot":
         first, *remainder = program.scheduler_state_slots
@@ -489,7 +509,10 @@ def test_complete_kernel_rejects_forged_dynamic_program(forgery):
         program = replace(
             program,
             execution_budgets=tuple(
-                replace(item, maximum=item.maximum - 1)
+                replace(
+                    item,
+                    unfinished_maximum=item.unfinished_maximum - 1,
+                )
                 if item is budget
                 else item
                 for item in program.execution_budgets
@@ -533,11 +556,17 @@ def test_complete_kernel_rejects_forged_dynamic_program(forgery):
         )
 
 
-def test_complete_kernel_rejects_forged_dynamic_global_cap():
+def test_complete_kernel_rejects_forged_dynamic_schedule_fuel():
     kernel = _dynamic_control_kernel()
 
-    with pytest.raises(ValueError, match="compiler-derived|global pass cap|exact"):
-        _replace_dynamic_region(kernel, max_passes=kernel.max_steps - 1)
+    with pytest.raises(ValueError, match="compiler-derived|execution budget|exact"):
+        _replace_dynamic_region(
+            kernel,
+            program=replace(
+                _dynamic_program(kernel),
+                schedule_fuel=kernel.max_steps + 1,
+            ),
+        )
 
 
 @pytest.mark.parametrize("store_kind", ("StoreFlag", "StoreOutput"))

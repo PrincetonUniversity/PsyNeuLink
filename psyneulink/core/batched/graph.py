@@ -560,7 +560,7 @@ def lower_composition(
                     },
                 )
 
-        if _dynamic_controlled_finished_graph_eligible(
+        if _dynamic_scheduled_graph_eligible(
             graph,
             tuple(params.specs),
         ):
@@ -573,11 +573,17 @@ def lower_composition(
                 diagnostic
                 for diagnostic in rejected_conditions
                 if not (
-                    diagnostic.component in follower_names
-                    and diagnostic.reason
+                    diagnostic.reason
                     == "batched schedule kind is not executable yet"
-                    and diagnostic.detail
-                    == "WhenFinished requires dynamic_lane_local"
+                    and (
+                        (
+                            diagnostic.component in follower_names
+                            and diagnostic.detail
+                            == "WhenFinished requires dynamic_lane_local"
+                        )
+                        or diagnostic.detail
+                        == _COEVOLVING_SCHEDULE_DIAGNOSTIC_DETAIL
+                    )
                 )
             ]
             graph = replace(
@@ -1304,6 +1310,341 @@ def _dynamic_controlled_finished_graph_eligible(
         and len(output_ids) == chain_count
         and len(set(output_ids)) == len(output_ids)
         and set(output_ids) == expected_output_ids == follower_ids
+    )
+
+
+def _dynamic_scheduled_graph_eligible(
+    graph: BatchedGraphIR,
+    parameters: tuple[BatchedParamSpec, ...],
+    *,
+    op_specs: specs.BatchedOpSpecSnapshot | None = None,
+) -> bool:
+    """Whether typed declarations describe an executable dynamic schedule.
+
+    The controlled-count tier remains independently authenticated while the
+    second branch admits scheduler-driven mechanism terminators by capability,
+    rather than by a fixed node count or public component names.
+    """
+
+    if _dynamic_controlled_finished_graph_eligible(
+        graph,
+        parameters,
+        op_specs=op_specs,
+    ):
+        return True
+
+    lookup_spec = specs.lookup_spec if op_specs is None else op_specs.lookup_spec
+    component_ids = tuple(node.component_id for node in graph.nodes)
+    if not (
+        graph.metadata.get("schedule_kind") == DYNAMIC_LANE_LOCAL_SCHEDULE
+        and graph.fusion_kind == COEVOLVING_GRAPH_FUSION
+        and graph.nodes
+        and all(type(component_id) is int for component_id in component_ids)
+        and component_ids == tuple(range(len(graph.nodes)))
+        and graph.execution_order == tuple(node.name for node in graph.nodes)
+        and not graph.modulations
+        and not graph.effective_parameters
+        and not graph.absorbed_projections
+        and len(graph.scheduler) == len(graph.nodes)
+    ):
+        return False
+
+    def exact_attrs(actual, expected) -> bool:
+        return bool(
+            isinstance(actual, Mapping)
+            and set(actual) == set(expected)
+            and all(
+                type(actual[key]) is type(value) and actual[key] == value
+                for key, value in expected.items()
+            )
+        )
+
+    nodes_by_id = {node.component_id: node for node in graph.nodes}
+    scheduler_component_ids = tuple(
+        condition.component_id for condition in graph.scheduler
+    )
+    scheduler_by_id = {
+        condition.component_id: condition for condition in graph.scheduler
+    }
+    finished_value_ids = tuple(
+        finished.value_id for finished in graph.finished_values
+    )
+    finished_by_id = {
+        finished.value_id: finished for finished in graph.finished_values
+    }
+    if (
+        len(nodes_by_id) != len(graph.nodes)
+        or any(type(component_id) is not int for component_id in scheduler_component_ids)
+        or scheduler_component_ids != component_ids
+        or set(scheduler_by_id) != set(component_ids)
+        or any(type(value_id) is not int for value_id in finished_value_ids)
+        or finished_value_ids != tuple(range(len(finished_value_ids)))
+        or len(finished_by_id) != len(graph.finished_values)
+    ):
+        return False
+
+    node_specs = {}
+    try:
+        for node in graph.nodes:
+            spec_key = node.attrs.get("spec_key")
+            if type(spec_key) is not str or not spec_key:
+                return False
+            node_specs[node.component_id] = lookup_spec(spec_key)
+    except specs.BatchedOpSpecError:
+        return False
+
+    consideration_sets = tuple(
+        sorted(
+            graph.consideration_sets,
+            key=lambda item: item.consideration_set_id,
+        )
+    )
+    if (
+        any(
+            type(item.consideration_set_id) is not int
+            for item in consideration_sets
+        )
+        or
+        tuple(item.consideration_set_id for item in consideration_sets)
+        != tuple(range(len(consideration_sets)))
+        or any(
+            type(item.component_ids) is not tuple
+            or any(type(component_id) is not int for component_id in item.component_ids)
+            or len(set(item.component_ids)) != len(item.component_ids)
+            or item.region != "pass"
+            or item.inputs_frozen is not True
+            or item.component_ids
+            != tuple(
+                nodes_by_id[component_id].component_id
+                for component_id in item.component_ids
+                if component_id in nodes_by_id
+            )
+            or item.nodes
+            != tuple(
+                nodes_by_id[component_id].name
+                for component_id in item.component_ids
+                if component_id in nodes_by_id
+            )
+            for item in consideration_sets
+        )
+    ):
+        return False
+    set_by_component_id = {
+        component_id: item.consideration_set_id
+        for item in consideration_sets
+        for component_id in item.component_ids
+    }
+    if (
+        len(set_by_component_id) != len(component_ids)
+        or set(set_by_component_id) != set(component_ids)
+    ):
+        return False
+
+    referenced_finished_ids = set()
+    for component_id, condition in scheduler_by_id.items():
+        node = nodes_by_id[component_id]
+        if not (
+            condition.node == node.name
+            and type(condition.consideration_set_id) is int
+            and condition.region == "pass"
+            and condition.consideration_set_id == set_by_component_id[component_id]
+            and type(condition.dependencies) is tuple
+            and type(condition.dependency_component_ids) is tuple
+            and type(condition.finished_value_ids) is tuple
+            and all(type(name) is str for name in condition.dependencies)
+            and all(
+                type(dependency_id) is int
+                for dependency_id in condition.dependency_component_ids
+            )
+            and all(
+                type(finished_id) is int
+                for finished_id in condition.finished_value_ids
+            )
+        ):
+            return False
+        if condition.condition_type == "Always":
+            if (
+                condition.dependencies
+                or condition.dependency_component_ids
+                or condition.finished_value_ids
+                or not (
+                    exact_attrs(condition.attrs, {})
+                    or exact_attrs(condition.attrs, {"implicit": True})
+                )
+            ):
+                return False
+            continue
+        if condition.condition_type != "WhenFinished" or not exact_attrs(
+            condition.attrs,
+            {"predicate": "is_finished"},
+        ):
+            return False
+        if not (
+            len(condition.dependencies) == 1
+            and len(condition.dependency_component_ids) == 1
+            and len(condition.finished_value_ids) == 1
+        ):
+            return False
+        dependency_id = condition.dependency_component_ids[0]
+        finished_id = condition.finished_value_ids[0]
+        dependency = nodes_by_id.get(dependency_id)
+        finished = finished_by_id.get(finished_id)
+        if not (
+            dependency is not None
+            and finished is not None
+            and condition.dependencies == (dependency.name,)
+            and finished.component_id == dependency_id
+            and set_by_component_id[dependency_id]
+            < set_by_component_id[component_id]
+        ):
+            return False
+        referenced_finished_ids.add(finished_id)
+
+    dynamic_finished_ids = set()
+    count_finished_ids = set()
+    for finished in graph.finished_values:
+        owner = nodes_by_id.get(finished.component_id)
+        owner_spec = node_specs.get(finished.component_id)
+        if not (
+            type(finished.component_id) is int
+            and owner is not None
+            and finished.node == owner.name
+            and type(finished.width) is int
+            and finished.width == 1
+            and finished.dtype == "bool"
+            and finished.storage == "combinational"
+            and type(finished.producer_consideration_set_id) is int
+            and finished.producer_consideration_set_id
+            == set_by_component_id[finished.component_id]
+            and isinstance(owner_spec, specs.MechanismOpSpec)
+            and owner_spec.can_step
+        ):
+            return False
+        if finished.predicate_kind == "execution_count_at_least":
+            count = finished.attrs.get("count")
+            if not (
+                exact_attrs(finished.attrs, {"count": count})
+                and type(count) is int
+                and 0 < count <= FP32_EXACT_INTEGER_LIMIT
+            ):
+                return False
+            count_finished_ids.add(finished.value_id)
+        elif finished.predicate_kind == "dynamic":
+            trial_state_names = tuple(state.name for state in owner_spec.trial_states)
+            if not (
+                exact_attrs(finished.attrs, {})
+                and owner_spec.readout_emit is not None
+                and owner_spec.finished_output
+                and trial_state_names.count(owner_spec.finished_output) == 1
+            ):
+                return False
+            dynamic_finished_ids.add(finished.value_id)
+        else:
+            return False
+    if not (
+        dynamic_finished_ids
+        and count_finished_ids
+        and referenced_finished_ids == set(finished_by_id)
+    ):
+        return False
+
+    mechanism_ids = {
+        component_id
+        for component_id, op_spec in node_specs.items()
+        if isinstance(op_spec, specs.MechanismOpSpec)
+    }
+    if mechanism_ids != {
+        finished.component_id for finished in graph.finished_values
+    }:
+        return False
+
+    expected_state_owners = {
+        component_id
+        for component_id, op_spec in node_specs.items()
+        if isinstance(op_spec, specs.MechanismOpSpec) and op_spec.states
+    }
+    state_owners = {state.component_id for state in graph.states}
+    resets_by_id = {reset.component_id: reset for reset in graph.resets}
+    if (
+        state_owners != expected_state_owners
+        or set(resets_by_id) != expected_state_owners
+        or len(resets_by_id) != len(graph.resets)
+        or any(
+            reset.node != nodes_by_id[component_id].name
+            or reset.state_ids
+            != tuple(
+                state.state_id
+                for state in graph.states
+                if state.component_id == component_id
+            )
+            or reset.condition_type not in {"AtTrialStart", "Never"}
+            or reset.region != "trial"
+            or not exact_attrs(reset.attrs, {})
+            for component_id, reset in resets_by_id.items()
+        )
+    ):
+        return False
+
+    expected_rng = tuple(
+        (
+            component_id,
+            index,
+            f"{nodes_by_id[component_id].name}.{declaration.name}",
+            declaration.step_extent,
+            declaration.width
+            if declaration.width is not None
+            else nodes_by_id[component_id].output_width,
+        )
+        for component_id, op_spec in node_specs.items()
+        if isinstance(op_spec, specs.MechanismOpSpec)
+        for index, declaration in enumerate(op_spec.rng)
+    )
+    actual_rng = tuple(
+        (
+            stream.component_id,
+            stream.stream_id,
+            stream.name,
+            stream.step_extent,
+            stream.width,
+        )
+        for stream in graph.rng_streams
+    )
+    if actual_rng != expected_rng:
+        return False
+
+    if (
+        tuple(
+            (region.name, region.kind, region.time_scale, region.parent)
+            for region in graph.schedule_regions
+        )
+        != (
+            ("trial", "trial", "ENVIRONMENT_STATE_UPDATE", ""),
+            ("pass", "pass", "PASS", "trial"),
+        )
+        or len(graph.termination) != 2
+    ):
+        return False
+    termination_by_scale = {
+        termination.time_scale: termination for termination in graph.termination
+    }
+    trial_termination = termination_by_scale.get("ENVIRONMENT_STATE_UPDATE")
+    run_termination = termination_by_scale.get("ENVIRONMENT_SEQUENCE")
+    return bool(
+        len(termination_by_scale) == 2
+        and trial_termination is not None
+        and trial_termination.condition_type == "AllHaveRun"
+        and type(trial_termination.dependency_component_ids) is tuple
+        and all(
+            type(component_id) is int
+            for component_id in trial_termination.dependency_component_ids
+        )
+        and trial_termination.dependency_component_ids == component_ids
+        and exact_attrs(trial_termination.attrs, {})
+        and run_termination is not None
+        and run_termination.condition_type == "Never"
+        and type(run_termination.dependency_component_ids) is tuple
+        and run_termination.dependency_component_ids == ()
+        and exact_attrs(run_termination.attrs, {})
     )
 
 
@@ -3540,7 +3881,7 @@ def _lca_execution_support_diagnostic(
     if (
         type(reset_condition) is AtTrialStart
         and is_canonical_condition(reset_condition)
-        and not (counted_finished_pair or dynamic_controlled_finished)
+        and not stepwise
     ):
         return BatchedDiagnostic(
             _node_name(node),

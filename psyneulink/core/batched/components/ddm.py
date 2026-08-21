@@ -215,6 +215,12 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     value = ctx.state(f"{name}.value", 0)
     steps = ctx.state(f"{name}.steps", 0)
     finished = ctx.state(f"{name}.finished", 0)
+    held_threshold = ctx.coevolve_terminator_control_value()
+    if not held_threshold:
+        # In the generic dynamic scheduler there is no legacy folded-control
+        # register.  The scheduler controls *when* the DDM steps, while an
+        # unmodulated DDM starts from its bound threshold.
+        held_threshold = ctx.param(node_spec, "threshold")
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_ddm_step,
@@ -235,7 +241,7 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 step_var,
                 str(ctx.coevolve_warmup()),
                 "MAX_STEPS",
-                ctx.coevolve_terminator_control_value(),
+                held_threshold,
             ),
         )
     )
@@ -270,7 +276,11 @@ def _ddm_readout_emit(ctx, node_spec, output_vars):
     step_emit=_ddm_step_emit,
     readout_emit=_ddm_readout_emit,
     trial_states=(
-        StateDecl("value", width=1, initial=0.0),
+        StateDecl(
+            "value",
+            width=1,
+            initial_parameter="starting_value",
+        ),
         StateDecl("steps", width=1, initial=0.0),
         StateDecl("finished", width=1, initial=0.0),
     ),

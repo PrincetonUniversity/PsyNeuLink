@@ -121,11 +121,27 @@ def _program():
         ),
         scheduler_state_slots=slots,
         loop_carries=tuple(_carry(member) for member in members),
-        execution_budgets=(KernelComponentExecutionBudget(0, 100),),
+        execution_budgets=tuple(
+            KernelComponentExecutionBudget(
+                component_id,
+                100,
+                **(
+                    {
+                        "finished_value_id": 7,
+                        "unfinished_maximum": 100,
+                        "post_finish": "continue",
+                    }
+                    if component_id == 1
+                    else {}
+                ),
+            )
+            for component_id in range(3)
+        ),
         trial_termination=KernelSchedulePredicate(
             "AllHaveRun",
             dependency_component_ids=(0, 1, 2),
         ),
+        schedule_fuel=100,
     )
 
 
@@ -153,6 +169,14 @@ def test_dynamic_schedule_records_are_frozen_typed_and_attr_free():
     )
     assert program.scheduler_state_slots[-1].kind == "rng_clock"
     assert program.scheduler_state_slots[-1].rng_stream_id == 0
+    parameter_initialized = KernelLoopCarry(
+        "trial_state",
+        0,
+        0,
+        _value("trial state"),
+        initial_parameter_id=3,
+    )
+    assert parameter_initialized.initial_value is None
     with pytest.raises(FrozenInstanceError):
         program.loop_carries = ()
 
@@ -207,6 +231,24 @@ def test_member_requires_exact_ops_and_body_defined_publications():
                 replace(member.publications[0], source=_value("forged")),
             ),
         )
+
+    with pytest.raises(ValueError, match="typed identity"):
+        KernelPublication(_value("finished candidate"), "finished", 0, 0)
+    finished_candidate = _value("finished candidate", "bool")
+    finished_member = replace(
+        member,
+        body=(
+            replace(
+                member.body[0],
+                outputs=(*member.body[0].outputs, finished_candidate),
+            ),
+        ),
+        publications=(
+            *member.publications,
+            KernelPublication(finished_candidate, "finished", 0, 0),
+        ),
+    )
+    assert finished_member.publications[-1].kind == "finished"
     with pytest.raises(ValueError, match="fields"):
         replace(member, body=list(member.body))
     with pytest.raises(ValueError, match="fields"):
@@ -254,7 +296,36 @@ def test_member_requires_exact_ops_and_body_defined_publications():
         lambda: KernelLoopCarry("output", True, 0, _value("carry")),
         lambda: KernelLoopCarry("topology", 0, 0, _value("carry")),
         lambda: KernelLoopCarry("output", 0, 0, object()),
+        lambda: KernelLoopCarry("trial_state", 0, 0, _value("carry")),
+        lambda: KernelLoopCarry(
+            "trial_state", 0, 0, _value("carry"), initial_value=(float("nan"),)
+        ),
+        lambda: KernelLoopCarry(
+            "trial_state",
+            0,
+            0,
+            _value("carry"),
+            initial_value=(0.0,),
+            initial_parameter_id=1,
+        ),
+        lambda: KernelLoopCarry(
+            "trial_state", 0, 0, _value("carry"), initial_parameter_id=True
+        ),
+        lambda: KernelLoopCarry(
+            "output", 0, 0, _value("carry"), initial_value=(0.0,)
+        ),
         lambda: KernelComponentExecutionBudget(0, True),
+        lambda: KernelComponentExecutionBudget(
+            0, 2, finished_value_id=1, post_finish="continue"
+        ),
+        lambda: KernelComponentExecutionBudget(
+            0,
+            2,
+            finished_value_id=1,
+            unfinished_maximum=3,
+            post_finish="stop",
+        ),
+        lambda: KernelComponentExecutionBudget(0, 2, post_finish="forged"),
     ],
 )
 def test_state_carry_and_budget_identities_fail_closed(factory):
@@ -289,6 +360,8 @@ def test_program_authenticates_coverage_references_and_ownership():
         )
     with pytest.raises(ValueError, match="owned"):
         replace(program, execution_budgets=(KernelComponentExecutionBudget(9, 1),))
+    with pytest.raises(ValueError, match="fuel"):
+        replace(program, schedule_fuel=99)
     with pytest.raises(ValueError, match="owned"):
         replace(
             program,
