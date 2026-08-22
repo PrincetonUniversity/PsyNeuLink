@@ -99,7 +99,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
 
-from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.component import NDimUnsupportedStatus, parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
@@ -272,6 +272,8 @@ class KohonenLearningMechanism(LearningMechanism):
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
+
+    _ndim_unsupported = NDimUnsupportedStatus.MATRIX
 
     class Parameters(LearningMechanism.Parameters):
         """

@@ -996,6 +996,7 @@ import warnings
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
+from psyneulink.core.components.component import NDimUnsupportedStatus
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import (
     Concatenate, LinearCombination, MatrixTransform)
@@ -1572,6 +1573,8 @@ class EMComposition_Proj(AutodiffComposition):
         pytorch_composition_wrapper_type = PytorchEMCompositionProjWrapper
         pytorch_mechanism_wrapper_type = PytorchEMMechanismProjWrapper
 
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
+    _ndim_container_parameters = AutodiffComposition._ndim_container_parameters.union({'memory_template'})
 
     class Parameters(AutodiffComposition.Parameters):
         """

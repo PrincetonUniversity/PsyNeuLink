@@ -515,7 +515,7 @@ import warnings
 import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from typing import TYPE_CHECKING
 
 import dill
@@ -523,7 +523,7 @@ import graph_scheduler
 import numpy as np
 from numpy.typing import ArrayLike
 
-from psyneulink._typing import Iterable, List, Union
+from psyneulink._typing import Iterable, List, Set, Union
 from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
@@ -694,6 +694,26 @@ class DefaultsFlexibility(Enum):
     FLEXIBLE = 0
     RIGID = 1
     INCREASE_DIMENSION = 2
+
+
+class NDimUnsupportedStatus(Enum):
+    """
+    Used to indicate how much support there is for a Component using >2d values.
+    See `Component._ndim_unsupported` and warning in `Component.__init__`
+
+    Attributes:
+        NONE
+            no known issues with any Parameter
+
+        MATRIX
+            depends on 2D matrices
+
+        ALL
+            core functionality depends on at least some Parameters being <=2D
+    """
+    NONE = auto()
+    MATRIX = auto()
+    ALL = auto()
 
 
 parameter_keywords = set()
@@ -1014,6 +1034,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     deprecated_constructor_args = {
         'size': 'input_shapes',
     }
+
+    _ndim_unsupported: Union[NDimUnsupportedStatus, Iterable[str]] = NDimUnsupportedStatus.NONE
+    """
+        indicator of known problems with using values of more than two dimensions.
+        An iterable of strings contains the names of specific Parameters that
+        still must be at most two dimensions.
+        This and the warning in __init__ can be removed if/when support is added for all.
+    """
+
+    _ndim_container_parameters: Set[str] = set()
+    """
+        names of any Parameters that contain one or more elements whose values
+        are not supported in arbitrary dimensions
+        (example: `ContentAddressableMemory.memory`, which stores multiple items
+        of the same shape as its `value <ContentAddressableMemory.value>`)
+    """
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1371,6 +1407,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Delete the _user_specified_args attribute, we don't need it anymore
         del self._user_specified_args
+
+        self._check_dimension_compatibility()
 
         _debugger.step(
             _debugger.BreakpointCategory.END_OF_INIT,
@@ -4723,6 +4761,31 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             return None
         else:
             return shape(inp)
+
+    def _check_dimension_compatibility(self):
+        if self._ndim_unsupported is NDimUnsupportedStatus.NONE:
+            return
+
+        if self._ndim_unsupported is NDimUnsupportedStatus.ALL:
+            ndim_check_params = self.parameters
+        elif self._ndim_unsupported is NDimUnsupportedStatus.MATRIX:
+            ndim_check_params = [self.parameters.matrix]
+        else:
+            ndim_check_params = [getattr(self.parameters, name) for name in self._ndim_unsupported]
+
+        max_dim = 2
+        for param in ndim_check_params:
+            pstr = param.name
+            p_max_dim = max_dim
+            if param.name in self._ndim_container_parameters:
+                p_max_dim += 1
+                pstr = f'{pstr} containing elements'
+            if is_array_like(param.default_value) and param.default_value.ndim > p_max_dim:
+                warnings.warn(
+                    f'{self} was created with {pstr} of more than {p_max_dim} dimensions ({param.default_value.ndim}).'
+                    f' This is not currently supported for {type(self).__name__}.'
+                    ' It is likely that there will be unexpected behavior or errors.'
+                )
 
     @property
     def logged_items(self):

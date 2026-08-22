@@ -35,7 +35,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal, Callable
 
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.component import ComponentError, NDimUnsupportedStatus
 
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
@@ -1361,6 +1361,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     componentName = HEBBIAN_FUNCTION
 
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
+
     class Parameters(LearningFunction.Parameters):
         """
             Attributes
@@ -1580,6 +1582,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     """
 
     componentName = CONTRASTIVE_HEBBIAN_FUNCTION
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
 
     class Parameters(LearningFunction.Parameters):
         """
