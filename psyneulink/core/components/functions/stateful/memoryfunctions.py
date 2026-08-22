@@ -35,6 +35,7 @@ import numpy as np
 from beartype import beartype
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
@@ -1052,6 +1053,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     """
 
     componentName = ContentAddressableMemory_FUNCTION
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
+    _ndim_container_parameters = MemoryFunction._ndim_container_parameters.union({'initializer'})
 
     class Parameters(StatefulFunction.Parameters):
         """
