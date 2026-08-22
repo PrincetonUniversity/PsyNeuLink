@@ -4431,6 +4431,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if termination_processing is not None:
             self.termination_processing = termination_processing
 
+        self._check_dimension_compatibility()
+
     def assign_ShowGraph(self, show_graph_attributes):
         """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
         show_graph_attributes = show_graph_attributes or {}

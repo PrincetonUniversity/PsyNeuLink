@@ -34,7 +34,7 @@ except ImportError:
 from psyneulink._typing import Optional, Callable
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility, NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.globals.keywords import \
@@ -179,6 +179,8 @@ class Stability(ObjectiveFunction):
     """
 
     componentName = STABILITY_FUNCTION
+
+    _ndim_unsupported = NDimUnsupportedStatus.MATRIX
 
     class Parameters(ObjectiveFunction.Parameters):
         """
