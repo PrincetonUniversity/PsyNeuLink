@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.19.1.0+57.g5b755c3d5 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.19.1.0+61.g875890855 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.1.0+57
+                  0.19.1.0+61
                 </div>
               
             
@@ -1223,6 +1223,24 @@ this object</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.FunctionParameter.primary">
+<span class="sig-name descname"><span class="pre">primary</span></span><a class="headerlink" href="#psyneulink.core.globals.parameters.FunctionParameter.primary" title="Link to this definition">¶</a></dt>
+<dd><p>indicates whether <strong>default_value</strong> takes precedence over the
+default value of the target Parameter when a user does not
+specify either.
+If True, the FunctionParameter default is used. Otherwise, the
+target Parameter default is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Default<span class="colon">:</span></dt>
+<dd class="field-even"><p>True</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1271,9 +1289,11 @@ Parameter of this object</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.parameters.SharedParameter.primary">
 <span class="sig-name descname"><span class="pre">primary</span></span><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.primary" title="Link to this definition">¶</a></dt>
-<dd><p>whether the default value specified in the
-SharedParameter should take precedence over the default
-value specified in its target</p>
+<dd><p>indicates whether <strong>default_value</strong> takes precedence over the
+default value of the target Parameter when a user does not
+specify either.
+If True, the SharedParameter default is used. Otherwise, the
+target Parameter default is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -1469,6 +1489,7 @@ before that.</p></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter"><code class="docutils literal notranslate"><span class="pre">FunctionParameter</span></code></a><ul>
 <li><a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter.function_parameter_name"><code class="docutils literal notranslate"><span class="pre">FunctionParameter.function_parameter_name</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter.function_name"><code class="docutils literal notranslate"><span class="pre">FunctionParameter.function_name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter.primary"><code class="docutils literal notranslate"><span class="pre">FunctionParameter.primary</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter"><code class="docutils literal notranslate"><span class="pre">SharedParameter</span></code></a><ul>
@@ -1502,7 +1523,7 @@ before that.</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=31058539"></script>
+         <script src="_static/documentation_options.js?v=ae108dcb"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
