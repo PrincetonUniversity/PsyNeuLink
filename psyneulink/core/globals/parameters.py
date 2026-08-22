@@ -2289,9 +2289,11 @@ class SharedParameter(Parameter):
                 :default: 'function'
 
             primary
-                whether the default value specified in the
-                SharedParameter should take precedence over the default
-                value specified in its target
+                indicates whether **default_value** takes precedence over the
+                default value of the target Parameter when a user does not
+                specify either.
+                If True, the SharedParameter default is used. Otherwise, the
+                target Parameter default is used.
 
                 :type: bool
                 :default: False
