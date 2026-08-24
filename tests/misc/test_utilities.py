@@ -6,7 +6,12 @@ import numpy as np
 import pytest
 
 from psyneulink.core.globals.utilities import (
-    PNLStrEnum, convert_all_elements_to_np_array, extended_array_equal, prune_unused_args, update_array_in_place
+    PNLStrEnum,
+    convert_all_elements_to_np_array,
+    extended_array_equal,
+    is_numeric,
+    prune_unused_args,
+    update_array_in_place,
 )
 
 
@@ -169,6 +174,17 @@ def test_update_array_in_place_failures(target, source):
         assert not np.array_equal(target[i], source[i])
         assert not np.array_equal(old_target[i], source[i])
         np.testing.assert_array_equal(target[i], old_target[i])
+
+
+@pytest.mark.parametrize(
+    'x, result',
+    [
+        ([np.array(1)], True),
+        (np.array([np.array(1)], dtype=object), True),
+    ],
+)
+def test_is_numeric(x, result):
+    assert is_numeric(x) is result
 
 
 class TestPNLStrEnum:

@@ -215,14 +215,16 @@ def _memory_matrix_getter(owning_component=None, context=None) -> list:
     learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals - num_fields:]
 
     # Get memory from learning_signals that project to retrieved_nodes
-    if owning_component.is_initializing:
-        # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
-        memory = [retrieved_learning_signal.parameters.matrix._get(context)
-                  for retrieved_learning_signal in learning_signals_for_retrieved]
-    else:
-        # Otherwise, get directly from the learning_signals
-        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
-                  for retrieved_learning_signal in learning_signals_for_retrieved]
+    memory = []
+    for retrieved_learning_signal in learning_signals_for_retrieved:
+        try:
+            matrix = retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
+        except AttributeError:
+            # If initializing, learning_signals may still be MappingProjections used to specify them
+            # This shouldn't happen after initialization
+            assert owning_component.is_initializing
+            matrix = retrieved_learning_signal.parameters.matrix._get(context)
+        memory.append(matrix)
 
     # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
     memory_capacity = len(memory[0])
