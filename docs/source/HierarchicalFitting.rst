@@ -223,10 +223,7 @@ Limitations
   participants.
 * Participant uncertainty is diagonal too, and is the spread of one parameter with the others held
   at the mode rather than integrated out.  Where two parameters trade off against each other, that
-  is the narrower of the two quantities, so reported intervals err towards being too tight.  The
-  effect is small where it has been measured -- about 4% on drift-diffusion posterior widths,
-  against a sampler that integrates the other parameters out -- and much smaller than the effect of
-  the likelihood itself.
+  is the narrower of the two quantities, so reported intervals err towards being too tight.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood.  A likelihood estimated from too few
