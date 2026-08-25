@@ -15,10 +15,9 @@ summary.  The M-step stays on the driver, so this runner is interchangeable with
 
 Building a participant's model constructs a composition and compiles it, so each worker caches the
 models it builds.  That only pays off if a participant keeps landing on the same worker, hence the
-pinning after the first iteration; otherwise every worker ends up holding a model for every
-participant, which is how a large fit exhausts memory.  For the same reason the cache is keyed by
-fit and emptied of that fit's entries at the end, since a cluster the caller supplied outlives any
-one fit run against it.
+pinning after the first iteration; otherwise every worker holds a model for every participant, which
+is how a large fit exhausts memory.  The cache is keyed by fit and cleared at the end, since a
+caller-supplied cluster outlives the fit.
 
 Dask is imported inside the functions that need it, so this module can be imported, and its worker
 task exercised, without it.
@@ -95,8 +94,8 @@ def _dask_subject_estep(
             if worker_cores is not None:
                 set_num_threads(worker_cores)
             pec, inputs = pec_factory(data_slice, subject_index)
-            # Checked here rather than on the driver so that a model fitting the wrong parameters
-            # fails before it is scored, instead of being handed `theta` in someone else's order.
+            # Checked before scoring: a model fitting different parameters would otherwise be
+            # handed `theta` positionally, in the wrong order.
             schema.check_matches(ParameterSchema.from_pec(
                 pec, source=f"the model built for participant {subject_index}"
             ))

@@ -18,11 +18,7 @@ second moments.
 Only the diagonal of the curvature is computed, matching the diagonal group covariance, so a
 participant's reported variance is ``1 / H_kk`` rather than ``(H^-1)_kk``: the variance of one
 parameter with the others held at the mode, not with them integrated out.  Where parameters trade
-off against each other the first is the smaller of the two, so intervals are narrow rather than
-wide -- on the drift-diffusion model, by about 4% against a sampler that integrates them out.  The
-off-diagonal curvature that would close the gap costs ``P(P+1)/2`` mixed second differences instead
-of ``P``, each four evaluations of a simulated likelihood rather than two, which is more estimation
-noise than the correction is worth.
+off against each other the first is the smaller, so intervals err narrow.
 
 Curvature comes from central finite differences, which requires the objective to be deterministic in
 `theta`.  Participant models must therefore be built with common random numbers; without them the
@@ -129,13 +125,10 @@ class EStepConfig:
         default) it is derived per dimension from the current group variance as
         ``DEFAULT_HESSIAN_STEP_SCALE * sqrt(sigma)``.
 
-        Scaling rather than fixing it matters because, in unconstrained space, the width of a
-        participant's posterior is set by the group standard deviation.  A step proportional to
-        ``sqrt(sigma)`` is therefore dimensionless and independent of how wide the user's search
-        range happens to be, whereas a fixed step has to be retuned whenever either changes.
-
-        `DEFAULT_HESSIAN_STEP_SCALE` is a reasonable default rather than a tuned optimum.  The step
-        actually used is recorded on `SubjectPosterior.hessian_step` so that a fit can be audited.
+        In unconstrained space a participant's posterior width is set by the group standard
+        deviation, so a step proportional to ``sqrt(sigma)`` is dimensionless and independent of
+        the search range; a fixed step has to be retuned when either changes.  The step used is
+        recorded on `SubjectPosterior.hessian_step`.
 
     variance_floor : float
         Smallest posterior variance to report.  Guards against a zero that would make the group
