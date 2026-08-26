@@ -19,7 +19,10 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.batched import BatchedCompositionCompiler
-from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
+from psyneulink.core.batched.backend.triton.runtime import (
+    BatchedTruncationError,
+    _collect_diagnostics,
+)
 
 
 pytestmark = [
@@ -47,6 +50,46 @@ def _ddm_plan(max_steps):
 
 def _run(plan, inputs, **kwargs):
     return plan.run(inputs=inputs, parameter_sets=[{}], num_estimates=1, seed=0, **kwargs)
+
+
+def test_diagnostic_flags_are_reduced_before_host_transfer():
+    events = []
+
+    class HostMeans:
+        def numpy(self):
+            events.append("numpy")
+            return np.array([0.25, 0.5, 1.0])
+
+    class DeviceMeans:
+        def cpu(self):
+            events.append("cpu")
+            return HostMeans()
+
+    class DeviceFlags:
+        def numel(self):
+            return 12
+
+        def mean(self, *, dim):
+            assert dim == 0
+            events.append("mean")
+            return DeviceMeans()
+
+        def cpu(self):
+            raise AssertionError("full diagnostic flags must not move to the host")
+
+    class DiagnosticTensor:
+        def reshape(self, *shape):
+            assert shape == (-1, 3)
+            events.append("reshape")
+            return DeviceFlags()
+
+    result = _collect_diagnostics(
+        DiagnosticTensor(),
+        (("DDM", "first"), ("DDM", "second"), ("LCA", "only")),
+    )
+
+    assert events == ["reshape", "mean", "cpu", "numpy"]
+    assert result == {"DDM": pytest.approx(0.75), "LCA": pytest.approx(1.0)}
 
 
 def test_truncation_detected_and_warns_when_max_steps_too_low():

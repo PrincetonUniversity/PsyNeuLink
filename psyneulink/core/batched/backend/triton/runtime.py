@@ -180,14 +180,21 @@ def _report_truncation(truncation: dict, max_steps: int, strict: bool) -> None:
 def _collect_diagnostics(diag_tensor, slots) -> dict:
     """Mean per-slot flag value (the truncated fraction), keyed by node name.
 
-    The caller must have synchronized the device first.  Slots that share a
-    node (a node with multiple diagnostics) are summed.
+    Reduce on the tensor's current device before copying the per-slot means to
+    the host.  A CSI fit can produce millions of lane/trial flags per objective
+    evaluation, while the reduced result contains only one value per slot.
+    The caller must have synchronized the simulation first.  Slots that share
+    a node (a node with multiple diagnostics) are summed.
     """
 
     if not slots:
         return {}
-    flat = diag_tensor.reshape(-1, len(slots)).cpu().numpy()
-    fractions = flat.mean(axis=0) if flat.size else np.zeros(len(slots), dtype=float)
+    flat = diag_tensor.reshape(-1, len(slots))
+    fractions = (
+        flat.mean(dim=0).cpu().numpy()
+        if flat.numel()
+        else np.zeros(len(slots), dtype=float)
+    )
     result: dict[str, float] = {}
     for (node, _name), fraction in zip(slots, fractions):
         result[node] = result.get(node, 0.0) + float(fraction)
