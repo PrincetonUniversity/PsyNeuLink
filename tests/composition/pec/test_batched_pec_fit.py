@@ -9,6 +9,7 @@ parameters at PEC scale is validated separately on GPU.
 """
 
 import numpy as np
+import optuna
 import pandas as pd
 import pytest
 
@@ -113,6 +114,22 @@ def test_batched_backend_none_uses_default_path():
     assert opt_func._batched_plan is None
 
 
+def test_parameter_batching_requires_local_batched_backend():
+    with pytest.raises(ValueError, match="requires a batched_backend"):
+        PECOptimizationFunction(
+            method=optuna.samplers.CmaEsSampler(popsize=2),
+            batched_parameter_batch_size=2,
+        )
+
+    with pytest.raises(ValueError, match="cannot be combined"):
+        PECOptimizationFunction(
+            method=optuna.samplers.CmaEsSampler(popsize=2),
+            batched_backend="triton",
+            batched_parameter_batch_size=2,
+            distributed=True,
+        )
+
+
 @pytest.mark.triton_interpreter
 def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
     """A model the batched compiler rejects raises a clear error (never falls back)."""
@@ -166,12 +183,16 @@ def test_batched_conditional_parameter_is_selected_per_trial(batched_backend):
         ],
         data=data,
         optimization_function=PECOptimizationFunction(
-            method="differential_evolution",
-            max_iterations=1,
+            method=optuna.samplers.CmaEsSampler(
+                popsize=2,
+                seed=1,
+            ),
+            max_iterations=5,
             batched_backend=batched_backend,
             batched_max_steps=100,
             batched_bins=10,
             batched_seed=1,
+            batched_parameter_batch_size=2,
         ),
         num_estimates=2,
     )
@@ -185,4 +206,18 @@ def test_batched_conditional_parameter_is_selected_per_trial(batched_backend):
     assert parameter_set[f"{decision.name}.rate"] == 1.0
 
     objective = opt_func._make_objective_func()
-    assert np.isfinite(objective(0.1, 0.4, 1.0))
+    single_value = objective(0.1, 0.4, 1.0)
+    batch_values = objective._batched_parameter_sets(
+        [(0.1, 0.4, 1.0), (0.4, 0.1, 1.0)]
+    )
+    assert batch_values.shape == (2,)
+    assert batch_values[0] == pytest.approx(single_value, rel=1e-6, abs=1e-5)
+    assert np.all(np.isfinite(batch_values))
+
+    fit_result = opt_func._fit_optuna(
+        objective,
+        opt_func.method,
+        display_iter=False,
+    )
+    assert opt_func.num_evals == 5
+    assert np.isfinite(fit_result["optimal_value"])

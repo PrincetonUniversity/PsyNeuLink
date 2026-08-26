@@ -11,8 +11,7 @@ LLVM ``grid_evaluate``:
   3. fit the model back to that data with a ``ParameterEstimationComposition``
      whose ``PECOptimizationFunction`` is configured with
      ``batched_backend="triton"`` (optuna CMA-ES over the fitting parameters,
-     each objective evaluation = ``num_estimates`` x ``trials`` GPU simulations
-     scored by the on-device histogram likelihood);
+     with each complete CMA population simulated and scored in one GPU call);
   4. report recovered vs. true parameters.
 
 The recovery uses the historical five-parameter surface: ``gain`` (LCA control
@@ -25,7 +24,8 @@ while retaining both public PEC parameter names as runtime lane aliases.
 Usage (requires CUDA + triton):
 
     .venv/bin/python Scripts/Debug/pec_batch_compile/csi_batched_parameter_recovery.py \
-        --trials 128 --estimates 10000 --max-iterations 200 --seed 1
+        --trials 128 --estimates 10000 --max-iterations 200 \
+        --parameter-batch-size 8 --seed 1
 
 Use ``--backend triton_cpu`` only for a tiny smoke test (interpret mode is slow).
 
@@ -117,7 +117,19 @@ def generate_data(true, trials, backend, max_steps, seed, subject):
     return data, (task, stim, correct)
 
 
-def fit(data, seq, true, trials, estimates, backend, max_steps, max_iterations, seed, subject):
+def fit(
+    data,
+    seq,
+    true,
+    trials,
+    estimates,
+    backend,
+    max_steps,
+    max_iterations,
+    parameter_batch_size,
+    seed,
+    subject,
+):
     task, stim, correct = seq
     comp = make_stab_flex(
         gain=true["gain"],
@@ -153,12 +165,16 @@ def fit(data, seq, true, trials, estimates, backend, max_steps, max_iterations, 
         outcome_variables=[decisionGate.output_ports[0], responseGate.output_ports[0]],
         data=data,
         optimization_function=pnl.PECOptimizationFunction(
-            method=optuna.samplers.CmaEsSampler(seed=seed),
+            method=optuna.samplers.CmaEsSampler(
+                seed=seed,
+                popsize=parameter_batch_size,
+            ),
             max_iterations=max_iterations,
             batched_backend=backend,
             batched_max_steps=max_steps,
             batched_bins=60,
             batched_seed=seed,
+            batched_parameter_batch_size=parameter_batch_size,
         ),
         num_estimates=estimates,
         initial_seed=seed,
@@ -176,6 +192,7 @@ def main():
     ap.add_argument("--trials", type=int, default=128)
     ap.add_argument("--estimates", type=int, default=10000)
     ap.add_argument("--max-iterations", type=int, default=200)
+    ap.add_argument("--parameter-batch-size", type=int, default=8)
     ap.add_argument("--max-steps", type=int, default=600)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--subject", type=int, default=1)
@@ -193,7 +210,8 @@ def main():
 
     print(f"CSI batched parameter recovery  (backend={args.backend}, "
           f"{args.trials} trials x {args.estimates} estimates, "
-          f"max_iterations={args.max_iterations})")
+          f"max_iterations={args.max_iterations}, "
+          f"parameter_batch_size={args.parameter_batch_size})")
     print("True parameters:")
     for k, v in true.items():
         print(f"  {k:>18} = {v:.4f}")
@@ -207,7 +225,7 @@ def main():
     print("Fitting (batched GPU objective; optuna CMA-ES) ...")
     recovered, ll, elapsed = fit(data, seq, true, args.trials, args.estimates,
                                  args.backend, args.max_steps, args.max_iterations,
-                                 args.seed, args.subject)
+                                 args.parameter_batch_size, args.seed, args.subject)
 
     name_map = {
         "gain": "gain",

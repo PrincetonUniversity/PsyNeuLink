@@ -462,6 +462,95 @@ def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
     return study
 
 
+def _run_batched_ask_tell_rounds(
+    study,
+    distributions,
+    param_order,
+    batch,
+    n_trials,
+    evaluate_batch,
+    *,
+    startup_trials=0,
+    generation_attr=None,
+    after_batch=None,
+):
+    """Ask candidate batches, evaluate each batch together, and tell in order.
+
+    ``n_trials`` remains a candidate count, not a batch/generation count.  Any
+    outstanding CMA-ES startup trials are completed first.  If an existing
+    study ended partway through a generation, that generation is filled before
+    another full batch is asked.  Subsequent batches can therefore correspond
+    exactly to optimizer populations instead of being sampled independently
+    before the search space has been established.
+    """
+
+    batch = int(batch)
+    n_trials = int(n_trials)
+    if batch < 1:
+        raise ValueError("Batched ask/tell requires batch >= 1.")
+    if n_trials < 0:
+        raise ValueError("Batched ask/tell requires n_trials >= 0.")
+
+    completed_trials = study.get_trials(
+        deepcopy=False,
+        states=(optuna.trial.TrialState.COMPLETE,),
+    )
+    startup_remaining = max(0, int(startup_trials) - len(completed_trials))
+    generation_remaining = 0
+    if generation_attr is not None and not startup_remaining:
+        generations = [
+            trial.system_attrs[generation_attr]
+            for trial in completed_trials
+            if generation_attr in trial.system_attrs
+        ]
+        if generations:
+            latest_generation = max(generations)
+            completed_in_generation = sum(
+                generation == latest_generation
+                for generation in generations
+            )
+            if completed_in_generation < batch:
+                generation_remaining = batch - completed_in_generation
+    remaining = n_trials
+
+    while remaining > 0:
+        if startup_remaining:
+            size = min(startup_remaining, batch, remaining)
+            startup_remaining -= size
+        elif generation_remaining:
+            size = min(generation_remaining, remaining)
+            generation_remaining -= size
+        else:
+            size = min(batch, remaining)
+
+        trials = [study.ask(distributions) for _ in range(size)]
+        parameter_values = [
+            [trial.params[name] for name in param_order]
+            for trial in trials
+        ]
+        try:
+            values = np.asarray(evaluate_batch(parameter_values), dtype=float).reshape(-1)
+        except BaseException:
+            for trial in trials:
+                study.tell(trial, state=optuna.trial.TrialState.FAIL)
+            raise
+        if len(values) != size:
+            for trial in trials:
+                study.tell(trial, state=optuna.trial.TrialState.FAIL)
+            raise OptimizationFunctionError(
+                "Batched Optuna objective returned "
+                f"{len(values)} value(s) for {size} candidate parameter sets."
+            )
+
+        for trial, value in zip(trials, values):
+            study.tell(trial, float(value))
+        if after_batch is not None:
+            after_batch(trials, values)
+        remaining -= size
+
+    return study
+
+
 class PECOptimizationFunction(OptimizationFunction):
     """
     A subclass of OptimizationFunction that is used to interface with the PEC. This class is used to specify the
@@ -503,6 +592,12 @@ class PECOptimizationFunction(OptimizationFunction):
     direction :
         Whether to maximize or minimize the objective function. If 'maximize', the objective function is maximized. If
         'minimize', the objective function is minimized.
+
+    batched_parameter_batch_size :
+        Number of candidate parameter sets evaluated together by a batched
+        Triton objective.  This is currently supported for an explicitly sized
+        ``CmaEsSampler`` population and must equal its ``popsize``.  ``None``
+        preserves serial candidate evaluation.
 
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
@@ -558,6 +653,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_max_steps: Optional[int] = None,
         batched_bin_range=None,
         batched_seed: Optional[int] = None,
+        batched_parameter_batch_size: Optional[int] = None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -576,6 +672,21 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_max_steps = batched_max_steps
         self.batched_bin_range = batched_bin_range
         self.batched_seed = batched_seed
+        if (
+            batched_parameter_batch_size is not None
+            and batched_parameter_batch_size < 2
+        ):
+            raise ValueError("batched_parameter_batch_size must be at least 2.")
+        if batched_parameter_batch_size is not None and batched_backend is None:
+            raise ValueError(
+                "batched_parameter_batch_size requires a batched_backend."
+            )
+        if batched_parameter_batch_size is not None and distributed:
+            raise ValueError(
+                "batched_parameter_batch_size and distributed=True cannot be "
+                "combined; population batching currently runs on one local device."
+            )
+        self.batched_parameter_batch_size = batched_parameter_batch_size
         # Lazily-built, cached compiled plan (only used when batched_backend is set).
         self._batched_plan = None
 
@@ -864,14 +975,17 @@ class PECOptimizationFunction(OptimizationFunction):
                 self._get_current_parameter_value("initial_seed", context)
             )
 
-        def objfunc(*args):
+        def parameter_batch_objfunc(parameter_values):
             plan = self._compile_batched_plan()
             inputs = self._batched_stimulus_inputs()
             outcome_indices = self._batched_outcome_indices(plan)
-            param_set = self._batched_parameter_set(args)
-            return plan.log_likelihood(
+            parameter_sets = [
+                self._batched_parameter_set(values)
+                for values in parameter_values
+            ]
+            result = plan.log_likelihood(
                 inputs,
-                [param_set],
+                parameter_sets,
                 num_estimates=self.owner.num_estimates,
                 data=exp_data,
                 categorical_dims=categorical_dims,
@@ -881,6 +995,15 @@ class PECOptimizationFunction(OptimizationFunction):
                 include_mask=include_mask,
                 seed=seed,
             )
+            return np.asarray(result, dtype=float).reshape(-1)
+
+        def objfunc(*args):
+            return float(parameter_batch_objfunc([args])[0])
+
+        # The serial Optuna interface consumes the callable normally.  The
+        # population-batched ask/tell path discovers this companion evaluator
+        # without changing OptimizationFunction's public objective signature.
+        objfunc._batched_parameter_sets = parameter_batch_objfunc
 
         return objfunc
 
@@ -1365,6 +1488,12 @@ class PECOptimizationFunction(OptimizationFunction):
     ):
         if self.distributed:
             return self._fit_optuna_distributed(opt_func, client)
+        if self.batched_parameter_batch_size is not None:
+            return self._fit_optuna_parameter_batches(
+                obj_func,
+                opt_func,
+                display_iter=display_iter,
+            )
 
         with Progress(
             "[progress.description]{task.description}",
@@ -1444,6 +1573,139 @@ class PECOptimizationFunction(OptimizationFunction):
         }
 
         return output_dict
+
+    def _fit_optuna_parameter_batches(
+        self,
+        obj_func,
+        opt_func,
+        *,
+        display_iter=True,
+    ):
+        """Evaluate complete local CMA-ES populations in one batched GPU call."""
+
+        from optuna.distributions import FloatDistribution
+
+        batch_obj_func = getattr(obj_func, "_batched_parameter_sets", None)
+        if batch_obj_func is None:
+            raise OptimizationFunctionError(
+                "batched_parameter_batch_size requires a batched data-fitting "
+                "objective."
+            )
+
+        if isinstance(opt_func, optuna.study.Study):
+            study = opt_func
+            sampler = study.sampler
+        else:
+            sampler = opt_func
+            study = optuna.create_study(
+                sampler=sampler,
+                direction=self.direction,
+            )
+        if not isinstance(sampler, optuna.samplers.CmaEsSampler):
+            raise OptimizationFunctionError(
+                "batched_parameter_batch_size currently requires "
+                "optuna.samplers.CmaEsSampler."
+            )
+
+        population_size = getattr(sampler, "_popsize", None)
+        if population_size is None:
+            raise OptimizationFunctionError(
+                "Population-batched CMA-ES requires an explicit "
+                "CmaEsSampler(popsize=...)."
+            )
+        batch_size = int(self.batched_parameter_batch_size)
+        if int(population_size) != batch_size:
+            raise OptimizationFunctionError(
+                "batched_parameter_batch_size must equal the CmaEsSampler "
+                f"population size ({batch_size} != {population_size})."
+            )
+
+        max_iterations = int(self.parameters.max_iterations.get())
+        if max_iterations < 1:
+            raise OptimizationFunctionError(
+                f"max_iterations ({max_iterations}) must be >= 1."
+            )
+        param_order = list(self.fit_param_names)
+        distributions = {
+            name: FloatDistribution(lower, upper, step=step)
+            for name, (lower, upper, step) in self.fit_param_bounds.items()
+        }
+        startup_trials = int(getattr(sampler, "_n_startup_trials", 1))
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        self.num_evals = 0
+        self._best_params = {}
+
+        with Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "Completed: [progress.percentage]{task.percentage:>3.0f}%",
+            TimeRemainingColumn(),
+        ) as progress:
+            opt_task = progress.add_task(
+                self.opt_task_desc_str,
+                total=max_iterations,
+            )
+            progress.update(opt_task, completed=0)
+
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter("always", PECObjectiveFuncWarning)
+                warnings.simplefilter("always", BadLikelihoodWarning)
+
+                def evaluate_batch(parameter_values):
+                    start = time.time()
+                    values = batch_obj_func(parameter_values)
+                    elapsed = time.time() - start
+                    if display_iter:
+                        progress.console.print(
+                            f"Evaluated {len(parameter_values)} parameter set(s), "
+                            f"Batch-Eval-Time: {elapsed} (seconds)",
+                            highlight=False,
+                        )
+                    for warning in caught_warnings:
+                        if issubclass(warning.category, PECObjectiveFuncWarning):
+                            progress.console.print(
+                                f"Warning: {warning.message}",
+                                style="bold red",
+                            )
+                    caught_warnings.clear()
+                    return values
+
+                def after_batch(trials, values):
+                    self.num_evals += len(trials)
+                    if self._best_params != study.best_params:
+                        self._best_params = study.best_params
+                        progress.console.print(
+                            f"[green]Current Best Parameters: "
+                            f"{get_param_str(self._best_params)}, "
+                            f"{self.obj_func_desc_str}: {study.best_value}, "
+                        )
+                    progress.update(opt_task, advance=len(trials))
+
+                _run_batched_ask_tell_rounds(
+                    study,
+                    distributions,
+                    param_order,
+                    batch_size,
+                    max_iterations,
+                    evaluate_batch,
+                    startup_trials=startup_trials,
+                    generation_attr=getattr(
+                        sampler,
+                        "_attr_key_generation",
+                        "cma:generation",
+                    ),
+                    after_batch=after_batch,
+                )
+
+        fitted_params = {
+            name: study.best_params[name]
+            for name in param_order
+        }
+        return {
+            "fitted_params": fitted_params,
+            "optimal_value": study.best_value,
+        }
 
     def _resolve_pec_factory(self):
         """Return the user's ``pec_factory`` or raise an actionable error."""

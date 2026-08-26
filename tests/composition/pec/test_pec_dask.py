@@ -31,6 +31,7 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     _require_dask,
     _resolve_worker_cores,
     _run_ask_tell_rounds,
+    _run_batched_ask_tell_rounds,
 )
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
     OptimizationFunctionError,
@@ -404,6 +405,101 @@ def test_ask_tell_cmaes_maximizes_toward_target():
     assert study.best_value > -0.01
     for name in PARAM_ORDER:
         assert study.best_params[name] == pytest.approx(_TARGET[name], abs=0.15)
+
+
+def test_batched_ask_tell_aligns_startup_and_cmaes_generations():
+    batch, n_trials = 4, 10
+    study = optuna.create_study(
+        sampler=optuna.samplers.CmaEsSampler(
+            seed=0,
+            popsize=batch,
+            n_startup_trials=1,
+        ),
+        direction="maximize",
+    )
+    batch_sizes = []
+
+    def evaluate_batch(parameter_values):
+        batch_sizes.append(len(parameter_values))
+        return [_neg_quadratic(values) for values in parameter_values]
+
+    _run_batched_ask_tell_rounds(
+        study,
+        _distributions(),
+        PARAM_ORDER,
+        batch,
+        n_trials,
+        evaluate_batch,
+        startup_trials=1,
+        generation_attr="cma:generation",
+    )
+
+    assert batch_sizes == [1, 4, 4, 1]
+    assert len(study.trials) == n_trials
+    assert "cma:generation" not in study.trials[0].system_attrs
+    assert {
+        trial.system_attrs["cma:generation"]
+        for trial in study.trials[1:5]
+    } == {0}
+    assert {
+        trial.system_attrs["cma:generation"]
+        for trial in study.trials[5:9]
+    } == {1}
+    assert study.trials[9].system_attrs["cma:generation"] == 2
+
+
+def test_batched_ask_tell_resumes_partial_cmaes_generation():
+    batch = 4
+    study = optuna.create_study(
+        sampler=optuna.samplers.CmaEsSampler(
+            seed=0,
+            popsize=batch,
+            n_startup_trials=1,
+        ),
+        direction="maximize",
+    )
+    batch_sizes = []
+
+    def evaluate_batch(parameter_values):
+        batch_sizes.append(len(parameter_values))
+        return [_neg_quadratic(values) for values in parameter_values]
+
+    kwargs = dict(
+        study=study,
+        distributions=_distributions(),
+        param_order=PARAM_ORDER,
+        batch=batch,
+        evaluate_batch=evaluate_batch,
+        startup_trials=1,
+        generation_attr="cma:generation",
+    )
+    _run_batched_ask_tell_rounds(n_trials=2, **kwargs)
+    _run_batched_ask_tell_rounds(n_trials=3, **kwargs)
+
+    assert batch_sizes == [1, 1, 3]
+    assert {
+        trial.system_attrs["cma:generation"]
+        for trial in study.trials[1:]
+    } == {0}
+
+
+def test_batched_ask_tell_marks_trials_failed_on_bad_result_count():
+    study = optuna.create_study(direction="maximize")
+
+    with pytest.raises(OptimizationFunctionError, match="returned 1 value"):
+        _run_batched_ask_tell_rounds(
+            study,
+            _distributions(),
+            PARAM_ORDER,
+            batch=2,
+            n_trials=2,
+            evaluate_batch=lambda parameter_values: [0.0],
+        )
+
+    assert [trial.state for trial in study.trials] == [
+        optuna.trial.TrialState.FAIL,
+        optuna.trial.TrialState.FAIL,
+    ]
 
 
 # ===========================================================================
