@@ -21,6 +21,7 @@ from psyneulink.core.batched.prep import (
     lca_max_steps,
     normalize_parameter_sets,
     prepare_inputs,
+    prepare_parameter_values,
 )
 from psyneulink.core.batched.kernel_ir import KernelIR, diag_slots, lower_to_kernel_ir
 from psyneulink.core.batched.backend.triton.cache import (
@@ -86,6 +87,8 @@ def run_triton(
         raise RuntimeError("The Triton batched backend requires an available CUDA device.")
 
     params = normalize_parameter_sets(parameter_sets, ir)
+    if subject_slices is not None:
+        subject_slices = tuple(subject_slices)
     prepared_inputs = prepare_inputs(
         ir,
         inputs,
@@ -102,23 +105,26 @@ def run_triton(
 
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
-                torch, triton, module, ir, prepared_inputs, params, num_estimates, device,
+                torch, triton, module, ir, prepared_inputs, params, num_estimates,
+                device, subject_slices,
             )
         elif fusion_kind == DDM_GRAPH_FUSION:
             values, truncation = _run_ddm_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
-                seed, common_random_numbers, device, slots,
+                seed, common_random_numbers, device, slots, subject_slices,
             )
         elif fusion_kind == STATEFUL_GRAPH_FUSION:
             values, truncation = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
+                subject_slices=subject_slices,
             )
         elif fusion_kind == COEVOLVING_GRAPH_FUSION:
             values, truncation = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
                 kernel_name="pnl_batched_coevolving_graph_kernel",
+                subject_slices=subject_slices,
             )
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
@@ -198,11 +204,28 @@ def _input_tensors(torch, graph, inputs, device):
     return tensors
 
 
-def _param_tensors(torch, ir, params, device):
-    return tuple(
-        torch.as_tensor([row[param_spec.name] for row in params], dtype=torch.float32, device=device).contiguous()
-        for param_spec in ir.params
+def _param_tensors(
+    torch,
+    ir,
+    params,
+    device,
+    *,
+    num_subjects,
+    num_trials,
+    subject_slices,
+):
+    values, strides = prepare_parameter_values(
+        ir,
+        params,
+        num_subjects=num_subjects,
+        num_trials=num_trials,
+        subject_slices=subject_slices,
     )
+    tensors = tuple(
+        torch.as_tensor(value, dtype=torch.float32, device=device).contiguous()
+        for value in values
+    )
+    return tensors, strides
 
 
 def _sync(torch, device):
@@ -212,12 +235,21 @@ def _sync(torch, device):
 
 def _run_stateless_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates, device,
+    subject_slices=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
-    param_tensors = _param_tensors(torch, ir, params, device)
     num_params = len(params)
     num_subjects, num_trials = input_tensors[0].shape[:2]
+    param_tensors, param_strides = _param_tensors(
+        torch,
+        ir,
+        params,
+        device,
+        num_subjects=num_subjects,
+        num_trials=num_trials,
+        subject_slices=subject_slices,
+    )
     output_width = sum(output.width for output in graph.outputs)
     total_lanes = num_params * num_subjects * num_trials * num_estimates
     out = torch.empty(
@@ -227,7 +259,7 @@ def _run_stateless_graph_kernel(
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
     module.pnl_batched_stateless_graph_kernel[grid](
-        *input_tensors, *param_tensors, out,
+        *input_tensors, *param_tensors, *param_strides, out,
         total_lanes, num_subjects, num_trials, num_estimates, BLOCK=block,
     )
     _sync(torch, device)
@@ -236,13 +268,21 @@ def _run_stateless_graph_kernel(
 
 def _run_ddm_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
-    seed, common_random_numbers, device, slots,
+    seed, common_random_numbers, device, slots, subject_slices=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
-    param_tensors = _param_tensors(torch, ir, params, device)
     num_params = len(params)
     num_subjects, num_trials = input_tensors[0].shape[:2]
+    param_tensors, param_strides = _param_tensors(
+        torch,
+        ir,
+        params,
+        device,
+        num_subjects=num_subjects,
+        num_trials=num_trials,
+        subject_slices=subject_slices,
+    )
     output_width = sum(output.width for output in graph.outputs)
     total_lanes = num_params * num_subjects * num_trials * num_estimates
     out = torch.empty(
@@ -254,7 +294,8 @@ def _run_ddm_graph_kernel(
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
     module.pnl_batched_ddm_graph_kernel[grid](
-        *input_tensors, *param_tensors, out, *(() if diag is None else (diag,)),
+        *input_tensors, *param_tensors, *param_strides, out,
+        *(() if diag is None else (diag,)),
         total_lanes, num_subjects, num_trials, num_estimates,
         MAX_STEPS=ir.max_steps, COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed), BLOCK=block,
@@ -266,13 +307,21 @@ def _run_ddm_graph_kernel(
 def _run_stateful_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
     seed, common_random_numbers, device, slots,
-    kernel_name="pnl_batched_stateful_graph_kernel",
+    kernel_name="pnl_batched_stateful_graph_kernel", subject_slices=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
-    param_tensors = _param_tensors(torch, ir, params, device)
     num_params = len(params)
     num_subjects, num_trials = input_tensors[0].shape[:2]
+    param_tensors, param_strides = _param_tensors(
+        torch,
+        ir,
+        params,
+        device,
+        num_subjects=num_subjects,
+        num_trials=num_trials,
+        subject_slices=subject_slices,
+    )
     output_width = sum(output.width for output in graph.outputs)
     total_lanes = num_params * num_subjects * num_estimates
     out = torch.empty(
@@ -285,7 +334,8 @@ def _run_stateful_graph_kernel(
     block = 128
     grid = (triton.cdiv(total_lanes, block),)
     getattr(module, kernel_name)[grid](
-        *input_tensors, *param_tensors, out, *(() if diag is None else (diag,)),
+        *input_tensors, *param_tensors, *param_strides, out,
+        *(() if diag is None else (diag,)),
         total_lanes, num_subjects, num_estimates, num_trials,
         LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),

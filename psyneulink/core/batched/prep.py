@@ -19,10 +19,14 @@ from psyneulink.core.batched.bindings import (
 from psyneulink.core.batched.ir import (
     FP32_EXACT_INTEGER_LIMIT,
     BatchedCompositionIR,
+    BatchedTrialParameter,
 )
 
 
-def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[dict[str, float]]:
+def normalize_parameter_sets(
+    parameter_sets,
+    ir: BatchedCompositionIR,
+) -> list[dict[str, float | BatchedTrialParameter]]:
     defaults = dict(ir.param_defaults)
     if parameter_sets is None:
         return [defaults]
@@ -36,7 +40,7 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
                 for idx in range(next(iter(lengths))):
                     row = {}
                     for key, value in parameter_sets.items():
-                        row[_normalize_param_key(key)] = _as_scalar(
+                        row[_normalize_param_key(key)] = _as_parameter_value(
                             np.asarray(value).reshape(-1)[idx]
                         )
                     rows.append(_canonicalize_param_set(row, ir))
@@ -44,7 +48,7 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
 
         row = {}
         for key, value in parameter_sets.items():
-            row[_normalize_param_key(key)] = _as_scalar(value)
+            row[_normalize_param_key(key)] = _as_parameter_value(value)
         return [_canonicalize_param_set(row, ir)]
 
     rows = []
@@ -52,7 +56,7 @@ def normalize_parameter_sets(parameter_sets, ir: BatchedCompositionIR) -> list[d
         row = {}
         if isinstance(parameter_set, Mapping):
             for key, value in parameter_set.items():
-                row[_normalize_param_key(key)] = _as_scalar(value)
+                row[_normalize_param_key(key)] = _as_parameter_value(value)
         else:
             values = np.asarray(parameter_set, dtype=float).reshape(-1)
             if len(values) != len(ir.params):
@@ -109,6 +113,102 @@ def prepare_inputs(
         require_equal_trials=(
             ir.graph.metadata.get("schedule_kind") == "dynamic_lane_local"
         ),
+    )
+
+
+def prepare_parameter_values(
+    ir: BatchedCompositionIR,
+    parameter_sets: list[dict[str, float | BatchedTrialParameter]],
+    *,
+    num_subjects: int,
+    num_trials: int,
+    subject_slices=None,
+) -> tuple[tuple[np.ndarray, ...], tuple[int, ...]]:
+    """Pack scalar and trial-varying parameters without expanding scalars.
+
+    Each returned parameter buffer is either ``[parameter_set]`` for a scalar
+    parameter or ``[parameter_set, subject, trial]`` for a trial-varying one.
+    The paired strides are flattened as ``(set_stride, trial_stride, ...)`` for
+    the generated kernel ABI.  A zero trial stride broadcasts a scalar value.
+    """
+
+    if num_subjects < 1 or num_trials < 1:
+        raise ValueError(
+            "Batched parameter preparation requires positive subject and trial counts."
+        )
+
+    buffers = []
+    strides = []
+    for spec in ir.params:
+        values = [row[spec.name] for row in parameter_sets]
+        trial_varying = any(
+            isinstance(value, BatchedTrialParameter) for value in values
+        )
+        if not trial_varying:
+            buffers.append(np.asarray(values, dtype=np.float32))
+            strides.extend((1, 0))
+            continue
+
+        dense_rows = []
+        for value in values:
+            if isinstance(value, BatchedTrialParameter):
+                dense_rows.append(
+                    _coerce_trial_parameter(
+                        value.values,
+                        spec.name,
+                        num_subjects=num_subjects,
+                        num_trials=num_trials,
+                        subject_slices=subject_slices,
+                    )
+                )
+            else:
+                dense_rows.append(
+                    np.full(
+                        (num_subjects, num_trials),
+                        float(value),
+                        dtype=np.float32,
+                    )
+                )
+        buffers.append(np.stack(dense_rows).astype(np.float32, copy=False))
+        strides.extend((num_subjects * num_trials, 1))
+
+    return tuple(buffers), tuple(strides)
+
+
+def _coerce_trial_parameter(
+    value,
+    parameter_name: str,
+    *,
+    num_subjects: int,
+    num_trials: int,
+    subject_slices,
+) -> np.ndarray:
+    array = np.asarray(value, dtype=np.float32)
+    expected = (num_subjects, num_trials)
+    if array.shape == expected:
+        return array
+
+    if array.ndim == 1:
+        if subject_slices is None:
+            if num_subjects == 1 and len(array) == num_trials:
+                return array.reshape(1, num_trials)
+        else:
+            slices = tuple(subject_slices)
+            if len(slices) != num_subjects:
+                raise ValueError(
+                    "Batched trial-parameter subject slices do not match the "
+                    f"prepared subject count ({len(slices)} != {num_subjects})."
+                )
+            split = [np.asarray(array[index], dtype=np.float32) for index in slices]
+            if all(part.ndim == 1 and len(part) <= num_trials for part in split):
+                padded = np.zeros(expected, dtype=np.float32)
+                for index, part in enumerate(split):
+                    padded[index, : len(part)] = part
+                return padded
+
+    raise ValueError(
+        f"Batched trial parameter '{parameter_name}' has shape {array.shape}; "
+        f"expected a flat trial vector for one subject or {expected}."
     )
 
 
@@ -238,15 +338,29 @@ def _exact_count_linear_transform(values, node, row, defaults) -> np.ndarray:
             f"Batched LCA count source '{node.name}' requires an authenticated "
             "Identity or Linear transform."
         )
-    coefficients = tuple(
-        float(row.get(parameter_name, defaults[parameter_name]))
-        for parameter_name in node.params.values()
-    )
+    base_values = np.asarray(values, dtype=float)
+    coefficients = []
+    for parameter_name in node.params.values():
+        value = row.get(parameter_name, defaults[parameter_name])
+        if isinstance(value, BatchedTrialParameter):
+            value = value.values
+        coefficient = np.asarray(value, dtype=float)
+        if coefficient.size == 1:
+            coefficient = float(coefficient.reshape(-1)[0])
+        else:
+            coefficient = _align_trial_parameter_for_counts(
+                coefficient,
+                base_values,
+                node.name,
+                parameter_name,
+            )
+        coefficients.append(coefficient)
+    coefficients = tuple(coefficients)
     if any(
-        not np.isfinite(coefficient)
-        or coefficient < 0
-        or coefficient != np.floor(coefficient)
-        or coefficient > FP32_EXACT_INTEGER_LIMIT
+        not np.all(np.isfinite(coefficient))
+        or np.any(coefficient < 0)
+        or np.any(coefficient != np.floor(coefficient))
+        or np.any(coefficient > FP32_EXACT_INTEGER_LIMIT)
         for coefficient in coefficients
     ):
         raise ValueError(
@@ -255,7 +369,7 @@ def _exact_count_linear_transform(values, node, row, defaults) -> np.ndarray:
             f"{FP32_EXACT_INTEGER_LIMIT}."
         )
     slope, intercept, scale, offset = coefficients
-    transformed = scale * (np.asarray(values, dtype=float) * slope + intercept) + offset
+    transformed = scale * (base_values * slope + intercept) + offset
     if (
         not np.all(np.isfinite(transformed))
         or np.any(transformed < 0)
@@ -267,6 +381,34 @@ def _exact_count_linear_transform(values, node, row, defaults) -> np.ndarray:
             "nonnegative exact fp32 integer for every input and parameter row."
         )
     return transformed
+
+
+def _align_trial_parameter_for_counts(
+    coefficient: np.ndarray,
+    values: np.ndarray,
+    node_name: str,
+    parameter_name: str,
+) -> np.ndarray:
+    """Align a trial vector with raw or prepared scalar count inputs."""
+
+    if coefficient.shape == values.shape:
+        return coefficient
+    if coefficient.size == values.size:
+        return coefficient.reshape(values.shape)
+    if coefficient.ndim == 1 and values.ndim:
+        if len(coefficient) == values.shape[0]:
+            return coefficient.reshape(
+                (len(coefficient),) + (1,) * (values.ndim - 1)
+            )
+        if len(coefficient) == values.shape[-1]:
+            return coefficient.reshape(
+                (1,) * (values.ndim - 1) + (len(coefficient),)
+            )
+    raise ValueError(
+        f"Batched trial parameter '{node_name}.{parameter_name}' has shape "
+        f"{coefficient.shape}, which cannot align with step-count input shape "
+        f"{values.shape}."
+    )
 
 
 def lca_max_steps(
@@ -465,7 +607,10 @@ def _unwrap_singletons(value):
     return value
 
 
-def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> dict[str, float]:
+def _canonicalize_param_set(
+    row: dict[str, float | BatchedTrialParameter],
+    ir: BatchedCompositionIR,
+) -> dict[str, float | BatchedTrialParameter]:
     canonical = dict(ir.param_defaults)
     matched = set()
     for name, value in row.items():
@@ -488,7 +633,7 @@ def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> 
                 "Use a component-qualified parameter name."
             )
         if matching_specs:
-            canonical[matching_specs[0].name] = _as_scalar(value)
+            canonical[matching_specs[0].name] = _as_parameter_value(value)
             matched.add(name)
     unknown = sorted(
         str(name)
@@ -509,22 +654,29 @@ def _canonicalize_param_set(row: dict[str, float], ir: BatchedCompositionIR) -> 
     return canonical
 
 
-def _validate_parameter_constraints(spec, value: float) -> None:
-    if not spec.runtime_mutable and value != spec.default:
+def _validate_parameter_constraints(
+    spec,
+    value: float | BatchedTrialParameter,
+) -> None:
+    values = np.asarray(
+        value.values if isinstance(value, BatchedTrialParameter) else value,
+        dtype=float,
+    )
+    if not spec.runtime_mutable and not np.all(values == spec.default):
         detail = f" ({spec.runtime_constraint})" if spec.runtime_constraint else ""
         raise ValueError(
             f"Batched parameter '{spec.name}' is fixed at {spec.default}{detail}."
         )
     if spec.minimum is not None:
-        valid = value >= spec.minimum if spec.minimum_inclusive else value > spec.minimum
-        if not valid:
+        valid = values >= spec.minimum if spec.minimum_inclusive else values > spec.minimum
+        if not np.all(valid):
             relation = ">=" if spec.minimum_inclusive else ">"
             raise ValueError(
                 f"Batched parameter '{spec.name}' must be {relation} {spec.minimum}."
             )
     if spec.maximum is not None:
-        valid = value <= spec.maximum if spec.maximum_inclusive else value < spec.maximum
-        if not valid:
+        valid = values <= spec.maximum if spec.maximum_inclusive else values < spec.maximum
+        if not np.all(valid):
             relation = "<=" if spec.maximum_inclusive else "<"
             raise ValueError(
                 f"Batched parameter '{spec.name}' must be {relation} {spec.maximum}."
@@ -538,6 +690,8 @@ def _normalize_param_key(key) -> str:
 
 
 def _is_vector_value(value) -> bool:
+    if isinstance(value, BatchedTrialParameter):
+        return False
     if isinstance(value, str):
         return False
     try:
@@ -547,7 +701,27 @@ def _is_vector_value(value) -> bool:
     return array.ndim > 0 and array.size > 1
 
 
-def _as_scalar(value) -> float:
+def _as_parameter_value(value) -> float | BatchedTrialParameter:
+    if isinstance(value, BatchedTrialParameter):
+        array = np.asarray(value.values)
+        if array.ndim not in (1, 2) or array.size == 0:
+            raise ValueError(
+                "Batched trial-parameter values must be a nonempty trial vector "
+                "or [subject, trial] array."
+            )
+        if array.dtype.kind not in "biuf":
+            raise ValueError(
+                "Batched trial-parameter values must be real numeric values; "
+                f"got dtype {array.dtype}."
+            )
+        if not np.all(np.isfinite(array)):
+            raise ValueError("Batched trial-parameter values must be finite.")
+        if np.any(np.abs(array) > np.finfo(np.float32).max):
+            raise ValueError(
+                "Batched trial-parameter values must be representable as float32."
+            )
+        return BatchedTrialParameter(np.asarray(array, dtype=float))
+
     array = np.asarray(value)
     if array.size != 1:
         raise ValueError(

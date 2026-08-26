@@ -103,6 +103,12 @@ class BatchedSimulationPlan:
         strict_truncation: bool = False,
         keep_device_values: bool = False,
     ) -> BatchedSimulationResult:
+        """Run one or more parameter sets over the supplied trial inputs.
+
+        A parameter-set value is normally scalar.  Wrap a trial vector (or a
+        ``[subject, trial]`` array) in :class:`BatchedTrialParameter` when that
+        model parameter must change between trials while lane state persists.
+        """
         try:
             device = _BACKEND_DEVICES[self.backend]
         except KeyError:
@@ -149,7 +155,8 @@ class BatchedSimulationPlan:
         subjects and trials.  On the ``triton`` (GPU) backend the outcomes stay
         on the device and the likelihood is computed there (no host round-trip).
 
-        ``data`` is the experimental data shaped ``[trial, outcome]``.
+        Parameter values may use :class:`BatchedTrialParameter`, as for
+        :meth:`run`.  ``data`` is the experimental data shaped ``[trial, outcome]``.
         ``outcome_indices`` selects/reorders the plan outputs to line up with the
         columns of ``data`` (defaults to all outputs, in order).  See
         :func:`psyneulink.core.batched.likelihood.histogram_log_likelihood` for

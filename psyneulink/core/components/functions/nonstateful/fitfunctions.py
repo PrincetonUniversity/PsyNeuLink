@@ -757,13 +757,6 @@ class PECOptimizationFunction(OptimizationFunction):
 
         from psyneulink.core.batched import BatchedCompositionCompiler, BatchedCompileError
 
-        if self.owner.depends_on:
-            raise OptimizationFunctionError(
-                "batched_backend does not yet support trial-conditional fitting "
-                "parameters (depends_on); use the default (LLVM/Python) path for "
-                "conditional parameters."
-            )
-
         model = self.owner.composition.model
         ignored_control_nodes = tuple(
             self.owner.composition.pec_control_mechs.values()
@@ -875,7 +868,7 @@ class PECOptimizationFunction(OptimizationFunction):
             plan = self._compile_batched_plan()
             inputs = self._batched_stimulus_inputs()
             outcome_indices = self._batched_outcome_indices(plan)
-            param_set = dict(zip(self.fit_param_names, args))
+            param_set = self._batched_parameter_set(args)
             return plan.log_likelihood(
                 inputs,
                 [param_set],
@@ -890,6 +883,50 @@ class PECOptimizationFunction(OptimizationFunction):
             )
 
         return objfunc
+
+    def _batched_parameter_set(self, args):
+        """Map PEC optimizer coordinates to scalar or per-trial model values."""
+
+        from psyneulink.core.batched import BatchedTrialParameter
+
+        pec = self.owner.composition
+        if len(args) != len(self.fit_param_names):
+            raise OptimizationFunctionError(
+                f"Batched fitting received {len(args)} parameter values, but the "
+                f"PEC defines {len(self.fit_param_names)}."
+            )
+
+        row = {}
+        arg_index = 0
+        for parameter, mechanism in pec.fit_parameters:
+            qualified_name = f"{mechanism.name}.{parameter}"
+            key = (parameter, mechanism)
+            if not pec.depends_on or key not in pec.cond_levels:
+                row[qualified_name] = args[arg_index]
+                arg_index += 1
+                continue
+
+            values = np.empty(len(pec.cond_data), dtype=float)
+            covered = np.zeros(len(pec.cond_data), dtype=bool)
+            for level in pec.cond_levels[key]:
+                mask = np.asarray(pec.cond_mask[key][level], dtype=bool)
+                values[mask] = args[arg_index]
+                covered |= mask
+                arg_index += 1
+            if not np.all(covered):
+                raise OptimizationFunctionError(
+                    f"Conditional parameter '{qualified_name}' does not assign "
+                    "a value to every trial."
+                )
+            row[qualified_name] = BatchedTrialParameter(values)
+
+        if arg_index != len(args):
+            raise OptimizationFunctionError(
+                "Batched fitting could not align the PEC condition levels with "
+                f"its optimizer parameters ({arg_index} of {len(args)} used)."
+            )
+
+        return row
 
     def _evaluate_objective_and_sim_data(self, *args, context=None):
         """

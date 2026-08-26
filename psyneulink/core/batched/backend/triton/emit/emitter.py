@@ -97,6 +97,14 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self._index_rng_streams()
         with self.builder.indent():
             self._emit_lane_decode()
+            if self.kernel.fusion_kind in {
+                STATEFUL_GRAPH_FUSION,
+                COEVOLVING_GRAPH_FUSION,
+            }:
+                # Stateful lanes loop over trials internally.  Trial zero is
+                # needed for parameter-dependent lane-state initialization;
+                # the values are reloaded for each trial inside ForTrials.
+                self.builder.line("trial_idx = 0")
             self._emit_params()
             self._emit_top_level_ops()
         body_source = self.builder.render()
@@ -137,6 +145,13 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
     def _signature_args(self) -> tuple[str, ...]:
         args = [f"input_{idx}" for idx, _ in enumerate(self.kernel.inputs)]
         args.extend(f"param_{idx}" for idx, _ in enumerate(self.kernel.params))
+        for idx, _ in enumerate(self.kernel.params):
+            args.extend(
+                (
+                    f"param_{idx}_set_stride: tl.constexpr",
+                    f"param_{idx}_trial_stride: tl.constexpr",
+                )
+            )
         args.append("out")
         # Per-lane diagnostic buffer (e.g. DDM truncation flags); only present
         # when the kernel emits StoreFlag ops, so diagnostic-free kernels (the
@@ -181,14 +196,22 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         args.append("BLOCK: tl.constexpr")
         return tuple(args)
 
-    def _emit_params(self) -> None:
+    def _emit_params(self, *, trial_varying_only: bool = False) -> None:
         for idx, param_spec in enumerate(self.kernel.params):
             var = f"param_{idx}_value"
             self.param_vars[param_spec.name] = var
             default = float_literal(param_spec.default)
-            self.builder.line(
-                f"{var} = tl.load(param_{idx} + param_idx, mask=mask, other={default})"
+            line = (
+                f"{var} = tl.load(param_{idx} + "
+                f"param_idx * param_{idx}_set_stride + "
+                f"(subject_idx * num_trials + trial_idx) * "
+                f"param_{idx}_trial_stride, mask=mask, other={default})"
             )
+            if trial_varying_only:
+                with self.builder.block(f"if param_{idx}_trial_stride"):
+                    self.builder.line(line)
+            else:
+                self.builder.line(line)
         if self.kernel.params:
             self.builder.line()
 

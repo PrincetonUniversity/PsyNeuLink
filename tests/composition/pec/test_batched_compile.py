@@ -11,6 +11,7 @@ from psyneulink.core.batched import (
     BatchedGraphIR,
     BatchedCompileError,
     BatchedCompositionCompiler,
+    BatchedTrialParameter,
     batched_node_op,
     unregister_batched_instance_op,
 )
@@ -78,6 +79,47 @@ def _make_ddm_comp(noise=0.0):
 # Numeric execution uses the externally configured Triton interpreter. Pure
 # lowering, diagnostic, and source-emission tests remain backend-independent.
 requires_triton = pytest.mark.triton_interpreter
+
+
+def test_stateful_graph_reloads_trial_parameters_inside_lane(batched_backend):
+    lca = pnl.LCAMechanism(
+        name="trial-parameter LCA",
+        input_shapes=2,
+        function=pnl.Logistic(gain=1.0),
+        leak=1.0,
+        competition=0.0,
+        self_excitation=0.0,
+        noise=0.0,
+        time_step_size=0.1,
+        execute_until_finished=True,
+        termination_measure=pnl.TimeScale.TRIAL,
+        termination_threshold=1,
+    )
+    composition = pnl.Composition(pathways=lca)
+    plan = BatchedCompositionCompiler.compile(
+        composition,
+        backend=batched_backend,
+    )
+
+    result = plan.run(
+        inputs={lca: np.ones((2, 2))},
+        parameter_sets=[
+            {
+                f"{lca.name}.gain": BatchedTrialParameter([1.0, 2.0]),
+            },
+            {
+                f"{lca.name}.gain": BatchedTrialParameter([2.0, 1.0]),
+            },
+        ],
+        num_estimates=1,
+    )
+    values = result.values[:, 0, :, 0]
+
+    assert plan.ir.graph.fusion_kind == "stateful_graph"
+    assert values[0, 0] == pytest.approx([0.5249792, 0.5249792])
+    assert values[0, 1] == pytest.approx([0.5938731, 0.5938731])
+    assert values[1, 0] == pytest.approx([0.5498340, 0.5498340])
+    assert values[1, 1] == pytest.approx([0.5473576, 0.5473576])
 
 
 @pytest.mark.composition

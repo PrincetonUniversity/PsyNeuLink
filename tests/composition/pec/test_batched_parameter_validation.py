@@ -7,8 +7,11 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched.graph import lower_composition
-from psyneulink.core.batched.ir import BatchedCompositionIR
-from psyneulink.core.batched.prep import normalize_parameter_sets
+from psyneulink.core.batched.ir import BatchedCompositionIR, BatchedTrialParameter
+from psyneulink.core.batched.prep import (
+    normalize_parameter_sets,
+    prepare_parameter_values,
+)
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
@@ -75,6 +78,76 @@ def test_vectorized_mapping_remains_an_explicit_parameter_lane_shorthand():
     assert [row[slope] for row in rows] == [1.0, 2.0]
 
 
+def test_explicit_trial_parameter_preserves_one_parameter_lane():
+    ir, slope = _linear_ir()
+    rows = normalize_parameter_sets(
+        {slope: BatchedTrialParameter([1.0, 2.0, 3.0])},
+        ir,
+    )
+
+    assert len(rows) == 1
+    assert isinstance(rows[0][slope], BatchedTrialParameter)
+
+    buffers, strides = prepare_parameter_values(
+        ir,
+        rows,
+        num_subjects=1,
+        num_trials=3,
+    )
+    parameter_index = next(
+        index for index, spec in enumerate(ir.params) if spec.name == slope
+    )
+    assert buffers[parameter_index].shape == (1, 1, 3)
+    assert buffers[parameter_index][0, 0].tolist() == [1.0, 2.0, 3.0]
+    assert strides[2 * parameter_index : 2 * parameter_index + 2] == (3, 1)
+
+    scalar_index = next(
+        index for index, spec in enumerate(ir.params) if spec.name != slope
+    )
+    assert buffers[scalar_index].shape == (1,)
+    assert strides[2 * scalar_index : 2 * scalar_index + 2] == (1, 0)
+
+
+def test_trial_parameter_shape_must_match_prepared_trials():
+    ir, slope = _linear_ir()
+    rows = normalize_parameter_sets(
+        [{slope: BatchedTrialParameter([1.0, 2.0])}],
+        ir,
+    )
+
+    with pytest.raises(ValueError, match="expected a flat trial vector"):
+        prepare_parameter_values(
+            ir,
+            rows,
+            num_subjects=1,
+            num_trials=3,
+        )
+
+
+def test_flat_trial_parameter_uses_subject_slices_and_padding():
+    ir, slope = _linear_ir()
+    rows = normalize_parameter_sets(
+        [{slope: BatchedTrialParameter([1.0, 2.0, 3.0, 4.0, 5.0])}],
+        ir,
+    )
+    buffers, strides = prepare_parameter_values(
+        ir,
+        rows,
+        num_subjects=2,
+        num_trials=3,
+        subject_slices=(slice(0, 2), slice(2, 5)),
+    )
+    parameter_index = next(
+        index for index, spec in enumerate(ir.params) if spec.name == slope
+    )
+
+    assert buffers[parameter_index][0].tolist() == [
+        [1.0, 2.0, 0.0],
+        [3.0, 4.0, 5.0],
+    ]
+    assert strides[2 * parameter_index : 2 * parameter_index + 2] == (6, 1)
+
+
 def test_ambiguous_parameter_alias_is_rejected():
     ir, _ = _linear_ir()
     shared_alias = "shared.parameter"
@@ -114,3 +187,13 @@ def test_runtime_parameter_respects_declared_exclusive_minimum(value):
 
     with pytest.raises(ValueError, match=r"must be > 0\.0"):
         normalize_parameter_sets([{parameter: value}], ir)
+
+
+def test_trial_parameter_respects_declared_exclusive_minimum():
+    ir, parameter = _constrained_linear_ir()
+
+    with pytest.raises(ValueError, match=r"must be > 0\.0"):
+        normalize_parameter_sets(
+            [{parameter: BatchedTrialParameter([1.0, 0.0])}],
+            ir,
+        )

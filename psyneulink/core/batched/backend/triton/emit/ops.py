@@ -107,6 +107,10 @@ class OpEmitMixin:
     def _emit_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
         self.builder.line("trial_idx = 0")
         with self.builder.block("while trial_idx < num_trials"):
+            # Scalar parameters remain lane-persistent.  The strides are
+            # constexpr launch metadata, so these branches and all scalar
+            # reloads disappear from the compiled kernel.
+            self._emit_params(trial_varying_only=True)
             self._emit_stateful_random_base()
             self.output_cursor = 0
             self.lane_out_emitted = False

@@ -33,6 +33,7 @@ from psyneulink.core.batched.likelihood import (
     histogram_log_likelihood,
 )
 from psyneulink.core.batched.ir import (
+    BatchedTrialParameter,
     BatchedAbsorbedProjectionSpec,
     BatchedConsiderationSetSpec,
     BatchedCompositionIR,
@@ -58,6 +59,7 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "BatchedTrialParameter",
     "BatchedAbsorbedProjectionSpec",
     "BatchedCapabilityReport",
     "BatchedCompileError",

@@ -12,6 +12,19 @@ FP32_EXACT_INTEGER_LIMIT = 2 ** 24
 
 
 @dataclass(frozen=True)
+class BatchedTrialParameter:
+    """Values for one batched model parameter that vary across trials.
+
+    ``values`` may be a one-dimensional trial vector or a two-dimensional
+    ``[subject, trial]`` array.  The runtime validates its shape against the
+    prepared inputs.  This explicit wrapper keeps ordinary vector-valued
+    mappings available as the existing shorthand for multiple parameter sets.
+    """
+
+    values: Any
+
+
+@dataclass(frozen=True)
 class BatchedParamSpec:
     name: str
     default: float

@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 
 import psyneulink as pnl
+from psyneulink.core.batched import BatchedTrialParameter
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
@@ -23,8 +24,6 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
 pytestmark = [
     pytest.mark.batched,
     pytest.mark.composition,
-    pytest.mark.triton,
-    pytest.mark.triton_interpreter,
 ]
 
 
@@ -79,6 +78,7 @@ def _make_ddm_pec(batched_backend, num_estimates=150, threshold=0.2):
     return pec, comp
 
 
+@pytest.mark.triton_interpreter
 def test_batched_objective_scores_true_threshold_highest():
     """The batched data-fitting objective peaks near the data-generating threshold.
 
@@ -113,6 +113,7 @@ def test_batched_backend_none_uses_default_path():
     assert opt_func._batched_plan is None
 
 
+@pytest.mark.triton_interpreter
 def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
     """A model the batched compiler rejects raises a clear error (never falls back)."""
     import psyneulink.core.batched as batched
@@ -128,3 +129,60 @@ def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
     objfunc = opt_func._make_objective_func()
     with pytest.raises(OptimizationFunctionError, match="cannot be compiled"):
         objfunc(0.2)
+
+
+def test_batched_conditional_parameter_is_selected_per_trial(batched_backend):
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            rate=1.0,
+            noise=0.0,
+            threshold=0.2,
+            non_decision_time=0.0,
+            time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="conditional DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    data = pd.DataFrame(
+        {
+            "decision": [1.0, 1.0, 1.0, 1.0],
+            "response_time": [0.1, 0.4, 0.1, 0.4],
+            "condition": ["low", "high", "low", "high"],
+        }
+    )
+    data["decision"] = data["decision"].astype("category")
+    data["condition"] = data["condition"].astype("category")
+    pec = pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={
+            ("threshold", decision): np.linspace(0.1, 0.4, 4),
+            ("rate", decision): np.linspace(0.5, 1.5, 3),
+        },
+        depends_on={("threshold", decision): "condition"},
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution",
+            max_iterations=1,
+            batched_backend=batched_backend,
+            batched_max_steps=100,
+            batched_bins=10,
+            batched_seed=1,
+        ),
+        num_estimates=2,
+    )
+    pec.controller._pec_input_values_by_node = {decision: np.ones((4, 1))}
+
+    opt_func = pec.controller.function
+    parameter_set = opt_func._batched_parameter_set((0.1, 0.4, 1.0))
+    threshold = parameter_set[f"{decision.name}.threshold"]
+    assert isinstance(threshold, BatchedTrialParameter)
+    assert threshold.values.tolist() == [0.1, 0.4, 0.1, 0.4]
+    assert parameter_set[f"{decision.name}.rate"] == 1.0
+
+    objective = opt_func._make_objective_func()
+    assert np.isfinite(objective(0.1, 0.4, 1.0))
