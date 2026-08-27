@@ -130,6 +130,28 @@ def test_parameter_batching_requires_local_batched_backend():
         )
 
 
+def test_triton_launch_options_require_compiled_gpu_backend():
+    with pytest.raises(ValueError, match="requires batched_backend='triton'"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_backend="triton_cpu",
+            batched_triton_launch_options={"block_size": 64},
+        )
+
+    options = {"block_size": 64, "num_warps": 2, "maxnreg": 96}
+    function = PECOptimizationFunction(
+        method="differential_evolution",
+        batched_backend="triton",
+        batched_triton_launch_options=options,
+    )
+    options["block_size"] = 256
+    assert function.batched_triton_launch_options == {
+        "block_size": 64,
+        "num_warps": 2,
+        "maxnreg": 96,
+    }
+
+
 @pytest.mark.triton_interpreter
 def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
     """A model the batched compiler rejects raises a clear error (never falls back)."""

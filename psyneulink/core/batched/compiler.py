@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from psyneulink.core.batched.bindings import (
@@ -102,6 +103,7 @@ class BatchedSimulationPlan:
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
         keep_device_values: bool = False,
+        triton_launch_options: Mapping | None = None,
     ) -> BatchedSimulationResult:
         """Run one or more parameter sets over the supplied trial inputs.
 
@@ -129,6 +131,7 @@ class BatchedSimulationPlan:
             keep_device_values=keep_device_values,
             kernel_ir=self.kernel_ir,
             component_bindings=self.component_bindings,
+            launch_options=triton_launch_options,
         )
 
     def log_likelihood(
@@ -147,6 +150,7 @@ class BatchedSimulationPlan:
         seed=None,
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
+        triton_launch_options: Mapping | None = None,
     ):
         """Simulate and score experimental ``data`` with a histogram likelihood.
 
@@ -179,6 +183,7 @@ class BatchedSimulationPlan:
             common_random_numbers=common_random_numbers,
             strict_truncation=strict_truncation,
             keep_device_values=keep_device,
+            triton_launch_options=triton_launch_options,
         )
 
         # values: [parameter_set, subject, trial, estimate, outcome].  Collapse

@@ -48,7 +48,15 @@ parser.add_argument(
         "same 11-member population one candidate at a time."
     ),
 )
-parser.add_argument("--skip_posterior_predictive", action="store_true")
+parser.add_argument("--triton_block_size", "--triton-block-size", default=128, type=int)
+parser.add_argument("--triton_num_warps", "--triton-num-warps", default=4, type=int)
+parser.add_argument("--triton_maxnreg", "--triton-maxnreg", default=None, type=int)
+parser.add_argument(
+    "--skip_posterior_predictive",
+    "--skip-posterior-predictive",
+    action="store_true",
+)
+parser.add_argument("--skip_fit_output", "--skip-fit-output", action="store_true")
 
 args = parser.parse_args()
 data_file = args.data_file.expanduser()
@@ -165,6 +173,12 @@ if args.backend != "llvm":
     }
     if args.parameter_batch_size:
         batched_options["batched_parameter_batch_size"] = args.parameter_batch_size
+    if args.backend == "triton":
+        batched_options["batched_triton_launch_options"] = {
+            "block_size": args.triton_block_size,
+            "num_warps": args.triton_num_warps,
+            "maxnreg": args.triton_maxnreg,
+        }
 
 cma_population_size = args.parameter_batch_size or 11
 
@@ -211,6 +225,13 @@ print(
     f"Participant {actual_subject_id}, Slurm Array {args.subject_id}, "
     f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}"
 )
+if args.backend == "triton":
+    print(
+        "Triton launch configuration: "
+        f"block_size={args.triton_block_size}, "
+        f"num_warps={args.triton_num_warps}, "
+        f"maxnreg={args.triton_maxnreg}"
+    )
 print("Running the PEC")
 
 start_time = datetime.now()
@@ -219,6 +240,7 @@ end_time = datetime.now()
 
 optimal_parameters = pec.optimized_parameter_values
 print(optimal_parameters)
+print(f"Optimal Log-Likelihood: {pec.optimal_value}")
 print("Fit Complete!")
 
 # -- Save fit results ----------------------------------------------------------
@@ -249,10 +271,11 @@ output_stem = (
     "expectation_3.2_real_sequences_single_csi_leak12"
     f"_sub{actual_subject_id}{output_suffix}"
 )
-df.to_csv(
-    output_dir / f"{output_stem}.csv",
-    index=False,
-)
+if not args.skip_fit_output:
+    df.to_csv(
+        output_dir / f"{output_stem}.csv",
+        index=False,
+    )
 
 # -- Posterior predictive checks -----------------------------------------------
 sim_posterior_predict = not args.skip_posterior_predictive

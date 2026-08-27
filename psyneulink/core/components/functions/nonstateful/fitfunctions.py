@@ -599,6 +599,12 @@ class PECOptimizationFunction(OptimizationFunction):
         ``CmaEsSampler`` population and must equal its ``popsize``.  ``None``
         preserves serial candidate evaluation.
 
+    batched_triton_launch_options :
+        Optional mapping of compiled-GPU launch controls used by the experimental
+        batched Triton backend. Supported keys are ``block_size``, ``num_warps``,
+        and ``maxnreg``. Omit this mapping to use the established 128-lane,
+        four-warp launch without a register cap.
+
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
         candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
@@ -654,6 +660,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_bin_range=None,
         batched_seed: Optional[int] = None,
         batched_parameter_batch_size: Optional[int] = None,
+        batched_triton_launch_options: Optional[Mapping] = None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -687,6 +694,18 @@ class PECOptimizationFunction(OptimizationFunction):
                 "combined; population batching currently runs on one local device."
             )
         self.batched_parameter_batch_size = batched_parameter_batch_size
+        if (
+            batched_triton_launch_options is not None
+            and batched_backend != "triton"
+        ):
+            raise ValueError(
+                "batched_triton_launch_options requires batched_backend='triton'."
+            )
+        self.batched_triton_launch_options = (
+            None
+            if batched_triton_launch_options is None
+            else dict(batched_triton_launch_options)
+        )
         # Lazily-built, cached compiled plan (only used when batched_backend is set).
         self._batched_plan = None
 
@@ -994,6 +1013,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 bin_range=self.batched_bin_range,
                 include_mask=include_mask,
                 seed=seed,
+                triton_launch_options=self.batched_triton_launch_options,
             )
             return np.asarray(result, dtype=float).reshape(-1)
 

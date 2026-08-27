@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from collections.abc import Mapping
 
 import numpy as np
 
@@ -30,6 +31,74 @@ from psyneulink.core.batched.backend.triton.cache import (
 )
 from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
 from psyneulink.core.batched.backend.triton.emit.lanes import RNG_STREAM_STRIDE
+
+
+_DEFAULT_LAUNCH_OPTIONS = {
+    "block_size": 128,
+    "num_warps": 4,
+    "maxnreg": None,
+}
+_SUPPORTED_LAUNCH_OPTIONS = frozenset(_DEFAULT_LAUNCH_OPTIONS)
+
+
+def _normalize_launch_options(options, *, interpret: bool) -> dict:
+    """Return validated Triton launch controls with stable defaults."""
+
+    if options is None:
+        options = {}
+    if not isinstance(options, Mapping):
+        raise TypeError("Triton launch_options must be a mapping or None.")
+    unknown = set(options) - _SUPPORTED_LAUNCH_OPTIONS
+    if unknown:
+        raise ValueError(
+            "Unknown Triton launch option(s): " + ", ".join(sorted(unknown))
+        )
+    if interpret and options:
+        raise ValueError(
+            "Custom Triton launch_options require the compiled GPU backend "
+            "(device='cuda'), not the CPU interpreter."
+        )
+
+    result = {**_DEFAULT_LAUNCH_OPTIONS, **options}
+    block_size = result["block_size"]
+    if (
+        isinstance(block_size, bool)
+        or not isinstance(block_size, int)
+        or not 32 <= block_size <= 1024
+        or block_size & (block_size - 1)
+    ):
+        raise ValueError(
+            "Triton block_size must be a power-of-two integer from 32 through 1024."
+        )
+
+    num_warps = result["num_warps"]
+    if (
+        isinstance(num_warps, bool)
+        or not isinstance(num_warps, int)
+        or num_warps not in {1, 2, 4, 8}
+    ):
+        raise ValueError("Triton num_warps must be one of 1, 2, 4, or 8.")
+
+    maxnreg = result["maxnreg"]
+    if (
+        maxnreg is not None
+        and (
+            isinstance(maxnreg, bool)
+            or not isinstance(maxnreg, int)
+            or not 16 <= maxnreg <= 255
+        )
+    ):
+        raise ValueError(
+            "Triton maxnreg must be None or an integer from 16 through 255."
+        )
+    return result
+
+
+def _compiler_launch_options(launch: Mapping) -> dict:
+    options = {"num_warps": launch["num_warps"]}
+    if launch["maxnreg"] is not None:
+        options["maxnreg"] = launch["maxnreg"]
+    return options
 
 
 def _check_step_caps(**caps):
@@ -62,6 +131,7 @@ def run_triton(
     *,
     kernel_ir: KernelIR | None = None,
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
+    launch_options: Mapping | None = None,
 ) -> BatchedSimulationResult:
     """Execute the generated batched kernels.
 
@@ -79,9 +149,15 @@ def run_triton(
     on-device Torch tensor (``result.values``) instead of a host numpy array, so
     a downstream consumer (e.g. the histogram likelihood) can run on the GPU
     without a host round-trip.
+
+    ``launch_options`` exposes a small, validated set of GPU-only Triton tuning
+    controls for benchmarking: ``block_size``, ``num_warps``, and ``maxnreg``.
+    Omitting it preserves the historical 128-lane/four-warp launch with no
+    compiler register cap.
     """
 
     interpret = device == "cpu"
+    launch = _normalize_launch_options(launch_options, interpret=interpret)
     torch, triton = _import_torch_triton(interpret)
     if not interpret and not torch.cuda.is_available():
         raise RuntimeError("The Triton batched backend requires an available CUDA device.")
@@ -106,25 +182,25 @@ def run_triton(
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
-                device, subject_slices,
+                device, subject_slices, launch,
             )
         elif fusion_kind == DDM_GRAPH_FUSION:
             values, truncation = _run_ddm_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
-                seed, common_random_numbers, device, slots, subject_slices,
+                seed, common_random_numbers, device, slots, subject_slices, launch,
             )
         elif fusion_kind == STATEFUL_GRAPH_FUSION:
             values, truncation = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
-                subject_slices=subject_slices,
+                subject_slices=subject_slices, launch=launch,
             )
         elif fusion_kind == COEVOLVING_GRAPH_FUSION:
             values, truncation = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
                 kernel_name="pnl_batched_coevolving_graph_kernel",
-                subject_slices=subject_slices,
+                subject_slices=subject_slices, launch=launch,
             )
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
@@ -139,7 +215,12 @@ def run_triton(
         values=values,
         output_names=ir.output_names,
         backend="triton" if device == "cuda" else "triton_cpu",
-        metadata={"model_kind": ir.model_kind, "device": device, "truncation": truncation},
+        metadata={
+            "model_kind": ir.model_kind,
+            "device": device,
+            "truncation": truncation,
+            "triton_launch_options": launch,
+        },
     )
 
 
@@ -242,7 +323,7 @@ def _sync(torch, device):
 
 def _run_stateless_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates, device,
-    subject_slices=None,
+    subject_slices=None, launch=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -263,11 +344,12 @@ def _run_stateless_graph_kernel(
         (num_params, num_subjects, num_trials, num_estimates, output_width),
         dtype=torch.float32, device=device,
     )
-    block = 128
+    block = launch["block_size"]
     grid = (triton.cdiv(total_lanes, block),)
     module.pnl_batched_stateless_graph_kernel[grid](
         *input_tensors, *param_tensors, *param_strides, out,
         total_lanes, num_subjects, num_trials, num_estimates, BLOCK=block,
+        **_compiler_launch_options(launch),
     )
     _sync(torch, device)
     return out, {}
@@ -275,7 +357,7 @@ def _run_stateless_graph_kernel(
 
 def _run_ddm_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
-    seed, common_random_numbers, device, slots, subject_slices=None,
+    seed, common_random_numbers, device, slots, subject_slices=None, launch=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -298,7 +380,7 @@ def _run_ddm_graph_kernel(
     )
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
     _check_step_caps(max_steps=ir.max_steps)
-    block = 128
+    block = launch["block_size"]
     grid = (triton.cdiv(total_lanes, block),)
     module.pnl_batched_ddm_graph_kernel[grid](
         *input_tensors, *param_tensors, *param_strides, out,
@@ -306,6 +388,7 @@ def _run_ddm_graph_kernel(
         total_lanes, num_subjects, num_trials, num_estimates,
         MAX_STEPS=ir.max_steps, COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed), BLOCK=block,
+        **_compiler_launch_options(launch),
     )
     _sync(torch, device)
     return out, _collect_diagnostics(diag, slots)
@@ -315,6 +398,7 @@ def _run_stateful_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
     seed, common_random_numbers, device, slots,
     kernel_name="pnl_batched_stateful_graph_kernel", subject_slices=None,
+    launch=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -338,7 +422,7 @@ def _run_stateful_graph_kernel(
     diag = _diag_buffer(torch, (num_params, num_subjects, num_trials, num_estimates), slots, device)
     lca_steps = lca_max_steps(ir, inputs, params)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
-    block = 128
+    block = launch["block_size"]
     grid = (triton.cdiv(total_lanes, block),)
     getattr(module, kernel_name)[grid](
         *input_tensors, *param_tensors, *param_strides, out,
@@ -347,6 +431,7 @@ def _run_stateful_graph_kernel(
         LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed), BLOCK=block,
+        **_compiler_launch_options(launch),
     )
     _sync(torch, device)
     return out, _collect_diagnostics(diag, slots)
