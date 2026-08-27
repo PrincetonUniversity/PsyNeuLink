@@ -56,9 +56,24 @@ parser.add_argument(
     "--skip-posterior-predictive",
     action="store_true",
 )
+parser.add_argument(
+    "--posterior_predictive_simulations",
+    "--posterior-predictive-simulations",
+    default=100,
+    type=int,
+)
+parser.add_argument(
+    "--posterior_predictive_seed",
+    "--posterior-predictive-seed",
+    default=None,
+    type=int,
+    help="Random seed for posterior prediction (default: fitting seed + 1).",
+)
 parser.add_argument("--skip_fit_output", "--skip-fit-output", action="store_true")
 
 args = parser.parse_args()
+if args.posterior_predictive_simulations < 1:
+    parser.error("--posterior-predictive-simulations must be at least 1.")
 data_file = args.data_file.expanduser()
 if not data_file.is_file():
     parser.error(
@@ -279,81 +294,124 @@ if not args.skip_fit_output:
 
 # -- Posterior predictive checks -----------------------------------------------
 sim_posterior_predict = not args.skip_posterior_predictive
-n_sim = 100
+n_sim = args.posterior_predictive_simulations
+posterior_predictive_seed = args.posterior_predictive_seed
+if posterior_predictive_seed is None:
+    posterior_predictive_seed = args.seed + 1
 
 if sim_posterior_predict:
-    comp_pp = make_stab_flex(**sf_params)
-
-    cueStimulusInterval_pp = get_node(comp_pp, "Cue Stimulus Interval")
-    controlExecution_pp    = get_node(comp_pp, "Task Activations [C1, C2]")
-    thresholdMechanism_pp  = get_node(comp_pp, "Threshold Mechanism")
-    decisionMaker_pp       = get_node(comp_pp, "DDM")
-
-    # Reload the full trial sequence for this subject (no mask filtering)
-    # and replicate n_sim times for a stable posterior predictive distribution.
+    posterior_predictive_start = datetime.now()
+    # Keep the full trial sequence: the likelihood mask controls fitting only.
     pp_data = data[
         (data.subject_nr == actual_subject_id) &
         data.sequence.isin(["RealRare", "RealFrequent", "NoInstruction"])
     ].reset_index(drop=True)
-    pp_data = pd.concat([pp_data] * n_sim, ignore_index=True)
 
-    taskSequence_pp            = pp_data[["T1", "T2"]].to_numpy()
-    stimulusSequence_pp        = pp_data[["S1", "S2", "S3", "S4"]].to_numpy()
-    correctResponseSequence_pp = pp_data["correct_response"].to_numpy()
-
-    inputs_pp = make_input_dict(
-        comp_pp, taskSequence_pp, stimulusSequence_pp, correctResponseSequence_pp
-    )
-
-    # Infer conditions present in this dataset.
-    conditions = pp_data["sequence"].unique()
-
-    def _select(param_base):
-        """Map each trial to its fitted parameter value.
-
-        For condition-specific parameters (depends_on by sequence), selects the
-        appropriate condition column. For shared parameters (no depends_on),
-        broadcasts the single fitted value across all trials.
-        """
-        col_with_cond = f"{param_base}[{conditions[0]}]"
-        if col_with_cond in df.columns:
-            return np.select(
-                [pp_data["sequence"] == cond for cond in conditions],
-                [df[f"{param_base}[{cond}]"] for cond in conditions],
+    if args.backend == "triton":
+        # Reuse the fitted model's cached plan. The fitting helper performs the
+        # authoritative mapping from optimizer coordinates to scalar and
+        # condition-dependent per-trial parameters.
+        fit_function = pec.controller.function
+        fit_values = tuple(
+            optimal_parameters[name] for name in fit_function.fit_param_names
+        )
+        pp_parameter_set = fit_function._batched_parameter_set(fit_values)
+        pp_plan = fit_function._compile_batched_plan()
+        pp_result = pp_plan.run(
+            fit_function._batched_stimulus_inputs(),
+            [pp_parameter_set],
+            num_estimates=n_sim,
+            seed=posterior_predictive_seed,
+            # With one parameter set, common-random-number indexing still gives
+            # every estimate an independent stream and reuses the fit's kernel
+            # specialization.
+            common_random_numbers=True,
+            triton_launch_options=fit_function.batched_triton_launch_options,
+        )
+        outcome_indices = fit_function._batched_outcome_indices(pp_plan)
+        selected = np.take(pp_result.values, outcome_indices, axis=-1)
+        # Runtime layout is [parameter, subject, trial, estimate, outcome].
+        # Put independent simulations first so each CSV replicate contains one
+        # complete, stateful trial sequence.
+        simulated_outcomes = np.transpose(selected[0, 0], (1, 0, 2))
+        if simulated_outcomes.shape != (n_sim, len(pp_data), 2):
+            raise RuntimeError(
+                "Unexpected posterior-predictive result shape: "
+                f"{simulated_outcomes.shape}; expected {(n_sim, len(pp_data), 2)}."
             )
-        else:
-            return np.full(len(pp_data), df[param_base].iloc[0])
+        simulated_outcomes = simulated_outcomes.reshape(-1, 2)
+        repeated_pp_data = pd.concat([pp_data] * n_sim, ignore_index=True)
+        print(
+            f"GPU posterior prediction complete: {n_sim} simulation(s), "
+            f"{len(pp_data)} trials each, seed={posterior_predictive_seed}"
+        )
+    else:
+        # Retain the original LLVM path for non-GPU fits.
+        comp_pp = make_stab_flex(**sf_params)
 
-    gain_array = _select("Task Activations [C1, C2].gain")
-    prep_time_array = _select("Cue Stimulus Interval.slope")
-    threshold_array = _select("Threshold Mechanism.intercept")
-    collapse_array = _select("Threshold Mechanism.offset-integrator_function")
-    ndt_array = _select("DDM.non_decision_time")
+        cueStimulusInterval_pp = get_node(comp_pp, "Cue Stimulus Interval")
+        controlExecution_pp    = get_node(comp_pp, "Task Activations [C1, C2]")
+        thresholdMechanism_pp  = get_node(comp_pp, "Threshold Mechanism")
+        decisionMaker_pp       = get_node(comp_pp, "DDM")
 
-    gain_mech      = pnl.ControlMechanism(name="Gain Mech",      control_signals=("gain",                       controlExecution_pp),   modulation=pnl.OVERRIDE)
-    prep_time_mech = pnl.ControlMechanism(name="Prep Time Mech", control_signals=("slope",                      cueStimulusInterval_pp), modulation=pnl.OVERRIDE)
-    threshold_mech = pnl.ControlMechanism(name="Threshold Mech", control_signals=("intercept",                  thresholdMechanism_pp),  modulation=pnl.OVERRIDE)
-    collapse_mech  = pnl.ControlMechanism(name="Collapse Mech",  control_signals=("offset-integrator_function", thresholdMechanism_pp),  modulation=pnl.OVERRIDE)
-    ndt_mech       = pnl.ControlMechanism(name="NDT Mech",       control_signals=("non_decision_time",          decisionMaker_pp),       modulation=pnl.OVERRIDE)
+        repeated_pp_data = pd.concat([pp_data] * n_sim, ignore_index=True)
+        taskSequence_pp = repeated_pp_data[["T1", "T2"]].to_numpy()
+        stimulusSequence_pp = repeated_pp_data[["S1", "S2", "S3", "S4"]].to_numpy()
+        correctResponseSequence_pp = repeated_pp_data["correct_response"].to_numpy()
+        inputs_pp = make_input_dict(
+            comp_pp, taskSequence_pp, stimulusSequence_pp, correctResponseSequence_pp
+        )
 
-    comp_pp.add_nodes([gain_mech, prep_time_mech, threshold_mech, collapse_mech, ndt_mech])
+        conditions = repeated_pp_data["sequence"].unique()
 
-    inputs_pp["Gain Mech"]      = [[np.array([v])] for v in gain_array]
-    inputs_pp["Prep Time Mech"] = [[np.array([v])] for v in prep_time_array]
-    inputs_pp["Threshold Mech"] = [[np.array([v])] for v in threshold_array]
-    inputs_pp["Collapse Mech"]  = [[np.array([v])] for v in collapse_array]
-    inputs_pp["NDT Mech"]       = [[np.array([v])] for v in ndt_array]
+        def _select(param_base):
+            col_with_cond = f"{param_base}[{conditions[0]}]"
+            if col_with_cond in df.columns:
+                return np.select(
+                    [repeated_pp_data["sequence"] == cond for cond in conditions],
+                    [df[f"{param_base}[{cond}]"] for cond in conditions],
+                )
+            return np.full(len(repeated_pp_data), df[param_base].iloc[0])
 
-    comp_pp.run(inputs_pp, execution_mode=pnl.ExecutionMode.LLVMRun)
+        gain_array = _select("Task Activations [C1, C2].gain")
+        prep_time_array = _select("Cue Stimulus Interval.slope")
+        threshold_array = _select("Threshold Mechanism.intercept")
+        collapse_array = _select("Threshold Mechanism.offset-integrator_function")
+        ndt_array = _select("DDM.non_decision_time")
+
+        gain_mech = pnl.ControlMechanism(name="Gain Mech", control_signals=("gain", controlExecution_pp), modulation=pnl.OVERRIDE)
+        prep_time_mech = pnl.ControlMechanism(name="Prep Time Mech", control_signals=("slope", cueStimulusInterval_pp), modulation=pnl.OVERRIDE)
+        threshold_mech = pnl.ControlMechanism(name="Threshold Mech", control_signals=("intercept", thresholdMechanism_pp), modulation=pnl.OVERRIDE)
+        collapse_mech = pnl.ControlMechanism(name="Collapse Mech", control_signals=("offset-integrator_function", thresholdMechanism_pp), modulation=pnl.OVERRIDE)
+        ndt_mech = pnl.ControlMechanism(name="NDT Mech", control_signals=("non_decision_time", decisionMaker_pp), modulation=pnl.OVERRIDE)
+        comp_pp.add_nodes([
+            gain_mech,
+            prep_time_mech,
+            threshold_mech,
+            collapse_mech,
+            ndt_mech,
+        ])
+
+        inputs_pp["Gain Mech"] = [[np.array([v])] for v in gain_array]
+        inputs_pp["Prep Time Mech"] = [[np.array([v])] for v in prep_time_array]
+        inputs_pp["Threshold Mech"] = [[np.array([v])] for v in threshold_array]
+        inputs_pp["Collapse Mech"] = [[np.array([v])] for v in collapse_array]
+        inputs_pp["NDT Mech"] = [[np.array([v])] for v in ndt_array]
+
+        comp_pp.run(inputs_pp, execution_mode=pnl.ExecutionMode.LLVMRun)
+        simulated_outcomes = np.squeeze(np.array(comp_pp.results))[:, 1:]
 
     sim_data = pd.DataFrame(
-        np.squeeze(np.array(comp_pp.results))[:, 1:],
+        simulated_outcomes,
         columns=["decision", "response_time"],
     ).assign(
-        sequence=pp_data["sequence"].to_numpy(),
-        task_transition=pp_data["task_transition"].to_numpy(),
-        congruence=pp_data["congruence"].to_numpy(),
+        sequence=repeated_pp_data["sequence"].to_numpy(),
+        task_transition=repeated_pp_data["task_transition"].to_numpy(),
+        congruence=repeated_pp_data["congruence"].to_numpy(),
         subject_nr=actual_subject_id,
+        posterior_predictive_replicate=np.repeat(
+            np.arange(n_sim), len(pp_data)
+        ),
     )
 
     posterior_output = output_dir / (
@@ -361,4 +419,7 @@ if sim_posterior_predict:
         f"_posterior_predict_sub{actual_subject_id}{output_suffix}.csv"
     )
     sim_data.to_csv(posterior_output, index=False)
-    print("Simulation Complete!")
+    print(
+        "Simulation Complete! Posterior-predictive duration: "
+        f"{datetime.now() - posterior_predictive_start}"
+    )
