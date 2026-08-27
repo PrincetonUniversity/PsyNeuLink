@@ -213,3 +213,9 @@ pnl-show_graph-output/
 
 # Local thesis experiment scripts (not part of the test suite)
 tests/composition/thesis_code/
+
+# Local PEC GPU workload inputs and outputs
+/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/data_to_fit_study3.csv
+/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/fits/
+/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/logs/
+/Scripts/Debug/pec_batch_compile/dawa_lca_model/
