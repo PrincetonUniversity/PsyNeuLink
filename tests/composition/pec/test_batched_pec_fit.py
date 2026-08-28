@@ -105,6 +105,20 @@ def test_batched_objective_scores_true_threshold_highest():
     assert best == 0.2, lls
 
 
+@pytest.mark.triton_interpreter
+def test_public_log_likelihood_reuses_batched_objective():
+    """Fixed-parameter rescoring follows the configured batched backend."""
+
+    pec, comp = _make_ddm_pec("triton_cpu", num_estimates=100, threshold=0.2)
+    opt_func = pec.controller.function
+    inputs = {comp.nodes["DDM"]: np.zeros((5, 1))}
+
+    expected = opt_func._make_objective_func()(0.2)
+    actual = pec.log_likelihood(0.2, inputs=inputs)
+
+    assert actual == pytest.approx(expected, rel=1e-6, abs=1e-5)
+
+
 def test_batched_backend_none_uses_default_path():
     """Without batched_backend the objective is the standard (non-batched) closure."""
     pec, comp = _make_ddm_pec(None)

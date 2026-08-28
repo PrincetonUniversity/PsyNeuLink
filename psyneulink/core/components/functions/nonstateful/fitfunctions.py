@@ -1934,6 +1934,21 @@ class PECOptimizationFunction(OptimizationFunction):
                 "ParameterEstimationControlMechanism for more information."
             )
 
+        # Reuse the compiled batched likelihood path for fixed-parameter
+        # evaluations as well as optimizer evaluations.  This is important for
+        # validation/rescoring workloads: without this branch a PEC configured
+        # with ``batched_backend`` silently sends public ``log_likelihood`` calls
+        # through the legacy simulation path.  The batched likelihood currently
+        # returns only the score, so retain the legacy path when callers request
+        # the simulated outcomes too.
+        if (
+            self.batched_backend is not None
+            and self.data_fitting_mode
+            and not return_sim_data
+        ):
+            objective = self._batched_objective_func(context=context)
+            return float(objective(*args))
+
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING
         try:

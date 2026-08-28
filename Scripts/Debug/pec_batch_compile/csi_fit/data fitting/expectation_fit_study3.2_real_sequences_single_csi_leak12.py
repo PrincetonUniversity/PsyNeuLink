@@ -15,19 +15,26 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_FILE = SCRIPT_DIR / "data_to_fit_study3.csv"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--subject_id", help="The subject ID to fit model.", default=1, type=int)
-parser.add_argument("--cpu_count", help="The number of CPUs requested for this task.", default=None, type=int)
+parser.add_argument("--subject_id", "--subject-id", help="The subject ID to fit model.", default=1, type=int)
+parser.add_argument("--cpu_count", "--cpu-count", help="The number of CPUs requested for this task.", default=None, type=int)
 parser.add_argument(
     "--backend",
     choices=("llvm", "triton", "triton_cpu"),
     default="llvm",
     help="Likelihood simulator backend; use 'triton' for a CUDA GPU.",
 )
-parser.add_argument("--num_estimates", default=10000, type=int)
-parser.add_argument("--max_iterations", default=5000, type=int)
-parser.add_argument("--max_steps", default=1200, type=int)
+parser.add_argument("--num_estimates", "--num-estimates", default=10000, type=int)
+parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=int)
+parser.add_argument("--max_steps", "--max-steps", default=1200, type=int)
 parser.add_argument("--bins", default=100, type=int)
-parser.add_argument("--seed", default=1, type=int)
+parser.add_argument(
+    "--seed",
+    default=1,
+    type=int,
+    help="Legacy default used for optimizer and simulation seeds unless either is set explicitly.",
+)
+parser.add_argument("--optimizer_seed", "--optimizer-seed", default=None, type=int)
+parser.add_argument("--simulation_seed", "--simulation-seed", default=None, type=int)
 parser.add_argument(
     "--data_file",
     "--data-file",
@@ -41,6 +48,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--parameter_batch_size",
+    "--parameter-batch-size",
     default=11,
     type=int,
     help=(
@@ -67,13 +75,45 @@ parser.add_argument(
     "--posterior-predictive-seed",
     default=None,
     type=int,
-    help="Random seed for posterior prediction (default: fitting seed + 1).",
+    help="Random seed for posterior prediction (default: simulation seed + 1).",
 )
 parser.add_argument("--skip_fit_output", "--skip-fit-output", action="store_true")
+parser.add_argument(
+    "--output_dir",
+    "--output-dir",
+    default=SCRIPT_DIR / "fits",
+    type=Path,
+    help="Directory for fit, predictive, and rescoring CSV files.",
+)
+parser.add_argument(
+    "--run_label",
+    "--run-label",
+    default=None,
+    help="Optional experiment label recorded in output files.",
+)
+parser.add_argument(
+    "--rescore_parameter_file",
+    "--rescore-parameter-file",
+    default=None,
+    type=Path,
+    help="Skip optimization and rescore the one-row fit CSV at fixed parameters.",
+)
+parser.add_argument(
+    "--rescore_simulation_seeds",
+    "--rescore-simulation-seeds",
+    nargs="+",
+    type=int,
+    default=None,
+    help="Simulation seeds used with --rescore-parameter-file.",
+)
 
 args = parser.parse_args()
+optimizer_seed = args.seed if args.optimizer_seed is None else args.optimizer_seed
+simulation_seed = args.seed if args.simulation_seed is None else args.simulation_seed
 if args.posterior_predictive_simulations < 1:
     parser.error("--posterior-predictive-simulations must be at least 1.")
+if args.rescore_simulation_seeds is not None and args.rescore_parameter_file is None:
+    parser.error("--rescore-simulation-seeds requires --rescore-parameter-file.")
 data_file = args.data_file.expanduser()
 if not data_file.is_file():
     parser.error(
@@ -184,7 +224,7 @@ if args.backend != "llvm":
         "batched_backend": args.backend,
         "batched_max_steps": args.max_steps,
         "batched_bins": args.bins,
-        "batched_seed": args.seed,
+        "batched_seed": simulation_seed,
     }
     if args.parameter_batch_size:
         batched_options["batched_parameter_batch_size"] = args.parameter_batch_size
@@ -218,7 +258,7 @@ pec = pnl.ParameterEstimationComposition(
             sigma0=0.2,
             lr_adapt=True,
             popsize=cma_population_size,
-            seed=args.seed,
+            seed=optimizer_seed,
         ),
         max_iterations=max_iterations,
         **batched_options,
@@ -238,7 +278,8 @@ print(
     f"Fit Expectation Study 3.2 Real Sequences, No Warm Start, Single Surrogate CSI, "
     f"{num_estimates} Num Estimates, Sigma 0.2, LR Adapt = True, Leak = 12, "
     f"Participant {actual_subject_id}, Slurm Array {args.subject_id}, "
-    f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}"
+    f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}, "
+    f"Optimizer Seed {optimizer_seed}, Simulation Seed {simulation_seed}"
 )
 if args.backend == "triton":
     print(
@@ -247,6 +288,97 @@ if args.backend == "triton":
         f"num_warps={args.triton_num_warps}, "
         f"maxnreg={args.triton_maxnreg}"
     )
+
+output_dir = args.output_dir.expanduser()
+if not output_dir.is_absolute():
+    output_dir = SCRIPT_DIR / output_dir
+output_dir.mkdir(parents=True, exist_ok=True)
+output_suffix = "" if args.backend == "llvm" else f"_{args.backend}"
+output_stem = (
+    "expectation_3.2_real_sequences_single_csi_leak12"
+    f"_sub{actual_subject_id}{output_suffix}"
+)
+
+if args.rescore_parameter_file is not None:
+    parameter_file = args.rescore_parameter_file.expanduser().resolve()
+    if not parameter_file.is_file():
+        parser.error(f"fit parameters to rescore were not found: {parameter_file}")
+    candidate = pd.read_csv(parameter_file)
+    if len(candidate) != 1:
+        parser.error(
+            f"--rescore-parameter-file must contain exactly one row; got {len(candidate)}"
+        )
+    if (
+        "subject_nr" in candidate
+        and int(candidate.loc[0, "subject_nr"]) != actual_subject_id
+    ):
+        parser.error(
+            f"parameter file is for subject {candidate.loc[0, 'subject_nr']}, "
+            f"but --subject-id selects {actual_subject_id}"
+        )
+
+    fit_function = pec.controller.function
+    missing = [name for name in fit_function.fit_param_names if name not in candidate]
+    if missing:
+        parser.error(f"parameter file is missing fitted columns: {missing}")
+    fit_values = tuple(
+        float(candidate.loc[0, name]) for name in fit_function.fit_param_names
+    )
+    validation_seeds = args.rescore_simulation_seeds or [simulation_seed]
+    rows = []
+    print(
+        f"Rescoring {parameter_file} with {num_estimates} estimates and seeds "
+        f"{validation_seeds}"
+    )
+    for validation_seed in validation_seeds:
+        fit_function.batched_seed = validation_seed
+        score_start = datetime.now()
+        score = pec.log_likelihood(*fit_values, inputs=inputs)
+        score_duration = datetime.now() - score_start
+        row = {
+            name: value
+            for name, value in zip(fit_function.fit_param_names, fit_values)
+        }
+        row.update(
+            subject_nr=actual_subject_id,
+            validation_log_likelihood=score,
+            validation_simulation_seed=validation_seed,
+            validation_num_estimates=num_estimates,
+            validation_duration=score_duration,
+            source_parameter_file=str(parameter_file),
+            source_log_likelihood=(
+                float(candidate.loc[0, "log_likelihood"])
+                if "log_likelihood" in candidate
+                else np.nan
+            ),
+            optimizer_seed=(
+                candidate.loc[0, "optimizer_seed"]
+                if "optimizer_seed" in candidate
+                else optimizer_seed
+            ),
+            fitting_simulation_seed=(
+                candidate.loc[0, "simulation_seed"]
+                if "simulation_seed" in candidate
+                else simulation_seed
+            ),
+            source_run_label=(
+                candidate.loc[0, "run_label"]
+                if "run_label" in candidate
+                else args.run_label
+            ),
+            run_label=args.run_label,
+            backend=args.backend,
+        )
+        rows.append(row)
+        print(
+            f"Validation seed {validation_seed}: log-likelihood={score}, "
+            f"duration={score_duration}"
+        )
+    rescore_output = output_dir / f"{output_stem}_rescore.csv"
+    pd.DataFrame(rows).to_csv(rescore_output, index=False)
+    print(f"Rescore complete: {rescore_output}")
+    raise SystemExit(0)
+
 print("Running the PEC")
 
 start_time = datetime.now()
@@ -277,15 +409,15 @@ df["max_iterations"] = max_iterations
 df["fit_duration"] = end_time - start_time
 df["cpu_count"] = args.cpu_count
 df["backend"] = args.backend
+df["optimizer_seed"] = optimizer_seed
+df["simulation_seed"] = simulation_seed
+df["parameter_batch_size"] = args.parameter_batch_size
+df["triton_block_size"] = args.triton_block_size
+df["triton_num_warps"] = args.triton_num_warps
+df["triton_maxnreg"] = args.triton_maxnreg
+df["run_label"] = args.run_label
 df = pd.concat([df, pd.DataFrame(sf_params, index=[0])], axis=1)
 
-output_suffix = "" if args.backend == "llvm" else f"_{args.backend}"
-output_dir = SCRIPT_DIR / "fits"
-output_dir.mkdir(exist_ok=True)
-output_stem = (
-    "expectation_3.2_real_sequences_single_csi_leak12"
-    f"_sub{actual_subject_id}{output_suffix}"
-)
 if not args.skip_fit_output:
     df.to_csv(
         output_dir / f"{output_stem}.csv",
@@ -297,7 +429,7 @@ sim_posterior_predict = not args.skip_posterior_predictive
 n_sim = args.posterior_predictive_simulations
 posterior_predictive_seed = args.posterior_predictive_seed
 if posterior_predictive_seed is None:
-    posterior_predictive_seed = args.seed + 1
+    posterior_predictive_seed = simulation_seed + 1
 
 if sim_posterior_predict:
     posterior_predictive_start = datetime.now()
