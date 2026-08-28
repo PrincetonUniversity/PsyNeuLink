@@ -145,6 +145,9 @@ class BatchedSimulationPlan:
         outcome_indices=None,
         bins: int = 100,
         bin_range=None,
+        smoothing_sigma: float = 0.0,
+        pseudocount: float = 0.0,
+        categorical_cardinalities=None,
         include_mask=None,
         subject_slices=None,
         seed=None,
@@ -164,7 +167,7 @@ class BatchedSimulationPlan:
         ``outcome_indices`` selects/reorders the plan outputs to line up with the
         columns of ``data`` (defaults to all outputs, in order).  See
         :func:`psyneulink.core.batched.likelihood.histogram_log_likelihood` for
-        ``categorical_dims`` / ``bins`` / ``bin_range`` semantics.
+        ``categorical_dims`` / ``bins`` / ``bin_range`` / smoothing semantics.
 
         Returns a scalar for a single parameter set, else one log-likelihood per
         parameter set.
@@ -203,6 +206,9 @@ class BatchedSimulationPlan:
             categorical_dims,
             bins=bins,
             bin_range=bin_range,
+            smoothing_sigma=smoothing_sigma,
+            pseudocount=pseudocount,
+            categorical_cardinalities=categorical_cardinalities,
             include_mask=include_mask,
         )
         # ll is [n_param * n_subject] (or scalar for the 1x1 case); sum over

@@ -658,6 +658,9 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_bins: int = 100,
         batched_max_steps: Optional[int] = None,
         batched_bin_range=None,
+        batched_smoothing_sigma: float = 0.0,
+        batched_pseudocount: float = 0.0,
+        batched_categorical_cardinalities=None,
         batched_seed: Optional[int] = None,
         batched_parameter_batch_size: Optional[int] = None,
         batched_triton_launch_options: Optional[Mapping] = None,
@@ -678,7 +681,25 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_bins = batched_bins
         self.batched_max_steps = batched_max_steps
         self.batched_bin_range = batched_bin_range
+        self.batched_smoothing_sigma = batched_smoothing_sigma
+        self.batched_pseudocount = batched_pseudocount
+        self.batched_categorical_cardinalities = batched_categorical_cardinalities
         self.batched_seed = batched_seed
+        if not np.isfinite(batched_smoothing_sigma) or batched_smoothing_sigma < 0:
+            raise ValueError("batched_smoothing_sigma must be finite and nonnegative.")
+        if not np.isfinite(batched_pseudocount) or batched_pseudocount < 0:
+            raise ValueError("batched_pseudocount must be finite and nonnegative.")
+        if (
+            batched_backend is None
+            and (
+                batched_smoothing_sigma != 0
+                or batched_pseudocount != 0
+                or batched_categorical_cardinalities is not None
+            )
+        ):
+            raise ValueError(
+                "Batched likelihood smoothing options require a batched_backend."
+            )
         if (
             batched_parameter_batch_size is not None
             and batched_parameter_batch_size < 2
@@ -1011,6 +1032,9 @@ class PECOptimizationFunction(OptimizationFunction):
                 outcome_indices=outcome_indices,
                 bins=self.batched_bins,
                 bin_range=self.batched_bin_range,
+                smoothing_sigma=self.batched_smoothing_sigma,
+                pseudocount=self.batched_pseudocount,
+                categorical_cardinalities=self.batched_categorical_cardinalities,
                 include_mask=include_mask,
                 seed=seed,
                 triton_launch_options=self.batched_triton_launch_options,

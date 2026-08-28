@@ -144,6 +144,28 @@ def test_parameter_batching_requires_local_batched_backend():
         )
 
 
+def test_batched_likelihood_smoothing_options_are_validated():
+    with pytest.raises(ValueError, match="finite and nonnegative"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_backend="triton",
+            batched_smoothing_sigma=-0.5,
+        )
+
+    with pytest.raises(ValueError, match="finite and nonnegative"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_backend="triton",
+            batched_pseudocount=-0.5,
+        )
+
+    with pytest.raises(ValueError, match="require a batched_backend"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_smoothing_sigma=0.5,
+        )
+
+
 def test_triton_launch_options_require_compiled_gpu_backend():
     with pytest.raises(ValueError, match="requires batched_backend='triton'"):
         PECOptimizationFunction(

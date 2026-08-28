@@ -70,6 +70,9 @@ def histogram_likelihood(
     *,
     bins: int = 100,
     bin_range: Sequence | None = None,
+    smoothing_sigma: float = 0.0,
+    pseudocount: float = 0.0,
+    categorical_cardinalities: Sequence[int] | None = None,
     device: str | None = None,
 ):
     """Per-trial histogram likelihood of ``exp_data`` under ``sim_outcomes``.
@@ -99,6 +102,23 @@ def histogram_likelihood(
         range is anchored to the **experimental** data (min/max plus a small
         margin) along each dimension — not the simulated data — so the bins stay
         identical across parameter sets and ``num_estimates`` (see ``_bin_edges``).
+    smoothing_sigma : float
+        Standard deviation, in histogram-bin units, of a discrete Gaussian
+        kernel applied independently along each continuous dimension.  The
+        kernel is truncated at three standard deviations and renormalized at
+        the histogram boundaries.  ``0`` (the default) retains exact-bin
+        matching.
+    pseudocount : float
+        Symmetric Dirichlet pseudocount added to every joint categorical and
+        continuous histogram cell.  ``0`` (the default) retains the original
+        estimator.  A positive value prevents sparse but plausible cells from
+        jumping directly to ``ZERO_PROB``.
+    categorical_cardinalities : sequence of int, optional
+        Number of possible values for each categorical outcome dimension, in
+        categorical-dimension order.  This is used only to normalize a positive
+        ``pseudocount``.  By default, cardinalities are inferred from the unique
+        values present in ``exp_data``.  Specify them when the experimental data
+        do not contain every possible category.
     device : str, optional
         Torch device to run on (e.g. ``"cuda"``).  Defaults to the device of
         ``sim_outcomes`` if it is already a tensor, else CPU.
@@ -112,9 +132,21 @@ def histogram_likelihood(
     """
     import torch
 
+    if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
+        raise ValueError(f"bins must be a positive integer, got {bins!r}.")
+    if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
+        raise ValueError(
+            f"smoothing_sigma must be finite and nonnegative, got {smoothing_sigma!r}."
+        )
+    if not np.isfinite(pseudocount) or pseudocount < 0:
+        raise ValueError(
+            f"pseudocount must be finite and nonnegative, got {pseudocount!r}."
+        )
+
     sim, squeezed = _to_lane_tensor(sim_outcomes, torch, device)
     device = sim.device
-    exp = torch.as_tensor(np.asarray(exp_data, dtype=float), dtype=sim.dtype, device=device)
+    exp_array = np.asarray(exp_data, dtype=float)
+    exp = torch.as_tensor(exp_array, dtype=sim.dtype, device=device)
     if exp.ndim != 2:
         raise ValueError(f"exp_data must be 2D [trial, outcome], got shape {tuple(exp.shape)}.")
 
@@ -142,25 +174,71 @@ def histogram_likelihood(
     else:
         match_cat = torch.ones((n_lanes, n_trials, n_sims), dtype=torch.bool, device=device)
 
-    # --- continuous match: sims landing in the same histogram bin as the observed point
+    # --- continuous match: sims landing in or near the observed histogram bin
     if con_idx.numel() > 0:
         sim_con = sim.index_select(-1, con_idx)              # [L, T, S, Ccon]
         exp_con = exp.index_select(-1, con_idx)              # [T, Ccon]
         edges = _bin_edges(sim_con, exp_con, bins, bin_range, torch)  # list of [bins+1]
         bin_volume = torch.tensor(1.0, dtype=sim.dtype, device=device)
-        match_con = torch.ones((n_lanes, n_trials, n_sims), dtype=torch.bool, device=device)
-        for d in range(con_idx.numel()):
-            interior = edges[d][1:-1]
-            sim_bin = torch.bucketize(sim_con[..., d], interior)   # [L, T, S] in [0, bins-1]
-            exp_bin = torch.bucketize(exp_con[:, d], interior)     # [T]
-            match_con &= sim_bin == exp_bin[None, :, None]
-            bin_volume = bin_volume * (edges[d][1] - edges[d][0])
-    else:
-        match_con = torch.ones((n_lanes, n_trials, n_sims), dtype=torch.bool, device=device)
-        bin_volume = torch.tensor(1.0, dtype=sim.dtype, device=device)
+        if smoothing_sigma == 0:
+            match_con = torch.ones(
+                (n_lanes, n_trials, n_sims), dtype=torch.bool, device=device
+            )
+            for d in range(con_idx.numel()):
+                interior = edges[d][1:-1]
+                sim_bin = torch.bucketize(sim_con[..., d], interior)
+                exp_bin = torch.bucketize(exp_con[:, d], interior)
+                match_con &= sim_bin == exp_bin[None, :, None]
+                bin_volume = bin_volume * (edges[d][1] - edges[d][0])
+            counts = (match_cat & match_con).sum(dim=2).to(sim.dtype)
+        else:
+            # Evaluate the separable, discrete Gaussian-smoothed histogram at
+            # the observed bin without materializing a full (potentially
+            # multidimensional) histogram.  Renormalizing the kernel for each
+            # observed bin prevents probability mass from leaking through an
+            # edge of the finite histogram range.
+            radius = max(1, int(np.ceil(3.0 * smoothing_sigma)))
+            offsets = torch.arange(-radius, radius + 1, device=device)
+            kernel = torch.exp(
+                -0.5 * (offsets.to(sim.dtype) / float(smoothing_sigma)) ** 2
+            )
+            weights = match_cat.to(sim.dtype)
+            for d in range(con_idx.numel()):
+                interior = edges[d][1:-1]
+                sim_bin = torch.bucketize(sim_con[..., d], interior)
+                exp_bin = torch.bucketize(exp_con[:, d], interior)
+                delta = sim_bin - exp_bin[None, :, None]
+                in_radius = delta.abs() <= radius
 
-    counts = (match_cat & match_con).sum(dim=2).to(sim.dtype)     # [L, T]
-    density = counts / (float(n_sims) * bin_volume)
+                valid_offsets = (
+                    (exp_bin[:, None] + offsets[None, :] >= 0)
+                    & (exp_bin[:, None] + offsets[None, :] < bins)
+                )
+                normalizer = (valid_offsets.to(sim.dtype) * kernel[None, :]).sum(dim=1)
+                dim_weights = torch.exp(
+                    -0.5 * (delta.to(sim.dtype) / float(smoothing_sigma)) ** 2
+                ) / normalizer[None, :, None]
+                weights = weights * torch.where(
+                    in_radius, dim_weights, torch.zeros_like(dim_weights)
+                )
+                bin_volume = bin_volume * (edges[d][1] - edges[d][0])
+            counts = weights.sum(dim=2)
+    else:
+        bin_volume = torch.tensor(1.0, dtype=sim.dtype, device=device)
+        counts = match_cat.sum(dim=2).to(sim.dtype)
+
+    if pseudocount > 0:
+        cardinalities = _categorical_cardinalities(
+            exp_array,
+            cat_mask,
+            categorical_cardinalities,
+        )
+        joint_bin_count = float(bins ** int(con_idx.numel()) * np.prod(cardinalities))
+        density = (counts + pseudocount) / (
+            (float(n_sims) + pseudocount * joint_bin_count) * bin_volume
+        )
+    else:
+        density = counts / (float(n_sims) * bin_volume)
     density = torch.clamp(density, min=ZERO_PROB)
 
     like = density.cpu().numpy()
@@ -176,6 +254,9 @@ def histogram_log_likelihood(
     *,
     bins: int = 100,
     bin_range: Sequence | None = None,
+    smoothing_sigma: float = 0.0,
+    pseudocount: float = 0.0,
+    categorical_cardinalities: Sequence[int] | None = None,
     include_mask: np.ndarray | None = None,
     device: str | None = None,
 ) -> float | np.ndarray:
@@ -194,6 +275,9 @@ def histogram_log_likelihood(
         categorical_dims,
         bins=bins,
         bin_range=bin_range,
+        smoothing_sigma=smoothing_sigma,
+        pseudocount=pseudocount,
+        categorical_cardinalities=categorical_cardinalities,
         device=device,
     )
     log_like = np.log(like)
@@ -209,6 +293,32 @@ def histogram_log_likelihood(
     if total.ndim == 0:
         return float(total)
     return total
+
+
+def _categorical_cardinalities(exp_data, cat_mask, specified):
+    """Validate or infer category counts used for Dirichlet normalization."""
+    cat_indices = np.flatnonzero(cat_mask)
+    if specified is None:
+        cardinalities = [len(np.unique(exp_data[:, d])) for d in cat_indices]
+    else:
+        cardinalities = list(specified)
+        if len(cardinalities) != len(cat_indices):
+            raise ValueError(
+                "categorical_cardinalities has length "
+                f"{len(cardinalities)}, expected {len(cat_indices)} "
+                "(one per categorical outcome dimension)."
+            )
+    for value in cardinalities:
+        if (
+            isinstance(value, (bool, np.bool_))
+            or not isinstance(value, (int, np.integer))
+            or value < 1
+        ):
+            raise ValueError(
+                "categorical_cardinalities values must be positive integers; "
+                f"got {cardinalities!r}."
+            )
+    return cardinalities
 
 
 def _to_lane_tensor(sim_outcomes, torch, device):

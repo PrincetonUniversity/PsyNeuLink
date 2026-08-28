@@ -137,6 +137,101 @@ def test_histogram_log_likelihood_include_mask():
     assert np.isclose(ll, np.log(like)[mask].sum(), rtol=1e-5)
 
 
+@requires_torch
+def test_histogram_likelihood_pseudocount_has_dirichlet_normalization():
+    """An empty cell gets alpha mass and the denominator covers every cell."""
+    n_sims = 10
+    sim = np.full((1, n_sims, 1), 2.5)
+    exp = np.array([[0.5]])
+    alpha = 0.5
+
+    got = histogram_likelihood(
+        sim,
+        exp,
+        bins=4,
+        bin_range=[(0.0, 4.0)],
+        pseudocount=alpha,
+    )
+
+    # _bin_edges nudges the upper edge by one part per million.
+    bin_width = (4.0 + 4.0e-6) / 4
+    expected = alpha / ((n_sims + alpha * 4) * bin_width)
+    assert np.allclose(got, [expected], rtol=1e-5)
+
+
+@requires_torch
+def test_histogram_likelihood_smoothing_borrows_from_adjacent_bins():
+    """RT mass in an adjacent bin contributes through the local Gaussian kernel."""
+    n_sims = 20
+    sim = np.full((1, n_sims, 1), 3.5)
+    exp = np.array([[2.5]])
+
+    exact = histogram_likelihood(sim, exp, bins=5, bin_range=[(0.0, 5.0)])
+    smoothed = histogram_likelihood(
+        sim,
+        exp,
+        bins=5,
+        bin_range=[(0.0, 5.0)],
+        smoothing_sigma=1.0,
+    )
+
+    # The observed point is in the middle bin, so valid offsets are -2..2.
+    offsets = np.arange(-2, 3)
+    adjacent_weight = np.exp(-0.5) / np.exp(-0.5 * offsets ** 2).sum()
+    bin_width = (5.0 + 5.0e-6) / 5
+    assert exact[0] == pytest.approx(1e-10)
+    assert smoothed[0] == pytest.approx(adjacent_weight / bin_width, rel=1e-5)
+
+
+@requires_torch
+def test_histogram_likelihood_smoothing_does_not_cross_categories():
+    """Continuous smoothing must not borrow mass from another decision outcome."""
+    n_sims = 20
+    sim = np.stack(
+        [np.zeros(n_sims), np.full(n_sims, 3.5)],
+        axis=-1,
+    )[None, ...]
+    exp = np.array([[1.0, 2.5]])
+
+    got = histogram_likelihood(
+        sim,
+        exp,
+        categorical_dims=[True, False],
+        bins=5,
+        bin_range=[(0.0, 5.0)],
+        smoothing_sigma=1.0,
+    )
+    assert got[0] == pytest.approx(1e-10)
+
+
+@requires_torch
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"bins": 0}, "bins"),
+        ({"smoothing_sigma": -1.0}, "smoothing_sigma"),
+        ({"pseudocount": -0.5}, "pseudocount"),
+        (
+            {
+                "pseudocount": 0.5,
+                "categorical_cardinalities": [2, 2],
+            },
+            "categorical_cardinalities",
+        ),
+    ],
+)
+def test_histogram_likelihood_rejects_invalid_smoothing_options(kwargs, match):
+    sim = np.zeros((1, 10, 2))
+    exp = np.zeros((1, 2))
+    with pytest.raises(ValueError, match=match):
+        histogram_likelihood(
+            sim,
+            exp,
+            categorical_dims=[True, False],
+            **kwargs,
+        )
+
+
 @requires_triton
 def test_plan_log_likelihood_recovers_ddm_threshold():
     """``plan.log_likelihood`` scores the data-generating threshold highest."""
@@ -183,3 +278,18 @@ def test_plan_log_likelihood_recovers_ddm_threshold():
         seed=7,
     )
     assert np.ndim(one) == 0
+
+    smoothed = plan.log_likelihood(
+        inputs=inputs,
+        parameter_sets=[{"DDM.threshold": t} for t in grid],
+        num_estimates=150,
+        data=exp,
+        categorical_dims=cat_dims,
+        bins=30,
+        smoothing_sigma=1.0,
+        pseudocount=0.5,
+        categorical_cardinalities=[2],
+        seed=7,
+    )
+    assert smoothed.shape == (2,)
+    assert np.isfinite(smoothed).all()

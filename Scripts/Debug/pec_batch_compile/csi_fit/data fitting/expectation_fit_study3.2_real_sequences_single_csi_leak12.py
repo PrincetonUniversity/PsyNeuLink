@@ -28,6 +28,19 @@ parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=i
 parser.add_argument("--max_steps", "--max-steps", default=1200, type=int)
 parser.add_argument("--bins", default=100, type=int)
 parser.add_argument(
+    "--smoothing_sigma",
+    "--smoothing-sigma",
+    default=0.0,
+    type=float,
+    help="Gaussian histogram smoothing bandwidth in RT-bin units (0 disables).",
+)
+parser.add_argument(
+    "--pseudocount",
+    default=0.0,
+    type=float,
+    help="Symmetric pseudocount per joint decision/RT histogram cell (0 disables).",
+)
+parser.add_argument(
     "--seed",
     default=1,
     type=int,
@@ -112,6 +125,12 @@ optimizer_seed = args.seed if args.optimizer_seed is None else args.optimizer_se
 simulation_seed = args.seed if args.simulation_seed is None else args.simulation_seed
 if args.posterior_predictive_simulations < 1:
     parser.error("--posterior-predictive-simulations must be at least 1.")
+if args.smoothing_sigma < 0:
+    parser.error("--smoothing-sigma must be nonnegative.")
+if args.pseudocount < 0:
+    parser.error("--pseudocount must be nonnegative.")
+if args.backend == "llvm" and (args.smoothing_sigma != 0 or args.pseudocount != 0):
+    parser.error("--smoothing-sigma and --pseudocount require a batched backend.")
 if args.rescore_simulation_seeds is not None and args.rescore_parameter_file is None:
     parser.error("--rescore-simulation-seeds requires --rescore-parameter-file.")
 data_file = args.data_file.expanduser()
@@ -224,6 +243,12 @@ if args.backend != "llvm":
         "batched_backend": args.backend,
         "batched_max_steps": args.max_steps,
         "batched_bins": args.bins,
+        "batched_smoothing_sigma": args.smoothing_sigma,
+        "batched_pseudocount": args.pseudocount,
+        # The DDM decision has two possible outcomes.  Supplying this explicitly
+        # keeps pseudocount normalization correct even for a participant whose
+        # observed data happen to contain only one outcome.
+        "batched_categorical_cardinalities": [2],
         "batched_seed": simulation_seed,
     }
     if args.parameter_batch_size:
@@ -279,7 +304,8 @@ print(
     f"{num_estimates} Num Estimates, Sigma 0.2, LR Adapt = True, Leak = 12, "
     f"Participant {actual_subject_id}, Slurm Array {args.subject_id}, "
     f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}, "
-    f"Optimizer Seed {optimizer_seed}, Simulation Seed {simulation_seed}"
+    f"Optimizer Seed {optimizer_seed}, Simulation Seed {simulation_seed}, "
+    f"Smoothing Sigma {args.smoothing_sigma}, Pseudocount {args.pseudocount}"
 )
 if args.backend == "triton":
     print(
@@ -368,6 +394,9 @@ if args.rescore_parameter_file is not None:
             ),
             run_label=args.run_label,
             backend=args.backend,
+            bins=args.bins,
+            smoothing_sigma=args.smoothing_sigma,
+            pseudocount=args.pseudocount,
         )
         rows.append(row)
         print(
@@ -411,6 +440,9 @@ df["cpu_count"] = args.cpu_count
 df["backend"] = args.backend
 df["optimizer_seed"] = optimizer_seed
 df["simulation_seed"] = simulation_seed
+df["bins"] = args.bins
+df["smoothing_sigma"] = args.smoothing_sigma
+df["pseudocount"] = args.pseudocount
 df["parameter_batch_size"] = args.parameter_batch_size
 df["triton_block_size"] = args.triton_block_size
 df["triton_num_warps"] = args.triton_num_warps
