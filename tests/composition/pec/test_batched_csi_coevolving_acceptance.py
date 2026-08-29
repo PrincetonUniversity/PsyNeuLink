@@ -520,8 +520,13 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     assert source.count(
         "dynamic_has_run_word_0 = tl.zeros((BLOCK,), dtype=tl.int32)"
     ) == 1
-    assert "(dynamic_has_run_word_0 & 2047) == 2047" in source
+    termination_check = "(dynamic_has_run_word_0 & 2047) == 2047"
+    assert source.count(termination_check) == len(program.consideration_sets)
     assert "schedule_has_run" not in source
+    assert "n_schedule_pass_index_0" not in source
+    for component_id in (1, 2, 3, 4, 5):
+        bit = 1 << component_id
+        assert f"(dynamic_has_run_word_0 & {bit}) == 0" not in source
 
     # The controller consumes its execution ordinal and the two stateful
     # mechanisms use it as their step index.  Every other CSI count is proven

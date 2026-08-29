@@ -494,11 +494,6 @@ class OpEmitMixin:
             f"(tl.max(tl.where(mask & ({done_var} == 0), 1, 0)) > 0)"
         ):
             for consideration_set in program.consideration_sets:
-                self._emit_dynamic_termination(
-                    program,
-                    has_run_bits,
-                    done_var,
-                )
                 self._emit_dynamic_consideration_set(
                     program,
                     consideration_set,
@@ -507,19 +502,11 @@ class OpEmitMixin:
                     has_run_bits,
                     done_var,
                 )
-            self._emit_dynamic_termination(
-                program,
-                has_run_bits,
-                done_var,
-            )
-            pass_var = self._dynamic_slot_var(
-                slot_vars,
-                "pass_index",
-            )
-            self.builder.line(
-                f"{pass_var} = tl.where(mask & ({done_var} == 0), "
-                f"{pass_var} + 1, {pass_var})"
-            )
+                self._emit_dynamic_termination(
+                    program,
+                    has_run_bits,
+                    done_var,
+                )
             self.builder.line(f"{round_var} += 1")
 
         # Exhaustion is a region-level safety result, not a fabricated
@@ -638,6 +625,16 @@ class OpEmitMixin:
             value.value_id: value for value in self.kernel.finished_values
         }
         for slot in program.scheduler_state_slots:
+            # Every non-done lane advances exactly once per outer iteration,
+            # and done is monotonic.  Consequently, any lane that can execute
+            # observes the scalar outer round as its pass index.  Keep the
+            # typed KernelIR slot but avoid a redundant lane vector and masked
+            # increment in the backend representation.
+            if slot.kind == "pass_index":
+                key = self._dynamic_slot_key(slot)
+                slot_vars[key] = "dynamic_round"
+                self._set_value(slot.value.name, ["dynamic_round"])
+                continue
             # Per-component AllHaveRun state is packed separately below.  A
             # dynamic graph can have dozens of components, and carrying one
             # int32 vector per component through the hot scheduler loop wastes
@@ -912,7 +909,16 @@ class OpEmitMixin:
                 raise ValueError(
                     "Triton dynamic member has no execution budget."
                 ) from error
-            if single_execution:
+            if (
+                single_execution
+                and member.predicate.kind in {"AtPass", "AtTrialStart"}
+            ):
+                # A fixed pass can be visited only once, so the predicate
+                # itself enforces a maximum-one execution budget.  The packed
+                # bit remains live for AllHaveRun termination but is not also
+                # needed as a member gate.
+                budget_gate = "True"
+            elif single_execution:
                 try:
                     has_run_word, has_run_bit = has_run_bits[member.component_id]
                 except KeyError as error:
