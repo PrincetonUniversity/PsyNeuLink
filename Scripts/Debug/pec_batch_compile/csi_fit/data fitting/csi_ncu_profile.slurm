@@ -31,6 +31,9 @@ RESULTS_DIR="$SCRIPT_DIR/logs/ncu-${SLURM_JOB_ID}"
 PROFILE_BASE="$RESULTS_DIR/csi-kernel"
 PROFILE_REPORT="$PROFILE_BASE.ncu-rep"
 FIT_OUTPUT="$RESULTS_DIR/fit-output"
+TRITON_CACHE="$RESULTS_DIR/triton-cache"
+KERNEL_ARTIFACTS="$RESULTS_DIR/kernel-artifacts"
+WARP_SAMPLING_BUFFER_SIZE="${CSI_NCU_WARP_SAMPLING_BUFFER_SIZE:-1073741824}"
 
 if [[ ! -x "$PYTHON" ]]; then
     echo "Python environment not found: $PYTHON" >&2
@@ -58,10 +61,16 @@ if [[ -r /proc/driver/nvidia/params ]]; then
     fi
 fi
 
-mkdir -p "$RESULTS_DIR" "$FIT_OUTPUT"
+mkdir -p "$RESULTS_DIR" "$FIT_OUTPUT" "$TRITON_CACHE" "$KERNEL_ARTIFACTS"
 
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
 export PYTHONUNBUFFERED=1
+export TRITON_CACHE_DIR="$TRITON_CACHE"
+
+NCU_EXTRA_ARGS=()
+if "$NCU" --help 2>&1 | grep -- '--warp-sampling-buffer-size' >/dev/null; then
+    NCU_EXTRA_ARGS+=(--warp-sampling-buffer-size "$WARP_SAMPLING_BUFFER_SIZE")
+fi
 
 echo "Job ID: ${SLURM_JOB_ID}"
 echo "Node: $(hostname)"
@@ -71,6 +80,12 @@ echo "Git revision: $(git -C "$REPO_ROOT" rev-parse HEAD)"
 echo "Participant: ${SUBJECT}"
 echo "Num estimates: ${NUM_ESTIMATES}"
 echo "Profile: ${PROFILE_REPORT}"
+echo "Triton cache: ${TRITON_CACHE}"
+if (( ${#NCU_EXTRA_ARGS[@]} )); then
+    echo "Warp sampling buffer: ${WARP_SAMPLING_BUFFER_SIZE} bytes"
+else
+    echo "Warp sampling buffer option is unavailable in this Nsight Compute version"
+fi
 "$NCU" --version
 nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
 
@@ -86,6 +101,7 @@ echo "Collecting one full-population simulation-kernel launch"
     --clock-control none \
     --force-overwrite \
     --export "$PROFILE_BASE" \
+    "${NCU_EXTRA_ARGS[@]}" \
     "$PYTHON" -u "$DRIVER" \
         --backend triton \
         --subject-id "$SUBJECT" \
@@ -104,7 +120,7 @@ echo "Collecting one full-population simulation-kernel launch"
         --triton-num-warps 1 \
         --skip-posterior-predictive \
         --output-dir "$FIT_OUTPUT" \
-        --run-label "ncu_${NUM_ESTIMATES}estimates"
+        --run-label "ncu_${SLURM_JOB_ID}_${NUM_ESTIMATES}estimates"
 
 if [[ ! -f "$PROFILE_REPORT" ]]; then
     echo "Nsight Compute report was not produced: $PROFILE_REPORT" >&2
@@ -119,5 +135,35 @@ if ! "$NCU" --import "$PROFILE_REPORT" --page raw --csv > "$RESULTS_DIR/csi-kern
     echo "Warning: unable to export raw CSV; the .ncu-rep is intact." >&2
 fi
 
+echo "Archiving generated Triton kernel artifacts"
+CUBIN="$(
+    find "$TRITON_CACHE" \
+        -type f \
+        -name 'pnl_batched_coevolving_graph_kernel.cubin' \
+        -printf '%T@ %p\n' |
+    sort -nr |
+    sed -n '1s/^[^ ]* //p'
+)"
+if [[ -n "$CUBIN" ]]; then
+    ARTIFACT_BASE="${CUBIN%.cubin}"
+    for extension in json source ttir ttgir llir ptx cubin; do
+        artifact="${ARTIFACT_BASE}.${extension}"
+        if [[ -f "$artifact" ]]; then
+            cp "$artifact" "$KERNEL_ARTIFACTS/csi-kernel.${extension}"
+        fi
+    done
+    if command -v cuobjdump >/dev/null 2>&1; then
+        cuobjdump --dump-resource-usage "$CUBIN" \
+            > "$KERNEL_ARTIFACTS/csi-kernel-resource-usage.txt"
+    else
+        echo "Warning: cuobjdump is unavailable; resource usage was not exported." >&2
+    fi
+else
+    echo "Warning: generated CSI CUBIN was not found in $TRITON_CACHE." >&2
+fi
+
 echo "Finished: $(date --iso-8601=seconds)"
 echo "Profile report: ${PROFILE_REPORT}"
+echo "Details: $RESULTS_DIR/csi-kernel-details.txt"
+echo "Raw metrics: $RESULTS_DIR/csi-kernel-raw.csv"
+echo "Kernel artifacts: $KERNEL_ARTIFACTS"
