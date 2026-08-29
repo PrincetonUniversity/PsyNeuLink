@@ -1,9 +1,12 @@
 """Typed, non-executable KernelIR scaffold for lane-local scheduling."""
 
 from dataclasses import FrozenInstanceError, fields, replace
+from types import SimpleNamespace
 
 import pytest
 
+from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
+from psyneulink.core.batched.backend.triton.source_builder import SourceBuilder
 from psyneulink.core.batched.kernel_ir import (
     KernelComponentExecutionBudget,
     KernelConsiderationSetProgram,
@@ -19,6 +22,11 @@ from psyneulink.core.batched.kernel_ir import (
 
 
 pytestmark = pytest.mark.batched
+
+
+class _SchedulerEmitHarness(OpEmitMixin):
+    def __init__(self):
+        self.builder = SourceBuilder()
 
 
 def _value(name, dtype="float32"):
@@ -143,6 +151,86 @@ def _program():
         ),
         schedule_fuel=100,
     )
+
+
+def test_triton_has_run_slots_pack_across_multiple_words():
+    slots = tuple(
+        _slot("has_run", owner=component_id, dtype="bool")
+        for component_id in range(32)
+    )
+    emitter = _SchedulerEmitHarness()
+
+    layout = emitter._emit_dynamic_has_run_initializers(
+        SimpleNamespace(scheduler_state_slots=slots)
+    )
+    source = emitter.builder.render()
+
+    assert layout[0] == ("dynamic_has_run_word_0", 1)
+    assert layout[30] == ("dynamic_has_run_word_0", 1 << 30)
+    assert layout[31] == ("dynamic_has_run_word_1", 1)
+    assert source.count("tl.zeros((BLOCK,), dtype=tl.int32)") == 2
+
+
+def test_triton_elides_only_proven_redundant_execution_counts():
+    program = _program()
+    emitter = _SchedulerEmitHarness()
+
+    # Components 0 and 2 can run at most once per outer schedule round, and
+    # their budget is exactly the outer fuel.  Component 1 has a distinct
+    # post-finish budget and must retain its explicit count.
+    assert emitter._dynamic_fuel_bounded_component_ids(program) == frozenset(
+        {0, 2}
+    )
+
+    single_execution_program = replace(
+        program,
+        execution_budgets=tuple(
+            replace(budget, maximum=1)
+            if budget.component_id == 0
+            else budget
+            for budget in program.execution_budgets
+        ),
+    )
+    assert emitter._dynamic_single_execution_component_ids(
+        single_execution_program
+    ) == frozenset({0})
+
+    # A body that observes its own execution ordinal makes the count semantic,
+    # even when its maximum is otherwise redundant with schedule fuel.
+    count_value = next(
+        slot.value
+        for slot in program.scheduler_state_slots
+        if slot.kind == "execution_count" and slot.owner_component_id == 0
+    )
+    member = program.consideration_sets[0].members[0]
+    count_reading_member = replace(
+        member,
+        body=(
+            replace(
+                member.body[0],
+                kind="AffineSchedulerValue",
+                inputs=(count_value,),
+                attrs={
+                    "folded_control_id": 0,
+                    "base_parameter_id": 0,
+                    "delta_parameter_id": 1,
+                },
+            ),
+        ),
+    )
+    count_reading_program = replace(
+        program,
+        consideration_sets=(
+            replace(
+                program.consideration_sets[0],
+                members=(count_reading_member,),
+            ),
+            *program.consideration_sets[1:],
+        ),
+    )
+    assert emitter._dynamic_fuel_bounded_component_ids(
+        count_reading_program
+    ) == frozenset({2})
 
 
 def test_dynamic_schedule_records_are_frozen_typed_and_attr_free():

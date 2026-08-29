@@ -28,6 +28,12 @@ from psyneulink.core.batched.diagnostics import (
     BatchedDiagnostic,
     BatchedDiagnosticCode,
 )
+from psyneulink.core.batched.dependency import (
+    AxisDependencyAnalysis,
+    AxisDependencyEdge,
+    NodeAxisDependency,
+    analyze_axis_dependencies,
+)
 from psyneulink.core.batched.likelihood import (
     histogram_likelihood,
     histogram_log_likelihood,
@@ -60,6 +66,8 @@ from psyneulink.core.batched.ir import (
 
 __all__ = [
     "BatchedTrialParameter",
+    "AxisDependencyAnalysis",
+    "AxisDependencyEdge",
     "BatchedAbsorbedProjectionSpec",
     "BatchedCapabilityReport",
     "BatchedCompileError",
@@ -93,6 +101,7 @@ __all__ = [
     "DenseProjectionSpec",
     "ElementwiseFunctionSpec",
     "MechanismOpSpec",
+    "NodeAxisDependency",
     "OutputDecl",
     "ParamBinding",
     "PassthroughMechanismSpec",
@@ -100,6 +109,7 @@ __all__ = [
     "StateDecl",
     "batched_node_op",
     "batched_op",
+    "analyze_axis_dependencies",
     "histogram_likelihood",
     "histogram_log_likelihood",
     "param",

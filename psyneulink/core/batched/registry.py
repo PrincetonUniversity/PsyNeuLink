@@ -162,6 +162,11 @@ def analyze_composition(
             "num_nodes": len(getattr(composition, "nodes", [])),
             "fusion_kind": None if lowering.graph is None else lowering.graph.fusion_kind,
             "schedule_kind": lowering.schedule_kind,
+            "axis_dependencies": (
+                None
+                if kernel_ir is None
+                else kernel_ir.metadata.get("axis_dependencies")
+            ),
         },
     )
 

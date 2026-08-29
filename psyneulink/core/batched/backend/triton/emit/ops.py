@@ -472,8 +472,15 @@ class OpEmitMixin:
             )
 
         outer_values = dict(self.value_vars)
+        self.dynamic_single_execution_component_ids = (
+            self._dynamic_single_execution_component_ids(program)
+        )
+        self.dynamic_fuel_bounded_component_ids = (
+            self._dynamic_fuel_bounded_component_ids(program)
+        )
         carry_vars = self._emit_dynamic_carry_initializers(program)
         slot_vars = self._emit_dynamic_scheduler_initializers(program)
+        has_run_bits = self._emit_dynamic_has_run_initializers(program)
         self.dynamic_program = program
         self.dynamic_slot_vars = slot_vars
         done_var = "dynamic_done"
@@ -487,15 +494,24 @@ class OpEmitMixin:
             f"(tl.max(tl.where(mask & ({done_var} == 0), 1, 0)) > 0)"
         ):
             for consideration_set in program.consideration_sets:
-                self._emit_dynamic_termination(program, slot_vars, done_var)
+                self._emit_dynamic_termination(
+                    program,
+                    has_run_bits,
+                    done_var,
+                )
                 self._emit_dynamic_consideration_set(
                     program,
                     consideration_set,
                     slot_vars,
                     carry_vars,
+                    has_run_bits,
                     done_var,
                 )
-            self._emit_dynamic_termination(program, slot_vars, done_var)
+            self._emit_dynamic_termination(
+                program,
+                has_run_bits,
+                done_var,
+            )
             pass_var = self._dynamic_slot_var(
                 slot_vars,
                 "pass_index",
@@ -544,6 +560,8 @@ class OpEmitMixin:
         self.dynamic_execution_index = None
         self.dynamic_program = None
         self.dynamic_slot_vars = None
+        self.dynamic_single_execution_component_ids = frozenset()
+        self.dynamic_fuel_bounded_component_ids = frozenset()
         self.builder.line()
 
     def _emit_dynamic_carry_initializers(self, program):
@@ -620,6 +638,26 @@ class OpEmitMixin:
             value.value_id: value for value in self.kernel.finished_values
         }
         for slot in program.scheduler_state_slots:
+            # Per-component AllHaveRun state is packed separately below.  A
+            # dynamic graph can have dozens of components, and carrying one
+            # int32 vector per component through the hot scheduler loop wastes
+            # both registers and integer instructions.  KernelIR retains the
+            # explicit typed slots; packing is a backend representation choice.
+            if slot.kind == "has_run":
+                continue
+            # A maximum-one member can use its packed has-run bit as its budget
+            # gate.  A fuel-bounded member cannot exceed the same cap enforced
+            # by the outer loop.  When neither member observes its ordinal,
+            # carrying another int32 vector through the loop is redundant.
+            if (
+                slot.kind == "execution_count"
+                and slot.owner_component_id
+                in (
+                    self.dynamic_single_execution_component_ids
+                    | self.dynamic_fuel_bounded_component_ids
+                )
+            ):
+                continue
             key = self._dynamic_slot_key(slot)
             value = self._component_vars(slot.value.name, 1)[0]
             if slot.initialization == "zero":
@@ -669,6 +707,116 @@ class OpEmitMixin:
         return slot_vars
 
     @staticmethod
+    def _dynamic_single_execution_component_ids(program):
+        """Return members whose full execution-count vector is unnecessary.
+
+        This deliberately recognizes only the simplest proof: an unrestricted
+        maximum-one budget, no finished-value derivation, no scheduled step,
+        and no explicit read of the typed count value.  More cases can be added
+        later without weakening this fail-closed boundary.
+        """
+
+        count_names = {
+            slot.owner_component_id: slot.value.name
+            for slot in program.scheduler_state_slots
+            if slot.kind == "execution_count"
+        }
+        members = {
+            member.component_id: member
+            for consideration_set in program.consideration_sets
+            for member in consideration_set.members
+        }
+        result = set()
+        for budget in program.execution_budgets:
+            member = members.get(budget.component_id)
+            count_name = count_names.get(budget.component_id)
+            if (
+                member is None
+                or count_name is None
+                or budget.maximum != 1
+                or budget.finished_value_id is not None
+                or budget.unfinished_maximum is not None
+                or budget.post_finish != "unrestricted"
+                or any(child.kind == "StepMechanism" for child in member.body)
+                or any(
+                    value.name == count_name
+                    for child in (*member.body, *member.effects)
+                    for value in child.inputs
+                )
+            ):
+                continue
+            result.add(budget.component_id)
+        return frozenset(result)
+
+    def _dynamic_fuel_bounded_component_ids(self, program):
+        """Return members whose count cap duplicates the outer loop fuel."""
+
+        count_names = {
+            slot.owner_component_id: slot.value.name
+            for slot in program.scheduler_state_slots
+            if slot.kind == "execution_count"
+        }
+        members = {
+            member.component_id: member
+            for consideration_set in program.consideration_sets
+            for member in consideration_set.members
+        }
+        result = set()
+        for budget in program.execution_budgets:
+            member = members.get(budget.component_id)
+            count_name = count_names.get(budget.component_id)
+            if (
+                member is None
+                or count_name is None
+                or budget.maximum != program.schedule_fuel
+                or budget.finished_value_id is not None
+                or budget.unfinished_maximum is not None
+                or budget.post_finish != "unrestricted"
+                or any(child.kind == "StepMechanism" for child in member.body)
+                or any(
+                    value.name == count_name
+                    for child in (*member.body, *member.effects)
+                    for value in child.inputs
+                )
+            ):
+                continue
+            # Every member is considered at most once per outer schedule round,
+            # so the round fuel already proves the same upper bound.
+            result.add(budget.component_id)
+        return frozenset(result)
+
+    def _emit_dynamic_has_run_initializers(self, program):
+        """Pack typed per-component ``has_run`` slots into int32 bitsets."""
+
+        component_ids = tuple(
+            slot.owner_component_id
+            for slot in program.scheduler_state_slots
+            if slot.kind == "has_run"
+        )
+        # Use 31 bits so every emitted mask is a positive int32 literal on all
+        # supported Triton/CUDA versions.  Larger graphs simply carry another
+        # word; the optimization is not limited to one model or graph size.
+        bits_per_word = 31
+        words = {}
+        layout = {}
+        for index, component_id in enumerate(component_ids):
+            word_index, bit_index = divmod(index, bits_per_word)
+            word = words.get(word_index)
+            if word is None:
+                word = f"dynamic_has_run_word_{word_index}"
+                words[word_index] = word
+                self.builder.line(
+                    f"{word} = tl.zeros((BLOCK,), dtype=tl.int32)"
+                )
+            layout[component_id] = (word, 1 << bit_index)
+        if not layout:
+            raise ValueError(
+                "Triton dynamic scheduler requires typed has_run slots."
+            )
+        self.builder.line()
+        return layout
+
+    @staticmethod
     def _dynamic_slot_var(
         slot_vars,
         kind,
@@ -687,16 +835,30 @@ class OpEmitMixin:
                 f"Triton dynamic scheduler has no declared slot {key}."
             ) from error
 
-    def _emit_dynamic_termination(self, program, slot_vars, done_var: str) -> None:
-        has_run = [
-            self._dynamic_slot_var(slot_vars, "has_run", owner=component_id)
-            for component_id in program.trial_termination.dependency_component_ids
-        ]
-        expression = " & ".join(f"({value} != 0)" for value in has_run)
-        if not expression:
+    def _emit_dynamic_termination(
+        self,
+        program,
+        has_run_bits,
+        done_var: str,
+    ) -> None:
+        required_by_word = {}
+        for component_id in program.trial_termination.dependency_component_ids:
+            try:
+                word, bit = has_run_bits[component_id]
+            except KeyError as error:
+                raise ValueError(
+                    "Triton dynamic AllHaveRun termination references a "
+                    "component without typed has_run state."
+                ) from error
+            required_by_word[word] = required_by_word.get(word, 0) | bit
+        if not required_by_word:
             raise ValueError(
                 "Triton dynamic AllHaveRun termination requires dependencies."
             )
+        expression = " & ".join(
+            f"(({word} & {required}) == {required})"
+            for word, required in required_by_word.items()
+        )
         self.builder.line(
             f"{done_var} = tl.where(mask & ({expression}), 1, {done_var})"
         )
@@ -707,6 +869,7 @@ class OpEmitMixin:
         consideration_set,
         slot_vars,
         carry_vars,
+        has_run_bits,
         done_var: str,
     ) -> None:
         set_id = consideration_set.consideration_set_id
@@ -726,10 +889,22 @@ class OpEmitMixin:
                 slot_vars,
                 member.component_id,
             )
-            count_var = self._dynamic_slot_var(
-                slot_vars,
-                "execution_count",
-                owner=member.component_id,
+            single_execution = (
+                member.component_id
+                in self.dynamic_single_execution_component_ids
+            )
+            fuel_bounded = (
+                member.component_id
+                in self.dynamic_fuel_bounded_component_ids
+            )
+            count_var = (
+                "0"
+                if single_execution or fuel_bounded
+                else self._dynamic_slot_var(
+                    slot_vars,
+                    "execution_count",
+                    owner=member.component_id,
+                )
             )
             try:
                 budget = budgets_by_component[member.component_id]
@@ -737,7 +912,19 @@ class OpEmitMixin:
                 raise ValueError(
                     "Triton dynamic member has no execution budget."
                 ) from error
-            budget_gate = f"({count_var} < {budget.maximum})"
+            if single_execution:
+                try:
+                    has_run_word, has_run_bit = has_run_bits[member.component_id]
+                except KeyError as error:
+                    raise ValueError(
+                        "Triton single-execution member has no packed "
+                        "has_run state."
+                    ) from error
+                budget_gate = f"(({has_run_word} & {has_run_bit}) == 0)"
+            elif fuel_bounded:
+                budget_gate = "True"
+            else:
+                budget_gate = f"({count_var} < {budget.maximum})"
             if budget.post_finish != "unrestricted":
                 finished_var = self._dynamic_slot_var(
                     slot_vars,
@@ -771,10 +958,18 @@ class OpEmitMixin:
             self.value_vars.clear()
             self.value_vars.update(frozen_values)
             self.dynamic_active_mask = member_masks[member.component_id]
-            self.dynamic_execution_index = self._dynamic_slot_var(
-                slot_vars,
-                "execution_count",
-                owner=member.component_id,
+            self.dynamic_execution_index = (
+                "0"
+                if member.component_id
+                in (
+                    self.dynamic_single_execution_component_ids
+                    | self.dynamic_fuel_bounded_component_ids
+                )
+                else self._dynamic_slot_var(
+                    slot_vars,
+                    "execution_count",
+                    owner=member.component_id,
+                )
             )
             for child in member.body:
                 self._emit_op(child)
@@ -862,6 +1057,7 @@ class OpEmitMixin:
             consideration_set,
             slot_vars,
             member_masks,
+            has_run_bits,
         )
         self.dynamic_active_mask = "mask"
         self.dynamic_execution_index = None
@@ -908,25 +1104,26 @@ class OpEmitMixin:
         consideration_set,
         slot_vars,
         member_masks,
+        has_run_bits,
     ) -> None:
         for member in consideration_set.members:
             active = member_masks[member.component_id]
-            count_var = self._dynamic_slot_var(
-                slot_vars,
-                "execution_count",
-                owner=member.component_id,
-            )
-            has_run_var = self._dynamic_slot_var(
-                slot_vars,
-                "has_run",
-                owner=member.component_id,
-            )
-            self.builder.line(
-                f"{count_var} = tl.where({active}, {count_var} + 1, {count_var})"
-            )
-            self.builder.line(
-                f"{has_run_var} = tl.where({active}, 1, {has_run_var})"
-            )
+            if (
+                member.component_id
+                not in (
+                    self.dynamic_single_execution_component_ids
+                    | self.dynamic_fuel_bounded_component_ids
+                )
+            ):
+                count_var = self._dynamic_slot_var(
+                    slot_vars,
+                    "execution_count",
+                    owner=member.component_id,
+                )
+                self.builder.line(
+                    f"{count_var} = tl.where({active}, "
+                    f"{count_var} + 1, {count_var})"
+                )
             for slot in program.scheduler_state_slots:
                 if (
                     slot.kind == "rng_clock"
@@ -936,6 +1133,20 @@ class OpEmitMixin:
                     self.builder.line(
                         f"{rng_var} = tl.where({active}, {rng_var} + 1, {rng_var})"
                     )
+
+        packed_updates = {}
+        for member in consideration_set.members:
+            try:
+                word, bit = has_run_bits[member.component_id]
+            except KeyError as error:
+                raise ValueError(
+                    "Triton dynamic member has no typed has_run state."
+                ) from error
+            packed_updates.setdefault(word, []).append(
+                f"tl.where({member_masks[member.component_id]}, {bit}, 0)"
+            )
+        for word, updates in packed_updates.items():
+            self.builder.line(f"{word} = {word} | " + " | ".join(updates))
 
         for slot in program.scheduler_state_slots:
             if slot.kind != "usable_call":

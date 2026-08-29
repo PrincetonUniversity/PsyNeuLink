@@ -72,6 +72,8 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # RNG clock declared for that member.
         self.dynamic_program = None
         self.dynamic_slot_vars = None
+        self.dynamic_single_execution_component_ids = frozenset()
+        self.dynamic_fuel_bounded_component_ids = frozenset()
         # Explicit effective-parameter inputs sampled by the currently emitted
         # dynamic StepMechanism.  Component adapters resolve these by typed
         # target identity; the mapping is empty outside that one member body.

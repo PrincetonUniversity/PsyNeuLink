@@ -17,6 +17,7 @@ from psyneulink.core.batched.graph import (
     _node_param_aliases,
     projection_inputs,
 )
+from psyneulink.core.batched.dependency import analyze_axis_dependencies
 from psyneulink.core.batched.ir import (
     FP32_EXACT_INTEGER_LIMIT,
     BatchedAbsorbedProjectionSpec,
@@ -5539,10 +5540,24 @@ def lower_to_kernel_ir(
         schedule_trace=schedule_trace,
     )
     if _dynamic_schedule_lowering_eligible(kernel):
-        return replace(
+        kernel = replace(
             kernel,
             ops=_canonical_dynamic_schedule_kernel_ops(kernel),
             executable=graph.executable,
+        )
+    # Analyze only after every executable lowering tier has authenticated the
+    # graph and materialized its final KernelIR.  Declaration-only fallback IR
+    # can intentionally retain malformed identities for structured diagnostics;
+    # analysis must neither mask those diagnostics nor treat that IR as an
+    # optimization candidate.
+    if kernel.executable:
+        axis_dependencies = analyze_axis_dependencies(graph, ir.params)
+        kernel = replace(
+            kernel,
+            metadata={
+                **kernel.metadata,
+                "axis_dependencies": axis_dependencies.as_metadata(),
+            },
         )
     return kernel
 

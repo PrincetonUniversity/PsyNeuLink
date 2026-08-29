@@ -460,7 +460,6 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
         and carry.value_id == modulation.effective_parameter_id
         for carry in program.loop_carries
     )
-
     folded = kernel.folded_affine_controls[0]
     assert folded.clock_component_id == folded.controller_component_id
     folded_member = next(
@@ -515,6 +514,60 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     assert "lane_local_coevolving" not in source
     assert "coevolving_required_passes" not in source
     assert "draw = tl.randn(seed, rng_base + step)" in source
+    # Backend scheduler state is packed without changing the explicit typed
+    # KernelIR slots.  CSI has eleven scheduled components, so their AllHaveRun
+    # state occupies one word with the low eleven bits set (2**11 - 1).
+    assert source.count(
+        "dynamic_has_run_word_0 = tl.zeros((BLOCK,), dtype=tl.int32)"
+    ) == 1
+    assert "(dynamic_has_run_word_0 & 2047) == 2047" in source
+    assert "schedule_has_run" not in source
+
+    # The controller consumes its execution ordinal and the two stateful
+    # mechanisms use it as their step index.  Every other CSI count is proven
+    # redundant by either a maximum-one budget or the outer schedule fuel.
+    retained_count_ids = {
+        folded.clock_component_id,
+        stepper.component_id,
+        terminator.component_id,
+    }
+    for node in graph.nodes:
+        count_name = f"n_schedule_execution_count_{node.component_id}_0"
+        assert (count_name in source) is (
+            node.component_id in retained_count_ids
+        )
+
+
+def test_csi_axis_analysis_accounts_for_stochastic_schedule_duration(
+    registered_csi_drift_rate,
+):
+    composition, _, outputs = _model(ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton_cpu",
+        outputs=outputs,
+        max_steps=128,
+    )
+    graph = plan.kernel_ir.graph
+    metadata = plan.kernel_ir.metadata["axis_dependencies"]
+    axes_by_component = {
+        component_id: axes
+        for component_id, _, _, axes in metadata["nodes"]
+    }
+    lca = graph.node(_node(composition, "Task Activations [C1, C2]").name)
+    ddm = graph.node(_node(composition, "DDM").name)
+
+    # The LCA has no random input, but it runs under Always until the dynamic
+    # trial region ends.  Stochastic DDM completion therefore changes how many
+    # LCA steps a lane executes and must make its retained state estimate-local.
+    assert "estimate" in axes_by_component[lca.component_id]
+    assert "estimate" in axes_by_component[ddm.component_id]
+    assert metadata["stochastic_root_component_ids"] == (ddm.component_id,)
+    assert any(
+        producer in metadata["estimate_invariant_component_ids"]
+        and consumer in metadata["estimate_dependent_component_ids"]
+        for producer, consumer, _ in metadata["estimate_frontier_edges"]
+    )
 
 
 @pytest.mark.parametrize(
