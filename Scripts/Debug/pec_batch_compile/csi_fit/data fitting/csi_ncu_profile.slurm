@@ -23,7 +23,21 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 PYTHON="$REPO_ROOT/.venv/bin/python"
 DRIVER="$SCRIPT_DIR/expectation_fit_study3.2_real_sequences_single_csi_leak12.py"
 DATA_FILE="${CSI_DATA_FILE:-$SCRIPT_DIR/data_to_fit_study3.csv}"
-NCU="$(command -v ncu || true)"
+NCU="${CSI_NCU_BIN:-$(command -v ncu || true)}"
+
+if [[ -z "$NCU" ]]; then
+    for candidate in \
+        /usr/local/cuda/bin/ncu \
+        /usr/local/cuda-*/bin/ncu \
+        /opt/nvidia/nsight-compute/*/ncu \
+        /opt/nvidia/hpc_sdk/Linux_*/*/profilers/*/Nsight_Compute/ncu
+    do
+        if [[ -x "$candidate" ]]; then
+            NCU="$candidate"
+            break
+        fi
+    done
+fi
 
 SUBJECT="${CSI_SUBJECT_ID:-1}"
 NUM_ESTIMATES="${CSI_PROFILE_NUM_ESTIMATES:-100000}"
