@@ -21,13 +21,19 @@ set -euo pipefail
 # rescored on the same five one-million-estimate streams for its participant.
 # Posterior prediction is deferred until the independently validated winners
 # have been selected.
+#
+# A partial array can be resumed into the original results directory with:
+#
+#   CSI_RESULTS_ROOT="$PWD/audit/high-fidelity-fit-<original-job-id>" \
+#       sbatch --export=ALL,CSI_RESULTS_ROOT --array=<missing-indices> \
+#       csi_high_fidelity_convergence_audit.slurm
 
 SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
 REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 PYTHON="$REPO_ROOT/.venv/bin/python"
 DRIVER="$SCRIPT_DIR/expectation_fit_study3.2_real_sequences_single_csi_leak12.py"
 DATA_FILE="${CSI_DATA_FILE:-$SCRIPT_DIR/data_to_fit_study3.csv}"
-RESULTS_ROOT="$SCRIPT_DIR/audit/high-fidelity-fit-${SLURM_ARRAY_JOB_ID}"
+RESULTS_ROOT="${CSI_RESULTS_ROOT:-$SCRIPT_DIR/audit/high-fidelity-fit-${SLURM_ARRAY_JOB_ID}}"
 
 if [[ ! -x "$PYTHON" ]]; then
     echo "Python environment not found: $PYTHON" >&2
