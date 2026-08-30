@@ -470,7 +470,9 @@ def test_scheduled_terminator_has_typed_dynamic_program():
         if " = _pnl_triton_ddm_step(" in line
     )
     assert len(ddm_step_calls) == 1
-    assert "draw = tl.randn(seed, rng_base + step)" in source
+    assert "tl.rand4x(SEED," in source
+    assert "tl.pair_uniform_to_normal(" in source
+    assert "dynamic_rng_spare_0" in source
     assert rng_clock_var in ddm_step_calls[0]
     assert all(
         forbidden not in ddm_step_calls[0]
@@ -542,6 +544,11 @@ def test_distinct_scheduled_rng_owners_use_global_stream_inventory():
         0,
         RNG_STREAM_STRIDE,
     )
+    source = triton_graph_kernel_source(plan.kernel_ir)
+    assert source.count(" = tl.rand4x(") == 2
+    assert "dynamic_rng_spare_0" in source
+    assert "dynamic_rng_spare_1" in source
+    assert f"random_base + {RNG_STREAM_STRIDE}" in source
 
     duplicate_owner = replace(
         streams[1],

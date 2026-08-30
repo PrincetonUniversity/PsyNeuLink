@@ -481,6 +481,7 @@ class OpEmitMixin:
         carry_vars = self._emit_dynamic_carry_initializers(program)
         slot_vars = self._emit_dynamic_scheduler_initializers(program)
         has_run_bits = self._emit_dynamic_has_run_initializers(program)
+        self._emit_dynamic_normal_cache_initializers(program)
         self.dynamic_program = program
         self.dynamic_slot_vars = slot_vars
         done_var = "dynamic_done"
@@ -549,7 +550,30 @@ class OpEmitMixin:
         self.dynamic_slot_vars = None
         self.dynamic_single_execution_component_ids = frozenset()
         self.dynamic_fuel_bounded_component_ids = frozenset()
+        self.dynamic_normal_cache_vars = {}
         self.builder.line()
+
+    def _emit_dynamic_normal_cache_initializers(self, program) -> None:
+        """Allocate one spare normal for each scalar scheduled RNG stream."""
+
+        streams_by_id = {
+            stream.stream_id: stream for stream in self.kernel.rng_streams
+        }
+        cache_vars = {}
+        for slot in program.scheduler_state_slots:
+            if slot.kind != "rng_clock":
+                continue
+            stream = streams_by_id.get(slot.rng_stream_id)
+            if stream is None or stream.width != 1:
+                continue
+            value = f"dynamic_rng_spare_{stream.stream_id}"
+            self.builder.line(
+                f"{value} = tl.zeros((BLOCK,), dtype=tl.float32)"
+            )
+            cache_vars[stream.node] = value
+        self.dynamic_normal_cache_vars = cache_vars
+        if cache_vars:
+            self.builder.line()
 
     def _emit_dynamic_carry_initializers(self, program):
         carry_vars = {}

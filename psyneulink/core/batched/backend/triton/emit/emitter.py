@@ -74,6 +74,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.dynamic_slot_vars = None
         self.dynamic_single_execution_component_ids = frozenset()
         self.dynamic_fuel_bounded_component_ids = frozenset()
+        self.dynamic_normal_cache_vars: dict[str, str] = {}
         # Explicit effective-parameter inputs sampled by the currently emitted
         # dynamic StepMechanism.  Component adapters resolve these by typed
         # target identity; the mapping is empty outside that one member body.

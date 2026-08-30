@@ -16,8 +16,10 @@ from psyneulink.core.batched.kernel_ir import node_output_value_name
 from psyneulink.core.batched.backend.triton.emit._helpers import primary_output_port_name
 
 # Philox counter space reserved per RNG stream.  Stream identity is packed into
-# the high 32 bits of the offset and the step index into the low 32, which
-# `randint4x` splits back into two counter words.  The point of a fixed stride
+# the high 32 bits of the offset and a step-derived counter into the low 32,
+# which `randint4x` splits back into two counter words.  Direct draws use the
+# step itself; scheduled standard-normal draws pack an even/odd pair into one
+# counter and retain the second Box-Muller result.  The point of a fixed stride
 # is that offsets -- and so the draws -- do not depend on MAX_STEPS or
 # LCA_MAX_STEPS: raising a step cap for safety no longer changes results.
 #
@@ -141,6 +143,52 @@ class LaneEmitMixin:
 
     def rng_base(self, node_name: str) -> str:
         return self._rng_base(node_name)
+
+    def normal_draw(self, node_name: str, step: str) -> str:
+        """Return a standard-normal draw, reusing a Philox pair when legal.
+
+        Pairing changes the exact seed-to-sample mapping relative to calling
+        ``tl.randn`` for every step, but retains deterministic replay, stream
+        separation, and common-random-number alignment across parameter lanes.
+        """
+
+        spare = self.dynamic_normal_cache_vars.get(node_name)
+        rng_base = self._rng_base(node_name)
+        if spare is None:
+            return f"tl.randn(SEED, {rng_base} + {step})"
+
+        symbol = f"dynamic_rng_{self.rng_stream_slot[node_name]}"
+        phase = f"{symbol}_phase"
+        refresh = f"{symbol}_refresh"
+        uniforms = tuple(f"{symbol}_uniform_{index}" for index in range(4))
+        draws = tuple(f"{symbol}_draw_{index}" for index in range(2))
+        draw = f"{symbol}_selected"
+        self.builder.line(f"{phase} = {step} & 1")
+        self.builder.line(
+            f"{refresh} = {self.dynamic_active_mask} & ({phase} == 0)"
+        )
+        # Odd executions consume the spare normal retained from the preceding
+        # even execution.  The selected value itself is iteration-local, so
+        # only one extra vector must remain live across the scheduler loop.
+        self.builder.line(f"{draw} = {spare}")
+        with self.builder.block(
+            f"if tl.max(tl.where({refresh}, 1, 0)) > 0"
+        ):
+            self.builder.line(
+                f"{', '.join(uniforms)} = tl.rand4x("
+                f"SEED, {rng_base} + ({step} // 2))"
+            )
+            self.builder.line(
+                f"{', '.join(draws)} = tl.pair_uniform_to_normal("
+                f"{uniforms[0]}, {uniforms[1]})"
+            )
+            self.builder.line(
+                f"{spare} = tl.where({refresh}, {draws[1]}, {spare})"
+            )
+            self.builder.line(
+                f"{draw} = tl.where({refresh}, {draws[0]}, {draw})"
+            )
+        return draw
 
     def _index_rng_streams(self) -> None:
         # One flat pool: every stream gets the same stride, so which step cap

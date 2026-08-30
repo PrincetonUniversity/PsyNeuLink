@@ -185,15 +185,13 @@ def _pnl_triton_ddm_step(
     threshold_collapse,
     time_step_size,
     offset,
-    seed,
-    rng_base,
+    draw,
     step,
     max_steps,
 ):
     # The scheduler supplies the DDM's component-local execution clock, so cue
     # onset and other inter-member timing do not leak into the integrator.
     active_time = step < max_steps
-    draw = tl.randn(seed, rng_base + step)
     new_value, new_steps, new_finished = _pnl_triton_ddm_update(
         value, steps, finished, drift, rate, noise, threshold,
         threshold_collapse, time_step_size, offset, draw, step,
@@ -220,6 +218,7 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     else:
         threshold = ctx.param(node_spec, "threshold")
         threshold_collapse = ctx.param(node_spec, "threshold_collapse")
+    draw = ctx.normal_draw(name, step_var)
     ctx.emit_call(
         TritonOpCall(
             template=_pnl_triton_ddm_step,
@@ -235,8 +234,7 @@ def _ddm_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
                 threshold_collapse,
                 ctx.param(node_spec, "time_step_size"),
                 ctx.param(node_spec, "offset"),
-                ctx.seed,
-                ctx.rng_base(name),
+                draw,
                 step_var,
                 "MAX_STEPS",
             ),

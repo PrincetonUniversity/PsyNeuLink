@@ -513,7 +513,9 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     source = triton_graph_kernel_source(kernel)
     assert "lane_local_coevolving" not in source
     assert "coevolving_required_passes" not in source
-    assert "draw = tl.randn(seed, rng_base + step)" in source
+    assert "tl.rand4x(SEED, random_base + (n_schedule_rng_clock_8_0_0 // 2))" in source
+    assert "tl.pair_uniform_to_normal(" in source
+    assert "dynamic_rng_spare_0" in source
     # Backend scheduler state is packed without changing the explicit typed
     # KernelIR slots.  CSI has eleven scheduled components, so their AllHaveRun
     # state occupies one word with the low eleven bits set (2**11 - 1).

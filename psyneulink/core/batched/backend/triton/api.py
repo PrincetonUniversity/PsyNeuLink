@@ -87,6 +87,17 @@ class TritonEmitContext:
 
         return self._emitter.rng_stream_offset(node_name, component_idx)
 
+    def normal_draw(self, node_name: str, step: str) -> str:
+        """Emit or reference one lane-local standard-normal draw.
+
+        Dynamic scheduled regions may cache a two-draw Philox result across
+        component executions.  Other regions retain the direct one-draw
+        lowering.  Component adapters use this API so the RNG optimization is
+        owned by the backend rather than embedded in a particular model.
+        """
+
+        return self._emitter.normal_draw(node_name, step)
+
     def emit_trial_random_base_if_needed(self) -> None:
         self._emitter.emit_trial_random_base_if_needed()
 
