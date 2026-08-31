@@ -1,19 +1,28 @@
-"""Hierarchical fitting of a group of drift-diffusion participants.
+"""Fit a group of participants jointly with `ParameterEstimationComposition`.
 
-Simulates a group whose parameters vary around a population mean, fits them jointly, and reports
-how well the individual and group parameters were recovered.
+Read this one if you have data and want to fit it hierarchically.  It expects a CSV holding
+every participant's trials stacked, with a column naming who produced each row::
+
+    subject,decision,response_time
+    S00,1,0.512
+    S00,0,0.734
+    S01,1,0.488
+
+Participants may have different trial counts.  ``make_example_data.py`` writes a synthetic
+table in this format if you want something to run against first.
 
 Run in one process::
 
-    python hierarchical_study.py
+    python hierarchical_fitting.py --data group_data.csv
 
 Across a single-node cluster::
 
-    python hierarchical_study.py --distributed --n-workers 4
+    python hierarchical_fitting.py --data group_data.csv --distributed --n-workers 4
 
 Across several nodes, using the SLURM launcher::
 
-    srun -n <workers+2> python -m psyneulink.dask_run hierarchical_study.py --distributed
+    srun -n <workers+2> python -m psyneulink.dask_run hierarchical_fitting.py \\
+        --data group_data.csv --distributed
 """
 
 import argparse
@@ -24,17 +33,11 @@ import pandas as pd
 
 import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction
-from psyneulink.core.compositions.hierarchical.transforms import BoundedTransform
 
-# Ranges searched for each parameter. These are also the support of the group model, so they are
-# shared by every participant.
+# Ranges searched for each parameter.  These are also the support of the group model, so every
+# participant must be fitted over the same ranges.
 FIT_RANGES = {"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)}
 FIT_PARAMS = tuple(FIT_RANGES)
-
-# Population the participants are drawn from, in the unconstrained space the group model uses:
-# centred on the middle of each range, with this variance between participants.
-GROUP_MEAN_Z = np.zeros(len(FIT_PARAMS))
-GROUP_VARIANCE_Z = np.full(len(FIT_PARAMS), 0.36)
 
 NON_DECISION_TIME = 0.15
 TIME_STEP_SIZE = 0.01
@@ -64,36 +67,15 @@ def trial_inputs(n_trials):
     return np.ones((n_trials, 1))
 
 
-def simulate_participant(theta, n_trials, seed):
-    """Generate one participant's trials at known parameters."""
-    comp, _ = build_model(rate=float(theta[0]), threshold=float(theta[1]), seed=seed)
-    comp.run(inputs={comp.nodes[0]: trial_inputs(n_trials)}, context=f"simulate-{seed}")
-    data = pd.DataFrame(np.squeeze(np.array(comp.results)),
-                        columns=["decision", "response_time"])
+def load_data(path):
+    """Read the stacked trial table.
+
+    The choice column has to be `category` dtype for the likelihood to treat it as discrete;
+    a CSV does not carry dtypes, so set it after reading.
+    """
+    data = pd.read_csv(path)
     data["decision"] = data["decision"].astype("category")
     return data
-
-
-def make_group_data(n_participants, n_trials, seed=0):
-    """Draw participants from the population and simulate each one.
-
-    Returns the stacked table to fit and the parameters it was generated from.
-    """
-    transform = BoundedTransform(
-        lower=[FIT_RANGES[p][0] for p in FIT_PARAMS],
-        upper=[FIT_RANGES[p][1] for p in FIT_PARAMS],
-    )
-    rng = np.random.default_rng(seed)
-    z_true = rng.normal(GROUP_MEAN_Z, np.sqrt(GROUP_VARIANCE_Z),
-                        size=(n_participants, len(FIT_PARAMS)))
-    theta_true = np.vstack([transform.to_natural(z) for z in z_true])
-
-    frames = []
-    for s in range(n_participants):
-        frame = simulate_participant(theta_true[s], n_trials, seed=1000 + s)
-        frame.insert(0, "subject", f"S{s:02d}")
-        frames.append(frame)
-    return pd.concat(frames, ignore_index=True), theta_true, transform
 
 
 def participant_pec(data, subject_index=None):
@@ -126,27 +108,17 @@ def participant_pec(data, subject_index=None):
     return pec, {comp: trial_inputs(len(data))}
 
 
-def report(results, theta_true):
-    """Compare what was recovered against what the data were generated from."""
-    recovered = results.subject_parameters.to_numpy()
-
+def report(results):
+    """Print what the fit found."""
     print(f"\n{results!r}")
     print("\nobjective by iteration:",
           np.round(results.em_history["objective"].to_numpy(), 2).tolist())
 
     print("\ngroup estimate:")
     print(results.group_parameters.round(4).to_string())
-    print(f"\n  mean of the parameters used to generate the data: "
-          f"{theta_true.mean(axis=0).round(4)}")
-    print(f"  mean of the recovered participant estimates:      "
-          f"{recovered.mean(axis=0).round(4)}")
 
-    print("\nper-participant recovery:")
-    error = recovered - theta_true
-    for k, name in enumerate(FIT_PARAMS):
-        rmse = float(np.sqrt((error[:, k] ** 2).mean()))
-        corr = float(np.corrcoef(recovered[:, k], theta_true[:, k])[0, 1])
-        print(f"  {name:<12} RMSE {rmse:.4f}   correlation with truth {corr:.3f}")
+    print("\nper-participant estimates:")
+    print(results.subject_parameters.round(4).to_string())
 
     # The group variance accounts for both the spread of the estimates and how uncertain each one
     # is. The two agree once the fit has converged, and differ by one update before that.
@@ -162,8 +134,10 @@ def report(results, theta_true):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--n-participants", type=int, default=6)
-    parser.add_argument("--n-trials", type=int, default=40)
+    parser.add_argument("--data", default="group_data.csv",
+                        help="stacked trial table, as written by make_example_data.py")
+    parser.add_argument("--subject-id", default="subject",
+                        help="column of the table naming who produced each row")
     parser.add_argument("--max-iterations", type=int, default=8)
     parser.add_argument("--distributed", action="store_true",
                         help="fit participants across a Dask cluster")
@@ -171,8 +145,8 @@ def main():
                         help="size of the cluster created for --distributed")
     args = parser.parse_args()
 
-    data, theta_true, _ = make_group_data(args.n_participants, args.n_trials)
-    print(f"{len(data)} trials from {data['subject'].nunique()} participants")
+    data = load_data(args.data)
+    print(f"{len(data)} trials from {data[args.subject_id].nunique()} participants")
 
     distributed_options = {"pec_factory": participant_pec}
     if args.n_workers is not None:
@@ -197,7 +171,7 @@ def main():
         ),
         fit_method="hierarchical",
         hierarchical_options={
-            "subject_id": "subject",
+            "subject_id": args.subject_id,
             "max_iterations": args.max_iterations,
             "tol": 1e-3,
             "estep_options": {"xatol": 1e-2, "fatol": 5e-2, "maxiter": 120},
@@ -210,7 +184,7 @@ def main():
     results = pec.run()
     print(f"fitted in {time.time() - started:.1f}s")
 
-    report(results, theta_true)
+    report(results)
 
 
 if __name__ == "__main__":
