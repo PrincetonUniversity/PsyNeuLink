@@ -17,14 +17,19 @@
 
 # --- edit paths ---
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
-STUDY=$REPO/Scripts/Debug/pec_hierarchical/hierarchical_study.py
+EXAMPLES=$REPO/Scripts/Debug/pec_hierarchical
+DATA=$EXAMPLES/group_data.csv
 
 PY=$REPO/.venv/bin/python3
 
 cd $REPO
 
+# Synthetic data to fit. Skip this step and point --data at your own table instead.
+$PY "$EXAMPLES/make_example_data.py" --n-participants 24 --n-trials 60 \
+    --data-out "$DATA"
+
 # worker_cores defaults to $SLURM_CPUS_PER_TASK.
-srun --distribution=block $PY -m psyneulink.dask_run "$STUDY" \
-    --distributed --n-participants 24 --n-trials 60
+srun --distribution=block $PY -m psyneulink.dask_run "$EXAMPLES/hierarchical_fitting.py" \
+    --data "$DATA" --distributed
 
 rm -f $REPO/.psyneulink_dask_scheduler_${SLURM_JOB_ID}_*.json
