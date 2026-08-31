@@ -949,16 +949,17 @@ def test_pec_log_likelihood_refuses_in_hierarchical_mode():
 def test_pec_uses_the_cluster_when_distributed(monkeypatch):
     # `distributed` selects where participants are fitted; the group update is unaffected.
     pytest.importorskip("dask.distributed")
-    from psyneulink.core.compositions.hierarchical import distributedestep
+    from psyneulink.core.compositions import parameterestimationcomposition as pec_module
 
     calls = {"distributed": 0}
-    real = distributedestep.make_distributed_estep_runner
+    real = pec_module.make_distributed_estep_runner
 
     def spy(*args, **kwargs):
         calls["distributed"] += 1
         return real(*args, **kwargs)
 
-    monkeypatch.setattr(distributedestep, "make_distributed_estep_runner", spy)
+    # Patched on the module that calls it, which is where the name is resolved.
+    monkeypatch.setattr(pec_module, "make_distributed_estep_runner", spy)
 
     def factory(data, subject_index=None):
         return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None

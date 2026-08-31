@@ -279,7 +279,25 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 )
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
+    _dask_client,
+    _resolve_worker_cores,
     simulation_likelihood,
+)
+from psyneulink.core.compositions.hierarchical.distributedestep import (
+    make_distributed_estep_runner,
+)
+from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
+    HierarchicalPECResults,
+)
+from psyneulink.core.compositions.hierarchical.laplaceem import (
+    EStepConfig,
+    fit_laplace_em,
+    make_inprocess_estep_runner,
+)
+from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+    PECFactorySubjectLikelihood,
+    ParameterSchema,
+    split_stacked_data,
 )
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
     ControlSignal,
@@ -804,8 +822,6 @@ class ParameterEstimationComposition(Composition):
 
     def _setup_hierarchical(self, likelihood_include_mask):
         """Divide the data by participant and check the fit was configured coherently."""
-        from psyneulink.core.compositions.hierarchical.subjectlikelihood import split_stacked_data
-
         unknown = set(self._hierarchical_options) - set(self._HIERARCHICAL_OPTION_DEFAULTS)
         if unknown:
             raise ParameterEstimationCompositionError(
@@ -868,19 +884,6 @@ class ParameterEstimationComposition(Composition):
 
     def _run_hierarchical(self, context):
         """Fit every participant jointly and record the result on `fit_results`."""
-        from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
-            HierarchicalPECResults,
-        )
-        from psyneulink.core.compositions.hierarchical.laplaceem import (
-            EStepConfig,
-            fit_laplace_em,
-            make_inprocess_estep_runner,
-        )
-        from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
-            PECFactorySubjectLikelihood,
-            ParameterSchema,
-        )
-
         options = self._hierarchical_options
         # This composition declares what is fitted and over what range; every participant's
         # model is held to it.
@@ -907,14 +910,6 @@ class ParameterEstimationComposition(Composition):
             damping=options["damping"],
         )
         if self._pec_distributed:
-            from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-                _dask_client,
-                _resolve_worker_cores,
-            )
-            from psyneulink.core.compositions.hierarchical.distributedestep import (
-                make_distributed_estep_runner,
-            )
-
             client, close_client = _dask_client(self._pec_distributed_options)
             runner = make_distributed_estep_runner(
                 client,
