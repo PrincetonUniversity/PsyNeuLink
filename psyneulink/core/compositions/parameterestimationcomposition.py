@@ -822,7 +822,7 @@ class ParameterEstimationComposition(Composition):
             )
         if self.data is None:
             raise ParameterEstimationCompositionError(
-                "hierarchical fitting requires `data`; there is nothing to fit without it"
+                "hierarchical fitting requires `data`"
             )
         if options["max_iterations"] < 1 or options["tol"] <= 0:
             raise ParameterEstimationCompositionError(
@@ -838,9 +838,7 @@ class ParameterEstimationComposition(Composition):
             )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
-                "depends_on is not supported with hierarchical fitting: conditional parameters and "
-                "participant-level random effects would expand into a combination this release does "
-                "not model"
+                "depends_on is not supported with hierarchical fitting"
             )
         if likelihood_include_mask is not None:
             raise ParameterEstimationCompositionError(
@@ -884,9 +882,8 @@ class ParameterEstimationComposition(Composition):
         )
 
         options = self._hierarchical_options
-        # The model this composition was given declares what is fitted and over what range; every
-        # participant's model is held to it. Taking the first participant's model as authoritative
-        # instead would let a factory quietly fit something other than what was asked for.
+        # This composition declares what is fitted and over what range; every participant's
+        # model is held to it.
         schema = ParameterSchema.from_pec(
             self, source="the model given to ParameterEstimationComposition"
         )
@@ -933,8 +930,7 @@ class ParameterEstimationComposition(Composition):
                     runner, provider.n_subjects, provider.n_params, **fit_kwargs
                 )
             finally:
-                # A cluster this fit created goes away with its models. One the user supplied
-                # outlives the fit, so the models it built have to be dropped explicitly.
+                # A cluster this fit created takes its models with it; a caller's does not.
                 if close_client is not None:
                     close_client()
                 else:
@@ -947,8 +943,6 @@ class ParameterEstimationComposition(Composition):
             em, transform, provider.fit_param_names, self._subject_split.labels,
             settings=dict(options),
         )
-        # The group estimate is what a single-participant fit would call its answer, so it is
-        # reported the same way.
         self.optimized_parameter_values = dict(
             zip(provider.fit_param_names, transform.to_natural(em.beta[0]))
         )
@@ -1309,9 +1303,8 @@ class ParameterEstimationComposition(Composition):
         if self._fit_method == "hierarchical":
             raise ParameterEstimationCompositionError(
                 f"ParameterEstimationComposition {self.name} is configured for hierarchical "
-                f"fitting, where each participant has their own likelihood and there is no single "
-                f"one to return. Scoring the stacked data as though it came from one participant "
-                f"would silently pool it. Per-participant results are on "
+                f"fitting: each participant has their own likelihood, and scoring the stacked "
+                f"data as one participant would silently pool it. See "
                 f"`fit_results.subject_posteriors` after `run()`."
             )
 

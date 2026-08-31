@@ -941,7 +941,7 @@ def test_pec_requires_a_factory_to_run():
 def test_pec_log_likelihood_refuses_in_hierarchical_mode():
     # Scoring the stacked table as one participant would silently pool it.
     pec = _build_group_pec()
-    with pytest.raises(Exception, match="no single"):
+    with pytest.raises(Exception, match="silently pool"):
         pec.log_likelihood(0.3)
 
 

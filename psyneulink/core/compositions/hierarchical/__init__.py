@@ -11,12 +11,11 @@
 Fits a group of participants jointly rather than one at a time, so that each participant's estimate
 is informed by the population they belong to.
 
-`HierarchicalPECResults` and `HierarchicalEMWarning` are the public surface; the rest is reached by
-path.  No module in this subpackage may import `parameterestimationcomposition
-<ParameterEstimationComposition>` at module scope, or the import order in
-``psyneulink/core/compositions/__init__.py`` deadlocks.
+`HierarchicalPECResults` and `HierarchicalEMWarning` are the public surface.
 """
 
+# ParameterEstimationComposition imports this package, so nothing here may import it back at
+# module scope; use a function-local import.
 from . import hierarchicalresults, laplaceem, subjectlikelihood, transforms
 from .hierarchicalresults import HierarchicalPECResults
 from .laplaceem import HierarchicalEMWarning
