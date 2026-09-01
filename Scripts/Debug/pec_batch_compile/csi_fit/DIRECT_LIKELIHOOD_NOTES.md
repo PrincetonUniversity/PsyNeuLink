@@ -505,3 +505,43 @@ seeds and sequence lengths reuse the same compiled kernel. A warm full-subject
 11-candidate CMA-ES population took 17.23 seconds versus 10.85 seconds for one
 candidate, giving about 6.9x the candidate throughput of sequential evaluation.
 No LLVM changes were made in this GPU accuracy/performance pass.
+
+## Deterministic CSI observed-history specialization
+
+CSI admits a cheaper corrected likelihood when LCA noise is exactly zero. For
+fixed parameters and an observed RT endpoint, its persistent LCA state is then
+deterministic: the LCA follows the participant's observed duration, while the
+DDM simulations are needed only to estimate the current trial's choice/RT
+density. There is no reason to copy that identical LCA trajectory into 10,000
+particles or to resample it.
+
+The CUDA specialization implements two stages:
+
+1. one sequential LCA lane per parameter candidate follows the observed trial
+   history and records the within-trial drift path presented to the DDM; and
+2. one parallel launch simulates every candidate/trial/DDM estimate from those
+   cached drift paths and evaluates the existing histogram likelihood.
+
+The history pass preserves the scheduler's overlap exactly: the first DDM
+update uses the same pass that makes a positive LCA execution count finished.
+In particular, with a positive ITI and zero CSI, that DDM update precedes task
+onset by one pass, matching the historical model rather than imposing a cleaner
+phase boundary.
+
+The observed decision duration is mapped to the legacy endpoint process as
+`ceil(max(RT - nondecision - CSI, 0) / 0.01)` scheduler steps. Thus this mode
+conditions on the recorded RT endpoint. It is not the broader interpretation
+in which the whole observed histogram bin represents latent endpoint-state
+uncertainty; use the particle filter for that interpretation or whenever the
+persistent process itself is stochastic. The specialization rejects nonzero
+LCA noise and any graph outside the authenticated CSI structure rather than
+silently changing semantics.
+
+The fitting script selects this path with
+`--backend triton --deterministic-observed-history`. The default corrected mode
+remains the particle filter so that choosing endpoint conditioning is explicit.
+On the local RTX 2080 Ti, a warm 561-trial, 10,000-estimate, 11-candidate
+representative batch took 1.24 seconds. The same workload previously took
+17.23 seconds with particle filtering and 0.756 seconds with the old
+unconditional-history likelihood. This provisional result recovers most of the
+old throughput while retaining the corrected observed history.

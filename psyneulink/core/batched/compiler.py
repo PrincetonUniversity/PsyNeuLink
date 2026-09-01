@@ -449,6 +449,83 @@ class BatchedSimulationPlan:
             return float(values[0])
         return values
 
+    def deterministic_history_log_likelihood(
+        self,
+        inputs,
+        parameter_sets,
+        num_estimates: int,
+        data,
+        categorical_dims=None,
+        *,
+        outcome_indices=None,
+        bins: int = 100,
+        bin_range=None,
+        smoothing_sigma: float = 0.0,
+        pseudocount: float = 0.0,
+        categorical_cardinalities=None,
+        include_mask=None,
+        subject_slices=None,
+        seed=None,
+        common_random_numbers: bool = True,
+        strict_truncation: bool = False,
+        triton_launch_options: Mapping | None = None,
+        return_debug: bool = False,
+    ):
+        """CSI likelihood specialized for deterministic observed LCA history.
+
+        The persistent LCA has no process noise in the fitted CSI model, so its
+        state at each observed RT endpoint is a deterministic function of the
+        parameters and preceding observations.  This path computes that history
+        once per parameter set, stores the resulting within-trial DDM drift
+        paths, and then simulates all DDM estimates in one parallel GPU launch.
+
+        This is intentionally fail-closed to the authenticated CSI graph.  Use
+        :meth:`conditioned_log_likelihood` for a stochastic persistent state or
+        for a histogram-bin interpretation that marginalizes possible endpoint
+        histories.
+        """
+
+        if self.backend != "triton":
+            raise BatchedCompileError(
+                "deterministic_history_log_likelihood currently requires the "
+                "CUDA Triton backend."
+            )
+        if subject_slices is not None:
+            raise NotImplementedError(
+                "CSI deterministic-history likelihood currently accepts one "
+                "contiguous subject sequence per call (subject_slices=None)."
+            )
+        if outcome_indices is not None and list(outcome_indices) != [0, 1]:
+            raise ValueError(
+                "CSI deterministic-history likelihood requires the plan's "
+                "decision and response-time outputs in that order."
+            )
+
+        from psyneulink.core.batched.backend.triton.csi_deterministic import (
+            run_csi_deterministic_history_likelihood,
+        )
+
+        return run_csi_deterministic_history_likelihood(
+            self.ir,
+            inputs,
+            parameter_sets,
+            num_estimates,
+            data,
+            categorical_dims,
+            bins=bins,
+            bin_range=bin_range,
+            smoothing_sigma=smoothing_sigma,
+            pseudocount=pseudocount,
+            categorical_cardinalities=categorical_cardinalities,
+            include_mask=include_mask,
+            seed=seed,
+            common_random_numbers=common_random_numbers,
+            strict_truncation=strict_truncation,
+            component_bindings=self.component_bindings,
+            launch_options=triton_launch_options,
+            return_debug=return_debug,
+        )
+
 
 def _as_long(tensor_like, idx):
     import torch

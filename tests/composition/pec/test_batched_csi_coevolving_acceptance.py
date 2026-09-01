@@ -118,6 +118,7 @@ def _model(
     cue_values=None,
     ddm_rate=None,
     ddm_noise=0.0,
+    lca_noise=0.0,
     iti=0,
     one_trial=False,
 ):
@@ -125,6 +126,7 @@ def _model(
         csi_repeat=csi_repeat,
         csi_switch=csi_switch,
         ddm_noise=ddm_noise,
+        lca_noise=lca_noise,
         iti=iti,
     )
     stimulus = _node(composition, "Stimulus Input")
@@ -325,6 +327,7 @@ def _recovery_pec(
     *,
     backend,
     include_historical_threshold_parameters,
+    deterministic_history_likelihood=False,
 ):
     """Build the real PEC wrapper used by the CSI recovery workflows."""
 
@@ -367,6 +370,7 @@ def _recovery_pec(
             batched_max_steps=600,
             batched_bins=20,
             batched_seed=29,
+            deterministic_history_likelihood=deterministic_history_likelihood,
         ),
         num_estimates=8,
         initial_seed=29,
@@ -948,6 +952,30 @@ def test_csi_three_parameter_pec_objective_compiles_and_scores(
     assert optimization._batched_plan.kernel_ir.executable
 
 
+@pytest.mark.triton_gpu
+def test_csi_deterministic_history_routes_through_pec_objective(
+    registered_csi_drift_rate,
+):
+    composition, inputs, _, outputs = _recovery_surface_model()
+    pec = _recovery_pec(
+        composition,
+        inputs,
+        outputs,
+        backend="triton",
+        include_historical_threshold_parameters=False,
+        deterministic_history_likelihood=True,
+    )
+    optimization = pec.controller.function
+    objective = optimization._make_objective_func()
+
+    first = objective(10.0, 10.0, 0.2)
+    replay = objective(10.0, 10.0, 0.2)
+
+    assert np.isfinite(first)
+    assert replay == first
+    assert optimization._batched_plan is not None
+
+
 @pytest.mark.parametrize(
     "ignored_factory",
     (
@@ -1364,6 +1392,180 @@ def test_csi_conditioned_likelihood_runs_and_replays(
 
     assert np.isfinite(first)
     assert replay == first
+
+
+@pytest.mark.triton_gpu
+def test_csi_deterministic_history_matches_lca_endpoint_recurrence(
+    registered_csi_drift_rate,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=64,
+    )
+    observed = np.asarray(
+        [[1.0, 0.62], [1.0, 0.73]],
+        dtype=np.float32,
+    )
+    kwargs = dict(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=32,
+        data=observed,
+        categorical_dims=[0],
+        bins=8,
+        bin_range=[(0.0, 2.0)],
+        smoothing_sigma=1.0,
+        seed=43,
+        strict_truncation=True,
+        return_debug=True,
+    )
+    first, debug = plan.deterministic_history_log_likelihood(**kwargs)
+    replay, replay_debug = plan.deterministic_history_log_likelihood(**kwargs)
+
+    assert np.isfinite(first)
+    assert replay == first
+    np.testing.assert_array_equal(
+        replay_debug["values"].detach().cpu(),
+        debug["values"].detach().cpu(),
+    )
+
+    # Independent scalar recurrence for the persistent zero-noise LCA.  The
+    # CSI model uses gain=10, leak=7, competition=3, self-excitation=0, and
+    # 10 ms Euler steps.  Its observed state advances by the cue-controlled
+    # onset steps and then by the participant's inferred DDM endpoint steps.
+    pre = np.zeros(2, dtype=np.float64)
+    activity = np.zeros(2, dtype=np.float64)
+    initialized = False
+    expected = []
+    observed_steps = debug["observed_steps"][0]
+    effective_steps = np.asarray([1, 3], dtype=int)
+    task_values = np.asarray(inputs[_node(composition, "Task Input")])
+    for trial, task_value in enumerate(task_values):
+        total_steps = max(effective_steps[trial] - 1, 0) + observed_steps[trial]
+        for _ in range(total_steps):
+            if not initialized:
+                activity[:] = 0.5
+            recurrence = np.asarray(
+                [
+                    -3.0 * activity[1],
+                    -3.0 * activity[0],
+                ]
+            )
+            pre += (task_value + recurrence - 7.0 * pre) * 0.01
+            activity = 1.0 / (1.0 + np.exp(-10.0 * pre))
+            initialized = True
+        expected.append([*pre, *activity, 1.0])
+
+    np.testing.assert_allclose(
+        debug["history_states"].detach().cpu().numpy()[0],
+        expected,
+        rtol=2e-5,
+        atol=2e-6,
+    )
+
+
+@pytest.mark.parametrize(
+    "model_options",
+    (
+        pytest.param({}, id="positive-csi"),
+        pytest.param(
+            {
+                "iti": 10,
+                "csi_repeat": 0,
+                "csi_switch": 0,
+                "cue_values": [[0.0], [1.0]],
+            },
+            id="zero-csi-overlapped-onset",
+        ),
+        pytest.param(
+            {
+                "iti": 2,
+                "csi_repeat": 3,
+                "csi_switch": 4,
+                "cue_values": [[0.0], [1.0]],
+            },
+            id="iti-plus-positive-csi",
+        ),
+    ),
+)
+@pytest.mark.triton_gpu
+def test_csi_deterministic_history_matches_coupled_endpoint_execution(
+    registered_csi_drift_rate,
+    model_options,
+):
+    composition, inputs, outputs = _model(ddm_noise=0.0, **model_options)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=64,
+    )
+    coupled_result = plan.run(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=1,
+        seed=17,
+        strict_truncation=True,
+        return_final_states=True,
+    )
+    coupled = coupled_result.values[0, 0, :, 0]
+
+    _, debug = plan.deterministic_history_log_likelihood(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=8,
+        data=coupled,
+        categorical_dims=[0],
+        bins=8,
+        bin_range=[(0.0, 2.0)],
+        seed=19,
+        strict_truncation=True,
+        return_debug=True,
+    )
+
+    specialized = debug["values"].detach().cpu().numpy()[0]
+    np.testing.assert_allclose(
+        specialized,
+        np.broadcast_to(coupled[:, None, :], specialized.shape),
+        rtol=1e-6,
+        atol=1e-6,
+    )
+    coupled_final_state = np.asarray(
+        coupled_result.metadata["final_states"]
+    )[0, 0, 0]
+    np.testing.assert_allclose(
+        debug["history_states"].detach().cpu().numpy()[0, -1],
+        coupled_final_state,
+        rtol=2e-5,
+        atol=2e-6,
+    )
+
+
+@pytest.mark.triton_gpu
+def test_csi_deterministic_history_rejects_stochastic_lca(
+    registered_csi_drift_rate,
+):
+    composition, inputs, outputs = _model(lca_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=64,
+    )
+
+    with pytest.raises(ValueError, match="deterministic LCA noise=0"):
+        plan.deterministic_history_log_likelihood(
+            inputs=inputs,
+            parameter_sets=[{}],
+            num_estimates=8,
+            data=np.asarray([[1.0, 0.5], [1.0, 0.5]]),
+            categorical_dims=[0],
+            bins=8,
+            bin_range=[(0.0, 2.0)],
+        )
 
 
 @pytest.mark.triton_gpu

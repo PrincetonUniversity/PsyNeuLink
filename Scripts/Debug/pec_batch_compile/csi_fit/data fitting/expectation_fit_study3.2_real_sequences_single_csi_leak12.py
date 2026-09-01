@@ -50,6 +50,16 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
+    "--deterministic-observed-history",
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help=(
+        "For the zero-noise CSI LCA, compute its observed endpoint history once "
+        "per parameter candidate and simulate only the DDM on the GPU. This "
+        "replaces particle filtering and requires --backend triton."
+    ),
+)
+parser.add_argument(
     "--seed",
     default=1,
     type=int,
@@ -140,6 +150,18 @@ if args.pseudocount < 0:
     parser.error("--pseudocount must be nonnegative.")
 if args.backend == "llvm" and (args.smoothing_sigma != 0 or args.pseudocount != 0):
     parser.error("--smoothing-sigma and --pseudocount require a batched backend.")
+if args.deterministic_observed_history and args.backend != "triton":
+    parser.error("--deterministic-observed-history requires --backend triton.")
+if args.deterministic_observed_history and not args.condition_observed_history:
+    parser.error(
+        "--deterministic-observed-history conflicts with "
+        "--no-condition-observed-history."
+    )
+history_mode = (
+    "deterministic"
+    if args.deterministic_observed_history
+    else ("particle" if args.condition_observed_history else "unconditional")
+)
 if args.rescore_simulation_seeds is not None and args.rescore_parameter_file is None:
     parser.error("--rescore-simulation-seeds requires --rescore-parameter-file.")
 data_file = args.data_file.expanduser()
@@ -248,7 +270,11 @@ fit_parameters = {
 
 batched_options = {}
 conditioned_options = {
-    "conditioned_likelihood": args.condition_observed_history,
+    "conditioned_likelihood": (
+        args.condition_observed_history
+        and not args.deterministic_observed_history
+    ),
+    "deterministic_history_likelihood": args.deterministic_observed_history,
 }
 if args.condition_observed_history:
     conditioned_options.update(
@@ -333,7 +359,8 @@ print(
     f"Participant {actual_subject_id}, Slurm Array {args.subject_id}, "
     f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}, "
     f"Optimizer Seed {optimizer_seed}, Simulation Seed {simulation_seed}, "
-    f"Smoothing Sigma {args.smoothing_sigma}, Pseudocount {args.pseudocount}"
+    f"Smoothing Sigma {args.smoothing_sigma}, Pseudocount {args.pseudocount}, "
+    f"History Mode {history_mode}"
 )
 if args.backend == "triton":
     print(
@@ -466,6 +493,7 @@ df["max_iterations"] = max_iterations
 df["fit_duration"] = end_time - start_time
 df["cpu_count"] = args.cpu_count
 df["backend"] = args.backend
+df["history_mode"] = history_mode
 df["optimizer_seed"] = optimizer_seed
 df["simulation_seed"] = simulation_seed
 df["bins"] = args.bins

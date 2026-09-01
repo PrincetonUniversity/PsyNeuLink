@@ -611,6 +611,14 @@ class PECOptimizationFunction(OptimizationFunction):
         The experimental path is implemented for both LLVM PEC and the batched
         co-evolving compiler and uses the batched histogram observation model.
 
+    deterministic_history_likelihood :
+        If True, use the CUDA CSI specialization for a deterministic persistent
+        LCA.  It advances one observed LCA history per parameter set, caches the
+        resulting within-trial drift paths, and simulates only the DDM estimates
+        in parallel.  This is substantially cheaper than particle filtering but
+        is deliberately restricted to the authenticated CSI graph with zero LCA
+        noise.
+
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
         candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
@@ -671,6 +679,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_parameter_batch_size: Optional[int] = None,
         batched_triton_launch_options: Optional[Mapping] = None,
         conditioned_likelihood: bool = False,
+        deterministic_history_likelihood: bool = False,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -693,6 +702,17 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_categorical_cardinalities = batched_categorical_cardinalities
         self.batched_seed = batched_seed
         self.conditioned_likelihood = conditioned_likelihood
+        self.deterministic_history_likelihood = deterministic_history_likelihood
+        if conditioned_likelihood and deterministic_history_likelihood:
+            raise ValueError(
+                "conditioned_likelihood and deterministic_history_likelihood "
+                "select different history algorithms and cannot both be True."
+            )
+        if deterministic_history_likelihood and batched_backend != "triton":
+            raise ValueError(
+                "deterministic_history_likelihood requires "
+                "batched_backend='triton'."
+            )
         if not np.isfinite(batched_smoothing_sigma) or batched_smoothing_sigma < 0:
             raise ValueError("batched_smoothing_sigma must be finite and nonnegative.")
         if not np.isfinite(batched_pseudocount) or batched_pseudocount < 0:
@@ -700,6 +720,7 @@ class PECOptimizationFunction(OptimizationFunction):
         if (
             batched_backend is None
             and not conditioned_likelihood
+            and not deterministic_history_likelihood
             and (
                 batched_smoothing_sigma != 0
                 or batched_pseudocount != 0
@@ -708,7 +729,7 @@ class PECOptimizationFunction(OptimizationFunction):
         ):
             raise ValueError(
                 "Histogram likelihood smoothing options require a batched_backend "
-                "or conditioned_likelihood=True."
+                "or an observed-history likelihood mode."
             )
         if (
             batched_parameter_batch_size is not None
@@ -1036,9 +1057,13 @@ class PECOptimizationFunction(OptimizationFunction):
                 for values in parameter_values
             ]
             likelihood_method = (
-                plan.conditioned_log_likelihood
-                if self.conditioned_likelihood
-                else plan.log_likelihood
+                plan.deterministic_history_log_likelihood
+                if self.deterministic_history_likelihood
+                else (
+                    plan.conditioned_log_likelihood
+                    if self.conditioned_likelihood
+                    else plan.log_likelihood
+                )
             )
             result = likelihood_method(
                 inputs,

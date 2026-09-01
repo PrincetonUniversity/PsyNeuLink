@@ -188,6 +188,23 @@ def test_triton_launch_options_require_compiled_gpu_backend():
     }
 
 
+def test_deterministic_history_requires_exclusive_gpu_mode():
+    with pytest.raises(ValueError, match="requires batched_backend='triton'"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_backend="triton_cpu",
+            deterministic_history_likelihood=True,
+        )
+
+    with pytest.raises(ValueError, match="cannot both be True"):
+        PECOptimizationFunction(
+            method="differential_evolution",
+            batched_backend="triton",
+            conditioned_likelihood=True,
+            deterministic_history_likelihood=True,
+        )
+
+
 @pytest.mark.triton_interpreter
 def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
     """A model the batched compiler rejects raises a clear error (never falls back)."""
