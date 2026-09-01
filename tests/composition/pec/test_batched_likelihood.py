@@ -46,9 +46,13 @@ def _numpy_reference(sim, exp, cat_mask, bins, bin_range):
         vol = 1.0
         for j, d in enumerate(con_idx):
             interior = edges[j][1:-1]
-            match &= np.searchsorted(interior, sim[t, :, d], side="right") == np.searchsorted(
-                interior, exp[t, d], side="right"
+            match &= (
+                np.searchsorted(interior, sim[t, :, d], side="right")
+                == np.searchsorted(interior, exp[t, d], side="right")
             )
+            match &= sim[t, :, d] >= edges[j][0]
+            match &= sim[t, :, d] <= edges[j][-1]
+            match &= edges[j][0] <= exp[t, d] <= edges[j][-1]
             vol *= edges[j][1] - edges[j][0]
         out[t] = max(match.sum() / (S * vol), 1e-10)
     return out
@@ -136,6 +140,37 @@ def test_observation_weights_average_to_trial_histogram_density():
         )
         assert weights.shape == (lanes, estimates)
         np.testing.assert_allclose(density.cpu().numpy(), ordinary[:, trial], rtol=1e-6)
+
+
+@requires_torch
+@pytest.mark.parametrize("smoothing_sigma", [0.0, 1.0])
+def test_histogram_finite_range_rejects_out_of_range_edge_mass(smoothing_sigma):
+    """A finite edge bin must not absorb observations beyond its stated range."""
+
+    simulated = np.array([[[0.5], [3.5], [4.0], [5.0], [-1.0]]])
+    observed = np.array([[3.5]])
+
+    likelihood = histogram_likelihood(
+        simulated,
+        observed,
+        bins=4,
+        bin_range=[(0.0, 4.0)],
+        smoothing_sigma=smoothing_sigma,
+    )
+    weights, density = histogram_observation_weights(
+        simulated[0],
+        observed,
+        0,
+        bins=4,
+        bin_range=[(0.0, 4.0)],
+        smoothing_sigma=smoothing_sigma,
+    )
+
+    # 5.0 and -1.0 are outside the finite histogram support and must never
+    # contribute, even though bucketize maps them to an edge-bin index.
+    assert weights.cpu().numpy()[3] == 0.0
+    assert weights.cpu().numpy()[4] == 0.0
+    np.testing.assert_allclose(density.cpu().numpy(), likelihood[0], rtol=1e-6)
 
 
 @requires_torch

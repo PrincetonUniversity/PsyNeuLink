@@ -54,10 +54,24 @@ def emit_triton_imports(builder: SourceBuilder) -> None:
     )
 
 
-def emit_triton_function_header(builder: SourceBuilder, function_name: str, signature_args: Iterable[str]) -> None:
+def emit_triton_function_header(
+    builder: SourceBuilder,
+    function_name: str,
+    signature_args: Iterable[str],
+    *,
+    do_not_specialize: Iterable[str] = (),
+) -> None:
+    do_not_specialize = tuple(do_not_specialize)
+    decorator = "@triton.jit"
+    if do_not_specialize:
+        names = repr(list(do_not_specialize))
+        decorator = (
+            f"@triton.jit(do_not_specialize={names}, "
+            f"do_not_specialize_on_alignment={names})"
+        )
     builder.lines(
         [
-            "@triton.jit",
+            decorator,
             f"def {function_name}(",
         ]
     )

@@ -123,6 +123,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             module_builder,
             self._kernel_name(),
             self._signature_args(),
+            do_not_specialize=self._do_not_specialize_args(),
         )
         module_builder.lines(body_source.splitlines())
         return module_builder.render()
@@ -145,6 +146,22 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             raise ValueError(
                 f"Unsupported Triton graph fusion kind '{self.kernel.fusion_kind}'."
             ) from error
+
+    def _do_not_specialize_args(self) -> tuple[str, ...]:
+        if self.kernel.fusion_kind in (
+            STATEFUL_GRAPH_FUSION,
+            COEVOLVING_GRAPH_FUSION,
+        ):
+            return (
+                "num_trials",
+                "LCA_MAX_STEPS",
+                "SEED",
+                "TRIAL_OFFSET",
+                "RNG_NUM_TRIALS",
+            )
+        if self.kernel.fusion_kind == DDM_GRAPH_FUSION:
+            return ("SEED",)
+        return ()
 
     def _signature_args(self) -> tuple[str, ...]:
         args = [f"input_{idx}" for idx, _ in enumerate(self.kernel.inputs)]
@@ -183,12 +200,12 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
                 [
                     "num_estimates: tl.constexpr",
                     "num_trials",
-                    "LCA_MAX_STEPS: tl.constexpr",
+                    "LCA_MAX_STEPS",
                     "MAX_STEPS: tl.constexpr",
                     "COMMON_RANDOM: tl.constexpr",
-                    "SEED: tl.constexpr",
-                    "TRIAL_OFFSET: tl.constexpr",
-                    "RNG_NUM_TRIALS: tl.constexpr",
+                    "SEED",
+                    "TRIAL_OFFSET",
+                    "RNG_NUM_TRIALS",
                     "BLOCK: tl.constexpr",
                 ]
             )
@@ -205,7 +222,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
                 [
                     "MAX_STEPS: tl.constexpr",
                     "COMMON_RANDOM: tl.constexpr",
-                    "SEED: tl.constexpr",
+                    "SEED",
                 ]
             )
         args.append("BLOCK: tl.constexpr")

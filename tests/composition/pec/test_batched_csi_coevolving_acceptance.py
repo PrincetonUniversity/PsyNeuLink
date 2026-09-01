@@ -24,6 +24,7 @@ from psyneulink.core.batched import (
 from psyneulink.core.batched.backend.triton.graph_emit import (
     triton_graph_kernel_source,
 )
+from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     lower_composition,
@@ -515,8 +516,11 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     assert "final_state" in source
     assert "if USE_INITIAL_STATE:" in source
     assert "if STORE_FINAL_STATE:" in source
-    assert "TRIAL_OFFSET: tl.constexpr" in source
-    assert "RNG_NUM_TRIALS: tl.constexpr" in source
+    assert "SEED: tl.constexpr" not in source
+    assert "TRIAL_OFFSET: tl.constexpr" not in source
+    assert "RNG_NUM_TRIALS: tl.constexpr" not in source
+    assert "LCA_MAX_STEPS: tl.constexpr" not in source
+    assert "do_not_specialize=['num_trials', 'LCA_MAX_STEPS', 'SEED', " in source
     assert "tl.store(final_state + offsets" in source
     assert "lane_local_coevolving" not in source
     assert "coevolving_required_passes" not in source
@@ -1360,6 +1364,32 @@ def test_csi_conditioned_likelihood_runs_and_replays(
 
     assert np.isfinite(first)
     assert replay == first
+
+
+@pytest.mark.triton_gpu
+def test_csi_conditioned_likelihood_preserves_strict_truncation_check(
+    registered_csi_drift_rate,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=1,
+    )
+
+    with pytest.raises(BatchedTruncationError):
+        plan.conditioned_log_likelihood(
+            inputs=inputs,
+            parameter_sets=[{}],
+            num_estimates=32,
+            data=np.asarray([[1.0, 0.5], [1.0, 0.5]]),
+            categorical_dims=[True, False],
+            bins=8,
+            bin_range=[(0.0, 2.0)],
+            seed=43,
+            strict_truncation=True,
+        )
 
 
 def test_csi_conditioned_llvm_pec_runs_and_replays(registered_csi_drift_rate):

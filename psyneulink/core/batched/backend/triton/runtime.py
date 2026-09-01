@@ -136,6 +136,7 @@ def run_triton(
     kernel_ir: KernelIR | None = None,
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
     launch_options: Mapping | None = None,
+    defer_device_checks: bool = False,
 ) -> BatchedSimulationResult:
     """Execute the generated batched kernels.
 
@@ -188,6 +189,13 @@ def run_triton(
     kernel_ir = kernel_ir or lower_to_kernel_ir(ir)
     slots = diag_slots(kernel_ir) if ir.graph is not None else ()
     stateful_fusions = {STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION}
+    if defer_device_checks and (
+        device != "cuda" or not keep_device_values or fusion_kind not in stateful_fusions
+    ):
+        raise ValueError(
+            "Deferred device checks require a stateful CUDA run with "
+            "keep_device_values=True."
+        )
     if (
         initial_states is not None or return_final_states
     ) and fusion_kind not in stateful_fusions:
@@ -218,6 +226,7 @@ def run_triton(
                 return_final_states=return_final_states,
                 rng_trial_offset=rng_trial_offset,
                 rng_sequence_trials=rng_sequence_trials,
+                defer_device_checks=defer_device_checks,
             )
         elif fusion_kind == COEVOLVING_GRAPH_FUSION:
             values, truncation, final_states = _run_stateful_graph_kernel(
@@ -229,12 +238,29 @@ def run_triton(
                 return_final_states=return_final_states,
                 rng_trial_offset=rng_trial_offset,
                 rng_sequence_trials=rng_sequence_trials,
+                defer_device_checks=defer_device_checks,
             )
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
 
-    _raise_on_nonfinite(values, torch, device)
-    _report_truncation(truncation, ir.max_steps, strict_truncation)
+    if defer_device_checks:
+        diag = truncation
+        deferred_checks = {
+            "nonfinite_count": (~torch.isfinite(values)).sum(),
+            "diagnostic_sums": (
+                None
+                if diag is None
+                else diag.reshape(-1, len(slots)).sum(dim=0)
+            ),
+            "diagnostic_count": (
+                0 if diag is None else diag.numel() // len(slots)
+            ),
+            "slots": slots,
+        }
+        truncation = {}
+    else:
+        _raise_on_nonfinite(values, torch, device)
+        _report_truncation(truncation, ir.max_steps, strict_truncation)
 
     if not keep_device_values:
         values = values.cpu().numpy()
@@ -249,6 +275,8 @@ def run_triton(
         metadata["final_states"] = (
             final_states if keep_device_values else final_states.cpu().numpy()
         )
+    if defer_device_checks:
+        metadata["_deferred_device_checks"] = deferred_checks
 
     return BatchedSimulationResult(
         values=values,
@@ -292,14 +320,41 @@ def _report_truncation(truncation: dict, max_steps: int, strict: bool) -> None:
     warnings.warn(message, stacklevel=3)
 
 
+def finalize_deferred_device_checks(
+    checks: dict,
+    *,
+    max_steps: int,
+    strict_truncation: bool,
+) -> dict:
+    """Synchronize and report checks accumulated across conditioned GPU trials."""
+
+    count = int(checks["nonfinite_count"].item())
+    if count:
+        raise BatchedNumericalError(
+            f"Batched simulation produced {count} NaN or infinite outcome "
+            "value(s) on backend 'triton'."
+        )
+
+    slots = checks["slots"]
+    sums = checks["diagnostic_sums"]
+    total = checks["diagnostic_count"]
+    truncation: dict[str, float] = {}
+    if sums is not None and total:
+        fractions = sums.cpu().numpy() / float(total)
+        for (node, _name), fraction in zip(slots, fractions):
+            truncation[node] = truncation.get(node, 0.0) + float(fraction)
+    _report_truncation(truncation, max_steps, strict_truncation)
+    return truncation
+
+
 def _collect_diagnostics(diag_tensor, slots) -> dict:
     """Mean per-slot flag value (the truncated fraction), keyed by node name.
 
     Reduce on the tensor's current device before copying the per-slot means to
     the host.  A CSI fit can produce millions of lane/trial flags per objective
     evaluation, while the reduced result contains only one value per slot.
-    The caller must have synchronized the simulation first.  Slots that share
-    a node (a node with multiple diagnostics) are summed.
+    Copying the reduced means to the host also synchronizes their producing
+    stream. Slots that share a node (a node with multiple diagnostics) are summed.
     """
 
     if not slots:
@@ -350,11 +405,6 @@ def _param_tensors(
     return tensors, strides
 
 
-def _sync(torch, device):
-    if device == "cuda":
-        torch.cuda.synchronize()
-
-
 def _run_stateless_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates, device,
     subject_slices=None, launch=None,
@@ -385,7 +435,6 @@ def _run_stateless_graph_kernel(
         total_lanes, num_subjects, num_trials, num_estimates, BLOCK=block,
         **_compiler_launch_options(launch),
     )
-    _sync(torch, device)
     return out, {}
 
 
@@ -424,7 +473,6 @@ def _run_ddm_graph_kernel(
         SEED=0 if seed is None else int(seed), BLOCK=block,
         **_compiler_launch_options(launch),
     )
-    _sync(torch, device)
     return out, _collect_diagnostics(diag, slots)
 
 
@@ -434,6 +482,7 @@ def _run_stateful_graph_kernel(
     kernel_name="pnl_batched_stateful_graph_kernel", subject_slices=None,
     launch=None, initial_states=None, return_final_states=False,
     rng_trial_offset=0, rng_sequence_trials=None,
+    defer_device_checks=False,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -502,8 +551,8 @@ def _run_stateful_graph_kernel(
         RNG_NUM_TRIALS=int(rng_sequence_trials), BLOCK=block,
         **_compiler_launch_options(launch),
     )
-    _sync(torch, device)
-    return out, _collect_diagnostics(diag, slots), final_state
+    diagnostics = diag if defer_device_checks else _collect_diagnostics(diag, slots)
+    return out, diagnostics, final_state
 
 
 def _diag_buffer(torch, lane_shape, slots, device):

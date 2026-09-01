@@ -173,10 +173,9 @@ def test_batched_ir_debug_ddm_deterministic():
 
 
 @pytest.mark.composition
-@requires_triton
-def test_batched_ir_debug_ddm_common_random_numbers():
+def test_batched_ir_debug_ddm_common_random_numbers(batched_backend):
     comp, decision = _make_ddm_comp(noise=0.2)
-    plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
+    plan = BatchedCompositionCompiler.compile(comp, backend=batched_backend)
     params = [
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
         {"rate": 0.0, "threshold": 0.05, "noise": 0.2, "time_step_size": 0.01},
@@ -188,8 +187,24 @@ def test_batched_ir_debug_ddm_common_random_numbers():
         seed=7,
         common_random_numbers=True,
     )
+    replay = plan.run(
+        inputs={decision: np.array([[0.0], [0.0]], dtype=float)},
+        parameter_sets=params,
+        num_estimates=4,
+        seed=7,
+        common_random_numbers=True,
+    )
+    changed_seed = plan.run(
+        inputs={decision: np.array([[0.0], [0.0]], dtype=float)},
+        parameter_sets=params,
+        num_estimates=4,
+        seed=8,
+        common_random_numbers=True,
+    )
 
     np.testing.assert_array_equal(result.values[0], result.values[1])
+    np.testing.assert_array_equal(result.values, replay.values)
+    assert not np.array_equal(result.values, changed_seed.values)
 
 
 def _make_linear_projection_comp():

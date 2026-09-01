@@ -103,6 +103,7 @@ def histogram_likelihood(
         range is anchored to the **experimental** data (min/max plus a small
         margin) along each dimension — not the simulated data — so the bins stay
         identical across parameter sets and ``num_estimates`` (see ``_bin_edges``).
+        Simulations outside this finite range do not contribute to an edge bin.
     smoothing_sigma : float
         Standard deviation, in histogram-bin units, of a discrete Gaussian
         kernel applied independently along each continuous dimension.  The
@@ -187,9 +188,23 @@ def histogram_likelihood(
             )
             for d in range(con_idx.numel()):
                 interior = edges[d][1:-1]
-                sim_bin = torch.bucketize(sim_con[..., d], interior)
-                exp_bin = torch.bucketize(exp_con[:, d], interior)
-                match_con &= sim_bin == exp_bin[None, :, None]
+                sim_value = sim_con[..., d]
+                exp_value = exp_con[:, d]
+                sim_bin = torch.bucketize(sim_value, interior)
+                exp_bin = torch.bucketize(exp_value, interior)
+                sim_in_range = (
+                    (sim_value >= edges[d][0])
+                    & (sim_value <= edges[d][-1])
+                )
+                exp_in_range = (
+                    (exp_value >= edges[d][0])
+                    & (exp_value <= edges[d][-1])
+                )
+                match_con &= (
+                    (sim_bin == exp_bin[None, :, None])
+                    & sim_in_range
+                    & exp_in_range[None, :, None]
+                )
                 bin_volume = bin_volume * (edges[d][1] - edges[d][0])
             counts = (match_cat & match_con).sum(dim=2).to(sim.dtype)
         else:
@@ -206,10 +221,20 @@ def histogram_likelihood(
             weights = match_cat.to(sim.dtype)
             for d in range(con_idx.numel()):
                 interior = edges[d][1:-1]
-                sim_bin = torch.bucketize(sim_con[..., d], interior)
-                exp_bin = torch.bucketize(exp_con[:, d], interior)
+                sim_value = sim_con[..., d]
+                exp_value = exp_con[:, d]
+                sim_bin = torch.bucketize(sim_value, interior)
+                exp_bin = torch.bucketize(exp_value, interior)
                 delta = sim_bin - exp_bin[None, :, None]
                 in_radius = delta.abs() <= radius
+                sim_in_range = (
+                    (sim_value >= edges[d][0])
+                    & (sim_value <= edges[d][-1])
+                )
+                exp_in_range = (
+                    (exp_value >= edges[d][0])
+                    & (exp_value <= edges[d][-1])
+                )
 
                 valid_offsets = (
                     (exp_bin[:, None] + offsets[None, :] >= 0)
@@ -220,7 +245,9 @@ def histogram_likelihood(
                     -0.5 * (delta.to(sim.dtype) / float(smoothing_sigma)) ** 2
                 ) / normalizer[None, :, None]
                 weights = weights * torch.where(
-                    in_radius, dim_weights, torch.zeros_like(dim_weights)
+                    in_radius & sim_in_range & exp_in_range[None, :, None],
+                    dim_weights,
+                    torch.zeros_like(dim_weights),
                 )
                 bin_volume = bin_volume * (edges[d][1] - edges[d][0])
             counts = weights.sum(dim=2)
@@ -378,11 +405,17 @@ def histogram_observation_weights(
         edges = _bin_edges(sim_con, exp_con, bins, bin_range, torch)
         for dimension, edge in enumerate(edges):
             interior = edge[1:-1]
-            sim_bin = torch.bucketize(sim_con[..., dimension], interior)
-            exp_bin = torch.bucketize(exp_con[trial_index, dimension], interior)
+            sim_value = sim_con[..., dimension]
+            exp_value = exp_con[trial_index, dimension]
+            sim_bin = torch.bucketize(sim_value, interior)
+            exp_bin = torch.bucketize(exp_value, interior)
             delta = sim_bin - exp_bin
+            sim_in_range = (sim_value >= edge[0]) & (sim_value <= edge[-1])
+            exp_in_range = (exp_value >= edge[0]) & (exp_value <= edge[-1])
             if smoothing_sigma == 0:
-                weights = weights * (delta == 0).to(sim.dtype)
+                weights = weights * (
+                    (delta == 0) & sim_in_range & exp_in_range
+                ).to(sim.dtype)
             else:
                 radius = max(1, int(np.ceil(3.0 * smoothing_sigma)))
                 offsets = torch.arange(-radius, radius + 1, device=sim.device)
@@ -397,7 +430,7 @@ def histogram_observation_weights(
                     -0.5 * (delta.to(sim.dtype) / float(smoothing_sigma)) ** 2
                 ) / normalizer
                 weights = weights * torch.where(
-                    delta.abs() <= radius,
+                    (delta.abs() <= radius) & sim_in_range & exp_in_range,
                     dimension_weights,
                     torch.zeros_like(dimension_weights),
                 )
@@ -474,11 +507,11 @@ def _bin_edges(sim_con, exp_con, bins: int, bin_range, torch):
     When ``bin_range`` is not given, the range is anchored to the **experimental**
     data only (with a small margin), *not* the simulated data.  The likelihood is
     evaluated at the experimental points, so those are the only values that need to
-    fall in interior bins; simulated values outside the range clamp into the empty
-    edge bins.  Anchoring to the data keeps the bins identical across every
-    parameter set and every ``num_estimates`` — otherwise the bins (and hence the
-    likelihood surface) would drift with the simulated data's spread, adding noise
-    to the optimizer's objective.
+    fall in the finite histogram range; simulated values outside the range do not
+    contribute to an edge cell.  Anchoring to the data keeps the bins identical
+    across every parameter set and every ``num_estimates`` — otherwise the bins
+    (and hence the likelihood surface) would drift with the simulated data's
+    spread, adding noise to the optimizer's objective.
     """
     n_dims = sim_con.shape[-1]
     edges = []
@@ -488,9 +521,8 @@ def _bin_edges(sim_con, exp_con, bins: int, bin_range, torch):
         else:
             lo = float(exp_con[:, d].min().item())
             hi = float(exp_con[:, d].max().item())
-            # Pad so the experimental extremes sit strictly inside interior bins
-            # (out-of-range simulations pile into the edge bins, which must not
-            # coincide with an evaluated data point).
+            # Pad so the experimental extremes sit strictly inside the finite
+            # histogram range rather than exactly on a boundary.
             margin = (hi - lo) * 0.02 if hi > lo else 1.0
             lo -= margin
             hi += margin

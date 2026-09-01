@@ -94,10 +94,7 @@ def _pnl_triton_lca_width2_recurrence(
     return pre0, pre1, act0, act1, initialized
 
 
-@pnl_triton_op(
-    constexpr=("lca_max_steps",),
-    helpers=(_pnl_triton_lca_width2_recurrence,),
-)
+@pnl_triton_op(helpers=(_pnl_triton_lca_width2_recurrence,))
 def _pnl_triton_lca_width2_integrate(
     input0,
     input1,

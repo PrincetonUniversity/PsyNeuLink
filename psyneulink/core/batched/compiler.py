@@ -108,6 +108,7 @@ class BatchedSimulationPlan:
         rng_trial_offset: int = 0,
         rng_sequence_trials: int | None = None,
         triton_launch_options: Mapping | None = None,
+        _defer_device_checks: bool = False,
     ) -> BatchedSimulationResult:
         """Run one or more parameter sets over the supplied trial inputs.
 
@@ -140,6 +141,7 @@ class BatchedSimulationPlan:
             kernel_ir=self.kernel_ir,
             component_bindings=self.component_bindings,
             launch_options=triton_launch_options,
+            defer_device_checks=_defer_device_checks,
         )
 
     def log_likelihood(
@@ -320,6 +322,8 @@ class BatchedSimulationPlan:
         state = None
         log_likelihood = None
         resampling_generator = None
+        deferred_checks = None
+        defer_device_checks = self.backend == "triton"
 
         for trial_index in range(num_trials):
             trial_inputs = {
@@ -360,7 +364,25 @@ class BatchedSimulationPlan:
                 rng_trial_offset=trial_index,
                 rng_sequence_trials=num_trials,
                 triton_launch_options=triton_launch_options,
+                _defer_device_checks=defer_device_checks,
             )
+            if defer_device_checks:
+                trial_checks = result.metadata["_deferred_device_checks"]
+                if deferred_checks is None:
+                    deferred_checks = trial_checks
+                else:
+                    deferred_checks["nonfinite_count"] = (
+                        deferred_checks["nonfinite_count"]
+                        + trial_checks["nonfinite_count"]
+                    )
+                    if deferred_checks["diagnostic_sums"] is not None:
+                        deferred_checks["diagnostic_sums"] = (
+                            deferred_checks["diagnostic_sums"]
+                            + trial_checks["diagnostic_sums"]
+                        )
+                        deferred_checks["diagnostic_count"] += trial_checks[
+                            "diagnostic_count"
+                        ]
             outcomes = result.values[:, :, 0]
             if outcome_indices is not None:
                 outcomes = outcomes.index_select(
@@ -411,6 +433,17 @@ class BatchedSimulationPlan:
             ).reshape_as(terminal_state)
 
         assert log_likelihood is not None
+        if defer_device_checks:
+            assert deferred_checks is not None
+            from psyneulink.core.batched.backend.triton.runtime import (
+                finalize_deferred_device_checks,
+            )
+
+            finalize_deferred_device_checks(
+                deferred_checks,
+                max_steps=self.ir.max_steps,
+                strict_truncation=strict_truncation,
+            )
         values = log_likelihood.detach().cpu().numpy().sum(axis=1)
         if values.shape[0] == 1:
             return float(values[0])

@@ -479,9 +479,29 @@ scientific direct likelihood still targets continuous first passage.
 
 Current prototype limits are deliberate. A positive histogram pseudocount has
 no particle ancestry and is rejected; the batched API currently accepts one
-contiguous subject sequence per call; LLVM state transport is CPU-threaded, not
-PTX; and one host synchronization plus resampling is required per trial. A
-general PEC solution should define an observation-kernel/resampler interface,
-missing-observation behavior, subject batching, effective-parameter state, and
-the ownership of every retained state component before exposing this behavior
-for arbitrary compositions.
+contiguous subject sequence per call; and LLVM state transport is CPU-threaded,
+not PTX. A general PEC solution should define an observation-kernel/resampler
+interface, missing-observation behavior, subject batching, effective-parameter
+state, and the ownership of every retained state component before exposing this
+behavior for arbitrary compositions.
+
+The GPU prototype now treats the data-anchored RT histogram as genuinely
+finite: simulated RTs below its first edge or above its last edge contribute no
+mass, rather than being folded into an edge bin and divided by that bin's finite
+width. On the subject-1 14-observation diagnostic, five 10,000-particle scores
+had mean 5.8405 (SD 0.2825), versus 5.9550 from the deterministic 10 ms endpoint
+solver. The difference is 0.41 Monte Carlo standard deviations. This comparison
+uses the endpoint solver as a compatibility oracle; it does not change the
+continuous first-passage scientific target.
+
+GPU seed, trial offset, sequence length, and LCA step cap are runtime scalars
+with Triton's automatic integer-value and alignment specialization disabled.
+Numerical and truncation reductions are queued across the sequential particle
+filter and synchronized once at the end; resampling and state transport remain
+on the GPU. On the local RTX 2080 Ti benchmark, a 561-trial subject with 10,000
+particles fell from 21.25 to 11.63 seconds of scoring time (1.83x), while a warm
+14-observation score fell from roughly 0.34 to 0.25--0.27 seconds. Different
+seeds and sequence lengths reuse the same compiled kernel. A warm full-subject
+11-candidate CMA-ES population took 17.23 seconds versus 10.85 seconds for one
+candidate, giving about 6.9x the candidate throughput of sequential evaluation.
+No LLVM changes were made in this GPU accuracy/performance pass.
