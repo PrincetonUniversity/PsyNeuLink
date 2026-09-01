@@ -352,9 +352,10 @@ Implemented checks and remaining scientific validation are:
    can be compared.
 6. Fitted-point grid convergence and one seeded 13-parameter recovery are now
    exercised. Three high-resolution original-PNL paired simulation comparisons
-   and a numerical-semantic ladder are now exercised. Broader repeated recovery,
-   explicit marginal-history comparison, and simulation-based calibration
-   remain required before scientific use.
+   and a numerical-semantic ladder are now exercised. A conditioned simulator
+   likelihood is now implemented for the explicit marginal-history comparison;
+   broader repeated recovery and simulation-based calibration remain required
+   before scientific use.
 7. A genuine noisy-LCA model remains a separate future phase requiring the
    two-dimensional sequential filter described above (or a three-dimensional
    joint LCA--DDM density during decisions).
@@ -438,7 +439,49 @@ likelihood.
 Resetting LCA state at every trial is not an implementation of the PNL
 marginal-history objective, but it gives a useful sensitivity bound. With the
 endpoint DDM it changed the gaps to -2.12, -18.79, and +1.25, matching the PNL
-preference sign for all three subjects. The remaining exact experiment is
-therefore explicit averaging over simulated prior RT histories. The continuous
-model remains the mathematically preferred target; the endpoint solver is a
-compatibility diagnostic and currently has no fitting adjoint.
+preference sign for all three subjects.
+
+## Conditioned simulator-likelihood prototype
+
+The PEC simulator paths now have an opt-in CSI correction through
+`PECOptimizationFunction(conditioned_likelihood=True)`. The CSI fitting script
+exposes it as `--condition-observed-history` and enables it by default. Both
+the co-evolving batched compiler and threaded LLVM PEC follow the same
+sequential Monte Carlo recursion:
+
+1. begin a trial with particles representing persistent composition state
+   conditioned on the earlier observed trials;
+2. run the complete coupled CSI scheduler for one trial, so the LCA still
+   evolves on every scheduler pass while the DDM is active;
+3. compute each simulated terminal state's contribution to the observed
+   choice/RT histogram cell (including optional Gaussian bin smoothing);
+4. add the log of the mean observation density;
+5. resample the complete terminal state using those contributions; and
+6. launch the next observed trial from the resampled states.
+
+The batched kernel can now accept and return retained state with shape
+`[parameter, subject, estimate, state]`. Split launches preserve the original
+full-sequence Philox trial/lane indexing; a stochastic two-trial CSI test gives
+bit-identical outcomes when an unsplit launch is replaced by two state-carrying
+launches without resampling. LLVM's evaluation function now has a retained-state
+variant that gives each estimate its own composition state and composition data,
+writes both back after one trial, and resumes the resampled structures on the
+next call. Resampling copies ancestral model state while retaining each
+destination lane's advanced LLVM RNG state, so duplicate offspring do not clone
+or restart their future random streams. Tests execute the real CSI graph through
+both implementations and verify deterministic replay of the conditioned score.
+
+This corrects the particular statistical bug under the histogram observation
+model: simulated prior histories are no longer left unconditional when the
+next trial is scored. It does not change the within-trial stochastic process.
+The legacy simulator still uses 10 ms Euler endpoint crossing, whereas the
+scientific direct likelihood still targets continuous first passage.
+
+Current prototype limits are deliberate. A positive histogram pseudocount has
+no particle ancestry and is rejected; the batched API currently accepts one
+contiguous subject sequence per call; LLVM state transport is CPU-threaded, not
+PTX; and one host synchronization plus resampling is required per trial. A
+general PEC solution should define an observation-kernel/resampler interface,
+missing-observation behavior, subject batching, effective-parameter state, and
+the ownership of every retained state component before exposing this behavior
+for arbitrary compositions.

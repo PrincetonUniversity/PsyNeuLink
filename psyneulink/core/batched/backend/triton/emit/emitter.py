@@ -86,6 +86,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.lane_out_emitted = False
         self.diag_slot_count = len(diag_slots(kernel))
         self.diag_lane_emitted = False
+        self.state_width = sum(state.width for state in kernel.states)
 
     def emit(self) -> str:
         # KernelIR attrs are mapping-valued for an extensible public schema.
@@ -161,6 +162,15 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # stateless graph) keep their original signature.
         if self.diag_slot_count:
             args.append("diag")
+        if self.kernel.fusion_kind in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION):
+            args.extend(
+                [
+                    "initial_state",
+                    "final_state",
+                    "USE_INITIAL_STATE: tl.constexpr",
+                    "STORE_FINAL_STATE: tl.constexpr",
+                ]
+            )
         args.extend(
             [
                 "total_lanes: tl.constexpr",
@@ -177,6 +187,8 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
                     "MAX_STEPS: tl.constexpr",
                     "COMMON_RANDOM: tl.constexpr",
                     "SEED: tl.constexpr",
+                    "TRIAL_OFFSET: tl.constexpr",
+                    "RNG_NUM_TRIALS: tl.constexpr",
                     "BLOCK: tl.constexpr",
                 ]
             )
@@ -220,6 +232,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
 
     def _emit_initialize_state(self) -> None:
         state_slots: dict[int, int] = {}
+        flat_index = 0
         for state in self.kernel.states:
             node = self.graph.node(state.node)
             component_id = (
@@ -235,7 +248,30 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             for idx, value in enumerate(state.initial_value):
                 var = f"{state_symbol}_{idx}"
                 self.state_vars[(state.name, idx)] = var
-                self._emit_state_initializer_value(state, idx, value, var)
+                with self.builder.block("if USE_INITIAL_STATE"):
+                    self.builder.line(
+                        f"{var} = tl.load(initial_state + offsets * "
+                        f"{self.state_width} + {flat_index}, mask=mask, other=0.0)"
+                    )
+                with self.builder.block("else"):
+                    self._emit_state_initializer_value(state, idx, value, var)
+                flat_index += 1
+        if self.kernel.states:
+            self.builder.line()
+
+    def _emit_store_final_state(self) -> None:
+        """Publish every retained lane state after the final trial."""
+
+        flat_index = 0
+        with self.builder.block("if STORE_FINAL_STATE"):
+            for state in self.kernel.states:
+                for index in range(state.width):
+                    value = self.state_vars[(state.name, index)]
+                    self.builder.line(
+                        f"tl.store(final_state + offsets * {self.state_width} + "
+                        f"{flat_index}, {value}, mask=mask)"
+                    )
+                    flat_index += 1
         if self.kernel.states:
             self.builder.line()
 

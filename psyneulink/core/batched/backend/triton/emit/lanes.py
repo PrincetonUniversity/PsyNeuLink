@@ -68,16 +68,24 @@ class LaneEmitMixin:
         """
 
         stride = self._lane_rng_stride
+        stateful = self.kernel.fusion_kind in (
+            STATEFUL_GRAPH_FUSION,
+            COEVOLVING_GRAPH_FUSION,
+        )
+        trial_offset = "TRIAL_OFFSET" if stateful else "0"
+        rng_num_trials = "RNG_NUM_TRIALS" if stateful else "num_trials"
         with self.builder.block("if COMMON_RANDOM"):
             self.builder.line(
                 "random_base = ((subject_idx * num_estimates + estimate_idx) "
-                f"* num_trials + trial_idx).to(tl.int64) * {stride}"
+                f"* {rng_num_trials} + trial_idx + {trial_offset}).to(tl.int64) "
+                f"* {stride}"
             )
         with self.builder.block("else"):
             self.builder.line(
-                "random_base = (((param_idx * num_subjects + subject_idx) "
-                "* num_estimates + estimate_idx) * num_trials + trial_idx)"
-                f".to(tl.int64) * {stride}"
+                "random_base = ((((param_idx * num_subjects + subject_idx) "
+                f"* num_estimates + estimate_idx) * {rng_num_trials} + trial_idx)"
+                f".to(tl.int64) + {trial_offset}) "
+                f"* {stride}"
             )
 
     def _emit_stateful_random_base(self) -> None:

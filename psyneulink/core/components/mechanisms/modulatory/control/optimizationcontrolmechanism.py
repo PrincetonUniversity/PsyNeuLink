@@ -3398,8 +3398,25 @@ class OptimizationControlMechanism(ControlMechanism):
 
             func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
+            if "retain_simulation_state" in tags:
+                evaluation_state = b.gep(state, [idx], name="evaluation_state")
+                evaluation_data = b.gep(data, [idx], name="evaluation_data")
+            else:
+                evaluation_state = state
+                evaluation_data = data
 
-            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
+            b.call(
+                evaluate_f,
+                [
+                    params,
+                    evaluation_state,
+                    allocation,
+                    func_out,
+                    arg_in,
+                    evaluation_data,
+                    num_inputs,
+                ],
+            )
 
         builder.ret_void()
         return llvm_func
@@ -3530,6 +3547,14 @@ class OptimizationControlMechanism(ControlMechanism):
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs])
+
+        if "retain_simulation_state" in tags:
+            # A sequential likelihood uses one LLVM launch per observed trial.
+            # Publish both structures needed to resume recurrent mechanisms:
+            # integrator values live in composition state, while recurrent
+            # sender/output values live in composition data.
+            builder = pnlvm.helpers.memcpy(builder, base_comp_state, comp_state)
+            builder = pnlvm.helpers.memcpy(builder, base_comp_data, comp_data)
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value

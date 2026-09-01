@@ -37,6 +37,7 @@ from collections.abc import Sequence
 import numpy as np
 
 __all__ = [
+    "histogram_observation_weights",
     "histogram_likelihood",
     "histogram_log_likelihood",
 ]
@@ -293,6 +294,120 @@ def histogram_log_likelihood(
     if total.ndim == 0:
         return float(total)
     return total
+
+
+def histogram_observation_weights(
+    sim_outcomes,
+    exp_data,
+    trial_index: int,
+    categorical_dims=None,
+    *,
+    bins: int = 100,
+    bin_range: Sequence | None = None,
+    smoothing_sigma: float = 0.0,
+):
+    """Return per-particle observation weights and their histogram density.
+
+    ``sim_outcomes`` has shape ``[*lanes, estimate, outcome]`` and ``exp_data``
+    contains the complete observed sequence.  Keeping the complete data here is
+    important: when ``bin_range`` is omitted, every sequential trial uses the
+    same empirical-data-anchored bin edges as :func:`histogram_likelihood`.
+
+    The unnormalized weights are exactly the categorical/bin-match (or smoothed
+    bin) contributions used by the ordinary batched likelihood.  Their mean,
+    divided by bin volume, is therefore the same per-trial density.  Returning
+    the individual contributions lets a sequential likelihood resample the
+    terminal persistent states before propagating the next trial.
+    """
+
+    import torch
+
+    if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
+        raise ValueError(f"bins must be a positive integer, got {bins!r}.")
+    if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
+        raise ValueError(
+            f"smoothing_sigma must be finite and nonnegative, got {smoothing_sigma!r}."
+        )
+
+    sim = sim_outcomes
+    if not isinstance(sim, torch.Tensor):
+        sim = torch.as_tensor(np.asarray(sim, dtype=float), dtype=torch.float32)
+    elif not sim.is_floating_point():
+        sim = sim.to(torch.float32)
+    if sim.ndim < 2:
+        raise ValueError(
+            "sim_outcomes must have at least 2 dims [estimate, outcome], "
+            f"got shape {tuple(sim.shape)}."
+        )
+    leading_shape = tuple(sim.shape[:-2])
+    n_sims, n_out = sim.shape[-2:]
+    lanes = sim.reshape(-1, n_sims, n_out)
+
+    exp_array = np.asarray(exp_data, dtype=float)
+    if exp_array.ndim != 2 or exp_array.shape[1] != n_out:
+        raise ValueError(
+            "exp_data must have shape [trial, outcome] matching sim_outcomes; "
+            f"got {exp_array.shape} and outcome width {n_out}."
+        )
+    if not 0 <= trial_index < exp_array.shape[0]:
+        raise IndexError(
+            f"trial_index {trial_index} is outside {exp_array.shape[0]} trials."
+        )
+    exp = torch.as_tensor(exp_array, dtype=sim.dtype, device=sim.device)
+    cat_mask = _as_categorical_mask(categorical_dims, n_out)
+    cat_idx = torch.as_tensor(np.flatnonzero(cat_mask), dtype=torch.long, device=sim.device)
+    con_idx = torch.as_tensor(np.flatnonzero(~cat_mask), dtype=torch.long, device=sim.device)
+
+    if cat_idx.numel():
+        observed_cat = exp[trial_index].index_select(0, cat_idx)
+        weights = torch.isclose(
+            lanes.index_select(-1, cat_idx),
+            observed_cat[None, None, :],
+            atol=1e-6,
+            rtol=0.0,
+        ).all(dim=-1).to(sim.dtype)
+    else:
+        weights = torch.ones(
+            (lanes.shape[0], n_sims), dtype=sim.dtype, device=sim.device
+        )
+
+    bin_volume = torch.tensor(1.0, dtype=sim.dtype, device=sim.device)
+    if con_idx.numel():
+        sim_con = lanes.index_select(-1, con_idx)
+        exp_con = exp.index_select(-1, con_idx)
+        edges = _bin_edges(sim_con, exp_con, bins, bin_range, torch)
+        for dimension, edge in enumerate(edges):
+            interior = edge[1:-1]
+            sim_bin = torch.bucketize(sim_con[..., dimension], interior)
+            exp_bin = torch.bucketize(exp_con[trial_index, dimension], interior)
+            delta = sim_bin - exp_bin
+            if smoothing_sigma == 0:
+                weights = weights * (delta == 0).to(sim.dtype)
+            else:
+                radius = max(1, int(np.ceil(3.0 * smoothing_sigma)))
+                offsets = torch.arange(-radius, radius + 1, device=sim.device)
+                kernel = torch.exp(
+                    -0.5 * (offsets.to(sim.dtype) / float(smoothing_sigma)) ** 2
+                )
+                valid_offsets = (
+                    (exp_bin + offsets >= 0) & (exp_bin + offsets < bins)
+                )
+                normalizer = (valid_offsets.to(sim.dtype) * kernel).sum()
+                dimension_weights = torch.exp(
+                    -0.5 * (delta.to(sim.dtype) / float(smoothing_sigma)) ** 2
+                ) / normalizer
+                weights = weights * torch.where(
+                    delta.abs() <= radius,
+                    dimension_weights,
+                    torch.zeros_like(dimension_weights),
+                )
+            bin_volume = bin_volume * (edge[1] - edge[0])
+
+    density = torch.clamp(weights.mean(dim=-1) / bin_volume, min=ZERO_PROB)
+    return (
+        weights.reshape(*leading_shape, n_sims),
+        density.reshape(leading_shape),
+    )
 
 
 def _categorical_cardinalities(exp_data, cat_mask, specified):

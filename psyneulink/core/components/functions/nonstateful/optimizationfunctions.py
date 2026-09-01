@@ -838,9 +838,25 @@ class OptimizationFunction(Function_Base):
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
+            if getattr(ocm, "_pec_stateful_evaluation", False):
+                raise NotImplementedError(
+                    "Conditioned PEC state transport is currently implemented "
+                    "for threaded LLVM execution, not PTX."
+                )
             outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         elif execution_mode == "LLVM":
-            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals, get_results)
+            if getattr(ocm, "_pec_stateful_evaluation", False):
+                outcomes, states, data = comp_exec.thread_evaluate_stateful(
+                    inputs,
+                    num_inputs_sets,
+                    num_evals,
+                    states=getattr(ocm, "_pec_stateful_evaluation_states", None),
+                    data=getattr(ocm, "_pec_stateful_evaluation_data", None),
+                )
+                ocm._pec_stateful_evaluation_states = states
+                ocm._pec_stateful_evaluation_data = data
+            else:
+                outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 

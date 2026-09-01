@@ -128,6 +128,10 @@ def run_triton(
     device: str = "cuda",
     strict_truncation: bool = False,
     keep_device_values: bool = False,
+    initial_states=None,
+    return_final_states: bool = False,
+    rng_trial_offset: int = 0,
+    rng_sequence_trials: int | None = None,
     *,
     kernel_ir: KernelIR | None = None,
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS,
@@ -154,6 +158,14 @@ def run_triton(
     controls for benchmarking: ``block_size``, ``num_warps``, and ``maxnreg``.
     Omitting it preserves the historical 128-lane/four-warp launch with no
     compiler register cap.
+
+    Stateful and co-evolving kernels may be resumed from ``initial_states``
+    shaped ``[parameter_set, subject, estimate, state]``. When
+    ``return_final_states`` is true, the retained state after the final trial is
+    returned in ``result.metadata["final_states"]`` with the same shape.
+    ``rng_trial_offset`` selects a disjoint per-trial Philox counter region for
+    callers that split one logical sequence across multiple launches;
+    ``rng_sequence_trials`` preserves the original full-sequence lane stride.
     """
 
     interpret = device == "cpu"
@@ -175,6 +187,14 @@ def run_triton(
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
     kernel_ir = kernel_ir or lower_to_kernel_ir(ir)
     slots = diag_slots(kernel_ir) if ir.graph is not None else ()
+    stateful_fusions = {STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION}
+    if (
+        initial_states is not None or return_final_states
+    ) and fusion_kind not in stateful_fusions:
+        raise ValueError(
+            "External retained state is available only for stateful or "
+            "co-evolving batched kernels."
+        )
 
     with interpret_scope(interpret):
         module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret)
@@ -190,17 +210,25 @@ def run_triton(
                 seed, common_random_numbers, device, slots, subject_slices, launch,
             )
         elif fusion_kind == STATEFUL_GRAPH_FUSION:
-            values, truncation = _run_stateful_graph_kernel(
+            values, truncation, final_states = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
                 subject_slices=subject_slices, launch=launch,
+                initial_states=initial_states,
+                return_final_states=return_final_states,
+                rng_trial_offset=rng_trial_offset,
+                rng_sequence_trials=rng_sequence_trials,
             )
         elif fusion_kind == COEVOLVING_GRAPH_FUSION:
-            values, truncation = _run_stateful_graph_kernel(
+            values, truncation, final_states = _run_stateful_graph_kernel(
                 torch, triton, module, ir, prepared_inputs, params, num_estimates,
                 seed, common_random_numbers, device, slots,
                 kernel_name="pnl_batched_coevolving_graph_kernel",
                 subject_slices=subject_slices, launch=launch,
+                initial_states=initial_states,
+                return_final_states=return_final_states,
+                rng_trial_offset=rng_trial_offset,
+                rng_sequence_trials=rng_sequence_trials,
             )
         else:
             raise ValueError(f"Unsupported Triton batched graph fusion kind '{fusion_kind}'.")
@@ -211,16 +239,22 @@ def run_triton(
     if not keep_device_values:
         values = values.cpu().numpy()
 
+    metadata = {
+        "model_kind": ir.model_kind,
+        "device": device,
+        "truncation": truncation,
+        "triton_launch_options": launch,
+    }
+    if return_final_states:
+        metadata["final_states"] = (
+            final_states if keep_device_values else final_states.cpu().numpy()
+        )
+
     return BatchedSimulationResult(
         values=values,
         output_names=ir.output_names,
         backend="triton" if device == "cuda" else "triton_cpu",
-        metadata={
-            "model_kind": ir.model_kind,
-            "device": device,
-            "truncation": truncation,
-            "triton_launch_options": launch,
-        },
+        metadata=metadata,
     )
 
 
@@ -398,12 +432,23 @@ def _run_stateful_graph_kernel(
     torch, triton, module, ir, inputs, params, num_estimates,
     seed, common_random_numbers, device, slots,
     kernel_name="pnl_batched_stateful_graph_kernel", subject_slices=None,
-    launch=None,
+    launch=None, initial_states=None, return_final_states=False,
+    rng_trial_offset=0, rng_sequence_trials=None,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
     num_params = len(params)
     num_subjects, num_trials = input_tensors[0].shape[:2]
+    if rng_trial_offset < 0:
+        raise ValueError("rng_trial_offset must be nonnegative.")
+    if rng_sequence_trials is None:
+        rng_sequence_trials = num_trials
+    if rng_sequence_trials < 1:
+        raise ValueError("rng_sequence_trials must be positive.")
+    if rng_sequence_trials < num_trials + rng_trial_offset:
+        raise ValueError(
+            "rng_sequence_trials must cover the launched trial interval."
+        )
     param_tensors, param_strides = _param_tensors(
         torch,
         ir,
@@ -415,6 +460,27 @@ def _run_stateful_graph_kernel(
     )
     output_width = sum(output.width for output in graph.outputs)
     total_lanes = num_params * num_subjects * num_estimates
+    state_width = sum(state.width for state in graph.states)
+    state_shape = (num_params, num_subjects, num_estimates, state_width)
+    if initial_states is None:
+        initial_state = torch.empty((1,), dtype=torch.float32, device=device)
+        use_initial_state = False
+    else:
+        initial_state = torch.as_tensor(
+            initial_states, dtype=torch.float32, device=device
+        )
+        if tuple(initial_state.shape) != state_shape:
+            raise ValueError(
+                "initial_states must have shape "
+                f"{state_shape}, got {tuple(initial_state.shape)}."
+            )
+        initial_state = initial_state.contiguous()
+        use_initial_state = True
+    final_state = torch.empty(
+        state_shape if return_final_states else (1,),
+        dtype=torch.float32,
+        device=device,
+    )
     out = torch.empty(
         (num_params, num_subjects, num_trials, num_estimates, output_width),
         dtype=torch.float32, device=device,
@@ -427,14 +493,17 @@ def _run_stateful_graph_kernel(
     getattr(module, kernel_name)[grid](
         *input_tensors, *param_tensors, *param_strides, out,
         *(() if diag is None else (diag,)),
+        initial_state, final_state, use_initial_state, bool(return_final_states),
         total_lanes, num_subjects, num_estimates, num_trials,
         LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),
-        SEED=0 if seed is None else int(seed), BLOCK=block,
+        SEED=0 if seed is None else int(seed),
+        TRIAL_OFFSET=int(rng_trial_offset),
+        RNG_NUM_TRIALS=int(rng_sequence_trials), BLOCK=block,
         **_compiler_launch_options(launch),
     )
     _sync(torch, device)
-    return out, _collect_diagnostics(diag, slots)
+    return out, _collect_diagnostics(diag, slots), final_state
 
 
 def _diag_buffer(torch, lane_shape, slots, device):

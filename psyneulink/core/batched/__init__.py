@@ -35,6 +35,7 @@ from psyneulink.core.batched.dependency import (
     analyze_axis_dependencies,
 )
 from psyneulink.core.batched.likelihood import (
+    histogram_observation_weights,
     histogram_likelihood,
     histogram_log_likelihood,
 )
@@ -98,6 +99,7 @@ __all__ = [
     "BatchedSimulationResult",
     "BatchedStateFunctionInitializer",
     "BatchedStateSpec",
+    "histogram_observation_weights",
     "DenseProjectionSpec",
     "ElementwiseFunctionSpec",
     "MechanismOpSpec",

@@ -505,7 +505,12 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     )
 
 
-def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
+def _make_ddm_log_likelihood_pec(
+    num_trials=12,
+    num_estimates=20,
+    *,
+    conditioned_likelihood=False,
+):
     trial_inputs = np.ones((num_trials, 1))
     ddm_params = dict(
         starting_value=0.0,
@@ -532,7 +537,9 @@ def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
         ],
         data=data_to_fit,
         optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
+            method="differential_evolution",
+            max_iterations=1,
+            conditioned_likelihood=conditioned_likelihood,
         ),
         num_estimates=num_estimates,
         initial_seed=42,
@@ -576,6 +583,79 @@ def test_pec_log_likelihood_requires_llvm():
         match="comp_execution_mode is 'LLVM'",
     ):
         pec.log_likelihood(*params, inputs={comp: trial_inputs})
+
+
+@pytest.mark.composition
+def test_pec_conditioned_llvm_log_likelihood_runs_and_replays():
+    pec, comp, trial_inputs, params = _make_ddm_log_likelihood_pec(
+        num_trials=3,
+        num_estimates=8,
+        conditioned_likelihood=True,
+    )
+    inputs = {comp: trial_inputs.copy()}
+
+    first = pec.log_likelihood(*params, inputs=inputs)
+    replay = pec.log_likelihood(*params, inputs=inputs)
+
+    assert np.isfinite(first)
+    assert replay == first
+
+
+def test_conditioned_llvm_resampling_preserves_destination_rng_streams():
+    from psyneulink.core.llvm.execution import _resample_stateful_structures
+
+    class _Parameter:
+        def __init__(self, value):
+            self.value = value
+
+        def _get(self, context):
+            return self.value
+
+    class _Parameters:
+        pass
+
+    class _Component:
+        def __init__(self, name, state_ids):
+            self.name = name
+            self.llvm_state_ids = state_ids
+            self.parameters = _Parameters()
+
+    child = _Component("child", ("persistent", "random_state"))
+    root = _Component("root", ("persistent", "random_state", "function"))
+    root.parameters.function = _Parameter(child)
+
+    child_dtype = np.dtype(
+        [("field_0", np.float64), ("field_1", np.uint64)], align=True
+    )
+    state_dtype = np.dtype(
+        [
+            ("field_0", np.float64),
+            ("field_1", np.uint64),
+            ("field_2", child_dtype),
+        ],
+        align=True,
+    )
+    states = np.zeros(3, dtype=state_dtype)
+    states["field_0"] = [100.0, 200.0, 300.0]
+    states["field_1"] = [10, 20, 30]
+    states["field_2"]["field_0"] = [1.0, 2.0, 3.0]
+    states["field_2"]["field_1"] = [11, 21, 31]
+    data = np.asarray([[1.0], [2.0], [3.0]])
+    ancestors = np.asarray([2, 2, 0])
+
+    resampled_states, resampled_data = _resample_stateful_structures(
+        root, states, data, ancestors, context=None
+    )
+
+    np.testing.assert_array_equal(resampled_states["field_0"], [300.0, 300.0, 100.0])
+    np.testing.assert_array_equal(
+        resampled_states["field_2"]["field_0"], [3.0, 3.0, 1.0]
+    )
+    np.testing.assert_array_equal(resampled_data[:, 0], [3.0, 3.0, 1.0])
+    np.testing.assert_array_equal(resampled_states["field_1"], [10, 20, 30])
+    np.testing.assert_array_equal(
+        resampled_states["field_2"]["field_1"], [11, 21, 31]
+    )
 
 
 @pytest.mark.composition

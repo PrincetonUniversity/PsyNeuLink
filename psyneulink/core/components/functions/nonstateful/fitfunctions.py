@@ -605,6 +605,12 @@ class PECOptimizationFunction(OptimizationFunction):
         and ``maxnreg``. Omit this mapping to use the established 128-lane,
         four-warp launch without a register cap.
 
+    conditioned_likelihood :
+        If True, score the CSI model one trial at a time and resample its
+        retained state using the current observed choice/RT before continuing.
+        The experimental path is implemented for both LLVM PEC and the batched
+        co-evolving compiler and uses the batched histogram observation model.
+
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
         candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
@@ -664,6 +670,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_seed: Optional[int] = None,
         batched_parameter_batch_size: Optional[int] = None,
         batched_triton_launch_options: Optional[Mapping] = None,
+        conditioned_likelihood: bool = False,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -685,12 +692,14 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_pseudocount = batched_pseudocount
         self.batched_categorical_cardinalities = batched_categorical_cardinalities
         self.batched_seed = batched_seed
+        self.conditioned_likelihood = conditioned_likelihood
         if not np.isfinite(batched_smoothing_sigma) or batched_smoothing_sigma < 0:
             raise ValueError("batched_smoothing_sigma must be finite and nonnegative.")
         if not np.isfinite(batched_pseudocount) or batched_pseudocount < 0:
             raise ValueError("batched_pseudocount must be finite and nonnegative.")
         if (
             batched_backend is None
+            and not conditioned_likelihood
             and (
                 batched_smoothing_sigma != 0
                 or batched_pseudocount != 0
@@ -698,7 +707,8 @@ class PECOptimizationFunction(OptimizationFunction):
             )
         ):
             raise ValueError(
-                "Batched likelihood smoothing options require a batched_backend."
+                "Histogram likelihood smoothing options require a batched_backend "
+                "or conditioned_likelihood=True."
             )
         if (
             batched_parameter_batch_size is not None
@@ -890,6 +900,8 @@ class PECOptimizationFunction(OptimizationFunction):
         # same device the outcomes were produced on.
         if self.batched_backend is not None and self.data_fitting_mode:
             return self._batched_objective_func(context=context)
+        if self.conditioned_likelihood and self.data_fitting_mode:
+            return self._llvm_conditioned_objective_func(context=context)
 
         def objfunc(*args):
             obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
@@ -1023,7 +1035,12 @@ class PECOptimizationFunction(OptimizationFunction):
                 self._batched_parameter_set(values)
                 for values in parameter_values
             ]
-            result = plan.log_likelihood(
+            likelihood_method = (
+                plan.conditioned_log_likelihood
+                if self.conditioned_likelihood
+                else plan.log_likelihood
+            )
+            result = likelihood_method(
                 inputs,
                 parameter_sets,
                 num_estimates=self.owner.num_estimates,
@@ -1094,6 +1111,144 @@ class PECOptimizationFunction(OptimizationFunction):
             )
 
         return row
+
+    def _llvm_conditioned_objective_func(self, context=None):
+        """LLVM CSI likelihood with an observation/resampling boundary per trial.
+
+        The ordinary LLVM PEC evaluator copies one base composition state into
+        every estimate, runs the complete input sequence, and discards each
+        estimate's terminal state. Here the compiled evaluator runs one trial,
+        writes each estimate's state and data structures back, and the host
+        resamples those structures using the observed choice/RT before the next
+        compiled launch.
+        """
+
+        pec = self.owner.composition
+        ocm = self.owner
+        exp_data = np.asarray(pec._data_numpy, dtype=float)
+        categorical_dims = pec.data_categorical_dims
+        include_mask = np.asarray(
+            getattr(pec, "likelihood_include_mask", np.ones(len(exp_data), dtype=bool)),
+            dtype=bool,
+        )
+
+        def objfunc(*args):
+            from psyneulink.core.batched.likelihood import (
+                histogram_observation_weights,
+            )
+            from psyneulink.core.llvm.execution import (
+                _resample_stateful_structures,
+            )
+
+            if self.batched_pseudocount != 0.0:
+                raise ValueError(
+                    "A histogram pseudocount has no LLVM particle ancestry to "
+                    "resample; conditioned_likelihood requires pseudocount=0."
+                )
+            if len(args) != len(self.fit_param_names):
+                raise ValueError(
+                    f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
+                )
+
+            full_inputs = ocm._pec_input_values
+            model = pec.model
+            if not full_inputs or model not in full_inputs:
+                raise OptimizationFunctionError(
+                    "LLVM conditioned likelihood requires PEC's canonical "
+                    "{model: trial_inputs} cache."
+                )
+            trial_sequence = full_inputs[model]
+            if len(trial_sequence) != len(exp_data):
+                raise OptimizationFunctionError(
+                    "LLVM conditioned likelihood input/data trial counts differ: "
+                    f"{len(trial_sequence)} versus {len(exp_data)}."
+                )
+
+            original_inputs = ocm._pec_input_values
+            original_num_trials = ocm.parameters.num_trials_per_estimate.get(context)
+            original_flag = getattr(ocm, "_pec_stateful_evaluation", False)
+            original_states = getattr(ocm, "_pec_stateful_evaluation_states", None)
+            original_data = getattr(ocm, "_pec_stateful_evaluation_data", None)
+            ocm._pec_stateful_evaluation = True
+            ocm._pec_stateful_evaluation_states = None
+            ocm._pec_stateful_evaluation_data = None
+            ocm.parameters.num_trials_per_estimate.set(1, context=context)
+
+            likelihood = 0.0
+            rng_seed = self.batched_seed
+            if rng_seed is None:
+                rng_seed = try_extract_0d_array_item(
+                    self._get_current_parameter_value("initial_seed", context)
+                )
+            resampling_rng = np.random.default_rng(
+                (0 if rng_seed is None else int(rng_seed)) ^ 0x5EED5EED
+            )
+            try:
+                for trial_index in range(len(exp_data)):
+                    trial_inputs = {
+                        model: copy.deepcopy(
+                            trial_sequence[trial_index : trial_index + 1]
+                        )
+                    }
+                    ocm._pec_input_values = trial_inputs
+                    ocm.set_parameters_in_inputs(parameters=args, inputs=trial_inputs)
+                    self.reset_grid(context)
+                    _, _, _, all_values = self._evaluate(
+                        variable=self.defaults.variable,
+                        context=context,
+                        params=None,
+                        fit_evaluate=True,
+                    )
+                    sim_data = np.transpose(all_values, (0, 2, 1))
+                    sim_trial = sim_data[0][:, self.outcome_variable_indices]
+                    weights, density = histogram_observation_weights(
+                        sim_trial,
+                        exp_data,
+                        trial_index,
+                        categorical_dims,
+                        bins=self.batched_bins,
+                        bin_range=self.batched_bin_range,
+                        smoothing_sigma=self.batched_smoothing_sigma,
+                    )
+                    if include_mask[trial_index]:
+                        likelihood += float(np.log(density.item()))
+
+                    particle_weights = weights.detach().cpu().numpy().reshape(-1)
+                    total = particle_weights.sum()
+                    if total > 0.0:
+                        particle_weights = particle_weights / total
+                    else:
+                        particle_weights = np.full(
+                            len(particle_weights),
+                            1.0 / float(len(particle_weights)),
+                        )
+                    ancestors = resampling_rng.choice(
+                        len(particle_weights),
+                        size=len(particle_weights),
+                        replace=True,
+                        p=particle_weights,
+                    )
+                    (
+                        ocm._pec_stateful_evaluation_states,
+                        ocm._pec_stateful_evaluation_data,
+                    ) = _resample_stateful_structures(
+                        pec,
+                        ocm._pec_stateful_evaluation_states,
+                        ocm._pec_stateful_evaluation_data,
+                        ancestors,
+                        context,
+                    )
+            finally:
+                ocm._pec_input_values = original_inputs
+                ocm.parameters.num_trials_per_estimate.set(
+                    original_num_trials, context=context
+                )
+                ocm._pec_stateful_evaluation = original_flag
+                ocm._pec_stateful_evaluation_states = original_states
+                ocm._pec_stateful_evaluation_data = original_data
+            return float(likelihood)
+
+        return objfunc
 
     def _evaluate_objective_and_sim_data(self, *args, context=None):
         """
@@ -1972,6 +2127,20 @@ class PECOptimizationFunction(OptimizationFunction):
         ):
             objective = self._batched_objective_func(context=context)
             return float(objective(*args))
+
+        if self.conditioned_likelihood and self.data_fitting_mode:
+            if return_sim_data:
+                raise NotImplementedError(
+                    "return_sim_data is not yet implemented for the sequential "
+                    "conditioned LLVM likelihood."
+                )
+            execution_phase_at_entry = context.execution_phase
+            context.execution_phase = ContextFlags.PROCESSING
+            try:
+                objective = self._llvm_conditioned_objective_func(context=context)
+                return float(objective(*args))
+            finally:
+                context.execution_phase = execution_phase_at_entry
 
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING

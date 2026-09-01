@@ -41,6 +41,15 @@ parser.add_argument(
     help="Symmetric pseudocount per joint decision/RT histogram cell (0 disables).",
 )
 parser.add_argument(
+    "--condition-observed-history",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help=(
+        "Condition persistent CSI state on each observed choice/RT before "
+        "simulating the next trial (default: enabled)."
+    ),
+)
+parser.add_argument(
     "--seed",
     default=1,
     type=int,
@@ -238,19 +247,37 @@ fit_parameters = {
 }
 
 batched_options = {}
+conditioned_options = {
+    "conditioned_likelihood": args.condition_observed_history,
+}
+if args.condition_observed_history:
+    conditioned_options.update(
+        {
+            "batched_bins": args.bins,
+            "batched_smoothing_sigma": args.smoothing_sigma,
+            "batched_pseudocount": args.pseudocount,
+            "batched_categorical_cardinalities": [2],
+            "batched_seed": simulation_seed,
+        }
+    )
 if args.backend != "llvm":
     batched_options = {
         "batched_backend": args.backend,
         "batched_max_steps": args.max_steps,
-        "batched_bins": args.bins,
-        "batched_smoothing_sigma": args.smoothing_sigma,
-        "batched_pseudocount": args.pseudocount,
-        # The DDM decision has two possible outcomes.  Supplying this explicitly
-        # keeps pseudocount normalization correct even for a participant whose
-        # observed data happen to contain only one outcome.
-        "batched_categorical_cardinalities": [2],
-        "batched_seed": simulation_seed,
     }
+    if not args.condition_observed_history:
+        batched_options.update(
+            {
+                "batched_bins": args.bins,
+                "batched_smoothing_sigma": args.smoothing_sigma,
+                "batched_pseudocount": args.pseudocount,
+                # The DDM decision has two possible outcomes. Supplying this
+                # explicitly keeps pseudocount normalization correct even when
+                # one participant contains only one observed outcome.
+                "batched_categorical_cardinalities": [2],
+                "batched_seed": simulation_seed,
+            }
+        )
     if args.parameter_batch_size:
         batched_options["batched_parameter_batch_size"] = args.parameter_batch_size
     if args.backend == "triton":
@@ -286,6 +313,7 @@ pec = pnl.ParameterEstimationComposition(
             seed=optimizer_seed,
         ),
         max_iterations=max_iterations,
+        **conditioned_options,
         **batched_options,
     ),
     num_estimates=num_estimates,

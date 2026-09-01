@@ -103,6 +103,10 @@ class BatchedSimulationPlan:
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
         keep_device_values: bool = False,
+        initial_states=None,
+        return_final_states: bool = False,
+        rng_trial_offset: int = 0,
+        rng_sequence_trials: int | None = None,
         triton_launch_options: Mapping | None = None,
     ) -> BatchedSimulationResult:
         """Run one or more parameter sets over the supplied trial inputs.
@@ -129,6 +133,10 @@ class BatchedSimulationPlan:
             device=device,
             strict_truncation=strict_truncation,
             keep_device_values=keep_device_values,
+            initial_states=initial_states,
+            return_final_states=return_final_states,
+            rng_trial_offset=rng_trial_offset,
+            rng_sequence_trials=rng_sequence_trials,
             kernel_ir=self.kernel_ir,
             component_bindings=self.component_bindings,
             launch_options=triton_launch_options,
@@ -220,11 +228,213 @@ class BatchedSimulationPlan:
             return float(ll[0])
         return ll
 
+    def conditioned_log_likelihood(
+        self,
+        inputs,
+        parameter_sets,
+        num_estimates: int,
+        data,
+        categorical_dims=None,
+        *,
+        outcome_indices=None,
+        bins: int = 100,
+        bin_range=None,
+        smoothing_sigma: float = 0.0,
+        pseudocount: float = 0.0,
+        categorical_cardinalities=None,
+        include_mask=None,
+        subject_slices=None,
+        seed=None,
+        common_random_numbers: bool = True,
+        strict_truncation: bool = False,
+        triton_launch_options: Mapping | None = None,
+    ):
+        """Sequential histogram likelihood with persistent-state conditioning.
+
+        This experimental path launches one complete coupled trial at a time.
+        It scores the observed choice/outcome, resamples the terminal retained
+        states with those observation weights, and only then launches the next
+        trial. Thus each state lane approximates
+        ``p(state_t | observed outcomes before t)`` instead of carrying an
+        unconditional simulated history through the whole sequence.
+
+        It is currently intended for the CSI co-evolving LCA/DDM model. The
+        state transport itself is general, but a general PEC contract must also
+        specify how latent state, observation kernels, missing observations,
+        and resampling interact for arbitrary models.
+        """
+
+        from collections.abc import Mapping as MappingABC
+
+        import numpy as np
+        import torch
+
+        from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION
+        from psyneulink.core.batched.ir import BatchedTrialParameter
+        from psyneulink.core.batched.likelihood import histogram_observation_weights
+        from psyneulink.core.batched.prep import normalize_parameter_sets
+
+        if self.kernel_ir.fusion_kind != COEVOLVING_GRAPH_FUSION:
+            raise BatchedCompileError(
+                "conditioned_log_likelihood is currently enabled only for a "
+                "co-evolving batched graph (the CSI LCA/DDM prototype)."
+            )
+        if pseudocount != 0.0:
+            raise ValueError(
+                "A histogram pseudocount has no particle ancestry to resample; "
+                "conditioned_log_likelihood currently requires pseudocount=0."
+            )
+        if categorical_cardinalities is not None and pseudocount == 0.0:
+            # It has no effect without pseudocounts, matching histogram_likelihood.
+            categorical_cardinalities = None
+        if subject_slices is not None:
+            raise NotImplementedError(
+                "The CSI conditioned-likelihood prototype currently accepts one "
+                "contiguous subject sequence per call (subject_slices=None)."
+            )
+        if not isinstance(inputs, MappingABC):
+            raise TypeError(
+                "conditioned_log_likelihood requires node-keyed input sequences."
+            )
+
+        exp_data = np.asarray(data, dtype=float)
+        if exp_data.ndim != 2:
+            raise ValueError(
+                f"data must be 2D [trial, outcome], got shape {exp_data.shape}."
+            )
+        num_trials = exp_data.shape[0]
+        mask = (
+            np.ones(num_trials, dtype=bool)
+            if include_mask is None
+            else np.asarray(include_mask, dtype=bool).reshape(-1)
+        )
+        if mask.shape[0] != num_trials:
+            raise ValueError(
+                f"include_mask has length {mask.shape[0]} but data has "
+                f"{num_trials} trials."
+            )
+        if num_trials == 0:
+            raise ValueError("conditioned_log_likelihood requires at least one trial.")
+
+        parameter_rows = normalize_parameter_sets(parameter_sets, self.ir)
+        state = None
+        log_likelihood = None
+        resampling_generator = None
+
+        for trial_index in range(num_trials):
+            trial_inputs = {
+                key: _slice_conditioned_trial(value, trial_index, num_trials)
+                for key, value in inputs.items()
+            }
+            trial_parameter_rows = []
+            for row in parameter_rows:
+                trial_row = {}
+                for name, value in row.items():
+                    if isinstance(value, BatchedTrialParameter):
+                        values = np.asarray(value.values)
+                        if values.ndim == 1:
+                            trial_row[name] = float(values[trial_index])
+                        elif values.ndim == 2:
+                            trial_row[name] = BatchedTrialParameter(
+                                values[:, trial_index : trial_index + 1]
+                            )
+                        else:
+                            raise ValueError(
+                                f"Trial-varying parameter '{name}' must be a trial "
+                                "vector or [subject, trial] array."
+                            )
+                    else:
+                        trial_row[name] = value
+                trial_parameter_rows.append(trial_row)
+
+            result = self.run(
+                trial_inputs,
+                trial_parameter_rows,
+                num_estimates,
+                seed=seed,
+                common_random_numbers=common_random_numbers,
+                strict_truncation=strict_truncation,
+                keep_device_values=True,
+                initial_states=state,
+                return_final_states=True,
+                rng_trial_offset=trial_index,
+                rng_sequence_trials=num_trials,
+                triton_launch_options=triton_launch_options,
+            )
+            outcomes = result.values[:, :, 0]
+            if outcome_indices is not None:
+                outcomes = outcomes.index_select(
+                    -1,
+                    torch.as_tensor(
+                        list(outcome_indices), dtype=torch.long, device=outcomes.device
+                    ),
+                )
+            weights, density = histogram_observation_weights(
+                outcomes,
+                exp_data,
+                trial_index,
+                categorical_dims,
+                bins=bins,
+                bin_range=bin_range,
+                smoothing_sigma=smoothing_sigma,
+            )
+            if log_likelihood is None:
+                log_likelihood = torch.zeros_like(density)
+                resampling_generator = torch.Generator(device=outcomes.device)
+                resampling_generator.manual_seed(
+                    (0 if seed is None else int(seed)) ^ 0x5EED5EED
+                )
+            if mask[trial_index]:
+                log_likelihood = log_likelihood + torch.log(density)
+
+            terminal_state = result.metadata["final_states"]
+            flat_weights = weights.reshape(-1, num_estimates)
+            totals = flat_weights.sum(dim=-1, keepdim=True)
+            normalized = torch.where(
+                totals > 0,
+                flat_weights / torch.clamp(totals, min=torch.finfo(weights.dtype).tiny),
+                torch.full_like(flat_weights, 1.0 / float(num_estimates)),
+            )
+            ancestors = torch.multinomial(
+                normalized,
+                num_samples=num_estimates,
+                replacement=True,
+                generator=resampling_generator,
+            )
+            flat_state = terminal_state.reshape(
+                -1, num_estimates, terminal_state.shape[-1]
+            )
+            state = torch.gather(
+                flat_state,
+                1,
+                ancestors[..., None].expand(-1, -1, flat_state.shape[-1]),
+            ).reshape_as(terminal_state)
+
+        assert log_likelihood is not None
+        values = log_likelihood.detach().cpu().numpy().sum(axis=1)
+        if values.shape[0] == 1:
+            return float(values[0])
+        return values
+
 
 def _as_long(tensor_like, idx):
     import torch
 
     return torch.as_tensor(idx, dtype=torch.long, device=tensor_like.device)
+
+
+def _slice_conditioned_trial(value, trial_index: int, num_trials: int):
+    """Slice one trial from the raw, pre-subject-splitting input sequence."""
+
+    import numpy as np
+
+    array = np.asarray(value)
+    if array.ndim == 0 or array.shape[0] != num_trials:
+        raise ValueError(
+            "Each conditioned-likelihood input must have the data trial axis "
+            f"first (expected {num_trials}, got shape {array.shape})."
+        )
+    return array[trial_index : trial_index + 1]
 
 
 def _validate_backend(backend: str) -> None:

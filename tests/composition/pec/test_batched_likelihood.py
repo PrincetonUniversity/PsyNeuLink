@@ -13,6 +13,7 @@ import pytest
 import psyneulink as pnl
 from psyneulink.core.batched import (
     BatchedCompositionCompiler,
+    histogram_observation_weights,
     histogram_likelihood,
     histogram_log_likelihood,
 )
@@ -97,6 +98,44 @@ def test_histogram_likelihood_batches_over_lanes():
     for i in range(L):
         ref = _numpy_reference(sim_lanes[i], exp, cat_mask, bins=40, bin_range=br)
         assert np.allclose(got[i], ref, rtol=1e-5, atol=1e-9)
+
+
+@requires_torch
+def test_observation_weights_average_to_trial_histogram_density():
+    rng = np.random.default_rng(17)
+    lanes, trials, estimates = 2, 4, 500
+    simulated = np.stack(
+        [
+            rng.choice([-1.0, 1.0], size=(lanes, trials, estimates)),
+            rng.uniform(0.0, 2.0, size=(lanes, trials, estimates)),
+        ],
+        axis=-1,
+    )
+    observed = np.stack(
+        [rng.choice([-1.0, 1.0], size=trials), rng.uniform(0.0, 2.0, size=trials)],
+        axis=-1,
+    )
+    ordinary = histogram_likelihood(
+        simulated,
+        observed,
+        [True, False],
+        bins=20,
+        bin_range=[(0.0, 2.0)],
+        smoothing_sigma=0.75,
+    )
+
+    for trial in range(trials):
+        weights, density = histogram_observation_weights(
+            simulated[:, trial],
+            observed,
+            trial,
+            [True, False],
+            bins=20,
+            bin_range=[(0.0, 2.0)],
+            smoothing_sigma=0.75,
+        )
+        assert weights.shape == (lanes, estimates)
+        np.testing.assert_allclose(density.cpu().numpy(), ordinary[:, trial], rtol=1e-6)
 
 
 @requires_torch

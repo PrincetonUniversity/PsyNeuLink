@@ -46,6 +46,103 @@ def _pretty_size(size):
     return "{:.2f} {}".format(size, u)
 
 
+def _resample_stateful_structures(composition, states, data, ancestors, context):
+    """Resample resumable composition structures without cloning RNG streams.
+
+    ``states`` and ``data`` contain one terminal simulation structure per
+    particle.  Persistent model state and recurrent output data follow the
+    selected ancestor, but each destination particle must retain its own
+    advanced random-number-generator state.  Otherwise duplicate offspring
+    either share an identical future stream or trigger LLVM's seed-change
+    reinitialization and restart a stream from its beginning.
+
+    The recursive walk mirrors :meth:`Execution._copy_params_to_pnl`, using
+    ``llvm_state_ids`` to find every ``random_state`` field without relying on
+    a model-specific byte offset.
+    """
+
+    states = np.asarray(states)
+    data = np.asarray(data)
+    ancestors = np.asarray(ancestors, dtype=np.intp)
+    if ancestors.shape != (len(states),):
+        raise ValueError(
+            "ancestors must contain one index per destination particle; "
+            f"expected {(len(states),)}, got {ancestors.shape}."
+        )
+    if len(data) != len(states):
+        raise ValueError(
+            "state and data particle counts differ: "
+            f"{len(states)} versus {len(data)}."
+        )
+    if np.any(ancestors < 0) or np.any(ancestors >= len(states)):
+        raise ValueError("ancestor index is outside the particle population.")
+
+    resampled_states = np.ascontiguousarray(states[ancestors])
+    resampled_data = np.ascontiguousarray(data[ancestors])
+
+    def _preserve_rng_fields(component, source, destination):
+        state_ids = component.llvm_state_ids
+        if source.dtype.names is None or len(source.dtype.names) != len(state_ids):
+            raise ValueError(
+                f"LLVM state layout for {component.name!r} does not match "
+                f"its state identifiers {state_ids!r}."
+            )
+
+        for numpy_name, attribute in zip(source.dtype.names, state_ids):
+            source_field = source[numpy_name]
+            destination_field = destination[numpy_name]
+            if attribute == "random_state":
+                np.copyto(destination_field, source_field)
+                continue
+
+            nested_component = None
+            if attribute == "nodes":
+                children = component._all_nodes
+            elif attribute == "projections":
+                children = tuple(component._inner_projections)
+            elif attribute == "_parameter_ports":
+                children = component._parameter_ports
+            elif attribute in {"input_ports", "output_ports"}:
+                children = getattr(component, attribute)
+            else:
+                parameter = getattr(component.parameters, attribute, None)
+                value = None if parameter is None else parameter._get(context)
+                nested_component = value if hasattr(value, "llvm_state_ids") else None
+                children = ()
+
+            if nested_component is not None:
+                _preserve_rng_fields(
+                    nested_component,
+                    source_field,
+                    destination_field,
+                )
+                continue
+
+            children = tuple(children)
+            if not children:
+                continue
+            if source_field.dtype.names is None:
+                raise ValueError(
+                    f"Nested LLVM state field {component.name}.{attribute} "
+                    "does not have a structured dtype."
+                )
+            if len(source_field.dtype.names) != len(children):
+                raise ValueError(
+                    f"Nested LLVM state layout for {component.name}.{attribute} "
+                    f"has {len(source_field.dtype.names)} fields for "
+                    f"{len(children)} components."
+                )
+            for child_name, child in zip(source_field.dtype.names, children):
+                _preserve_rng_fields(
+                    child,
+                    source_field[child_name],
+                    destination_field[child_name],
+                )
+
+    _preserve_rng_fields(composition, states, resampled_states)
+    return resampled_states, resampled_data
+
+
 class Execution:
     def __init__(self):
         self._debug_env = debug_env
@@ -730,3 +827,113 @@ class CompExecution(CUDAExecution):
         assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
 
         return outputs
+
+    def thread_evaluate_stateful(
+        self,
+        inputs,
+        num_input_sets,
+        num_evaluations,
+        *,
+        states=None,
+        data=None,
+    ):
+        """Evaluate one trial per lane and return resumable LLVM structures.
+
+        Unlike :meth:`thread_evaluate`, every evaluation owns its composition
+        state *and* data structure. The compiled evaluator writes the simulated
+        terminal structures back so a caller can resample them between observed
+        trials. The controlled composition must have
+        ``num_trials_per_estimate == 1``.
+        """
+
+        ocm = self._composition.controller
+        num_trials = ocm.parameters.num_trials_per_estimate.get(
+            self._execution_context
+        )
+        if num_trials != 1:
+            raise ValueError(
+                "thread_evaluate_stateful requires num_trials_per_estimate == 1, "
+                f"got {num_trials!r}."
+            )
+
+        tags = {
+            "evaluate",
+            "alloc_range",
+            "evaluate_type_all_results",
+            "retain_simulation_state",
+        }
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(
+            ocm,
+            tags=frozenset(tags),
+            ctype_ptr_args=(5,),
+            dynamic_size_args=(1, 4, 6),
+        )
+        self.__bin_func = bin_func
+        assert len(bin_func.byref_arg_types) == 8
+
+        comp_params = self._get_compilation_param(
+            "_eval_param_stateful", "_get_param_initializer", 0
+        )
+        base_state = self._get_compilation_param(
+            "_eval_state_stateful", "_get_state_initializer", 1
+        )
+        base_data = self._get_compilation_param(
+            "_eval_data_stateful", "_get_data_initializer", 6
+        )
+        expected_state_shape = (num_evaluations, *base_state.shape[1:])
+        expected_data_shape = (num_evaluations, *base_data.shape[1:])
+        if states is None:
+            states = np.repeat(base_state, num_evaluations, axis=0)
+        else:
+            states = np.asarray(states)
+            if states.shape != expected_state_shape or states.dtype != base_state.dtype:
+                raise ValueError(
+                    "states must have the LLVM evaluation shape/dtype "
+                    f"{expected_state_shape}/{base_state.dtype}, got "
+                    f"{states.shape}/{states.dtype}."
+                )
+            states = np.ascontiguousarray(states)
+        if data is None:
+            data = np.repeat(base_data, num_evaluations, axis=0)
+        else:
+            data = np.asarray(data)
+            if data.shape != expected_data_shape or data.dtype != base_data.dtype:
+                raise ValueError(
+                    "data must have the LLVM evaluation shape/dtype "
+                    f"{expected_data_shape}/{base_data.dtype}, got "
+                    f"{data.shape}/{data.dtype}."
+                )
+            data = np.ascontiguousarray(data)
+
+        ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
+        outputs = bin_func.np_buffer_for_arg(
+            4, extra_dimensions=(num_evaluations, 1)
+        )
+        num_inputs = np.asarray(num_input_sets, dtype=np.uint32)
+        jobs = min(get_num_threads(), num_evaluations)
+        evals_per_job = (num_evaluations + jobs - 1) // jobs
+        input_arg = ctypes.cast(ct_inputs, bin_func.c_func.argtypes[5])
+        output_arg = outputs.reshape(-1, *bin_func.np_arg_dtypes[4].shape)
+        assert output_arg.base is outputs
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures = [
+                executor.submit(
+                    bin_func,
+                    comp_params,
+                    states,
+                    int(index * evals_per_job),
+                    min((index + 1) * evals_per_job, num_evaluations),
+                    output_arg,
+                    input_arg,
+                    data,
+                    num_inputs,
+                )
+                for index in range(jobs)
+            ]
+        exceptions = [future.exception() for future in futures]
+        assert all(error is None for error in exceptions), (
+            "Not all stateful LLVM evaluation jobs finished successfully: "
+            f"{exceptions}"
+        )
+        return outputs, states, data

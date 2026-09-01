@@ -511,6 +511,13 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     assert sum(op.kind == "StoreOutput" for op in all_ops) == 2
 
     source = triton_graph_kernel_source(kernel)
+    assert "initial_state" in source
+    assert "final_state" in source
+    assert "if USE_INITIAL_STATE:" in source
+    assert "if STORE_FINAL_STATE:" in source
+    assert "TRIAL_OFFSET: tl.constexpr" in source
+    assert "RNG_NUM_TRIALS: tl.constexpr" in source
+    assert "tl.store(final_state + offsets" in source
     assert "lane_local_coevolving" not in source
     assert "coevolving_required_passes" not in source
     assert "tl.rand4x(SEED, random_base + (n_schedule_rng_clock_8_0_0 // 2))" in source
@@ -1269,6 +1276,129 @@ def test_csi_stochastic_ddm_replays_and_uses_common_random_numbers(
     )
     assert np.unique(first.values[0, ..., 1]).size > 2
     assert all(fraction == 0.0 for fraction in first.metadata["truncation"].values())
+
+
+def test_csi_one_trial_state_transport_matches_unsplit_sequence(
+    registered_csi_drift_rate,
+    batched_backend,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend=batched_backend,
+        outputs=outputs,
+        max_steps=64,
+    )
+    estimates = 8
+    seed = 29
+    full = plan.run(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=estimates,
+        seed=seed,
+        strict_truncation=True,
+    )
+
+    state = None
+    split_trials = []
+    for trial in range(2):
+        one_trial_inputs = {
+            node: np.asarray(values)[trial : trial + 1]
+            for node, values in inputs.items()
+        }
+        result = plan.run(
+            inputs=one_trial_inputs,
+            parameter_sets=[{}],
+            num_estimates=estimates,
+            seed=seed,
+            strict_truncation=True,
+            initial_states=state,
+            return_final_states=True,
+            rng_trial_offset=trial,
+            rng_sequence_trials=2,
+        )
+        split_trials.append(result.values)
+        state = result.metadata["final_states"]
+
+    split = np.concatenate(split_trials, axis=2)
+    np.testing.assert_array_equal(split, full.values)
+
+
+def test_csi_conditioned_likelihood_runs_and_replays(
+    registered_csi_drift_rate,
+    batched_backend,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend=batched_backend,
+        outputs=outputs,
+        max_steps=64,
+    )
+    observed = plan.run(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=1,
+        seed=41,
+        strict_truncation=True,
+    ).values[0, 0, :, 0]
+
+    kwargs = dict(
+        inputs=inputs,
+        parameter_sets=[{}],
+        num_estimates=32,
+        data=observed,
+        categorical_dims=[True, False],
+        bins=8,
+        bin_range=[(0.0, 2.0)],
+        smoothing_sigma=1.0,
+        seed=43,
+        strict_truncation=True,
+    )
+    first = plan.conditioned_log_likelihood(**kwargs)
+    replay = plan.conditioned_log_likelihood(**kwargs)
+
+    assert np.isfinite(first)
+    assert replay == first
+
+
+def test_csi_conditioned_llvm_pec_runs_and_replays(registered_csi_drift_rate):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    ddm = _node(composition, "DDM")
+    threshold = _node(composition, "Threshold Mechanism")
+    inputs[threshold] = np.zeros((2, 1), dtype=float)
+    observed = pd.DataFrame(
+        {
+            "decision": pd.Categorical([1.0, -1.0]),
+            "response_time": [0.50, 0.55],
+        }
+    )
+    pec = pnl.ParameterEstimationComposition(
+        nodes=composition,
+        parameters={
+            ("non_decision_time", ddm): np.linspace(0.1, 0.3, 3),
+        },
+        outcome_variables=list(outputs),
+        data=observed,
+        optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution",
+            max_iterations=1,
+            conditioned_likelihood=True,
+            batched_bins=8,
+            batched_bin_range=[(0.0, 2.0)],
+            batched_smoothing_sigma=1.0,
+            batched_seed=47,
+        ),
+        num_estimates=8,
+        initial_seed=47,
+    )
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+
+    first = pec.log_likelihood(0.2, inputs=inputs)
+    replay = pec.log_likelihood(0.2, inputs=inputs)
+
+    assert np.isfinite(first)
+    assert replay == first
 
 
 def test_csi_stochastic_ddm_draws_are_cap_and_onset_independent(

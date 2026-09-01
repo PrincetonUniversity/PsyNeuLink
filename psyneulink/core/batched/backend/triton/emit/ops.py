@@ -42,6 +42,7 @@ class OpEmitMixin:
                     raise ValueError(
                         f"Unsupported stateful top-level op '{op.kind}'."
                     )
+            self._emit_store_final_state()
             return
 
         self._emit_ops(self.kernel.ops)
