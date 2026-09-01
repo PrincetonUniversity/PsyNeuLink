@@ -219,4 +219,6 @@ tests/composition/thesis_code/
 /Scripts/Debug/pec_batch_compile/csi_fit/data fitting/fits/
 /Scripts/Debug/pec_batch_compile/csi_fit/data fitting/logs/
 /Scripts/Debug/pec_batch_compile/csi_fit/data fitting/audit/
+/Scripts/Debug/pec_batch_compile/csi_fit/direct_likelihood/fits/
+/Scripts/Debug/pec_batch_compile/csi_fit/direct_likelihood/recovery_truth_*.json
 /Scripts/Debug/pec_batch_compile/dawa_lca_model/
