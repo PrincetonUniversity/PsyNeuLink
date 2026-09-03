@@ -177,7 +177,6 @@ class MovingBoundaryDDMSolver:
         time_step: float = 0.001,
         spatial_points: int = 65,
         noise: float = 0.1,
-        starting_value: float = 0.0,
         boundary_floor: float = 1.0e-5,
         rannacher_steps: int = 2,
         checkpoint_steps: int = 32,
@@ -191,16 +190,11 @@ class MovingBoundaryDDMSolver:
             raise ValueError("spatial_points must be an odd integer of at least 5.")
         if noise <= 0:
             raise ValueError("noise must be positive.")
-        if starting_value != 0.0:
-            raise ValueError(
-                "The CSI prototype currently supports only a zero DDM starting value."
-            )
         if checkpoint_steps < 0:
             raise ValueError("checkpoint_steps cannot be negative.")
         self.time_step = float(time_step)
         self.spatial_points = int(spatial_points)
         self.noise = float(noise)
-        self.starting_value = float(starting_value)
         self.boundary_floor = float(boundary_floor)
         self.rannacher_steps = int(rannacher_steps)
         self.checkpoint_steps = int(checkpoint_steps)

@@ -175,10 +175,10 @@ def _load_problem(args):
         else args.compile_ddm_steps
     )
     if args.native_lca_scan is None:
-        from direct_likelihood.native import native_lca_available
+        from direct_likelihood.native import native_kernels_available
 
         native_lca_scan = (
-            torch.device(args.device).type == "cpu" and native_lca_available()
+            torch.device(args.device).type == "cpu" and native_kernels_available()
         )
     else:
         native_lca_scan = args.native_lca_scan

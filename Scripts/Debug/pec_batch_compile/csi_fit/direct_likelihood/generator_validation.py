@@ -8,7 +8,7 @@ import math
 import numpy as np
 import torch
 
-from .native import native_lca_available
+from .native import native_kernels_available
 from .solver import MovingBoundaryDDMSolver
 
 
@@ -176,7 +176,7 @@ def _pde_reference(
         time_step=time_step,
         spatial_points=spatial_points,
         noise=noise,
-        native_forward=native_lca_available(),
+        native_forward=native_kernels_available(),
     )
     with torch.no_grad():
         result = solver.solve_observation_batch(

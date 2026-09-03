@@ -39,7 +39,7 @@ from direct_likelihood.validation import pnl_lca_endpoint  # noqa: E402
 from direct_likelihood.fit import _feasible_start, fit_lbfgsb  # noqa: E402
 from direct_likelihood.model import ContinuousLCA, pnl_euler_lca_step  # noqa: E402
 from direct_likelihood.model import parameter_bounds, parameter_names  # noqa: E402
-from direct_likelihood.native import native_lca_available  # noqa: E402
+from direct_likelihood.native import native_kernels_available  # noqa: E402
 from direct_likelihood.recovery_summary import (  # noqa: E402
     summarize_recovery_results,
 )
@@ -66,6 +66,91 @@ def _trials(*, first_rt=0.55, second_rt=0.62, first_include=True):
         subject_nr=4,
         rt_resolution=0.004,
     )
+
+
+def _gradient_trials():
+    """Small off-grid sequence that exercises every fitted parameter."""
+    dtype = torch.float64
+    return CSITrialData(
+        task=torch.tensor(
+            [
+                [1.0, 0.0],
+                [1.0, 0.0],
+                [0.0, 1.0],
+                [0.0, 1.0],
+                [1.0, 0.0],
+                [0.0, 1.0],
+            ],
+            dtype=dtype,
+        ),
+        stimulus=torch.tensor(
+            [
+                [1.0, 0.0, 1.0, 0.0],
+                [0.8, 0.2, 0.1, 0.9],
+                [0.2, 0.8, 0.9, 0.1],
+                [0.9, 0.1, 0.3, 0.7],
+                [0.1, 0.9, 0.8, 0.2],
+                [0.7, 0.3, 0.2, 0.8],
+            ],
+            dtype=dtype,
+        ),
+        correct_response=torch.tensor(
+            [1.0, -1.0, 1.0, -1.0, 1.0, -1.0], dtype=dtype
+        ),
+        choice=torch.tensor(
+            [1.0, 0.0, 1.0, 0.0, 1.0, 0.0], dtype=dtype
+        ),
+        response_time=torch.tensor(
+            [0.4973, 0.5361, 0.5827, 0.6219, 0.6671, 0.7083],
+            dtype=dtype,
+        ),
+        condition_index=torch.tensor([0, 1, 2, 0, 1, 2]),
+        is_switch=torch.tensor(
+            [0.0, 0.0, 1.0, 0.0, 1.0, 1.0], dtype=dtype
+        ),
+        include=torch.ones(6, dtype=torch.bool),
+        row_id=torch.arange(6),
+        subject_nr=4,
+        rt_resolution=0.0034,
+    )
+
+
+def _gradient_vector(*, requires_grad=False):
+    return torch.tensor(
+        [
+            11.0,
+            14.0,
+            17.0,
+            0.037,
+            0.11,
+            0.13,
+            0.15,
+            -0.015,
+            -0.025,
+            -0.035,
+            0.143,
+            0.157,
+            0.171,
+        ],
+        dtype=torch.float64,
+        requires_grad=requires_grad,
+    )
+
+
+def _central_difference_gradient(likelihood, trials, vector):
+    gradient = torch.empty_like(vector)
+    for index in range(vector.numel()):
+        step = 1.0e-6 * max(1.0, abs(float(vector[index])))
+        plus = vector.clone()
+        minus = vector.clone()
+        plus[index] += step
+        minus[index] -= step
+        with torch.no_grad():
+            gradient[index] = (
+                likelihood.score_vector(plus, trials).log_likelihood
+                - likelihood.score_vector(minus, trials).log_likelihood
+            ) / (2.0 * step)
+    return gradient
 
 
 def test_parallel_cyclic_reduction_matches_dense_solve():
@@ -366,74 +451,30 @@ def test_sequential_likelihood_is_finite_differentiable_and_updates_masked_rows(
     )
 
 
-def test_direct_likelihood_threshold_gradient_matches_finite_difference():
-    trials = _trials(first_include=False)
-    trials = CSITrialData(
-        **{
-            **trials.__dict__,
-            "include": torch.tensor([False, True]),
-        }
-    )
+def test_all_parameter_gradients_match_centered_finite_differences():
+    trials = _gradient_trials()
     likelihood = ContinuousCSILikelihood(
         SolverConfig(
-            ddm_time_step=0.002,
-            ddm_spatial_points=33,
-            lca_max_step=0.005,
-            iti_duration=0.05,
+            ddm_time_step=0.01,
+            ddm_spatial_points=17,
+            lca_max_step=0.02,
+            iti_duration=0.04,
+            ddm_checkpoint_steps=0,
+            checkpoint_lca=False,
+            ddm_bucket_size=3,
         )
     )
-    vector = (
-        ContinuousCSIParameters.defaults(dtype=torch.float64)
-        .vector()
-        .clone()
-        .requires_grad_()
-    )
-    value = likelihood.score_vector(vector, trials).log_likelihood
-    value.backward()
-    analytic = vector.grad[5]
-    epsilon = 1.0e-5
-    plus = vector.detach().clone()
-    minus = vector.detach().clone()
-    plus[5] += epsilon
-    minus[5] -= epsilon
-    finite_difference = (
-        likelihood.score_vector(plus, trials).log_likelihood
-        - likelihood.score_vector(minus, trials).log_likelihood
-    ) / (2.0 * epsilon)
-    torch.testing.assert_close(analytic, finite_difference, rtol=1e-5, atol=1e-6)
-
-
-def test_direct_likelihood_ndt_gradient_matches_finite_difference():
-    # Avoid an exact DDM time-cell edge: the piecewise-constant flux integral
-    # is continuous there, but its endpoint derivative has a legitimate kink.
-    trials = _trials(first_rt=0.553, second_rt=0.627, first_include=False)
-    likelihood = ContinuousCSILikelihood(
-        SolverConfig(
-            ddm_time_step=0.002,
-            ddm_spatial_points=33,
-            lca_max_step=0.005,
-            iti_duration=0.05,
-        )
-    )
-    vector = (
-        ContinuousCSIParameters.defaults(dtype=torch.float64)
-        .vector()
-        .clone()
-        .requires_grad_()
-    )
+    vector = _gradient_vector(requires_grad=True)
     likelihood.score_vector(vector, trials).log_likelihood.backward()
-    # The only included row is condition 1, whose NDT is vector element 11.
-    analytic = vector.grad[11]
-    epsilon = 1.0e-6
-    plus = vector.detach().clone()
-    minus = vector.detach().clone()
-    plus[11] += epsilon
-    minus[11] -= epsilon
-    finite_difference = (
-        likelihood.score_vector(plus, trials).log_likelihood
-        - likelihood.score_vector(minus, trials).log_likelihood
-    ) / (2.0 * epsilon)
-    torch.testing.assert_close(analytic, finite_difference, rtol=1e-5, atol=1e-6)
+    analytic = vector.grad
+    assert analytic is not None
+    assert torch.all(analytic != 0.0)
+    finite_difference = _central_difference_gradient(
+        likelihood, trials, vector.detach()
+    )
+    torch.testing.assert_close(
+        analytic, finite_difference, rtol=2.0e-4, atol=2.0e-6
+    )
 
 
 def test_duration_buckets_preserve_likelihood_state_and_gradients():
@@ -474,12 +515,9 @@ def test_duration_buckets_preserve_likelihood_state_and_gradients():
 
 
 def test_custom_adjoints_preserve_likelihood_and_all_gradients():
-    trials = _trials(first_rt=0.253, second_rt=0.277)
+    trials = _gradient_trials()
     vectors = [
-        ContinuousCSIParameters.defaults(dtype=torch.float64)
-        .vector()
-        .clone()
-        .requires_grad_()
+        _gradient_vector(requires_grad=True)
         for _ in range(2)
     ]
     common = dict(
@@ -487,7 +525,7 @@ def test_custom_adjoints_preserve_likelihood_and_all_gradients():
         ddm_spatial_points=9,
         lca_max_step=0.02,
         iti_duration=0.02,
-        ddm_bucket_size=1,
+        ddm_bucket_size=3,
     )
     configurations = [
         SolverConfig(**common),
@@ -504,14 +542,15 @@ def test_custom_adjoints_preserve_likelihood_and_all_gradients():
     for result, vector in zip(results, vectors, strict=True):
         (-result.log_likelihood).backward()
         assert vector.grad is not None
+        assert torch.all(vector.grad != 0.0)
 
     torch.testing.assert_close(results[0].probability, results[1].probability)
     torch.testing.assert_close(vectors[0].grad, vectors[1].grad)
 
 
 @pytest.mark.skipif(
-    not native_lca_available(),
-    reason="The optional native LCA scan requires Ninja and a C++ compiler.",
+    not native_kernels_available(),
+    reason="The optional native kernels require Ninja and a C++ compiler.",
 )
 def test_native_ddm_forward_and_adjoint_match_torch_oracle():
     dtype = torch.float64
@@ -571,16 +610,13 @@ def test_native_ddm_forward_and_adjoint_match_torch_oracle():
 
 
 @pytest.mark.skipif(
-    not native_lca_available(),
-    reason="The optional native LCA scan requires Ninja and a C++ compiler.",
+    not native_kernels_available(),
+    reason="The optional native kernels require Ninja and a C++ compiler.",
 )
-def test_native_lca_scans_preserve_likelihood_and_all_gradients():
-    trials = _trials(first_rt=0.253, second_rt=0.277)
+def test_native_kernels_preserve_likelihood_and_all_gradients():
+    trials = _gradient_trials()
     vectors = [
-        ContinuousCSIParameters.defaults(dtype=torch.float64)
-        .vector()
-        .clone()
-        .requires_grad_()
+        _gradient_vector(requires_grad=True)
         for _ in range(2)
     ]
     common = dict(
@@ -588,7 +624,7 @@ def test_native_lca_scans_preserve_likelihood_and_all_gradients():
         ddm_spatial_points=9,
         lca_max_step=0.02,
         iti_duration=0.02,
-        ddm_bucket_size=1,
+        ddm_bucket_size=3,
         custom_ddm_adjoint=True,
         custom_lca_adjoint=True,
     )
@@ -607,6 +643,7 @@ def test_native_lca_scans_preserve_likelihood_and_all_gradients():
     for result, vector in zip(results, vectors, strict=True):
         (-result.log_likelihood).backward()
         assert vector.grad is not None
+        assert torch.all(vector.grad != 0.0)
 
     torch.testing.assert_close(results[0].probability, results[1].probability)
     torch.testing.assert_close(

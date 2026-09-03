@@ -1467,6 +1467,76 @@ def test_csi_deterministic_history_matches_lca_endpoint_recurrence(
     )
 
 
+@pytest.mark.triton_gpu
+@pytest.mark.parametrize("smoothing_sigma", (0.0, 0.5, 1.0))
+def test_csi_deterministic_history_fused_histogram_matches_materialized_outcomes(
+    registered_csi_drift_rate,
+    smoothing_sigma,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=64,
+    )
+    observed = np.asarray(
+        [[1.0, 0.62], [0.0, 0.73]],
+        dtype=np.float32,
+    )
+    kwargs = dict(
+        inputs=inputs,
+        parameter_sets=[{}, {}],
+        num_estimates=257,
+        data=observed,
+        categorical_dims=[0],
+        bins=8,
+        bin_range=[(0.0, 2.0)],
+        smoothing_sigma=smoothing_sigma,
+        pseudocount=0.25,
+        categorical_cardinalities=[2],
+        include_mask=[True, False],
+        seed=47,
+        strict_truncation=False,
+    )
+
+    fused = plan.deterministic_history_log_likelihood(**kwargs)
+    replay = plan.deterministic_history_log_likelihood(**kwargs)
+    materialized, _ = plan.deterministic_history_log_likelihood(
+        **kwargs,
+        return_debug=True,
+    )
+
+    np.testing.assert_array_equal(fused, replay)
+    np.testing.assert_allclose(fused, materialized, rtol=0.0, atol=1e-6)
+
+
+@pytest.mark.triton_gpu
+def test_csi_deterministic_history_fused_histogram_reports_truncation(
+    registered_csi_drift_rate,
+):
+    composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
+    plan = _compile_csi(
+        composition,
+        backend="triton",
+        outputs=outputs,
+        max_steps=1,
+    )
+
+    with pytest.raises(BatchedTruncationError):
+        plan.deterministic_history_log_likelihood(
+            inputs=inputs,
+            parameter_sets=[{}],
+            num_estimates=32,
+            data=np.asarray([[1.0, 0.31], [1.0, 0.33]]),
+            categorical_dims=[0],
+            bins=8,
+            bin_range=[(0.0, 2.0)],
+            seed=53,
+            strict_truncation=True,
+        )
+
+
 @pytest.mark.parametrize(
     "model_options",
     (

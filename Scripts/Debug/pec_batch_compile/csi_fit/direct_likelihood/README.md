@@ -55,8 +55,9 @@ stage result and timing while exposing the final `parameter_vector` at the top
 level, so it can be reused anywhere a normal fit JSON is accepted.
 
 When Ninja and an OpenMP-capable C++ compiler are available, the CPU CLI builds
-a research-local extension on first use and fuses the complete
-subject LCA scan, batched drift paths, DDM time loop, and their reverse passes.
+a research-local extension from `csi_kernels.cpp` on first use and fuses the
+complete subject LCA scan, batched drift paths, DDM time loop, and their reverse
+passes.
 Install the small build dependency, if needed, with `uv pip install ninja`.
 The compiled extension is cached outside the repository; subsequent processes
 reuse it. `--no-native-lca-scan --no-native-ddm-forward` selects the Torch
@@ -74,6 +75,13 @@ matched the Torch path within `1.8e-11`, and every parameter gradient matched
 within `5e-11`. A benchmark process with one warmup and two measured gradient
 evaluations peaked at about 0.97 GB resident memory. These are machine-specific
 prototype measurements.
+
+The gradient tests use an off-grid, six-trial sequence spanning all conditions.
+All 13 ordinary-autograd derivatives are checked against centered finite
+differences, then the compact Torch and native adjoints are checked against the
+ordinary-autograd result. Exact RT-cell boundaries are excluded from those
+comparisons because they are legitimate piecewise-smooth numerical points
+rather than differentiable ones.
 
 Three full-resolution, single-start pilot fits gave:
 

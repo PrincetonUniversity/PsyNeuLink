@@ -10,8 +10,8 @@ import shutil
 import torch
 
 
-def native_lca_available() -> bool:
-    """Whether the optional PyTorch extension build helper is installed."""
+def native_kernels_available() -> bool:
+    """Whether the optional fused CPU backend can be built or loaded."""
     compiler = os.environ.get("CXX", "c++")
     return (
         shutil.which("ninja") is not None
@@ -20,13 +20,13 @@ def native_lca_available() -> bool:
 
 
 @lru_cache(maxsize=1)
-def _native_lca_module():
-    """Build or load the small CPU extension outside the source tree."""
+def _native_module():
+    """Build or load the fused CSI CPU extension outside the source tree."""
     from torch.utils.cpp_extension import load
 
-    source = Path(__file__).with_name("native_lca.cpp")
+    source = Path(__file__).with_name("csi_kernels.cpp")
     return load(
-        name="csi_direct_likelihood_native_lca_v3",
+        name="csi_direct_likelihood_kernels_v5",
         sources=[str(source)],
         extra_cflags=["-O3", "-DNDEBUG", "-fopenmp"],
         extra_ldflags=["-fopenmp"],
@@ -49,7 +49,7 @@ class _NativeLCASubjectScan(torch.autograd.Function):
         leak,
         competition,
     ):
-        module = _native_lca_module()
+        module = _native_module()
         onset, after, history = module.forward(
             task.contiguous(),
             gain.contiguous(),
@@ -159,7 +159,7 @@ class _NativeLCADriftPath(torch.autograd.Function):
         leak,
         competition,
     ):
-        module = _native_lca_module()
+        module = _native_module()
         drift, final_state, history = module.drift_forward(
             state.contiguous(),
             task.contiguous(),
@@ -257,7 +257,7 @@ def native_ddm_forward(
     if drift.device.type != "cpu":
         raise ValueError("The native DDM forward solve currently supports only CPU tensors.")
     return tuple(
-        _native_lca_module().ddm_forward(
+        _native_module().ddm_forward(
             drift.contiguous(),
             threshold.contiguous(),
             collapse_rate.contiguous(),
@@ -292,7 +292,7 @@ def native_ddm_backward(
 ) -> tuple[torch.Tensor, ...]:
     """Apply the native implicit adjoint to a stored DDM density history."""
     return tuple(
-        _native_lca_module().ddm_backward(
+        _native_module().ddm_backward(
             history.contiguous(),
             drift.contiguous(),
             threshold.contiguous(),

@@ -1,3 +1,4 @@
+// Fused CPU kernels for the complete deterministic-LCA CSI direct likelihood.
 #include <ATen/ATen.h>
 #include <torch/extension.h>
 

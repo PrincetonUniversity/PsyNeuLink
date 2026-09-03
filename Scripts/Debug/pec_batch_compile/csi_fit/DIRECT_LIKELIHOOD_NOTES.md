@@ -344,10 +344,12 @@ Implemented checks and remaining scientific validation are:
    endpoint as its time step is refined.
 3. The moving-boundary solver reports mass error, negative-density, and invalid
    boundary diagnostics for every parameter evaluation.
-4. Autograd through the sequential LCA and PDE is exercised by unit tests;
-   threshold and off-cell-edge NDT derivatives agree with centered finite
-   differences. Selected gradients should additionally be checked over a broad
-   parameter grid, including gain, CSI, collapse, and all condition indices.
+4. Autograd through the sequential LCA and PDE is exercised by unit tests. At
+   an off-grid six-trial point spanning every condition, all 13 fitted-parameter
+   derivatives agree with centered finite differences and remain nonzero. The
+   compact Torch and fused native adjoints then agree with the ordinary-autograd
+   oracle. Additional random points and mesh resolutions would still strengthen
+   coverage before gradient-based posterior sampling.
 5. The CLI exposes both multi-start L-BFGS-B and CMA-ES so their fitted optima
    can be compared.
 6. Fitted-point grid convergence and one seeded 13-parameter recovery are now
@@ -545,3 +547,104 @@ representative batch took 1.24 seconds. The same workload previously took
 17.23 seconds with particle filtering and 0.756 seconds with the old
 unconditional-history likelihood. This provisional result recovers most of the
 old throughput while retaining the corrected observed history.
+
+The deterministic specialization now has a bounded-memory likelihood path. A
+fit only consumes the number of simulations that match each trial's observed
+choice and RT bin, so the DDM kernel reduces one estimate tile directly into
+that count instead of materializing every simulated choice and RT. It launches
+only likelihood-included trials, stops a tile once every trajectory has crossed,
+and stops an uncrossed trajectory once its monotonically increasing RT has
+passed the last bin that can contribute to the observation. The latter is exact
+observation-window censoring, not an approximation. Strict truncation checks
+disable it and retain the full `max_steps` execution. Gaussian histogram
+smoothing through radius eight (including the fitting values 0.5 and 1.0) is
+also accumulated in the kernel; raw outcomes remain available through the
+debug path, and unusually wide smoothing kernels use the general materialized
+fallback.
+
+This removes the poor 100,000-estimate scaling. Before fusion, a warm
+11-candidate by 100,000-estimate subject-1 batch took 40.60 seconds and reported
+21.87 GiB of peak CUDA allocation on the 11 GiB RTX 2080 Ti. After fusion, five
+runs with a separate compilation warmup gave a 0.510-second warm median without
+smoothing and a 0.576-second median with smoothing sigma 0.5 and pseudocount
+0.1. Peak allocation was 28.8 MiB. The unsmoothed score changed by only
+`3.1e-5` log units, attributable to floating-point reduction order, and focused
+tests compare fused and materialized results at smoothing 0, 0.5, and 1.0.
+
+For a same-machine throughput reference, the primary continuous direct
+likelihood (1 ms DDM mesh, 65 spatial points, native CPU paths) scored the same
+561-row subject in a 0.0688-second warm median over five runs. Eleven sequential
+direct scores would therefore take about 0.756 seconds, versus 0.510 seconds for
+the 11-candidate, 100,000-estimate GPU population. The GPU sampling population
+has about 1.48x the candidate throughput in this comparison, although one GPU
+candidate still has higher latency and finite Monte Carlo error. The direct
+likelihood remains the scientific standard: it is deterministic, continuous
+first passage, and differentiable; these timings only compare the computational
+cost of evaluating a population with the legacy 10 ms sampling process.
+
+### Local likelihood-surface comparison after GPU fusion
+
+`csi_likelihood_surface_comparison.py` evaluates one reproducible candidate
+surface under the primary continuous likelihood, a continuous likelihood with
+the GPU histogram's fixed RT bins, and the optimized GPU endpoint sampler. It
+compares rankings rather than raw likelihood values because the direct and GPU
+methods implement different stochastic processes and likelihood conventions.
+
+The subject-1 pilot used 121 candidates centered on the direct-fit vector,
+100,000 simulations per candidate, and five GPU seeds. Without smoothing, the
+Spearman correlation between the mean GPU score and the primary direct score
+was 0.113; matching the direct solver to 100 fixed RT bins increased it only to
+0.177. The direct-fit vector ranked 46th under the GPU mean, the GPU-preferred
+candidate ranked 101st under the direct likelihood, and their top-ten sets did
+not overlap. In contrast, the median rank correlation between independent GPU
+seeds was 0.993, showing that this disagreement was not dominated by sampling
+noise.
+
+With smoothing sigma 0.5 and pseudocount 0.1, GPU seed-to-seed correlations
+were 0.993--0.998 and the maximum across-seed score SD fell below 0.95 log
+units. GPU-versus-direct rank correlations remained 0.026 for the primary
+continuous likelihood and 0.093 for the bin-matched continuous likelihood.
+The same GPU candidate remained preferred. A deterministic 10 ms endpoint
+spot check also preferred the leading GPU candidates over the direct-fit
+vector. Together these diagnostics attribute the local ranking disagreement
+primarily to endpoint-process semantics, not to the fused likelihood reduction,
+Monte Carlo instability, or RT-bin width.
+
+This pilot does not require cluster hardware. On the RTX 2080 Ti, all eleven
+100,000-simulation batches for one seed took about 5.8 seconds unsmoothed and
+6.8--7.2 seconds with smoothing after compilation; all 121 direct scores took
+about ten seconds per direct variant. GB300/Grace resources become useful for
+a multi-subject replication or substantially larger surfaces, where subjects,
+GPU seeds, and candidate batches can be distributed independently.
+
+### One-millisecond GPU refinement
+
+The GPU comparison drivers can also refine the sampled endpoint process while
+holding physical model parameters fixed. A valid 1 ms refinement changes both
+the LCA and DDM steps, converts the one-second ITI from 100 to 1,000 executions,
+converts the fitted 11-step CSI to 110 executions, divides each per-step
+boundary-collapse increment by ten, and raises the 12-second execution cap from
+1,200 to 12,000 steps. Changing only the DDM step would make the lockstep LCA
+evolve ten times too quickly relative to response time.
+
+For subject 1, 100,000-sample RT-density overlays at the direct-fit vector show
+the refined endpoint distribution nearly superimposed on the continuous
+direct curve. In common 10 ms display bins, changing the sampled process from
+10 ms to 1 ms reduced integrated absolute density error by 57% for
+NoInstruction, 56% for RealRare, and 66% for RealFrequent on the three
+representative trials. These are visualization bins only; the 1 ms simulation
+still performs endpoint checks every millisecond.
+
+The full 121-candidate, five-seed, 100,000-estimate surface check showed the
+same convergence. GPU-versus-primary-direct Spearman correlation rose from
+0.113 at 10 ms to 0.838 at 1 ms; correlation with the bin-matched continuous
+likelihood rose from 0.177 to 0.878. The direct-fit vector improved from GPU
+rank 46 to rank 12. The highest GPU candidates were separated from it by less
+than 0.5 log units while their across-seed SDs were roughly 0.5--0.8, so this
+pilot cannot reliably distinguish the local optimum within that near-tied set.
+
+Temporal refinement preserves bounded memory but costs arithmetic. One
+121-candidate GPU seed took 56--58 seconds at 1 ms versus about 5.8 seconds at
+10 ms on the RTX 2080 Ti, almost exactly the expected tenfold increase. The
+GB300 system is therefore unnecessary for an individual diagnostic but useful
+for additional seeds, multiple subjects, or a full 1 ms fitting study.

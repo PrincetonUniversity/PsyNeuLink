@@ -4,9 +4,10 @@ This is deliberately a specialization, not a general stateful-composition
 contract.  The first kernel follows the participant's observed response-time
 history with one deterministic LCA lane per parameter set and stores the
 time-varying DDM drift for every trial.  The second kernel simulates all DDM
-trials and estimates in parallel.  Simulated stopping times therefore affect
-the current trial's histogram density but do not create artificial uncertainty
-about the next LCA state.
+trials and estimates in parallel and, during fitting, reduces them directly to
+observed histogram-bin counts.  Simulated stopping times therefore affect the
+current trial's histogram density but do not create artificial uncertainty
+about the next LCA state or require materializing every simulated outcome.
 """
 
 from __future__ import annotations
@@ -28,7 +29,12 @@ from psyneulink.core.batched.backend.triton.runtime import (
     _report_truncation,
 )
 from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION
-from psyneulink.core.batched.likelihood import histogram_log_likelihood
+from psyneulink.core.batched.likelihood import (
+    ZERO_PROB,
+    _bin_edges,
+    _categorical_cardinalities,
+    histogram_log_likelihood,
+)
 from psyneulink.core.batched.prep import (
     _dynamic_lca_effective_counts,
     normalize_parameter_sets,
@@ -297,6 +303,129 @@ def pnl_csi_deterministic_ddm_kernel(
         (active_mask & ~finished).to(tl.uint8),
         mask=mask,
     )
+
+
+@triton.jit(
+    do_not_specialize=['SEED', 'csi_time_per_step'],
+    do_not_specialize_on_alignment=['SEED', 'csi_time_per_step'],
+)
+def pnl_csi_deterministic_ddm_histogram_kernel(
+    drift, csi_steps, include, rate, noise, threshold, threshold_collapse,
+    non_decision_time, time_step_size, starting_value, ddm_offset,
+    observed_choice, observed_bin, observed_valid, histogram_edges,
+    included_trials, counts, truncated_counts, csi_time_per_step,
+    num_trials: tl.constexpr, num_estimates: tl.constexpr,
+    NUM_INCLUDED: tl.constexpr, ESTIMATE_BLOCKS: tl.constexpr,
+    BINS: tl.constexpr, SMOOTH_RADIUS: tl.constexpr,
+    MAX_STEPS: tl.constexpr,
+    COMMON_RANDOM: tl.constexpr, CENSOR_AFTER_OBSERVATION: tl.constexpr,
+    SEED, BLOCK: tl.constexpr,
+):
+    """Simulate one estimate tile and retain only its observed-bin count.
+
+    A full CSI fit consumes the number of simulations matching each trial's
+    observed decision and RT bin, not the individual simulated outcomes.  The
+    materialized path above is useful for diagnostics, but its outcome and
+    histogram temporaries grow as parameter * trial * estimate.  This kernel
+    reduces one estimate tile to a small integer bin-count vector before it
+    leaves the GPU core; smoothing weights are applied deterministically later.
+    """
+    program_idx = tl.program_id(0)
+    included_lane = program_idx // ESTIMATE_BLOCKS
+    estimate_block = program_idx - included_lane * ESTIMATE_BLOCKS
+    estimate_idx = estimate_block * BLOCK + tl.arange(0, BLOCK)
+    mask = estimate_idx < num_estimates
+    included_idx = included_lane % NUM_INCLUDED
+    param_idx = included_lane // NUM_INCLUDED
+    trial_idx = tl.load(included_trials + included_idx)
+    lane = param_idx * num_trials + trial_idx
+    active_mask = mask
+
+    if COMMON_RANDOM:
+        random_base = (
+            (estimate_idx * num_trials + trial_idx).to(tl.int64) * 4294967296
+        )
+    else:
+        random_base = (
+            ((param_idx * num_estimates + estimate_idx) * num_trials + trial_idx)
+            .to(tl.int64) * 4294967296
+        )
+
+    rate_value = tl.load(rate + lane)
+    noise_value = tl.load(noise + lane)
+    threshold_value = tl.load(threshold + lane)
+    collapse_value = tl.load(threshold_collapse + lane)
+    ndt_value = tl.load(non_decision_time + lane)
+    dt_value = tl.load(time_step_size + lane)
+    value = tl.zeros((BLOCK,), tl.float32) + tl.load(starting_value + lane)
+    offset_value = tl.load(ddm_offset + lane)
+    csi_value = tl.load(csi_steps + lane).to(tl.float32)
+    choice = tl.load(observed_choice + trial_idx)
+    bin_idx = tl.load(observed_bin + trial_idx)
+    censor_bin = tl.minimum(bin_idx + SMOOTH_RADIUS, BINS - 1)
+    censor_upper = tl.load(histogram_edges + censor_bin + 1)
+    observation_valid = tl.load(observed_valid + trial_idx) != 0
+    finished = ~active_mask
+    crossed = tl.zeros((BLOCK,), tl.int32) != 0
+    if CENSOR_AFTER_OBSERVATION:
+        # RT increases monotonically.  A path still running after this trial's
+        # observed bin can never contribute to its likelihood, so fitting does
+        # not need to simulate its irrelevant tail.  Strict truncation checks
+        # disable this exact observation-window censoring and run to MAX_STEPS.
+        onset_time = ndt_value + csi_value * csi_time_per_step
+        finished = finished | ~observation_valid | (onset_time >= censor_upper)
+    steps = tl.zeros((BLOCK,), tl.float32)
+
+    step = 0
+    any_active = tl.sum(active_mask.to(tl.int32), axis=0) > 0
+    while (step < MAX_STEPS) & any_active:
+        active = active_mask & ~finished
+        draw = tl.randn(SEED, random_base + step)
+        drift_value = tl.load(drift + lane * MAX_STEPS + step)
+        boundary = threshold_value + collapse_value * step
+        tolerance = tl.maximum(1.0e-7, threshold_value * 1.0e-6)
+        updated = (
+            value + rate_value * drift_value * dt_value
+            + noise_value * tl.sqrt(dt_value) * draw + offset_value
+        )
+        updated = tl.minimum(tl.maximum(updated, -boundary), boundary)
+        value = tl.where(active, updated, value)
+        steps = tl.where(active, steps + 1.0, steps)
+        step_crossed = active & (tl.abs(value) + tolerance >= boundary)
+        crossed = crossed | step_crossed
+        finished = finished | step_crossed
+        if CENSOR_AFTER_OBSERVATION:
+            current_time = (
+                ndt_value + steps * dt_value + csi_value * csi_time_per_step
+            )
+            finished = finished | (active & (current_time > censor_upper))
+        step += 1
+        any_active = tl.sum((active_mask & ~finished).to(tl.int32), axis=0) > 0
+
+    decision = tl.where(value > 0.0, 1.0, 0.0)
+    response_time = (
+        ndt_value + steps * dt_value + csi_value * csi_time_per_step
+    )
+    decision_matches = tl.abs(decision - choice) <= 1.0e-6
+    eligible = active_mask & crossed & decision_matches & observation_valid
+    count_width: tl.constexpr = 2 * SMOOTH_RADIUS + 1
+    for offset in tl.static_range(-SMOOTH_RADIUS, SMOOTH_RADIUS + 1):
+        target_bin = bin_idx + offset
+        valid_target = (target_bin >= 0) & (target_bin < BINS)
+        safe_bin = tl.minimum(tl.maximum(target_bin, 0), BINS - 1)
+        target_lower = tl.load(histogram_edges + safe_bin)
+        target_upper = tl.load(histogram_edges + safe_bin + 1)
+        in_lower = tl.where(
+            safe_bin == 0,
+            response_time >= target_lower,
+            response_time > target_lower,
+        )
+        in_target = valid_target & in_lower & (response_time <= target_upper)
+        block_count = tl.sum((eligible & in_target).to(tl.int32), axis=0)
+        count_idx = lane * count_width + offset + SMOOTH_RADIUS
+        tl.atomic_add(counts + count_idx, block_count)
+    block_truncated = tl.sum((active_mask & ~finished).to(tl.int32), axis=0)
+    tl.atomic_add(truncated_counts + lane, block_truncated)
 '''
 
 
@@ -602,6 +731,19 @@ def run_csi_deterministic_history_likelihood(
 
     if num_estimates < 1:
         raise ValueError("num_estimates must be positive.")
+    if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
+        raise ValueError(f"bins must be a positive integer, got {bins!r}.")
+    if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
+        raise ValueError(
+            f"smoothing_sigma must be finite and nonnegative, got {smoothing_sigma!r}."
+        )
+    if not np.isfinite(pseudocount) or pseudocount < 0:
+        raise ValueError(
+            f"pseudocount must be finite and nonnegative, got {pseudocount!r}."
+        )
+    smoothing_radius = (
+        0 if smoothing_sigma == 0.0 else max(1, int(np.ceil(3.0 * smoothing_sigma)))
+    )
     rows = normalize_parameter_sets(parameter_sets, ir)
     (
         lca,
@@ -726,16 +868,91 @@ def run_csi_deterministic_history_likelihood(
     history_states = torch.empty(
         (num_params, num_trials, 5), dtype=torch.float32, device=device
     )
-    values = torch.empty(
-        (num_params, num_trials, num_estimates, 2),
-        dtype=torch.float32,
-        device=device,
-    )
-    truncated = torch.empty(
-        (num_params, num_trials, num_estimates),
-        dtype=torch.uint8,
-        device=device,
-    )
+    # Debugging promises the raw outcomes.  Very wide smoothing kernels retain
+    # the general materialized implementation to avoid generating a huge
+    # statically-unrolled Triton loop; ordinary fitting bandwidths are reduced
+    # directly in the DDM kernel.
+    materialize_outcomes = return_debug or smoothing_radius > 8
+    values = None
+    truncated = None
+    counts = None
+    truncated_counts = None
+    observed_choice = None
+    observed_bins = None
+    observed_valid = None
+    histogram_edges = None
+    smoothing_weights = None
+    included_trials = None
+    if materialize_outcomes:
+        values = torch.empty(
+            (num_params, num_trials, num_estimates, 2),
+            dtype=torch.float32,
+            device=device,
+        )
+        truncated = torch.empty(
+            (num_params, num_trials, num_estimates),
+            dtype=torch.uint8,
+            device=device,
+        )
+    else:
+        exp_tensor = tensor(exp_data)
+        exp_continuous = exp_tensor[:, 1:2]
+        histogram_edges = _bin_edges(
+            exp_continuous,
+            exp_continuous,
+            bins,
+            bin_range,
+            torch,
+        )[0].contiguous()
+        observed_choice = exp_tensor[:, 0].contiguous()
+        observed_bins = (
+            torch.bucketize(exp_continuous[:, 0].contiguous(), histogram_edges[1:-1])
+            .to(torch.int32)
+            .contiguous()
+        )
+        observed_valid = (
+            (
+                (exp_continuous[:, 0] >= histogram_edges[0])
+                & (exp_continuous[:, 0] <= histogram_edges[-1])
+            )
+            .to(torch.uint8)
+            .contiguous()
+        )
+        if smoothing_radius:
+            offsets = torch.arange(
+                -smoothing_radius,
+                smoothing_radius + 1,
+                dtype=torch.int32,
+                device=device,
+            )
+            kernel = torch.exp(
+                -0.5 * (offsets.to(torch.float32) / float(smoothing_sigma)) ** 2
+            )
+            valid_offsets = (observed_bins[:, None] + offsets[None, :] >= 0) & (
+                observed_bins[:, None] + offsets[None, :] < bins
+            )
+            normalizer = (valid_offsets.to(torch.float32) * kernel[None, :]).sum(
+                dim=1
+            )
+            smoothing_weights = (kernel[None, :] / normalizer[:, None]).contiguous()
+        else:
+            smoothing_weights = torch.ones(
+                (num_trials, 1), dtype=torch.float32, device=device
+            )
+        included_indices = np.flatnonzero(include)
+        if not len(included_indices):
+            # Keep the Triton launch shape nonzero; the score mask below still
+            # makes an all-excluded likelihood exactly zero.
+            included_indices = np.asarray([0], dtype=np.int32)
+        included_trials = tensor(included_indices, dtype=torch.int32)
+        counts = torch.zeros(
+            (num_params, num_trials, 2 * smoothing_radius + 1),
+            dtype=torch.int32,
+            device=device,
+        )
+        truncated_counts = torch.zeros(
+            (num_params, num_trials), dtype=torch.int32, device=device
+        )
 
     with interpret_scope(False):
         module = load_triton_kernel_module(
@@ -773,11 +990,8 @@ def run_csi_deterministic_history_likelihood(
             num_warps=1,
         )
 
-        total_lanes = num_params * num_trials * num_estimates
         block = launch["block_size"]
-        module.pnl_csi_deterministic_ddm_kernel[
-            (triton.cdiv(total_lanes, block),)
-        ](
+        ddm_arguments = (
             drift_paths,
             csi_tensor,
             include_tensor,
@@ -789,43 +1003,104 @@ def run_csi_deterministic_history_likelihood(
             parameter(ddm.params["time_step_size"]),
             parameter(ddm.params["starting_value"]),
             parameter(ddm.params["offset"]),
-            values,
-            truncated,
-            csi_time_per_step,
-            total_lanes=total_lanes,
-            num_trials=num_trials,
-            num_estimates=num_estimates,
-            MAX_STEPS=ir.max_steps,
-            COMMON_RANDOM=bool(common_random_numbers),
-            SEED=0 if seed is None else int(seed),
-            BLOCK=block,
-            **_compiler_launch_options(launch),
         )
+        if materialize_outcomes:
+            total_lanes = num_params * num_trials * num_estimates
+            module.pnl_csi_deterministic_ddm_kernel[(triton.cdiv(total_lanes, block),)](
+                *ddm_arguments,
+                values,
+                truncated,
+                csi_time_per_step,
+                total_lanes=total_lanes,
+                num_trials=num_trials,
+                num_estimates=num_estimates,
+                MAX_STEPS=ir.max_steps,
+                COMMON_RANDOM=bool(common_random_numbers),
+                SEED=0 if seed is None else int(seed),
+                BLOCK=block,
+                **_compiler_launch_options(launch),
+            )
+        else:
+            estimate_blocks = triton.cdiv(num_estimates, block)
+            module.pnl_csi_deterministic_ddm_histogram_kernel[
+                (num_params * len(included_trials) * estimate_blocks,)
+            ](
+                *ddm_arguments,
+                observed_choice,
+                observed_bins,
+                observed_valid,
+                histogram_edges,
+                included_trials,
+                counts,
+                truncated_counts,
+                csi_time_per_step,
+                num_trials=num_trials,
+                num_estimates=num_estimates,
+                NUM_INCLUDED=len(included_trials),
+                ESTIMATE_BLOCKS=estimate_blocks,
+                BINS=bins,
+                SMOOTH_RADIUS=smoothing_radius,
+                MAX_STEPS=ir.max_steps,
+                COMMON_RANDOM=bool(common_random_numbers),
+                CENSOR_AFTER_OBSERVATION=not strict_truncation,
+                SEED=0 if seed is None else int(seed),
+                BLOCK=block,
+                **_compiler_launch_options(launch),
+            )
 
-    nonfinite = int((~torch.isfinite(values)).sum().item())
-    if nonfinite:
-        raise FloatingPointError(
-            f"CSI deterministic-history simulation produced {nonfinite} "
-            "non-finite outcomes."
-        )
-    included_lanes = include_tensor[None, :, None].expand_as(truncated) != 0
-    included_count = int(included_lanes.sum().item())
-    truncated_count = int(((truncated != 0) & included_lanes).sum().item())
+    included_count = num_params * int(include.sum()) * num_estimates
+    if materialize_outcomes:
+        nonfinite = int((~torch.isfinite(values)).sum().item())
+        if nonfinite:
+            raise FloatingPointError(
+                f"CSI deterministic-history simulation produced {nonfinite} "
+                "non-finite outcomes."
+            )
+        included_lanes = include_tensor[None, :, None].expand_as(truncated) != 0
+        truncated_count = int(((truncated != 0) & included_lanes).sum().item())
+    else:
+        truncated_count = int(truncated_counts.sum().item())
     fraction = 0.0 if included_count == 0 else truncated_count / included_count
     _report_truncation({ddm.name: fraction}, ir.max_steps, strict_truncation)
 
-    score = histogram_log_likelihood(
-        values,
-        exp_data,
-        categorical_dims,
-        bins=bins,
-        bin_range=bin_range,
-        smoothing_sigma=smoothing_sigma,
-        pseudocount=pseudocount,
-        categorical_cardinalities=categorical_cardinalities,
-        include_mask=include,
-    )
-    score_array = np.asarray(score, dtype=float).reshape(-1)
+    if materialize_outcomes:
+        score = histogram_log_likelihood(
+            values,
+            exp_data,
+            categorical_dims,
+            bins=bins,
+            bin_range=bin_range,
+            smoothing_sigma=smoothing_sigma,
+            pseudocount=pseudocount,
+            categorical_cardinalities=categorical_cardinalities,
+            include_mask=include,
+        )
+        score_array = np.asarray(score, dtype=float).reshape(-1)
+    else:
+        if pseudocount > 0:
+            cardinalities = _categorical_cardinalities(
+                exp_data,
+                categorical,
+                categorical_cardinalities,
+            )
+            joint_bin_count = float(bins * np.prod(cardinalities))
+        else:
+            joint_bin_count = 0.0
+        weighted_counts = (
+            counts.to(torch.float32) * smoothing_weights[None, :, :]
+        ).sum(dim=2)
+        density = (weighted_counts + pseudocount) / (
+            float(num_estimates) + pseudocount * joint_bin_count
+        )
+        density = density / (histogram_edges[1] - histogram_edges[0])
+        density = torch.clamp(density, min=ZERO_PROB)
+        log_density = torch.log(density)
+        log_density = torch.where(
+            include_tensor[None, :] != 0,
+            log_density,
+            torch.zeros_like(log_density),
+        )
+        score_array = log_density.sum(dim=1).detach().cpu().numpy().astype(float)
     result = float(score_array[0]) if num_params == 1 else score_array
     if return_debug:
         return result, {
