@@ -648,3 +648,42 @@ Temporal refinement preserves bounded memory but costs arithmetic. One
 10 ms on the RTX 2080 Ti, almost exactly the expected tenfold increase. The
 GB300 system is therefore unnecessary for an individual diagnostic but useful
 for additional seeds, multiple subjects, or a full 1 ms fitting study.
+
+## GPU versus original LLVM simulation audit
+
+`csi_gpu_llvm_simulation_audit.py` compares the batched Triton simulator
+directly with `LLVMRun` execution of the original CSI model in
+`data fitting/expectation_model_study2_study3.py`. It deliberately bypasses
+both likelihood implementations, so the known LLVM likelihood-history problem
+cannot affect this comparison. Each stochastic LLVM replicate resets the full
+composition to the canonical initial state before running the same mixed trial
+sequence; the GPU lanes have the same full-sequence interpretation. Because
+the two backends use different random-stream layouts, stochastic results are
+compared as distributions rather than lane by lane.
+
+The local audit used 16 balanced trials and 1,000 independently initialized
+sequence replicates per backend in three parameter regimes. Zero-noise runs
+first checked the state transitions exactly: maximum absolute GPU-versus-LLVM
+errors were `3.8e-8`, `1.8e-7`, and `4.5e-8`. The stochastic results were:
+
+| regime | accuracy, GPU / LLVM | mean RT, GPU / LLVM | RT Wasserstein |
+| --- | --- | --- | --- |
+| baseline collapsing | 0.8461 / 0.8468 | 0.7329 / 0.7346 s | 0.0020 s |
+| low-gain constant boundary | 0.9104 / 0.9081 | 1.8879 / 1.8955 s | 0.0166 s |
+| high-gain fast collapse | 0.9397 / 0.9410 | 0.7862 / 0.7875 s | 0.0019 s |
+
+All overall and repeat/switch, congruent/incongruent, and correct-response-sign
+strata passed the prespecified mean checks. The largest overall standardized
+difference was 0.78 standard errors for accuracy and 0.78 for mean RT. A direct
+LLVM-versus-Triton deterministic test is also retained in
+`test_batched_csi_coevolving_acceptance.py`.
+
+One initial stress run found that the fitting default of 1,200 DDM steps
+censored 0.04% of low-gain constant-boundary GPU trajectories. The audit
+therefore defaults to 5,000 steps and enables strict truncation detection. This
+does not affect the fitted collapsing-boundary regimes checked previously, but
+1,200 should not be treated as a safe universal cap over broader parameter
+spaces. Subject-level sequences and additional parameter regions remain useful
+extensions; the present result establishes close agreement for the tested CSI
+simulation semantics, not a proof over the entire parameter space and not a
+validation of either likelihood calculation.

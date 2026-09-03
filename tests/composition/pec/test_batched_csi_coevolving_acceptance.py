@@ -1972,6 +1972,35 @@ def test_csi_deterministic_gpu_matches_oracle(registered_csi_drift_rate):
     )
 
 
+@pytest.mark.llvm
+@pytest.mark.triton
+@pytest.mark.triton_gpu
+def test_csi_deterministic_gpu_matches_llvm(registered_csi_drift_rate):
+    """Pin direct LLVM/Triton agreement independently of likelihood code."""
+    composition, inputs, outputs = _model(
+        csi_repeat=3,
+        csi_switch=4,
+        cue_values=[[0.0], [1.0], [0.0], [1.0]],
+        ddm_noise=0.0,
+        iti=2,
+    )
+    composition.run(
+        inputs=inputs,
+        execution_mode=pnl.ExecutionMode.LLVMRun,
+    )
+    expected = _selected_python_results(composition, outputs)
+    actual = _run_compiled_csi(
+        "triton",
+        csi_repeat=3,
+        csi_switch=4,
+        cue_values=[[0.0], [1.0], [0.0], [1.0]],
+        ddm_noise=0.0,
+        iti=2,
+    )
+
+    np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
+
+
 @pytest.mark.parametrize("model_options,_", _AFFINE_TIMING_CASES)
 @pytest.mark.triton
 @pytest.mark.triton_gpu
