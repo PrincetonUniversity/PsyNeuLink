@@ -33,6 +33,9 @@ PYTHON="$REPO_ROOT/.venv/bin/python"
 DRIVER="$SCRIPT_DIR/../csi_fitting_readiness.py"
 DATA_FILE="${CSI_DATA_FILE:-$SCRIPT_DIR/data_to_fit_study3.csv}"
 RESULTS_ROOT="${CSI_RESULTS_ROOT:-$SCRIPT_DIR/audit/fitting-readiness-${SLURM_ARRAY_JOB_ID:-mapping}}"
+# The TigerAI virtual environment is shared with another checkout. Put this
+# immutable run worktree first so imports match the recorded Git revision.
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 if [[ ! -x "$PYTHON" ]]; then
     echo "Python environment not found: $PYTHON" >&2

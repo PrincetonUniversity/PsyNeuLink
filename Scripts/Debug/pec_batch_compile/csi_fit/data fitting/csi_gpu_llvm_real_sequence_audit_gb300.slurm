@@ -27,6 +27,9 @@ DRIVER="$SCRIPT_DIR/../csi_gpu_llvm_simulation_audit.py"
 DATA_FILE="${CSI_DATA_FILE:-$SCRIPT_DIR/data_to_fit_study3.csv}"
 PARAMETER_ROOT="${CSI_PARAMETER_ROOT:-$SCRIPT_DIR/../direct_likelihood/fits}"
 RESULTS_ROOT="${CSI_RESULTS_ROOT:-$SCRIPT_DIR/audit/gpu-llvm-real-${SLURM_ARRAY_JOB_ID:-mapping}}"
+# The TigerAI virtual environment is shared with another checkout. Put this
+# immutable run worktree first so imports match the recorded Git revision.
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 SUBJECTS=(1 4 7)
 PARAMETER_FILES=(
