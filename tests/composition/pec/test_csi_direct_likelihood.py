@@ -1,5 +1,6 @@
 """Numerical contracts for the research-local CSI direct likelihood."""
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import sys
@@ -893,6 +894,65 @@ def test_recovery_legacy_parameter_conversion_preserves_physical_units():
     for time_step in (0.01, 0.001):
         converted = readiness._legacy_row_to_physical_vector(row(time_step))
         np.testing.assert_allclose(converted, physical, rtol=0.0, atol=1e-12)
+
+
+def test_generation_summary_compares_resolution_levels_by_seed(tmp_path):
+    values = {
+        "continuous": ((0.80, 0.70), (0.90, 0.80)),
+        "gpu-1ms": ((0.81, 0.701), (0.91, 0.802)),
+        "gpu-10ms": ((0.82, 0.75), (0.88, 0.86)),
+    }
+    for generator, runs in values.items():
+        for seed, (accuracy, response_time) in zip((17, 43), runs):
+            path = tmp_path / generator / str(seed) / "generation.json"
+            path.parent.mkdir(parents=True)
+            readiness._write_json(
+                {
+                    "generator": generator,
+                    "subject_nr": 1,
+                    "simulation_seed": seed,
+                    "rows": 561,
+                    "included_rows": 485,
+                    "simulated_accuracy": accuracy,
+                    "mean_response_time": response_time,
+                    "included_simulated_accuracy": accuracy,
+                    "included_mean_response_time": response_time,
+                    "generation_seconds": 1.0,
+                    "diagnostics": {"maximum_decision_time": 2.0},
+                    "condition_summary": {
+                        condition: {
+                            "simulated_accuracy": accuracy,
+                            "mean_response_time": response_time,
+                            "included_simulated_accuracy": accuracy,
+                            "included_mean_response_time": response_time,
+                        }
+                        for condition in readiness.CONDITIONS
+                    },
+                },
+                path,
+            )
+
+    output = tmp_path / "summary.json"
+    readiness._summarize_generations(
+        SimpleNamespace(paths=[tmp_path], output=output, csv_output=None)
+    )
+    report = json.loads(output.read_text())
+    comparisons = {
+        (item["generator"], item["reference"]): item
+        for item in report["comparisons"]
+    }
+
+    assert report["generation_count"] == 6
+    assert comparisons[("gpu-1ms", "continuous")]["common_seeds"] == [17, 43]
+    assert comparisons[("gpu-1ms", "continuous")][
+        "mean_response_time_difference_seconds"
+    ]["mean"] == pytest.approx(0.0015)
+    assert comparisons[("gpu-10ms", "continuous")][
+        "mean_response_time_difference_seconds"
+    ]["mean"] == pytest.approx(0.055)
+    assert comparisons[("gpu-10ms", "gpu-1ms")][
+        "mean_response_time_difference_seconds"
+    ]["mean"] == pytest.approx(0.0535)
 
 
 def test_staged_fit_uses_coarse_default_and_fine_meshes(monkeypatch):

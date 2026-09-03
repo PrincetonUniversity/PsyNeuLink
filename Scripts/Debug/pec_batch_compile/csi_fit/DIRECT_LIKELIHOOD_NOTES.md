@@ -752,3 +752,45 @@ The Slurm mapping can be inspected without submission from any directory inside
 the repository by setting `CSI_MAPPING_ONLY=1` and `SLURM_ARRAY_TASK_ID` before
 running either template with `bash`. Do not invoke `sbatch` until the resource
 request and experimental budget have been approved.
+
+## Proposed resolution-ladder follow-up
+
+The first crossed recovery run found an average 55 ms RT difference between
+three continuous-generated and three 10 ms GPU-generated sequences, while the
+three fitting methods had similar parameter recovery on continuous data. The
+next experiment should distinguish a resolution effect from ordinary
+single-sequence variability before spending compute on a broad optimizer sweep.
+
+`csi_resolution_ladder_gb300.slurm` is prepared but not submitted. Its first 90
+array tasks generate 30 complete subject-1 sequences from each of the continuous,
+GPU 1 ms, and GPU 10 ms processes at the same interior truth. This estimates
+mean RT and accuracy differences across independently sampled full sequences.
+The final nine tasks generate GPU 1 ms data for seeds 17, 43, and 79 and fit
+each with the direct, GPU 1 ms, and GPU 10 ms likelihoods. Together with the
+previous 18 cells, those results complete a three-generator by three-fitter by
+three-seed recovery matrix.
+
+The main convergence question is whether the GPU 1 ms generative RT distribution
+moves materially toward the continuous generator relative to GPU 10 ms. If it
+does, the earlier RT difference is primarily temporal discretization. If it
+does not, the next audit should isolate LCA Euler/RK4 evolution and endpoint
+versus continuous first-passage semantics at fixed resolution. Parameter RMSE
+remains secondary with only three recovery seeds; repeated optimizer seeds and
+independent Monte Carlo rescoring should target whichever completed cells remain
+unstable after this resolution experiment.
+
+The primary estimates are the across-seed mean RT contrasts GPU 1 ms minus
+continuous, GPU 10 ms minus continuous, and GPU 10 ms minus GPU 1 ms, with the
+complete sequence as the replication unit. A positive GPU-10-ms-minus-GPU-1-ms
+contrast whose uncertainty excludes zero is the clearest evidence of numerical
+convergence. Accuracy and the same contrasts within each instruction condition
+are secondary diagnostics. Equal seed labels organize matched cells but do not
+imply common random numbers across the three generators.
+
+Generation results can be aggregated with:
+
+```bash
+uv run python Scripts/Debug/pec_batch_compile/csi_fit/csi_fitting_readiness.py \
+  summarize-generations <resolution-ladder-root>/generation \
+  --output generation-summary.json --csv-output generation-summary.csv
+```

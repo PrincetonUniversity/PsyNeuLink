@@ -466,6 +466,25 @@ def generate_dataset(
     frame["synthetic_seed"] = simulation_seed
     if "row_id" not in frame:
         frame["row_id"] = np.arange(len(frame), dtype=int)
+    include = frame["likelihood_include_mask"].to_numpy(dtype=bool)
+    condition_summary = {}
+    for condition in CONDITIONS:
+        condition_mask = frame["sequence"].to_numpy() == condition
+        included_condition_mask = condition_mask & include
+        condition_summary[condition] = {
+            "rows": int(np.sum(condition_mask)),
+            "included_rows": int(np.sum(included_condition_mask)),
+            "simulated_accuracy": float(np.mean(choice[condition_mask])),
+            "mean_response_time": float(
+                np.mean(response_time[condition_mask])
+            ),
+            "included_simulated_accuracy": float(
+                np.mean(choice[included_condition_mask])
+            ),
+            "included_mean_response_time": float(
+                np.mean(response_time[included_condition_mask])
+            ),
+        }
     data_output.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(data_output, index=False)
     payload = {
@@ -474,9 +493,12 @@ def generate_dataset(
         "subject_nr": subject,
         "simulation_seed": simulation_seed,
         "rows": len(frame),
-        "included_rows": int(frame["likelihood_include_mask"].astype(bool).sum()),
+        "included_rows": int(np.sum(include)),
         "simulated_accuracy": float(np.mean(choice)),
         "mean_response_time": float(np.mean(response_time)),
+        "included_simulated_accuracy": float(np.mean(choice[include])),
+        "included_mean_response_time": float(np.mean(response_time[include])),
+        "condition_summary": condition_summary,
         "truth_parameter_names": parameter_names(),
         "truth_parameter_vector": truth_vector,
         "generation_seconds": time.perf_counter() - start,
@@ -704,6 +726,232 @@ def _result_paths(paths: list[Path]) -> list[Path]:
     return sorted(set(result.resolve() for result in results))
 
 
+def _generation_paths(paths: list[Path]) -> list[Path]:
+    results = []
+    for path in paths:
+        if path.is_dir():
+            results.extend(path.rglob("generation.json"))
+        elif path.is_file():
+            results.append(path)
+    return sorted(set(result.resolve() for result in results))
+
+
+def _sample_summary(values: list[float]) -> dict[str, float | int | None]:
+    array = np.asarray(values, dtype=float)
+    standard_deviation = (
+        float(np.std(array, ddof=1)) if len(array) > 1 else None
+    )
+    standard_error = (
+        standard_deviation / math.sqrt(len(array))
+        if standard_deviation is not None
+        else None
+    )
+    return {
+        "runs": len(array),
+        "mean": float(np.mean(array)),
+        "standard_deviation": standard_deviation,
+        "standard_error": standard_error,
+        "minimum": float(np.min(array)),
+        "maximum": float(np.max(array)),
+    }
+
+
+def _summarize_generations(args) -> None:
+    paths = _generation_paths(args.paths)
+    if not paths:
+        raise SystemExit("No generation.json files were found.")
+    payloads = [json.loads(path.read_text()) for path in paths]
+    indexed = {}
+    for payload, path in zip(payloads, paths):
+        key = (payload["generator"], int(payload["simulation_seed"]))
+        if key in indexed:
+            raise SystemExit(
+                "Generation summary requires one result per generator/seed; "
+                f"found duplicates for {key}: {indexed[key][1]} and {path}."
+            )
+        indexed[key] = (payload, path)
+
+    groups = []
+    for generator in sorted({key[0] for key in indexed}):
+        runs = [
+            payload
+            for (candidate, _), (payload, _) in indexed.items()
+            if candidate == generator
+        ]
+        groups.append(
+            {
+                "generator": generator,
+                "accuracy": _sample_summary(
+                    [run["simulated_accuracy"] for run in runs]
+                ),
+                "mean_response_time_seconds": _sample_summary(
+                    [run["mean_response_time"] for run in runs]
+                ),
+                "included_accuracy": _sample_summary(
+                    [run["included_simulated_accuracy"] for run in runs]
+                ),
+                "included_mean_response_time_seconds": _sample_summary(
+                    [run["included_mean_response_time"] for run in runs]
+                ),
+                "maximum_decision_time_seconds": _sample_summary(
+                    [
+                        run["diagnostics"]["maximum_decision_time"]
+                        for run in runs
+                    ]
+                ),
+                "generation_seconds": _sample_summary(
+                    [run["generation_seconds"] for run in runs]
+                ),
+                "conditions": {
+                    condition: {
+                        "accuracy": _sample_summary(
+                            [
+                                run["condition_summary"][condition][
+                                    "simulated_accuracy"
+                                ]
+                                for run in runs
+                            ]
+                        ),
+                        "mean_response_time_seconds": _sample_summary(
+                            [
+                                run["condition_summary"][condition][
+                                    "mean_response_time"
+                                ]
+                                for run in runs
+                            ]
+                        ),
+                        "included_accuracy": _sample_summary(
+                            [
+                                run["condition_summary"][condition][
+                                    "included_simulated_accuracy"
+                                ]
+                                for run in runs
+                            ]
+                        ),
+                        "included_mean_response_time_seconds": _sample_summary(
+                            [
+                                run["condition_summary"][condition][
+                                    "included_mean_response_time"
+                                ]
+                                for run in runs
+                            ]
+                        ),
+                    }
+                    for condition in CONDITIONS
+                },
+            }
+        )
+
+    comparisons = []
+    available_generators = {key[0] for key in indexed}
+    comparison_pairs = (
+        ("gpu-1ms", "continuous"),
+        ("gpu-10ms", "continuous"),
+        ("gpu-10ms", "gpu-1ms"),
+    )
+    for generator, reference in comparison_pairs:
+        if generator not in available_generators or reference not in available_generators:
+            continue
+        reference_seeds = {
+            seed for candidate, seed in indexed if candidate == reference
+        }
+        generator_seeds = {
+            seed for candidate, seed in indexed if candidate == generator
+        }
+        common_seeds = sorted(reference_seeds.intersection(generator_seeds))
+        if not common_seeds:
+            continue
+        accuracy_difference = []
+        response_time_difference = []
+        condition_differences = {
+            condition: {"accuracy": [], "response_time": []}
+            for condition in CONDITIONS
+        }
+        for seed in common_seeds:
+            target = indexed[(generator, seed)][0]
+            baseline = indexed[(reference, seed)][0]
+            accuracy_difference.append(
+                target["simulated_accuracy"] - baseline["simulated_accuracy"]
+            )
+            response_time_difference.append(
+                target["mean_response_time"] - baseline["mean_response_time"]
+            )
+            for condition in CONDITIONS:
+                target_condition = target["condition_summary"][condition]
+                baseline_condition = baseline["condition_summary"][condition]
+                condition_differences[condition]["accuracy"].append(
+                    target_condition["simulated_accuracy"]
+                    - baseline_condition["simulated_accuracy"]
+                )
+                condition_differences[condition]["response_time"].append(
+                    target_condition["mean_response_time"]
+                    - baseline_condition["mean_response_time"]
+                )
+        comparisons.append(
+            {
+                "generator": generator,
+                "reference": reference,
+                "common_seeds": common_seeds,
+                "accuracy_difference": _sample_summary(accuracy_difference),
+                "mean_response_time_difference_seconds": _sample_summary(
+                    response_time_difference
+                ),
+                "conditions": {
+                    condition: {
+                        "accuracy_difference": _sample_summary(
+                            condition_differences[condition]["accuracy"]
+                        ),
+                        "mean_response_time_difference_seconds": _sample_summary(
+                            condition_differences[condition]["response_time"]
+                        ),
+                    }
+                    for condition in CONDITIONS
+                },
+            }
+        )
+
+    report = {
+        "generation_count": len(payloads),
+        "groups": groups,
+        "comparisons": comparisons,
+        "interpretation": (
+            "Uncertainty is across independently generated complete subject "
+            "sequences. Equal numeric seeds identify matched experiment cells, "
+            "but different generators do not share identical random streams."
+        ),
+        "results": [str(path) for path in paths],
+    }
+    _write_json(report, args.output)
+    if args.csv_output is not None:
+        rows = []
+        for payload, path in zip(payloads, paths):
+            rows.append(
+                {
+                    "result": str(path),
+                    "generator": payload["generator"],
+                    "subject_nr": payload["subject_nr"],
+                    "simulation_seed": payload["simulation_seed"],
+                    "rows": payload["rows"],
+                    "included_rows": payload["included_rows"],
+                    "simulated_accuracy": payload["simulated_accuracy"],
+                    "mean_response_time": payload["mean_response_time"],
+                    "included_simulated_accuracy": payload[
+                        "included_simulated_accuracy"
+                    ],
+                    "included_mean_response_time": payload[
+                        "included_mean_response_time"
+                    ],
+                    "maximum_decision_time": payload["diagnostics"][
+                        "maximum_decision_time"
+                    ],
+                    "generation_seconds": payload["generation_seconds"],
+                }
+            )
+        args.csv_output.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(rows).to_csv(args.csv_output, index=False)
+    print(args.output)
+
+
 def _summarize(args) -> None:
     paths = _result_paths(args.paths)
     if not paths:
@@ -826,6 +1074,15 @@ def make_parser() -> argparse.ArgumentParser:
     summarize.add_argument("--output", type=Path, required=True)
     summarize.add_argument("--csv-output", type=Path)
     summarize.set_defaults(action=_summarize)
+
+    generation_summary = commands.add_parser(
+        "summarize-generations",
+        help="Aggregate repeated synthetic-generation diagnostics.",
+    )
+    generation_summary.add_argument("paths", type=Path, nargs="+")
+    generation_summary.add_argument("--output", type=Path, required=True)
+    generation_summary.add_argument("--csv-output", type=Path)
+    generation_summary.set_defaults(action=_summarize_generations)
     return parser
 
 
