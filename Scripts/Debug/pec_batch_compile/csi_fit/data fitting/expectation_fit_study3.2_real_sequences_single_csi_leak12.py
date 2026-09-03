@@ -7,6 +7,7 @@ import argparse
 import optuna
 import re
 import copy
+import math
 from datetime import datetime
 from pathlib import Path
 from psyneulink.core.batched import batched_node_op
@@ -25,7 +26,31 @@ parser.add_argument(
 )
 parser.add_argument("--num_estimates", "--num-estimates", default=10000, type=int)
 parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=int)
-parser.add_argument("--max_steps", "--max-steps", default=1200, type=int)
+parser.add_argument("--max_steps", "--max-steps", default=None, type=int)
+parser.add_argument(
+    "--model-time-step",
+    default=0.01,
+    type=float,
+    help=(
+        "Physical LCA/DDM step in seconds. ITI, CSI, and boundary-collapse "
+        "parameters are rescaled so 0.01 and 0.001 fit the same physical bounds."
+    ),
+)
+parser.add_argument(
+    "--maximum-simulation-time",
+    default=12.0,
+    type=float,
+    help=(
+        "Physical DDM horizon used to derive --max-steps when it is omitted. "
+        "An explicit --max-steps takes precedence."
+    ),
+)
+parser.add_argument(
+    "--strict-truncation",
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help="Fail the likelihood evaluation if any DDM reaches --max-steps.",
+)
 parser.add_argument("--bins", default=100, type=int)
 parser.add_argument(
     "--smoothing_sigma",
@@ -118,6 +143,11 @@ parser.add_argument(
     help="Directory for fit, predictive, and rescoring CSV files.",
 )
 parser.add_argument(
+    "--fit-output",
+    type=Path,
+    help="Optional exact path for the one-row fit CSV.",
+)
+parser.add_argument(
     "--run_label",
     "--run-label",
     default=None,
@@ -148,6 +178,29 @@ if args.smoothing_sigma < 0:
     parser.error("--smoothing-sigma must be nonnegative.")
 if args.pseudocount < 0:
     parser.error("--pseudocount must be nonnegative.")
+if not math.isfinite(args.model_time_step) or args.model_time_step <= 0:
+    parser.error("--model-time-step must be finite and positive.")
+if (
+    not math.isfinite(args.maximum_simulation_time)
+    or args.maximum_simulation_time <= 0
+):
+    parser.error("--maximum-simulation-time must be finite and positive.")
+steps_per_second = round(1.0 / args.model_time_step)
+if not math.isclose(
+    steps_per_second * args.model_time_step,
+    1.0,
+    rel_tol=0.0,
+    abs_tol=1.0e-12,
+):
+    parser.error(
+        "--model-time-step must divide one second into an integer number of steps."
+    )
+if args.max_steps is None:
+    args.max_steps = math.ceil(
+        args.maximum_simulation_time / args.model_time_step
+    )
+if args.max_steps < 1:
+    parser.error("--max-steps must be positive.")
 if args.backend == "llvm" and (args.smoothing_sigma != 0 or args.pseudocount != 0):
     parser.error("--smoothing-sigma and --pseudocount require a batched backend.")
 if args.deterministic_observed_history and args.backend != "triton":
@@ -219,13 +272,13 @@ sf_params = dict(
     gain=10.0,
     leak=12.0,
     competition=3.0,
-    iti=100,
+    iti=steps_per_second,
     csi_switch=0,
     threshold=0.06,
     threshold_collapse=0.0,
     non_decision_time=0.3,
-    lca_time_step_size=0.01,
-    ddm_time_step_size=0.01,
+    lca_time_step_size=args.model_time_step,
+    ddm_time_step_size=args.model_time_step,
     lca_noise=0.0,
     ddm_noise=0.1,
 )
@@ -241,6 +294,22 @@ data_to_fit = data[
     (data.subject_nr == actual_subject_id) &
     data.sequence.isin(["RealRare", "RealFrequent", "NoInstruction"])
 ].reset_index(drop=True)
+
+# Even with strict runtime checks, reject a horizon that is visibly too short
+# to reach the largest observed RT under the smallest fitted NDT and CSI. This
+# catches unit-conversion mistakes before compiling a costly GPU objective.
+minimum_fitted_ndt = 0.1
+minimum_required_decision_time = max(
+    0.0,
+    float(data_to_fit["response_time"].max()) - minimum_fitted_ndt,
+)
+configured_decision_horizon = args.max_steps * args.model_time_step
+if configured_decision_horizon + 1.0e-12 < minimum_required_decision_time:
+    parser.error(
+        "The configured DDM horizon is shorter than the observed-data horizon: "
+        f"{configured_decision_horizon:g}s < {minimum_required_decision_time:g}s. "
+        "Increase --maximum-simulation-time or --max-steps."
+    )
 
 # -- Extract arrays for model inputs and PEC ----------------------------------
 taskSequence            = data_to_fit[["T1", "T2"]].to_numpy()
@@ -260,11 +329,16 @@ decisionMaker       = get_node(comp, "DDM")
 decisionGate        = get_node(comp, "DECISION_GATE")
 responseGate        = get_node(comp, "RESPONSE_GATE")
 
+maximum_csi_steps = round(0.3 / args.model_time_step)
 fit_parameters = {
     ("gain",                       controlExecution):    np.linspace(5.0,   35.0,  301),
-    ("slope",                      cueStimulusInterval): np.linspace(0,     30,     31),
+    ("slope",                      cueStimulusInterval): np.linspace(
+        0, maximum_csi_steps, maximum_csi_steps + 1
+    ),
     ("intercept",                  thresholdMechanism):  np.linspace(0.05,  0.25,  401),
-    ("offset-integrator_function", thresholdMechanism):  np.linspace(-0.003, 0.0,  301),
+    ("offset-integrator_function", thresholdMechanism):  np.linspace(
+        -0.3 * args.model_time_step, 0.0, 301
+    ),
     ("non_decision_time",          decisionMaker):       np.linspace(0.1,   0.4,   301),
 }
 
@@ -290,6 +364,7 @@ if args.backend != "llvm":
     batched_options = {
         "batched_backend": args.backend,
         "batched_max_steps": args.max_steps,
+        "batched_strict_truncation": args.strict_truncation,
     }
     if not args.condition_observed_history:
         batched_options.update(
@@ -360,7 +435,9 @@ print(
     f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}, "
     f"Optimizer Seed {optimizer_seed}, Simulation Seed {simulation_seed}, "
     f"Smoothing Sigma {args.smoothing_sigma}, Pseudocount {args.pseudocount}, "
-    f"History Mode {history_mode}"
+    f"History Mode {history_mode}, Model dt {args.model_time_step:g}s, "
+    f"DDM Horizon {configured_decision_horizon:g}s, "
+    f"Strict Truncation {args.strict_truncation}"
 )
 if args.backend == "triton":
     print(
@@ -504,13 +581,22 @@ df["triton_block_size"] = args.triton_block_size
 df["triton_num_warps"] = args.triton_num_warps
 df["triton_maxnreg"] = args.triton_maxnreg
 df["run_label"] = args.run_label
+df["model_time_step"] = args.model_time_step
+df["max_steps"] = args.max_steps
+df["maximum_simulation_time"] = configured_decision_horizon
+df["strict_truncation"] = args.strict_truncation
 df = pd.concat([df, pd.DataFrame(sf_params, index=[0])], axis=1)
 
 if not args.skip_fit_output:
-    df.to_csv(
-        output_dir / f"{output_stem}.csv",
-        index=False,
+    fit_output = (
+        args.fit_output.expanduser()
+        if args.fit_output is not None
+        else output_dir / f"{output_stem}.csv"
     )
+    if not fit_output.is_absolute():
+        fit_output = Path.cwd() / fit_output
+    fit_output.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(fit_output, index=False)
 
 # -- Posterior predictive checks -----------------------------------------------
 sim_posterior_predict = not args.skip_posterior_predictive
@@ -546,6 +632,7 @@ if sim_posterior_predict:
             # every estimate an independent stream and reuses the fit's kernel
             # specialization.
             common_random_numbers=True,
+            strict_truncation=args.strict_truncation,
             triton_launch_options=fit_function.batched_triton_launch_options,
         )
         outcome_indices = fit_function._batched_outcome_indices(pp_plan)

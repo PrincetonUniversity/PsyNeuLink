@@ -15,6 +15,7 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched import BatchedTrialParameter
+from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
@@ -28,7 +29,14 @@ pytestmark = [
 ]
 
 
-def _make_ddm_pec(batched_backend, num_estimates=150, threshold=0.2):
+def _make_ddm_pec(
+    batched_backend,
+    num_estimates=150,
+    threshold=0.2,
+    *,
+    max_steps=400,
+    strict_truncation=False,
+):
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             starting_value=0.0, rate=1.0, noise=0.5, threshold=threshold,
@@ -66,9 +74,10 @@ def _make_ddm_pec(batched_backend, num_estimates=150, threshold=0.2):
             method="differential_evolution",
             max_iterations=1,
             batched_backend=batched_backend,
-            batched_max_steps=400,
+            batched_max_steps=max_steps,
             batched_bins=30,
             batched_seed=7,
+            batched_strict_truncation=strict_truncation,
         ),
         num_estimates=num_estimates,
         initial_seed=42,
@@ -77,6 +86,19 @@ def _make_ddm_pec(batched_backend, num_estimates=150, threshold=0.2):
     # by pec.run via set_pec_inputs_cache).
     pec.controller._pec_input_values_by_node = {comp.nodes["DDM"]: trial_inputs}
     return pec, comp
+
+
+def test_fit_parameter_bounds_preserve_sub_five_decimal_step():
+    """Fine physical-time grids must not be rounded to an invalid zero step."""
+
+    pec, comp = _make_ddm_pec(None)
+    parameter = ("threshold", comp.nodes["DDM"])
+    pec.controller.fit_parameters[parameter] = np.linspace(0.0, 0.0003, 301)
+
+    lower, upper, step = pec.controller.function.fit_param_bounds["DDM.threshold"]
+    assert lower == 0.0
+    assert upper == pytest.approx(0.0003)
+    assert step == pytest.approx(1.0e-6)
 
 
 @pytest.mark.triton_interpreter
@@ -117,6 +139,19 @@ def test_public_log_likelihood_reuses_batched_objective():
     actual = pec.log_likelihood(0.2, inputs=inputs)
 
     assert actual == pytest.approx(expected, rel=1e-6, abs=1e-5)
+
+
+@pytest.mark.triton_interpreter
+def test_batched_pec_can_fail_on_truncated_likelihood_simulations():
+    pec, _ = _make_ddm_pec(
+        "triton_cpu",
+        num_estimates=4,
+        max_steps=1,
+        strict_truncation=True,
+    )
+
+    with pytest.raises(BatchedTruncationError, match="max_steps=1"):
+        pec.controller.function._make_objective_func()(0.2)
 
 
 def test_batched_backend_none_uses_default_path():

@@ -11,20 +11,26 @@ replicates.  It deliberately bypasses both likelihood implementations.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import importlib.util
 import json
 import math
 from pathlib import Path
 import re
+import sys
 import time
 from typing import Any
 
 import numpy as np
+import pandas as pd
 from scipy.stats import ks_2samp, wasserstein_distance
 
 import psyneulink as pnl
-from psyneulink.core.batched import BatchedCompositionCompiler, batched_node_op
+from psyneulink.core.batched import (
+    BatchedCompositionCompiler,
+    BatchedTrialParameter,
+    batched_node_op,
+)
 from psyneulink.core.globals.utilities import set_global_seed
 
 
@@ -47,11 +53,11 @@ def _batched_csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
 @dataclass(frozen=True)
 class Scenario:
     name: str
-    gain: float
-    csi_switch: float
-    threshold: float
-    collapse: float
-    non_decision_time: float
+    gain: float | np.ndarray
+    csi_switch: float | np.ndarray
+    threshold: float | np.ndarray
+    collapse: float | np.ndarray
+    non_decision_time: float | np.ndarray
 
 
 SCENARIOS = (
@@ -150,7 +156,106 @@ def _trial_sequence(model, trial_count: int, seed: int):
         "correct_response": correct_response,
         "cue": cue,
         "congruent": congruent,
+        "source": "generated",
     }
+
+
+def _real_trial_sequence(path: Path, subject: int, maximum_trials: int | None):
+    frame = pd.read_csv(path)
+    conditions = ("NoInstruction", "RealRare", "RealFrequent")
+    frame = frame[
+        (frame["subject_nr"] == subject)
+        & frame["sequence"].isin(conditions)
+    ].reset_index(drop=True)
+    if maximum_trials is not None:
+        frame = frame.iloc[:maximum_trials].reset_index(drop=True)
+    if frame.empty:
+        raise ValueError(f"subject_nr={subject} has no CSI trials in {path}.")
+    task = frame[["T1", "T2"]].to_numpy(dtype=float)
+    stimulus = frame[["S1", "S2", "S3", "S4"]].to_numpy(dtype=float)
+    cue = np.any(task != np.roll(task, 1, axis=0), axis=1).astype(float)
+    condition_lookup = {name: index for index, name in enumerate(conditions)}
+    return {
+        "task": task,
+        "stimulus": stimulus,
+        "correct_response": frame["correct_response"].to_numpy(dtype=float),
+        "cue": cue,
+        "congruent": np.sign(stimulus[:, 0] - stimulus[:, 1])
+        == np.sign(stimulus[:, 2] - stimulus[:, 3]),
+        "condition_index": np.asarray(
+            [condition_lookup[name] for name in frame["sequence"]], dtype=int
+        ),
+        "source": str(path.resolve()),
+        "subject_nr": subject,
+    }
+
+
+def _load_parameter_vector(path: Path) -> np.ndarray:
+    if path.suffix.lower() == ".csv":
+        frame = pd.read_csv(path)
+        if len(frame) != 1:
+            raise ValueError(
+                f"Parameter CSV must contain one row; found {len(frame)}."
+            )
+        sys_path = str(SCRIPT_DIR)
+        if sys_path not in sys.path:
+            sys.path.insert(0, sys_path)
+        from direct_likelihood.model import ContinuousCSIParameters
+
+        vector = (
+            ContinuousCSIParameters.from_legacy_row(frame.iloc[0])
+            .vector()
+            .detach()
+            .cpu()
+            .numpy()
+        )
+    else:
+        payload = json.loads(path.read_text())
+        if isinstance(payload, dict):
+            for key in (
+                "parameter_vector",
+                "truth_parameter_vector",
+                "recovered_parameter_vector",
+            ):
+                if key in payload:
+                    payload = payload[key]
+                    break
+            else:
+                names = (
+                    "gain[NoInstruction]",
+                    "gain[RealRare]",
+                    "gain[RealFrequent]",
+                    "csi_duration",
+                    "threshold[NoInstruction]",
+                    "threshold[RealRare]",
+                    "threshold[RealFrequent]",
+                    "collapse_rate[NoInstruction]",
+                    "collapse_rate[RealRare]",
+                    "collapse_rate[RealFrequent]",
+                    "non_decision_time[NoInstruction]",
+                    "non_decision_time[RealRare]",
+                    "non_decision_time[RealFrequent]",
+                )
+                payload = [payload[name] for name in names]
+        vector = np.asarray(payload, dtype=float)
+    if vector.shape != (13,) or not np.all(np.isfinite(vector)):
+        raise ValueError("Parameter file must define 13 finite physical values.")
+    return vector
+
+
+def _fitted_scenario(path: Path, trials) -> Scenario:
+    if "condition_index" not in trials:
+        raise ValueError("--parameter-file requires --data-file and --subject.")
+    vector = _load_parameter_vector(path)
+    condition = trials["condition_index"]
+    return Scenario(
+        name=f"fitted_{path.stem}",
+        gain=vector[0:3][condition],
+        csi_switch=np.full(len(condition), round(vector[3] / 0.01)),
+        threshold=vector[4:7][condition],
+        collapse=vector[7:10][condition] * 0.01,
+        non_decision_time=vector[10:13][condition],
+    )
 
 
 def _inputs(composition, trials):
@@ -209,16 +314,110 @@ def _scenario_parameter_sets(composition, scenarios):
     cue = _node(composition, "Cue Stimulus Interval")
     threshold = _node(composition, "Threshold Mechanism")
     ddm = _node(composition, "DDM")
+    def value(item):
+        array = np.asarray(item)
+        return (
+            float(array)
+            if array.ndim == 0
+            else BatchedTrialParameter(array.astype(float))
+        )
+
     return [
         {
-            f"{lca.name}.gain": scenario.gain,
-            f"{cue.name}.slope": scenario.csi_switch,
-            f"{threshold.name}.intercept": scenario.threshold,
-            f"{threshold.name}.offset-integrator_function": scenario.collapse,
-            f"{ddm.name}.non_decision_time": scenario.non_decision_time,
+            f"{lca.name}.gain": value(scenario.gain),
+            f"{cue.name}.slope": value(scenario.csi_switch),
+            f"{threshold.name}.intercept": value(scenario.threshold),
+            f"{threshold.name}.offset-integrator_function": value(
+                scenario.collapse
+            ),
+            f"{ddm.name}.non_decision_time": value(
+                scenario.non_decision_time
+            ),
         }
         for scenario in scenarios
     ]
+
+
+def _is_trial_varying(scenario):
+    return any(
+        np.asarray(value).ndim != 0
+        for value in (
+            scenario.gain,
+            scenario.csi_switch,
+            scenario.threshold,
+            scenario.collapse,
+            scenario.non_decision_time,
+        )
+    )
+
+
+def _trial_values(value, trial_count):
+    array = np.asarray(value, dtype=float)
+    if array.ndim == 0:
+        return np.full(trial_count, float(array))
+    if array.shape != (trial_count,):
+        raise ValueError(
+            f"Trial parameter has shape {array.shape}; expected {(trial_count,)}."
+        )
+    return array
+
+
+def _scenario_blocks(scenario, trial_count):
+    values = np.stack(
+        [
+            _trial_values(value, trial_count)
+            for value in (
+                scenario.gain,
+                scenario.csi_switch,
+                scenario.threshold,
+                scenario.collapse,
+                scenario.non_decision_time,
+            )
+        ],
+        axis=1,
+    )
+    boundaries = np.flatnonzero(np.any(values[1:] != values[:-1], axis=1)) + 1
+    starts = np.concatenate(([0], boundaries))
+    stops = np.concatenate((boundaries, [trial_count]))
+    return tuple((int(start), int(stop), values[start]) for start, stop in zip(starts, stops))
+
+
+def _set_llvm_parameters(composition, values):
+    lca = _node(composition, "Task Activations [C1, C2]")
+    cue = _node(composition, "Cue Stimulus Interval")
+    threshold = _node(composition, "Threshold Mechanism")
+    ddm = _node(composition, "DDM")
+    settings = (
+        (lca, "gain", lca.function.parameters.gain, values[0], False),
+        (cue, "slope", cue.function.parameters.slope, values[1], False),
+        (
+            threshold,
+            "intercept",
+            threshold.function.parameters.intercept,
+            values[2],
+            False,
+        ),
+        (
+            threshold,
+            "offset-integrator_function",
+            threshold.integrator_function.parameters.offset,
+            values[3],
+            False,
+        ),
+        (
+            ddm,
+            "non_decision_time",
+            ddm.function.parameters.non_decision_time,
+            values[4],
+            True,
+        ),
+    )
+    for node, port_name, parameter, value, function_array in settings:
+        function_value = np.asarray([value]) if function_array else float(value)
+        parameter.set(function_value, context=composition)
+        node.parameter_ports[port_name].parameters.value.set(
+            np.asarray([value]), context=composition, override=True
+        )
 
 
 def _gpu_simulations(
@@ -285,26 +484,40 @@ def _llvm_simulations(
         # each run restores the canonical LCA/DDM state while the stream moves
         # forward to fresh draws for the next independent sequence replicate.
         set_global_seed(seed + scenario_index)
+        trial_varying = _is_trial_varying(scenario)
+        model_values = {
+            "gain": 10.0 if trial_varying else scenario.gain,
+            "csi_switch": 0.0 if trial_varying else scenario.csi_switch,
+            "threshold": 0.12 if trial_varying else scenario.threshold,
+            "threshold_collapse": (
+                0.0 if trial_varying else scenario.collapse
+            ),
+            "non_decision_time": (
+                0.2 if trial_varying else scenario.non_decision_time
+            ),
+        }
         composition = model.make_stab_flex(
             **{
                 **BASE_MODEL_OPTIONS,
-                "gain": scenario.gain,
-                "csi_switch": scenario.csi_switch,
-                "threshold": scenario.threshold,
-                "threshold_collapse": scenario.collapse,
-                "non_decision_time": scenario.non_decision_time,
+                **model_values,
                 "ddm_noise": ddm_noise,
             }
         )
         inputs = _inputs(composition, trials)
         outputs = _outputs(composition)
+        blocks = _scenario_blocks(scenario, len(trials["cue"]))
         start = time.perf_counter()
         for replicate in range(replicates):
             composition.reset(clear_results=True)
-            composition.run(
-                inputs=inputs,
-                execution_mode=pnl.ExecutionMode.LLVMRun,
-            )
+            for block_start, block_stop, block_values in blocks:
+                _set_llvm_parameters(composition, block_values)
+                composition.run(
+                    inputs={
+                        node: value[block_start:block_stop]
+                        for node, value in inputs.items()
+                    },
+                    execution_mode=pnl.ExecutionMode.LLVMRun,
+                )
             values[scenario_index, replicate] = (
                 _selected_composition_results(composition, outputs)
             )
@@ -343,13 +556,43 @@ def _group_masks(trials):
 
 
 def _rt_grid_error(values, trials, scenario):
-    csi_seconds = trials["cue"] * scenario.csi_switch * 0.01
+    trial_count = len(trials["cue"])
+    csi_seconds = (
+        trials["cue"]
+        * _trial_values(scenario.csi_switch, trial_count)
+        * 0.01
+    )
+    non_decision_time = _trial_values(
+        scenario.non_decision_time, trial_count
+    )
     decision_steps = (
         values[..., 1]
-        - scenario.non_decision_time
+        - non_decision_time[None, :]
         - csi_seconds[None, :]
     ) / 0.01
     return float(np.max(np.abs(decision_steps - np.round(decision_steps))))
+
+
+def _scenario_description(scenario):
+    def describe(value):
+        array = np.asarray(value, dtype=float)
+        if array.ndim == 0:
+            return float(array)
+        return {
+            "trial_varying": True,
+            "minimum": float(np.min(array)),
+            "maximum": float(np.max(array)),
+            "unique": sorted(np.unique(array).tolist()),
+        }
+
+    return {
+        "name": scenario.name,
+        "gain": describe(scenario.gain),
+        "csi_switch": describe(scenario.csi_switch),
+        "threshold": describe(scenario.threshold),
+        "collapse": describe(scenario.collapse),
+        "non_decision_time": describe(scenario.non_decision_time),
+    }
 
 
 def _summarize_scenario(gpu, llvm, trials, scenario):
@@ -414,7 +657,7 @@ def _summarize_scenario(gpu, llvm, trials, scenario):
         llvm[..., 1], axis=0
     )
     return {
-        "scenario": asdict(scenario),
+        "scenario": _scenario_description(scenario),
         "passes_mean_checks": passed,
         "gpu_decisions": sorted(np.unique(gpu[..., 0]).tolist()),
         "llvm_decisions": sorted(np.unique(llvm[..., 0]).tolist()),
@@ -442,16 +685,24 @@ def _json_default(value):
 
 def run_audit(args):
     model = _load_model_module()
-    trials = _trial_sequence(model, args.trials, args.sequence_seed)
+    if args.data_file is None:
+        trials = _trial_sequence(model, args.trials, args.sequence_seed)
+    else:
+        trials = _real_trial_sequence(
+            args.data_file.expanduser(), args.subject, args.max_real_trials
+        )
     selected = set(args.scenario or ())
-    scenarios = tuple(
-        scenario
-        for scenario in SCENARIOS
-        if not selected or scenario.name in selected
-    )
-    unknown = selected.difference(scenario.name for scenario in SCENARIOS)
-    if unknown:
-        raise ValueError(f"Unknown scenarios: {sorted(unknown)}")
+    if args.parameter_file is not None:
+        scenarios = (_fitted_scenario(args.parameter_file.expanduser(), trials),)
+    else:
+        scenarios = tuple(
+            scenario
+            for scenario in SCENARIOS
+            if not selected or scenario.name in selected
+        )
+        unknown = selected.difference(scenario.name for scenario in SCENARIOS)
+        if unknown:
+            raise ValueError(f"Unknown scenarios: {sorted(unknown)}")
 
     deterministic_gpu, deterministic_gpu_timing = _gpu_simulations(
         model,
@@ -505,8 +756,13 @@ def run_audit(args):
         ),
         "model_source": MODEL_PATH,
         "base_model_options": BASE_MODEL_OPTIONS,
-        "trial_count": args.trials,
-        "sequence_seed": args.sequence_seed,
+        "trial_count": len(trials["cue"]),
+        "trial_source": trials["source"],
+        "subject_nr": trials.get("subject_nr"),
+        "sequence_seed": (
+            args.sequence_seed if args.data_file is None else None
+        ),
+        "parameter_file": args.parameter_file,
         "gpu_replicates": args.gpu_replicates,
         "llvm_replicates": args.llvm_replicates,
         "gpu_seed": args.gpu_seed,
@@ -549,6 +805,30 @@ def make_parser():
     parser.add_argument("--gpu-replicates", type=int, default=2_000)
     parser.add_argument("--llvm-replicates", type=int, default=2_000)
     parser.add_argument("--sequence-seed", type=int, default=17)
+    parser.add_argument(
+        "--data-file",
+        type=Path,
+        help="Use an actual participant's ordered trial inputs instead of a generated sequence.",
+    )
+    parser.add_argument(
+        "--subject",
+        type=int,
+        default=1,
+        help="Actual subject_nr selected with --data-file.",
+    )
+    parser.add_argument(
+        "--max-real-trials",
+        type=int,
+        help="Optional prefix length for a quick real-sequence audit.",
+    )
+    parser.add_argument(
+        "--parameter-file",
+        type=Path,
+        help=(
+            "One direct JSON or legacy 10 ms fit CSV. Requires --data-file; "
+            "condition-specific values follow the real trial sequence."
+        ),
+    )
     parser.add_argument("--gpu-seed", type=int, default=29)
     parser.add_argument("--llvm-seed", type=int, default=31)
     parser.add_argument(
@@ -602,8 +882,14 @@ def _print_summary(payload):
 
 def main():
     args = make_parser().parse_args()
-    if args.trials < 8 or args.trials % 8:
+    if args.data_file is None and (args.trials < 8 or args.trials % 8):
         raise SystemExit("--trials must be a positive multiple of eight.")
+    if args.parameter_file is not None and args.data_file is None:
+        raise SystemExit("--parameter-file requires --data-file.")
+    if args.parameter_file is not None and args.scenario:
+        raise SystemExit("--parameter-file cannot be combined with --scenario.")
+    if args.max_real_trials is not None and args.max_real_trials < 1:
+        raise SystemExit("--max-real-trials must be positive.")
     if args.gpu_replicates < 2 or args.llvm_replicates < 2:
         raise SystemExit("Stochastic replicate counts must be at least two.")
     payload = run_audit(args)

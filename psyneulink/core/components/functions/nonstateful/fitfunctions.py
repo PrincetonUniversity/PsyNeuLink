@@ -605,6 +605,12 @@ class PECOptimizationFunction(OptimizationFunction):
         and ``maxnreg``. Omit this mapping to use the established 128-lane,
         four-warp launch without a register cap.
 
+    batched_strict_truncation :
+        If True, raise an error when any batched likelihood simulation reaches
+        ``batched_max_steps`` before its termination condition. This is useful
+        for fitting and validation workflows where silently censored response
+        times would bias the objective. Defaults to False for compatibility.
+
     conditioned_likelihood :
         If True, score the CSI model one trial at a time and resample its
         retained state using the current observed choice/RT before continuing.
@@ -678,6 +684,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_seed: Optional[int] = None,
         batched_parameter_batch_size: Optional[int] = None,
         batched_triton_launch_options: Optional[Mapping] = None,
+        batched_strict_truncation: bool = False,
         conditioned_likelihood: bool = False,
         deterministic_history_likelihood: bool = False,
         distributed: bool = False,
@@ -701,6 +708,7 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_pseudocount = batched_pseudocount
         self.batched_categorical_cardinalities = batched_categorical_cardinalities
         self.batched_seed = batched_seed
+        self.batched_strict_truncation = batched_strict_truncation
         self.conditioned_likelihood = conditioned_likelihood
         self.deterministic_history_likelihood = deterministic_history_likelihood
         if conditioned_likelihood and deterministic_history_likelihood:
@@ -1079,6 +1087,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 categorical_cardinalities=self.batched_categorical_cardinalities,
                 include_mask=include_mask,
                 seed=seed,
+                strict_truncation=self.batched_strict_truncation,
                 triton_launch_options=self.batched_triton_launch_options,
             )
             return np.asarray(result, dtype=float).reshape(-1)
@@ -2074,9 +2083,32 @@ class PECOptimizationFunction(OptimizationFunction):
 
         if self.owner is not None:
 
+            def constant_step(samples):
+                values = np.asarray(samples, dtype=float)
+                differences = np.diff(values)
+                if len(differences) == 0:
+                    raise ValueError(
+                        "Each fitted parameter needs at least two samples"
+                    )
+                step = (values[-1] - values[0]) / float(len(values) - 1)
+                if step <= 0.0:
+                    raise ValueError(
+                        "Fitted parameter samples must be strictly increasing"
+                    )
+                tolerance = max(abs(step) * 1.0e-9, 1.0e-15)
+                if not np.allclose(
+                    differences, step, rtol=1.0e-9, atol=tolerance
+                ):
+                    raise ValueError(
+                        "Step size for each parameter must be constant"
+                    )
+                # Remove harmless linspace roundoff without imposing the old
+                # five-decimal floor (which turned valid 1e-6 steps into zero).
+                return float(f"{step:.12g}")
+
             if not self.owner.depends_on:
                 bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
-                steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
+                steps = [constant_step(s) for s in self.owner.fit_parameters.values()]
             else:
                 bounds = []
                 steps = []
@@ -2085,17 +2117,10 @@ class PECOptimizationFunction(OptimizationFunction):
                     if (param_name, mech) in self.owner.cond_levels:
                         for _ in self.owner.cond_levels[(param_name, mech)]:
                             bounds.append((float(min(s)), float(max(s))))
-                            steps.append(np.unique(np.diff(s).round(decimals=5)))
+                            steps.append(constant_step(s))
                     else:
                         bounds.append((float(min(s)), float(max(s))))
-                        steps.append(np.unique(np.diff(s).round(decimals=5)))
-
-            # We also check if step size is constant, if not we raise an error
-            for s in steps:
-                if len(s) > 1:
-                    raise ValueError("Step size for each parameter must be constant")
-
-            steps = [float(s[0]) for s in steps]
+                        steps.append(constant_step(s))
 
             return dict(
                 zip(

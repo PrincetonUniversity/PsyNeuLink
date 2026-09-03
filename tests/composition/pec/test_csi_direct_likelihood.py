@@ -44,6 +44,7 @@ from direct_likelihood.recovery_summary import (  # noqa: E402
     summarize_recovery_results,
 )
 import direct_likelihood.fit as fit_module  # noqa: E402
+import csi_fitting_readiness as readiness  # noqa: E402
 
 
 pytestmark = [pytest.mark.composition]
@@ -860,6 +861,38 @@ def test_recovery_summary_reports_scaled_error_and_bound_hits():
     assert run["lower_bound_parameters"] == ["gain[NoInstruction]"]
     assert run["log_likelihood_gain_over_truth"] == 0.5
     assert summary["groups"][0]["coordinate_stationary_count"] == 1
+
+
+def test_recovery_legacy_parameter_conversion_preserves_physical_units():
+    physical = np.asarray(
+        [
+            10.0, 11.0, 12.0, 0.08,
+            0.10, 0.11, 0.12,
+            -0.03, -0.02, -0.01,
+            0.20, 0.21, 0.22,
+        ]
+    )
+
+    def row(time_step):
+        values = {"model_time_step": time_step}
+        for index, condition in enumerate(readiness.CONDITIONS):
+            values[
+                f"Task Activations [C1, C2].gain[{condition}]"
+            ] = physical[index]
+            values[
+                f"Threshold Mechanism.intercept[{condition}]"
+            ] = physical[4 + index]
+            values[
+                "Threshold Mechanism.offset-integrator_function"
+                f"[{condition}]"
+            ] = physical[7 + index] * time_step
+            values[f"DDM.non_decision_time[{condition}]"] = physical[10 + index]
+        values["Cue Stimulus Interval.slope"] = physical[3] / time_step
+        return pd.Series(values)
+
+    for time_step in (0.01, 0.001):
+        converted = readiness._legacy_row_to_physical_vector(row(time_step))
+        np.testing.assert_allclose(converted, physical, rtol=0.0, atol=1e-12)
 
 
 def test_staged_fit_uses_coarse_default_and_fine_meshes(monkeypatch):

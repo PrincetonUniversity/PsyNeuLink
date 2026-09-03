@@ -687,3 +687,68 @@ spaces. Subject-level sequences and additional parameter regions remain useful
 extensions; the present result establishes close agreement for the tested CSI
 simulation semantics, not a proof over the entire parameter space and not a
 validation of either likelihood calculation.
+
+## Fitting-readiness and crossed recovery workflow
+
+`csi_fitting_readiness.py` makes the next validation stage reproducible. A
+`run-cell` invocation generates one complete stateful synthetic sequence from
+the continuous first-passage process, the 10 ms GPU endpoint process, or the
+1 ms GPU endpoint process, and fits it with the direct likelihood or either GPU
+resolution. The primary matrix crosses continuous and 10 ms generation with
+all three fitters. Each cell writes the synthetic CSV, generation diagnostics,
+native fit output, and a normalized 13-parameter recovery result. `summarize`
+aggregates completed cells without depending on scheduler metadata.
+
+Discrete generators record both the requested physical truth and the truth they
+actually realized after rounding CSI to their scheduler grid. Recovery errors
+are measured against the realized vector; for the continuous generator the two
+vectors are identical.
+
+All comparisons are stored in physical units: CSI is seconds and boundary
+collapse is boundary units per second. The legacy fit driver now accepts
+`--model-time-step`; at 1 ms it converts the one-second ITI to 1,000 executions,
+the CSI search to 0--300 executions, and collapse increments to one tenth of
+their 10 ms values. Its default 10 ms behavior is unchanged. It also accepts an
+exact `--fit-output` path so array tasks have unambiguous, resumable artifacts.
+
+The batched PEC objective now exposes `batched_strict_truncation`. Synthetic
+generation and GPU/LLVM simulation audits enable it so no simulated RT can be
+silently capped. The deterministic-history fitting path instead retains its
+exact observation-window censoring optimization: a trajectory already beyond
+the last RT bin has zero chance of matching the observation, so stopping it is
+not numerical truncation. Before compilation, the fit driver rejects any DDM
+horizon shorter than the largest observed RT after the minimum fitted NDT.
+
+The GPU/LLVM audit additionally accepts `--data-file`, `--subject`, and
+`--parameter-file`. A fitted parameter vector is applied in condition-specific
+blocks while retaining the LCA state across block boundaries. This avoids the
+one-trial control timing of ordinary PNL control inputs and gives LLVM the same
+per-trial parameter schedule that the batched PEC path receives. A full
+561-trial subject-1 zero-noise smoke run matched to `2.4e-8`; the stochastic
+two-replicate smoke was intentionally not treated as a powered statistical
+test.
+
+Two TigerAI templates are prepared in `data fitting/` but have not been
+submitted. `csi_gpu_llvm_real_sequence_audit_gb300.slurm` runs 200 complete
+sequence replicates for fitted subjects 1, 4, and 7.
+`csi_fitting_readiness_gb300.slurm` maps 18 tasks over three generation seeds,
+two generators, and three fitters. Both support `CSI_MAPPING_ONLY=1` so their
+array mapping can be checked without compiling, using a GPU, or writing result
+files. Account, partition, GRES, replicate counts, and fit budgets should be
+reviewed before submission.
+
+A single local cell and its aggregate can be exercised from the repository root
+with:
+
+```bash
+uv run python Scripts/Debug/pec_batch_compile/csi_fit/csi_fitting_readiness.py \
+  run-cell --generator continuous --fitter gpu-1ms \
+  --subject 1 --simulation-seed 17 --output-dir /tmp/csi-readiness-cell
+uv run python Scripts/Debug/pec_batch_compile/csi_fit/csi_fitting_readiness.py \
+  summarize /tmp/csi-readiness-cell --output /tmp/csi-readiness-summary.json
+```
+
+The Slurm mapping can be inspected without submission from any directory inside
+the repository by setting `CSI_MAPPING_ONLY=1` and `SLURM_ARRAY_TASK_ID` before
+running either template with `bash`. Do not invoke `sbatch` until the resource
+request and experimental budget have been approved.
