@@ -163,6 +163,9 @@ The ``max_iterations`` argument specifies the number of generations for
 For Dask/SLURM execution of data-fitting runs, pass ``distributed=True`` to either ``ParameterEstimationComposition`` or
 ``PECOptimizationFunction``; see :ref:`Distributed Fitting <DistributedFitting>`.
 
+To fit several participants jointly rather than one at a time, stack their trials into a single **data** table and pass
+``fit_method="hierarchical"``; see :ref:`Hierarchical Fitting <HierarchicalFitting>`.
+
 .. _ParameterEstimationComposition_Examples:
 
 Usage Examples
@@ -436,6 +439,17 @@ class ParameterEstimationComposition(Composition):
         ``PECOptimizationFunction``. Must include a ``"pec_factory"`` callable; see
         ``distributed_options`` and :ref:`Distributed Fitting <DistributedFitting>` for the full
         set of keys.
+
+    fit_method : "hierarchical" or None : default None
+        specifies that **data** holds several participants' trials stacked together and that they are to be fitted
+        jointly, each participant's estimate informed by the rest of the group, rather than one at a time. Requires
+        **hierarchical_options** and a ``"pec_factory"`` in **distributed_options**; see
+        :ref:`Hierarchical Fitting <HierarchicalFitting>`.
+
+    hierarchical_options : Mapping : default None
+        specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
+        a ``"subject_id"`` naming the column of **data** that identifies participants; see
+        :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set of keys.
 
 
     Attributes
