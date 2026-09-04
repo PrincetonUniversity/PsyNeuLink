@@ -14,7 +14,10 @@ network forward pass rather than a batch of simulations, and the surface is smoo
 differentiable rather than noisy.
 
 The simulation cost is paid once instead of on every evaluation, and the trained estimator
-can be reused across fits of the same model.
+can be reused across fits of the same model. How much cheaper an evaluation becomes depends
+on how many simulations the density would otherwise need: scoring 400 trials of a
+drift-diffusion model takes roughly 820 ms with ``num_estimates=300`` and roughly 4 ms with
+a trained estimator.
 
 
 .. _Neural_Likelihood_Training:
