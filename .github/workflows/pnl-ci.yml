@@ -120,6 +120,14 @@ jobs:
             extras: 'dask'
             extra-args: '-m dask'
 
+          # neural likelihood tests, which need an extra too heavy to install everywhere:
+          # sbi pulls in torch, which one build exists to do without
+          - python-version: '3.10'
+            os: ubuntu
+            arch: 'default'
+            extras: 'nle'
+            extra-args: 'tests/composition/pec'
+
         exclude:
           # Replaced with the min version run above
           - python-version: '3.10'
@@ -190,6 +198,11 @@ jobs:
       id: install
       with:
         features: 'dev'
+
+    - name: Install optional dependencies
+      if: matrix.extras
+      shell: bash
+      run: pip install "${{ steps.install.outputs.wheel }}[${{ matrix.extras }}]" -c broken_trans_deps.txt
 
     - name: Install optional dependencies
       if: matrix.extras
