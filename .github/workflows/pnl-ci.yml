@@ -82,7 +82,7 @@ jobs:
           # parameter estimation tests with optional dependencies on linux python 3.10
           - python-version: '3.10'
             os: ubuntu
-            features: 'dev,dask'
+            features: 'dev,dask,nle'
             extra-args: 'tests/composition/pec'
 
         exclude:
