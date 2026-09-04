@@ -22,6 +22,8 @@ differ -- congruent against incongruent, switch against repeat -- is conditioned
 trial it is scoring rather than on the parameters alone.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import warnings
@@ -29,7 +31,12 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, asdict
 
 import numpy as np
-import torch
+
+# Optional, as elsewhere in PsyNeuLink: the package is importable without it.
+try:
+    import torch
+except ImportError:
+    torch = None
 
 __all__ = [
     "NeuralLikelihood",
@@ -89,7 +96,7 @@ class NeuralLikelihoodProvenance:
         return json.dumps(asdict(self))
 
     @classmethod
-    def from_json(cls, text: str) -> "NeuralLikelihoodProvenance":
+    def from_json(cls, text: str) -> NeuralLikelihoodProvenance:
         raw = json.loads(text)
         return cls(
             fit_param_names=tuple(raw["fit_param_names"]),
@@ -227,8 +234,9 @@ class NeuralLikelihood:
         )
 
     @classmethod
-    def load(cls, path) -> "NeuralLikelihood":
+    def load(cls, path) -> NeuralLikelihood:
         """Read back an estimator written by `save`."""
+        _require_sbi()
         blob = torch.load(path, weights_only=True)
         provenance = NeuralLikelihoodProvenance.from_json(blob["provenance"])
         estimator = _build_estimator(
