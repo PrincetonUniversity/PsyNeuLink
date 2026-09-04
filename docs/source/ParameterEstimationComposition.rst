@@ -11,6 +11,7 @@ ParameterEstimationComposition
        OptimizationControlMechanism
        DistributedFitting
        HierarchicalFitting
+       NeuralLikelihood
 
 .. toctree::
    :maxdepth: 2
