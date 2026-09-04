@@ -262,3 +262,65 @@ def test_a_mismatched_artifact_is_rejected_before_fitting(ddm_data):
                    likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="trained for parameters"):
         pec._setup_neural_likelihood()
+
+
+def _ddm_training_pec(data):
+    """A factory for training, at module scope so a Dask worker can unpickle it."""
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
+            non_decision_time=0.15, time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    pec = pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={
+            ("rate", decision): np.linspace(*RATE_BOUNDS, 100),
+            ("threshold", decision): np.linspace(*THRESHOLD_BOUNDS, 100),
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=5,
+        initial_seed=0,
+        same_seed_for_all_parameter_combinations=True,
+    )
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    return pec, {comp: np.ones((len(data), 1))}
+
+
+@pytest.mark.composition
+def test_training_data_is_generated_from_the_composition():
+    likelihood = nlf.train_neural_likelihood(
+        _ddm_training_pec,
+        bounds={"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
+        outcome_names=OUTCOMES,
+        n_parameter_samples=8, n_trials_per_sample=10, epochs=1, n_chunks=2,
+    )
+    provenance = likelihood.provenance
+    assert provenance.fit_param_names == ("rate", "threshold")
+    assert provenance.categorical == (True, False)
+    # The model is driven by a constant input, so nothing distinguishes one trial from another.
+    assert provenance.n_trial_features == 0
+    assert np.isfinite(provenance.val_nll)
+
+
+@pytest.mark.composition
+def test_training_data_generation_distributes():
+    pytest.importorskip("dask.distributed")
+    likelihood = nlf.train_neural_likelihood(
+        _ddm_training_pec,
+        bounds={"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
+        outcome_names=OUTCOMES,
+        n_parameter_samples=8, n_trials_per_sample=10, epochs=1, n_chunks=2,
+        distributed_options={"n_workers": 2},
+    )
+    assert np.isfinite(likelihood.provenance.val_nll)
