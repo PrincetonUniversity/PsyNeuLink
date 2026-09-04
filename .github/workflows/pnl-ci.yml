@@ -79,6 +79,12 @@ jobs:
             os: macos
             version-restrict: 'min'
 
+          # parameter estimation tests with optional dependencies on linux python 3.10
+          - python-version: '3.10'
+            os: ubuntu
+            features: 'dev,dask'
+            extra-args: 'tests/composition/pec'
+
         exclude:
           # Replaced with the min version run above
           - python-version: '3.10'
@@ -140,7 +146,7 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        features: 'dev'
+        features: ${{ matrix.features || 'dev' }}
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
@@ -204,7 +210,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v7
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}${{ matrix.features }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
