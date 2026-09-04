@@ -26,7 +26,7 @@ def _native_module():
 
     source = Path(__file__).with_name("csi_kernels.cpp")
     return load(
-        name="csi_direct_likelihood_kernels_v5",
+        name="csi_direct_likelihood_kernels_v6",
         sources=[str(source)],
         extra_cflags=["-O3", "-DNDEBUG", "-fopenmp"],
         extra_ldflags=["-fopenmp"],
@@ -235,6 +235,60 @@ def native_lca_drift_path(
         step_size,
         leak,
         competition,
+    )
+
+
+def native_lca_integrate_euler(
+    state: torch.Tensor,
+    task: torch.Tensor,
+    gain: torch.Tensor,
+    *,
+    steps: int,
+    step_size: float,
+    leak: float,
+    competition: float,
+) -> torch.Tensor:
+    """Advance forward-only Euler LCA lanes in one native CPU call."""
+    if state.device.type != "cpu":
+        raise ValueError("The native Euler LCA integrator supports only CPU tensors.")
+    return _native_module().euler_integrate(
+        state.contiguous(),
+        task.contiguous(),
+        gain.contiguous(),
+        steps,
+        step_size,
+        leak,
+        competition,
+    )
+
+
+def native_lca_drift_path_euler(
+    state: torch.Tensor,
+    task: torch.Tensor,
+    gain: torch.Tensor,
+    stimulus: torch.Tensor,
+    correct_response: torch.Tensor,
+    *,
+    steps: int,
+    step_size: float,
+    leak: float,
+    competition: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return post-Euler-step drifts without constructing an autograd graph."""
+    if state.device.type != "cpu":
+        raise ValueError("The native Euler LCA drift path supports only CPU tensors.")
+    return tuple(
+        _native_module().euler_drift_forward(
+            state.contiguous(),
+            task.contiguous(),
+            gain.contiguous(),
+            stimulus.contiguous(),
+            correct_response.contiguous(),
+            steps,
+            step_size,
+            leak,
+            competition,
+        )
     )
 
 

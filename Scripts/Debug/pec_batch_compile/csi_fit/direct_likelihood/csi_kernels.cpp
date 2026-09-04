@@ -64,6 +64,21 @@ inline State<scalar_t> rhs(
 }
 
 template <typename scalar_t>
+inline State<scalar_t> euler_step(
+    State<scalar_t> state,
+    State<scalar_t> task,
+    scalar_t gain,
+    scalar_t step,
+    scalar_t leak,
+    scalar_t competition
+) {
+    return add(
+        state,
+        scale(step, rhs(state, task, gain, leak, competition))
+    );
+}
+
+template <typename scalar_t>
 inline StepGradient<scalar_t> rhs_vjp(
     State<scalar_t> state,
     scalar_t gain,
@@ -642,6 +657,108 @@ std::vector<at::Tensor> drift_forward_impl(
             final_values[lane][1] = state.second;
     }
     return {drift, final_state, history};
+}
+
+template <typename scalar_t>
+at::Tensor integrate_euler_impl(
+    const at::Tensor& initial_state,
+    const at::Tensor& task,
+    const at::Tensor& gain,
+    int64_t steps,
+    double step_size,
+    double leak,
+    double competition
+) {
+    const int64_t batch = initial_state.size(0);
+    at::Tensor final_state = at::empty_like(initial_state);
+    const auto initial_values = initial_state.accessor<scalar_t, 2>();
+    const auto task_values = task.accessor<scalar_t, 2>();
+    const auto gain_values = gain.accessor<scalar_t, 1>();
+    auto final_values = final_state.accessor<scalar_t, 2>();
+
+    #pragma omp parallel for schedule(static)
+    for (int64_t lane = 0; lane < batch; ++lane) {
+        State<scalar_t> state{
+            initial_values[lane][0], initial_values[lane][1]
+        };
+        const State<scalar_t> local_task{
+            task_values[lane][0], task_values[lane][1]
+        };
+        const scalar_t local_gain = gain_values[lane];
+        for (int64_t step_index = 0; step_index < steps; ++step_index) {
+            state = euler_step(
+                state,
+                local_task,
+                local_gain,
+                static_cast<scalar_t>(step_size),
+                static_cast<scalar_t>(leak),
+                static_cast<scalar_t>(competition)
+            );
+        }
+        final_values[lane][0] = state.first;
+        final_values[lane][1] = state.second;
+    }
+    return final_state;
+}
+
+template <typename scalar_t>
+std::vector<at::Tensor> drift_forward_euler_impl(
+    const at::Tensor& initial_state,
+    const at::Tensor& task,
+    const at::Tensor& gain,
+    const at::Tensor& stimulus,
+    const at::Tensor& correct_response,
+    int64_t steps,
+    double step_size,
+    double leak,
+    double competition
+) {
+    const int64_t batch = initial_state.size(0);
+    at::Tensor drift = at::empty({batch, steps}, initial_state.options());
+    at::Tensor final_state = at::empty_like(initial_state);
+    const auto initial_values = initial_state.accessor<scalar_t, 2>();
+    const auto task_values = task.accessor<scalar_t, 2>();
+    const auto gain_values = gain.accessor<scalar_t, 1>();
+    const auto stimulus_values = stimulus.accessor<scalar_t, 2>();
+    const auto response_values = correct_response.accessor<scalar_t, 1>();
+    auto drift_values = drift.accessor<scalar_t, 2>();
+    auto final_values = final_state.accessor<scalar_t, 2>();
+
+    #pragma omp parallel for schedule(static)
+    for (int64_t lane = 0; lane < batch; ++lane) {
+        State<scalar_t> state{
+            initial_values[lane][0], initial_values[lane][1]
+        };
+        const State<scalar_t> local_task{
+            task_values[lane][0], task_values[lane][1]
+        };
+        const scalar_t local_gain = gain_values[lane];
+        scalar_t local_stimulus[4];
+        for (int64_t index = 0; index < 4; ++index) {
+            local_stimulus[index] = stimulus_values[lane][index];
+        }
+        for (int64_t step_index = 0; step_index < steps; ++step_index) {
+            // PNL advances the LCA before evaluating the logistic output that
+            // supplies this scheduler pass's DDM drift.
+            state = euler_step(
+                state,
+                local_task,
+                local_gain,
+                static_cast<scalar_t>(step_size),
+                static_cast<scalar_t>(leak),
+                static_cast<scalar_t>(competition)
+            );
+            drift_values[lane][step_index] = drift_value(
+                local_stimulus,
+                state,
+                local_gain,
+                response_values[lane]
+            );
+        }
+        final_values[lane][0] = state.first;
+        final_values[lane][1] = state.second;
+    }
+    return {drift, final_state};
 }
 
 template <typename scalar_t>
@@ -1577,6 +1694,23 @@ std::vector<at::Tensor> lca_subject_backward(
     return result;
 }
 
+void check_lca_inputs(
+    const at::Tensor& state,
+    const at::Tensor& task,
+    const at::Tensor& gain
+) {
+    TORCH_CHECK(state.device().is_cpu(), "The native LCA drift scan is CPU-only.");
+    TORCH_CHECK(state.dim() == 2 && state.size(1) == 2, "state must have shape [batch, 2].");
+    const int64_t batch = state.size(0);
+    TORCH_CHECK(task.sizes() == at::IntArrayRef({batch, 2}), "task must have shape [batch, 2].");
+    TORCH_CHECK(gain.sizes() == at::IntArrayRef({batch}), "gain must have shape [batch].");
+    for (const at::Tensor& value : {state, task, gain}) {
+        TORCH_CHECK(value.device().is_cpu(), "All native LCA inputs must be on the CPU.");
+        TORCH_CHECK(value.is_contiguous(), "All native LCA inputs must be contiguous.");
+        TORCH_CHECK(value.scalar_type() == state.scalar_type(), "All native LCA inputs must share a dtype.");
+    }
+}
+
 void check_drift_inputs(
     const at::Tensor& state,
     const at::Tensor& task,
@@ -1584,18 +1718,41 @@ void check_drift_inputs(
     const at::Tensor& stimulus,
     const at::Tensor& correct_response
 ) {
-    TORCH_CHECK(state.device().is_cpu(), "The native LCA drift scan is CPU-only.");
-    TORCH_CHECK(state.dim() == 2 && state.size(1) == 2, "state must have shape [batch, 2].");
+    check_lca_inputs(state, task, gain);
     const int64_t batch = state.size(0);
-    TORCH_CHECK(task.sizes() == at::IntArrayRef({batch, 2}), "task must have shape [batch, 2].");
-    TORCH_CHECK(gain.sizes() == at::IntArrayRef({batch}), "gain must have shape [batch].");
     TORCH_CHECK(stimulus.sizes() == at::IntArrayRef({batch, 4}), "stimulus must have shape [batch, 4].");
     TORCH_CHECK(correct_response.sizes() == at::IntArrayRef({batch}), "correct_response must have shape [batch].");
-    for (const at::Tensor& value : {state, task, gain, stimulus, correct_response}) {
+    for (const at::Tensor& value : {stimulus, correct_response}) {
         TORCH_CHECK(value.device().is_cpu(), "All native LCA drift inputs must be on the CPU.");
         TORCH_CHECK(value.is_contiguous(), "All native LCA drift inputs must be contiguous.");
         TORCH_CHECK(value.scalar_type() == state.scalar_type(), "All native LCA drift inputs must share a dtype.");
     }
+}
+
+at::Tensor lca_integrate_euler(
+    const at::Tensor& state,
+    const at::Tensor& task,
+    const at::Tensor& gain,
+    int64_t steps,
+    double step_size,
+    double leak,
+    double competition
+) {
+    check_lca_inputs(state, task, gain);
+    TORCH_CHECK(steps >= 0, "Euler integration steps cannot be negative.");
+    at::Tensor result;
+    AT_DISPATCH_FLOATING_TYPES(state.scalar_type(), "lca_integrate_euler", [&] {
+        result = integrate_euler_impl<scalar_t>(
+            state,
+            task,
+            gain,
+            steps,
+            step_size,
+            leak,
+            competition
+        );
+    });
+    return result;
 }
 
 std::vector<at::Tensor> lca_drift_forward(
@@ -1614,6 +1771,36 @@ std::vector<at::Tensor> lca_drift_forward(
     std::vector<at::Tensor> result;
     AT_DISPATCH_FLOATING_TYPES(state.scalar_type(), "lca_drift_forward", [&] {
         result = drift_forward_impl<scalar_t>(
+            state,
+            task,
+            gain,
+            stimulus,
+            correct_response,
+            steps,
+            step_size,
+            leak,
+            competition
+        );
+    });
+    return result;
+}
+
+std::vector<at::Tensor> lca_drift_forward_euler(
+    const at::Tensor& state,
+    const at::Tensor& task,
+    const at::Tensor& gain,
+    const at::Tensor& stimulus,
+    const at::Tensor& correct_response,
+    int64_t steps,
+    double step_size,
+    double leak,
+    double competition
+) {
+    check_drift_inputs(state, task, gain, stimulus, correct_response);
+    TORCH_CHECK(steps > 0, "The Euler LCA drift path must contain at least one step.");
+    std::vector<at::Tensor> result;
+    AT_DISPATCH_FLOATING_TYPES(state.scalar_type(), "lca_drift_forward_euler", [&] {
+        result = drift_forward_euler_impl<scalar_t>(
             state,
             task,
             gain,
@@ -1759,6 +1946,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, module) {
     module.def("backward", &lca_subject_backward, "Fused CSI LCA subject adjoint");
     module.def("drift_forward", &lca_drift_forward, "Fused CSI LCA drift paths");
     module.def("drift_backward", &lca_drift_backward, "Fused CSI LCA drift adjoint");
+    module.def("euler_integrate", &lca_integrate_euler, "Forward-only Euler LCA integration");
+    module.def("euler_drift_forward", &lca_drift_forward_euler, "Forward-only Euler CSI LCA drift paths");
     module.def("ddm_forward", &ddm_forward, "Fused moving-boundary DDM forward solve");
     module.def("ddm_backward", &ddm_backward, "Fused moving-boundary DDM adjoint");
 }

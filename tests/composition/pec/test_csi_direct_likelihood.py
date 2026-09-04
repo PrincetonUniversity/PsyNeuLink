@@ -40,7 +40,11 @@ from direct_likelihood.validation import pnl_lca_endpoint  # noqa: E402
 from direct_likelihood.fit import _feasible_start, fit_lbfgsb  # noqa: E402
 from direct_likelihood.model import ContinuousLCA, pnl_euler_lca_step  # noqa: E402
 from direct_likelihood.model import parameter_bounds, parameter_names  # noqa: E402
-from direct_likelihood.native import native_kernels_available  # noqa: E402
+from direct_likelihood.native import (  # noqa: E402
+    native_kernels_available,
+    native_lca_drift_path_euler,
+    native_lca_integrate_euler,
+)
 from direct_likelihood.recovery_summary import (  # noqa: E402
     summarize_recovery_results,
 )
@@ -342,6 +346,111 @@ def test_configured_euler_lca_matches_legacy_step_and_scheduler_order():
         step_size=0.01,
     )
     torch.testing.assert_close(final_state, expected, rtol=0.0, atol=0.0)
+
+
+@pytest.mark.skipif(
+    not native_kernels_available(),
+    reason="The optional native kernels require Ninja and a C++ compiler.",
+)
+def test_native_euler_generation_kernels_match_torch_mirror():
+    lca = ContinuousLCA()
+    state = torch.tensor([[0.01, -0.02], [-0.03, 0.04]], dtype=torch.float64)
+    task = torch.tensor([[1.0, 0.0], [0.0, 1.0]], dtype=torch.float64)
+    gain = torch.tensor([10.0, 17.0], dtype=torch.float64)
+    stimulus = torch.tensor(
+        [[1.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 1.0]],
+        dtype=torch.float64,
+    )
+    correct = torch.tensor([1.0, -1.0], dtype=torch.float64)
+
+    expected_state = lca.integrate_euler(
+        state, task, gain, 0.007, max_step=0.001, steps=7
+    )
+    actual_state = native_lca_integrate_euler(
+        state,
+        task,
+        gain,
+        steps=7,
+        step_size=0.001,
+        leak=lca.leak,
+        competition=lca.competition,
+    )
+    torch.testing.assert_close(actual_state, expected_state)
+
+    expected_drift, expected_final = lca.drift_path_euler(
+        state,
+        task,
+        gain,
+        stimulus,
+        correct,
+        steps=11,
+        step_size=0.001,
+    )
+    actual_drift, actual_final = native_lca_drift_path_euler(
+        state,
+        task,
+        gain,
+        stimulus,
+        correct,
+        steps=11,
+        step_size=0.001,
+        leak=lca.leak,
+        competition=lca.competition,
+    )
+    torch.testing.assert_close(actual_drift, expected_drift)
+    torch.testing.assert_close(actual_final, expected_final)
+
+
+@pytest.mark.skipif(
+    not native_kernels_available(),
+    reason="The optional native kernels require Ninja and a C++ compiler.",
+)
+def test_native_euler_recovery_matches_torch_end_to_end():
+    vector = torch.tensor(
+        [
+            15.0, 15.0, 15.0, 0.04,
+            0.06, 0.06, 0.06,
+            -0.02, -0.02, -0.02,
+            0.15, 0.15, 0.15,
+        ],
+        dtype=torch.float64,
+    )
+    parameters = ContinuousCSIParameters.from_vector(vector)
+    simulations = []
+    for native_lca_scan in (False, True):
+        likelihood = ContinuousCSILikelihood(
+            SolverConfig(
+                ddm_time_step=0.005,
+                ddm_spatial_points=33,
+                lca_max_step=0.002,
+                lca_integration_method="euler",
+                iti_duration=0.02,
+                native_lca_scan=native_lca_scan,
+            )
+        )
+        simulations.append(
+            simulate_sequential_trials(
+                likelihood,
+                parameters,
+                _trials(),
+                seed=28,
+                simulation_time_step=0.002,
+                maximum_decision_time=2.0,
+                bridge_correction=False,
+            )
+        )
+    torch.testing.assert_close(
+        simulations[1].trials.choice,
+        simulations[0].trials.choice,
+        rtol=0.0,
+        atol=0.0,
+    )
+    torch.testing.assert_close(
+        simulations[1].trials.response_time,
+        simulations[0].trials.response_time,
+        rtol=0.0,
+        atol=0.0,
+    )
 
 
 def test_euler_likelihood_path_is_finite_and_bypasses_native_rk4_scan():
@@ -736,6 +845,128 @@ def test_lbfgsb_screens_random_candidate_pool_before_optimization():
     assert start_rows[1]["random_pool_valid_candidates"] == 5
 
 
+def test_lbfgsb_retains_scored_start_when_optimizer_degrades_it(monkeypatch):
+    from scipy.optimize import OptimizeResult
+    import scipy.optimize
+
+    lower, upper = parameter_bounds()
+    scale = upper - lower
+
+    class QuadraticLikelihood:
+        @staticmethod
+        def score_vector(vector, trials):
+            del trials
+            target = torch.as_tensor(lower + 0.4 * scale, dtype=vector.dtype)
+            loss = torch.sum(
+                ((vector - target) / torch.as_tensor(scale, dtype=vector.dtype)) ** 2
+            )
+            return SimpleNamespace(
+                probability=torch.exp(-loss).reshape(1),
+                included_row_indices=torch.tensor([0]),
+            )
+
+    def degrading_minimize(function, value, **kwargs):
+        del function, kwargs
+        return OptimizeResult(
+            x=np.full_like(value, 0.9),
+            fun=100.0,
+            success=True,
+            nfev=1,
+            nit=1,
+            message="deliberately degraded test point",
+        )
+
+    monkeypatch.setattr(scipy.optimize, "minimize", degrading_minimize)
+    trials = SimpleNamespace(response_time=torch.zeros(1, dtype=torch.float64))
+    result = fit_lbfgsb(
+        QuadraticLikelihood(),
+        trials,
+        starts=1,
+        max_iterations=1,
+        coordinate_polish=False,
+        polish_restarts=0,
+    )
+
+    start = next(row for row in result.run_results if row["phase"] == "start")
+    assert start["retained_initial_candidate"]
+    assert result.log_likelihood == pytest.approx(start["initial_log_likelihood"])
+    np.testing.assert_allclose(
+        result.parameter_vector,
+        ContinuousCSIParameters.defaults(dtype=torch.float64).vector().numpy(),
+    )
+
+
+def test_lbfgsb_repolishes_after_coordinate_escape(monkeypatch):
+    from scipy.optimize import OptimizeResult
+    import scipy.optimize
+
+    lower, upper = parameter_bounds()
+    scale = upper - lower
+    default = ContinuousCSIParameters.defaults(dtype=torch.float64).vector().numpy()
+    default_scaled = (default - lower) / scale
+    target_scaled = default_scaled.copy()
+    target_scaled[0] += 0.2
+    calls = 0
+
+    class QuadraticLikelihood:
+        @staticmethod
+        def score_vector(vector, trials):
+            del trials
+            scaled = (
+                (vector - torch.as_tensor(lower, dtype=vector.dtype))
+                / torch.as_tensor(scale, dtype=vector.dtype)
+            )
+            target = torch.as_tensor(target_scaled, dtype=vector.dtype)
+            loss = torch.sum((scaled - target) ** 2)
+            return SimpleNamespace(
+                probability=torch.exp(-loss).reshape(1),
+                included_row_indices=torch.tensor([0]),
+            )
+
+    def staged_minimize(function, value, **kwargs):
+        nonlocal calls
+        del kwargs
+        calls += 1
+        if calls == 1:
+            objective, _ = function(value)
+            final_value = np.asarray(value)
+        else:
+            objective = 0.0
+            final_value = target_scaled
+        return OptimizeResult(
+            x=final_value,
+            fun=objective,
+            success=True,
+            nfev=1,
+            nit=1,
+            message="staged test result",
+        )
+
+    monkeypatch.setattr(scipy.optimize, "minimize", staged_minimize)
+    trials = SimpleNamespace(response_time=torch.zeros(1, dtype=torch.float64))
+    result = fit_lbfgsb(
+        QuadraticLikelihood(),
+        trials,
+        starts=1,
+        max_iterations=1,
+        polish_restarts=0,
+        coordinate_step=0.01,
+        coordinate_levels=1,
+        coordinate_rounds=1,
+        coordinate_cycles=2,
+    )
+
+    phases = [row["phase"] for row in result.run_results]
+    assert phases.count("coordinate-polish") == 2
+    assert phases.count("post-coordinate-polish") == 1
+    assert result.coordinate_stationary
+    assert result.log_likelihood == pytest.approx(0.0)
+    np.testing.assert_allclose(
+        result.parameter_vector,
+        lower + scale * target_scaled,
+    )
+
+
 def test_random_start_respects_rt_and_collapsing_boundary_constraints():
     trials = _trials()
     lower, upper = parameter_bounds()
@@ -894,6 +1125,36 @@ def test_recovery_legacy_parameter_conversion_preserves_physical_units():
     for time_step in (0.01, 0.001):
         converted = readiness._legacy_row_to_physical_vector(row(time_step))
         np.testing.assert_allclose(converted, physical, rtol=0.0, atol=1e-12)
+
+
+def test_recovery_truth_profiles_are_distinct_interior_points():
+    lower, upper = parameter_bounds()
+    vectors = []
+    for name, expected in readiness.TRUTH_PROFILES.items():
+        actual = readiness._load_parameter_vector(None, name)
+        np.testing.assert_array_equal(actual, expected)
+        assert np.all(actual > lower), name
+        assert np.all(actual < upper), name
+        vectors.append(actual)
+    assert len(np.unique(np.stack(vectors), axis=0)) == len(vectors)
+
+
+def test_oat_recovery_truth_profiles_change_one_parameter():
+    baseline = readiness.TRUTH_PROFILES["baseline"]
+    profiles = {
+        name: vector
+        for name, vector in readiness.TRUTH_PROFILES.items()
+        if name.startswith("oat-")
+    }
+    assert len(profiles) == 2 * len(baseline)
+
+    changed_indices = []
+    for name, vector in profiles.items():
+        changed = np.flatnonzero(vector != baseline)
+        assert len(changed) == 1, name
+        changed_indices.append(int(changed[0]))
+
+    assert sorted(changed_indices) == sorted(list(range(len(baseline))) * 2)
 
 
 def test_generation_summary_compares_resolution_levels_by_seed(tmp_path):

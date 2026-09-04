@@ -83,6 +83,74 @@ DEFAULT_TRUTH = np.asarray(
     ],
     dtype=float,
 )
+TRUTH_PROFILES = {
+    "baseline": DEFAULT_TRUTH,
+    # Interior points chosen to span the parameter regimes seen in the CSI
+    # fits without testing pathological corners of the optimization bounds.
+    "low-control-fast": np.asarray(
+        [
+            9.0, 12.0, 8.0, 0.04,
+            0.075, 0.085, 0.090,
+            -0.012, -0.016, -0.020,
+            0.17, 0.20, 0.15,
+        ],
+        dtype=float,
+    ),
+    "high-control": np.asarray(
+        [
+            27.0, 30.0, 24.0, 0.16,
+            0.09, 0.085, 0.10,
+            -0.015, -0.012, -0.018,
+            0.28, 0.31, 0.25,
+        ],
+        dtype=float,
+    ),
+    "strong-collapse": np.asarray(
+        [
+            18.0, 22.0, 14.0, 0.10,
+            0.14, 0.13, 0.16,
+            -0.040, -0.035, -0.045,
+            0.21, 0.25, 0.19,
+        ],
+        dtype=float,
+    ),
+    "condition-contrast": np.asarray(
+        [
+            11.0, 28.0, 20.0, 0.20,
+            0.09, 0.16, 0.12,
+            -0.010, -0.035, -0.022,
+            0.30, 0.17, 0.26,
+        ],
+        dtype=float,
+    ),
+}
+
+# One-at-a-time perturbations complement the multivariate regimes above by
+# showing whether each physical parameter can be recovered on both sides of
+# the baseline while all other parameters remain fixed.  The values are
+# deliberately interior to the fitting bounds and avoid pathological model
+# regimes that would turn an optimizer study into a boundary-condition test.
+_OAT_TRUTH_VALUES = (
+    ("gain-ni", 0, 10.0, 25.0),
+    ("gain-rr", 1, 10.0, 28.0),
+    ("gain-rf", 2, 7.0, 23.0),
+    ("csi", 3, 0.03, 0.18),
+    ("threshold-ni", 4, 0.07, 0.17),
+    ("threshold-rr", 5, 0.065, 0.16),
+    ("threshold-rf", 6, 0.075, 0.18),
+    ("collapse-ni", 7, -0.055, -0.005),
+    ("collapse-rr", 8, -0.055, -0.003),
+    ("collapse-rf", 9, -0.065, -0.007),
+    ("ndt-ni", 10, 0.14, 0.30),
+    ("ndt-rr", 11, 0.15, 0.32),
+    ("ndt-rf", 12, 0.13, 0.28),
+)
+for _name, _index, _low, _high in _OAT_TRUTH_VALUES:
+    for _level, _value in (("low", _low), ("high", _high)):
+        _vector = DEFAULT_TRUTH.copy()
+        _vector[_index] = _value
+        TRUTH_PROFILES[f"oat-{_name}-{_level}"] = _vector
+
 GENERATOR_TIME_STEPS = {
     "gpu-10ms": 0.01,
     "gpu-1ms": 0.001,
@@ -178,8 +246,17 @@ def _legacy_row_to_physical_vector(
     )
 
 
-def _load_parameter_vector(path: Path | None) -> np.ndarray:
-    if path is None:
+def _load_parameter_vector(
+    path: Path | None,
+    truth_profile: str | None = None,
+) -> np.ndarray:
+    if path is not None and truth_profile is not None:
+        raise ValueError(
+            "Specify either --truth-parameters or --truth-profile, not both."
+        )
+    if truth_profile is not None:
+        vector = TRUTH_PROFILES[truth_profile].copy()
+    elif path is None:
         vector = DEFAULT_TRUTH.copy()
     elif path.suffix.lower() == ".csv":
         frame = pd.read_csv(path)
@@ -433,6 +510,7 @@ def generate_dataset(
     source_data: Path,
     subject: int,
     truth_vector: np.ndarray,
+    truth_profile: str | None,
     simulation_seed: int,
     continuous_simulation_time_step: float,
     maximum_decision_time: float,
@@ -501,6 +579,7 @@ def generate_dataset(
         "condition_summary": condition_summary,
         "truth_parameter_names": parameter_names(),
         "truth_parameter_vector": truth_vector,
+        "truth_profile": truth_profile,
         "generation_seconds": time.perf_counter() - start,
         "diagnostics": diagnostics,
         "data_output": data_output.resolve(),
@@ -531,6 +610,18 @@ def _direct_fit_command(args, data_path: Path, fit_output: Path) -> list[str]:
         str(args.direct_max_iterations),
         "--random-start-candidates",
         str(args.direct_random_start_candidates),
+        "--polish-restarts",
+        str(args.direct_polish_restarts),
+        "--polish-iterations",
+        str(args.direct_polish_iterations),
+        "--coordinate-step",
+        str(args.direct_coordinate_step),
+        "--coordinate-levels",
+        str(args.direct_coordinate_levels),
+        "--coordinate-rounds",
+        str(args.direct_coordinate_rounds),
+        "--coordinate-cycles",
+        str(args.direct_coordinate_cycles),
         "--seed",
         str(args.optimizer_seed),
         "--output",
@@ -610,7 +701,10 @@ def _run_cell(args) -> None:
         "fit.json" if args.fitter == "direct" else "fit.csv"
     )
     result_output = output_dir / "result.json"
-    truth = _load_parameter_vector(args.truth_parameters)
+    truth = _load_parameter_vector(args.truth_parameters, args.truth_profile)
+    truth_profile = args.truth_profile or (
+        "custom" if args.truth_parameters is not None else "baseline"
+    )
 
     if result_output.exists() and not args.force and not args.dry_run:
         print(result_output)
@@ -632,7 +726,9 @@ def _run_cell(args) -> None:
                     "generator": args.generator,
                     "fitter": args.fitter,
                     "output_dir": str(output_dir),
+                    "truth_profile": truth_profile,
                     "truth_parameter_vector": truth.tolist(),
+                    "likelihood_replicate": args.likelihood_replicate,
                     "fit_command": command,
                 },
                 indent=2,
@@ -647,6 +743,7 @@ def _run_cell(args) -> None:
             source_data=args.data,
             subject=args.subject,
             truth_vector=truth,
+            truth_profile=truth_profile,
             simulation_seed=args.simulation_seed,
             continuous_simulation_time_step=(
                 args.continuous_simulation_time_step
@@ -679,10 +776,12 @@ def _run_cell(args) -> None:
         "run_label": args.run_label,
         "generator": args.generator,
         "fitter": args.fitter,
+        "truth_profile": truth_profile,
         "subject_nr": args.subject,
         "simulation_seed": args.simulation_seed,
         "optimizer_seed": args.optimizer_seed,
         "likelihood_seed": args.likelihood_seed,
+        "likelihood_replicate": args.likelihood_replicate,
         "parameter_names": parameter_names(),
         "requested_truth_parameter_vector": truth,
         "truth_parameter_vector": recovery_target,
@@ -701,12 +800,16 @@ def _run_cell(args) -> None:
 
 
 def _generate(args) -> None:
-    truth = _load_parameter_vector(args.truth_parameters)
+    truth = _load_parameter_vector(args.truth_parameters, args.truth_profile)
+    truth_profile = args.truth_profile or (
+        "custom" if args.truth_parameters is not None else "baseline"
+    )
     payload = generate_dataset(
         generator=args.generator,
         source_data=args.data,
         subject=args.subject,
         truth_vector=truth,
+        truth_profile=truth_profile,
         simulation_seed=args.simulation_seed,
         continuous_simulation_time_step=args.continuous_simulation_time_step,
         maximum_decision_time=args.generation_maximum_time,
@@ -957,14 +1060,26 @@ def _summarize(args) -> None:
     if not paths:
         raise SystemExit("No result.json files were found.")
     payloads = [json.loads(path.read_text()) for path in paths]
-    groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
-    for payload in payloads:
-        groups[(payload["generator"], payload["fitter"])].append(payload)
+    primary_payloads = [
+        payload
+        for payload in payloads
+        if int(payload.get("likelihood_replicate", 1)) == 1
+    ]
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    for payload in primary_payloads:
+        groups[
+            (
+                payload.get("truth_profile", "baseline"),
+                payload["generator"],
+                payload["fitter"],
+            )
+        ].append(payload)
     summaries = []
-    for (generator, fitter), runs in sorted(groups.items()):
+    for (truth_profile, generator, fitter), runs in sorted(groups.items()):
         rmse = np.asarray([run["scaled_parameter_rmse"] for run in runs])
         summaries.append(
             {
+                "truth_profile": truth_profile,
                 "generator": generator,
                 "fitter": fitter,
                 "runs": len(runs),
@@ -973,10 +1088,51 @@ def _summarize(args) -> None:
                 "maximum_scaled_parameter_rmse": float(np.max(rmse)),
             }
         )
+    repeat_groups: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
+    for payload in payloads:
+        repeat_groups[
+            (
+                payload.get("truth_profile", "baseline"),
+                payload["generator"],
+                payload["fitter"],
+                int(payload["subject_nr"]),
+                int(payload["simulation_seed"]),
+                int(payload["optimizer_seed"]),
+            )
+        ].append(payload)
+    likelihood_seed_repeats = []
+    for key, runs in sorted(repeat_groups.items()):
+        if len(runs) < 2:
+            continue
+        recovered = np.asarray(
+            [run["recovered_parameter_vector"] for run in runs], dtype=float
+        )
+        likelihood_seed_repeats.append(
+            {
+                "truth_profile": key[0],
+                "generator": key[1],
+                "fitter": key[2],
+                "subject_nr": key[3],
+                "simulation_seed": key[4],
+                "optimizer_seed": key[5],
+                "runs": len(runs),
+                "likelihood_seeds": sorted(
+                    int(run["likelihood_seed"]) for run in runs
+                ),
+                "scaled_parameter_rmse": _sample_summary(
+                    [run["scaled_parameter_rmse"] for run in runs]
+                ),
+                "recovered_parameter_standard_deviation": (
+                    np.std(recovered, axis=0, ddof=1)
+                ),
+            }
+        )
     report = {
         "parameter_names": parameter_names(),
         "result_count": len(payloads),
+        "primary_result_count": len(primary_payloads),
         "groups": summaries,
+        "likelihood_seed_repeats": likelihood_seed_repeats,
         "results": [str(path) for path in paths],
     }
     _write_json(report, args.output)
@@ -985,12 +1141,14 @@ def _summarize(args) -> None:
         for payload, path in zip(payloads, paths):
             row = {
                 "result": str(path),
+                "truth_profile": payload.get("truth_profile", "baseline"),
                 "generator": payload["generator"],
                 "fitter": payload["fitter"],
                 "subject_nr": payload["subject_nr"],
                 "simulation_seed": payload["simulation_seed"],
                 "optimizer_seed": payload["optimizer_seed"],
                 "likelihood_seed": payload["likelihood_seed"],
+                "likelihood_replicate": payload.get("likelihood_replicate", 1),
                 "scaled_parameter_rmse": payload["scaled_parameter_rmse"],
                 "log_likelihood": payload["log_likelihood"],
                 "fit_seconds": payload["fit_seconds"],
@@ -1019,6 +1177,11 @@ def _add_generation_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--data", type=Path, default=DEFAULT_DATA)
     parser.add_argument("--subject", type=int, default=1)
     parser.add_argument("--truth-parameters", type=Path)
+    parser.add_argument(
+        "--truth-profile",
+        choices=tuple(TRUTH_PROFILES),
+        help="Use one named recovery-study truth vector.",
+    )
     parser.add_argument("--simulation-seed", type=int, default=17)
     parser.add_argument(
         "--continuous-simulation-time-step", type=float, default=0.0005
@@ -1047,14 +1210,21 @@ def make_parser() -> argparse.ArgumentParser:
     cell.add_argument("--run-label", default="fitting-readiness")
     cell.add_argument("--optimizer-seed", type=int, default=1)
     cell.add_argument("--likelihood-seed", type=int, default=1001)
+    cell.add_argument("--likelihood-replicate", type=int, default=1)
     cell.add_argument("--force", action="store_true")
     cell.add_argument("--dry-run", action="store_true")
     cell.add_argument("--direct-ddm-time-step", type=float, default=0.001)
     cell.add_argument("--direct-spatial-points", type=int, default=65)
     cell.add_argument("--direct-lca-max-step", type=float, default=0.01)
-    cell.add_argument("--direct-starts", type=int, default=2)
-    cell.add_argument("--direct-max-iterations", type=int, default=100)
+    cell.add_argument("--direct-starts", type=int, default=8)
+    cell.add_argument("--direct-max-iterations", type=int, default=200)
     cell.add_argument("--direct-random-start-candidates", type=int, default=32)
+    cell.add_argument("--direct-polish-restarts", type=int, default=2)
+    cell.add_argument("--direct-polish-iterations", type=int, default=150)
+    cell.add_argument("--direct-coordinate-step", type=float, default=0.01)
+    cell.add_argument("--direct-coordinate-levels", type=int, default=4)
+    cell.add_argument("--direct-coordinate-rounds", type=int, default=12)
+    cell.add_argument("--direct-coordinate-cycles", type=int, default=2)
     cell.add_argument("--gpu-num-estimates", type=int, default=100_000)
     cell.add_argument("--gpu-max-iterations", type=int, default=5_000)
     cell.add_argument("--gpu-bins", type=int, default=100)
@@ -1095,6 +1265,8 @@ def main() -> None:
     ):
         if hasattr(args, name) and getattr(args, name) <= 0.0:
             raise SystemExit(f"--{name.replace('_', '-')} must be positive.")
+    if hasattr(args, "likelihood_replicate") and args.likelihood_replicate <= 0:
+        raise SystemExit("--likelihood-replicate must be positive.")
     args.action(args)
 
 

@@ -72,15 +72,39 @@ def simulate_sequential_trials(
                 math.ceil(float(csi_duration) / likelihood.config.lca_max_step)
             )
 
-            state = likelihood._integrate_lca(
-                state,
-                zero_task,
-                gain,
+            def integrate_interval(local_state, local_task, duration, steps):
+                if (
+                    likelihood.config.native_lca_scan
+                    and likelihood.config.lca_integration_method == "euler"
+                ):
+                    from .native import native_lca_integrate_euler
+
+                    if steps == 0:
+                        return local_state
+                    return native_lca_integrate_euler(
+                        local_state.unsqueeze(0),
+                        local_task.unsqueeze(0),
+                        gain.reshape(1),
+                        steps=steps,
+                        step_size=float(duration) / steps,
+                        leak=likelihood.config.lca_leak,
+                        competition=likelihood.config.lca_competition,
+                    )[0]
+                return likelihood._integrate_lca(
+                    local_state,
+                    local_task,
+                    gain,
+                    duration,
+                    steps=steps,
+                )
+
+            state = integrate_interval(
+                state, zero_task,
                 likelihood.config.iti_duration,
-                steps=iti_steps,
+                iti_steps,
             )
-            state = likelihood._integrate_lca(
-                state, task, gain, csi_duration, steps=csi_steps
+            state = integrate_interval(
+                state, task, csi_duration, csi_steps
             )
             drift_arguments = (
                 state.unsqueeze(0),
@@ -97,6 +121,20 @@ def simulate_sequential_trials(
 
                 def drift_path(steps):
                     return native_lca_drift_path(
+                        *drift_arguments,
+                        steps=steps,
+                        step_size=simulation_time_step,
+                        leak=likelihood.config.lca_leak,
+                        competition=likelihood.config.lca_competition,
+                    )
+            elif (
+                likelihood.config.native_lca_scan
+                and likelihood.config.lca_integration_method == "euler"
+            ):
+                from .native import native_lca_drift_path_euler
+
+                def drift_path(steps):
+                    return native_lca_drift_path_euler(
                         *drift_arguments,
                         steps=steps,
                         step_size=simulation_time_step,

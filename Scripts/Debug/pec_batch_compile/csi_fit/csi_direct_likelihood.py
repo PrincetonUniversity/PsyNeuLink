@@ -663,6 +663,7 @@ def _fit(args) -> None:
                 coordinate_step=args.coordinate_step,
                 coordinate_levels=args.coordinate_levels,
                 coordinate_rounds=args.coordinate_rounds,
+                coordinate_cycles=args.coordinate_cycles,
                 coordinate_improvement_tolerance=(
                     args.coordinate_improvement_tolerance
                 ),
@@ -859,6 +860,7 @@ def _recover(args) -> None:
         coordinate_step=args.coordinate_step,
         coordinate_levels=args.coordinate_levels,
         coordinate_rounds=args.coordinate_rounds,
+        coordinate_cycles=args.coordinate_cycles,
         coordinate_improvement_tolerance=(
             args.coordinate_improvement_tolerance
         ),
@@ -1349,6 +1351,7 @@ def make_parser() -> argparse.ArgumentParser:
     fit.add_argument("--coordinate-step", type=float, default=1.0e-3)
     fit.add_argument("--coordinate-levels", type=int, default=3)
     fit.add_argument("--coordinate-rounds", type=int, default=2)
+    fit.add_argument("--coordinate-cycles", type=int, default=2)
     fit.add_argument(
         "--coordinate-improvement-tolerance", type=float, default=1.0e-7
     )
@@ -1430,6 +1433,7 @@ def make_parser() -> argparse.ArgumentParser:
     recover.add_argument("--coordinate-step", type=float, default=1.0e-3)
     recover.add_argument("--coordinate-levels", type=int, default=3)
     recover.add_argument("--coordinate-rounds", type=int, default=2)
+    recover.add_argument("--coordinate-cycles", type=int, default=2)
     recover.add_argument(
         "--coordinate-improvement-tolerance", type=float, default=1.0e-7
     )

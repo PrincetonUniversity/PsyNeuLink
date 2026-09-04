@@ -261,6 +261,7 @@ def fit_lbfgsb(
     coordinate_step: float = 1.0e-3,
     coordinate_levels: int = 3,
     coordinate_rounds: int = 2,
+    coordinate_cycles: int = 2,
     coordinate_improvement_tolerance: float = 1.0e-7,
     stationarity_tolerance: float = 1.0e-2,
 ) -> FitResult:
@@ -286,13 +287,18 @@ def fit_lbfgsb(
         raise ValueError("Polish settings must be nonnegative and positive.")
     if polish_method not in {"lbfgsb", "powell"}:
         raise ValueError("polish_method must be 'lbfgsb' or 'powell'.")
-    if coordinate_step <= 0.0 or coordinate_levels < 1 or coordinate_rounds < 1:
+    if (
+        coordinate_step <= 0.0
+        or coordinate_levels < 1
+        or coordinate_rounds < 1
+        or coordinate_cycles < 1
+    ):
         raise ValueError("Coordinate-polish settings must be positive.")
     if coordinate_improvement_tolerance <= 0.0:
         raise ValueError("coordinate_improvement_tolerance must be positive.")
     if stationarity_tolerance <= 0.0:
         raise ValueError("stationarity_tolerance must be positive.")
-    from scipy.optimize import minimize
+    from scipy.optimize import OptimizeResult, minimize
 
     lower, upper = parameter_bounds()
     parameter_scale = upper - lower
@@ -418,26 +424,47 @@ def fit_lbfgsb(
     bounds = list(zip(lower, upper, strict=True))
     if gradient_method == "autograd":
         scaled_bounds = [(0.0, 1.0)] * len(lower)
-        for candidate in candidates:
+        for candidate, metadata in zip(
+            candidates, candidate_metadata, strict=True
+        ):
             scaled_candidate = (
                 np.clip(candidate, lower, upper) - lower
             ) / parameter_scale
-            results.append(
-                minimize(
-                    scaled_autograd_objective,
-                    scaled_candidate,
-                    method="L-BFGS-B",
-                    jac=True,
-                    bounds=scaled_bounds,
-                    options={
-                        "maxiter": int(max_iterations),
-                        "ftol": function_tolerance,
-                        "gtol": gradient_tolerance,
-                        "maxls": int(maximum_line_search_steps),
-                        "maxcor": 20,
-                    },
-                )
+            optimized = minimize(
+                scaled_autograd_objective,
+                scaled_candidate,
+                method="L-BFGS-B",
+                jac=True,
+                bounds=scaled_bounds,
+                options={
+                    "maxiter": int(max_iterations),
+                    "ftol": function_tolerance,
+                    "gtol": gradient_tolerance,
+                    "maxls": int(maximum_line_search_steps),
+                    "maxcor": 20,
+                },
             )
+            initial_objective = -float(metadata["initial_log_likelihood"])
+            optimized_objective = float(optimized.fun)
+            retained_initial = (
+                not np.isfinite(optimized_objective)
+                or optimized_objective > initial_objective
+            )
+            metadata["optimizer_final_log_likelihood"] = -optimized_objective
+            metadata["retained_initial_candidate"] = retained_initial
+            if retained_initial:
+                optimized = OptimizeResult(
+                    x=scaled_candidate,
+                    fun=initial_objective,
+                    success=False,
+                    nfev=optimized.nfev,
+                    nit=optimized.nit,
+                    message=(
+                        f"{optimized.message}; retained the better scored "
+                        "initial candidate."
+                    ),
+                )
+            results.append(optimized)
     else:
         if device.type != "cpu":
             raise ValueError(
@@ -464,57 +491,82 @@ def fit_lbfgsb(
             initargs=(worker_config, trials, probability_floor),
         ) as pool:
             worker_map = _PoolMap(pool)
-            for candidate in candidates:
-                results.append(
-                    minimize(
-                        scalar_objective,
-                        np.clip(candidate, lower, upper),
-                        method="L-BFGS-B",
-                        jac="2-point",
-                        bounds=bounds,
-                        options={
-                            "maxiter": int(max_iterations),
-                            "finite_diff_rel_step": (
-                                finite_difference_relative_step
-                            ),
-                            "workers": worker_map,
-                        },
-                    )
+            for candidate, metadata in zip(
+                candidates, candidate_metadata, strict=True
+            ):
+                clipped_candidate = np.clip(candidate, lower, upper)
+                optimized = minimize(
+                    scalar_objective,
+                    clipped_candidate,
+                    method="L-BFGS-B",
+                    jac="2-point",
+                    bounds=bounds,
+                    options={
+                        "maxiter": int(max_iterations),
+                        "finite_diff_rel_step": (
+                            finite_difference_relative_step
+                        ),
+                        "workers": worker_map,
+                    },
                 )
+                initial_objective = -float(metadata["initial_log_likelihood"])
+                optimized_objective = float(optimized.fun)
+                retained_initial = (
+                    not np.isfinite(optimized_objective)
+                    or optimized_objective > initial_objective
+                )
+                metadata["optimizer_final_log_likelihood"] = -optimized_objective
+                metadata["retained_initial_candidate"] = retained_initial
+                if retained_initial:
+                    optimized = OptimizeResult(
+                        x=clipped_candidate,
+                        fun=initial_objective,
+                        success=False,
+                        nfev=optimized.nfev,
+                        nit=optimized.nit,
+                        message=(
+                            f"{optimized.message}; retained the better scored "
+                            "initial candidate."
+                        ),
+                    )
+                results.append(optimized)
     main_results = list(results)
     best = min(results, key=lambda result: float(result.fun))
     polish_results = []
+
+    def run_polish(starting_value: np.ndarray):
+        if polish_method == "lbfgsb":
+            return minimize(
+                scaled_autograd_objective,
+                np.asarray(starting_value, dtype=float),
+                method="L-BFGS-B",
+                jac=True,
+                bounds=scaled_bounds,
+                options={
+                    "maxiter": int(polish_iterations),
+                    "ftol": function_tolerance * 0.1,
+                    "gtol": gradient_tolerance,
+                    "maxls": int(maximum_line_search_steps),
+                    "maxcor": 30,
+                },
+            )
+        return minimize(
+            scaled_scalar_objective,
+            np.asarray(starting_value, dtype=float),
+            method="Powell",
+            bounds=scaled_bounds,
+            options={
+                "maxiter": int(polish_iterations),
+                "xtol": 1.0e-6,
+                "ftol": function_tolerance,
+            },
+        )
+
     if gradient_method == "autograd":
         scaled_bounds = [(0.0, 1.0)] * len(lower)
         for _ in range(polish_restarts):
             previous_objective = float(best.fun)
-            if polish_method == "lbfgsb":
-                polished = minimize(
-                    scaled_autograd_objective,
-                    np.asarray(best.x, dtype=float),
-                    method="L-BFGS-B",
-                    jac=True,
-                    bounds=scaled_bounds,
-                    options={
-                        "maxiter": int(polish_iterations),
-                        "ftol": function_tolerance * 0.1,
-                        "gtol": gradient_tolerance,
-                        "maxls": int(maximum_line_search_steps),
-                        "maxcor": 30,
-                    },
-                )
-            else:
-                polished = minimize(
-                    scaled_scalar_objective,
-                    np.asarray(best.x, dtype=float),
-                    method="Powell",
-                    bounds=scaled_bounds,
-                    options={
-                        "maxiter": int(polish_iterations),
-                        "xtol": 1.0e-6,
-                        "ftol": function_tolerance,
-                    },
-                )
+            polished = run_polish(best.x)
             polish_results.append(polished)
             results.append(polished)
             if float(polished.fun) <= float(best.fun):
@@ -522,62 +574,83 @@ def fit_lbfgsb(
             improvement = previous_objective - float(best.fun)
             if improvement <= function_tolerance * max(1.0, abs(previous_objective)):
                 break
-    coordinate_result = None
+    coordinate_results = []
+    post_coordinate_results = []
     coordinate_stationary = False
     if gradient_method == "autograd" and coordinate_polish:
-        from scipy.optimize import OptimizeResult
+        def run_coordinate_poll(starting_value, starting_objective):
+            coordinate_value = np.asarray(starting_value, dtype=float).copy()
+            coordinate_objective = float(starting_objective)
+            coordinate_evaluations = 0
+            coordinate_iterations = 0
+            stationary = False
+            for level in range(coordinate_levels):
+                step = coordinate_step * (0.1 ** level)
+                for _ in range(coordinate_rounds):
+                    trial_values = []
+                    for index in range(len(coordinate_value)):
+                        for direction in (-1.0, 1.0):
+                            trial_value = coordinate_value.copy()
+                            trial_value[index] = np.clip(
+                                trial_value[index] + direction * step, 0.0, 1.0
+                            )
+                            if trial_value[index] != coordinate_value[index]:
+                                trial_values.append(trial_value)
+                    trial_objectives = [
+                        scaled_scalar_objective(value) for value in trial_values
+                    ]
+                    coordinate_evaluations += len(trial_objectives)
+                    best_index = int(np.argmin(trial_objectives))
+                    best_trial_objective = trial_objectives[best_index]
+                    improvement_threshold = max(
+                        coordinate_improvement_tolerance,
+                        function_tolerance
+                        * max(1.0, abs(coordinate_objective)),
+                    )
+                    if best_trial_objective < (
+                        coordinate_objective - improvement_threshold
+                    ):
+                        coordinate_value = trial_values[best_index]
+                        coordinate_objective = best_trial_objective
+                        coordinate_iterations += 1
+                        continue
+                    if level == coordinate_levels - 1:
+                        stationary = True
+                    break
+            return OptimizeResult(
+                x=coordinate_value,
+                fun=coordinate_objective,
+                success=stationary,
+                nfev=coordinate_evaluations,
+                nit=coordinate_iterations,
+                message=(
+                    "No improving coordinate move at the finest poll step."
+                    if stationary
+                    else "Coordinate-polish round budget completed."
+                ),
+            )
 
-        coordinate_value = np.asarray(best.x, dtype=float).copy()
-        coordinate_objective = float(best.fun)
-        coordinate_evaluations = 0
-        coordinate_iterations = 0
-        for level in range(coordinate_levels):
-            step = coordinate_step * (0.1 ** level)
-            for _ in range(coordinate_rounds):
-                trial_values = []
-                for index in range(len(coordinate_value)):
-                    for direction in (-1.0, 1.0):
-                        trial_value = coordinate_value.copy()
-                        trial_value[index] = np.clip(
-                            trial_value[index] + direction * step, 0.0, 1.0
-                        )
-                        if trial_value[index] != coordinate_value[index]:
-                            trial_values.append(trial_value)
-                trial_objectives = [
-                    scaled_scalar_objective(value) for value in trial_values
-                ]
-                coordinate_evaluations += len(trial_objectives)
-                best_index = int(np.argmin(trial_objectives))
-                best_trial_objective = trial_objectives[best_index]
-                improvement_threshold = max(
-                    coordinate_improvement_tolerance,
-                    function_tolerance * max(1.0, abs(coordinate_objective)),
-                )
-                if best_trial_objective < (
-                    coordinate_objective - improvement_threshold
-                ):
-                    coordinate_value = trial_values[best_index]
-                    coordinate_objective = best_trial_objective
-                    coordinate_iterations += 1
-                    continue
-                if level == coordinate_levels - 1:
-                    coordinate_stationary = True
+        for cycle in range(1, coordinate_cycles + 1):
+            previous_objective = float(best.fun)
+            coordinate_result = run_coordinate_poll(best.x, best.fun)
+            coordinate_results.append((cycle, coordinate_result))
+            results.append(coordinate_result)
+            if float(coordinate_result.fun) <= float(best.fun):
+                best = coordinate_result
+            coordinate_stationary = bool(coordinate_result.success)
+            if coordinate_stationary:
                 break
-        coordinate_result = OptimizeResult(
-            x=coordinate_value,
-            fun=coordinate_objective,
-            success=coordinate_stationary,
-            nfev=coordinate_evaluations,
-            nit=coordinate_iterations,
-            message=(
-                "No improving coordinate move at the finest poll step."
-                if coordinate_stationary
-                else "Coordinate-polish round budget completed."
-            ),
-        )
-        results.append(coordinate_result)
-        if float(coordinate_result.fun) <= float(best.fun):
-            best = coordinate_result
+            improvement_threshold = max(
+                coordinate_improvement_tolerance,
+                function_tolerance * max(1.0, abs(previous_objective)),
+            )
+            if previous_objective - float(best.fun) <= improvement_threshold:
+                break
+            polished = run_polish(best.x)
+            post_coordinate_results.append((cycle, polished))
+            results.append(polished)
+            if float(polished.fun) <= float(best.fun):
+                best = polished
     if gradient_method == "autograd":
         best_parameter_vector = lower + parameter_scale * np.asarray(best.x)
         _, best_gradient = autograd_objective(best_parameter_vector)
@@ -640,21 +713,38 @@ def fit_lbfgsb(
                 "message": str(result.message),
             }
         )
-    if coordinate_result is not None:
+    for coordinate_cycle, result in coordinate_results:
         run_results.append(
             {
                 "phase": "coordinate-polish",
+                "coordinate_cycle": coordinate_cycle,
                 "initial_step": coordinate_step,
                 "levels": coordinate_levels,
                 "rounds_per_level": coordinate_rounds,
                 "final_parameter_vector": (
-                    lower + parameter_scale * np.asarray(coordinate_result.x)
+                    lower + parameter_scale * np.asarray(result.x)
                 ),
-                "log_likelihood": -float(coordinate_result.fun),
-                "success": bool(coordinate_result.success),
-                "evaluations": int(coordinate_result.nfev),
-                "iterations": int(coordinate_result.nit),
-                "message": str(coordinate_result.message),
+                "log_likelihood": -float(result.fun),
+                "success": bool(result.success),
+                "evaluations": int(result.nfev),
+                "iterations": int(result.nit),
+                "message": str(result.message),
+            }
+        )
+    for coordinate_cycle, result in post_coordinate_results:
+        run_results.append(
+            {
+                "phase": "post-coordinate-polish",
+                "coordinate_cycle": coordinate_cycle,
+                "polish_method": polish_method,
+                "final_parameter_vector": (
+                    lower + parameter_scale * np.asarray(result.x)
+                ),
+                "log_likelihood": -float(result.fun),
+                "success": bool(result.success),
+                "evaluations": int(result.nfev),
+                "iterations": int(result.nit),
+                "message": str(result.message),
             }
         )
     projected_gradient_inf_norm = float(np.max(np.abs(projected_gradient)))
