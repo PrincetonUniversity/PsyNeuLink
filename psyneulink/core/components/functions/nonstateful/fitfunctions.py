@@ -576,6 +576,13 @@ class PECOptimizationFunction(OptimizationFunction):
         # _pec_objective_function. Very confusing!
         self._pec_objective_function = objective_function
 
+        # Set when the PEC is configured with likelihood_estimator="neural". A trained
+        # estimator scores parameters directly, so the simulate-then-score path is
+        # bypassed rather than fed different numbers.
+        self._neural_likelihood = None
+        self._neural_outcomes = None
+        self._neural_trial_features = None
+
         # Are we in data fitting mode, or generic optimization. This is set automatically by the PEC when
         # PECOptimizationFunction is passed to it. It only really determines whether some cosmetic
         # things.
@@ -620,6 +627,24 @@ class PECOptimizationFunction(OptimizationFunction):
             search_function=search_function,
             search_termination_function=search_termination_function,
             aggregation_function=None,
+        )
+
+    def set_neural_likelihood(self, likelihood, outcomes, trial_features=None):
+        """Score with a trained `NeuralLikelihood` instead of by simulating."""
+        self._neural_likelihood = likelihood
+        self._neural_outcomes = outcomes
+        self._neural_trial_features = trial_features
+
+    def _neural_log_likelihood(self, *args):
+        """Log-likelihood of the observed data under one parameter setting."""
+        if len(args) != len(self.fit_param_names):
+            raise ValueError(
+                f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
+            )
+        return self._neural_likelihood.log_likelihood(
+            np.asarray(args, dtype=float),
+            self._neural_outcomes,
+            self._neural_trial_features,
         )
 
     def set_pec_objective_function(self, objective_function: Callable):
@@ -715,6 +740,9 @@ class PECOptimizationFunction(OptimizationFunction):
         then feeds the results self._pec_objective_func. This cannot be invoked until the PECOptimizationFunction
         (self) has been assigned to an OptimizationControlMechanism.
         """
+
+        if self._neural_likelihood is not None:
+            return self._neural_log_likelihood
 
         def objfunc(*args):
             obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
@@ -1445,6 +1473,14 @@ class PECOptimizationFunction(OptimizationFunction):
                 "OptimizationControlMechanism. See the documentation for the "
                 "ParameterEstimationControlMechanism for more information."
             )
+
+        if self._neural_likelihood is not None:
+            if return_sim_data:
+                raise ValueError(
+                    "return_sim_data is not available with a neural likelihood: the "
+                    "estimator scores the data directly, so no simulations are run."
+                )
+            return float(self._neural_log_likelihood(*args))
 
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING
