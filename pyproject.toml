@@ -36,6 +36,7 @@ optional-dependencies.cuda = { file = ["cuda_requirements.txt"] }
 optional-dependencies.dask = { file = ["dask_requirements.txt"] }
 optional-dependencies.dev = { file = ["dev_requirements.txt"] }
 optional-dependencies.doc = { file = ["doc_requirements.txt"] }
+optional-dependencies.nle = { file = ["nle_requirements.txt"] }
 optional-dependencies.tutorial = { file = ["tutorial_requirements.txt"] }
 
 [tool.setuptools]
