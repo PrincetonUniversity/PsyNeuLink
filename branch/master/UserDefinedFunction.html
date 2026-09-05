@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.19.0.0+10.ge7d0b8901 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.19.1.0+7.g9261e302a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.0.0+10
+                  0.19.1.0+7
                 </div>
               
             
@@ -313,7 +313,7 @@ to a 2d array).</p>
 <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, those parameters are assigned to <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> of <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, which
 that be used to modify their values by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> (see <code class="xref any docutils literal notranslate"><span class="pre">example</span> <span class="pre">below</span></code>).</p>
 <p id="udf-string-expression-function-examples">The <strong>function</strong> argument may also be an expression written as a string:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="s1">&#39;sum(variable, 2)&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="s1">'sum(variable, 2)'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="go">array([[3]])</span>
 </pre></div>
@@ -366,7 +366,7 @@ For example, the following assigns <code class="docutils literal notranslate"><s
 of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
-<span class="gp">... </span>                                       <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;SINUSOIDAL OUTPUT&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                       <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'SINUSOIDAL OUTPUT'</span><span class="p">,</span>
 <span class="gp">... </span>                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span><span class="n">pnl</span><span class="o">.</span><span class="n">EXECUTION_COUNT</span><span class="p">],</span>
 <span class="gp">... </span>                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">my_sinusoidal_fct</span><span class="p">}])</span>
 </pre></div>
@@ -386,8 +386,8 @@ the function itself:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                     <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="gp">... </span>                     <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">pnl</span><span class="o">.</span><span class="n">MULTIPLICATIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;amplitude&#39;</span><span class="p">}):</span>
+<span class="gp">... </span>                     <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">'phase'</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">pnl</span><span class="o">.</span><span class="n">MULTIPLICATIVE_PARAM</span><span class="p">:</span><span class="s1">'amplitude'</span><span class="p">}):</span>
 <span class="gp">... </span>   <span class="n">frequency</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">... </span>   <span class="n">t</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="gp">... </span>   <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">frequency</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="n">phase</span><span class="p">)</span>
@@ -397,8 +397,8 @@ the function itself:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
 <span class="gp">... </span>                                            <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                                            <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="gp">... </span>                                            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                                    <span class="n">pnl</span><span class="o">.</span><span class="n">MULTIPLICATIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;amplitude&#39;</span><span class="p">})</span>
+<span class="gp">... </span>                                            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">'phase'</span><span class="p">,</span>
+<span class="gp">... </span>                                                    <span class="n">pnl</span><span class="o">.</span><span class="n">MULTIPLICATIVE_PARAM</span><span class="p">:</span><span class="s1">'amplitude'</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code> parameters of <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> can now be used as the
@@ -594,7 +594,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=741cf751"></script>
+         <script src="_static/documentation_options.js?v=af1190d4"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

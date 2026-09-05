@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.19.0.0+10.ge7d0b8901 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.19.1.0+7.g9261e302a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.0.0+10
+                  0.19.1.0+7
                 </div>
               
             
@@ -557,7 +557,7 @@ OutputPort’s <a class="reference internal" href="#psyneulink.core.components.p
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
 <span class="gp">... </span>                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_VARIABLE</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DECISION ENTROPY&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'DECISION ENTROPY'</span><span class="p">,</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                  <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">)</span> <span class="p">}])</span>
 </pre></div>
@@ -572,7 +572,7 @@ will be assigned as items in its <a class="reference internal" href="Mechanism.h
 are listed in the <strong>output_ports</strong> argument of the constructor for <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>.</p>
 <p>Custom OutputPorts can also be created on their own, and separately assigned or added to a Mechanism.  For example,
 the <code class="docutils literal notranslate"><span class="pre">DECISION</span> <span class="pre">ENTROPY</span></code> OutputPort could be created as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decision_entropy_output_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">OutputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION ENTROPY&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decision_entropy_output_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">OutputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'DECISION ENTROPY'</span><span class="p">,</span>
 <span class="gp">... </span>                                                <span class="n">variable</span><span class="o">=</span><span class="p">(</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                                <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">))</span>
 </pre></div>
@@ -585,7 +585,7 @@ the <code class="docutils literal notranslate"><span class="pre">DECISION</span>
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">another_decision_entropy_output_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">OutputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION ENTROPY&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">another_decision_entropy_output_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">OutputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'DECISION ENTROPY'</span><span class="p">,</span>
 <span class="gp">... </span>                                               <span class="n">variable</span><span class="o">=</span><span class="p">(</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                                               <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Stability</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ENTROPY</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(),</span>
@@ -1091,7 +1091,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=741cf751"></script>
+         <script src="_static/documentation_options.js?v=af1190d4"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

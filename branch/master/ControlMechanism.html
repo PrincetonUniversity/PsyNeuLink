@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0.19.0.0+10.ge7d0b8901 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0.19.1.0+7.g9261e302a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.0.0+10
+                  0.19.1.0+7
                 </div>
               
             
@@ -564,19 +564,19 @@ ControlSignals for a ControlMechanism.</p>
 <p>The following example creates a ControlMechanism by specifying its <strong>objective_mechanism</strong> using a constructor
 that specifies the OutputPorts to be monitored by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>
 and the function used to evaluate these:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mech A&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;My DDM&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Mech A"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"My DDM"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Mech B&quot;</span><span class="p">)</span>
+<span class="gp">... </span>                                <span class="n">name</span><span class="o">=</span><span class="s2">"Mech B"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span>
 <span class="gp">... </span>                         <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="p">[(</span><span class="n">my_mech_A</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
 <span class="gp">... </span>                                                                          <span class="n">my_DDM</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
-<span class="gp">... </span>                                                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Objective Mechanism&quot;</span><span class="p">),</span>
+<span class="gp">... </span>                                                                <span class="n">name</span><span class="o">=</span><span class="s2">"Objective Mechanism"</span><span class="p">),</span>
 <span class="gp">... </span>                         <span class="n">function</span><span class="o">=</span><span class="n">LinearCombination</span><span class="p">(</span><span class="n">operation</span><span class="o">=</span><span class="n">PRODUCT</span><span class="p">),</span>
 <span class="gp">... </span>                         <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">my_DDM</span><span class="p">),</span>
 <span class="gp">... </span>                                          <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_mech_B</span><span class="p">)],</span>
-<span class="gp">... </span>                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;My Control Mech&quot;</span><span class="p">)</span>
+<span class="gp">... </span>                         <span class="n">name</span><span class="o">=</span><span class="s2">"My Control Mech"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This creates an ObjectiveMechanism for the ControlMechanism that monitors the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
@@ -1237,7 +1237,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=741cf751"></script>
+         <script src="_static/documentation_options.js?v=af1190d4"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
