@@ -62,22 +62,9 @@ if ptx_enabled:
 # Compiler binding
 __initialized = False
 
-# llvmlite>=0.44 introduced new pass manager, but it was broken on windows[1].
-# The new pass manager is, however, required starting llvmlite-0.45.0.[2]
-# [1] https://github.com/numba/llvmlite/issues/1078
-# [2] https://github.com/numba/llvmlite/pull/1092
-__required_version_for_new_pass_manager = '0.45.0' if sys.platform == "win32" else '0.44.0'
-__cpu_use_new_pass_manager = version.parse(llvmlite.__version__) >= version.parse(__required_version_for_new_pass_manager)
-__gpu_use_new_pass_manager = version.parse(llvmlite.__version__) >= version.parse('0.44.0')
-
 def _binding_initialize():
     global __initialized
     if not __initialized:
-        # calling binding.initalize() is not needed in later versions
-        # of llvmlite, and throws exception in >=0.45.0
-        if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
-            binding.initialize()
-
         if not ptx_enabled:
             # native == currently running CPU. ASM printer includes opcode emission
             binding.initialize_native_target()
@@ -89,7 +76,7 @@ def _binding_initialize():
         __initialized = True
 
 
-def _new_pass_builder(target_machine, opt_level, extra_opts=dict()):
+def _create_pass_builder(target_machine, opt_level, extra_opts=dict()):
     pto = binding.create_pipeline_tuning_options(speed_level=opt_level)
 
     opts = {'loop_vectorization': opt_level != 0,
@@ -106,28 +93,6 @@ def _new_pass_builder(target_machine, opt_level, extra_opts=dict()):
 
     return pass_builder
 
-def _old_pass_manager(target_machine, opt_level, extra_opts=dict()):
-    pass_manager_builder = binding.PassManagerBuilder()
-
-    opts = {'loop_vectorize': opt_level != 0,
-            'slp_vectorize': opt_level != 0,
-            'opt_level': opt_level,
-            **extra_opts,
-           }
-
-    assert set(opts.keys()).issubset(dir(pass_manager_builder)), \
-        "Unsupported opt: {}".format(opts.keys().difference(dir(pass_manager_builder)))
-
-    for key, value in opts.items():
-        setattr(pass_manager_builder, key, value)
-
-    # Create module pass manager and populate it with analysis and opt passes
-    pass_manager = binding.ModulePassManager()
-    target_machine.add_analysis_passes(pass_manager)
-    pass_manager_builder.populate(pass_manager)
-
-    return pass_manager
-
 def _cpu_jit_constructor():
     _binding_initialize()
 
@@ -142,12 +107,7 @@ def _cpu_jit_constructor():
                                                           opt=opt_level,
                                                           reloc='static')
 
-    if __cpu_use_new_pass_manager:
-        pass_manager = None
-        pass_builder = _new_pass_builder(cpu_target_machine, opt_level)
-    else:
-        pass_manager = _old_pass_manager(cpu_target_machine, opt_level)
-        pass_builder = None
+    pass_builder = _create_pass_builder(cpu_target_machine, opt_level)
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
@@ -161,7 +121,7 @@ def _cpu_jit_constructor():
 
     cpu_jit_engine = binding.create_mcjit_compiler(backing_mod, cpu_target_machine)
 
-    return cpu_jit_engine, cpu_target_machine, pass_manager, pass_builder
+    return cpu_jit_engine, cpu_target_machine, pass_builder
 
 
 def _ptx_jit_constructor():
@@ -190,19 +150,9 @@ def _ptx_jit_constructor():
     # The threshold of '64' is empirically selected on GF 3050
     extra_opts = {'inlining_threshold': 64}
 
-    if __gpu_use_new_pass_manager:
-        # Inlining threshold is not supported until llvmlite-0.45.0
-        # [1] https://github.com/numba/llvmlite/commit/ccfbf78bd838fef886a1ec9fc4a353ec952fa035
-        if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
-            extra_opts.pop('inlining_threshold', None)
+    ptx_pass_builder = _create_pass_builder(ptx_target_machine, opt_level, extra_opts)
 
-        ptx_pass_builder = _new_pass_builder(ptx_target_machine, opt_level, extra_opts)
-        ptx_pass_manager = None
-    else:
-        ptx_pass_manager = _old_pass_manager(ptx_target_machine, opt_level, extra_opts)
-        ptx_pass_builder = None
-
-    return ptx_target_machine, ptx_pass_manager, ptx_pass_builder
+    return ptx_target_machine, ptx_pass_builder
 
 
 def _try_parse_module(module):
@@ -229,7 +179,6 @@ def _try_parse_module(module):
 class jit_engine:
     def __init__(self):
         self._jit_engine = None
-        self._jit_pass_manager = None
         self._jit_pass_builder = None
         self._jit_target_machine = None
         self.__mod = None
@@ -261,7 +210,9 @@ class jit_engine:
         module.data_layout = str(self._target_machine.target_data)
 
         start = time.perf_counter()
-        self._pass_manager.run(module, self._pass_builder)
+        pass_manager = self._pass_builder.getModulePassManager()
+        pass_manager.add_verifier()
+        pass_manager.run(module, self._pass_builder)
         finish = time.perf_counter()
 
         if "time_stat" in debug_env:
@@ -325,20 +276,8 @@ class jit_engine:
         return self._jit_target_machine
 
     @property
-    def _pass_manager(self):
-        # use new pass manager
-        if self._pass_builder is not None:
-            return self._pass_builder.getModulePassManager()
-
-        # use old pass manager
-        if self._jit_pass_manager is None:
-            self._init()
-
-        return self._jit_pass_manager
-
-    @property
     def _pass_builder(self):
-        if self._jit_pass_builder is None and self._jit_pass_manager is None:
+        if self._jit_pass_builder is None:
             self._init()
 
         return self._jit_pass_builder
@@ -381,11 +320,10 @@ class cpu_jit_engine(jit_engine):
 
     def _init(self):
         assert self._jit_engine is None
-        assert self._jit_pass_manager is None
         assert self._jit_pass_builder is None
         assert self._jit_target_machine is None
 
-        self._jit_engine, self._jit_target_machine, self._jit_pass_manager, self._jit_pass_builder = _cpu_jit_constructor()
+        self._jit_engine, self._jit_target_machine, self._jit_pass_builder = _cpu_jit_constructor()
         if self._object_cache is not None:
             self._jit_engine.set_object_cache(self._object_cache)
 
@@ -460,11 +398,10 @@ class ptx_jit_engine(jit_engine):
 
     def _init(self):
         assert self._jit_engine is None
-        assert self._jit_pass_manager is None
         assert self._jit_pass_builder is None
         assert self._jit_target_machine is None
 
-        self._jit_target_machine, self._jit_pass_manager, self._jit_pass_builder = _ptx_jit_constructor()
+        self._jit_target_machine, self._jit_pass_builder = _ptx_jit_constructor()
         self._jit_engine = ptx_jit_engine.cuda_engine(self._jit_target_machine)
 
     def get_kernel(self, name):
