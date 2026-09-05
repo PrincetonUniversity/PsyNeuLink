@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.19.1.0 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.20.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.19.1.0
+                  0.20.0.0
                 </div>
               
             
@@ -403,12 +403,12 @@ executed.</p>
 uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function and the other a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_linear_mechanism&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">'my_linear_mechanism'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_logistic_mechanism&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                                  <span class="n">name</span><span class="o">=</span><span class="s1">'my_logistic_mechanism'</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">LC</span> <span class="o">=</span> <span class="n">LCControlMechanism</span><span class="p">(</span><span class="n">modulated_mechanisms</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">my_mech_2</span><span class="p">],</span>
-<span class="gp">... </span>                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_LC&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                        <span class="n">name</span><span class="o">=</span><span class="s1">'my_LC'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Calling <code class="xref any docutils literal notranslate"><span class="pre">LC.show()</span></code> generates the following report:</p>
@@ -1067,7 +1067,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=1f2af5ee"></script>
+         <script src="_static/documentation_options.js?v=6f7cd82a"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

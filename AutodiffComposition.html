@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.19.1.0 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.20.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.19.1.0
+                  0.20.0.0
                 </div>
               
             
@@ -902,11 +902,11 @@ and run it with learning enabled and disabled:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Specify inputs and targets</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_1</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_targets</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_2</span><span class="p">:</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"inputs"</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">,</span> <span class="s2">"targets"</span><span class="p">:</span> <span class="n">my_targets</span><span class="p">,</span> <span class="s2">"epochs"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Run Composition in learnng mode</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Run Composition in test mode</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">'inputs'</span><span class="p">])</span>
 </pre></div>
 </div>
 <p id="autodiffcomposition-nested-example">The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
@@ -1765,7 +1765,7 @@ IMPLEMENTATION NOTE:</p>
 <p>Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET_MECHANISMs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1776,7 +1776,7 @@ IMPLEMENTATION NOTE:</p>
 <dd><p>Validate specifications used to construct LossMechanism in _instantiate_loss_components</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2483,7 +2483,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=1f2af5ee"></script>
+         <script src="_static/documentation_options.js?v=6f7cd82a"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

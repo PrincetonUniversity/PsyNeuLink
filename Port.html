@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.19.1.0 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.20.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.19.1.0
+                  0.20.0.0
                 </div>
               
             
@@ -630,9 +630,9 @@ TransferMechanism:</p>
 <p id="port-constructor-argument-examples"><em>Using the</em> <strong>input_ports</strong> <em>argument of a Mechanism constructor.</em></p>
 <p>When Ports are specified explicitly, it is usually in an argument of the constructor for the Mechanism to which they
 belong.  For example, the following specifies that <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> should have an InputPort named ‘MY INPUT`:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MY INPUT&#39;</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'MY INPUT'</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_ports</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputPort</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">)]</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputPort</span> <span class="s1">'MY INPUT'</span><span class="p">)]</span>
 </pre></div>
 </div>
 <p>The InputPort was specified by a string (for its name) in the <strong>input_ports</strong> argument.  It can also be specified in
@@ -659,7 +659,7 @@ as the <code class="xref any docutils literal notranslate"><span class="pre">pri
 attribute (note the singular).</p>
 <p id="port-multiple-inputsates-example"><em>Multiple InputPorts</em></p>
 <p>The <strong>input_ports</strong> argument can also be used to create more than one InputPort:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MY FIRST INPUT&#39;</span><span class="p">,</span> <span class="s1">&#39;MY SECOND INPUT&#39;</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'MY FIRST INPUT'</span><span class="p">,</span> <span class="s1">'MY SECOND INPUT'</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_ports</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputPort</span> <span class="n">MY</span> <span class="n">FIRST</span> <span class="n">INPUT</span><span class="p">),</span> <span class="p">(</span><span class="n">InputPort</span> <span class="n">MY</span> <span class="n">SECOND</span> <span class="n">INPUT</span><span class="p">)]</span>
 </pre></div>
@@ -676,7 +676,7 @@ those are created automatically when the Mechanism is created, for each of its <
 </div></blockquote>
 <p id="port-standard-outputports-example"><em>OutputPorts</em></p>
 <p>The following example specifies two OutputPorts for <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>, using its <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;RESULT&#39;</span><span class="p">,</span> <span class="s1">&#39;MEAN&#39;</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'RESULT'</span><span class="p">,</span> <span class="s1">'MEAN'</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>As with InputPorts, specification of OutputPorts in the <strong>output_ports</strong> argument suppresses the creation of any
@@ -691,7 +691,7 @@ the type of Mechanism, then that is used (as is the case for both of the OutputP
 <p>Ports can be specified in greater detail using a <a class="reference internal" href="#port-specification-dictionary"><span class="std std-ref">Port specification dictionary</span></a>. In the example below, this is used to specify the variable and name of an
 InputPort:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">PORT_TYPE</span><span class="p">:</span> <span class="n">InputPort</span><span class="p">,</span>
-                                               <span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">,</span>
+                                               <span class="n">NAME</span><span class="p">:</span> <span class="s1">'MY INPUT'</span><span class="p">,</span>
                                                <span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]})</span>
 </pre></div>
 </div>
@@ -704,13 +704,13 @@ entry must be included.</p>
 a number of different ways.  The most straightforward is to include them in a <em>PROJECTIONS</em> entry.  For example, the
 following specifies that the InputPort of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> receive two Projections,  one from <code class="docutils literal notranslate"><span class="pre">source_mech_1</span></code> and another
 from <code class="docutils literal notranslate"><span class="pre">source_mech_2</span></code>, and that its OutputPort send one to <code class="docutils literal notranslate"><span class="pre">destination_mech</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;SOURCE_1&#39;</span><span class="p">)</span>
-<span class="n">source_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;SOURCE_2&#39;</span><span class="p">)</span>
-<span class="n">destination_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DEST&#39;</span><span class="p">)</span>
-<span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY_MECH&#39;</span><span class="p">,</span>
-                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'SOURCE_1'</span><span class="p">)</span>
+<span class="n">source_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'SOURCE_2'</span><span class="p">)</span>
+<span class="n">destination_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'DEST'</span><span class="p">)</span>
+<span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY_MECH'</span><span class="p">,</span>
+                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'MY INPUT'</span><span class="p">,</span>
                                                <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:[</span><span class="n">source_mech_1</span><span class="p">,</span> <span class="n">source_mech_2</span><span class="p">]}],</span>
-                                <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;RESULT&#39;</span><span class="p">,</span>
+                                <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'RESULT'</span><span class="p">,</span>
                                                 <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:[</span><span class="n">destination_mech</span><span class="p">]}])</span>
 
 <span class="c1"># Print names of the Projections:</span>
@@ -730,8 +730,8 @@ MappingProjections are created, since the Projections specified are between Inpu
 <a class="reference internal" href="ModulatoryProjections.html"><span class="doc">Modulatory Projections</span></a> can also be specified in a similar way.  The following creates a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and
 specifies that the InputPort of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> should receive a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> from it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_gating_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">GatingMechanism</span><span class="p">()</span>
-<span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY_MECH&#39;</span><span class="p">,</span>
-                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY INPUT&#39;</span><span class="p">,</span>
+<span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY_MECH'</span><span class="p">,</span>
+                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'MY INPUT'</span><span class="p">,</span>
                                                <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:[</span><span class="n">my_gating_mech</span><span class="p">]}])</span>
 </pre></div>
 </div>
@@ -739,15 +739,15 @@ specifies that the InputPort of <code class="docutils literal notranslate"><span
 the following example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> is created that sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the
 <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">drift_rate</span></code></a> and <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>
 ParameterPorts of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
-<span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY DDM'</span><span class="p">)</span>
+<span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL'</span><span class="p">,</span>
                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">],</span>
                                                                        <span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
 <span class="c1"># Print ControlSignals and their ControlProjections</span>
 <span class="k">for</span> <span class="n">control_signal</span> <span class="ow">in</span> <span class="n">my_ctl_mech</span><span class="o">.</span><span class="n">control_signals</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">control_signal</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">control_projection</span> <span class="ow">in</span> <span class="n">control_signal</span><span class="o">.</span><span class="n">efferents</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;     </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"     </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="p">))</span>
 <span class="o">&gt;</span> <span class="n">MY</span> <span class="n">DDM</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">AND</span> <span class="n">THRESHOLD</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">drift_rate</span><span class="p">)</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">threshold</span><span class="p">)</span>
@@ -759,10 +759,10 @@ of a ControlSignal (i.e., its ControlProjections), the keyword <em>CONTROL</em> 
 <em>PROJECTIONS</em> keyword (as shown in the example below).</p>
 <p>In the example above, both ControlProjections are assigned to a single ControlSignal.  However, they could each be
 assigned to their own by specifying them in separate items of the <strong>control_signals</strong> argument:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
-<span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DRIFT RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY DDM'</span><span class="p">)</span>
+<span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'DRIFT RATE CONTROL SIGNAL'</span><span class="p">,</span>
                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">]]},</span>
-                                                    <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;THRESHOLD RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
+                                                    <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">'THRESHOLD RATE CONTROL SIGNAL'</span><span class="p">,</span>
                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
 <span class="c1"># Print ControlSignals and their ControlProjections...</span>
 <span class="o">&gt;</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
@@ -791,8 +791,8 @@ and then a list of , as in the following example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">source_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">destination_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_mech_C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;MY INPUT&#39;</span><span class="p">:[</span><span class="n">source_mech_1</span><span class="p">,</span> <span class="n">source_mech_2</span><span class="p">]}],</span>
-                                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;RESULT&#39;</span><span class="p">:[</span><span class="n">destination_mech</span><span class="p">]}])</span>
+<span class="n">my_mech_C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[{</span><span class="s1">'MY INPUT'</span><span class="p">:[</span><span class="n">source_mech_1</span><span class="p">,</span> <span class="n">source_mech_2</span><span class="p">]}],</span>
+                                  <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="s1">'RESULT'</span><span class="p">:[</span><span class="n">destination_mech</span><span class="p">]}])</span>
 </pre></div>
 </div>
 <p>This produces the same result as the first example under <a class="reference internal" href="#port-projections-examples"><span class="std std-ref">Port specification dictionary</span></a>
@@ -802,7 +802,7 @@ by their name.  It uses the keyword <em>MECHANISM</em> to specify the Mechanism,
 specify Projections to its Ports.  This can be useful when a Mechanism must send Projections to several Ports
 of another Mechanism, such as a ControlMechanism that sends ControlProjections to several parameters of a
 given Mechanism, as in the following example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY DDM'</span><span class="p">)</span>
 <span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">MECHANISM</span><span class="p">:</span> <span class="n">my_mech</span><span class="p">,</span>
                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">PARAMETER_PORTS</span><span class="p">:</span> <span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]}])</span>
 </pre></div>
@@ -815,7 +815,7 @@ from the Ports of a single Mechanism;  Projections involving other Mechanisms mu
 The following creates an InputPort <code class="docutils literal notranslate"><span class="pre">my_input_port</span></code> with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to it from the
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of <code class="docutils literal notranslate"><span class="pre">mech_A</span></code> and assigns it to <code class="docutils literal notranslate"><span class="pre">mech_B</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY INPUTPORT&#39;</span><span class="p">,</span>
+<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY INPUTPORT'</span><span class="p">,</span>
                                 <span class="n">projections</span><span class="o">=</span><span class="p">[</span><span class="n">mech_A</span><span class="p">])</span>
 <span class="n">mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="n">my_input_port</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">mech_B</span><span class="o">.</span><span class="n">input_ports</span><span class="p">)</span>
@@ -825,7 +825,7 @@ The following creates an InputPort <code class="docutils literal notranslate"><s
 <p>The InputPort <code class="docutils literal notranslate"><span class="pre">my_input_port</span></code> could also have been assigned to <code class="docutils literal notranslate"><span class="pre">mech_B</span></code> in one of two other ways:
 by explicity adding it using <code class="docutils literal notranslate"><span class="pre">mech_B</span></code>'s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY INPUTPORT&#39;</span><span class="p">,</span>
+<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY INPUTPORT'</span><span class="p">,</span>
                                 <span class="n">projections</span><span class="o">=</span><span class="p">[</span><span class="n">mech_A</span><span class="p">])</span>
 <span class="n">mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">mech_B</span><span class="o">.</span><span class="n">add_ports</span><span class="p">([</span><span class="n">my_input_port</span><span class="p">])</span>
@@ -834,7 +834,7 @@ by explicity adding it using <code class="docutils literal notranslate"><span cl
 <p>or by constructing it after <code class="docutils literal notranslate"><span class="pre">mech_B</span></code> and assigning <code class="docutils literal notranslate"><span class="pre">mech_B</span></code> as its owner:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY INPUTPORT&#39;</span><span class="p">,</span>
+<span class="n">my_input_port</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">InputPort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MY INPUTPORT'</span><span class="p">,</span>
                                 <span class="n">owner</span><span class="o">=</span><span class="n">mech_B</span><span class="p">,</span>
                                 <span class="n">projections</span><span class="o">=</span><span class="p">[</span><span class="n">mech_A</span><span class="p">])</span>
 </pre></div>
@@ -1511,7 +1511,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=1f2af5ee"></script>
+         <script src="_static/documentation_options.js?v=6f7cd82a"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

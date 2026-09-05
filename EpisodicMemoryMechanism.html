@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.19.1.0 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.20.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.19.1.0
+                  0.20.0.0
                 </div>
               
             
@@ -511,22 +511,22 @@ in the constructor for the EpisodicMemoryMechanism’s <a class="reference inter
 in <a class="reference internal" href="MemoryFunctions.html#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#episodicmemorymechanism-input"><span class="std std-ref">Input</span></a>), that by default are named
 <code class="docutils literal notranslate"><span class="pre">FIELD_n_INPUT</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">input_ports</span><span class="o">.</span><span class="n">names</span>
-<span class="go">[&#39;FIELD_0_INPUT&#39;, &#39;FIELD_1_INPUT&#39;]</span>
+<span class="go">['FIELD_0_INPUT', 'FIELD_1_INPUT']</span>
 </pre></div>
 </div>
 <p>By default, an EpisodicMemoryMechanims also has the same number of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>
 as <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, named correspondingly <code class="docutils literal notranslate"><span class="pre">RETRIEVED_FIELD_n</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">output_ports</span><span class="o">.</span><span class="n">names</span>
-<span class="go">[&#39;RETRIEVED_FIELD_0&#39;, &#39;RETRIEVED_FIELD_1&#39;]</span>
+<span class="go">['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1']</span>
 </pre></div>
 </div>
 <p>These are assigned the values of the fields of the entry retrieved from <a class="reference internal" href="MemoryFunctions.html#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
 <p>The names of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> can be customized by specifying a list of names in
 the <strong>input_ports</strong> argument of the Mechanism’s constructor:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span> <span class="o">=</span> <span class="n">EpisodicMemoryMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
-<span class="gp">... </span>                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;VALUE&#39;</span><span class="p">,</span> <span class="s1">&#39;LABEL&#39;</span><span class="p">])</span>
+<span class="gp">... </span>                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'KEY'</span><span class="p">,</span> <span class="s1">'VALUE'</span><span class="p">,</span> <span class="s1">'LABEL'</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">input_ports</span><span class="o">.</span><span class="n">names</span>
-<span class="go">[&#39;KEY&#39;, &#39;VALUE&#39;, &#39;LABEL&#39;]</span>
+<span class="go">['KEY', 'VALUE', 'LABEL']</span>
 </pre></div>
 </div>
 <p>The number of names must be equal to the number of fields in an entry (in this case, 3).  Similarly, the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> can be named in the <strong>output_ports</strong> argument of the constructor.  In this case,
@@ -534,8 +534,8 @@ there can be fewer items specified, in which case the number of fields assigned 
 number of OutputPorts specified in the argument:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span> <span class="o">=</span> <span class="n">EpisodicMemoryMechanism</span><span class="p">(</span><span class="n">memory</span><span class="o">=</span><span class="p">[[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">]],</span>
 <span class="gp">... </span>                                        <span class="p">[[</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]]],</span>
-<span class="gp">... </span>                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;VALUE&#39;</span><span class="p">,</span> <span class="s1">&#39;LABEL&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;VALUE_RETRIEVED&#39;</span><span class="p">,</span> <span class="s1">&#39;LABEL_RETRIEVED&#39;</span><span class="p">])</span>
+<span class="gp">... </span>                                <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'KEY'</span><span class="p">,</span> <span class="s1">'VALUE'</span><span class="p">,</span> <span class="s1">'LABEL'</span><span class="p">],</span>
+<span class="gp">... </span>                                <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">'VALUE_RETRIEVED'</span><span class="p">,</span> <span class="s1">'LABEL_RETRIEVED'</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">execute</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">]])</span>
 <span class="go">array([array([1., 2.]), array([3., 4., 5.]), array([6., 7.])],</span>
 <span class="go">      dtype=object)</span>
@@ -797,7 +797,7 @@ Function associated with this Component</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=1f2af5ee"></script>
+         <script src="_static/documentation_options.js?v=6f7cd82a"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
