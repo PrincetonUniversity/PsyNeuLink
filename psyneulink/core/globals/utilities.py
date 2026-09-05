@@ -116,7 +116,20 @@ import types
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Any, Callable, Dict, Hashable, Iterable, List, Literal, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING
+from psyneulink._typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -124,7 +137,8 @@ from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
-from numpy.typing import DTypeLike
+import packaging.version as version
+from numpy.typing import ArrayLike, DTypeLike
 
 try:
     from numpy import exceptions as np_exceptions
@@ -142,8 +156,11 @@ from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_MET
                                               MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
 
+if TYPE_CHECKING:
+    from torch import Tensor
 
-__all__ = ([
+
+__all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'counts',
     'get_class_attributes', 'extended_array_equal',
@@ -163,12 +180,22 @@ __all__ = ([
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
     'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
-    'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes', 'PNLStrEnum'
-])
+    'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
+    'PNLStrEnum',
+    'clip', 'full_like', 'full', 'ones_like', 'ones', 'shape', 'zeros_like', 'zeros',
+    'convert_to_tensor',
+]
+
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
 _signature_strong_cache = {}
+
+
+NUMPY_COMPAT_V1 = version.parse(np.__version__) < version.parse('2')
+
+
+ArrayShape = Union[int, Tuple['ArrayShape']]
 
 
 class UtilitiesError(Exception):
@@ -1211,12 +1238,9 @@ def convert_to_np_array(value, dimension=None):
     elif dimension == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
         if (
-            value.ndim > 0
-            and value.dtype == object
-            and any([safe_len(x) > 1 for x in value])
+            value.ndim == 0
+            or (value.ndim == 1 and value.shape == shape(value))
         ):
-            pass
-        else:
             if torch and torch.is_tensor(value):
                 value = torch.atleast_2d(value)
             else:
@@ -1271,7 +1295,7 @@ def get_value_from_array(array):
 def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
     """Generate a random matrix
 
-    Calls np.random.rand to generate a 2d np.array with random values and shape (num_rows, num_cols):
+    Calls np.random.rand to generate a np.ndarray with random values and shape (num_rows, num_cols):
 
         :math:`matrix = (random[0.0:1.0] + offset) * scale
 
@@ -1296,7 +1320,7 @@ def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
 
     Returns
     -------
-    2d np.array
+    np.ndarray
     """
     if isinstance(offset,str):
         if offset.upper() == 'ZERO_CENTER':
@@ -2424,7 +2448,7 @@ def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
 
         | a | b | np.array_equal | extended_array_equal |
         |---|---|----------------|----------------------|
-        | X | X | False          | True                 |
+        | X | X | ValueError     | True                 |
     """
     a = convert_all_elements_to_np_array(a)
     b = convert_all_elements_to_np_array(b)
@@ -2657,3 +2681,464 @@ def get_stacklevel_skip_file_prefixes(
 
 
 #endregion
+
+
+def shape(obj: ArrayLike) -> ArrayShape:
+    """
+    Produces a shape tuple of **obj** that handles optionally-nested
+    Iterables, including standard, ragged, or object-dtype
+    numpy.ndarray. The standard numpy shape is returned when **obj** can
+    be represented as a non-ragged numpy.ndarray.
+
+    Args:
+        obj (typing.Union[np.ndarray, collections.abc.Iterable])
+
+    Returns:
+        ArrayShape: a numpy.ndarray-style shape of **obj**
+
+    Note:
+        The purpose of this function is to distinguish shapes of inner
+        items of ragged arrays. For example:
+
+        `A = np.array([[0], [0, 0]], dtype=object)`
+        `B = np.array([[0], [0, 0, 0]], dtype=object)`
+
+        | array | np.shape | pnl.shape       |
+        |-------|----------|-----------------|
+        | A     | (2, )    | ((1,), (2,))    |
+        | B     | (2, )    | ((1,), (3,))    |
+    """
+    def _shape(obj):
+        try:
+            if obj.dtype != object:
+                return tuple(obj.shape)
+        except AttributeError:
+            pass
+
+        shape = []
+        try:
+            for item in obj:
+                shape.append(_shape(item))
+        except TypeError:
+            return tuple()
+
+        if all([i == tuple() for i in shape]):
+            return (len(obj), )
+        else:
+            return tuple(shape)
+
+    try:
+        # handle non-ragged numpy.ndarray
+        if obj.dtype != object:
+            return tuple(obj.shape)
+    except AttributeError:
+        pass
+
+    try:
+        obj = convert_all_elements_to_np_array(obj)
+    except TypeError:
+        pass
+    return tuple(_shape(obj))
+
+
+_pnl_shape = shape
+
+
+def array_shapes_equal(a: ArrayLike, b: ArrayLike) -> bool:
+    """
+    Determines if the `shape <psyneulink.core.globals.utilities.shape>_`\\ s
+    of **a** and **b** are the same. In contrast to numpy, identifies ragged
+    arrays containing inner items of different shape as not equivalently shaped.
+
+    Args:
+        a (ArrayLike):
+        b (ArrayLike):
+
+    Returns:
+        bool: True if **a** and **b** and all nested arrays have the same shape,
+            False otherwise.
+    """
+    a_dtype = getattr(a, 'dtype', object)
+    b_dtype = getattr(b, 'dtype', object)
+    if a_dtype == object or b_dtype == object:
+        return shape(a) == shape(b)
+    else:
+        return a.shape == b.shape
+
+
+def _numpy_compat_kwargs(**kwargs) -> Dict:
+    """
+    Filters arguments incompatible with the current numpy version
+
+    Returns:
+        Dict
+    """
+    if not NUMPY_COMPAT_V1:
+        return kwargs
+
+    try:
+        del kwargs['device']
+    except KeyError:
+        pass
+    else:
+        warnings.warn("'device' argument requires numpy>=2")
+
+    return kwargs
+
+
+def full(
+    shape: ArrayShape,
+    fill_value,
+    dtype: Optional[DTypeLike] = None,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    *,
+    device=None,
+    like=None,
+) -> np.ndarray:
+    """
+        Returns an array of values **fill_value** of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ **shape**.
+        Other arguments generally mirror those of `numpy.full`. Intended to
+        support reproduction of an original possibly-nested ragged array. Uses
+        unmodified `numpy.full` when not ragged.
+
+        Arguments:
+            shape (Union[int, Tuple[Union[int, Tuple]]]):
+                shape of the result array, as `numpy.shape` or `shape <psyneulink.core.globals.utilities.shape>`_
+            fill_value :
+                values of the result array
+            dtype (Optional[DTypeLike]):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.full`
+            device (Optional[str]):
+                see `numpy.full`
+                requires version `numpy>=2`
+            like :
+                see `numpy.full`
+
+        Returns:
+            (`numpy.ndarray`): array of the specified shape with values **fill_value**
+    """
+    # 'like' argument exists in >=1.20.0, which is below our minimum version
+    kwargs = _numpy_compat_kwargs(device=device)
+
+    def _full(s):
+        try:
+            return np.full(s, fill_value=fill_value, dtype=dtype, order=order, like=like, **kwargs)
+        except TypeError as e:
+            if "'tuple' object cannot be interpreted as an integer" in str(e):
+                return [_full(x) for x in s]
+            else:
+                raise
+
+    res = _full(shape)
+    if like is not None:
+        res = like.__array_wrap__(res)
+    else:
+        res = convert_all_elements_to_np_array(res)
+    return res
+
+
+def zeros(
+    shape: ArrayShape,
+    dtype: DTypeLike = float,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    *,
+    device: Optional[str] = None,
+    like=None,
+) -> np.ndarray:
+    """
+        Returns an array of zeros of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ **shape**. Other
+        arguments generally mirror those of `numpy.zeros`. Intended to support
+        reproduction of an original possibly-nested ragged array. Uses
+        unmodified `numpy.zeros` when not ragged.
+
+        Arguments:
+            shape (Union[int, Tuple[Union[int, Tuple]]]):
+                shape of the result array, as `numpy.shape` or `shape <psyneulink.core.globals.utilities.shape>`_
+            dtype (Optional[DTypeLike]):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.zeros`
+            device (Optional[str]):
+                see `numpy.zeros`
+                requires version `numpy>=2`
+            like :
+                see `numpy.zeros`
+
+        Returns:
+            (`numpy.ndarray`): array of the specified shape containing zeros
+    """
+    return full(shape, 0, dtype=dtype, order=order, device=device, like=like)
+
+
+def ones(
+    shape: ArrayShape,
+    dtype: DTypeLike = float,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    *,
+    device: Optional[str] = None,
+    like=None,
+) -> np.ndarray:
+    """
+        Returns an array of ones of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ **shape**. Other
+        arguments generally mirror those of `numpy.ones`. Intended to support
+        reproduction of an original possibly-nested ragged array. Uses
+        unmodified `numpy.ones` when not ragged.
+
+        Arguments:
+            shape (Union[int, Tuple[Union[int, Tuple]]]):
+                shape of the result array, as `numpy.shape` or `shape <psyneulink.core.globals.utilities.shape>`_
+            dtype (Optional[DTypeLike]):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.ones`
+            device (Optional[str]):
+                see `numpy.ones`
+                requires version `numpy>=2`
+            like :
+                see `numpy.ones`
+
+        Returns:
+            (`numpy.ndarray`): array of the specified shape containing ones
+    """
+    return full(shape, 1, dtype=dtype, order=order, device=device, like=like)
+
+
+def full_like(
+    a: ArrayLike,
+    fill_value,
+    dtype: DTypeLike = None,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    subok=NotImplemented,
+    shape=NotImplemented,
+    *,
+    device: Optional[str] = None,
+) -> np.ndarray:
+    """
+        Returns an array of values **fill_value** of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ matching the shape
+        and type of **a**. Other arguments generally mirror those of
+        `numpy.full_like`. Intended to support reproduction of an original
+        possibly-nested ragged array.
+
+        Args:
+            a (ArrayLike):
+                template array that specifies the shape of the result array
+            fill_value :
+                values of the result array
+            dtype (DTypeLike):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.full_like`
+            subok :
+                see `numpy.full_like`. ignored, not implemented
+            shape :
+                see `numpy.full_like`. ignored, in favor of shape of **a**
+            device (Optional[str]):
+                see `numpy.full_like`
+                requires version `numpy>=2`
+
+        Returns:
+            (`numpy.ndarray`): array matching **a** with values **fill_value**
+    """
+    if shape is not NotImplemented:
+        warnings.warn('shape argument is ignored in favor of `a.shape`')
+    if subok is not NotImplemented:
+        warnings.warn('subok argument is not implemented')
+    shape = _pnl_shape(a)
+    return full(shape, fill_value, dtype, order, device=device)
+
+
+def zeros_like(
+    a: ArrayLike,
+    dtype: DTypeLike = None,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    subok=NotImplemented,
+    shape=NotImplemented,
+    *,
+    device: Optional[str] = None,
+) -> np.ndarray:
+    """
+        Returns an array of zeros of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ matching the shape
+        and type of **a**. Other arguments generally mirror those of
+        `numpy.zeros_like`. Intended to support reproduction of an original
+        possibly-nested ragged array.
+
+        Args:
+            a (ArrayLike):
+                template array that specifies the shape of the result array
+            dtype (DTypeLike):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.zeros_like`
+            subok :
+                see `numpy.zeros_like`. ignored, not implemented
+            shape :
+                see `numpy.zeros_like`. ignored, in favor of shape of **a**
+            device (Optional[str]):
+                see `numpy.zeros_like`
+                requires version `numpy>=2`
+
+        Returns:
+            (`numpy.ndarray`): array matching **a** of zeros
+    """
+    return full_like(a, 0, dtype, order, subok, shape, device=device)
+
+
+def ones_like(
+    a: ArrayLike,
+    dtype: DTypeLike = None,
+    order: Literal['C', 'F'] = 'C',  # noqa: F821
+    subok=NotImplemented,
+    shape=NotImplemented,
+    *,
+    device: Optional[str] = None,
+) -> np.ndarray:
+    """
+        Returns an array of ones of `numpy.shape` or
+        `shape <psyneulink.core.globals.utilities.shape>`_ matching the shape
+        and type of **a**. Other arguments generally mirror those of
+        `numpy.ones_like`. Intended to support reproduction of an original
+        possibly-nested ragged array.
+
+        Args:
+            a (ArrayLike):
+                template array that specifies the shape of the result array
+            dtype (DTypeLike):
+                explicitly set numpy dtype of the result array
+            order (Literal["C", "F"]):
+                see `numpy.ones_like`
+            subok :
+                see `numpy.ones_like`. ignored, not implemented
+            shape :
+                see `numpy.ones_like`. ignored, in favor of shape of **a**
+            device (Optional[str]):
+                see `numpy.ones_like`
+                requires version `numpy>=2`
+
+        Returns:
+            (`numpy.ndarray`): array matching **a** of ones
+    """
+    return full_like(a, 1, dtype, order, subok, shape, device=device)
+
+
+def clip(a: ArrayLike, a_min: Optional[ArrayLike], a_max: Optional[ArrayLike], **kwargs) -> np.ndarray:
+    """
+    Clips the values of **a** to the range `[**a_min**, **a_max**]`.
+
+    Args:
+        a (ArrayLike): array to be clipped
+        a_min (Optional[ArrayLike]): minimum range value.
+            If `None`, values will not be clipped to a minimum
+        a_max (Optional[ArrayLike]): maximum range value.
+            If `None`, values will not be clipped to a maximum
+
+    Returns:
+        np.ndarray: result array clipped to `[**a_min, **a_max**]`
+    """
+    def _clip(x):
+        try:
+            return np.clip(x, a_min, a_max, **kwargs)
+        except ValueError as e:
+            if 'The truth value of an array with more than one element is ambiguous' in str(e):
+                return [_clip(x_i) for x_i in x]
+            else:
+                raise
+    return convert_all_elements_to_np_array(_clip(convert_all_elements_to_np_array(a)))
+
+
+# ----------------------------------------------------------------------
+# _validate_np_tensordot_args is based heavily on contents of
+# numpy.tensordot v2.1.0, which provides a less detailed error message.
+#
+# NumPy License Attribution:
+# Copyright (c) 2005-2025, NumPy Developers. All rights reserved.
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+#     * Neither the name of the NumPy Developers nor the names of any contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+def _validate_np_tensordot_args(a: ArrayLike, b: ArrayLike, axes=2):
+    """
+    Checks a `numpy.tensordot(**a**, **b**, **axes**)` operation for valid axis
+    sizes with a more-detailed error message. See `numpy.tensordot`.
+
+    Raises:
+        ValueError
+    """
+    try:
+        iter(axes)
+    except Exception:
+        axes_a = list(range(-axes, 0))
+        axes_b = list(range(0, axes))
+    else:
+        axes_a, axes_b = axes
+    try:
+        na = len(axes_a)
+        axes_a = list(axes_a)
+    except TypeError:
+        axes_a = [axes_a]
+        na = 1
+    try:
+        nb = len(axes_b)
+        axes_b = list(axes_b)
+    except TypeError:
+        axes_b = [axes_b]
+        nb = 1
+
+    a = np.asarray(a)
+    b = np.asarray(b)
+    equal = True
+    if na != nb:
+        equal = False
+        reason = f'unequal number of axes ({na} and {nb})'
+    else:
+        wrong_a = []
+        wrong_b = []
+        for k in range(na):
+            if a.shape[axes_a[k]] != b.shape[axes_b[k]]:
+                equal = False
+                wrong_a.append(axes_a[k])
+                wrong_b.append(axes_b[k])
+
+        wrong_pair_strs = []
+        for i in range(len(wrong_a)):
+            ai = wrong_a[i]
+            bi = wrong_b[i]
+            wrong_pair_strs.append(f'a.shape[{ai}] != b.shape[{bi}] ({a.shape[ai]} != {b.shape[bi]})')
+        reason = '; '.join(wrong_pair_strs)
+        reason = f"axes pairs of a.shape {a.shape}, b.shape {b.shape}: {reason}"
+    if not equal:
+        raise ValueError(f'shape-mismatch for sum: {reason}')
+
+
+# ----------------------------------------------------------------------
+
+
+def convert_to_tensor(obj: Iterable, dtype: DTypeLike = None) -> Union['Tensor', List['Tensor']]:
+    """
+    Make **obj** a `torch.Tensor` or list of tensors if it is ragged
+
+    Args:
+        obj (Iterable):
+        dtype (DTypeLike, optional): explicit specification of result tensor dtype. Defaults to None.
+
+    Returns:
+        Union['Tensor', List['Tensor']]:
+    """
+    if isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], np.ndarray):
+        res = torch.from_numpy(np.asarray(obj))
+        if dtype is not None:
+            res = res.to(dtype)
+        return res
+
+    try:
+        return torch.tensor(obj, dtype=dtype)
+    except (TypeError, ValueError):
+        # We probably have a ragged array, so we need to convert to a list of tensors
+        return [convert_to_tensor(x, dtype) for x in obj]

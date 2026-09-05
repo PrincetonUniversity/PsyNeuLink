@@ -99,7 +99,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
 
-from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.component import NDimUnsupportedStatus, parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
@@ -273,6 +273,8 @@ class KohonenLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    _ndim_unsupported = NDimUnsupportedStatus.MATRIX
+
     class Parameters(LearningMechanism.Parameters):
         """
             Attributes
@@ -363,9 +365,9 @@ class KohonenLearningMechanism(LearningMechanism):
         # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
         variable = super(LearningMechanism, self)._validate_variable(variable, context)
 
-        if np.array(variable).ndim != 2 or not is_numeric(variable):
+        if not is_numeric(variable):
             raise KohonenLearningMechanismError("Variable for {} ({}) must be a list with two items "
-                                                "or a 2d np.array, all of which may contain only numbers".
+                                                "or an np.array, all of which may contain only numbers".
                                                         format(self.name, variable))
         return variable
 

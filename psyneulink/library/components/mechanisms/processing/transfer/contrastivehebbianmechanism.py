@@ -336,8 +336,7 @@ import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
-
-
+from psyneulink.core.components.component import NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
@@ -735,6 +734,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     """
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
 
     class Parameters(RecurrentTransferMechanism.Parameters):
         """

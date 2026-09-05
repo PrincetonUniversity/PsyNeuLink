@@ -1063,7 +1063,7 @@ class GradientOptimization(OptimizationFunction):
         `optimization process <GaussianProcess_Procedure>`.
 
     bounds : tuple
-        contains two 2d arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
+        contains two arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
         <GradientOptimization.variable>`), and the 2nd the upper bound of each.
 
     annealing_function : function or method

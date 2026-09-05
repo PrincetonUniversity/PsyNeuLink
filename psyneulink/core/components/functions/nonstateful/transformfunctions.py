@@ -46,25 +46,39 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import List, Literal, Optional, Union
+from psyneulink._typing import List, Literal, Optional, Tuple, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions import function
 from psyneulink.core.components.functions.function import (
-    Function_Base, FunctionError, FunctionOutputType, function_keywords,
-    get_matrix, _random_state_getter, _seed_setter, DEFAULT_SEED)
+    DEFAULT_SEED,
+    Function_Base,
+    FunctionError,
+    FunctionOutputType,
+    _random_state_getter,
+    _seed_setter,
+    function_keywords,
+    get_matrix,
+)
 from psyneulink.core.components.shellclasses import Projection
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, AUTO, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_MEMORY_FUNCTION, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
-     REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, RETRIEVE, SCALE, STORE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
-from psyneulink.core.globals.utilities import (
-    all_within_range, convert_all_elements_to_np_array, convert_to_np_array,
-    is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+    DEFAULT,
+    PREFERENCE_SET_NAME,
+    REARRANGE_FUNCTION,
+    RECEIVER,
+    REDUCE_FUNCTION,
+    RETRIEVE,
+    SCALE,
+    STORE,
+    SUM,
+    WEIGHTS,
+)
 from psyneulink.core.globals.parameters import (
     FunctionParameter,
     Parameter,
@@ -73,6 +87,17 @@ from psyneulink.core.globals.parameters import (
 )
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.utilities import (
+    ValidParamSpecType,
+    _validate_np_tensordot_args,
+    all_within_range,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    is_matrix_keyword,
+    is_numeric,
+    is_numeric_scalar,
+    np_array_less_than_2d,
+)
 
 __all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
            'LinearCombination', 'MatrixTransform', 'MatrixMemory', 'PredictionErrorDeltaFunction',
@@ -335,7 +360,7 @@ class Concatenate(TransformFunction):  # ---------------------------------------
         input : number
             value of the input to the function at which derivative is to be taken.
 
-        covariates : 2d np.array : default class_defaults.variable[1:]
+        covariates : np.ndarray : default class_defaults.variable[1:]
             the input(s) to the Concatenate function other than the one for which the derivative is being
             computed;  these are ignored and are accepted for consistency with other functions.
 
@@ -378,12 +403,12 @@ class Rearrange(TransformFunction):  # -----------------------------------------
     concatenating subsets of them into single 1d arrays.  The specification must be an integer, a tuple of integers,
     or a list containing either or both.  Each integer must be an index of an item in the outer dimension (axis 0) of
     `variable <Rearrange.variable>`.  Items referenced in a tuple are concatenated in the order specified into a single
-    1d array, and that 1d array is included in the resulting 2d array in the order it appears in **arrangement**.
+    inner array, and that inner array is included in the resulting outer array in the order it appears in **arrangement**.
     If **arrangement** is specified, then only the items of `variable <Rearrange.variable>` referenced in the
     specification are included in the result; if **arrangement** is not specified, all of the items of `variable
     <Rearrange.variable>` are concatenated into a single 1d array (i.e., it functions identically to `Concatenate`).
 
-    `function <Rearrange.function>` returns a 2d array with the items of `variable` rearranged
+    `function <Rearrange.function>` returns an array with the items of `variable` rearranged
     (and possibly concatenated) as specified by **arrangement**.
 
     Examples
@@ -610,7 +635,7 @@ class Rearrange(TransformFunction):  # -----------------------------------------
         -------
 
         Rearranged items of outer dimension (axis 0) of **variable** : array
-            in a 2d array.
+            in an array.
         """
         variable = np.atleast_2d(variable)
 
@@ -671,17 +696,17 @@ class Reduce(TransformFunction):  # --------------------------------------------
     default_variable : list or np.array : default class_defaults.variable
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
-    weights : 1d or 2d np.array : default None
+    weights : np.ndarray : default None
         specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `weights <LinearCombination.weights>` for details)
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details)
 
@@ -1059,18 +1084,18 @@ class LinearCombination(
             * If there is more than one array in variable, they must all be of the same length
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
-                - 2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
+                - >=2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
         Initialization arguments:
          - variable (value, np.ndarray or list): values to be combined;
-             can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
+             can be a list of lists, or an array; an array with one fewer dimension is always returned
              if it is a list, it must be a list of numbers, lists, or np.arrays
-             all items in the list or 2D np.array must be of equal length
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each item of variable before combining them
+             all items in the list or array must be of equal length
+             + WEIGHTS (list of numbers or array): multiplies each item of variable before combining them
                   (default: [1,1])
-             + EXPONENTS (list of numbers or 1D np.array): exponentiates each item of variable before combining them
+             + EXPONENTS (list of numbers or array): exponentiates each item of variable before combining them
                   (default: [1,1])
          - params (dict) can include:
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1,1])
+             + WEIGHTS (list of numbers or array): multiplies each variable before combining them (default: [1,1])
              + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
              + SCALE (value): multiples the result (after combining elements; default: 1)
              + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
@@ -1086,20 +1111,20 @@ class LinearCombination(
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default class_defaults.variable
-        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+    variable : np.ndarray : default class_defaults.variable
+        specifies a template for the arrays to be combined.  If it is >=2d, all items must have the same length.
 
-    weights : scalar or 1d or 2d np.array : default None
+    weights : scalar or np.ndarray : default None
         specifies values used to multiply the elements of each array in **variable**.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `weights <LinearCombination.weights>` for details of how weights are applied).
 
-    exponents : scalar or 1d or 2d np.array : default None
+    exponents : scalar or np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details of how exponents are applied).
 
@@ -1132,24 +1157,24 @@ class LinearCombination(
     Attributes
     ----------
 
-    variable : 1d or 2d np.array
+    variable : np.ndarray
         contains the arrays to be combined by `function <LinearCombination>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <LinearCombination.scale>` and `offset <LinearCombination.scale>`.
-        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        If it is >=2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
         and then combined as specified by `operation <LinearCombination.operation>`.
 
-    weights : scalar or 1d or 2d np.array
+    weights : scalar or np.ndarray
         if it is a scalar, the value is used to multiply all elements of all arrays in `variable
         <LinearCombination.variable>`; if it is a 1d array, each element is used to multiply all elements in the
-        corresponding array of `variable <LinearCombination.variable>`;  if it is a 2d array, then each array is
+        corresponding array of `variable <LinearCombination.variable>`;  if it is a >=2d array, then each array is
         multiplied elementwise (i.e., the Hadamard Product is taken) with the corresponding array of `variable
         <LinearCombinations.variable>`. All `weights` are applied before any exponentiation (if it is specified).
 
-    exponents : scalar or 1d or 2d np.array
+    exponents : scalar or np.ndarray
         if it is a scalar, the value is used to exponentiate all elements of all arrays in `variable
         <LinearCombination.variable>`; if it is a 1d array, each element is used to exponentiate the elements of the
-        corresponding array of `variable <LinearCombinations.variable>`;  if it is a 2d array, the element of each
+        corresponding array of `variable <LinearCombinations.variable>`;  if it is a >=2d array, the element of each
         array is used to exponentiate the corresponding element of the corresponding array of `variable
         <LinearCombination.variable>`. In either case, all exponents are applied after application of the `weights
         <LinearCombination.weights>` (if any are specified).
@@ -1392,8 +1417,8 @@ class LinearCombination(
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default class_defaults.variable
-           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+        variable : np.ndarray : default class_defaults.variable
+           a single numeric array, or multiple arrays to be combined; if it is >=2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1514,7 +1539,7 @@ class LinearCombination(
            .. technical_note::
               output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.
 
-        covariates : 2d np.array : default class_defaults.variable[1:]
+        covariates : np.ndarray : default class_defaults.variable[1:]
             the input(s) to the LinearCombination function other than the one for which the derivative is being
             computed;  these are used to calculate the Jacobian of the LinearCombination function.
 
@@ -1695,7 +1720,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     **operation** = *DOT_PRODUCT*:
 
-        Returns the dot (inner) product of `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`:
+        Returns the dot (inner) product of `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>` using `numpy.tensordot`. If `matrix <MatrixTransform.matrix>` has more than 2 dimensions,
 
         .. math::
             {variable} \\bullet |matrix|
@@ -1815,7 +1840,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
     variable : 1d array
         contains value to be transformed.
 
-    matrix : 2d array
+    matrix : np.ndarray
         matrix used to transform `variable <MatrixTransform.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
@@ -1834,6 +1859,14 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
     normalize : bool
         determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
         norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
+
+    axes : Union[int, Tuple[int, int], DEFAULT]
+        used when `operation` is `DOT_PRODUCT`. Specifies the axes on which
+        `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`
+        are summed. `DEFAULT` value is 1 when `matrix <MatrixTransform.matrix>`
+        is 2d (standard dot product), and `variable.ndim` when `matrix MatrixTransform.matrix>`
+        is >2d (tensor dot product). The value of `axes <MatrixTransform.axes>`
+        is provided directly to `numpy.tensordot`.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1876,11 +1909,18 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
                     :default value: False
                     :type: bool
+
+                axes
+                    see `axes <MatrixTransform.axes>`
+
+                    :default value: DEFAULT
+                    :type: Union[int, Tuple[int, int], DEFAULT]
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
         normalize = Parameter(False)
+        axes: Union[int, Tuple[int, int], DEFAULT] = DEFAULT
 
     @check_user_specified
     @beartype
@@ -1909,7 +1949,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         )
 
         self.parameters.matrix.set(
-            self.instantiate_matrix(self.parameters.matrix.get()),
+            self.instantiate_matrix(self.parameters.matrix.get(), Context(None)),
             skip_log=True,
         )
 
@@ -1932,7 +1972,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, 'receiver'):
             sender = self.defaults.variable
-            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), -1)
 
             # Check for and validate receiver first, since it may be needed to validate and/or construct the matrix
             # First try to get receiver from specification in params
@@ -1991,23 +2031,21 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                                                                         self.name,
                                                                         self.owner_name))
 
-                        if weight_matrix.ndim != 2:
-                            raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                                                format(weight_matrix.ndim, self.name, self.owner_name))
+                        if weight_matrix.ndim > 2:
+                            axes = self._get_axes(sender, weight_matrix, context)
+                            _validate_np_tensordot_args(sender, weight_matrix, axes)
+                        else:
+                            matrix_rows = weight_matrix.shape[0]
+                            matrix_cols = weight_matrix.shape[1]
 
-                        matrix_rows = weight_matrix.shape[0]
-                        matrix_cols = weight_matrix.shape[1]
-
-                        # Check that number of rows equals length of sender vector (variable)
-                        if matrix_rows != sender_len:
-                            raise FunctionError("The number of rows ({}) of the "
-                                                "matrix provided for {} function "
-                                                "of {} does not equal the length "
-                                                "({}) of the sender vector "
-                                                "(variable)".format(matrix_rows,
-                                                                    self.name,
-                                                                    self.owner_name,
-                                                                    sender_len))
+                            # Check that number of rows equals length of sender vector (variable)
+                            if matrix_rows != sender_len:
+                                raise FunctionError(
+                                    'The number of rows ({}) of the matrix provided for {} function of {}'
+                                    ' does not equal the length ({}) of the sender vector (variable)'.format(
+                                        matrix_rows, self.name, self.owner_name, sender_len,
+                                    )
+                                )
 
                     # Auto, full or random connectivity matrix requested (using keyword):
                     # Note:  assume that these will be properly processed by caller
@@ -2123,7 +2161,8 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         if matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             matrix = np.identity(variable_length)
-        self.parameters.matrix._set(self.instantiate_matrix(matrix), context)
+        matrix = self.instantiate_matrix(matrix, context)
+        self.parameters.matrix._set(matrix, context)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
@@ -2154,15 +2193,17 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                 # receiver = sender
             receiver_len = receiver.shape[0]
 
-            matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+            matrix = get_matrix(specification, inp=sender, out=receiver, context=context)
 
             # This should never happen (should have been picked up in validate_param or above)
             if matrix is None:
                 raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
                                     "that returns one, a matrix specification keyword ({}), or a number (filler)".
                                     format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
-            else:
-                return matrix
+            elif matrix.ndim > 2:
+                axes = self._get_axes(sender, matrix, context)
+                _validate_np_tensordot_args(sender, matrix, axes)
+            return matrix
         else:
             return np.array(specification)
 
@@ -2277,7 +2318,9 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                     #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                     # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
                     matrix = matrix / np.linalg.norm(matrix, axis=0, keepdims=True)
-            result = np.dot(vector, matrix)
+
+            axes = self._get_axes(vector, matrix, context)
+            result = np.tensordot(vector, matrix, axes=axes)
 
         elif operation == L0:
             if normalize:
@@ -2290,21 +2333,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     @staticmethod
     def keyword(obj, keyword):
-
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        rows = None
-        cols = None
-        # use of variable attribute here should be ok because it's using it as a format/type
-        if isinstance(obj, MappingProjection):
-            if isinstance(obj.sender.defaults.value, numbers.Number):
-                rows = 1
-            else:
-                rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.defaults.variable, numbers.Number):
-                cols = 1
-            else:
-                cols = obj.receiver.socket_width
-        matrix = get_matrix(keyword, rows, cols)
+        matrix = get_matrix(keyword, obj.sender.socket_shape, obj.receiver.socket_shape)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
@@ -2339,6 +2368,16 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             return np.array_equal(matrix, identity_matrix)
         except TypeError:
             return matrix == identity_matrix
+
+    # not implemented as a parameter getter in order to not cause confusion with the real value
+    def _get_axes(self, variable, matrix, context):
+        axes = self.parameters.axes._get(context)
+        if axes == DEFAULT:
+            if matrix.ndim <= 2:
+                axes = 1
+            else:
+                axes = variable.ndim
+        return axes
 
 # def is_matrix_spec(m):
 #     if m is None:
@@ -2568,7 +2607,8 @@ class MatrixMemory(TransformFunction): #
 
         # If this is an initialization run, just return query and zeros for score and norms
         if self.is_initializing:
-            scores_template = norms_template = np.zeros(len(memory))
+            scores_template = np.zeros(len(memory))
+            norms_template = np.zeros(len(memory))
             return scores_template, norms_template
 
         scores = self.scores_function(query, context)
@@ -2738,17 +2778,17 @@ class CombineMeans(TransformFunction):  # --------------------------------------
             Notes:
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
-                - 2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
+                - >=2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
         Initialization arguments:
          - variable (value, np.ndarray or list): values to be combined;
-             can be a list of lists, or a 1D or 2D np.array;  a scalar is always returned
+             can be a list of lists, or an array;  a scalar is always returned
              if it is a list, it must be a list of numbers, lists, or np.arrays
              if WEIGHTS or EXPONENTS are specified, their length along the outermost dimension (axis 0)
                  must equal the number of items in the variable
          - params (dict) can include:
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each item of variable before combining them
+             + WEIGHTS (list of numbers or array): multiplies each item of variable before combining them
                   (default: [1,1])
-             + EXPONENTS (list of numbers or 1D np.array): exponentiates each item of variable before combining them
+             + EXPONENTS (list of numbers or array): exponentiates each item of variable before combining them
                   (default: [1,1])
              + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
              + SCALE (value): multiples the result (after combining elements; default: 1)
@@ -2762,20 +2802,20 @@ class CombineMeans(TransformFunction):  # --------------------------------------
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default class_defaults.variable
-        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+    variable : np.ndarray : default class_defaults.variable
+        specifies a template for the arrays to be combined.  If it is >=2d, all items must have the same length.
 
-    weights : 1d or 2d np.array : default None
+    weights : np.ndarray : default None
         specifies values used to multiply the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `weights <CombineMeans.weights>` for details)
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `exponents <CombineMeans.exponents>` for details)
 
@@ -2808,22 +2848,22 @@ class CombineMeans(TransformFunction):  # --------------------------------------
     Attributes
     ----------
 
-    variable : 1d or 2d np.array
+    variable : np.ndarray
         contains the arrays to be combined by `function <CombineMeans>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <CombineMeans.scale>` and `offset <CombineMeans.scale>`.
-        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        If it is >=2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <CombineMeans.weights>` and/or `exponents <CombineMeans.exponents>`
         and then combined as specified by `operation <CombineMeans.operation>`.
 
-    weights : 1d or 2d np.array : default NOne
+    weights : np.ndarray : default None
         if it is 1d, each element is used to multiply all elements in the corresponding array of
-        `variable <CombineMeans.variable>`;    if it is 2d, then each array is multiplied elementwise
+        `variable <CombineMeans.variable>`;    if it is >=2d, then each array is multiplied elementwise
         (i.e., the Hadamard Product is taken) with the corresponding array of `variable <CombineMeanss.variable>`.
         All :keyword:`weights` are applied before any exponentiation (if it is specified).
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <CombineMeans.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        `variable <CombineMeans.variable>`;  if it is >=2d, the element of each array is used to exponentiate
         the corresponding element of the corresponding array of `variable <CombineMeans.variable>`.
         In either case, exponentiating is applied after application of the `weights <CombineMeans.weights>`
         (if any are specified).
@@ -3043,8 +3083,8 @@ class CombineMeans(TransformFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default class_defaults.variable
-           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+        variable : np.ndarray : default class_defaults.variable
+           a single numeric array, or multiple arrays to be combined; if it is >=2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3276,8 +3316,8 @@ class PredictionErrorDeltaFunction(TransformFunction):
 
         Arguments
         ----------
-        variable : 2d np.array : default class_defaults.variable
-            a 2d array representing the sample and target values to be used to
+        variable : np.ndarray : default class_defaults.variable
+            an array representing the sample and target values to be used to
             calculate the temporal difference delta values. Both arrays must
             have the same length
 

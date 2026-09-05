@@ -739,7 +739,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
-        assert ("Shape ((5,)) of input ([10.  5.  2.  1.  0.]) does not match required shape ((3,)) "
+        assert ("Shape ((5,)) of input ([10.  5.  2.  1.  0.]) does not match required shape ((1, 3)) "
                 "for input to InputPort 'InputPort-0' of IntegratorMechanism.") in str(error_text.value)
 
     # input = list of length < default length
@@ -755,7 +755,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0])
-        assert ("Shape ((3,)) of input ([10.  5.  2.]) does not match required shape ((5,)) "
+        assert ("Shape ((3,)) of input ([10.  5.  2.]) does not match required shape ((1, 5)) "
                 "for input to InputPort 'InputPort-0' of IntegratorMechanism.") in str(error_text.value)
 
 

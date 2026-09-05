@@ -868,7 +868,7 @@ class Projection_Base(Projection):
 
     def _get_matrix_from_keyword(self, keyword):
         return get_matrix(
-            keyword, self.sender.socket_width, self.receiver.socket_width
+            keyword, self.sender.socket_shape, self.receiver.socket_shape
         )
 
     def _instantiate_attributes_before_function(self, function=None, context=None):

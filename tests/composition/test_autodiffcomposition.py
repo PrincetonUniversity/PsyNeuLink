@@ -3965,17 +3965,20 @@ class TestNestedLearning:
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
-    def test_nested_autodiff_learning_with_input_func(self):
+    @pytest.mark.parametrize('input_dim', [2, 3, 4])
+    def test_nested_autodiff_learning_with_input_func(self, input_dim):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
+        input_dim_shape = (1,) * input_dim
+
         xor_in_func = TransferMechanism(name='xor_in',
-                                        default_variable=np.zeros(2))
+                                        default_variable=np.zeros(input_dim_shape[1:] + (2,)))
 
         xor_hid_func = TransferMechanism(name='xor_hid',
-                                         default_variable=np.zeros(10),
+                                         default_variable=np.zeros(input_dim_shape[1:] + (10,)),
                                          function=Logistic())
 
         xor_out_func = TransferMechanism(name='xor_out',
-                                         default_variable=np.zeros(1),
+                                         default_variable=np.zeros(input_dim_shape[1:] + (1,)),
                                          function=Logistic())
 
         nested = AutodiffComposition([xor_hid_func], learning_rate=.001, name='nested')
@@ -4008,7 +4011,13 @@ class TestNestedLearning:
         xor_func.learn(inputs=get_inputs_auto_diff, execution_mode=pnl.ExecutionMode.PyTorch)
 
         results = xor_func.results
-        np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
+        np.testing.assert_allclose(
+            results,
+            [
+                np.broadcast_to(x, input_dim_shape)
+                for x in [[[0.62245933]], [[0.62813197]], [[0.6282438]], [[0.6341436]]]
+            ]
+        )
 
     # def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
     #     nodes = nodes_for_testing_nested_comps(1, 0, 1)

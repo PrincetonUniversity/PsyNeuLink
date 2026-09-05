@@ -761,7 +761,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     Arguments
     ---------
 
-    variable : List or 2d np.array
+    variable : List or np.ndarray
         it must have three items that correspond to the three values required by the LearningMechanism's `function
         <LearningMechanism.function>`;  they must each be compatible (in number and type) with the `value
         <InputPort.value>` of the corresponding `InputPort <LearningMechanism_InputPorts>` (see `variable
@@ -814,7 +814,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         componentType : LEARNING_MECHANISM
     COMMENT
 
-    variable : 2d np.array
+    variable : np.ndarray
         has three items that serve as the template for the three inputs required by the LearningMechanism's `function
         <LearningMechanism.function>` (corresponding to its three `InputPorts <LearningMechanism_InputPorts>`:
         the input to the `primary_learned_projection` (from `input_source`), the output of the Mechanism to which
@@ -937,7 +937,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
        #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDATE 2d array (MATRICES) AS ENTRIES)\
     COMMENT
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         the first item is the `value <OutputPort.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`, followed by the `value <LearningSignal.value>` \\(s) of its
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (user-specified)
@@ -1463,7 +1463,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                      error_signal_input])
             # Get covariates_values and pass in covariates arg
             if self.covariates_sources:
-                covariates_values = [source.value for source in self.covariates_sources]
+                covariates_values = [source.parameters.value._get(context) for source in self.covariates_sources]
             else:
                 covariates_values = None
             learning_signal, error_signal = super()._execute(variable=function_variable,
