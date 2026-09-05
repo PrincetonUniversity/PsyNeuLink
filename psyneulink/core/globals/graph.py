@@ -1,11 +1,9 @@
 import collections
 import enum
 import logging
-import typing
-
 import networkx
 
-from psyneulink._typing import Union
+from psyneulink._typing import Optional, Union
 from psyneulink.core.globals.keywords import MAYBE
 
 __all__ = [
@@ -70,7 +68,7 @@ class EdgeType(enum.Enum):
             return True
 
 
-class Vertex(object):
+class Vertex:
     """
         Stores a Component for use with a :py:class:`Graph`
 
@@ -132,7 +130,7 @@ class Vertex(object):
             self._feedback = EdgeType.from_any(value)
 
 
-class Graph(object):
+class Graph:
     """A Graph of vertices and edges.
 
     Attributes
@@ -382,7 +380,7 @@ class Graph(object):
 
     def get_strongly_connected_components(
         self,
-        nx_graph: typing.Optional[networkx.DiGraph] = None
+        nx_graph: Optional[networkx.DiGraph] = None
     ):
         if nx_graph is None:
             nx_graph = self._generate_networkx_graph()

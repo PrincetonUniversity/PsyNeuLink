@@ -2530,7 +2530,7 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         return self.output
 
 
-class PytorchProjectionWrapper():
+class PytorchProjectionWrapper:
     """Wrapper for Projection in a PytorchCompositionWrapper
 
     The matrix of the wrapped `projection <PytorchProjectionWrapper.projection>` is assigned as a parameter of

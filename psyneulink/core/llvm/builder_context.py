@@ -53,7 +53,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 's
                                  'get_printf_address'))
 
 
-class _node_assembly():
+class _node_assembly:
     def __init__(self, composition, node):
         self._comp = weakref.proxy(composition)
         self._node = node

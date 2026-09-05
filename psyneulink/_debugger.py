@@ -64,7 +64,8 @@ Categories may grow new keys over time without breaking existing listeners.
 """
 
 from enum import Enum
-from typing import Callable, Optional
+
+from psyneulink._typing import Callable, Optional
 
 
 class BreakpointCategory(Enum):

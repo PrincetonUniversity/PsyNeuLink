@@ -66,7 +66,11 @@ from psyneulink.core.globals.utilities import (
     is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import (
-    Parameter, ParameterNoValueError, FunctionParameter, check_user_specified, copy_parameter_value)
+    FunctionParameter,
+    Parameter,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
@@ -108,8 +112,13 @@ class TransformFunction(Function_Base):
             return ctx.float_ty(default)
 
         elif isinstance(param_type, pnlvm.ir.ArrayType):
-            index = ctx.int32_ty(0) if len(param_type) == 1 else index
-            param_ptr = builder.gep(param_ptr, [ctx.int32_ty(0), index])
+            if len(param_type) == 1 and not isinstance(param_type.element, pnlvm.ir.ArrayType):
+                index = [ctx.int32_ty(0)]
+
+            if not isinstance(index, list):
+                index = [index]
+
+            param_ptr = builder.gep(param_ptr, [ctx.int32_ty(0), *index])
 
         return builder.load(param_ptr)
 
@@ -1529,10 +1538,92 @@ class LinearCombination(
         default_var = np.atleast_2d(self.defaults.variable)
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
-    def _gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)
-        offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags: frozenset):
+        # for the frequent case where non-LLVM variable is 2D and value is cast
+        # up to 2D from 1D. arg_out is expected to have one fewer dimension than
+        # arg_in in _gen_llvm_combine_body.
+        if (arg_in.type.pointee.element == arg_out.type.pointee.element) and arg_out.type.pointee.count == 1:
+            arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
+        self._gen_llvm_combine(builder, ctx=ctx, vi=arg_in, vo=arg_out, params=params)
+        return builder
+
+    def _gen_llvm_combine_body(self, builder, ctx, vi, vo, val, pow_f, comb_op, params, vo_idx):
+        ptro = builder.gep(vo, [ctx.int32_ty(0), *vo_idx])
+
+        if isinstance(ptro.type.pointee, pnlvm.ir.ArrayType):
+            # Recursion on output array dimensions stops when pointing to scalar
+            with pnlvm.helpers.array_ptr_loop(builder, ptro, f"combine_axis{len(vo_idx)}") as (b, idx):
+                self._gen_llvm_combine_body(b, ctx, vi, vo, val, pow_f, comb_op, params, [*vo_idx, idx])
+        else:
+            # val is the base value passed in according to the combination
+            # operation (0 for sum, 1 for product)
+            val_p = builder.alloca(val.type, name="combined_result")
+            builder.store(val, val_p)
+
+            assert isinstance(vi.type.pointee, pnlvm.ir.ArrayType)
+            with pnlvm.helpers.array_ptr_loop(builder, vi, "combine") as (b, idx):
+                # The recursion is on the output, so `vo_idx` corresponds to a
+                # scalar in the output array. This loop is over the input, which
+                # has shape (vi.type.pointee.count, <`vo` shape>) and assumes axis=0.
+                # So, we combine elements [0, `vo_idx`]...[`vi.type.pointee.count-1`, `vo_idx`]
+                # to get the result element (`vo_idx`) in the output.
+                in_idx = [idx, *vo_idx]
+                ptri = b.gep(vi, [ctx.int32_ty(0), *in_idx])
+                in_val = b.load(ptri)
+
+                # lower-dim array specification (ex: exponents [a, b]
+                # and var [[[1, 1]], [[2, 2]]], applying a to [[1, 1]]
+                # and b to [[2, 2]])
+                exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS, idx, 1.0)
+                if (
+                    isinstance(exponent.type, pnlvm.ir.ArrayType)
+                    and len(exponent.type) == 1
+                    and not isinstance(exponent.type.element, pnlvm.ir.ArrayType)
+                ):
+                    exponent = b.extract_value(exponent, [0])
+                else:
+                    # variable (input) matching array specification
+                    exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS, in_idx, 1.0)
+
+                # FIXME: Remove this micro-optimization,
+                #        it should be handled by the compiler
+                if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
+                    in_val = b.call(pow_f, [in_val, exponent])
+
+                # lower-dim array specification (see exponent above)
+                weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, idx, 1.0)
+                if (
+                    isinstance(weight.type, pnlvm.ir.ArrayType)
+                    and len(weight.type) == 1
+                    and not isinstance(weight.type.element, pnlvm.ir.ArrayType)
+                ):
+                    weight = b.extract_value(weight, [0])
+                else:
+                    # variable (input) matching array specification
+                    weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, in_idx, 1.0)
+
+                in_val = b.fmul(in_val, weight)
+
+                # val_p points to a temp value that will be put in a specific
+                # element in the result. It's calculated sequentially by
+                # combining each in_val iterated over in this loop
+                val = b.load(val_p)
+                val = getattr(b, comb_op)(val, in_val)
+
+                b.store(val, val_p)
+
+            # value (output) matching
+            scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, vo_idx, 1.0)
+            offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, vo_idx, -0.0)
+
+            val = builder.load(val_p)
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
+
+            builder.store(val, ptro)
+
+    def _gen_llvm_combine(self, builder, ctx, vi, vo, params):
         # assume operation does not change dynamically
         operation = self.parameters.operation.get()
         if operation == SUM:
@@ -1554,45 +1645,8 @@ class LinearCombination(
         else:
             assert False, "Unknown operation: {}".format(operation)
 
-        val_p = builder.alloca(val.type, name="combined_result")
-        builder.store(val, val_p)
-
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
-
-        with pnlvm.helpers.array_ptr_loop(builder, vi, "combine") as (b, idx):
-            ptri = b.gep(vi, [ctx.int32_ty(0), idx, index])
-            in_val = b.load(ptri)
-
-            exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS,
-                                                 idx, 1.0)
-            # Vector of vectors (even 1-element vectors)
-            if isinstance(exponent.type, pnlvm.ir.ArrayType):
-                assert len(exponent.type) == 1 # FIXME: Add support for matrix weights
-                exponent = b.extract_value(exponent, [0])
-            # FIXME: Remove this micro-optimization,
-            #        it should be handled by the compiler
-            if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
-                in_val = b.call(pow_f, [in_val, exponent])
-
-            weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                               idx, 1.0)
-            # Vector of vectors (even 1-element vectors)
-            if isinstance(weight.type, pnlvm.ir.ArrayType):
-                assert len(weight.type) == 1 # FIXME: Add support for matrix weights
-                weight = b.extract_value(weight, [0])
-
-            in_val = b.fmul(in_val, weight)
-
-            val = b.load(val_p)
-            val = getattr(b, comb_op)(val, in_val)
-            b.store(val, val_p)
-
-        val = builder.load(val_p)
-        val = builder.fmul(val, scale)
-        val = builder.fadd(val, offset)
-
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        builder.store(val, ptro)
+        self._gen_llvm_combine_body(builder, ctx, vi, vo, val, pow_f, comb_op, params, [])
 
     def _gen_pytorch_fct(self, device, context=None):
         weights = self._get_pytorch_fct_param_value('weights', device, context)
@@ -2366,11 +2420,10 @@ class MatrixMemory(TransformFunction): #
         #                                   function_parameter_name='operation',
         #                                   primary=True,
         #                                   stateful=True)
-        scores_metric = Parameter(DOT_PRODUCT, stateful=False)
-        normalize_memories = Parameter(True,
-                                       # getter = _normalize_memories_getter,
-                                       # setter = _normalize_memories_setter
-                                       )
+        scores_function = Parameter(MatrixTransform, stateful=False)
+        scores_function_matrix = FunctionParameter(None, function_name='scores_function', function_parameter_name='matrix')
+        scores_metric = FunctionParameter(DOT_PRODUCT, function_name='scores_function', function_parameter_name='operation', stateful=False)
+        normalize_memories = FunctionParameter(True, function_name='scores_function', function_parameter_name='normalize')
         # EM2 BREADCRUMB: MAKE THIS FunctionParameter??
         # normalize_memories = FunctionParameter(True,
         #                                        function_name='scores_function',
@@ -2408,11 +2461,6 @@ class MatrixMemory(TransformFunction): #
                  owner=None,
                  prefs:Optional[ValidPrefSet] = None):
 
-        self.scores_function = MatrixTransform(default_variable=default_variable[0], # MatrixTransform only uses query
-                                               operation=scores_metric,
-                                               normalize=normalize_memories,
-                                               matrix=memory.T)
-
         decay_rate = decay_rate or 0.0
         if decay_rate == AUTO:
             decay_rate = 1 / len(memory)
@@ -2420,7 +2468,8 @@ class MatrixMemory(TransformFunction): #
         super().__init__(
             default_variable=default_variable,
             memory=memory,
-            # scores_function=scores_function,
+            scores_function_matrix=memory.T,
+            scores_metric=scores_metric,
             normalize_memories=normalize_memories,
             decay_rate=decay_rate,
             storage_prob=storage_prob,
@@ -2451,6 +2500,9 @@ class MatrixMemory(TransformFunction): #
             raise FunctionError(f"The length of the 3rd item of variable for '{self.name}' should 1 "
                                 f"(index of weakest entry in memory), but got {len(variable[2])}.")
         return variable
+
+    def _parse_scores_function_variable(self, variable, context=None):  # noqa U100
+        return variable[0]  # MatrixTransform only uses query
 
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
@@ -2519,22 +2571,7 @@ class MatrixMemory(TransformFunction): #
             scores_template = norms_template = np.zeros(len(memory))
             return scores_template, norms_template
 
-        try:
-            scores = self.scores_function(query, context)
-        except ParameterNoValueError:
-            # IMPLEMENTATION NOTE:
-            #   This is needed since _comput_scores() is called before _access_memory(),
-            #   so there are not yet entries in self.scores_function for matrix or normalize in the execution context;
-            #   therefore, call to self.scores_function() above raises the ParameterNoValueError.
-            self.scores_function.parameters.matrix._set(self.memory.T, context)
-            self.scores_function.parameters.normalize._set(self.normalize_memories, context)
-            # # For assignment to score_function (by way of setters)
-            # # EM2 BREADCRUMB: NOT CLEAR WHY, GIVEN SETTERS IT IS NOT ALREADY BEING SET
-            # #                 (ARE THEY GETTING ASSIGNED IN CALL TO EXECUTE?
-            # self.parameters.memory._set(memory, context)
-            # self.parameters.normalize_memories._set(self.normalize_memories, context)
-            scores = self.scores_function(query, context)
-
+        scores = self.scores_function(query, context)
         norms = np.linalg.norm(memory, axis=1)
 
         return scores, norms

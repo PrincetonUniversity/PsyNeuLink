@@ -177,7 +177,7 @@ Dependencies that are automatically installed (except those noted as optional) i
    * numpy
    * matplotlib
    * toposort
-   * typecheck-decorator (version 1.2)
+   * beartype
    * pillow
    * llvmlite
    * mpi4py (optional)

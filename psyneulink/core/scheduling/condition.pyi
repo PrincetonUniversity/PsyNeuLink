@@ -1,10 +1,11 @@
 import enum
-from typing import Callable, ClassVar, Dict, Hashable, Iterable, Set, Union
 
 import _abc
 import graph_scheduler.time
 import pint
 from _typeshed import Incomplete
+
+from psyneulink._typing import Callable, ClassVar, Dict, Hashable, Iterable, Set, Union
 
 __all__ = ['Operation', 'ConditionError', 'ConditionSet', 'ConditionBase', 'Condition', 'AbsoluteCondition', 'While', 'When', 'WhileNot', 'Always', 'Never', 'CompositeCondition', 'All', 'Any', 'And', 'Or', 'Not', 'NWhen', 'TimeInterval', 'TimeTermination', 'BeforeTimeStep', 'AtTimeStep', 'AfterTimeStep', 'AfterNTimeSteps', 'BeforePass', 'AtPass', 'AfterPass', 'AfterNPasses', 'EveryNPasses', 'BeforeTrial', 'AtTrial', 'AfterTrial', 'AfterNTrials', 'AtRun', 'AfterRun', 'AfterNRuns', 'BeforeNCalls', 'AtNCalls', 'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'EveryNCalls', 'JustRan', 'AllHaveRun', 'WhenFinished', 'WhenFinishedAny', 'WhenFinishedAll', 'AtTrialStart', 'AtTrialNStart', 'AtRunStart', 'AtRunNStart', 'Threshold', 'GraphStructureCondition', 'CustomGraphStructureCondition', 'BeforeNodes', 'BeforeNode', 'WithNode', 'AfterNodes', 'AfterNode', 'AddEdgeTo', 'RemoveEdgeFrom']
 

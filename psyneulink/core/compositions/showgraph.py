@@ -219,8 +219,6 @@ import pathlib
 import site
 import warnings
 
-from psyneulink._typing import Union
-
 import numpy as np
 from beartype import beartype
 
@@ -330,7 +328,7 @@ class ShowGraphError(Exception):
         self.error_value = error_value
 
 
-class ShowGraph():
+class ShowGraph:
     """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
 
     Every Composition is assigned a ShowGraph object, with its `show_graph <ShowGraph.show_graph>` method

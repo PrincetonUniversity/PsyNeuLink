@@ -16,11 +16,11 @@ except (ImportError, ModuleNotFoundError):
     torch = None
 
 import warnings
-from typing import Optional
 from collections import defaultdict
 
 import numpy as np
 
+from psyneulink._typing import Optional
 from psyneulink.core.components.functions.nonstateful.transformfunctions import COMPUTE_SCORES
 from psyneulink.library.compositions.pytorchwrappers import (
     PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchLossMechanismWrapper)

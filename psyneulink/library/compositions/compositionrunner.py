@@ -8,11 +8,9 @@
 
 # ********************************************* AutodiffComposition *************************************************
 
-from typing import Generator, Hashable, Union
-
 import numpy as np
 
-from psyneulink._typing import Mapping, Optional, Tuple
+from psyneulink._typing import Generator, Hashable, Mapping, Optional, Tuple, Union
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition, LearningScale
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
@@ -34,7 +32,7 @@ def inf_yield_val(val=None):
     while True:
         yield val
 
-class CompositionRunner():
+class CompositionRunner:
 
     def __init__(self, compostion: Composition):
         self._composition = compostion
@@ -532,7 +530,7 @@ class CompositionRunner():
         # return result of last *trial* (as usual for a call to run)
         return self._composition.parameters.results.get(context)[-1]
 
-class EarlyStopping(object):
+class EarlyStopping:
     def __init__(self, mode='min', min_delta=0, patience=10):
         self.mode = mode
         self.min_delta = min_delta

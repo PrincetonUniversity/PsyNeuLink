@@ -13,12 +13,10 @@ import weakref
 import numpy as np
 import torch
 
-
-from typing import Union, Literal, Tuple
-
 from torch import nn
 
 import psyneulink.core.scheduling.condition as conditions
+from psyneulink._typing import Union, Literal, Tuple
 from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
