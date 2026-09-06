@@ -48,7 +48,7 @@ jobs:
         python-version: ['3.10', '3.13', '3.14']
         extra-args: ['']
         os: [ubuntu, macos, windows]
-        arch: ['default']
+        arch: ['x64', 'arm64']
         version-restrict: ['']
         torch: ['']
         include:
@@ -57,10 +57,12 @@ jobs:
           - python-version: '3.11'
             os: ubuntu
             extra-args: '--forked -m "not llvm"'
+            arch: 'default'
 
           # --benchmark-enable run on macos python 3.11
           - python-version: '3.11'
             os: macos
+            arch: 'default'
             # pytest needs both '--benchmark-only' and '-m benchmark'
             # The former fails the test if benchmarks cannot be enabled
             # (e.g. due to --dist setting)
@@ -71,27 +73,39 @@ jobs:
           # fp32 run on linux python 3.12
           - python-version: '3.12'
             os: ubuntu
+            arch: 'default'
             extra-args: '--fp-precision=fp32'
 
           # code-coverage run on macos python 3.12
           - python-version: '3.12'
             os: macos
+            arch: 'default'
             extra-args: '--cov=psyneulink'
 
           # run without pytorch on windows python 3.12
           - python-version: '3.12'
             os: windows
+            arch: 'default'
             torch: 'notorch'
 
           # add python 3.10 with deps restricted to min supported package versions
           - python-version: '3.10'
             os: macos
+            arch: 'default'
             version-restrict: 'min'
 
         exclude:
           # Replaced with the min version run above
           - python-version: '3.10'
             os: macos
+
+          # torch and llvmlite don't provide wheels for macos on Intel
+          - os: macos
+            arch: 'x64'
+
+          # torch and llvmlite don't provide wheels for Windows on ARM
+          - os: windows
+            arch: 'arm64'
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
