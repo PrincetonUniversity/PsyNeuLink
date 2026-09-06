@@ -26,16 +26,21 @@ jobs:
     # Explanation of the expression below:
     # line 1: Check if the job environment is listed in repository-scale "SELF_HOSTED" variable
     # line 2: "true" branch. Construct tag array to match one of the self hosted runners. All tags need to match.
-    # line 3: "else" branch. Construct GA image description. Generally the {windows,macos,ubuntu}-latest.
-    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2};', matrix.os, matrix.python-version, matrix.extra-args))
-                && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
+    # line 3: "else" branch. Construct GA image description.
+    # line 4: select 'ubuntu' image based on architecture
+    # line 5: select 'windows' image based on architecture
+    # line 6: select 'macos' image based on architecture
+    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.arch, matrix.python-version, matrix.extra-args))
+                && fromJSON(format('[ "self-hosted", "{0}", "{1}", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os, matrix.arch)))
                 || (
-                matrix.os == 'ubuntu' && 'ubuntu-24.04' ||
-                matrix.os == 'windows' && 'windows-2025' ||
-                matrix.os == 'macos' && 'macos-26') }}
+                  matrix.os == 'ubuntu' && (matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04') ||
+                  matrix.os == 'windows' && (matrix.arch == 'arm64' && 'windows-11-arm' || 'windows-2025') ||
+                  matrix.os == 'macos' && (matrix.arch == 'x64' && 'macos-26-intel' || 'macos-26')
+                )
+              }}
     env:
       # Keep DESCRIPTION in sync with the above
-      DESCRIPTION: ${{ format(';{0}_{1}_{2};', matrix.os, matrix.python-version, matrix.extra-args) }}
+      DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.arch, matrix.python-version, matrix.extra-args) }}
       SELF_HOSTED: ${{ vars.SELF_HOSTED }}
     strategy:
       fail-fast: false
@@ -43,6 +48,7 @@ jobs:
         python-version: ['3.10', '3.13', '3.14']
         extra-args: ['']
         os: [ubuntu, macos, windows]
+        arch: ['default']
         version-restrict: ['']
         torch: ['']
         include:
@@ -128,8 +134,8 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-${{ runner.arch }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
 
     - name: Drop PyTorch requirement
       if: ${{ matrix.torch == 'notorch' }}
@@ -150,7 +156,7 @@ jobs:
       if: always()
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
+        key: ${{ runner.os }}-${{ runner.arch }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
 
     - name: Lint with Ruff
       shell: bash
