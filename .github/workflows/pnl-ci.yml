@@ -52,24 +52,6 @@ jobs:
         version-restrict: ['']
         torch: ['']
         include:
-          # --forked run of python only tests
-          # Python tests are enough to test potential naming issues
-          - python-version: '3.11'
-            os: ubuntu
-            extra-args: '--forked -m "not llvm"'
-            arch: 'default'
-
-          # --benchmark-enable run on macos python 3.11
-          - python-version: '3.11'
-            os: macos
-            arch: 'default'
-            # pytest needs both '--benchmark-only' and '-m benchmark'
-            # The former fails the test if benchmarks cannot be enabled
-            # (e.g. due to --dist setting)
-            # The latter works around a crash in pytest when collecting tests:
-            # https://github.com/ionelmc/pytest-benchmark/issues/243
-            extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
-
           # fp32 run on linux python 3.12
           - python-version: '3.12'
             os: ubuntu
@@ -87,6 +69,24 @@ jobs:
             os: windows
             arch: 'default'
             torch: 'notorch'
+
+          # --forked run of python only tests
+          # Python tests are enough to test potential naming issues
+          - python-version: '3.11'
+            os: ubuntu
+            extra-args: '--forked -m "not llvm"'
+            arch: 'default'
+
+          # --benchmark-enable run on macos python 3.11
+          - python-version: '3.11'
+            os: macos
+            arch: 'default'
+            # pytest needs both '--benchmark-only' and '-m benchmark'
+            # The former fails the test if benchmarks cannot be enabled
+            # (e.g. due to --dist setting)
+            # The latter works around a crash in pytest when collecting tests:
+            # https://github.com/ionelmc/pytest-benchmark/issues/243
+            extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
 
           # add python 3.10 with deps restricted to min supported package versions
           - python-version: '3.10'
