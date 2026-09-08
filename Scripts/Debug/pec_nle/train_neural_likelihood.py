@@ -122,9 +122,9 @@ def main():
     print("training a neural likelihood", flush=True)
     started = time.time()
     likelihood = train_neural_likelihood(
-        build_pec,
-        bounds=FIT_RANGES,
-        outcome_names=OUTCOME_NAMES,
+        FIT_RANGES,
+        OUTCOME_NAMES,
+        pec_factory=build_pec,
         n_parameter_samples=args.n_parameter_samples,
         n_trials_per_sample=args.n_trials_per_sample,
         epochs=args.epochs,
