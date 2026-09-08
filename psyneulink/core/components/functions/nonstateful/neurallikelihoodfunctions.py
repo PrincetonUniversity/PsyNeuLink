@@ -338,27 +338,42 @@ def _split(thetas, n):
 
 
 def _simulate(pec, inputs, thetas, n_outcomes):
-    """Simulate every parameter draw through ``pec``; returns (conditioning, outcomes)."""
-    n_trials = len(pec.data)
-    features = _trial_features(inputs, n_trials)
+    """Simulate every draw through ``pec``; returns (conditioning, outcomes, trials).
+
+    How many trials each draw produces is set by ``inputs``, not by the data the model
+    was built around, so it is read back from the simulation rather than assumed.
+    """
+    n_trials = None
+    features = None
 
     # Training needs the simulated outcomes, not a score for them. Scoring here would pay
     # the per-evaluation density cost a neural likelihood exists to remove, so the
-    # objective is stubbed out and only the simulations are kept.
-    pec.controller.function.set_pec_objective_function(lambda sim_data: 0.0)
+    # objective is stubbed out for the duration. The model may be one the caller is still
+    # using, so it is put back afterwards.
+    function = pec.controller.function
+    scoring = function._pec_objective_function
+    function.set_pec_objective_function(lambda sim_data: 0.0)
 
     cond_rows, x_rows = [], []
-    for theta in thetas:
-        _, sim = pec.log_likelihood(*theta, inputs=inputs, return_sim_data=True)
-        sim = np.asarray(sim, dtype=float)
-        n_estimates = sim.shape[1]
-        x_rows.append(sim.reshape(-1, sim.shape[-1]))
-        block = np.repeat(np.asarray(theta, dtype=float).reshape(1, -1),
-                          n_trials * n_estimates, axis=0)
-        if features is not None:
-            block = np.concatenate([block, np.repeat(features, n_estimates, axis=0)], axis=1)
-        cond_rows.append(block)
-    return np.concatenate(cond_rows), np.concatenate(x_rows)
+    try:
+        for theta in thetas:
+            _, sim = pec.log_likelihood(*theta, inputs=inputs, return_sim_data=True)
+            sim = np.asarray(sim, dtype=float)
+            n_estimates = sim.shape[1]
+            if n_trials is None:
+                n_trials = sim.shape[0]
+                features = _trial_features(inputs, n_trials)
+            x_rows.append(sim.reshape(-1, sim.shape[-1]))
+            block = np.repeat(np.asarray(theta, dtype=float).reshape(1, -1),
+                              n_trials * n_estimates, axis=0)
+            if features is not None:
+                block = np.concatenate(
+                    [block, np.repeat(features, n_estimates, axis=0)], axis=1
+                )
+            cond_rows.append(block)
+    finally:
+        function.set_pec_objective_function(scoring)
+    return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials
 
 
 def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
@@ -505,10 +520,15 @@ def train_neural_likelihood(
             "Distributing generation requires pec_factory: a composition cannot be sent "
             "to another process, so each worker has to build its own."
         )
+    if pec is not None and inputs is None:
+        raise NeuralLikelihoodError(
+            "pec requires inputs: they set how many trials each draw simulates, and "
+            "what distinguishes one trial from another."
+        )
     if pec is not None and n_trials_per_sample is not None:
         raise NeuralLikelihoodError(
             "n_trials_per_sample applies to pec_factory only; with pec the number of "
-            "trials simulated per draw is the model's own."
+            "trials simulated per draw is the length of inputs."
         )
 
     names = tuple(bounds)
@@ -535,7 +555,6 @@ def train_neural_likelihood(
     # only as far as there are workers to build one each. In this process there is one
     # model and no split at all.
     if pec is not None:
-        n_trials = len(pec.data)
         results = [_simulate(pec, inputs, thetas, n_outcomes)]
     elif distributed_options is None:
         results = [_simulate_chunk(pec_factory, thetas, n_trials, n_outcomes)]
@@ -555,6 +574,7 @@ def train_neural_likelihood(
 
     cond = torch.as_tensor(np.concatenate([r[0] for r in results]), dtype=torch.float32)
     raw = np.concatenate([r[1] for r in results])
+    n_trials = results[0][2]
     if raw.shape[1] != n_outcomes:
         raise NeuralLikelihoodError(
             f"The composition reported {raw.shape[1]} outcome columns but "
