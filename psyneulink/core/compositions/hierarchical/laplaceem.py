@@ -46,7 +46,6 @@ __all__ = [
     "fit_laplace_em",
     "log_gauss_diag",
     "make_inprocess_estep_runner",
-    "subject_laplace_objective",
     "subject_map_estep",
 ]
 
@@ -55,6 +54,11 @@ LOG_2PI = np.log(2.0 * np.pi)
 #: Step size for the finite-difference curvature, as a fraction of the prior standard deviation.
 #: See `EStepConfig.hessian_step` for why the step is scaled to the prior rather than fixed.
 DEFAULT_HESSIAN_STEP_SCALE = 0.25
+
+#: Size of the initial Nelder-Mead simplex.  Set explicitly because scipy's default is proportional
+#: to the starting point, which collapses when a coordinate starts at zero -- as it does whenever a
+#: participant starts at the group mean.
+SIMPLEX_SCALE = 0.5
 
 
 def log_gauss_diag(z, mean, var):
@@ -137,17 +141,12 @@ class EStepConfig:
     optimizer_options : Mapping or None
         Passed through to `scipy.optimize.minimize`, overriding the defaults below.
 
-    simplex_scale : float
-        Size of the initial Nelder-Mead simplex.  Set explicitly because scipy's default is
-        proportional to the starting point, which collapses when a coordinate starts at zero -- as
-        it does whenever a participant starts at the group mean.
     """
 
     method: str = "Nelder-Mead"
     hessian_step: Optional[Union[float, np.ndarray]] = None
     variance_floor: float = 1e-6
     optimizer_options: Optional[Mapping] = None
-    simplex_scale: float = 0.5
 
     def resolve_hessian_step(self, prior_variance):
         """Return the per-dimension finite-difference step to use for this prior variance."""
@@ -214,7 +213,7 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     options = {}
     if config.method == "Nelder-Mead":
         n = z0.size
-        simplex = np.vstack([z0] + [z0 + config.simplex_scale * e for e in np.eye(n)])
+        simplex = np.vstack([z0] + [z0 + SIMPLEX_SCALE * e for e in np.eye(n)])
         options = {"xatol": 1e-6, "fatol": 1e-6, "maxiter": 2000, "initial_simplex": simplex}
     if config.optimizer_options:
         options.update(config.optimizer_options)
@@ -377,7 +376,6 @@ def fit_laplace_em(
     estep_config=None,
     max_iterations=50,
     tol=1e-4,
-    damping=0.0,
     init_beta=None,
     init_sigma=None,
     warm_start=True,
@@ -409,10 +407,6 @@ def fit_laplace_em(
 
     max_iterations, tol : int, float
         Stop after this many iterations, or once no group parameter moves by more than `tol`.
-
-    damping : float
-        Fraction of the previous group estimate to retain each M-step.  Slows the fit but steadies
-        it when participant posteriors are noisy.
 
     init_beta, init_sigma : array-like : default None
         Starting group estimates; zeros and ones respectively by default.
@@ -475,10 +469,6 @@ def fit_laplace_em(
         beta_new = np.linalg.lstsq(X, estep.z_hat, rcond=None)[0]
         resid = estep.z_hat - X @ beta_new
         sigma_new = np.maximum(np.mean(resid ** 2 + estep.variance, axis=0), variance_floor)
-
-        if damping > 0.0:
-            beta_new = (1.0 - damping) * beta_new + damping * beta
-            sigma_new = (1.0 - damping) * sigma_new + damping * sigma
 
         delta = max(
             float(np.max(np.abs(beta_new - beta))),
