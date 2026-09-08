@@ -334,8 +334,10 @@ BOUNDS = {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS}
     [
         ({}, "exactly one of pec"),
         ({"pec": object(), "pec_factory": _ddm_training_pec}, "exactly one of pec"),
-        ({"pec": object(), "distributed_options": {"n_workers": 2}}, "requires pec_factory"),
-        ({"pec": object(), "n_trials_per_sample": 10}, "applies to pec_factory only"),
+        ({"pec": object(), "inputs": {}, "distributed_options": {"n_workers": 2}},
+         "requires pec_factory"),
+        ({"pec": object(), "inputs": {}, "n_trials_per_sample": 10},
+         "applies to pec_factory only"),
     ],
     ids=["neither", "both", "pec-distributed", "pec-trial-count"],
 )
@@ -356,3 +358,34 @@ def test_training_accepts_an_already_built_model():
     assert likelihood.provenance.fit_param_names == ("rate", "threshold")
     # the trial count comes from the model rather than from an argument
     assert likelihood.provenance.n_trials_per_sample == 10
+
+
+@pytest.mark.composition
+def test_training_leaves_the_model_it_was_given_intact():
+    """Simulating for training must not disturb a model the caller is still using."""
+    frame = pd.DataFrame({"decision": [0.0, 1.0] * 5, "response_time": [0.5] * 10})
+    frame["decision"] = frame["decision"].astype("category")
+    pec, inputs = _ddm_training_pec(frame)
+
+    before = pec.log_likelihood(0.3, 0.6, inputs=inputs)
+    nlf._simulate(pec, inputs, np.array([[0.3, 0.6]]), 2)
+    assert pec.log_likelihood(0.3, 0.6, inputs=inputs) == before
+
+
+@pytest.mark.composition
+def test_inputs_set_how_many_trials_each_draw_simulates():
+    """Trials come from the inputs, not from the data the model was built around."""
+    frame = pd.DataFrame({"decision": [0.0, 1.0] * 5, "response_time": [0.5] * 10})
+    frame["decision"] = frame["decision"].astype("category")
+    pec, _ = _ddm_training_pec(frame)
+    node = pec.nodes[0]
+
+    _, _, ten = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]), 2)
+    _, _, thirty = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]), 2)
+    assert (ten, thirty) == (10, 30)
+
+
+@pytest.mark.composition
+def test_a_model_without_inputs_is_rejected(ddm_data):
+    with pytest.raises(nlf.NeuralLikelihoodError, match="pec requires inputs"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=object(), n_parameter_samples=8)
