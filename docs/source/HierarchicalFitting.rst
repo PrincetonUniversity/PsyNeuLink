@@ -137,10 +137,6 @@ being ignored.
 * ``tol``
     Stop once no group parameter moves by more than this. Defaults to ``1e-4``.
 
-* ``damping``
-    Fraction of the previous group estimate retained each iteration. Slows the fit but
-    steadies it when participant posteriors are noisy. Defaults to ``0.0``.
-
 * ``variance_floor``
     Smallest posterior variance to report. Defaults to ``1e-6``.
 

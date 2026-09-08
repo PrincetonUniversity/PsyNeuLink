@@ -912,7 +912,6 @@ def test_pec_rejects_out_of_range_hierarchical_options():
     for opts, match in [
         ({"subject_id": "subject", "max_iterations": 0}, "max_iterations"),
         ({"subject_id": "subject", "tol": 0.0}, "tol"),
-        ({"subject_id": "subject", "damping": 1.0}, "damping"),
         ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
     ]:
         with pytest.raises(Exception, match=match):
