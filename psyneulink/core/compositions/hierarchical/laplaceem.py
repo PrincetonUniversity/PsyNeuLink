@@ -158,6 +158,15 @@ class EStepConfig:
         return np.broadcast_to(step, prior_variance.shape).astype(float, copy=True)
 
 
+def subject_laplace_objective(neg_log_post, variance, n_params):
+    """One participant's contribution to the Laplace marginal log-likelihood.
+
+    The quantity EM is really maximizing: the log-likelihood of the participant's data with their
+    parameters integrated out, under the Gaussian approximation to their posterior.
+    """
+    return -neg_log_post + 0.5 * n_params * LOG_2PI + 0.5 * float(np.sum(np.log(variance)))
+
+
 @dataclass
 class SubjectPosterior:
     """One participant's Laplace posterior, plus enough detail to tell whether to trust it."""
@@ -169,6 +178,7 @@ class SubjectPosterior:
     success: bool              # whether the optimizer reported convergence
     message: str               # the optimizer's own account of why it stopped
     hessian_step: np.ndarray   # the step actually used, so the choice is auditable
+    laplace_objective: float   # this participant's marginal, from the curvature alone
 
 
 def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
@@ -220,9 +230,16 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     # honest answer: it reports "we learned nothing", rather than a spuriously tight interval from
     # a meaningless reciprocal.
     with np.errstate(divide="ignore"):
-        variance = np.where(curvature > 0, 1.0 / np.where(curvature > 0, curvature, 1.0), np.inf)
-    variance = np.minimum(variance, prior_variance)
-    variance = np.maximum(variance, config.variance_floor)
+        curved = np.where(curvature > 0, 1.0 / np.where(curvature > 0, curvature, 1.0), np.inf)
+    fallback = np.where(np.isfinite(curved), curved, prior_variance)
+
+    # Reported: never wider than the prior, which a Gaussian prior guarantees whenever the
+    # likelihood is concave at the mode, and is the sane answer when curvature says otherwise.
+    variance = np.maximum(np.minimum(fallback, prior_variance), config.variance_floor)
+
+    # For the marginal, the width of the Gaussian being integrated is set by the curvature alone.
+    # Capping it there would report an integral over a narrower density than was approximated.
+    laplace_variance = np.maximum(fallback, config.variance_floor)
 
     return SubjectPosterior(
         z_hat=z_hat,
@@ -232,20 +249,14 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
         success=bool(result.success),
         message=str(getattr(result, "message", "")),
         hessian_step=step,
+        laplace_objective=subject_laplace_objective(
+            float(result.fun), laplace_variance, z_hat.size
+        ),
     )
 
 
 class HierarchicalEMWarning(UserWarning):
     """Raised when an EM iteration completes but something about it warrants attention."""
-
-
-def subject_laplace_objective(neg_log_post, variance, n_params):
-    """One participant's contribution to the Laplace marginal log-likelihood.
-
-    The quantity EM is really maximizing: the log-likelihood of the participant's data with their
-    parameters integrated out, under the Gaussian approximation to their posterior.
-    """
-    return -neg_log_post + 0.5 * n_params * LOG_2PI + 0.5 * float(np.sum(np.log(variance)))
 
 
 @dataclass
@@ -320,9 +331,7 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
             variance[s] = post.variance
             curvature[s] = post.curvature
             steps[s] = post.hessian_step
-            subject_objective[s] = subject_laplace_objective(
-                post.neg_log_post, post.variance, n_params
-            )
+            subject_objective[s] = post.laplace_objective
             success[s] = post.success
             if not post.success:
                 messages.append((s, post.message))
@@ -424,6 +433,9 @@ def fit_laplace_em(
     Convergence is judged by how far the group estimate moves, not by the objective, which is not
     monotone under an approximate E-step.
     """
+    if max_iterations < 1:
+        raise ValueError(f"max_iterations must be at least 1; got {max_iterations}")
+
     X = np.ones((n_subjects, 1)) if design_matrix is None else np.asarray(design_matrix, float)
     if X.shape[0] != n_subjects:
         raise ValueError(
