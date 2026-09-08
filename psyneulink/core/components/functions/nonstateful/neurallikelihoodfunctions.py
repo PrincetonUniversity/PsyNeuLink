@@ -337,16 +337,9 @@ def _split(thetas, n):
     return np.array_split(thetas, max(1, min(int(n), len(thetas))))
 
 
-def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
-    """Simulate every parameter draw in ``thetas``; returns (conditioning, outcomes).
-
-    The PEC is built once for the whole chunk: constructing and compiling a composition
-    is expensive relative to a simulation, so chunks amortize it.
-    """
-    import pandas as pd
-
-    dummy = pd.DataFrame(np.zeros((n_trials, n_outcomes)))
-    pec, inputs = pec_factory(dummy)
+def _simulate(pec, inputs, thetas, n_outcomes):
+    """Simulate every parameter draw through ``pec``; returns (conditioning, outcomes)."""
+    n_trials = len(pec.data)
     features = _trial_features(inputs, n_trials)
 
     # Training needs the simulated outcomes, not a score for them. Scoring here would pay
@@ -366,6 +359,18 @@ def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
             block = np.concatenate([block, np.repeat(features, n_estimates, axis=0)], axis=1)
         cond_rows.append(block)
     return np.concatenate(cond_rows), np.concatenate(x_rows)
+
+
+def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
+    """Build a model and simulate ``thetas`` through it.
+
+    This is the unit of work sent to a worker: a composition cannot be sent to another
+    process, so each worker builds its own and then simulates its share of the draws.
+    """
+    import pandas as pd
+
+    pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))
+    return _simulate(pec, inputs, thetas, n_outcomes)
 
 
 def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
@@ -422,12 +427,14 @@ def _encode_outcomes(outcomes, categorical, categories, outcome_names) -> torch.
 
 
 def train_neural_likelihood(
-    pec_factory: Callable,
     bounds: Mapping[str, tuple[float, float]],
     outcome_names: Sequence[str],
     *,
+    pec=None,
+    inputs: Mapping | None = None,
+    pec_factory: Callable | None = None,
     n_parameter_samples: int = 20000,
-    n_trials_per_sample: int = 100,
+    n_trials_per_sample: int | None = None,
     categorical: Sequence[bool] | None = None,
     epochs: int = 30,
     batch_size: int = 512,
@@ -435,7 +442,6 @@ def train_neural_likelihood(
     validation_fraction: float = 0.1,
     seed: int = 0,
     distributed_options: Mapping | None = None,
-    n_chunks: int | None = None,
     strict: bool = True,
 ) -> NeuralLikelihood:
     """Train a `NeuralLikelihood` on data simulated from a composition.
@@ -443,10 +449,18 @@ def train_neural_likelihood(
     Arguments
     ---------
 
-    pec_factory : callable
+    pec : ParameterEstimationComposition : default None
+        a model to simulate in this process, together with its **inputs**.  Simplest when
+        one is already built; it cannot be distributed, since a composition cannot be sent
+        to another process.
+
+    pec_factory : callable : default None
         ``pec_factory(data) -> (pec, inputs)``, the same contract distributed and
         hierarchical fitting use.  It is called with a placeholder table of
-        **n_trials_per_sample** rows, since training simulates rather than fits.
+        **n_trials_per_sample** rows, since training simulates rather than fits.  Required
+        to distribute, because each worker builds its own model.
+
+        Exactly one of **pec** or **pec_factory** is required.
 
     bounds : Mapping
         Parameter name to ``(lower, upper)``.  Iteration order fixes the order of the
@@ -460,12 +474,17 @@ def train_neural_likelihood(
         and recorded either way, so a disagreement with the data being fit is caught
         before the estimator is used.
 
-    n_parameter_samples, n_trials_per_sample : int
-        Parameter draws across the box, and trials simulated per draw.
+    n_parameter_samples : int : default 20000
+        Parameter draws across the box.
+
+    n_trials_per_sample : int : default 100
+        Trials simulated per draw, with **pec_factory**.  With **pec** the trial count is
+        the model's own and this does not apply.
 
     distributed_options : Mapping : default None
-        Resolved exactly as for distributed fitting.  Generation is embarrassingly
-        parallel; omit for a single process.
+        Resolved exactly as for distributed fitting, and requires **pec_factory**.
+        Generation is embarrassingly parallel, but each worker first builds a model, so
+        distributing pays above roughly a few hundred parameter draws and not below.
 
     strict : bool : default True
         Raise rather than warn when a validation gate fails.
@@ -476,6 +495,22 @@ def train_neural_likelihood(
     """
     from scipy.stats import qmc
 
+    if (pec is None) == (pec_factory is None):
+        raise NeuralLikelihoodError(
+            "Supply exactly one of pec, a model to simulate in this process, or "
+            "pec_factory, a callable that builds one."
+        )
+    if pec is not None and distributed_options is not None:
+        raise NeuralLikelihoodError(
+            "Distributing generation requires pec_factory: a composition cannot be sent "
+            "to another process, so each worker has to build its own."
+        )
+    if pec is not None and n_trials_per_sample is not None:
+        raise NeuralLikelihoodError(
+            "n_trials_per_sample applies to pec_factory only; with pec the number of "
+            "trials simulated per draw is the model's own."
+        )
+
     names = tuple(bounds)
     if not names:
         raise NeuralLikelihoodError("bounds must name at least one parameter.")
@@ -484,36 +519,35 @@ def train_neural_likelihood(
     if not np.all(upper > lower):
         bad = [n for n, lo, hi in zip(names, lower, upper) if hi <= lo]
         raise NeuralLikelihoodError(f"bounds must satisfy lower < upper; got {bad} reversed.")
-    if n_parameter_samples < 2 or n_trials_per_sample < 1:
-        raise NeuralLikelihoodError(
-            "n_parameter_samples must be at least 2 and n_trials_per_sample at least 1."
-        )
+    if n_parameter_samples < 2:
+        raise NeuralLikelihoodError("n_parameter_samples must be at least 2.")
+    if n_trials_per_sample is not None and n_trials_per_sample < 1:
+        raise NeuralLikelihoodError("n_trials_per_sample must be at least 1.")
 
     # Sobol draws cover the box more evenly than independent uniforms at the same count.
     engine = qmc.Sobol(d=len(names), scramble=True, seed=seed)
     thetas = qmc.scale(engine.random(n_parameter_samples), lower, upper)
 
     n_outcomes = len(outcome_names)
+    n_trials = n_trials_per_sample or 100
 
-    def run(chunks):
-        return [_simulate_chunk(pec_factory, c, n_trials_per_sample, n_outcomes)
-                for c in chunks]
-
-    # Building a model costs far more than simulating from it, so a chunk is the unit of
-    # parallel work and nothing else: one chunk in this process, one per worker on a
-    # cluster. Splitting further only re-pays the build.
-    if distributed_options is None:
-        results = run(_split(thetas, n_chunks or 1))
+    # Building a model costs far more than simulating from it, so the draws are split
+    # only as far as there are workers to build one each. In this process there is one
+    # model and no split at all.
+    if pec is not None:
+        n_trials = len(pec.data)
+        results = [_simulate(pec, inputs, thetas, n_outcomes)]
+    elif distributed_options is None:
+        results = [_simulate_chunk(pec_factory, thetas, n_trials, n_outcomes)]
     else:
         from psyneulink.core.components.functions.nonstateful import fitfunctions
 
         client, close_fn = fitfunctions._dask_client(distributed_options)
         try:
             workers = len(client.scheduler_info().get("workers", {})) or 1
-            chunks = _split(thetas, n_chunks or workers)
             futures = [client.submit(_simulate_chunk, pec_factory, c,
-                                     n_trials_per_sample, n_outcomes, pure=False)
-                       for c in chunks]
+                                     n_trials, n_outcomes, pure=False)
+                       for c in _split(thetas, workers)]
             results = client.gather(futures)
         finally:
             if close_fn is not None:
@@ -559,11 +593,12 @@ def train_neural_likelihood(
         log_transform=log_transform,
         n_trial_features=int(cond.shape[1] - len(names)),
         n_parameter_samples=int(n_parameter_samples),
-        n_trials_per_sample=int(n_trials_per_sample),
+        n_trials_per_sample=int(n_trials),
         epochs=int(epochs),
         val_nll=float(val_nll),
         seed=int(seed),
-        simulator_hash=_simulator_hash(pec_factory, int(cond.shape[1] - len(names))),
+        simulator_hash=_simulator_hash(pec if pec is not None else pec_factory,
+                                       int(cond.shape[1] - len(names))),
         psyneulink_version=str(pnl_version),
         sbi_version=str(_require_sbi().__version__),
     )
