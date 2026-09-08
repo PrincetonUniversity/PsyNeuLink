@@ -868,17 +868,38 @@ def pnl_euler_lca_step(
     return state + step_size * (-leak * state + task + recurrent)
 
 
-def parameter_bounds() -> tuple[np.ndarray, np.ndarray]:
+def parameter_bounds(
+    *,
+    gain_upper: float = 35.0,
+    threshold_upper: float = 0.25,
+    non_decision_time_upper: float = 0.4,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return the physical fitting bounds, with optional upper-bound overrides.
+
+    The defaults reproduce the legacy CSI fitting grid.  Upper bounds are
+    configurable because they are numerical fitting choices rather than model
+    constants; in particular, the direct likelihood can support gains above
+    the legacy grid's ceiling of 35.
+    """
     lower = np.asarray(
         [5.0, 5.0, 5.0, 0.0, 0.05, 0.05, 0.05,
          -0.3, -0.3, -0.3, 0.1, 0.1, 0.1],
         dtype=float,
     )
     upper = np.asarray(
-        [35.0, 35.0, 35.0, 0.30, 0.25, 0.25, 0.25,
-         0.0, 0.0, 0.0, 0.4, 0.4, 0.4],
+        [gain_upper, gain_upper, gain_upper, 0.30,
+         threshold_upper, threshold_upper, threshold_upper,
+         0.0, 0.0, 0.0,
+         non_decision_time_upper, non_decision_time_upper,
+         non_decision_time_upper],
         dtype=float,
     )
+    if not np.all(np.isfinite(upper)):
+        raise ValueError("Parameter upper bounds must be finite.")
+    if np.any(upper <= lower):
+        raise ValueError(
+            "Every parameter upper bound must exceed its lower bound."
+        )
     return lower, upper
 
 

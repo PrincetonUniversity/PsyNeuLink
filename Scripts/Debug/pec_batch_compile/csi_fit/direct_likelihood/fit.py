@@ -20,6 +20,75 @@ _WORKER_TRIALS: CSITrialData | None = None
 _WORKER_PROBABILITY_FLOOR = 1.0e-300
 
 
+@dataclass(frozen=True)
+class _UnitParameterTransform:
+    """Map a unit optimizer box to physical CSI parameters."""
+
+    lower: np.ndarray
+    upper: np.ndarray
+    gain_parameterization: str = "linear"
+
+    def __post_init__(self) -> None:
+        lower = np.asarray(self.lower, dtype=float)
+        upper = np.asarray(self.upper, dtype=float)
+        if lower.shape != (13,) or upper.shape != (13,):
+            raise ValueError("CSI parameter bounds must each contain 13 values.")
+        if not np.all(np.isfinite(lower)) or not np.all(np.isfinite(upper)):
+            raise ValueError("CSI parameter bounds must be finite.")
+        if np.any(upper <= lower):
+            raise ValueError("Every upper bound must exceed its lower bound.")
+        if self.gain_parameterization not in {"linear", "log"}:
+            raise ValueError(
+                "gain_parameterization must be 'linear' or 'log'."
+            )
+        if self.gain_parameterization == "log" and np.any(lower[:3] <= 0.0):
+            raise ValueError("Log-parameterized gain bounds must be positive.")
+        object.__setattr__(self, "lower", lower.copy())
+        object.__setattr__(self, "upper", upper.copy())
+
+    def to_physical(self, unit_value: np.ndarray) -> np.ndarray:
+        unit = np.asarray(unit_value, dtype=float)
+        physical = self.lower + (self.upper - self.lower) * unit
+        if self.gain_parameterization == "log":
+            log_lower = np.log(self.lower[:3])
+            log_range = np.log(self.upper[:3]) - log_lower
+            physical[..., :3] = np.exp(log_lower + log_range * unit[..., :3])
+        return physical
+
+    def to_unit(self, physical_value: np.ndarray) -> np.ndarray:
+        physical = np.asarray(physical_value, dtype=float)
+        unit = (physical - self.lower) / (self.upper - self.lower)
+        if self.gain_parameterization == "log":
+            clipped_gain = np.clip(
+                physical[..., :3], self.lower[:3], self.upper[:3]
+            )
+            unit[..., :3] = (
+                np.log(clipped_gain) - np.log(self.lower[:3])
+            ) / (np.log(self.upper[:3]) - np.log(self.lower[:3]))
+        return unit
+
+    def physical_derivative(self, unit_value: np.ndarray) -> np.ndarray:
+        derivative = np.broadcast_to(
+            self.upper - self.lower, np.asarray(unit_value).shape
+        ).copy()
+        if self.gain_parameterization == "log":
+            physical = self.to_physical(unit_value)
+            log_range = np.log(self.upper[:3]) - np.log(self.lower[:3])
+            derivative[..., :3] = physical[..., :3] * log_range
+        return derivative
+
+
+def _resolve_bounds(
+    bounds: tuple[np.ndarray, np.ndarray] | None,
+) -> tuple[np.ndarray, np.ndarray]:
+    if bounds is None:
+        bounds = parameter_bounds()
+    lower, upper = bounds
+    # The transform performs the full validation and defensive copies.
+    transform = _UnitParameterTransform(lower, upper)
+    return transform.lower, transform.upper
+
+
 def _initialize_score_worker(
     config,
     trials: CSITrialData,
@@ -165,10 +234,15 @@ def _feasible_start(
     trials: CSITrialData,
     lower: np.ndarray,
     upper: np.ndarray,
+    *,
+    gain_parameterization: str = "linear",
 ) -> np.ndarray:
     """Draw an interior start and make its RT shifts feasible."""
     fraction = rng.uniform(0.15, 0.85, size=lower.shape)
-    vector = lower + fraction * (upper - lower)
+    transform = _UnitParameterTransform(
+        lower, upper, gain_parameterization=gain_parameterization
+    )
+    vector = transform.to_physical(fraction)
     # A linked CSI+NDT constraint is not expressible as independent L-BFGS-B
     # bounds.  Pull those values toward their lower bounds until every included
     # row starts with a positive decision-time interval.
@@ -264,6 +338,8 @@ def fit_lbfgsb(
     coordinate_cycles: int = 2,
     coordinate_improvement_tolerance: float = 1.0e-7,
     stationarity_tolerance: float = 1.0e-2,
+    bounds: tuple[np.ndarray, np.ndarray] | None = None,
+    gain_parameterization: str = "linear",
 ) -> FitResult:
     """Run bounded, gradient-based maximum likelihood from multiple starts."""
     if starts < 1:
@@ -298,10 +374,18 @@ def fit_lbfgsb(
         raise ValueError("coordinate_improvement_tolerance must be positive.")
     if stationarity_tolerance <= 0.0:
         raise ValueError("stationarity_tolerance must be positive.")
+    if gain_parameterization not in {"linear", "log"}:
+        raise ValueError("gain_parameterization must be 'linear' or 'log'.")
+    if gradient_method != "autograd" and gain_parameterization != "linear":
+        raise ValueError(
+            "Log gain parameterization currently requires autograd gradients."
+        )
     from scipy.optimize import OptimizeResult, minimize
 
-    lower, upper = parameter_bounds()
-    parameter_scale = upper - lower
+    lower, upper = _resolve_bounds(bounds)
+    transform = _UnitParameterTransform(
+        lower, upper, gain_parameterization=gain_parameterization
+    )
     rng = np.random.default_rng(seed)
     requested_candidates = [
         ("provided", np.asarray(value, dtype=float))
@@ -342,15 +426,23 @@ def fit_lbfgsb(
             }
         )
     random_slots = starts - len(candidates)
-    random_pool_target = (
-        random_slots
-        if random_start_candidates is None
-        else max(random_slots, random_start_candidates)
-    )
+    random_pool_target = 0
+    if random_slots > 0:
+        random_pool_target = (
+            random_slots
+            if random_start_candidates is None
+            else max(random_slots, random_start_candidates)
+        )
     random_pool = []
     while len(random_pool) < random_pool_target and attempt < max_start_attempts:
         attempt += 1
-        candidate = _feasible_start(rng, trials, lower, upper)
+        candidate = _feasible_start(
+            rng,
+            trials,
+            lower,
+            upper,
+            gain_parameterization=gain_parameterization,
+        )
         valid, initial_log_likelihood, minimum_probability = _valid_start_score(
             likelihood, trials, candidate, probability_floor
         )
@@ -414,12 +506,12 @@ def fit_lbfgsb(
     def scaled_autograd_objective(
         scaled_value: np.ndarray,
     ) -> tuple[float, np.ndarray]:
-        value = lower + parameter_scale * scaled_value
+        value = transform.to_physical(scaled_value)
         objective, gradient = autograd_objective(value)
-        return objective, gradient * parameter_scale
+        return objective, gradient * transform.physical_derivative(scaled_value)
 
     def scaled_scalar_objective(scaled_value: np.ndarray) -> float:
-        return scalar_objective(lower + parameter_scale * scaled_value)
+        return scalar_objective(transform.to_physical(scaled_value))
 
     bounds = list(zip(lower, upper, strict=True))
     if gradient_method == "autograd":
@@ -427,9 +519,9 @@ def fit_lbfgsb(
         for candidate, metadata in zip(
             candidates, candidate_metadata, strict=True
         ):
-            scaled_candidate = (
-                np.clip(candidate, lower, upper) - lower
-            ) / parameter_scale
+            scaled_candidate = transform.to_unit(
+                np.clip(candidate, lower, upper)
+            )
             optimized = minimize(
                 scaled_autograd_objective,
                 scaled_candidate,
@@ -652,9 +744,11 @@ def fit_lbfgsb(
             if float(polished.fun) <= float(best.fun):
                 best = polished
     if gradient_method == "autograd":
-        best_parameter_vector = lower + parameter_scale * np.asarray(best.x)
+        best_parameter_vector = transform.to_physical(np.asarray(best.x))
         _, best_gradient = autograd_objective(best_parameter_vector)
-        projected_gradient = best_gradient * parameter_scale
+        projected_gradient = (
+            best_gradient * transform.physical_derivative(np.asarray(best.x))
+        )
         scaled_value = np.asarray(best.x)
         bound_tolerance = 1.0e-8
         projected_gradient[
@@ -681,7 +775,7 @@ def fit_lbfgsb(
         zip(main_results, candidate_metadata, strict=True), start=1
     ):
         if gradient_method == "autograd":
-            result_vector = lower + parameter_scale * np.asarray(result.x)
+            result_vector = transform.to_physical(np.asarray(result.x))
         else:
             result_vector = np.asarray(result.x, dtype=float)
         run_results.append(
@@ -704,7 +798,7 @@ def fit_lbfgsb(
                 "polish_index": polish_index,
                 "polish_method": polish_method,
                 "final_parameter_vector": (
-                    lower + parameter_scale * np.asarray(result.x)
+                    transform.to_physical(np.asarray(result.x))
                 ),
                 "log_likelihood": -float(result.fun),
                 "success": bool(result.success),
@@ -722,7 +816,7 @@ def fit_lbfgsb(
                 "levels": coordinate_levels,
                 "rounds_per_level": coordinate_rounds,
                 "final_parameter_vector": (
-                    lower + parameter_scale * np.asarray(result.x)
+                    transform.to_physical(np.asarray(result.x))
                 ),
                 "log_likelihood": -float(result.fun),
                 "success": bool(result.success),
@@ -738,7 +832,7 @@ def fit_lbfgsb(
                 "coordinate_cycle": coordinate_cycle,
                 "polish_method": polish_method,
                 "final_parameter_vector": (
-                    lower + parameter_scale * np.asarray(result.x)
+                    transform.to_physical(np.asarray(result.x))
                 ),
                 "log_likelihood": -float(result.fun),
                 "success": bool(result.success),
@@ -750,7 +844,11 @@ def fit_lbfgsb(
     projected_gradient_inf_norm = float(np.max(np.abs(projected_gradient)))
     return FitResult(
         method=(
-            f"L-BFGS-B/{gradient_method}/unit-scaled"
+            (
+                f"L-BFGS-B/{gradient_method}/unit-log-gain-scaled"
+                if gain_parameterization == "log"
+                else f"L-BFGS-B/{gradient_method}/unit-scaled"
+            )
             if gradient_method == "autograd"
             else f"L-BFGS-B/{gradient_method}"
         ),
@@ -776,6 +874,8 @@ def fit_cmaes(
     seed: int = 1,
     probability_floor: float = 1.0e-300,
     initial_vectors: Sequence[np.ndarray] = (),
+    bounds: tuple[np.ndarray, np.ndarray] | None = None,
+    gain_parameterization: str = "linear",
 ) -> FitResult:
     """Run bounded Optuna CMA-ES as a derivative-free cross-check."""
     if evaluations < 1:
@@ -788,7 +888,9 @@ def fit_cmaes(
     from .model import parameter_names
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-    lower, upper = parameter_bounds()
+    lower, upper = _resolve_bounds(bounds)
+    if gain_parameterization not in {"linear", "log"}:
+        raise ValueError("gain_parameterization must be 'linear' or 'log'.")
     names = parameter_names()
     dtype, device = trials.response_time.dtype, trials.response_time.device
     sampler = optuna.samplers.CmaEsSampler(seed=seed, sigma0=0.2)
@@ -799,7 +901,13 @@ def fit_cmaes(
     queued_vectors = [default]
     queued_vectors.extend(np.asarray(value, dtype=float) for value in initial_vectors)
     queued_vectors.append(
-        _feasible_start(np.random.default_rng(seed), trials, lower, upper)
+        _feasible_start(
+            np.random.default_rng(seed),
+            trials,
+            lower,
+            upper,
+            gain_parameterization=gain_parameterization,
+        )
     )
     for value in queued_vectors:
         if value.shape != lower.shape:
@@ -810,8 +918,15 @@ def fit_cmaes(
     def objective(optuna_trial) -> float:
         value = np.asarray(
             [
-                optuna_trial.suggest_float(name, float(low), float(high))
-                for name, low, high in zip(names, lower, upper, strict=True)
+                optuna_trial.suggest_float(
+                    name,
+                    float(low),
+                    float(high),
+                    log=(gain_parameterization == "log" and index < 3),
+                )
+                for index, (name, low, high) in enumerate(
+                    zip(names, lower, upper, strict=True)
+                )
             ]
         )
         with torch.no_grad():
@@ -824,7 +939,11 @@ def fit_cmaes(
     best = study.best_trial
     best_vector = np.asarray([best.params[name] for name in names], dtype=float)
     return FitResult(
-        method="CMA-ES",
+        method=(
+            "CMA-ES/log-gain"
+            if gain_parameterization == "log"
+            else "CMA-ES"
+        ),
         parameter_vector=best_vector,
         log_likelihood=-float(best.value),
         success=True,
@@ -857,6 +976,8 @@ def fit_staged(
     fine_ddm_spatial_points: int = 129,
     fine_lca_max_step: float = 0.005,
     fine_max_iterations: int = 50,
+    bounds: tuple[np.ndarray, np.ndarray] | None = None,
+    gain_parameterization: str = "linear",
 ) -> StagedFitResult:
     """Run the standard coarse-CMA, exact-gradient, fine-polish pipeline."""
     if default_starts < 1:
@@ -899,6 +1020,8 @@ def fit_staged(
         evaluations=coarse_cma_evaluations,
         seed=seed,
         initial_vectors=initial_vectors,
+        bounds=bounds,
+        gain_parameterization=gain_parameterization,
     )
     coarse_seconds = time.perf_counter() - start
 
@@ -914,6 +1037,8 @@ def fit_staged(
         initial_vectors=default_initial_vectors,
         include_default_start=True,
         random_start_candidates=random_start_candidates,
+        bounds=bounds,
+        gain_parameterization=gain_parameterization,
     )
     default_seconds = time.perf_counter() - start
 
@@ -943,6 +1068,8 @@ def fit_staged(
             coordinate_step=1.0e-4,
             coordinate_levels=2,
             coordinate_rounds=1,
+            bounds=bounds,
+            gain_parameterization=gain_parameterization,
         )
         fine_seconds = time.perf_counter() - start
 

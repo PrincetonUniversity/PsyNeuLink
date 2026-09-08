@@ -139,6 +139,85 @@ def _add_model_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--no-lca-checkpoint", action="store_true")
 
 
+def _add_fit_bound_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--gain-upper-bound",
+        type=float,
+        default=35.0,
+        help="Common upper bound for the three condition-specific gains.",
+    )
+    parser.add_argument(
+        "--threshold-upper-bound",
+        type=float,
+        default=0.25,
+        help="Common upper bound for the three decision thresholds.",
+    )
+    parser.add_argument(
+        "--non-decision-time-upper-bound",
+        type=float,
+        default=0.4,
+        help="Common upper bound, in seconds, for nondecision time.",
+    )
+    parser.add_argument(
+        "--gain-parameterization",
+        choices=("linear", "log"),
+        default="linear",
+        help=(
+            "Map gain linearly or logarithmically into the optimizer's unit "
+            "box. This changes optimization geometry, not the CSI model."
+        ),
+    )
+
+
+def _fit_bounds(args) -> tuple[np.ndarray, np.ndarray]:
+    return parameter_bounds(
+        gain_upper=args.gain_upper_bound,
+        threshold_upper=args.threshold_upper_bound,
+        non_decision_time_upper=args.non_decision_time_upper_bound,
+    )
+
+
+def _fit_configuration_payload(
+    bounds: tuple[np.ndarray, np.ndarray], gain_parameterization: str
+) -> dict[str, object]:
+    lower, upper = bounds
+    return {
+        "parameter_bounds": {"lower": lower, "upper": upper},
+        "gain_parameterization": gain_parameterization,
+    }
+
+
+def _gain_lifted_initial_vectors(
+    initial_vectors: list[np.ndarray],
+    *,
+    lift_values: list[float],
+    source_bound: float,
+    upper_bounds: np.ndarray,
+    tolerance: float = 1.0e-6,
+) -> list[np.ndarray]:
+    """Add one-coordinate high-gain starts for legacy-bound solutions."""
+    if tolerance < 0.0:
+        raise ValueError("Gain-lift tolerance cannot be negative.")
+    lifts = np.asarray(lift_values, dtype=float)
+    if np.any(~np.isfinite(lifts)):
+        raise ValueError("Gain-lift values must be finite.")
+    if np.any(lifts <= source_bound):
+        raise ValueError("Every gain-lift value must exceed its source bound.")
+    if np.any(lifts > upper_bounds[0]):
+        raise ValueError("Gain-lift values cannot exceed the gain upper bound.")
+
+    result = [np.asarray(vector, dtype=float).copy() for vector in initial_vectors]
+    for vector in initial_vectors:
+        gain_indices = np.flatnonzero(vector[:3] >= source_bound - tolerance)
+        for lift in lifts:
+            for index in gain_indices:
+                lifted = np.asarray(vector, dtype=float).copy()
+                lifted[index] = lift
+                if not any(np.array_equal(lifted, candidate) for candidate in result):
+                    result.append(lifted)
+    return result
+
+
 def _load_problem(args):
     dtype = torch.float32 if args.float32 else torch.float64
     trials = CSITrialData.from_csv(
@@ -627,6 +706,7 @@ def _semantic_ladder(args) -> None:
 
 def _fit(args) -> None:
     trials, likelihood, dtype = _load_problem(args)
+    bounds = _fit_bounds(args)
     initial_vectors = [
         _load_parameters(path, dtype=dtype, device=args.device)
         .vector()
@@ -635,6 +715,12 @@ def _fit(args) -> None:
         .numpy()
         for path in args.initial_parameters
     ]
+    initial_vectors = _gain_lifted_initial_vectors(
+        initial_vectors,
+        lift_values=args.gain_lift_value,
+        source_bound=args.gain_lift_source_bound,
+        upper_bounds=bounds[1],
+    )
     results = []
     if args.optimizer in {"lbfgsb", "both"}:
         results.append(
@@ -668,6 +754,8 @@ def _fit(args) -> None:
                     args.coordinate_improvement_tolerance
                 ),
                 stationarity_tolerance=args.stationarity_tolerance,
+                bounds=bounds,
+                gain_parameterization=args.gain_parameterization,
             )
         )
     if args.optimizer in {"cmaes", "both"}:
@@ -678,6 +766,8 @@ def _fit(args) -> None:
                 evaluations=args.cma_evaluations,
                 seed=args.seed,
                 initial_vectors=initial_vectors,
+                bounds=bounds,
+                gain_parameterization=args.gain_parameterization,
             )
         )
     best = max(results, key=lambda result: result.log_likelihood)
@@ -699,6 +789,9 @@ def _fit(args) -> None:
         "parameter_names": parameter_names(),
         "parameter_vector": best.parameter_vector,
         "all_runs": [result.__dict__ for result in results],
+        "gain_lift_values": args.gain_lift_value,
+        "gain_lift_source_bound": args.gain_lift_source_bound,
+        **_fit_configuration_payload(bounds, args.gain_parameterization),
     }
     _write_json(payload, args.output)
 
@@ -709,6 +802,7 @@ def _validate(args) -> None:
 
 def _staged_fit(args) -> None:
     trials, likelihood, dtype = _load_problem(args)
+    bounds = _fit_bounds(args)
     initial_vectors = [
         _load_parameters(path, dtype=dtype, device=args.device)
         .vector()
@@ -734,6 +828,8 @@ def _staged_fit(args) -> None:
         fine_ddm_spatial_points=args.fine_ddm_spatial_points,
         fine_lca_max_step=args.fine_lca_max_step,
         fine_max_iterations=args.fine_max_iterations,
+        bounds=bounds,
+        gain_parameterization=args.gain_parameterization,
     )
     payload = {
         "subject_nr": trials.subject_nr,
@@ -755,6 +851,7 @@ def _staged_fit(args) -> None:
             if result.fine_result is not None
             else None
         ),
+        **_fit_configuration_payload(bounds, args.gain_parameterization),
     }
     _write_json(payload, args.output)
 
@@ -810,6 +907,7 @@ def _recovery_frame(trials: CSITrialData) -> pd.DataFrame:
 
 def _recover(args) -> None:
     template, likelihood, dtype = _load_problem(args)
+    bounds = _fit_bounds(args)
     if args.truth_parameters is None:
         truth_vector = torch.tensor(
             [
@@ -865,10 +963,12 @@ def _recover(args) -> None:
             args.coordinate_improvement_tolerance
         ),
         stationarity_tolerance=args.stationarity_tolerance,
+        bounds=bounds,
+        gain_parameterization=args.gain_parameterization,
     )
     truth_array = truth.vector().detach().cpu().numpy()
     error = fit.parameter_vector - truth_array
-    lower, upper = parameter_bounds()
+    lower, upper = bounds
     payload = {
         "subject_nr": template.subject_nr,
         "truth_label": args.truth_label,
@@ -890,6 +990,7 @@ def _recover(args) -> None:
         "truth_log_likelihood": truth_score.log_likelihood,
         "recovered_log_likelihood": fit.log_likelihood,
         "fit": fit.__dict__,
+        **_fit_configuration_payload(bounds, args.gain_parameterization),
     }
     _write_json(payload, args.output)
 
@@ -1316,6 +1417,7 @@ def make_parser() -> argparse.ArgumentParser:
 
     fit = commands.add_parser("fit", help="Fit one participant.")
     _add_model_arguments(fit)
+    _add_fit_bound_arguments(fit)
     fit.add_argument(
         "--optimizer", choices=("lbfgsb", "cmaes", "both"), default="lbfgsb"
     )
@@ -1329,6 +1431,23 @@ def make_parser() -> argparse.ArgumentParser:
             "JSON parameter vector to use as a start; repeat for multiple "
             "starts. Validated defaults and random starts fill the remainder."
         ),
+    )
+    fit.add_argument(
+        "--gain-lift-value",
+        type=float,
+        action="append",
+        default=[],
+        help=(
+            "Add a one-coordinate start at this gain for every supplied "
+            "initial vector whose corresponding gain is at the source bound; "
+            "repeat for multiple values."
+        ),
+    )
+    fit.add_argument(
+        "--gain-lift-source-bound",
+        type=float,
+        default=35.0,
+        help="Gain value treated as the old ceiling when generating lifted starts.",
     )
     fit.add_argument("--max-iterations", type=int, default=200)
     fit.add_argument("--no-default-start", action="store_true")
@@ -1379,6 +1498,7 @@ def make_parser() -> argparse.ArgumentParser:
         help="Run coarse CMA-ES, default L-BFGS-B, then fine polishing.",
     )
     _add_model_arguments(staged)
+    _add_fit_bound_arguments(staged)
     staged.add_argument(
         "--initial-parameters", type=Path, action="append", default=[]
     )
@@ -1403,6 +1523,7 @@ def make_parser() -> argparse.ArgumentParser:
         help="Generate and refit one seeded synthetic sequential dataset.",
     )
     _add_model_arguments(recover)
+    _add_fit_bound_arguments(recover)
     recover.add_argument("--truth-parameters", type=Path)
     recover.add_argument("--truth-label", default="interior")
     recover.add_argument("--simulation-seed", type=int, default=17)

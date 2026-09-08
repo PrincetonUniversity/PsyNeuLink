@@ -37,7 +37,11 @@ from direct_likelihood.solver import (  # noqa: E402
     solve_tridiagonal_pcr,
 )
 from direct_likelihood.validation import pnl_lca_endpoint  # noqa: E402
-from direct_likelihood.fit import _feasible_start, fit_lbfgsb  # noqa: E402
+from direct_likelihood.fit import (  # noqa: E402
+    _UnitParameterTransform,
+    _feasible_start,
+    fit_lbfgsb,
+)
 from direct_likelihood.model import ContinuousLCA, pnl_euler_lca_step  # noqa: E402
 from direct_likelihood.model import parameter_bounds, parameter_names  # noqa: E402
 from direct_likelihood.native import (  # noqa: E402
@@ -49,6 +53,7 @@ from direct_likelihood.recovery_summary import (  # noqa: E402
     summarize_recovery_results,
 )
 import direct_likelihood.fit as fit_module  # noqa: E402
+import csi_direct_likelihood as direct_driver  # noqa: E402
 import csi_fitting_readiness as readiness  # noqa: E402
 
 
@@ -806,6 +811,120 @@ def test_lbfgsb_uses_default_start_and_unit_scaled_coordinates():
     assert result.projected_gradient_inf_norm < 1.0e-5
 
 
+def test_parameter_bounds_support_expanded_direct_fit_box():
+    lower, upper = parameter_bounds(
+        gain_upper=120.0,
+        threshold_upper=0.3,
+        non_decision_time_upper=0.6,
+    )
+    np.testing.assert_array_equal(upper[:3], 120.0)
+    np.testing.assert_array_equal(upper[4:7], 0.3)
+    np.testing.assert_array_equal(upper[10:13], 0.6)
+    assert np.all(upper > lower)
+
+    with pytest.raises(ValueError, match="must exceed"):
+        parameter_bounds(gain_upper=5.0)
+
+
+def test_gain_lifted_starts_cover_each_legacy_bound_coordinate():
+    _, upper = parameter_bounds(gain_upper=120.0)
+    first = ContinuousCSIParameters.defaults(dtype=torch.float64).vector().numpy()
+    first[:3] = [35.0, 34.0, 35.0]
+    second = first.copy()
+    second[:3] = [20.0, 35.0, 30.0]
+
+    starts = direct_driver._gain_lifted_initial_vectors(
+        [first, second],
+        lift_values=[60.0, 80.0],
+        source_bound=35.0,
+        upper_bounds=upper,
+    )
+    assert len(starts) == 8
+    np.testing.assert_array_equal(starts[0], first)
+    np.testing.assert_array_equal(starts[1], second)
+    lifted_gains = [tuple(vector[:3]) for vector in starts[2:]]
+    assert lifted_gains == [
+        (60.0, 34.0, 35.0),
+        (35.0, 34.0, 60.0),
+        (80.0, 34.0, 35.0),
+        (35.0, 34.0, 80.0),
+        (20.0, 60.0, 30.0),
+        (20.0, 80.0, 30.0),
+    ]
+
+    with pytest.raises(ValueError, match="exceed its source"):
+        direct_driver._gain_lifted_initial_vectors(
+            [first],
+            lift_values=[35.0],
+            source_bound=35.0,
+            upper_bounds=upper,
+        )
+
+
+def test_log_gain_unit_transform_round_trips_and_has_correct_jacobian():
+    lower, upper = parameter_bounds(
+        gain_upper=120.0, non_decision_time_upper=0.6
+    )
+    transform = _UnitParameterTransform(
+        lower, upper, gain_parameterization="log"
+    )
+    unit = np.linspace(0.1, 0.9, 13)
+    physical = transform.to_physical(unit)
+    np.testing.assert_allclose(transform.to_unit(physical), unit, atol=1.0e-14)
+
+    step = 1.0e-7
+    numerical = np.empty(13)
+    for index in range(13):
+        plus = unit.copy()
+        minus = unit.copy()
+        plus[index] += step
+        minus[index] -= step
+        numerical[index] = (
+            transform.to_physical(plus)[index]
+            - transform.to_physical(minus)[index]
+        ) / (2.0 * step)
+    np.testing.assert_allclose(
+        transform.physical_derivative(unit), numerical, rtol=1.0e-8
+    )
+
+
+def test_lbfgsb_supports_expanded_bounds_and_log_gain_coordinates():
+    lower, upper = parameter_bounds(
+        gain_upper=120.0, non_decision_time_upper=0.6
+    )
+    transform = _UnitParameterTransform(
+        lower, upper, gain_parameterization="log"
+    )
+    target_unit = np.linspace(0.25, 0.75, 13)
+    target = transform.to_physical(target_unit)
+
+    class QuadraticLikelihood:
+        @staticmethod
+        def score_vector(vector, trials):
+            del trials
+            target_tensor = torch.as_tensor(target, dtype=vector.dtype)
+            scale = torch.as_tensor(upper - lower, dtype=vector.dtype)
+            loss = torch.sum(((vector - target_tensor) / scale) ** 2)
+            return SimpleNamespace(
+                probability=torch.exp(-loss).reshape(1),
+                included_row_indices=torch.tensor([0]),
+            )
+
+    trials = SimpleNamespace(response_time=torch.zeros(1, dtype=torch.float64))
+    result = fit_lbfgsb(
+        QuadraticLikelihood(),
+        trials,
+        starts=1,
+        max_iterations=100,
+        bounds=(lower, upper),
+        gain_parameterization="log",
+    )
+    np.testing.assert_allclose(result.parameter_vector, target, atol=1.0e-4)
+    assert result.success
+    assert result.method.endswith("/unit-log-gain-scaled")
+    assert result.projected_gradient_inf_norm < 1.0e-5
+
+
 def test_lbfgsb_screens_random_candidate_pool_before_optimization():
     lower, upper = parameter_bounds()
     scale = upper - lower
@@ -843,6 +962,43 @@ def test_lbfgsb_screens_random_candidate_pool_before_optimization():
     assert start_rows[1]["source"] == "screened-random"
     assert start_rows[1]["random_pool_rank"] == 1
     assert start_rows[1]["random_pool_valid_candidates"] == 5
+
+
+def test_lbfgsb_skips_random_screening_when_supplied_starts_fill_budget(
+    monkeypatch,
+):
+    lower, upper = parameter_bounds()
+    target = lower + 0.5 * (upper - lower)
+
+    class QuadraticLikelihood:
+        @staticmethod
+        def score_vector(vector, trials):
+            del trials
+            target_tensor = torch.as_tensor(target, dtype=vector.dtype)
+            loss = torch.sum((vector - target_tensor) ** 2)
+            return SimpleNamespace(
+                probability=torch.exp(-loss).reshape(1),
+                included_row_indices=torch.tensor([0]),
+            )
+
+    def unexpected_random_start(*args, **kwargs):
+        del args, kwargs
+        raise AssertionError("random starts should not be generated")
+
+    monkeypatch.setattr(fit_module, "_feasible_start", unexpected_random_start)
+    trials = SimpleNamespace(response_time=torch.zeros(1, dtype=torch.float64))
+    result = fit_lbfgsb(
+        QuadraticLikelihood(),
+        trials,
+        starts=1,
+        initial_vectors=[target],
+        include_default_start=False,
+        random_start_candidates=5,
+        max_iterations=5,
+        coordinate_polish=False,
+        polish_restarts=0,
+    )
+    assert result.success
 
 
 def test_lbfgsb_retains_scored_start_when_optimizer_degrades_it(monkeypatch):
