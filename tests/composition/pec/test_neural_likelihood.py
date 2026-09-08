@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-import torch
 
 import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
@@ -12,6 +11,10 @@ from psyneulink.core.components.functions.nonstateful import (
     neurallikelihoodfunctions as nlf,
 )
 
+# Both are optional, and PsyNeuLink is tested without them, so these have to be reached
+# through importorskip rather than imported: importing torch at module scope makes the
+# module fail to collect instead of skipping.
+torch = pytest.importorskip("torch")
 pytest.importorskip("sbi")
 
 RATE_BOUNDS = (-1.5, 1.5)
