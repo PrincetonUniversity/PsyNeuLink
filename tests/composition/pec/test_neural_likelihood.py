@@ -300,10 +300,10 @@ def _ddm_training_pec(data):
 @pytest.mark.composition
 def test_training_data_is_generated_from_the_composition():
     likelihood = nlf.train_neural_likelihood(
-        _ddm_training_pec,
-        bounds={"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
-        outcome_names=OUTCOMES,
-        n_parameter_samples=8, n_trials_per_sample=10, epochs=1, n_chunks=2,
+        {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
+        OUTCOMES,
+        pec_factory=_ddm_training_pec,
+        n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
     )
     provenance = likelihood.provenance
     assert provenance.fit_param_names == ("rate", "threshold")
@@ -317,10 +317,42 @@ def test_training_data_is_generated_from_the_composition():
 def test_training_data_generation_distributes():
     pytest.importorskip("dask.distributed")
     likelihood = nlf.train_neural_likelihood(
-        _ddm_training_pec,
-        bounds={"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
-        outcome_names=OUTCOMES,
-        n_parameter_samples=8, n_trials_per_sample=10, epochs=1, n_chunks=2,
+        {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
+        OUTCOMES,
+        pec_factory=_ddm_training_pec,
+        n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
         distributed_options={"n_workers": 2},
     )
     assert np.isfinite(likelihood.provenance.val_nll)
+
+
+BOUNDS = {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS}
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected",
+    [
+        ({}, "exactly one of pec"),
+        ({"pec": object(), "pec_factory": _ddm_training_pec}, "exactly one of pec"),
+        ({"pec": object(), "distributed_options": {"n_workers": 2}}, "requires pec_factory"),
+        ({"pec": object(), "n_trials_per_sample": 10}, "applies to pec_factory only"),
+    ],
+    ids=["neither", "both", "pec-distributed", "pec-trial-count"],
+)
+def test_model_source_is_validated(kwargs, expected):
+    with pytest.raises(nlf.NeuralLikelihoodError, match=expected):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, **kwargs)
+
+
+@pytest.mark.composition
+def test_training_accepts_an_already_built_model():
+    """A model built here needs no factory: nothing has to cross a process boundary."""
+    pec, inputs = _ddm_training_pec(
+        pd.DataFrame({"decision": [0.0] * 10, "response_time": [0.5] * 10})
+    )
+    likelihood = nlf.train_neural_likelihood(
+        BOUNDS, OUTCOMES, pec=pec, inputs=inputs, n_parameter_samples=8, epochs=1,
+    )
+    assert likelihood.provenance.fit_param_names == ("rate", "threshold")
+    # the trial count comes from the model rather than from an argument
+    assert likelihood.provenance.n_trials_per_sample == 10
