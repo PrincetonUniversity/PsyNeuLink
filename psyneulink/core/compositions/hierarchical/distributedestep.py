@@ -33,7 +33,6 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     EStepConfig,
     EStepResult,
     log_gauss_diag,
-    subject_laplace_objective,
     subject_map_estep,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import ParameterSchema
@@ -192,9 +191,7 @@ def make_distributed_estep_runner(
             variance[subject_index] = post.variance
             curvature[subject_index] = post.curvature
             steps[subject_index] = post.hessian_step
-            subject_objective[subject_index] = subject_laplace_objective(
-                post.neg_log_post, post.variance, n_params
-            )
+            subject_objective[subject_index] = post.laplace_objective
             success[subject_index] = post.success
             if not post.success:
                 messages.append((subject_index, post.message))
