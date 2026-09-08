@@ -51,6 +51,7 @@ jobs:
         arch: ['x64', 'arm64']
         version-restrict: ['']
         torch: ['']
+        extras: ['']
         include:
           # fp32 run on linux python 3.12
           - python-version: '3.12'
@@ -97,6 +98,7 @@ jobs:
           # parameter estimation tests with optional dependencies on linux python 3.10
           - python-version: '3.10'
             os: ubuntu
+            arch: 'default'
             extras: 'dask'
             extra-args: 'tests/composition/pec'
 
