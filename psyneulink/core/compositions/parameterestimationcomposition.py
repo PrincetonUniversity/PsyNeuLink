@@ -827,7 +827,6 @@ class ParameterEstimationComposition(Composition):
         "subject_id": None,
         "max_iterations": 50,
         "tol": 1e-4,
-        "damping": 0.0,
         "variance_floor": 1e-6,
         "hessian_step": None,
         "estep_method": "Nelder-Mead",
@@ -857,10 +856,6 @@ class ParameterEstimationComposition(Composition):
         if options["max_iterations"] < 1 or options["tol"] <= 0:
             raise ParameterEstimationCompositionError(
                 "hierarchical_options requires max_iterations >= 1 and tol > 0"
-            )
-        if not 0.0 <= options["damping"] < 1.0:
-            raise ParameterEstimationCompositionError(
-                "hierarchical_options requires 0 <= damping < 1"
             )
         if options["variance_floor"] <= 0:
             raise ParameterEstimationCompositionError(
@@ -921,7 +916,6 @@ class ParameterEstimationComposition(Composition):
             estep_config=config,
             max_iterations=options["max_iterations"],
             tol=options["tol"],
-            damping=options["damping"],
         )
         if self._pec_distributed:
             client, close_client = _dask_client(self._pec_distributed_options)
