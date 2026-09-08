@@ -332,6 +332,11 @@ def _simulator_hash(pec, n_trial_features: int) -> str:
     return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
 
+def _split(thetas, n):
+    """Split parameter draws into at most ``n`` non-empty chunks."""
+    return np.array_split(thetas, max(1, min(int(n), len(thetas))))
+
+
 def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
     """Simulate every parameter draw in ``thetas``; returns (conditioning, outcomes).
 
@@ -488,16 +493,24 @@ def train_neural_likelihood(
     engine = qmc.Sobol(d=len(names), scramble=True, seed=seed)
     thetas = qmc.scale(engine.random(n_parameter_samples), lower, upper)
 
-    chunks = np.array_split(thetas, n_chunks or max(1, min(len(thetas), 64)))
     n_outcomes = len(outcome_names)
+
+    def run(chunks):
+        return [_simulate_chunk(pec_factory, c, n_trials_per_sample, n_outcomes)
+                for c in chunks]
+
+    # Building a model costs far more than simulating from it, so a chunk is the unit of
+    # parallel work and nothing else: one chunk in this process, one per worker on a
+    # cluster. Splitting further only re-pays the build.
     if distributed_options is None:
-        results = [_simulate_chunk(pec_factory, c, n_trials_per_sample, n_outcomes)
-                   for c in chunks]
+        results = run(_split(thetas, n_chunks or 1))
     else:
         from psyneulink.core.components.functions.nonstateful import fitfunctions
 
         client, close_fn = fitfunctions._dask_client(distributed_options)
         try:
+            workers = len(client.scheduler_info().get("workers", {})) or 1
+            chunks = _split(thetas, n_chunks or workers)
             futures = [client.submit(_simulate_chunk, pec_factory, c,
                                      n_trials_per_sample, n_outcomes, pure=False)
                        for c in chunks]
