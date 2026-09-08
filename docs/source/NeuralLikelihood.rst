@@ -26,28 +26,45 @@ Training an estimator
 ---------------------
 
 Training is explicit and offline: it takes minutes to hours, and reusing a saved estimator
-is the point::
+is the point.  Give it a model to simulate, either one already built::
 
     from psyneulink import train_neural_likelihood
 
     likelihood = train_neural_likelihood(
-        build_pec,
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
         outcome_names=("decision", "response_time"),
+        pec=pec,
+        inputs=inputs,
         n_parameter_samples=20000,
-        n_trials_per_sample=100,
     )
     likelihood.save("ddm_nle.pt")
 
+or a callable that builds one::
+
+    likelihood = train_neural_likelihood(
+        bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
+        outcome_names=("decision", "response_time"),
+        pec_factory=build_pec,
+        n_parameter_samples=20000,
+        n_trials_per_sample=100,
+    )
+
 ``build_pec`` is a ``pec_factory(data) -> (pec, inputs)``, the same contract distributed
 and hierarchical fitting use (see :ref:`DistributedFitting`). It is called with a
-placeholder table, since training simulates rather than fits.
+placeholder table, since training simulates rather than fits, and **n_trials_per_sample**
+sets how many trials that table holds. Passing a **pec** instead takes the trial count
+from the model's own data.
 
 Parameter draws are taken across the box given by **bounds**, which is also the region the
-estimator is valid over. Generation is embarrassingly parallel; passing
-``distributed_options`` spreads it over a Dask cluster, resolved exactly as for
-distributed fitting.
+estimator is valid over.
 
+Generation is embarrassingly parallel, so ``distributed_options`` spreads it over a Dask
+cluster, resolved exactly as for distributed fitting. This requires **pec_factory**: a
+composition cannot be sent to another process, so each worker builds its own. Building a
+model costs far more than simulating from it, which is why the draws are divided no
+further than one share per worker, and why distributing is worth it only above roughly a
+few hundred parameter draws -- below that the builds cost more than the simulations they
+replace.
 
 .. _Neural_Likelihood_Fitting:
 
