@@ -52,8 +52,11 @@ or a callable that builds one::
 ``build_pec`` is a ``pec_factory(data) -> (pec, inputs)``, the same contract distributed
 and hierarchical fitting use (see :ref:`DistributedFitting`). It is called with a
 placeholder table, since training simulates rather than fits, and **n_trials_per_sample**
-sets how many trials that table holds. Passing a **pec** instead takes the trial count
-from the model's own data.
+sets how many trials that table holds.
+
+Passing a **pec** instead requires **inputs**, and their length is how many trials each
+draw simulates -- independently of how much data the model was built around. Training on
+longer runs than the data being fitted is a matter of passing longer inputs.
 
 Parameter draws are taken across the box given by **bounds**, which is also the region the
 estimator is valid over.
