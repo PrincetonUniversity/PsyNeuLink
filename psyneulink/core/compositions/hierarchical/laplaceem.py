@@ -55,6 +55,10 @@ LOG_2PI = np.log(2.0 * np.pi)
 #: See `EStepConfig.hessian_step` for why the step is scaled to the prior rather than fixed.
 DEFAULT_HESSIAN_STEP_SCALE = 0.25
 
+#: How many times to halve a finite-difference step that reached a parameter value the model
+#: rules out, before giving up on measuring that parameter's curvature.
+MAX_HESSIAN_RETRIES = 3
+
 #: Size of the initial Nelder-Mead simplex.  Set explicitly because scipy's default is proportional
 #: to the starting point, which collapses when a coordinate starts at zero -- as it does whenever a
 #: participant starts at the group mean.
@@ -222,23 +226,34 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     z_hat = np.asarray(result.x, dtype=float)
 
     step = config.resolve_hessian_step(prior_variance)
-    curvature = diagonal_hessian(neg_log_post, z_hat, step=step, f0=float(result.fun))
+    f0 = float(result.fun)
+    curvature = diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0)
 
-    # Non-positive curvature means the objective is locally flat or concave here, so the data say
-    # nothing about this parameter for this participant. Falling back to the prior variance is the
-    # honest answer: it reports "we learned nothing", rather than a spuriously tight interval from
-    # a meaningless reciprocal.
-    with np.errstate(divide="ignore"):
-        curved = np.where(curvature > 0, 1.0 / np.where(curvature > 0, curvature, 1.0), np.inf)
-    fallback = np.where(np.isfinite(curved), curved, prior_variance)
+    # The three-point probe measures curvature only if all three land where the model allows; a
+    # step reaching an impossible parameter value returns infinity, which describes that point
+    # and not the peak. Halve the step until it fits, and use the prior if it never does.
+    for _ in range(MAX_HESSIAN_RETRIES):
+        unusable = ~np.isfinite(curvature)
+        if not unusable.any():
+            break
+        step = np.where(unusable, 0.5 * step, step)
+        curvature = np.where(
+            unusable, diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0), curvature
+        )
+
+    # Curvature that is zero or negative describes a fit that is flat or rises away from the
+    # mode, and one that is still infinite describes a probe that never fit. Neither is a width,
+    # so the prior stands in and reports that this parameter was not pinned down.
+    usable = np.isfinite(curvature) & (curvature > 0)
+    inverse = np.where(usable, 1.0 / np.where(usable, curvature, 1.0), prior_variance)
 
     # Reported: never wider than the prior, which a Gaussian prior guarantees whenever the
     # likelihood is concave at the mode, and is the sane answer when curvature says otherwise.
-    variance = np.maximum(np.minimum(fallback, prior_variance), config.variance_floor)
+    variance = np.maximum(np.minimum(inverse, prior_variance), config.variance_floor)
 
     # For the marginal, the width of the Gaussian being integrated is set by the curvature alone.
     # Capping it there would report an integral over a narrower density than was approximated.
-    laplace_variance = np.maximum(fallback, config.variance_floor)
+    laplace_variance = np.maximum(inverse, config.variance_floor)
 
     return SubjectPosterior(
         z_hat=z_hat,
