@@ -8,9 +8,12 @@ from psyneulink.core.batched.compiler import (
 from psyneulink.core.batched.errors import BatchedNumericalError
 from psyneulink.core.batched.endpoints import EndpointReconstructionError, ObservedEndpointPlan
 from psyneulink.core.batched.history import HistoryReplayError, HistoryReplayPlan, HistoryTrace
+from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, BoundaryTrajectoryPlan
 from psyneulink.core.batched.likelihood_ir import (
     EventCountReadout,
     HistoryReplayWitness,
+    BoundaryField,
+    BoundaryTrajectoryWitness,
     EndpointExpression,
     EndpointWitness,
     LikelihoodCapabilityReport,
@@ -83,6 +86,11 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "BoundaryField",
+    "BoundaryTrajectories",
+    "BoundaryTrajectoryError",
+    "BoundaryTrajectoryPlan",
+    "BoundaryTrajectoryWitness",
     "HistoryReplayError",
     "HistoryReplayPlan",
     "HistoryReplayWitness",

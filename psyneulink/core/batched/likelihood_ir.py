@@ -58,6 +58,28 @@ class HistoryReplayWitness:
 
 
 @dataclass(frozen=True)
+class BoundaryField:
+    """A typed value read at the stochastic step boundary, before its update."""
+
+    kind: str
+    value_name: str
+    width: int
+    column_start: int
+    effective_parameter_id: int | None = None
+
+
+@dataclass(frozen=True)
+class BoundaryTrajectoryWitness:
+    history: HistoryReplayWitness
+    consumer_component_id: int
+    consideration_set_id: int
+    fields: tuple[BoundaryField, ...]
+    source_component_ids: tuple[int, ...]
+    static_parameter_ids: tuple[int, ...]
+    guarantee: str = "registered_contracts_with_checked_pre_finish_boundary_prefix"
+
+
+@dataclass(frozen=True)
 class LikelihoodEffectContract:
     """Assert that an implementation's declared effects are complete.
 

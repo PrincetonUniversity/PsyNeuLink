@@ -32,11 +32,19 @@ held controls. `compile_history_replay()` exposes a one-subject CPU reference
 with trial-boundary states, held values, component calls, and scheduler rounds.
 An instrumented, unmodified coupled simulation supplies differential traces.
 
-This implements the event/reconstruction portion of change 2 and the initial
-history inspection path of change 3 below, not full likelihood factorization.
-Validating and extracting deterministic boundary trajectories, multi-subject
-and chunk-safe execution, and generated parallel stochastic likelihood kernels
-remain outstanding. Consequently, likelihood reports always have
+The next slice derives the stochastic step's typed input/effective-parameter
+boundary, checks its data and scheduler dependencies, and generates
+candidate/trial-parallel deterministic paths from canonical observed-history
+starts. It records pre-step values and pass indices, and compares their valid
+prefixes with instrumented coupled execution. Hypothetical tails cannot update
+another trial's canonical history. The path uses registered component bodies,
+including altered drift UDFs and projections, without CSI-name recognition.
+
+These slices implement the one-event reconstruction/boundary portion of change
+2 and the initial inspection paths of changes 3–4, not an executable likelihood.
+Generated stochastic-region execution/scoring, multi-subject and chunk-safe
+execution, GPU validation/performance, and non-decision acceptance cases remain
+outstanding. Consequently, likelihood reports always have
 `codegen_ready=False` and `can_execute=False`. The existing CSI sampling
 implementation continues to perform likelihood work.
 

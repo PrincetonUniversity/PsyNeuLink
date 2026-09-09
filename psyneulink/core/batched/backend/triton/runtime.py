@@ -484,6 +484,7 @@ def _run_stateful_graph_kernel(
     rng_trial_offset=0, rng_sequence_trials=None,
     defer_device_checks=False,
     extra_kernel_args=(),
+    parallel_trial_lanes=False,
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -510,6 +511,10 @@ def _run_stateful_graph_kernel(
     )
     output_width = sum(output.width for output in graph.outputs)
     total_lanes = num_params * num_subjects * num_estimates
+    if parallel_trial_lanes:
+        if initial_states is not None or return_final_states:
+            raise ValueError("Trial-parallel inspection uses its own validated trial-start state buffers.")
+        total_lanes *= num_trials
     state_width = sum(state.width for state in graph.states)
     state_shape = (num_params, num_subjects, num_estimates, state_width)
     if initial_states is None:

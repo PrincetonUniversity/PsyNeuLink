@@ -40,12 +40,15 @@ class HistoryTraceEmitter(TritonGraphEmitter):
             )
 
     def _emit_trial_start_inspection(self):
-        self.builder.line("history_trial = offsets * num_trials + trial_idx")
+        self.builder.line(f"history_trial = {self._history_trial_index()}")
         if self.replay:
             self.builder.line("history_target = tl.load(observed_counts + history_trial, mask=mask, other=1)")
         for component in self.witness.component_ids:
             self.builder.line(f"history_calls_{component} = tl.zeros((BLOCK,), tl.int32)")
         self._emit_history_state(0)
+
+    def _history_trial_index(self):
+        return "offsets * num_trials + trial_idx"
 
     def _emit_trial_end_inspection(self):
         self._emit_history_state(1)
@@ -117,6 +120,14 @@ class HistoryTraceEmitter(TritonGraphEmitter):
 
 def run_history_trace(plan, inputs, parameter_sets, *, counts=None, seed=0):
     """Small CPU interpreter reference; no GPU launch or fitting objective."""
+    return _run_history_trace(plan, inputs, parameter_sets, counts=counts, seed=seed)
+
+
+def _run_history_trace(
+    plan, inputs, parameter_sets, *, counts=None, seed=0,
+    source_override=None, extra_kernel_args=(), parallel_trial_lanes=False,
+):
+    """Shared private launcher for validated history/path inspection programs."""
     from psyneulink.core.batched.backend.triton.cache import interpret_scope, load_triton_kernel_module
     from psyneulink.core.batched.backend.triton.runtime import (
         _import_torch_triton, _normalize_launch_options, _report_truncation, _run_stateful_graph_kernel,
@@ -146,14 +157,15 @@ def run_history_trace(plan, inputs, parameter_sets, *, counts=None, seed=0):
     observed = torch.ones(shape, dtype=torch.int32) if counts is None else torch.tensor(np.array(counts), dtype=torch.int32)
     if tuple(observed.shape) != shape:
         raise HistoryReplayError("history.count_shape", "Observed counts must match candidate and trial axes.")
-    source = plan.source(replay=counts is not None)
+    source = plan.source(replay=counts is not None) if source_override is None else source_override
     with interpret_scope(True):
         module = load_triton_kernel_module(source, "history_replay", ir.model_kind, interpret=True)
         values, diagnostics, _ = _run_stateful_graph_kernel(
             torch, triton, module, ir, prepared, rows, 1, seed, True, "cpu", diag_slots(simulation.kernel_ir),
             kernel_name="pnl_batched_coevolving_graph_kernel",
             launch=_normalize_launch_options(None, interpret=True),
-            extra_kernel_args=(observed, history, calls, status),
+            extra_kernel_args=(observed, history, calls, status, *extra_kernel_args),
+            parallel_trial_lanes=parallel_trial_lanes,
         )
     _report_truncation(diagnostics, ir.max_steps, True)
     states = history.numpy()

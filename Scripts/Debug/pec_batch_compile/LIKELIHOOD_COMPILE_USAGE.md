@@ -1,10 +1,11 @@
-# Likelihood compilation: diagnosis, event readouts, and history replay
+# Likelihood compilation: diagnosis, history replay, and boundary paths
 
 The implementation on `feat/likelihood_compile` diagnoses model structure,
 derives supported event readouts, and reconstructs history for a checked
 single-event subset using the generated source scheduler. It does not yet
-generate an objective. Deterministic path extraction and generated parallel
-stochastic execution are subsequent steps.
+generate an objective. A checked boundary-path interface now materializes
+deterministic inputs in candidate/trial-parallel lanes; generated stochastic
+execution and scoring are subsequent steps.
 
 ## Example: independent DDM trials
 
@@ -59,9 +60,10 @@ drift UDF with its explicit effect contract. The report then identifies a
 nodes; it does not call the CSI-specialization validator.
 
 This diagnosis is deliberately incomplete. A separate `compile_history_replay()`
-step now checks a restricted event substitution and generates scheduler replay
-for state and held controls. It must still validate and lower the within-trial
-trajectory partition before parallelizing stochastic trials. A user-supplied
+step checks a restricted event substitution and generates scheduler replay
+for state and held controls. `compile_boundary_trajectories()` checks the
+within-trial input boundary and generates deterministic paths for this subset.
+Neither API compiles a stochastic trial evaluator or score. A user-supplied
 `event_time` label cannot discharge these obligations.
 
 Current cases are:
@@ -242,6 +244,78 @@ probability, supply a likelihood value, or validate independent stochastic
 trials. The endpoint roundoff/support limitations above still apply. Reports
 keep `codegen_ready=False`; existing CSI likelihood workflows are unchanged.
 
+## Deterministic boundary paths
+
+After compiling a history replay plan:
+
+```python
+path_plan = history_plan.compile_boundary_trajectories()
+paths = path_plan.generate(inputs, data, parameter_sets, horizon=128)
+print(paths.values.shape)        # [candidate, trial, active step, field column]
+print(paths.valid.shape)         # [candidate, trial, active step]
+print(paths.pass_indices.shape)  # zero-based scheduler pass at each step
+print(paths.fields)              # source-value identities and column layout
+```
+
+The compiler derives the boundary from the actual scheduled `StepMechanism`:
+its combined input vector and explicitly sampled held parameter values. For
+CSI this includes the DDM input signal and held threshold modulation. These are
+the values supplied to the primitive, **not** an independently expanded drift
+or collapsing-bound formula. Candidate/trial parameter bindings remain in
+`witness.static_parameter_ids`; “static” here means fixed within that trial,
+not fixed across candidates or trials. The primitive's own counter, noise,
+bound transformation, and update formula remain responsibilities of the future
+stochastic region evaluator.
+
+The checked `BoundaryTrajectoryWitness` records typed input fields, the
+consumer and consideration-set identities, parameter bindings, deterministic
+dependency closure, and the history witness. Analysis includes dependencies
+of the stochastic member's execution predicate, not only its data inputs.
+Unobserved stochastic influences on these boundary values or their scheduling
+are rejected. The current rule also requires the stochastic component's
+scheduled execution to stop when it finishes. Source generation rederives the
+witness from the frozen model; this remains checked translation under trusted
+primitive contracts, not formal certification.
+
+Generation has two separate executions:
+
+1. Sequential observed-history replay supplies each trial's canonical starting
+   mechanism state and held control values.
+2. A generated path kernel assigns one lane to each candidate/trial pair,
+   restores that complete start, applies the source's trial resets, and runs
+   the actual deterministic scheduler/components to the requested horizon.
+
+Each path is sampled immediately before its stochastic step, using the same
+frozen consideration-set values that the coupled simulator consumes. No
+stochastic draws are made during path generation. The registered drift UDF and
+actual projections are used; there is no CSI drift transcription in this path.
+The generated path kernel has no sequential trial loop.
+
+Hypothetical tails are never carried into the next trial. Changing a trial's
+observed RT can change subsequent trial starts, but does not change that
+trial's own full input path when its start and parameters are unchanged.
+Changing the path horizon likewise leaves canonical history unchanged.
+`paths.history` contains the **observed** history, not endpoints of the
+hypothetical path executions. Its event counts need not equal the path horizon.
+
+For comparison, `path_plan.simulate_reference(inputs, parameter_sets, seed=12,
+horizon=128)` captures boundary values from unmodified coupled simulation.
+Reference entries after the actual stopping step are invalid (`valid=False`),
+with `NaN` values and pass index `-1`; compare only the valid prefix. A generated
+path has all requested steps valid, including hypothetical steps beyond the
+observed stopping time. Arrays are read-only and the result's `mode`
+distinguishes `coupled_reference` from `observed_history_paths`.
+
+Both interfaces currently execute only in a fresh `triton_cpu` interpreter
+process. Candidate/trial parallelism is expressed in the generated lane layout;
+this is not a CPU-threading or GPU-performance claim. They accept one contiguous
+subject from model defaults, with no external state injection or chunk resume.
+`horizon` must be a positive integer no larger than the source step cap.
+`max_buffer_bytes` (default 256 MiB) bounds the estimated inspection buffers
+before history execution; it is not a process-memory limit and excludes
+compiler/framework workspace. No likelihood workflow is automatically routed
+to these inspection APIs.
+
 ## Registered effect contracts
 
 Built-in compiler primitives declare complete effects. Custom implementations
@@ -284,10 +358,10 @@ separate parts of the implementation plan.
 
 ## Verification
 
-The history, endpoint, diagnostic, axis-dependency, registry-snapshot,
+The boundary-path, history, endpoint, diagnostic, axis-dependency, registry-snapshot,
 reset-state, and compiler suites, plus selected CSI/Python acceptance cases,
-passed with `TRITON_INTERPRET=1`: **147 passed, three GPU cases skipped**
-(about 237 seconds). This includes source-generation and interpreter
+passed with `TRITON_INTERPRET=1`: **166 passed, three GPU cases skipped**
+(about 342 seconds). This includes source-generation and interpreter
 execution regression coverage; no GPU job was submitted. Ruff and
 `git diff --check` also passed.
 
@@ -306,6 +380,13 @@ trial resets, one-step and exactly-at-cap events, forged witnesses, missing
 execution contracts, and stochastic-state rejection. The broad regression run
 also includes existing comparisons of coupled CSI outputs against fresh PNL
 Python execution for ordinary, zero-count, and affine-onset timing.
+
+Boundary-path tests additionally verify exact pre-step input/modulation
+agreement with coupled simulation, candidate/trial parameter lanes versus
+separate runs, horizon-invariant canonical history, causal propagation of a
+changed observed RT to subsequent trials only, altered registered drift code
+and projection weights, delayed onset/reset restoration, forged artifacts,
+dependency rejection, and buffer/horizon guards.
 
 The reset-state suite's fixtures previously changed Never reset declarations
 to AtTrialStart without updating the matching LCA initialization policy (16

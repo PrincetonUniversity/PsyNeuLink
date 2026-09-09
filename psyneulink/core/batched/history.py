@@ -108,6 +108,12 @@ class HistoryReplayPlan:
     observations: ObservationSpec = field(repr=False, compare=False)
     witness: HistoryReplayWitness
 
+    def compile_boundary_trajectories(self):
+        """Check the deterministic inputs read by the stochastic region."""
+        from psyneulink.core.batched.trajectories import compile_boundary_trajectories
+
+        return compile_boundary_trajectories(self)
+
     def source(self, *, replay=True):
         """Inspectable generated source; simulation mode changes no events."""
         from psyneulink.core.batched.backend.triton.history import HistoryTraceEmitter
