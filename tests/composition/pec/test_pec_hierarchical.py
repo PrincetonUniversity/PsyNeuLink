@@ -853,32 +853,15 @@ def _group_frame(n_subjects=3, n_trials=4):
 
 
 def _build_group_pec(**overrides):
-    """A PEC configured for hierarchical fitting, without running it."""
-    import psyneulink as pnl
-    from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-        PECOptimizationFunction,
-    )
+    """A PEC configured for hierarchical fitting, without running it.
 
-    decision = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(
-            starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
-            non_decision_time=0.15, time_step_size=0.01,
-        ),
-        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-        name="DDM",
-    )
-    comp = pnl.Composition(pathways=decision)
+    It is given no model: what is fitted comes from the factory, one model per participant.
+    """
+    import psyneulink as pnl
+
     kwargs = dict(
         name="group_pec",
-        nodes=[comp],
-        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000)},
-        outcome_variables=[
-            decision.output_ports[pnl.DECISION_OUTCOME],
-            decision.output_ports[pnl.RESPONSE_TIME],
-        ],
         data=_group_frame(),
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1),
         fit_method="hierarchical",
         hierarchical_options={"subject_id": "subject"},
     )
@@ -1033,3 +1016,29 @@ def test_hierarchical_run_rejects_arguments_it_cannot_use():
     pec = _build_group_pec()
     with pytest.raises(ParameterEstimationCompositionError, match="takes no arguments"):
         pec.run(inputs={})
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "argument",
+    ["parameters", "outcome_variables", "optimization_function", "nodes"],
+)
+def test_hierarchical_takes_the_model_from_the_factory_alone(argument):
+    """Describing a model here would state a second time what the factory already says."""
+    # values of the type each argument declares, so the rejection is the one under test
+    plausible = {
+        "parameters": {},
+        "outcome_variables": [],
+        "optimization_function": "differential_evolution",
+        "nodes": [],
+    }
+    with pytest.raises(ParameterEstimationCompositionError, match="describe a model"):
+        _build_group_pec(**{argument: plausible[argument]})
+
+
+@pytest.mark.composition
+def test_a_plain_fit_still_requires_a_model():
+    import psyneulink as pnl
+
+    with pytest.raises(ParameterEstimationCompositionError, match="are required unless"):
+        pnl.ParameterEstimationComposition(name="plain", data=_group_frame())
