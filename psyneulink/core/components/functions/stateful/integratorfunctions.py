@@ -1083,6 +1083,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  noise=None,
                  offset=None,
                  initializer=None,
+                 name=None,
                  params: Optional[Mapping] = None,
                  owner=None,
                  prefs: Optional[ValidPrefSet] = None):
@@ -1093,6 +1094,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             noise=noise,
             offset=offset,
             initializer=initializer,
+            name=name,
             params=params,
             owner=owner,
             prefs=prefs,
