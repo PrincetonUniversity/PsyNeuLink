@@ -29,6 +29,23 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
+    def compile_empirical_mass(
+        composition, observations, backend="triton_cpu", max_steps=None,
+        *, ignored_control_nodes=(),
+    ):
+        """Opt-in checked count-domain sampling objective, not an auto PEC route.
+
+        Supports complete exact scalar observations and counting-measure scores.
+        Event times use guarded count inversion; other scored fields use exact
+        FP32 matching. No smoothing, floor, or continuous density is implied.
+        """
+        history = BatchedCompositionCompiler.compile_history_replay(
+            composition, observations, backend=backend, max_steps=max_steps,
+            ignored_control_nodes=ignored_control_nodes,
+        )
+        return history.compile_boundary_trajectories().compile_stochastic_sampler().compile_observation_sampler().compile_empirical_mass()
+
+    @staticmethod
     def compile_history_replay(
         composition, observations, backend="triton_cpu", max_steps=None,
         *, ignored_control_nodes=(),

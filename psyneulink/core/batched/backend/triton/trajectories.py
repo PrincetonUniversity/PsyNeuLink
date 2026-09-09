@@ -108,8 +108,10 @@ def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_b
     from psyneulink.core.batched.backend.triton.runtime import _import_torch_triton
 
     simulation = plan.history_plan.simulation_plan
-    if simulation.backend != "triton_cpu":
-        raise BoundaryTrajectoryError("boundary.backend_unsupported", "Boundary inspection currently requires a triton_cpu plan.")
+    if simulation.backend not in ("triton_cpu", "triton"):
+        raise BoundaryTrajectoryError("boundary.backend_unsupported", "Boundary execution requires a Triton plan.")
+    interpret = simulation.backend == "triton_cpu"
+    device = "cpu" if interpret else "cuda"
     if horizon is None:
         horizon = simulation.ir.max_steps
     if type(horizon) is not int or not 1 <= horizon <= simulation.ir.max_steps:
@@ -130,28 +132,28 @@ def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_b
     # and framework workspace, so it is an explicit buffer limit, not an RSS cap.
     trial_slots = len(rows) * trials
     output_width = sum(output.width for output in simulation.kernel_ir.outputs)
-    required = trial_slots * (horizon * (4 * width + 1 + 4)
+    required = trial_slots * (horizon * (4 * width + 1 + 4) * (1 if interpret else 2)
                              + 8 * history_width * 4 + 3 * (len(plan.witness.history.component_ids) + 3 + output_width) * 4)
     if required > max_buffer_bytes:
         raise BoundaryTrajectoryError("boundary.memory_budget", f"Inspection buffers require approximately {required} bytes; budget is {max_buffer_bytes}.")
-    torch, _ = _import_torch_triton(True)
-    values = torch.full((*shape, width), float("nan"), dtype=torch.float32)
-    valid = torch.zeros(shape, dtype=torch.bool)
-    passes = torch.full(shape, -1, dtype=torch.int32)
+    torch, _ = _import_torch_triton(interpret)
+    values = torch.full((*shape, width), float("nan"), dtype=torch.float32, device=device)
+    valid = torch.zeros(shape, dtype=torch.bool, device=device)
+    passes = torch.full(shape, -1, dtype=torch.int32, device=device)
     if reference:
         canonical = None
-        starts = torch.empty((1,), dtype=torch.float32)
+        starts = torch.empty((1,), dtype=torch.float32, device=device)
         counts = None
     else:
         canonical = plan.history_plan.reconstruct(inputs, data, rows)
-        starts = torch.tensor(np.concatenate((canonical.start_states, canonical.start_effective_parameters), axis=-1))
+        starts = torch.tensor(np.concatenate((canonical.start_states, canonical.start_effective_parameters), axis=-1), device=device)
         counts = np.full(shape[:2], horizon, dtype=np.int32)
     trace = _run_history_trace(
         plan.history_plan, inputs, rows, counts=counts, seed=seed,
         source_override=plan.source(parallel_trials=not reference),
         extra_kernel_args=(values, valid, passes, starts, horizon), parallel_trial_lanes=not reference,
     )
-    values, valid, passes = values.numpy(), valid.numpy(), passes.numpy()
+    values, valid, passes = values.cpu().numpy(), valid.cpu().numpy(), passes.cpu().numpy()
     if not np.all(np.isfinite(values[valid])):
         raise BoundaryTrajectoryError("boundary.nonfinite", "A consumed boundary value is nonfinite.")
     expected_counts = np.minimum(trace.event_counts, horizon)

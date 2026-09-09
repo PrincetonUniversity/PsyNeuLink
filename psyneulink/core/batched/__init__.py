@@ -10,6 +10,8 @@ from psyneulink.core.batched.endpoints import EndpointReconstructionError, Obser
 from psyneulink.core.batched.history import HistoryReplayError, HistoryReplayPlan, HistoryTrace
 from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, BoundaryTrajectoryPlan
 from psyneulink.core.batched.sampling import PrimitiveSamples, StochasticSamplerPlan, StochasticSamplingError
+from psyneulink.core.batched.observed_sampling import ObservationSamplerPlan, ObservationSamples
+from psyneulink.core.batched.empirical_mass import EmpiricalMassPlan, EmpiricalMassResult
 from psyneulink.core.batched.likelihood_ir import (
     EventCountReadout,
     HistoryReplayWitness,
@@ -17,6 +19,8 @@ from psyneulink.core.batched.likelihood_ir import (
     BoundaryTrajectoryWitness,
     PrimitiveSampleOutput,
     StochasticSamplerWitness,
+    ScalarReadoutWitness,
+    ObservationSamplingWitness,
     EndpointExpression,
     EndpointWitness,
     LikelihoodCapabilityReport,
@@ -89,6 +93,12 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "EmpiricalMassPlan",
+    "EmpiricalMassResult",
+    "ObservationSamplerPlan",
+    "ObservationSamples",
+    "ObservationSamplingWitness",
+    "ScalarReadoutWitness",
     "PrimitiveSampleOutput",
     "PrimitiveSamples",
     "StochasticSamplerPlan",

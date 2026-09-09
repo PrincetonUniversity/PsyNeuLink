@@ -156,6 +156,24 @@ class EndpointExpression:
 
 
 @dataclass(frozen=True)
+class ScalarReadoutWitness:
+    observation: ResolvedObservationField
+    clock_component_id: int
+    clock_spec_key: str
+    expression: EndpointExpression
+    component_ids: tuple[int, ...]
+    projection_ids: tuple[int, ...]
+    parameter_ids: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class ObservationSamplingWitness:
+    sampler: StochasticSamplerWitness
+    readouts: tuple[ScalarReadoutWitness, ...]
+    guarantee: str = "registered_scalar_readouts_with_checked_publication"
+
+
+@dataclass(frozen=True)
 class EndpointWitness:
     observation: ResolvedObservationField
     clock_component_id: int

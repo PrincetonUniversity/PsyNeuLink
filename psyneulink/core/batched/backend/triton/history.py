@@ -119,7 +119,7 @@ class HistoryTraceEmitter(TritonGraphEmitter):
 
 
 def run_history_trace(plan, inputs, parameter_sets, *, counts=None, seed=0):
-    """Small CPU interpreter reference; no GPU launch or fitting objective."""
+    """Checked scheduler execution on the plan's interpreter or GPU backend."""
     return _run_history_trace(plan, inputs, parameter_sets, counts=counts, seed=seed)
 
 
@@ -134,8 +134,10 @@ def _run_history_trace(
     )
 
     simulation = plan.simulation_plan
-    if simulation.backend != "triton_cpu":
-        raise HistoryReplayError("history.backend_unsupported", "History inspection currently requires a triton_cpu simulation plan.")
+    if simulation.backend not in ("triton_cpu", "triton"):
+        raise HistoryReplayError("history.backend_unsupported", "History execution requires a Triton simulation plan.")
+    interpret = simulation.backend == "triton_cpu"
+    device = "cpu" if interpret else "cuda"
     ir = simulation.ir
     rows = normalize_parameter_sets(parameter_sets, ir)
     if not rows:
@@ -147,29 +149,29 @@ def _run_history_trace(
         raise HistoryReplayError("history.subject_layout", "Reference replay requires one nonempty, contiguous subject.")
     if any(not np.all(np.isfinite(value)) for value in prepared.values()):
         raise HistoryReplayError("history.input_nonfinite", "History inputs must be finite.")
-    torch, triton = _import_torch_triton(True)
+    torch, triton = _import_torch_triton(interpret)
     width = sum(state.width for state in ir.graph.states)
     history_width = width + len(simulation.kernel_ir.effective_parameters)
     shape = (len(rows), trials)
-    history = torch.empty((*shape, 2, history_width), dtype=torch.float32)
-    calls = torch.empty((*shape, len(plan.witness.component_ids)), dtype=torch.int32)
-    status = torch.empty((*shape, 3), dtype=torch.int32)
-    observed = torch.ones(shape, dtype=torch.int32) if counts is None else torch.tensor(np.array(counts), dtype=torch.int32)
+    history = torch.empty((*shape, 2, history_width), dtype=torch.float32, device=device)
+    calls = torch.empty((*shape, len(plan.witness.component_ids)), dtype=torch.int32, device=device)
+    status = torch.empty((*shape, 3), dtype=torch.int32, device=device)
+    observed = torch.ones(shape, dtype=torch.int32, device=device) if counts is None else torch.tensor(np.array(counts), dtype=torch.int32, device=device)
     if tuple(observed.shape) != shape:
         raise HistoryReplayError("history.count_shape", "Observed counts must match candidate and trial axes.")
     source = plan.source(replay=counts is not None) if source_override is None else source_override
-    with interpret_scope(True):
-        module = load_triton_kernel_module(source, "history_replay", ir.model_kind, interpret=True)
+    with interpret_scope(interpret):
+        module = load_triton_kernel_module(source, "history_replay", ir.model_kind, interpret=interpret)
         values, diagnostics, _ = _run_stateful_graph_kernel(
-            torch, triton, module, ir, prepared, rows, 1, seed, True, "cpu", diag_slots(simulation.kernel_ir),
+            torch, triton, module, ir, prepared, rows, 1, seed, True, device, diag_slots(simulation.kernel_ir),
             kernel_name="pnl_batched_coevolving_graph_kernel",
-            launch=_normalize_launch_options(None, interpret=True),
+            launch=_normalize_launch_options(None, interpret=interpret),
             extra_kernel_args=(observed, history, calls, status, *extra_kernel_args),
             parallel_trial_lanes=parallel_trial_lanes,
         )
     _report_truncation(diagnostics, ir.max_steps, True)
-    states = history.numpy()
-    status = status.numpy()
+    states = history.cpu().numpy()
+    status = status.cpu().numpy()
     if not np.all(status[..., 1] == 1):
         raise HistoryReplayError("history.schedule_incomplete", "Scheduler fuel exhausted before trial termination.")
     if counts is not None and not np.array_equal(status[..., 2], counts):
@@ -178,8 +180,8 @@ def _run_history_trace(
         raise HistoryReplayError("history.state_nonfinite", "Reconstructed state or held control is nonfinite.")
     arrays = [states[:, :, 0, :width], states[:, :, 1, :width],
               states[:, :, 0, width:], states[:, :, 1, width:],
-              calls.numpy(), status[..., 0], status[..., 2]]
-    arrays.append(values.numpy()[:, 0, :, 0, :] if counts is None else None)
+              calls.cpu().numpy(), status[..., 0], status[..., 2]]
+    arrays.append(values.cpu().numpy()[:, 0, :, 0, :] if counts is None else None)
     for value in arrays:
         if value is not None:
             value.flags.writeable = False

@@ -1,7 +1,7 @@
 """Generated conditional sampling of a checked stochastic primitive region.
 
-Raw primitive outputs only: observation gates and likelihood scoring have not
-been lowered. Simulation lanes never update the canonical observed history.
+Raw primitive outputs only: observation mapping and scoring are separate checked
+layers. Simulation lanes never update the canonical observed history.
 """
 
 from dataclasses import dataclass
@@ -68,6 +68,11 @@ class StochasticSamplerPlan:
     path_plan: object
     witness: StochasticSamplerWitness
 
+    def compile_observation_sampler(self):
+        from psyneulink.core.batched.observed_sampling import compile_observation_sampler
+
+        return compile_observation_sampler(self)
+
     def source(self, *, reference=False):
         from psyneulink.core.batched.backend.triton.sampling import CanonicalTrialReferenceEmitter, StochasticRegionEmitter
 
@@ -79,7 +84,7 @@ class StochasticSamplerPlan:
                common_random_numbers=True, horizon=None, strict_truncation=True, max_buffer_bytes=256 * 1024**2):
         """Sample raw primitive outputs conditioned on the observed sequence.
 
-        This CPU reference is not a likelihood evaluator. Truncation is explicit
+        This primitive sampler is not a likelihood evaluator. Truncation is explicit
         and rejected by default; no observation-gate mapping or score is implied.
         """
         return self._run(inputs, data, parameter_sets, num_estimates, seed, common_random_numbers,

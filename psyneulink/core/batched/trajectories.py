@@ -108,7 +108,7 @@ class BoundaryTrajectoryPlan:
     def generate(self, inputs, data, parameter_sets=None, *, horizon=None, max_buffer_bytes=256 * 1024**2):
         """Generate paths in trial-parallel lanes from internally replayed starts.
 
-        CPU interpreter reference only. No externally supplied start state or
+        Supports interpreter and compiled GPU plans. No externally supplied start state or
         hypothetical path endpoint can replace the observed sequence history.
         """
         from psyneulink.core.batched.backend.triton.trajectories import run_boundary_trajectories

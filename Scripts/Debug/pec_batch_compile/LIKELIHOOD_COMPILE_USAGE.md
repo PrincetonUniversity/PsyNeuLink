@@ -2,12 +2,12 @@
 
 The implementation on `feat/likelihood_compile` diagnoses model structure,
 derives supported event readouts, and reconstructs history for a checked
-single-event subset using the generated source scheduler. It does not yet
-generate an objective. A checked boundary-path interface now materializes
+single-event subset using the generated source scheduler. A checked boundary-path interface materializes
 deterministic inputs in candidate/trial-parallel lanes. A generated primitive
-sampler consumes these paths in candidate/trial/estimate lanes. Observation
-mapping, scoring, GPU execution of these new interfaces, and PEC routing remain
-subsequent steps.
+sampler consumes these paths in candidate/trial/estimate lanes. Checked scalar
+observation gates and an explicit empirical count-domain mass objective now run
+on CPU interpreter or compiled GPU backends. Automatic PEC routing, broader
+observation/estimator support, and production performance remain subsequent steps.
 
 ## Example: independent DDM trials
 
@@ -35,7 +35,7 @@ report = BatchedCompositionCompiler.diagnose_likelihood(
 )
 print(report.history_kind)          # independent_trials
 print(report.factorization_status)  # eligible
-print(report.codegen_ready)         # False: likelihood lowering not implemented
+print(report.codegen_ready)         # False: diagnosis does not select an estimator
 ```
 
 Counting measure here describes exact outputs of the discrete simulator. A
@@ -47,7 +47,7 @@ Fields bind to exact OutputPort objects at the public boundary. Reports contain
 only lowered component/port IDs, field widths, column offsets, and observation
 semantics. Ports from another model and duplicate port declarations are rejected.
 `report.to_dict()` exposes diagnostics and evidence for serialization without
-live PNL objects. Field order defines the data-column order for future lowering.
+live PNL objects. Field order defines the data-column order for lowering.
 
 You can also use `simulation_plan.diagnose_likelihood(observations)` on an
 existing plan. Later registry replacement cannot change the contracts used by
@@ -181,8 +181,10 @@ print(history.event_counts)                # [candidate, trial]
 ```
 
 Existing simulation plans expose `compile_history_replay(observations)` too.
-This initial runtime is a small **CPU interpreter reference**, not a performant
-fitting backend; execution requires a `triton_cpu` plan (the default).
+This initial runtime supports `triton_cpu` (the default) and compiled `triton`
+GPU plans. Use separate fresh processes for the two execution modes. It is not
+yet a production fitting backend: endpoint inversion, checks, and public trace
+arrays remain host-side, with transfers between stages.
 It requires one nonempty contiguous subject, model-default
 initial state, one observed stochastic event primitive, complete exact event
 observations, and registered effects for every primitive. No particle lanes or
@@ -267,7 +269,7 @@ the values supplied to the primitive, **not** an independently expanded drift
 or collapsing-bound formula. Candidate/trial parameter bindings remain in
 `witness.static_parameter_ids`; “static” here means fixed within that trial,
 not fixed across candidates or trials. The primitive's own counter, noise,
-bound transformation, and update formula remain responsibilities of the future
+bound transformation, and update formula remain responsibilities of the
 stochastic region evaluator described below.
 
 The checked `BoundaryTrajectoryWitness` records typed input fields, the
@@ -309,9 +311,9 @@ path has all requested steps valid, including hypothetical steps beyond the
 observed stopping time. Arrays are read-only and the result's `mode`
 distinguishes `coupled_reference` from `observed_history_paths`.
 
-Both interfaces currently execute only in a fresh `triton_cpu` interpreter
-process. Candidate/trial parallelism is expressed in the generated lane layout;
-this is not a CPU-threading or GPU-performance claim. They accept one contiguous
+Both interfaces execute on `triton_cpu` or compiled `triton` GPU plans in fresh
+processes. Candidate/trial parallelism is expressed in the generated lane layout;
+this is not a CPU-threading or GPU-speedup claim. They accept one contiguous
 subject from model defaults, with no external state injection or chunk resume.
 `horizon` must be a positive integer no larger than the source step cap.
 `max_buffer_bytes` (default 256 MiB) bounds the estimated inspection buffers
@@ -350,7 +352,7 @@ available for fitting.
 gates. For CSI, raw DDM decision/RT should not be confused with the final
 correct-response coding or RT after cue-timing adjustment. No density, histogram,
 likelihood, or support claim is attached to these samples. Observation mapping
-and scoring still require their own checked lowering.
+and scoring use the separate checked interfaces below.
 
 Sampling preserves the source subject/trial/estimate/component execution RNG
 addressing, including paired-normal caching and the common-random-number option.
@@ -381,12 +383,71 @@ not an independent mathematical validation of the primitive.
 Truncation raises `StochasticSamplingError(code="sampling.truncated")` by
 default. `strict_truncation=False` returns explicit flags and partial outputs
 for inspection; those outputs are not completed events and must not be silently
-scored as such. The runtime currently requires `triton_cpu`, one contiguous
-subject, and a fresh interpreter process. Positive horizon, estimate count,
+scored as such. The runtime supports `triton_cpu` and `triton`, one contiguous
+subject, and a fresh process for the chosen backend. Positive horizon, estimate count,
 buffer-budget, and lane-index bounds are checked before allocation. The buffer
-budget excludes compiler/framework workspace. GPU performance has not been
-established. Likelihood reports still say `codegen_ready=False`, and existing
-CSI fitting workflows remain unchanged.
+budget excludes compiler/framework workspace. The local GPU validation is
+described below. Structural diagnosis reports still say `codegen_ready=False`:
+they do not select a numerical estimator. The explicit mass compiler below is
+a separate opt-in interface, and existing CSI/PEC fitting workflows are unchanged.
+
+## Checked observations and explicit empirical mass
+
+```python
+observed_sampler = sampler.compile_observation_sampler()
+observed = observed_sampler.sample(inputs, data, parameter_sets, num_estimates=1024)
+# observed.values: [candidate, trial, estimate, declared observation column]
+
+# Equivalent one-call entry point, including automatic history/path/readout checks:
+mass_plan = BatchedCompositionCompiler.compile_empirical_mass(
+    composition, observations, backend="triton", max_steps=128,
+)
+result = mass_plan.score(inputs, data, parameter_sets, num_estimates=4097, seed=17)
+print(result.successes)       # [candidate, trial], raw hit counts
+print(result.probabilities)   # successes / num_estimates
+print(result.log_factors)     # zero hits give -inf, without a floor
+print(result.log_likelihood)  # [candidate], sum of log factors
+```
+
+Observation mapping derives scalar affine gates, dense scalar projections,
+known inputs, and parameter bindings from the frozen graph. It shares the
+endpoint derivation's publication checks: dependent gates must publish after
+the event finishes, with their dependencies available. Sampled primitive ports
+are leaves in this derivation. There are no CSI-specific gate formulas or node
+names in production lowering. It rejects unsupported/nonlinear transformations,
+modulated gate parameters, incomplete or non-exact recording, and vector fields.
+The observation declaration fixes column order, including reordered gates.
+
+`ObservationSamplerPlan.simulate_reference()` returns the actual declared ports
+from the full coupled source scheduler, not the new arithmetic expressions.
+This independently checks the readout translation against source execution.
+All witness artifacts are rederived before emission/execution.
+
+The mass estimator's target is explicitly
+`checked_event_count_and_exact_fp32_observation_fields`:
+
+- A scored event-time field matches the unique count returned by the existing
+  endpoint compatibility guard. That guard is **not** proof of exact floating-point
+  readout support; this is a count-domain target, not a density in real-valued RT.
+- Other scored fields match exact values after FP32 conversion. All scored fields
+  require counting measure. A second scored event-time field cannot silently
+  reuse the first field's count; it is rejected pending a consistency check.
+- Unscored event times still condition history. No sampled history is substituted.
+- Every lane must finish; truncation raises, without discarding/renormalizing lanes.
+- Zero hits remain zero. There is no bandwidth, smoothing, pseudocount, density
+  conversion, or implicit log floor. `zero_hits` exposes sparse factors.
+
+The sampler/readout kernels run on the chosen device. For GPU scoring, the
+observation tensor stays on the GPU and Torch reduces the matching lanes there;
+small count/status and result arrays still cross the host boundary. This is not
+a fused, chunked, or fully device-resident objective. The logarithm of the Monte
+Carlo mass estimate is biased and can be unstable. No gradient, uncertainty
+certificate, or pseudo-marginal MCMC guarantee is supplied.
+
+This narrow estimator is useful for correctness checks and exact discrete
+observation experiments. It does **not** replace the existing smoothed CSI
+likelihood or implement a recording model for real participant RTs. PEC routing
+and such estimator/measurement choices need an explicit subsequent design.
 
 ## Registered effect contracts
 
@@ -430,14 +491,19 @@ separate parts of the implementation plan.
 
 ## Verification
 
-The boundary-path, history, endpoint, diagnostic, axis-dependency, registry-snapshot,
-reset-state, and compiler suites, plus selected CSI/Python acceptance cases,
-passed with `TRITON_INTERPRET=1`: **166 passed, three GPU cases skipped**
-(about 340 seconds). This includes source-generation and interpreter
-execution regression coverage; no GPU job was submitted. Ruff and
-`git diff --check` also passed.
-The additional stochastic-sampler suite passed **16 tests** (about 186 seconds),
-for **182 passing tests and three skips** across the two runs.
+The current broad interpreter run, including boundary paths, history, endpoints,
+diagnosis, axis dependencies, registry snapshots, resets, compiler regression,
+stochastic sampling, and observed sampling, passed **185 tests with six GPU-mode
+skips** (617 seconds). Additional renamed-observation and CSI/Python acceptance
+checks passed **six tests with one opposite-backend skip** (71 seconds).
+
+On the local RTX 2080 Ti, the new conditional/observation/mass suites passed
+**11 tests with four interpreter-mode skips** (41 seconds), and existing GPU
+comparisons against the transition oracle, LLVM, and fresh PNL Python passed
+**four tests** (36 seconds). These run counts overlap; they are not a unique
+aggregate test count. Ruff and `git diff --check` also passed. No cluster job
+was submitted. See [the GPU validation report](LIKELIHOOD_COMPILE_GPU_VALIDATION.md)
+for the larger 10 ms/1 ms experiment and reproducible commands.
 
 Endpoint tests cover parameter-dependent clocks, affine transformations,
 incompatible/ambiguous observations, forged witnesses, frozen registry rules,

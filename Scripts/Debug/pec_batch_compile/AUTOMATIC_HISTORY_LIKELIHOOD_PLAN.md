@@ -47,13 +47,21 @@ held controls independently in every lane before executing the full scheduler.
 Results expose raw primitive ports, integration counts, and truncation flags;
 they are not final observation-gate outputs or likelihood scores.
 
-These slices implement the one-event reconstruction/boundary portion of change
-2 and initial execution paths of changes 3–4, not an executable likelihood.
-Observation mapping/scoring, multi-subject and chunk-safe execution,
-GPU validation/performance, and non-decision acceptance cases remain
-outstanding. Consequently, likelihood reports always have
-`codegen_ready=False` and `can_execute=False`. The existing CSI sampling
-implementation continues to perform likelihood work.
+The current slice adds checked scalar affine observation readouts and an
+explicit empirical count-domain mass objective. `compile_empirical_mass()`
+composes the passes automatically for the supported subset. All generated
+execution stages run on interpreter or compiled GPU plans, with local RTX 2080 Ti
+validation at 10 ms and 1 ms. GPU sample matching/reduction is implemented,
+but host-side validation, endpoint inversion, trace materialization, and transfers
+remain. See `LIKELIHOOD_COMPILE_GPU_VALIDATION.md` for the tested scope and timing.
+
+These slices implement the one-event portion of changes 2–4, including a narrow
+explicit objective, not general automatic likelihood selection. Measurement
+models, smoothed/density estimators, PEC routing, multi-subject/chunk-safe
+execution, performance optimization, and non-decision acceptance remain.
+Structural diagnosis does not select this estimator and still reports
+`codegen_ready=False` and `can_execute=False`. Existing CSI fitting workflows
+continue to use their existing likelihood implementation.
 
 ## Objective and first release boundary
 

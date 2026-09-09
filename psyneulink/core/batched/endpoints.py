@@ -13,6 +13,7 @@ from psyneulink.core.batched.kernel_ir import validate_kernel_ir
 from psyneulink.core.batched.likelihood_ir import (
     EndpointExpression as Expr,
     EndpointWitness,
+    ScalarReadoutWitness,
     LikelihoodDiagnostic,
 )
 from psyneulink.core.batched.observation import ResolvedObservationField
@@ -38,12 +39,27 @@ def derive_endpoint_witness(kernel, observation):
     inputs, and parameter values. Unknown functions and time-varying held
     parameters are rejected rather than assigned their defaults.
     """
-    validate_kernel_ir(kernel)
-    graph = kernel.graph
     if observation.role != "event_time" or not observation.condition_history:
         _reject("endpoint.not_conditioning_event", "Endpoint reconstruction requires a conditioning event field.")
     if observation.recording != "exact" or observation.availability != "complete":
         _reject("endpoint.recording_unsupported", "Only complete, exact event observations currently have a reconstruction rule.")
+    value = derive_scalar_readout(kernel, observation)
+    node = next(node for node in kernel.graph.nodes if node.component_id == value.clock_component_id)
+    readout = kernel.op_specs.lookup_spec(value.clock_spec_key).likelihood_contract.event_readout
+    step_id = next(parameter.parameter_id for parameter in kernel.params if parameter.name == node.params[readout.step_parameter])
+    return EndpointWitness(observation, value.clock_component_id, value.clock_spec_key,
+                           readout.counter_state, readout.minimum_count, step_id, value.expression,
+                           value.component_ids, value.projection_ids, value.parameter_ids)
+
+
+def derive_scalar_readout(kernel, observation, *, primitive_ports=()):
+    """Shared scalar affine/publication checker with optional primitive leaves.
+
+    The caller must authenticate primitive_ports against its sampler witness.
+    Without those leaves this derives the registered active-count readout.
+    """
+    validate_kernel_ir(kernel)
+    graph = kernel.graph
     outputs = {item.port_id: item for item in graph.outputs}
     if observation.port_id not in outputs:
         _reject("endpoint.output_missing", "The observation is not a frozen graph output.")
@@ -81,6 +97,8 @@ def derive_endpoint_witness(kernel, observation):
     def clock_ids(expr):
         if expr.kind == "count":
             return {expr.identity}
+        if expr.kind == "sample":
+            return {ports[expr.identity].owner_component_id}
         return set().union(*(clock_ids(arg) for arg in expr.arguments))
 
     def visit(port_id):
@@ -100,7 +118,12 @@ def derive_endpoint_witness(kernel, observation):
         if contract is None:
             _reject("endpoint.contract_missing", "A readout dependency has no registered semantic contract.")
         readout = contract.event_readout
-        if readout is not None and port.name == readout.output_port:
+        if port_id in primitive_ports:
+            if readout is None or port.name not in {output.port for output in spec.outputs}:
+                _reject("endpoint.primitive_leaf_invalid", "A sampled leaf must be a declared output of an event primitive.")
+            clocks[node.component_id] = (key, readout, None)
+            result = Expr("sample", identity=port_id)
+        elif readout is not None and port.name == readout.output_port:
             step = parameter(node, readout.step_parameter)
             offset = parameter(node, readout.offset_parameter)
             clocks[node.component_id] = (key, readout, step.identity)
@@ -165,7 +188,7 @@ def derive_endpoint_witness(kernel, observation):
     if len(clocks) != 1:
         _reject("endpoint.clock_not_unique", "The observed readout must depend on exactly one event counter.")
     clock_id, (key, readout, step_id) = next(iter(clocks.items()))
-    if dynamic:
+    if dynamic and observation.port_id not in primitive_ports:
         termination_ids = {
             component for item in graph.termination
             if item.condition_type == "AllHaveRun" for component in item.dependency_component_ids
@@ -175,9 +198,9 @@ def derive_endpoint_witness(kernel, observation):
             and item.dependency_component_ids == (clock_id,) for item in graph.scheduler
         ):
             _reject("endpoint.termination_unproven", "Trial termination must require publication after the observed event finishes.")
-    return EndpointWitness(
-        observation, clock_id, key, readout.counter_state, readout.minimum_count,
-        step_id, expression, tuple(sorted(used_nodes)), tuple(sorted(used_projections)), tuple(sorted(used_params)),
+    return ScalarReadoutWitness(
+        observation, clock_id, key, expression,
+        tuple(sorted(used_nodes)), tuple(sorted(used_projections)), tuple(sorted(used_params)),
     )
 
 
