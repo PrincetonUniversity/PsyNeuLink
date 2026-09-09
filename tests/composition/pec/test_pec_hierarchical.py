@@ -992,3 +992,33 @@ def test_pec_stays_in_process_by_default():
         distributedestep.make_distributed_estep_runner = original
     assert called == []
     assert results.subject_parameters.shape[0] == 3
+
+
+def _edged_posterior(mode, sd=2.0):
+    """A broad posterior the model rules out below zero, as a hard support boundary."""
+    def neg_log_post(z):
+        value = float(np.atleast_1d(z)[0])
+        return np.inf if value <= 0.0 else 0.5 * (value - mode) ** 2 / sd ** 2
+    return neg_log_post
+
+
+def test_curvature_step_is_halved_when_the_probe_leaves_the_support():
+    """A step reaching an impossible value says nothing about the peak; a shorter one does."""
+    mode = np.array([0.3])
+    config = EStepConfig(hessian_step=0.5)          # 0.3 - 0.5 lands outside
+    post = subject_map_estep(_edged_posterior(0.3), mode, np.array([4.0]), config)
+
+    assert np.isfinite(post.curvature[0])
+    assert post.hessian_step[0] < 0.5               # it was halved
+    # the halved probe recovers the curvature of the underlying Gaussian, 1/sd**2
+    np.testing.assert_allclose(post.curvature[0], 0.25, rtol=1e-3)
+
+
+def test_curvature_falls_back_when_halving_never_fits():
+    """Against a boundary the probe cannot clear, the prior stands in."""
+    prior = np.array([4.0])
+    config = EStepConfig(hessian_step=0.5)          # every halving still reaches past zero
+    post = subject_map_estep(_edged_posterior(1e-4), np.array([1e-4]), prior, config)
+
+    assert not np.isfinite(post.curvature[0])
+    assert post.variance[0] == prior[0]             # the prior, not a confident number
