@@ -443,8 +443,9 @@ class ParameterEstimationComposition(Composition):
     fit_method : "hierarchical" or None : default None
         specifies that **data** holds several participants' trials stacked together and that they are to be fitted
         jointly, each participant's estimate informed by the rest of the group, rather than one at a time. Requires
-        **hierarchical_options** and a ``"pec_factory"`` in **distributed_options**; see
-        :ref:`Hierarchical Fitting <HierarchicalFitting>`.
+        **hierarchical_options** and a ``"pec_factory"`` in **distributed_options**, which builds a participant's model
+        and so declares what is fitted: **parameters**, **outcome_variables**, **optimization_function** and a model
+        are taken from it rather than given here. See :ref:`Hierarchical Fitting <HierarchicalFitting>`.
 
     hierarchical_options : Mapping : default None
         specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
@@ -608,15 +609,15 @@ class ParameterEstimationComposition(Composition):
     @beartype
     def __init__(
         self,
-        parameters: Dict,
-        outcome_variables: Union[
+        parameters: Optional[Dict] = None,
+        outcome_variables: Optional[Union[
             List[Mechanism], Mechanism, List[OutputPort], OutputPort
-        ],
-        optimization_function: Union[
+        ]] = None,
+        optimization_function: Optional[Union[
             PECOptimizationFunction,
             Literal["differential_evolution"],
             Literal["grid_search"],
-        ],
+        ]] = None,
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
         likelihood_include_mask: Optional[np.ndarray] = None,
@@ -647,11 +648,50 @@ class ParameterEstimationComposition(Composition):
         if num_trials_per_estimate is None and data is not None:
             num_trials_per_estimate = len(data)
 
+        # A hierarchical fit describes its model once, in the factory that builds one per
+        # participant. This composition holds the data and splits it; it has no model of its own,
+        # so the arguments that describe one belong to the factory rather than here.
+        hierarchical = fit_method == "hierarchical"
+        if hierarchical:
+            declared = [
+                name for name, value in (
+                    ("parameters", parameters),
+                    ("outcome_variables", outcome_variables),
+                    ("optimization_function", optimization_function),
+                    ("model", model),
+                    ("nodes", kwargs.get("nodes")),
+                    ("pathways", kwargs.get("pathways")),
+                ) if value is not None
+            ]
+            if declared:
+                raise ParameterEstimationCompositionError(
+                    f"{sorted(declared)} describe a model, which a hierarchical fit takes from the "
+                    f"pec_factory in distributed_options: it builds one per participant and "
+                    f"declares what is fitted, over what ranges, and against which outputs. "
+                    f"Passing them here would state the same thing a second time."
+                )
+            kwargs.pop("nodes", None)
+            kwargs.pop("pathways", None)
+        else:
+            missing = [
+                name for name, value in (
+                    ("parameters", parameters),
+                    ("outcome_variables", outcome_variables),
+                    ("optimization_function", optimization_function),
+                ) if value is None
+            ]
+            if missing:
+                raise ParameterEstimationCompositionError(
+                    f"{sorted(missing)} are required unless fit_method is \"hierarchical\"."
+                )
+
         self._validate_params(locals().copy())
 
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC
-        if not model:
+        if hierarchical:
+            self.model = None
+        elif not model:
             # If model has not been specified, specification(s) in kwargs are used
             # (note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
             if "nodes" in kwargs:
@@ -672,9 +712,10 @@ class ParameterEstimationComposition(Composition):
             # Assign model as single node of PEC
             kwargs.update({"nodes": model})
 
-        # Assign model as nested composition in PEC and self.model as self
-        kwargs.update({"nodes": model})
-        self.model = model
+        if not hierarchical:
+            # Assign model as nested composition in PEC and self.model as self
+            kwargs.update({"nodes": model})
+            self.model = model
 
         self.depends_on = depends_on
 
@@ -686,7 +727,7 @@ class ParameterEstimationComposition(Composition):
         self.optimized_parameter_values = []
 
         self.pec_control_mechs = {}
-        for (pname, mech), values in parameters.items():
+        for (pname, mech), values in (parameters or {}).items():
             self.pec_control_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
                                                                      control_signals=[(pname, mech)],
                                                                      modulation=OVERRIDE)
@@ -721,6 +762,12 @@ class ParameterEstimationComposition(Composition):
         self.fit_results = None
         if fit_method == "hierarchical":
             self._setup_hierarchical(likelihood_include_mask)
+
+            # Everything below describes the model this composition fits and the search over it.
+            # A hierarchical fit has no model here: it holds the data, splits it by participant,
+            # and drives the models the factory builds.
+            self.optimization_function = None
+            return
 
         if not isinstance(self.nodes[0], Composition):
             raise ValueError(
@@ -894,16 +941,15 @@ class ParameterEstimationComposition(Composition):
     def _run_hierarchical(self, context):
         """Fit every participant jointly and record the result on `fit_results`."""
         options = self._hierarchical_options
-        # This composition declares what is fitted and over what range; every participant's
-        # model is held to it.
-        schema = ParameterSchema.from_pec(
-            self, source="the model given to ParameterEstimationComposition"
-        )
         # Participants are fitted independently within an iteration, so `distributed` sends one
         # per task; the group update stays here either way.
         provider = PECFactorySubjectLikelihood(
-            self._resolve_pec_factory(), self._subject_split.frames, schema=schema
+            self._resolve_pec_factory(), self._subject_split.frames
         )
+        # What is fitted, and over what range, is whatever the factory builds: the first
+        # participant's model settles it, and the rest are held to that. Building it here is not
+        # spare work even for a distributed fit, since the group prior is defined over its ranges.
+        schema = provider.schema
         config = EStepConfig(
             method=options["estep_method"],
             hessian_step=options["hessian_step"],
@@ -1054,8 +1100,9 @@ class ParameterEstimationComposition(Composition):
 
         # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameter_estimation_composition.py
 
-        # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
-        if not (
+        # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS, except for a
+        # hierarchical fit, whose models come one per participant from the factory.
+        if args.get("fit_method") != "hierarchical" and not (
             args["model"]
             or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]
         ):
@@ -1293,6 +1340,14 @@ class ParameterEstimationComposition(Composition):
 
         """
 
+        if self._fit_method == "hierarchical":
+            raise ParameterEstimationCompositionError(
+                f"ParameterEstimationComposition {self.name} is configured for hierarchical "
+                f"fitting: each participant has their own likelihood, and scoring the stacked "
+                f"data as one participant would silently pool it. See "
+                f"`fit_results.subject_posteriors` after `run()`."
+            )
+
         if self.controller is None:
             raise ParameterEstimationCompositionError(
                 f"The controller for ParameterEstimationComposition {self.name} "
@@ -1310,14 +1365,6 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(
                 f"The data for ParameterEstimationComposition {self.name} "
                 f"has not been defined. Cannot compute log-likelihood."
-            )
-
-        if self._fit_method == "hierarchical":
-            raise ParameterEstimationCompositionError(
-                f"ParameterEstimationComposition {self.name} is configured for hierarchical "
-                f"fitting: each participant has their own likelihood, and scoring the stacked "
-                f"data as one participant would silently pool it. See "
-                f"`fit_results.subject_posteriors` after `run()`."
             )
 
         fit_param_names = self.controller.function.fit_param_names

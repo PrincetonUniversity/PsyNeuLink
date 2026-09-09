@@ -153,22 +153,10 @@ def main():
         distributed_options["n_workers"] = args.n_workers
 
     # The model given here declares which parameters are fitted and which outputs are compared
-    # against the data. It is not simulated; each participant's model comes from the factory.
-    comp, decision = build_model()
+    # What is fitted, and over what range, is declared once, by the factory below.
     pec = pnl.ParameterEstimationComposition(
         name="group",
-        nodes=[comp],
-        parameters={
-            (name, decision): np.linspace(*FIT_RANGES[name], 1000) for name in FIT_PARAMS
-        },
-        outcome_variables=[
-            decision.output_ports[pnl.DECISION_OUTCOME],
-            decision.output_ports[pnl.RESPONSE_TIME],
-        ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         fit_method="hierarchical",
         hierarchical_options={
             "subject_id": args.subject_id,
