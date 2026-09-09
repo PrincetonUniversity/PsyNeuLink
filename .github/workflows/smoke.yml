@@ -1,0 +1,46 @@
+# Lightweight fork smoke CI (jonhanke-nam/PsyNeuLink#27).
+#
+# The inherited "PsyNeuLink CI" matrix (~20 jobs across 3 OSes / 7 Pythons) is
+# overkill for this fork, whose job is to stay synced with upstream devel while
+# keeping our additions working. This runs just the fork-surface smoke buckets
+# on one runner, and is the CI gate on sync PRs into jonhanke-dev (#25).
+name: Fork smoke
+
+on:
+  pull_request:
+    branches: [jonhanke-dev]
+  push:
+    branches: [jonhanke-dev]
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Fork-surface smoke (debugger + element-names + EM baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install PsyNeuLink (editable) + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Override the repo's heavy addopts (xdist, cov, benchmark, pydocstyle,
+      # pycodestyle) — a smoke gate checks that the functionality runs, not that
+      # the tree is style-clean. Keep this in sync with bin/sync-upstream-devel.sh.
+      - name: Smoke gate (functional only)
+        run: |
+          pytest -o addopts="" -p no:cacheprovider -q \
+            tests/misc/test_debugger.py \
+            tests/misc/test_element_names.py \
+            tests/misc/test_element_names_mdf.py \
+            tests/misc/test_element_names_propagation.py \
+            "tests/composition/test_emcomposition.py::TestExecution::test_simple_execution_without_learning"

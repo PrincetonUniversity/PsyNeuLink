@@ -838,6 +838,15 @@ class OutputPort(Port_Base):
         `mod_afferents <Port.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for additional
         details).
 
+    element_names : list of str : default None
+        optional semantic labels for each element of the OutputPort's
+        `value <OutputPort.value>`, surfaced by the `_debugger`
+        NODE_EXECUTION snapshot and consumed by inspection tools. The
+        list length must equal the size of the port's value; a
+        mismatch raises a `PortError` at construction. Static
+        construction metadata only — not threaded through the
+        `Parameters` system and does not participate in execution.
+
     Attributes
     ----------
 
@@ -884,6 +893,10 @@ class OutputPort(Port_Base):
         <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Registry_Naming>` apply to the
         OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
         <Port_Naming_Note>`).
+
+    element_names : list of str or None
+        the value passed to the **element_names** argument of the constructor (or ``None`` if unset). See the
+        argument description for usage and validation rules.
 
     """
 
@@ -939,6 +952,7 @@ class OutputPort(Port_Base):
                  prefs:   Optional[ValidPrefSet] = None,
                  index=None,
                  assign=None,
+                 element_names=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
@@ -951,6 +965,14 @@ class OutputPort(Port_Base):
 
         # setting here to ensure even deferred init ports have this attribute
         self._variable_spec = variable
+        # #11: optional semantic labels for the elements of this port's
+        # value. Static construction metadata — not threaded through the
+        # Parameters system because it never participates in execution.
+        # Consumed by the _debugger NODE_EXECUTION snapshot and by
+        # downstream tools (PsyNeuView's pill / Run State / Inspector).
+        # Stored verbatim here; length-vs-shape validation runs after
+        # super().__init__() once the port's actual value shape is known.
+        self.element_names = list(element_names) if element_names else None
 
         # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
         # if owner is None or reference_value is None:
@@ -997,6 +1019,7 @@ class OutputPort(Port_Base):
             assign=assign,
             **kwargs
         )
+
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.variable is compatible with the reference_value
@@ -1305,6 +1328,20 @@ class OutputPort(Port_Base):
         except AttributeError:
             label_dictionary = {}
         return self._get_value_label(label_dictionary, self.owner.output_ports, context=context)
+
+    @property
+    def _mdf_metadata(self):
+        # #11 slice 4: round-trip element_names through the free-form
+        # MDF metadata channel. Only injected when set, so default
+        # ports don't accumulate a stray ``element_names: None``.
+        from psyneulink.core.globals.keywords import MODEL_SPEC_ID_METADATA
+        md = super()._mdf_metadata
+        if self.element_names:
+            md[MODEL_SPEC_ID_METADATA] = {
+                **md[MODEL_SPEC_ID_METADATA],
+                'element_names': list(self.element_names),
+            }
+        return md
 
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf

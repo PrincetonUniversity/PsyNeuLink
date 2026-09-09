@@ -4547,7 +4547,134 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
+        # #14: propagate element_names across identity MappingProjections.
+        # Runs after all projection wiring is finalized so we see the
+        # actual incoming-projection topology per InputPort.
+        self._propagate_element_names()
         self.needs_update_graph = False
+
+    def _propagate_element_names(self):
+        """Auto-derive missing ``InputPort.element_names`` from upstream
+        ``OutputPort.element_names`` via identity-style MappingProjections.
+
+        Closes #14 (slice 3 of #11) and #18 (Phase 2: CIM / nested
+        Composition propagation). The rules are intentionally
+        conservative:
+
+        - ``MappingProjection`` with an identity matrix (and no active
+          learning) propagates — element-for-element passthrough, meaning
+          preserved.
+        - Non-identity static matrices, learnable matrices, modulator
+          projections (Control / Learning), and multi-source fan-in with
+          inconsistent labels all leave the downstream port untouched
+          (``element_names`` stays ``None``), so consumers fall back to
+          index labels.
+        - ``input_CIM`` / ``output_CIM`` ports mirror the labels on the
+          contained-Node port they pair with (the CIM is an `Identity`
+          passthrough by construction), so introspecting a Composition
+          from the outside sees the same element labels as its INPUT /
+          OUTPUT Nodes.
+
+        Only fills in ports whose ``element_names`` is currently ``None`` —
+        explicit per-port specs always win.
+        """
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        import numpy as _np
+
+        # #18: depth-first recursion into nested Compositions. Their
+        # internal propagation pass must run first so their CIM ports
+        # carry labels before our own per-node pass walks the outer
+        # graph and sees them as upstream senders.
+        for node in self.nodes:
+            if isinstance(node, Composition):
+                node._propagate_element_names()
+
+        # #18: mirror labels across CIM port pairs. ``port_map`` is a
+        # dict keyed by the contained-Node port the CIM pairs with;
+        # the value is the (input_port, output_port) tuple on the CIM
+        # itself. The CIM's function is ``Identity``, so labels carry
+        # element-for-element.
+        for cim in (
+            getattr(self, "input_CIM", None),
+            getattr(self, "output_CIM", None),
+        ):
+            port_map = getattr(cim, "port_map", None) if cim is not None else None
+            if not port_map:
+                continue
+            for inner_port, pair in port_map.items():
+                if not pair or len(pair) != 2:
+                    continue
+                cim_in, cim_out = pair
+                labels = getattr(inner_port, "element_names", None)
+                if not labels:
+                    continue
+                if getattr(cim_in, "element_names", None) is None:
+                    cim_in.element_names = list(labels)
+                if getattr(cim_out, "element_names", None) is None:
+                    cim_out.element_names = list(labels)
+
+        def _matrix_is_identity(m):
+            """True if the projection's effective matrix is identity."""
+            if m is None:
+                return False
+            # AUTO_ASSIGN_MATRIX / IDENTITY_MATRIX get resolved to ndarrays
+            # during projection instantiation, so we don't need to special-case
+            # the string keyword form here.
+            try:
+                arr = _np.asarray(m, dtype=float)
+            except (TypeError, ValueError):
+                return False
+            if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
+                return False
+            return _np.allclose(arr, _np.eye(arr.shape[0]))
+
+        def _projection_propagates(proj):
+            """Whether ``proj`` should carry element_names across.
+
+            Conservative v1: must be a plain MappingProjection with an
+            identity matrix at composition-init time. Control / Learning
+            projection subclasses (modulators) are excluded by type.
+
+            We deliberately do *not* reject ``learnable=True`` here —
+            that's the MappingProjection default, set on every plain
+            projection. Once learning actually moves the matrix away
+            from identity at run time, the labels become stale; that's
+            no worse than the same risk on any non-identity start.
+            Treating learnable-by-default as "unsafe" would reject the
+            common case and is more conservative than useful.
+            """
+            if not isinstance(proj, MappingProjection):
+                return False
+            try:
+                matrix = proj.matrix.base
+            except AttributeError:
+                matrix = getattr(proj, "matrix", None)
+            return _matrix_is_identity(matrix)
+
+        for node in self.nodes:
+            input_ports = getattr(node, "input_ports", None)
+            if not input_ports:
+                continue
+            for in_port in input_ports:
+                if getattr(in_port, "element_names", None) is not None:
+                    continue  # explicit per-port spec wins
+                # Walk incoming projections; collect candidate label lists
+                # from senders that propagate. If exactly one consistent
+                # set, use it.
+                candidates = []
+                for proj in getattr(in_port, "path_afferents", []):
+                    if not _projection_propagates(proj):
+                        continue
+                    sender = getattr(proj, "sender", None)
+                    upstream = getattr(sender, "element_names", None) if sender else None
+                    if upstream:
+                        candidates.append(list(upstream))
+                if not candidates:
+                    continue
+                first = candidates[0]
+                if all(c == first for c in candidates[1:]):
+                    in_port.element_names = first
+                # Otherwise mismatched fan-in: leave None (conservative).
 
     def _update_processing_graph(self):
         """
@@ -13608,7 +13735,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         {"node": node,
                                          "execution_set": execution_set,
                                          "scheduler": execution_scheduler,
-                                         "context": mech_context})
+                                         "context": mech_context,
+                                         # #13: per-port element_names from the model-intrinsic Layer 1
+                                         # API. Lets snapshot consumers (log replays, remote tools)
+                                         # read labels without a separate introspection pass.
+                                         "output_port_element_names": [
+                                             getattr(p, "element_names", None) for p in node.output_ports
+                                         ]})
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
