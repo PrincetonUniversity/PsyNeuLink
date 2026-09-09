@@ -696,6 +696,15 @@ class InputPort(Port_Base):
         specifies whether the InputPort requires external input when its `owner <Port_Base.owner>` is the `INPUT`
         `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
+    element_names : list of str : default None
+        optional semantic labels for each element of the InputPort's
+        `value <InputPort.value>`, surfaced by the `_debugger`
+        NODE_EXECUTION snapshot and consumed by inspection tools. The
+        list length must equal the size of the port's value; a mismatch
+        raises a `PortError` at construction. Stored as a static,
+        read-only structural `Parameter` that does not participate in
+        execution.
+
     Attributes
     ----------
 
@@ -777,6 +786,10 @@ class InputPort(Port_Base):
         InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions
         <Registry_Naming>` apply to the InputPorts specified, as well as any that are added to the Mechanism once it
         is created (see `note <Port_Naming_Note>`).
+
+    element_names : list of str or None
+        the value passed to the **element_names** argument of the constructor (or ``None`` if unset). See the
+        argument description for usage and validation rules.
 
     """
 
@@ -866,6 +879,7 @@ class InputPort(Port_Base):
         combine = None
         internal_only = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
+        element_names = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True)
 
         def _validate_default_input(self, default_input):
             if default_input is not None and default_input is not DEFAULT_VARIABLE:
@@ -892,7 +906,13 @@ class InputPort(Port_Base):
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,
                  context=None,
+                 element_names=None,
                  **kwargs):
+
+        # Normalize element_names up front (copy the list; falsy -> None) so
+        # both the deferred-init capture below and super().__init__() see the
+        # same normalized value.
+        element_names = list(element_names) if element_names else None
 
         if variable is None and input_shapes is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, input_shapes, projections)
@@ -931,6 +951,7 @@ class InputPort(Port_Base):
             exponent=exponent,
             internal_only=internal_only,
             shadow_inputs=None,
+            element_names=element_names,
             params=params,
             name=name,
             prefs=prefs,

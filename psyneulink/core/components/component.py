@@ -1578,7 +1578,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "range", "internal_only",
                      "require_projection_in_composition", "default_input",
-                     "shadow_inputs", "compute_reconfiguration_cost",
+                     "shadow_inputs", "element_names", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
