@@ -157,6 +157,10 @@ def make_distributed_estep_runner(
     config = config if config is not None else EStepConfig()
     fit_id = fit_id or uuid.uuid4().hex
     data_slices = list(data_slices)
+    # A participant's trials are the same every iteration, so they are placed on the cluster once
+    # rather than travelling with each task. Scattering also seeds the sticky assignment below:
+    # the first iteration runs a participant where their trials already are.
+    scattered = client.scatter(data_slices, hash=False)
     # Filled in after the first iteration, so each participant returns to the worker holding
     # their model instead of being rebuilt somewhere else.
     home = {}
@@ -172,7 +176,7 @@ def make_distributed_estep_runner(
                 # participant re-pins on the next iteration.
                 submit_kwargs.update(workers=[home[s]], allow_other_workers=True)
             futures.append(client.submit(
-                _dask_subject_estep, pec_factory, s, data_slices[s], mu[s], sigma,
+                _dask_subject_estep, pec_factory, s, scattered[s], mu[s], sigma,
                 schema, z0, worker_cores, fit_id, config, **submit_kwargs,
             ))
 
@@ -223,6 +227,9 @@ def make_distributed_estep_runner(
                 ResourceWarning,
                 stacklevel=2,
             )
+        finally:
+            # Drop our hold on the scattered trials so the cluster can free them too.
+            scattered.clear()
 
     runner.release = release
     return runner
