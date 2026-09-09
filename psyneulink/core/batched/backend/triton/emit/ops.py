@@ -584,10 +584,10 @@ class OpEmitMixin:
         if cache_vars:
             self.builder.line()
 
-    def _emit_dynamic_carry_initializers(self, program):
+    def _emit_dynamic_carry_initializers(self, program, *, carries=None):
         carry_vars = {}
         states_by_id = {state.state_id: state for state in self.kernel.states}
-        for carry in program.loop_carries:
+        for carry in program.loop_carries if carries is None else carries:
             key = self._dynamic_carry_key(carry)
             if carry.kind == "state":
                 try:

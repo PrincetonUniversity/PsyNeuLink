@@ -80,6 +80,24 @@ class BoundaryTrajectoryWitness:
 
 
 @dataclass(frozen=True)
+class PrimitiveSampleOutput:
+    port_id: int
+    port_name: str
+    width: int
+    column_start: int
+
+
+@dataclass(frozen=True)
+class StochasticSamplerWitness:
+    boundary: BoundaryTrajectoryWitness
+    spec_key: str
+    outputs: tuple[PrimitiveSampleOutput, ...]
+    rng_stream_ids: tuple[int, ...]
+    rng_policy: str = "source_subject_trial_estimate_component_execution"
+    guarantee: str = "checked_boundary_with_registered_step_and_readout"
+
+
+@dataclass(frozen=True)
 class LikelihoodEffectContract:
     """Assert that an implementation's declared effects are complete.
 

@@ -40,10 +40,17 @@ prefixes with instrumented coupled execution. Hypothetical tails cannot update
 another trial's canonical history. The path uses registered component bodies,
 including altered drift UDFs and projections, without CSI-name recognition.
 
+The following slice generates conditional primitive sampling from these paths.
+It reuses the registered source step/readout and RNG addressing, with parallel
+candidate/trial/estimate lanes. A coupled reference restores canonical state and
+held controls independently in every lane before executing the full scheduler.
+Results expose raw primitive ports, integration counts, and truncation flags;
+they are not final observation-gate outputs or likelihood scores.
+
 These slices implement the one-event reconstruction/boundary portion of change
-2 and the initial inspection paths of changes 3–4, not an executable likelihood.
-Generated stochastic-region execution/scoring, multi-subject and chunk-safe
-execution, GPU validation/performance, and non-decision acceptance cases remain
+2 and initial execution paths of changes 3–4, not an executable likelihood.
+Observation mapping/scoring, multi-subject and chunk-safe execution,
+GPU validation/performance, and non-decision acceptance cases remain
 outstanding. Consequently, likelihood reports always have
 `codegen_ready=False` and `can_execute=False`. The existing CSI sampling
 implementation continues to perform likelihood work.

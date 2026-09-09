@@ -55,7 +55,7 @@ class BoundaryTrajectoryEmitter(HistoryTraceEmitter):
             if declaration.state_id == state.state_id:
                 break
             column += declaration.width
-        self.builder.line(f"{output} = tl.load(path_starts + offsets * {self.history_width} + {column}, mask=mask, other=0.0)")
+        self.builder.line(f"{output} = tl.load(path_starts + ({self._path_start_index()}) * {self.history_width} + {column}, mask=mask, other=0.0)")
 
     def _emit_initialize_effective_parameter(self, op):
         super()._emit_initialize_effective_parameter(op)
@@ -63,7 +63,10 @@ class BoundaryTrajectoryEmitter(HistoryTraceEmitter):
             identity = op.attrs["effective_parameter_id"]
             index = self.witness.effective_parameter_ids.index(identity) + self.state_width
             value = self.effective_parameter_vars[identity]
-            self.builder.line(f"{value} = tl.load(path_starts + offsets * {self.history_width} + {index}, mask=mask, other=0.0)")
+            self.builder.line(f"{value} = tl.load(path_starts + ({self._path_start_index()}) * {self.history_width} + {index}, mask=mask, other=0.0)")
+
+    def _path_start_index(self):
+        return "offsets"
 
     def _emit_trial_loop(self, body):
         if not self.parallel_trials:

@@ -91,6 +91,11 @@ class BoundaryTrajectoryPlan:
     history_plan: object
     witness: BoundaryTrajectoryWitness
 
+    def compile_stochastic_sampler(self):
+        from psyneulink.core.batched.sampling import compile_stochastic_sampler
+
+        return compile_stochastic_sampler(self)
+
     def source(self, *, parallel_trials=True):
         """Generate deterministic paths, or instrument unmodified simulation."""
         from psyneulink.core.batched.backend.triton.trajectories import BoundaryTrajectoryEmitter

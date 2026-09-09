@@ -1,11 +1,13 @@
-# Likelihood compilation: diagnosis, history replay, and boundary paths
+# Likelihood compilation: diagnosis, history replay, paths, and primitive sampling
 
 The implementation on `feat/likelihood_compile` diagnoses model structure,
 derives supported event readouts, and reconstructs history for a checked
 single-event subset using the generated source scheduler. It does not yet
 generate an objective. A checked boundary-path interface now materializes
-deterministic inputs in candidate/trial-parallel lanes; generated stochastic
-execution and scoring are subsequent steps.
+deterministic inputs in candidate/trial-parallel lanes. A generated primitive
+sampler consumes these paths in candidate/trial/estimate lanes. Observation
+mapping, scoring, GPU execution of these new interfaces, and PEC routing remain
+subsequent steps.
 
 ## Example: independent DDM trials
 
@@ -63,8 +65,9 @@ This diagnosis is deliberately incomplete. A separate `compile_history_replay()`
 step checks a restricted event substitution and generates scheduler replay
 for state and held controls. `compile_boundary_trajectories()` checks the
 within-trial input boundary and generates deterministic paths for this subset.
-Neither API compiles a stochastic trial evaluator or score. A user-supplied
-`event_time` label cannot discharge these obligations.
+The separate `compile_stochastic_sampler()` step then generates raw primitive
+sampling, not a score. A user-supplied `event_time` label cannot discharge these
+obligations.
 
 Current cases are:
 
@@ -265,7 +268,7 @@ or collapsing-bound formula. Candidate/trial parameter bindings remain in
 `witness.static_parameter_ids`; “static” here means fixed within that trial,
 not fixed across candidates or trials. The primitive's own counter, noise,
 bound transformation, and update formula remain responsibilities of the future
-stochastic region evaluator.
+stochastic region evaluator described below.
 
 The checked `BoundaryTrajectoryWitness` records typed input fields, the
 consumer and consideration-set identities, parameter bindings, deterministic
@@ -316,6 +319,75 @@ before history execution; it is not a process-memory limit and excludes
 compiler/framework workspace. No likelihood workflow is automatically routed
 to these inspection APIs.
 
+## Conditional primitive sampling
+
+```python
+sampler = path_plan.compile_stochastic_sampler()
+samples = sampler.sample(
+    inputs, data, parameter_sets, num_estimates=16, seed=21,
+    common_random_numbers=True, horizon=128,
+)
+print(samples.values.shape)       # [candidate, trial, estimate, raw output column]
+print(samples.outputs)            # primitive port identities and column layout
+print(samples.event_counts)       # active integration counts, [candidate, trial, estimate]
+print(samples.truncated)          # same lane shape
+```
+
+This first sampler supports the checked single stochastic event primitive with
+trial-local state. It generates boundary paths internally from the same inputs,
+observations, and parameter candidates; it does not accept unchecked cached
+paths. It then emits only the stochastic primitive's registered step and readout,
+with its source parameter bindings, initial trial state, sampled held controls,
+and random-number streams. Deterministic mechanisms are not re-executed for each
+estimate. There is no CSI-specific drift, threshold, or update formula in the
+sampler. In particular, a controller's already-transformed threshold is passed
+to the existing primitive binding, not transformed a second time.
+The source compiler's parameter constraints still apply; this interface does
+not make frozen parameters (such as the current coupled DDM noise binding)
+available for fitting.
+
+`values` contains **raw primitive outputs**, not the composition's final output
+gates. For CSI, raw DDM decision/RT should not be confused with the final
+correct-response coding or RT after cue-timing adjustment. No density, histogram,
+likelihood, or support claim is attached to these samples. Observation mapping
+and scoring still require their own checked lowering.
+
+Sampling preserves the source subject/trial/estimate/component execution RNG
+addressing, including paired-normal caching and the common-random-number option.
+Every estimate begins at the same reconstructed state for its candidate/trial.
+Sampled endpoints never replace the observed history used by later trials.
+
+For a coupled comparison using those **same conditional starts**:
+
+```python
+import numpy as np
+
+reference = sampler.simulate_reference(
+    inputs, data, parameter_sets, num_estimates=16, seed=21,
+    common_random_numbers=True, horizon=128,
+)
+np.testing.assert_array_equal(samples.values, reference.values)
+np.testing.assert_array_equal(samples.event_counts, reference.event_counts)
+```
+
+The reference restores both canonical mechanism states and held controls in
+every trial/estimate lane, then runs the full source scheduler, deterministic
+mechanisms, and stochastic primitive. This differs from unconditional
+multi-trial simulation, where each estimate develops its own random RT history.
+It checks the execution split but shares the primitive implementation; it is
+not an independent mathematical validation of the primitive.
+`sampler.source(reference=False/True)` exposes both generated programs.
+
+Truncation raises `StochasticSamplingError(code="sampling.truncated")` by
+default. `strict_truncation=False` returns explicit flags and partial outputs
+for inspection; those outputs are not completed events and must not be silently
+scored as such. The runtime currently requires `triton_cpu`, one contiguous
+subject, and a fresh interpreter process. Positive horizon, estimate count,
+buffer-budget, and lane-index bounds are checked before allocation. The buffer
+budget excludes compiler/framework workspace. GPU performance has not been
+established. Likelihood reports still say `codegen_ready=False`, and existing
+CSI fitting workflows remain unchanged.
+
 ## Registered effect contracts
 
 Built-in compiler primitives declare complete effects. Custom implementations
@@ -361,9 +433,11 @@ separate parts of the implementation plan.
 The boundary-path, history, endpoint, diagnostic, axis-dependency, registry-snapshot,
 reset-state, and compiler suites, plus selected CSI/Python acceptance cases,
 passed with `TRITON_INTERPRET=1`: **166 passed, three GPU cases skipped**
-(about 342 seconds). This includes source-generation and interpreter
+(about 340 seconds). This includes source-generation and interpreter
 execution regression coverage; no GPU job was submitted. Ruff and
 `git diff --check` also passed.
+The additional stochastic-sampler suite passed **16 tests** (about 186 seconds),
+for **182 passing tests and three skips** across the two runs.
 
 Endpoint tests cover parameter-dependent clocks, affine transformations,
 incompatible/ambiguous observations, forged witnesses, frozen registry rules,
@@ -387,6 +461,14 @@ separate runs, horizon-invariant canonical history, causal propagation of a
 changed observed RT to subsequent trials only, altered registered drift code
 and projection weights, delayed onset/reset restoration, forged artifacts,
 dependency rejection, and buffer/horizon guards.
+
+The stochastic-sampler suite checks exact raw-output and event-count agreement
+with full coupled conditional execution across deterministic/noisy models,
+multiple estimates/candidates, and both common-random-number policies. It also
+compares against ordinary noisy forward simulation; verifies identical-candidate
+draw sharing and independent streams; exercises delayed onset and trial-varying
+parameters; and checks witness tampering, resource guards, explicit truncation,
+and horizon-invariant canonical history.
 
 The reset-state suite's fixtures previously changed Never reset declarations
 to AtTrialStart without updating the matching LCA initialization policy (16
