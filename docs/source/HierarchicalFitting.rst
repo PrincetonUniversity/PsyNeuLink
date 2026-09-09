@@ -28,13 +28,7 @@ Pass ``fit_method="hierarchical"``, name the column of ``data`` that identifies
 participants, and supply a ``pec_factory``::
 
     pec = ParameterEstimationComposition(
-        nodes=[model],
-        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000)},
-        outcome_variables=[decision.output_ports[DECISION_OUTCOME],
-                           decision.output_ports[RESPONSE_TIME]],
         data=stacked,
-        optimization_function=PECOptimizationFunction(method="differential_evolution",
-                                                      max_iterations=1),
         fit_method="hierarchical",
         hierarchical_options={"subject_id": "subject"},
         distributed_options={"pec_factory": build_subject_pec},
@@ -43,8 +37,9 @@ participants, and supply a ``pec_factory``::
     results = pec.run()
     results.group_parameters
 
-The model passed to the constructor declares which parameters are fitted, over what
-ranges, and which outputs are compared against the data. It is not itself simulated.
+No model is given here. What is fitted, over what ranges, and which outputs are compared
+against the data are declared once, by the factory: it builds a participant's model and
+this composition holds them all to the first one it builds.
 
 
 .. _Hierarchical_Fitting_Data:
@@ -114,10 +109,11 @@ Requirements on what it returns:
     Use ``subject_index``. A shared seed gives every participant the same stream of
     simulation noise, which is absorbed into the group variance rather than averaging out.
 
-* **LLVM execution, and the same parameters and ranges as the constructor's model**
+* **LLVM execution, and the same parameters and ranges for every participant**
     The group model is defined in terms of those ranges, so ranges that varied between
-    participants would mean different things for different people. This is checked for
-    every participant, in-process and on a worker alike, before it is scored.
+    participants would mean different things for different people. The first participant's
+    model settles what they are, and every other one is held to it, in-process and on a
+    worker alike, before it is scored.
 
 
 .. _Hierarchical_Fitting_Options:
