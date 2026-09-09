@@ -1206,6 +1206,14 @@ class ParameterEstimationComposition(Composition):
         # A hierarchical fit drives one model per participant, built by the user's factory; this
         # composition itself is never simulated, so none of the setup below applies to it.
         if self._fit_method == "hierarchical":
+            if args or kwargs:
+                given = sorted(kwargs) + ([f"{len(args)} positional"] if args else [])
+                raise ParameterEstimationCompositionError(
+                    f"ParameterEstimationComposition {self.name} is configured for hierarchical "
+                    f"fitting, whose run() takes no arguments; got {given}. Each participant is "
+                    f"run with the inputs their own model is built with, which the pec_factory "
+                    f"in distributed_options returns alongside it."
+                )
             return self._run_hierarchical(context)
 
         # Clear any old results from the composition
