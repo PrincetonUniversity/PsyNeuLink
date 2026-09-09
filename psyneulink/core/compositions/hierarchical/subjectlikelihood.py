@@ -243,17 +243,23 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         self._cache = {}
         self._schema = schema
 
+    @property
+    def n_subjects(self):
+        return len(self._data_slices)
+
+    def warn_if_costly_in_process(self):
+        """Warn that this many models is a lot to build in one process.
+
+        Called only on the path that does so.  A provider is also built for a distributed fit,
+        to read the parameters off it, and that fit builds one model per worker instead.
+        """
         if self.n_subjects > IN_PROCESS_SUBJECT_WARN_THRESHOLD:
             warnings.warn(
                 f"building {self.n_subjects} participant models in one process; each is compiled "
                 f"separately and they accumulate. Consider distributing the fit.",
                 ResourceWarning,
-                stacklevel=2,
+                stacklevel=3,
             )
-
-    @property
-    def n_subjects(self):
-        return len(self._data_slices)
 
     @property
     def n_params(self):
