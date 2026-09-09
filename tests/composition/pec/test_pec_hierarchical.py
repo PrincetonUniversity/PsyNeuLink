@@ -23,6 +23,9 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     subject_map_estep,
 )
 from psyneulink.core.components.functions.nonstateful import fitfunctions
+from psyneulink.core.compositions.parameterestimationcomposition import (
+    ParameterEstimationCompositionError,
+)
 from psyneulink.core.compositions.hierarchical import distributedestep
 from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
@@ -1022,3 +1025,11 @@ def test_curvature_falls_back_when_halving_never_fits():
 
     assert not np.isfinite(post.curvature[0])
     assert post.variance[0] == prior[0]             # the prior, not a confident number
+
+
+@pytest.mark.composition
+def test_hierarchical_run_rejects_arguments_it_cannot_use():
+    """Participants are run with the inputs their own model was built with."""
+    pec = _build_group_pec()
+    with pytest.raises(ParameterEstimationCompositionError, match="takes no arguments"):
+        pec.run(inputs={})
