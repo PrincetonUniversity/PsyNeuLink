@@ -6,6 +6,23 @@ from psyneulink.core.batched.compiler import (
     BatchedSimulationPlan,
 )
 from psyneulink.core.batched.errors import BatchedNumericalError
+from psyneulink.core.batched.endpoints import EndpointReconstructionError, ObservedEndpointPlan
+from psyneulink.core.batched.history import HistoryReplayError, HistoryReplayPlan, HistoryTrace
+from psyneulink.core.batched.likelihood_ir import (
+    EventCountReadout,
+    HistoryReplayWitness,
+    EndpointExpression,
+    EndpointWitness,
+    LikelihoodCapabilityReport,
+    LikelihoodDiagnostic,
+    LikelihoodEffectContract,
+    PrimitiveLikelihoodEvidence,
+)
+from psyneulink.core.batched.observation import (
+    ObservationField,
+    ObservationSpec,
+    ResolvedObservationField,
+)
 from psyneulink.core.batched.specs import (
     BatchedOpSpecError,
     DenseProjectionSpec,
@@ -66,6 +83,22 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "HistoryReplayError",
+    "HistoryReplayPlan",
+    "HistoryReplayWitness",
+    "HistoryTrace",
+    "EndpointReconstructionError",
+    "ObservedEndpointPlan",
+    "EventCountReadout",
+    "EndpointExpression",
+    "EndpointWitness",
+    "LikelihoodCapabilityReport",
+    "LikelihoodDiagnostic",
+    "LikelihoodEffectContract",
+    "PrimitiveLikelihoodEvidence",
+    "ObservationField",
+    "ObservationSpec",
+    "ResolvedObservationField",
     "BatchedTrialParameter",
     "AxisDependencyAnalysis",
     "AxisDependencyEdge",

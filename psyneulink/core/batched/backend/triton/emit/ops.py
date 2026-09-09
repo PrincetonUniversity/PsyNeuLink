@@ -115,9 +115,17 @@ class OpEmitMixin:
             self._emit_stateful_random_base()
             self.output_cursor = 0
             self.lane_out_emitted = False
+            self._emit_trial_start_inspection()
             self._emit_ops(body)
+            self._emit_trial_end_inspection()
             self.builder.line("trial_idx += 1")
         self.builder.line()
+
+    def _emit_trial_start_inspection(self) -> None:
+        """Optional instrumentation; ordinary simulation emits nothing."""
+
+    def _emit_trial_end_inspection(self) -> None:
+        """Optional instrumentation; ordinary simulation emits nothing."""
 
     def _emit_ops(self, ops: tuple[KernelOp, ...]) -> None:
         self.output_cursor = 0

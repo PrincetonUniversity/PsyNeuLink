@@ -16,6 +16,25 @@ from psyneulink.core.batched.kernel_ir import KernelIR, KernelOp, lower_to_kerne
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
 
+def _with_trial_start_reset(graph):
+    """Keep the reset and its authenticated recurrent-sender policy consistent.
+
+    These are direct KernelIR fixtures. Switching only the reset declaration
+    leaves the old Never-reset initialization metadata and produces invalid IR
+    before a test can exercise the intended reset mutation.
+    """
+    owners = {reset.component_id for reset in graph.resets}
+    return replace(
+        graph,
+        resets=tuple(replace(reset, condition_type="AtTrialStart") for reset in graph.resets),
+        nodes=tuple(
+            replace(node, attrs={**node.attrs, "initialize_noise_sender": False})
+            if node.component_id in owners else node
+            for node in graph.nodes
+        ),
+    )
+
+
 def _counted_lca_kernel(*, reset_at_trial_start: bool):
     producer = pnl.LCAMechanism(
         input_shapes=2,
@@ -51,12 +70,7 @@ def _counted_lca_kernel(*, reset_at_trial_start: bool):
     graph = lowering.graph
     assert graph is not None and graph.executable
     if reset_at_trial_start:
-        graph = replace(
-            graph,
-            resets=(
-                replace(graph.resets[0], condition_type="AtTrialStart"),
-            ),
-        )
+        graph = _with_trial_start_reset(graph)
     kernel = lower_to_kernel_ir(
         BatchedCompositionIR(
             model_kind=lowering.model_kind,
@@ -90,10 +104,7 @@ def _atomic_lca_kernel_with_typed_trial_reset():
     )
     graph = lowering.graph
     assert graph is not None and graph.executable
-    graph = replace(
-        graph,
-        resets=(replace(graph.resets[0], condition_type="AtTrialStart"),),
-    )
+    graph = _with_trial_start_reset(graph)
     return lower_to_kernel_ir(
         BatchedCompositionIR(
             model_kind=lowering.model_kind,
@@ -260,7 +271,7 @@ def test_reset_source_reapplies_literal_and_function_initializers_before_pass_ze
     # The pre-state literal and the Logistic-derived activation are initialized
     # once outside ForTrials and reapplied by ResetState inside every trial.
     assert source.count("n0_state_0_0 = tl.full") == 2
-    assert source.count("n0_state_1_0 =") == 2
+    assert source.count("n0_state_1_0 = _pnl_triton_logistic(") == 2
 
 
 @pytest.mark.parametrize(

@@ -2,6 +2,12 @@
 
 ## Status
 
+The immediate implementation track is described in
+[Automatic compilation of observation-conditioned history likelihoods](AUTOMATIC_HISTORY_LIKELIHOOD_PLAN.md).
+It prioritizes generic compiler analysis and code generation for the current
+CSI deterministic-history specialization, before LLM synthesis or formal proof
+integration.
+
 This document records a long-term research direction. It is not a description
 of a currently implemented PsyNeuLink feature or a commitment to a public API.
 The immediate purpose is to preserve the idea, define it precisely enough to

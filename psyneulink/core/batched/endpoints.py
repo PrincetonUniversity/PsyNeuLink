@@ -1,0 +1,348 @@
+"""Checked event-readout derivation and bounded endpoint reconstruction.
+
+This pass resolves a primitive's active-step counter, not the complete scheduler
+history. It does not authorize trial splitting or compute likelihood values.
+"""
+
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from psyneulink.core.batched.ir import FP32_EXACT_INTEGER_LIMIT
+from psyneulink.core.batched.kernel_ir import validate_kernel_ir
+from psyneulink.core.batched.likelihood_ir import (
+    EndpointExpression as Expr,
+    EndpointWitness,
+    LikelihoodDiagnostic,
+)
+from psyneulink.core.batched.observation import ResolvedObservationField
+from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_inputs, prepare_parameter_values
+
+
+class EndpointReconstructionError(ValueError):
+    """An observation does not determine one admissible event count."""
+
+    def __init__(self, code, detail):
+        super().__init__(detail)
+        self.code = code
+
+
+def _reject(code, detail):
+    raise EndpointReconstructionError(code, detail)
+
+
+def derive_endpoint_witness(kernel, observation):
+    """Derive a scalar readout from frozen primitive contracts and projections.
+
+    The accepted slice has one event counter, scalar affine operations, known
+    inputs, and parameter values. Unknown functions and time-varying held
+    parameters are rejected rather than assigned their defaults.
+    """
+    validate_kernel_ir(kernel)
+    graph = kernel.graph
+    if observation.role != "event_time" or not observation.condition_history:
+        _reject("endpoint.not_conditioning_event", "Endpoint reconstruction requires a conditioning event field.")
+    if observation.recording != "exact" or observation.availability != "complete":
+        _reject("endpoint.recording_unsupported", "Only complete, exact event observations currently have a reconstruction rule.")
+    outputs = {item.port_id: item for item in graph.outputs}
+    if observation.port_id not in outputs:
+        _reject("endpoint.output_missing", "The observation is not a frozen graph output.")
+    output = outputs[observation.port_id]
+    if observation.component_id != output.component_id or observation.width != output.width:
+        _reject("endpoint.output_identity", "Observed component/port identity does not match the graph.")
+    nodes = {node.component_id: node for node in graph.nodes}
+    ports = {port.port_id: port for port in graph.ports}
+    parameters = {parameter.name: parameter for parameter in kernel.params}
+    schedule = {item.component_id: item for item in graph.scheduler}
+    used_nodes, used_projections, used_params = set(), set(), set()
+    clocks = {}
+    visiting = set()
+    memo = {}
+    dynamic = graph.fusion_kind == "coevolving_graph"
+    if not dynamic and graph.metadata.get("schedule_kind") not in (None, "static_graph"):
+        _reject("endpoint.schedule_unsupported", "Event readout replay for this schedule tier is not implemented.")
+
+    def parameter(node, argument):
+        try:
+            spec = parameters[node.params[argument]]
+        except KeyError:
+            _reject("endpoint.parameter_missing", "A readout contract parameter has no frozen binding.")
+        if any(
+            item.target_component_id == node.component_id and item.target_parameter == argument
+            for item in (*graph.effective_parameters, *graph.folded_affine_controls)
+        ):
+            _reject("endpoint.modulated_parameter", "A readout parameter is scheduler-modulated; its held value must be reconstructed.")
+        used_params.add(spec.parameter_id)
+        return Expr("parameter", identity=spec.parameter_id)
+
+    def binary(kind, left, right):
+        return Expr(kind, (left, right))
+
+    def clock_ids(expr):
+        if expr.kind == "count":
+            return {expr.identity}
+        return set().union(*(clock_ids(arg) for arg in expr.arguments))
+
+    def visit(port_id):
+        if port_id in memo:
+            return memo[port_id]
+        if port_id in visiting:
+            _reject("endpoint.cyclic_readout", "A recurrent readout requires state reconstruction.")
+        visiting.add(port_id)
+        port = ports[port_id]
+        node = nodes[port.owner_component_id]
+        used_nodes.add(node.component_id)
+        if port_id not in node.output_port_ids or port.width != 1:
+            _reject("endpoint.scalar_output_required", "Event derivation currently requires scalar output ports.")
+        key = node.attrs.get("spec_key")
+        spec = kernel.op_specs.lookup_spec(key) if key else None
+        contract = None if spec is None else spec.likelihood_contract
+        if contract is None:
+            _reject("endpoint.contract_missing", "A readout dependency has no registered semantic contract.")
+        readout = contract.event_readout
+        if readout is not None and port.name == readout.output_port:
+            step = parameter(node, readout.step_parameter)
+            offset = parameter(node, readout.offset_parameter)
+            clocks[node.component_id] = (key, readout, step.identity)
+            result = binary("add", offset, binary("multiply", Expr("count", identity=node.component_id), step))
+        elif contract.value_rule == "affine":
+            if (
+                node.input_width != 1 or node.output_width != 1 or node.combine != "sum"
+                or any(name in node.attrs for name in ("clip", "integrator_pre", "noise"))
+                or any(state.component_id == node.component_id for state in graph.states)
+            ):
+                _reject("endpoint.affine_effects_unsupported", "The affine readout has unsupported width, combination, or state effects.")
+            terms = []
+            if any(item.component_id == node.component_id for item in graph.inputs):
+                terms.append(Expr("input", identity=node.component_id))
+            for projection in graph.projections:
+                if projection.receiver_component_id != node.component_id:
+                    continue
+                projection_spec = kernel.op_specs.lookup_spec(projection.spec_key)
+                projection_contract = projection_spec.likelihood_contract
+                if projection_contract is None or projection_contract.value_rule != "dense_projection":
+                    _reject("endpoint.projection_rule_missing", "An event projection has no registered dense linear rule.")
+                matrix = np.asarray(projection.matrix)
+                if matrix.shape != (1, 1) or not np.all(np.isfinite(matrix)):
+                    _reject("endpoint.projection_shape", "Event derivation currently requires finite scalar projections.")
+                used_projections.add(projection.projection_id)
+                coefficient = float(matrix[0, 0])
+                if coefficient != 0.0:
+                    terms.append(binary("multiply", visit(projection.sender_port_id), Expr("constant", value=coefficient)))
+            if not terms:
+                _reject("endpoint.input_missing", "No supplied input or projection establishes the readout value.")
+            combined = terms[0]
+            for term in terms[1:]:
+                combined = binary("add", combined, term)
+            result = binary("add", binary("multiply", parameter(node, "scale"), binary(
+                "add", binary("multiply", combined, parameter(node, "slope")), parameter(node, "intercept"),
+            )), parameter(node, "offset"))
+            if dynamic:
+                predicate = schedule[node.component_id]
+                event_ids = clock_ids(result)
+                if event_ids:
+                    if (
+                        predicate.condition_type != "WhenFinished"
+                        or set(predicate.dependency_component_ids) != event_ids
+                    ):
+                        _reject("endpoint.publication_unproven", "An event-dependent readout must execute after its event is finished.")
+                elif not (
+                    predicate.condition_type == "AtPass" and predicate.attrs.get("pass_index") == 0
+                ):
+                    _reject("endpoint.prelude_unproven", "Known readout inputs currently require an AtPass(0) prelude.")
+                for projection in graph.projections:
+                    if projection.receiver_component_id == node.component_id and np.any(projection.matrix):
+                        producer = schedule[projection.sender_component_id]
+                        if producer.consideration_set_id >= predicate.consideration_set_id:
+                            _reject("endpoint.publication_unproven", "Readout dependencies must publish in an earlier consideration set.")
+        else:
+            _reject("endpoint.readout_rule_missing", "The observed value is not a registered event readout or supported affine transform.")
+        visiting.remove(port_id)
+        memo[port_id] = result
+        return result
+
+    expression = visit(observation.port_id)
+    if len(clocks) != 1:
+        _reject("endpoint.clock_not_unique", "The observed readout must depend on exactly one event counter.")
+    clock_id, (key, readout, step_id) = next(iter(clocks.items()))
+    if dynamic:
+        termination_ids = {
+            component for item in graph.termination
+            if item.condition_type == "AllHaveRun" for component in item.dependency_component_ids
+        }
+        if observation.component_id not in termination_ids or not any(
+            item.component_id in termination_ids and item.condition_type == "WhenFinished"
+            and item.dependency_component_ids == (clock_id,) for item in graph.scheduler
+        ):
+            _reject("endpoint.termination_unproven", "Trial termination must require publication after the observed event finishes.")
+    return EndpointWitness(
+        observation, clock_id, key, readout.counter_state, readout.minimum_count,
+        step_id, expression, tuple(sorted(used_nodes)), tuple(sorted(used_projections)), tuple(sorted(used_params)),
+    )
+
+
+def validate_endpoint_witness(kernel, witness):
+    """Translation validation: replay the derivation against the source snapshot.
+
+    A caller-supplied expression/clock/guard cannot authorize reconstruction by
+    itself. This checker derives the expected translation from registered rules.
+    It is not a formal theorem checker or independent numerical oracle.
+    """
+    if type(witness) is not EndpointWitness or witness != derive_endpoint_witness(kernel, witness.observation):
+        _reject("endpoint.witness_mismatch", "Endpoint witness does not match the frozen source readout.")
+
+
+def discover_endpoints(kernel, observations):
+    witnesses, diagnostics = [], []
+    for observation in observations:
+        if observation.role != "event_time" or not observation.condition_history:
+            continue
+        try:
+            witnesses.append(derive_endpoint_witness(kernel, observation))
+        except EndpointReconstructionError as error:
+            diagnostics.append(LikelihoodDiagnostic(error.code, str(error), (observation.component_id,)))
+    return tuple(witnesses), tuple(diagnostics)
+
+
+def _enclose(lower, upper):
+    """Outward fp32 rounding, also enclosing an unrounded intermediate for FMA.
+
+    The envelope permits contraction of the declared add/multiply expression;
+    it does not cover arbitrary fast-math reassociation. Subnormal arithmetic
+    is rejected because backend flush-to-zero behavior is not specified here.
+    """
+    for value in (lower, upper):
+        if np.any((np.abs(value) > 0) & (np.abs(value) < np.finfo(np.float32).tiny)):
+            _reject("endpoint.arithmetic_domain", "Subnormal endpoint arithmetic is not supported.")
+    with np.errstate(over="ignore", invalid="ignore"):
+        lo = np.nextafter(np.asarray(lower, dtype=np.float32), np.float32(-np.inf)).astype(np.float64)
+        hi = np.nextafter(np.asarray(upper, dtype=np.float32), np.float32(np.inf)).astype(np.float64)
+    if not np.all(np.isfinite(lo)) or not np.all(np.isfinite(hi)):
+        _reject("endpoint.arithmetic_domain", "Endpoint arithmetic exceeds the finite fp32 domain.")
+    # Preserve exact zero to avoid creating subnormal uncertainty at every
+    # identity projection or zero offset.
+    exact_zero = (np.asarray(lower) == 0) & (np.asarray(upper) == 0)
+    return np.where(exact_zero, 0.0, lo), np.where(exact_zero, 0.0, hi)
+
+
+def _evaluate_enclosure(expr, parameters, inputs, counts):
+    if expr.kind == "count":
+        return counts, counts
+    if expr.kind == "parameter":
+        return parameters[expr.identity], parameters[expr.identity]
+    if expr.kind == "input":
+        return inputs[expr.identity], inputs[expr.identity]
+    if expr.kind == "constant":
+        value = float(np.float32(expr.value))
+        return value, value
+    left = _evaluate_enclosure(expr.arguments[0], parameters, inputs, counts)
+    right = _evaluate_enclosure(expr.arguments[1], parameters, inputs, counts)
+    if expr.kind == "add":
+        return _enclose(left[0] + right[0], left[1] + right[1])
+    if expr.kind == "multiply":
+        products = np.broadcast_arrays(*(a * b for a in left for b in right))
+        return _enclose(np.minimum.reduce(products), np.maximum.reduce(products))
+    _reject("endpoint.expression_invalid", "Unknown endpoint arithmetic operation.")
+
+
+@dataclass(frozen=True)
+class ObservedEndpointPlan:
+    """CPU reference reconstruction with explicit per-candidate runtime guards.
+
+    Success establishes a unique count inside the bounded roundoff enclosure.
+    It does not establish nonzero likelihood, observation-law equivalence, a
+    complete scheduler history, or a formal floating-point certificate.
+    """
+
+    witnesses: tuple[EndpointWitness, ...]
+    simulation_plan: object = field(repr=False, compare=False)
+    observations: tuple[ResolvedObservationField, ...]
+
+    @property
+    def column_count(self):
+        return sum(observation.width for observation in self.observations)
+
+    def reconstruct(self, inputs, data, parameter_sets=None):
+        """Return integer counts shaped [candidate, trial, event] for one subject.
+
+        No nearest-bin/ceil policy is applied. Zero compatible counts or more
+        than one count in the roundoff envelope raise a structured error.
+        """
+        plan = self.simulation_plan
+        column, seen = 0, set()
+        for observation in self.observations:
+            if observation.column_start != column or observation.port_id in seen:
+                _reject("endpoint.observation_layout", "Observation columns/ports do not form a unique contiguous layout.")
+            column += observation.width
+            seen.add(observation.port_id)
+        if tuple(witness.observation for witness in self.witnesses) != tuple(
+            observation for observation in self.observations
+            if observation.role == "event_time" and observation.condition_history
+        ):
+            _reject("endpoint.witness_mismatch", "Endpoint witnesses do not match the declared observation fields.")
+        for witness in self.witnesses:
+            validate_endpoint_witness(plan.kernel_ir, witness)
+        if not self.witnesses:
+            _reject("endpoint.no_events", "No endpoint witnesses were supplied.")
+        if not 1 <= plan.ir.max_steps <= FP32_EXACT_INTEGER_LIMIT:
+            _reject("endpoint.count_domain", "Event counts must fit the exact fp32 integer domain.")
+        observations = np.asarray(data, dtype=np.float64)
+        if observations.ndim != 2 or observations.shape[1] != self.column_count or not len(observations):
+            _reject("endpoint.data_shape", "Data must have one row per trial and the declared observation columns.")
+        rows = normalize_parameter_sets(parameter_sets, plan.ir)
+        if not rows:
+            _reject("endpoint.empty_candidates", "At least one parameter candidate is required.")
+        prepared = prepare_inputs(plan.ir, inputs, parameter_sets=rows, component_bindings=plan.component_bindings)
+        first_input = next(iter(prepared.values()))
+        if first_input.shape[:2] != (1, len(observations)):
+            _reject("endpoint.data_shape", "Endpoint reconstruction currently accepts one contiguous subject with matching trial inputs.")
+        buffers, _ = prepare_parameter_values(plan.ir, rows, num_subjects=1, num_trials=len(observations))
+        result = np.empty((len(rows), len(observations), len(self.witnesses)), dtype=np.int64)
+        for candidate in range(len(rows)):
+            for trial in range(len(observations)):
+                parameters = {
+                    spec.parameter_id: float(buffer[candidate] if buffer.ndim == 1 else buffer[candidate, 0, trial])
+                    for spec, buffer in zip(plan.ir.params, buffers)
+                }
+                trial_inputs = {
+                    item.component_id: float(np.asarray(prepared[item.node][0, trial]).reshape(-1)[0])
+                    for item in plan.ir.graph.inputs if item.width == 1
+                }
+                for event, witness in enumerate(self.witnesses):
+                    observed = observations[trial, witness.observation.column_start]
+                    location = f"candidate {candidate}, trial {trial}, event {event}"
+                    if not np.isfinite(observed):
+                        _reject("endpoint.observation_nonfinite", f"Missing or nonfinite event at {location}.")
+                    if any(not np.isfinite(parameters[i]) for i in witness.parameter_ids):
+                        _reject("endpoint.parameter_nonfinite", f"Nonfinite readout parameter at {location}.")
+                    if not np.all(np.isfinite(tuple(trial_inputs.values()))):
+                        _reject("endpoint.input_nonfinite", f"Nonfinite readout input at {location}.")
+                    if parameters[witness.step_parameter_id] <= 0:
+                        _reject("endpoint.step_nonpositive", f"Event step size must be positive at {location}.")
+                    matches = []
+                    for start in range(witness.minimum_count, plan.ir.max_steps + 1, 256):
+                        counts = np.arange(start, min(start + 256, plan.ir.max_steps + 1), dtype=np.float64)
+                        lower, upper = _evaluate_enclosure(witness.expression, parameters, trial_inputs, counts)
+                        matches.extend(counts[(observed >= lower) & (observed <= upper)].astype(np.int64).tolist())
+                        if len(matches) > 1:
+                            _reject("endpoint.count_ambiguous", f"Multiple event counts are compatible with {location}.")
+                    if not matches:
+                        _reject("endpoint.count_incompatible", f"No event count within the step cap is compatible with {location}.")
+                    result[candidate, trial, event] = matches[0]
+        result.flags.writeable = False
+        return result
+
+
+def compile_observed_endpoints(simulation_plan, observations):
+    from psyneulink.core.batched.observation import resolve_observations
+
+    resolved = resolve_observations(
+        observations, simulation_plan.ir.graph, simulation_plan.component_bindings,
+    )
+    witnesses, diagnostics = discover_endpoints(simulation_plan.kernel_ir, resolved)
+    if diagnostics:
+        first = diagnostics[0]
+        _reject(first.code, first.detail)
+    if not witnesses:
+        _reject("endpoint.no_events", "No reconstructible conditioning events were declared.")
+    return ObservedEndpointPlan(witnesses, simulation_plan, resolved)

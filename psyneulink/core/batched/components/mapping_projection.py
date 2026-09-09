@@ -1,7 +1,9 @@
 """Batched op for dense `MappingProjection`."""
 
 from psyneulink.core.batched.backend.triton.api import pnl_triton_op
-from psyneulink.core.batched.specs import DenseProjectionSpec, register_batched_op
+from psyneulink.core.batched.specs import (
+    DenseProjectionSpec, LikelihoodEffectContract, register_batched_op,
+)
 from psyneulink.core.components.projections.pathway.mappingprojection import (
     MappingProjection,
 )
@@ -30,5 +32,6 @@ register_batched_op(
     DenseProjectionSpec(
         projection_class=MappingProjection,
         triton_emit=_mapping_triton_emit,
+        likelihood_contract=LikelihoodEffectContract(value_rule="dense_projection"),
     )
 )

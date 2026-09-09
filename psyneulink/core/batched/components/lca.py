@@ -14,6 +14,7 @@ from psyneulink.core.batched.condition_validation import is_canonical_condition
 from psyneulink.core.batched.diagnostics import BatchedDiagnostic
 from psyneulink.core.batched.ir import FP32_EXACT_INTEGER_LIMIT
 from psyneulink.core.batched.specs import (
+    LikelihoodEffectContract,
     MechanismOpSpec,
     ParamBinding,
     StateDecl,
@@ -703,5 +704,6 @@ register_batched_op(
         triton_emit=_lca_triton_emit,
         step_emit=_lca_step_emit,
         finished_after_execution_count=_lca_finished_after_execution_count,
+        likelihood_contract=LikelihoodEffectContract(),
     )
 )

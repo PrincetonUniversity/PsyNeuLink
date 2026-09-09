@@ -15,8 +15,11 @@ an ordinary fixed-threshold DDM).
 
 import psyneulink as pnl
 
+from psyneulink.core.batched.likelihood_ir import EventCountReadout
+
 from psyneulink.core.batched.backend.triton.api import TritonOpCall, pnl_triton_op
 from psyneulink.core.batched.specs import (
+    LikelihoodEffectContract,
     StateDecl,
     batched_op,
     param,
@@ -281,6 +284,14 @@ def _ddm_readout_emit(ctx, node_spec, output_vars):
     ),
     finished_output="finished",
     helpers=(_pnl_triton_ddm_update,),
+    likelihood_contract=LikelihoodEffectContract(
+        randomness="declared_streams",
+        event_readout=EventCountReadout(
+            output_port="RESPONSE_TIME", counter_state="steps",
+            step_parameter="time_step_size", offset_parameter="non_decision_time",
+            execution_rule="one_step_until_finished",
+        ),
+    ),
 )
 def ddm_integrate(
     x,

@@ -49,6 +49,8 @@ from typing import Any
 
 import numpy as np
 
+from psyneulink.core.batched.likelihood_ir import LikelihoodEffectContract
+
 from psyneulink.core.batched.backend.triton.api import (
     TritonOpCall,
     TritonOpTemplate,
@@ -205,6 +207,7 @@ class ElementwiseFunctionSpec:
     body: Callable
     triton_template: TritonOpTemplate | None = None
     key: str = ""
+    likelihood_contract: LikelihoodEffectContract | None = None
 
 
 @dataclass(frozen=True)
@@ -217,6 +220,7 @@ class PassthroughMechanismSpec:
 
     mechanism_class: type
     key: str = ""
+    likelihood_contract: LikelihoodEffectContract | None = None
 
 
 @dataclass(frozen=True)
@@ -226,6 +230,7 @@ class DenseProjectionSpec:
     projection_class: type
     triton_emit: Callable | None = None
     key: str = ""
+    likelihood_contract: LikelihoodEffectContract | None = None
 
 
 @dataclass(frozen=True)
@@ -274,6 +279,7 @@ class MechanismOpSpec:
     # The hook runs during graph lowering and must return a positive ``int`` or
     # ``None``; no live PNL object is retained in GraphIR.
     finished_after_execution_count: Callable | None = None
+    likelihood_contract: LikelihoodEffectContract | None = None
 
     @property
     def persistent_state(self) -> bool:
@@ -373,6 +379,7 @@ def register_batched_op(spec):
     else:
         raise BatchedOpSpecError(f"Unknown batched op spec type '{type(spec).__name__}'.")
 
+    _validate_likelihood_contract(spec)
     spec = replace(spec, key=spec_key(target))
     table[target] = spec
     _SPECS_BY_KEY[spec.key] = spec
@@ -389,6 +396,7 @@ def register_batched_instance_op(node_name: str, spec: MechanismOpSpec) -> Mecha
     never affects other nodes of the same class.
     """
 
+    _validate_likelihood_contract(spec)
     spec = replace(spec, key=f"instance:{node_name}")
     _INSTANCE_SPECS[node_name] = spec
     _SPECS_BY_KEY[spec.key] = spec
@@ -454,6 +462,46 @@ def ensure_builtin_specs() -> None:
     _BUILTINS_REGISTERED = True
 
 
+def _validate_likelihood_contract(spec):
+    contract = spec.likelihood_contract
+    if contract is None:
+        return
+    if type(contract) is not LikelihoodEffectContract:
+        raise BatchedOpSpecError("likelihood_contract must be a LikelihoodEffectContract.")
+    has_rng = isinstance(spec, MechanismOpSpec) and bool(spec.rng)
+    if has_rng != (contract.randomness == "declared_streams"):
+        raise BatchedOpSpecError("Likelihood contract must agree with declared RNG streams.")
+    if contract.value_rule == "affine" and (
+        not isinstance(spec, ElementwiseFunctionSpec)
+        or not {"slope", "intercept", "scale", "offset"} <= {p.arg for p in spec.params}
+    ):
+        raise BatchedOpSpecError("Affine likelihood rules require an elementwise affine signature.")
+    if contract.value_rule == "dense_projection" and not isinstance(spec, DenseProjectionSpec):
+        raise BatchedOpSpecError("Dense likelihood rules require a projection implementation.")
+    readout = contract.event_readout
+    if readout is not None and (
+        not isinstance(spec, MechanismOpSpec)
+        or not spec.finished_output
+        or readout.counter_state not in {s.name for s in spec.trial_states}
+        or not {readout.step_parameter, readout.offset_parameter} <= {p.arg for p in spec.params}
+        or (readout.output_port, 1) not in {(o.port, o.width) for o in (spec.outputs or ())}
+    ):
+        raise BatchedOpSpecError("Event readout must bind a scalar output, trial counter, and parameters.")
+    if readout is not None and readout.execution_rule == "one_step_until_finished":
+        # This stronger author contract permits replacing the stopping event,
+        # not just reading its final count. Both clock states start at zero.
+        declarations = {state.name: state for state in spec.trial_states}
+        if readout.counter_state == spec.finished_output:
+            raise BatchedOpSpecError("Event count and finished flag must be distinct states.")
+        for name in (readout.counter_state, spec.finished_output):
+            state = declarations.get(name)
+            if (state is None or state.width != 1 or state.initial_parameter
+                    or state.initialize_with_function or state.initial != 0.0):
+                raise BatchedOpSpecError("Event execution requires zero-initialized scalar count and finished states.")
+        if readout.minimum_count != 1:
+            raise BatchedOpSpecError("One-step event execution requires minimum_count=1.")
+
+
 def batched_op(
     component_class: type,
     *,
@@ -471,6 +519,7 @@ def batched_op(
     finished_output: str = "",
     finished_after_execution_count: Callable | None = None,
     helpers: tuple = (),
+    likelihood_contract: LikelihoodEffectContract | None = None,
 ):
     """Register a batched op for ``component_class`` from its kernel body.
 
@@ -500,6 +549,10 @@ def batched_op(
     equivalent to a fixed positive number of scheduled calls.  It declares
     semantics only; backend execution remains subject to the scheduler
     capability boundary.
+
+    ``likelihood_contract`` optionally asserts complete state and RNG effects
+    for likelihood analysis. It is a trusted declaration frozen with this op;
+    omission leaves simulation support unchanged but blocks likelihood analysis.
     """
 
     def decorate(body):
@@ -513,6 +566,7 @@ def batched_op(
                 body,
                 bind or {},
                 helpers=tuple(helpers),
+                likelihood_contract=likelihood_contract,
             )
         else:
             _register_mechanism_op(
@@ -532,6 +586,7 @@ def batched_op(
                 finished_output=finished_output,
                 finished_after_execution_count=finished_after_execution_count,
                 helpers=tuple(helpers),
+                likelihood_contract=likelihood_contract,
             )
         return body
 
@@ -543,6 +598,7 @@ def batched_node_op(
     *,
     outputs=None,
     constexpr: tuple[str, ...] = (),
+    likelihood_contract: LikelihoodEffectContract | None = None,
 ):
     """Register a batched op for a single node, supplying a whole-input-vector body.
 
@@ -569,6 +625,9 @@ def batched_node_op(
 
     (Binding extra ``tl`` arguments to node ``Parameters`` or RNG streams is not
     supported yet — input components only.)
+
+    ``likelihood_contract`` is an optional trusted effect declaration. A UDF
+    is not presumed pure merely because a Triton body was registered.
     """
 
     def decorate(body):
@@ -610,6 +669,7 @@ def batched_node_op(
                 display_name=node_name,
                 outputs=_normalize_outputs(outputs),
                 triton_emit=_instance_triton_emit,
+                likelihood_contract=likelihood_contract,
             ),
         )
         return body
@@ -621,7 +681,9 @@ def _safe_ident(name: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in name)
 
 
-def _register_function_op(function_class, body, bind, *, helpers=()):
+def _register_function_op(
+    function_class, body, bind, *, helpers=(), likelihood_contract=None,
+):
     arg_names = _signature_args(body)
     if not arg_names or arg_names[0] != INPUT_ARG:
         raise BatchedOpSpecError(
@@ -649,6 +711,7 @@ def _register_function_op(function_class, body, bind, *, helpers=()):
             params=params,
             body=body,
             triton_template=template,
+            likelihood_contract=likelihood_contract,
         )
     )
 
@@ -671,6 +734,7 @@ def _register_mechanism_op(
     finished_output="",
     finished_after_execution_count=None,
     helpers=(),
+    likelihood_contract=None,
 ):
     template = pnl_triton_op(
         name=f"_pnl_triton_{mechanism_class.__name__.lower()}",
@@ -701,6 +765,7 @@ def _register_mechanism_op(
             trial_states=tuple(trial_states),
             finished_output=finished_output,
             finished_after_execution_count=finished_after_execution_count,
+            likelihood_contract=likelihood_contract,
         )
     )
 

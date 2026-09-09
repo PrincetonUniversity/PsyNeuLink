@@ -483,6 +483,7 @@ def _run_stateful_graph_kernel(
     launch=None, initial_states=None, return_final_states=False,
     rng_trial_offset=0, rng_sequence_trials=None,
     defer_device_checks=False,
+    extra_kernel_args=(),
 ):
     graph = ir.graph
     input_tensors = _input_tensors(torch, graph, inputs, device)
@@ -544,6 +545,7 @@ def _run_stateful_graph_kernel(
         *(() if diag is None else (diag,)),
         initial_state, final_state, use_initial_state, bool(return_final_states),
         total_lanes, num_subjects, num_estimates, num_trials,
+        *extra_kernel_args,
         LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed),

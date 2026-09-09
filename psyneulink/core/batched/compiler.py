@@ -29,6 +29,68 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
+    def compile_history_replay(
+        composition, observations, backend="triton_cpu", max_steps=None,
+        *, ignored_control_nodes=(),
+    ):
+        """Build checked single-subject history replay, not a likelihood kernel."""
+        endpoints = BatchedCompositionCompiler.compile_observed_endpoints(
+            composition, observations, backend=backend, max_steps=max_steps,
+            ignored_control_nodes=ignored_control_nodes,
+        )
+        return endpoints.simulation_plan.compile_history_replay(observations)
+
+    @staticmethod
+    def compile_observed_endpoints(
+        composition, observations, backend="triton_cpu", max_steps=None,
+        *, ignored_control_nodes=(),
+    ):
+        """Build guarded CPU event-count reconstruction, not a likelihood kernel."""
+        from psyneulink.core.batched.observation import ObservationSpec
+
+        _validate_backend(backend)
+        if type(observations) is not ObservationSpec:
+            raise TypeError("observations must be an ObservationSpec.")
+        report, ir, bindings, kernel = analyze_composition(
+            composition, backend=backend, outputs=observations.output_ports,
+            max_steps=max_steps, ignored_control_nodes=ignored_control_nodes,
+        )
+        if ir is None or kernel is None:
+            raise BatchedCompileError(
+                "Endpoint reconstruction requires a supported simulation IR: "
+                + "; ".join(report.unsupported_reasons), capability_report=report,
+            )
+        plan = BatchedSimulationPlan(ir, backend, report, kernel, bindings)
+        return plan.compile_observed_endpoints(observations)
+
+    @staticmethod
+    def diagnose_likelihood(
+        composition,
+        observations,
+        backend: str = "triton_cpu",
+        max_steps: int | None = None,
+        *,
+        ignored_control_nodes=(),
+    ):
+        """Diagnose trial factorization; does not compile a likelihood kernel.
+
+        Observation semantics are explicit and eligibility is reported
+        separately from code-generation and device availability. Persistent
+        history candidates retain their unresolved reconstruction obligations.
+        """
+        from psyneulink.core.batched.likelihood_analysis import analyze_likelihood
+        from psyneulink.core.batched.observation import ObservationSpec
+
+        _validate_backend(backend)
+        if type(observations) is not ObservationSpec:
+            raise TypeError("observations must be an ObservationSpec.")
+        report, ir, bindings, kernel = analyze_composition(
+            composition, backend=backend, outputs=observations.output_ports,
+            max_steps=max_steps, ignored_control_nodes=ignored_control_nodes,
+        )
+        return analyze_likelihood(report, ir, kernel, bindings, observations)
+
+    @staticmethod
     def diagnose(
         composition,
         backend: str = "triton_cpu",
@@ -92,6 +154,27 @@ class BatchedSimulationPlan:
     # emitted; recompiling it here would reopen the registry-mutation race.
     kernel_ir: KernelIR = field(repr=False)
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
+
+    def compile_history_replay(self, observations):
+        """Check observed-event replay against this frozen simulation snapshot."""
+        from psyneulink.core.batched.history import compile_history_replay
+
+        return compile_history_replay(self, observations)
+
+    def compile_observed_endpoints(self, observations):
+        """Derive checked event readouts using this plan's implementation snapshot."""
+        from psyneulink.core.batched.endpoints import compile_observed_endpoints
+
+        return compile_observed_endpoints(self, observations)
+
+    def diagnose_likelihood(self, observations):
+        """Analyze observations against this plan's frozen implementation snapshot."""
+        from psyneulink.core.batched.likelihood_analysis import analyze_likelihood
+
+        return analyze_likelihood(
+            self.capability_report, self.ir, self.kernel_ir,
+            self.component_bindings, observations,
+        )
 
     def run(
         self,
