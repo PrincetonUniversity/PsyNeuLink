@@ -939,6 +939,7 @@ class ParameterEstimationComposition(Composition):
                 else:
                     runner.release()
         else:
+            provider.warn_if_costly_in_process()
             runner = make_inprocess_estep_runner(provider.log_likelihood, transform, config)
             em = fit_laplace_em(runner, provider.n_subjects, provider.n_params, **fit_kwargs)
 
