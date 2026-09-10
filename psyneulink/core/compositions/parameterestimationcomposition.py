@@ -731,7 +731,7 @@ class ParameterEstimationComposition(Composition):
 
                 # If the include mask is 2D, make it 1D
                 if likelihood_include_mask.ndim == 2:
-                    likelihood_include_mask = likelihood_include_mask.flatten()
+                    likelihood_include_mask = likelihood_include_mask.ravel()
 
                 self.likelihood_include_mask = likelihood_include_mask
 

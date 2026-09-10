@@ -2136,8 +2136,7 @@ class GridSearch(OptimizationFunction):
 
                 # Find the optimal value(s)
                 optimal_value_count = 1
-                value_sample_pairs = zip(all_values.flatten(),
-                                         [all_samples[:,i] for i in range(all_samples.shape[1])])
+                value_sample_pairs = zip(all_values.ravel(), [all_samples[:,i] for i in range(all_samples.shape[1])])
                 optimal_value, optimal_sample = next(value_sample_pairs)
 
                 # The algorithm below implements "Reservoir sampling"[0]. This

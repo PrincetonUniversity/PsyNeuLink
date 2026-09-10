@@ -2868,9 +2868,7 @@ class TestNestedNoLearning:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff = AutodiffComposition(
-            learning_rate=learning_rate,
-        )
+        xor_autodiff = AutodiffComposition(learning_rate=learning_rate)
 
         xor_autodiff.add_node(xor_in)
         xor_autodiff.add_node(xor_hid)
@@ -2887,15 +2885,20 @@ class TestNestedNoLearning:
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
 
-        input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(xor_autodiff.learning_results).flatten()
-        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
+        xor_autodiff.learn(inputs=input_dict,
+                           execution_mode=autodiff_mode,
+                           epochs=num_epochs,
+                           context=learning_context,
+                           patience=patience,
+                           min_delta=min_delta)
 
+        result1 = np.array(xor_autodiff.learning_results).ravel()
+        np.testing.assert_allclose(result1, np.array(xor_targets).ravel(), atol=0.1)
+
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
         np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
