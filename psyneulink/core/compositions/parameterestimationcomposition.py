@@ -911,6 +911,14 @@ class ParameterEstimationComposition(Composition):
 
     def _validate_likelihood_estimator(self):
         """Check the likelihood settings before anything is built from them."""
+        if self._fit_method == "hierarchical" and (
+            self._likelihood_estimator != "kde" or self._likelihood_estimator_kwargs
+        ):
+            raise ParameterEstimationCompositionError(
+                "likelihood_estimator describes how a model is scored, which a hierarchical "
+                "fit takes from the pec_factory in distributed_options along with the model "
+                "itself. Set it on the participant models the factory builds, not here."
+            )
         if self._likelihood_estimator == "kde":
             if self._likelihood_estimator_kwargs:
                 raise ParameterEstimationCompositionError(
@@ -1306,12 +1314,13 @@ class ParameterEstimationComposition(Composition):
         return ocm
 
     def _setup_neural_likelihood(self, inputs=None):
-        """Load the trained estimator and check it was trained for this model.
+        """Point the optimization function at the estimator, for the trials of this call.
 
-        Deferred until the first fit because the fitted parameters and their ranges are
-        only known once the controller exists.
+        The estimator is loaded and held to this model once.  Which trials it scores, and
+        what distinguishes one from another, are prepared on every call, since the inputs
+        and the rows to include can differ between them.
         """
-        if self._likelihood_estimator != "neural" or self._neural_likelihood is not None:
+        if self._likelihood_estimator != "neural":
             return
 
         from psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions import (
@@ -1322,25 +1331,30 @@ class ParameterEstimationComposition(Composition):
             _reported_names,
         )
 
-        artifact = self._likelihood_estimator_kwargs["artifact"]
-        likelihood = (
-            artifact
-            if isinstance(artifact, NeuralLikelihood)
-            else NeuralLikelihood.load(artifact)
-        )
+        if self._neural_likelihood is None:
+            artifact = self._likelihood_estimator_kwargs["artifact"]
+            likelihood = (
+                artifact
+                if isinstance(artifact, NeuralLikelihood)
+                else NeuralLikelihood.load(artifact)
+            )
 
-        bounds = self.controller.function.fit_param_bounds
-        categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
-        # A model reports its parameters as ``<mechanism>.<parameter>``, and the mechanism
-        # part carries a number assigned in construction order, so it cannot be matched
-        # against the names an estimator was trained under.
-        likelihood.provenance.check_matches(
-            _reported_names(self.controller.function.fit_param_names),
-            [bounds[name][0] for name in bounds],
-            [bounds[name][1] for name in bounds],
-            tuple(str(c) for c in self.data.columns),
-            categorical,
-        )
+            bounds = self.controller.function.fit_param_bounds
+            categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
+            # A model reports its parameters as ``<mechanism>.<parameter>``, and the mechanism
+            # part carries a number assigned in construction order, so it cannot be matched
+            # against the names an estimator was trained under.
+            likelihood.provenance.check_matches(
+                _reported_names(self.controller.function.fit_param_names),
+                [bounds[name][0] for name in bounds],
+                [bounds[name][1] for name in bounds],
+                tuple(str(c) for c in self.data.columns),
+                categorical,
+            )
+            self._neural_likelihood = likelihood
+
+        likelihood = self._neural_likelihood
+        included = self.likelihood_include_mask
 
         features = None
         if likelihood.provenance.n_trial_features:
@@ -1352,11 +1366,13 @@ class ParameterEstimationComposition(Composition):
                     f"from the composition's inputs, so fitting requires inputs that vary "
                     f"across trials in the same way. Pass the same inputs used for training."
                 )
+            features = features[included]
 
+        # Excluded trials are dropped rather than scored, as they are for a simulated
+        # likelihood, which sums the density over the included rows alone.
         self.controller.function.set_neural_likelihood(
-            likelihood, self._data_numpy, features
+            likelihood, self._data_numpy[included], features
         )
-        self._neural_likelihood = likelihood
 
     @handle_external_context()
     def run(self, *args, context=None, **kwargs):
