@@ -49,14 +49,14 @@ warnings.filterwarnings("ignore", message=r"The following arg\(s\) were not spec
 import optuna  # noqa: E402
 
 import psyneulink as pnl  # noqa: E402
-from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op  # noqa: E402
+from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op, LikelihoodEffectContract  # noqa: E402
 
 from csi_model_surrogate import make_stab_flex, generate_mixed_task_sequence  # noqa: E402
 
 
 # The CSI drift-rate node is a UserDefinedFunction (nested logistic, 7 -> 1); it
 # needs an instance-level batched op registered before the model can compile.
-@batched_node_op("Drift Rate Value")
+@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _drift_rate(x0, x1, x2, x3, x4, x5, x6):
     a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
     b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))

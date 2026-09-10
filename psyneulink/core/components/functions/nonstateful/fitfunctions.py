@@ -618,12 +618,12 @@ class PECOptimizationFunction(OptimizationFunction):
         co-evolving compiler and uses the batched histogram observation model.
 
     deterministic_history_likelihood :
-        If True, use the CUDA CSI specialization for a deterministic persistent
-        LCA.  It advances one observed LCA history per parameter set, caches the
+        If True, use generated CUDA choice/RT likelihood compilation for a deterministic persistent
+        history. It advances one observed history per parameter set, caches the
         resulting within-trial drift paths, and simulates only the DDM estimates
         in parallel.  This is substantially cheaper than particle filtering but
-        is deliberately restricted to the authenticated CSI graph with zero LCA
-        noise.
+        requires checked deterministic-history structure and registered likelihood
+        effects. The handwritten CSI oracle is available only by explicit selection.
 
     batched_observations :
         Optional ObservationSpec selecting the generic compiled histogram
@@ -632,6 +632,16 @@ class PECOptimizationFunction(OptimizationFunction):
         raise instead of falling back to CSI code. Mutually exclusive with
         conditioned_likelihood and deterministic_history_likelihood. This is
         an opt-in migration path, not a change to existing fitting defaults.
+
+    batched_history_implementation :
+        Implementation for deterministic_history_likelihood: "generated"
+        (default) uses checked generic compilation; "handwritten" explicitly
+        selects the retained CSI oracle. There is no automatic fallback.
+
+    batched_likelihood_buffer_bytes :
+        Positive generated-likelihood buffer budget (default 1 GiB). Smaller
+        budgets microbatch candidates without splitting their trial histories.
+        Excludes framework/compiler workspace; not used by the handwritten oracle.
 
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
@@ -696,6 +706,8 @@ class PECOptimizationFunction(OptimizationFunction):
         conditioned_likelihood: bool = False,
         deterministic_history_likelihood: bool = False,
         batched_observations=None,
+        batched_history_implementation: str = "generated",
+        batched_likelihood_buffer_bytes: int = 1024**3,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -721,6 +733,14 @@ class PECOptimizationFunction(OptimizationFunction):
         self.conditioned_likelihood = conditioned_likelihood
         self.deterministic_history_likelihood = deterministic_history_likelihood
         self.batched_observations = batched_observations
+        if batched_history_implementation not in ("generated", "handwritten"):
+            raise ValueError("batched_history_implementation must be 'generated' or 'handwritten'.")
+        if batched_history_implementation == "handwritten" and not deterministic_history_likelihood:
+            raise ValueError("The handwritten oracle requires deterministic_history_likelihood=True.")
+        self.batched_history_implementation = batched_history_implementation
+        if type(batched_likelihood_buffer_bytes) is not int or batched_likelihood_buffer_bytes < 1:
+            raise ValueError("batched_likelihood_buffer_bytes must be a positive integer.")
+        self.batched_likelihood_buffer_bytes = batched_likelihood_buffer_bytes
         if batched_observations is not None:
             from psyneulink.core.batched.observation import ObservationSpec
 
@@ -1112,6 +1132,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     seed=0 if seed is None else int(seed), include_mask=include_mask,
                     execution="strict" if self.batched_strict_truncation else "window",
                     triton_launch_options=self.batched_triton_launch_options,
+                    max_buffer_bytes=self.batched_likelihood_buffer_bytes,
                 )
                 return np.asarray(result.log_likelihood, dtype=float).reshape(-1)
             outcome_indices = self._batched_outcome_indices(plan)
@@ -1140,6 +1161,8 @@ class PECOptimizationFunction(OptimizationFunction):
                 seed=seed,
                 strict_truncation=self.batched_strict_truncation,
                 triton_launch_options=self.batched_triton_launch_options,
+                **({"implementation": self.batched_history_implementation, "max_buffer_bytes": self.batched_likelihood_buffer_bytes}
+                   if self.deterministic_history_likelihood else {}),
             )
             return np.asarray(result, dtype=float).reshape(-1)
 

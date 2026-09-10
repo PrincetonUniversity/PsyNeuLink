@@ -55,6 +55,8 @@ class HistoryReplayWitness:
     component_ids: tuple[int, ...]
     resolved_termination_edges: tuple[AxisDependencyEdge, ...]
     guarantee: str = "registered_contracts_with_checked_event_replay"
+    zero_step_gate_component: int | None = None
+    zero_step_gate_finished: int | None = None
 
 
 @dataclass(frozen=True)

@@ -400,8 +400,8 @@ def _affine_timing_coefficients(expr, parameters, inputs):
     _reject("endpoint.ceiling_nonaffine", "Ceiling history timing requires an affine count readout.")
 
 
-def _ceil_history_counts(expression, parameters, inputs, observed, minimum, maximum):
-    """Positive-count projection, not exact conditioning or a recording model."""
+def _ceil_history_counts(expression, parameters, inputs, observed, minimum, maximum, *, allow_zero=False):
+    """Declared count projection, not exact conditioning or a recording model."""
     offset, slope, _ = _affine_timing_coefficients(expression, parameters, inputs)
     if not np.all(np.isfinite(offset)) or not np.all(np.isfinite(slope)) or not np.all(np.asarray(slope) > 0):
         _reject("endpoint.ceiling_direction", "Ceiling history timing requires a finite strictly increasing affine readout.")
@@ -415,7 +415,7 @@ def _ceil_history_counts(expression, parameters, inputs, observed, minimum, maxi
         projected = np.where(snap, nearest, np.ceil(ratio))
     if not np.all(np.isfinite(projected)) or not np.all(np.isfinite(fp32)):
         _reject("endpoint.arithmetic_domain", "Ceiling projection exceeds the finite arithmetic domain.")
-    if np.any(projected < minimum):
+    if np.any((projected < minimum) & ((projected != 0) if allow_zero else True)):
         _reject("endpoint.projected_count_below_minimum", "Ceiling timing produced a zero-step history; this replay tier requires at least one event step.")
     if np.any(projected > maximum):
         _reject("endpoint.projected_count_above_cap", "Ceiling timing exceeds the source event step cap.")
@@ -451,7 +451,8 @@ class ObservedEndpointPlan:
         roundoff envelope. ``auto`` uses checked interval inversion with
         exhaustive fallback; ``exhaustive`` selects enumeration for validation.
         Explicit ``ceil_fp32_8ulp`` timing instead projects an affine readout
-        to a positive count (auto only); this is not exact conditioning.
+        to a nonnegative count (auto only); zero requires the separate checked
+        replay extension and is not exact conditioning or a forward event.
         """
         if method not in ("auto", "exhaustive"):
             raise ValueError("Endpoint reconstruction method must be 'auto' or 'exhaustive'.")
@@ -516,7 +517,7 @@ class ObservedEndpointPlan:
                 if method != "auto":
                     raise ValueError("Exhaustive exact inversion does not implement ceiling history projection.")
                 result[..., event] = _ceil_history_counts(
-                    witness.expression, relevant, trial_inputs, observed, witness.minimum_count, plan.ir.max_steps,
+                    witness.expression, relevant, trial_inputs, observed, witness.minimum_count, plan.ir.max_steps, allow_zero=True,
                 ).reshape(shape)
                 continue
             counts = (np.zeros(len(observed), dtype=np.int64) if method == "exhaustive" else

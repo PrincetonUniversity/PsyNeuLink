@@ -10,7 +10,7 @@ import copy
 import math
 from datetime import datetime
 from pathlib import Path
-from psyneulink.core.batched import batched_node_op
+from psyneulink.core.batched import batched_node_op, LikelihoodEffectContract
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_FILE = SCRIPT_DIR / "data_to_fit_study3.csv"
@@ -52,6 +52,10 @@ parser.add_argument(
     help="Fail the likelihood evaluation if any DDM reaches --max-steps.",
 )
 parser.add_argument("--bins", default=100, type=int)
+parser.add_argument("--history-implementation", choices=["generated", "handwritten"], default="generated",
+                    help="Deterministic-history backend; handwritten is retained only as an explicit CSI oracle.")
+parser.add_argument("--likelihood-buffer-mib", type=int, default=1024,
+                    help="Generated likelihood buffer budget; lower values microbatch candidates.")
 parser.add_argument(
     "--smoothing_sigma",
     "--smoothing-sigma",
@@ -113,8 +117,8 @@ parser.add_argument(
         "same 11-member population one candidate at a time."
     ),
 )
-parser.add_argument("--triton_block_size", "--triton-block-size", default=128, type=int)
-parser.add_argument("--triton_num_warps", "--triton-num-warps", default=4, type=int)
+parser.add_argument("--triton_block_size", "--triton-block-size", default=32, type=int)
+parser.add_argument("--triton_num_warps", "--triton-num-warps", default=1, type=int)
 parser.add_argument("--triton_maxnreg", "--triton-maxnreg", default=None, type=int)
 parser.add_argument(
     "--skip_posterior_predictive",
@@ -201,10 +205,14 @@ if args.max_steps is None:
     )
 if args.max_steps < 1:
     parser.error("--max-steps must be positive.")
+if args.likelihood_buffer_mib < 1:
+    parser.error("--likelihood-buffer-mib must be positive.")
 if args.backend == "llvm" and (args.smoothing_sigma != 0 or args.pseudocount != 0):
     parser.error("--smoothing-sigma and --pseudocount require a batched backend.")
 if args.deterministic_observed_history and args.backend != "triton":
     parser.error("--deterministic-observed-history requires --backend triton.")
+if args.history_implementation == "handwritten" and not args.deterministic_observed_history:
+    parser.error("--history-implementation handwritten requires --deterministic-observed-history.")
 if args.deterministic_observed_history and not args.condition_observed_history:
     parser.error(
         "--deterministic-observed-history conflicts with "
@@ -229,7 +237,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from expectation_model_study2_study3 import make_stab_flex  # noqa: E402
 
 
-@batched_node_op("Drift Rate Value")
+@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _batched_drift_rate(x0, x1, x2, x3, x4, x5, x6):
     """Triton implementation of the model's seven-input drift-rate UDF."""
 
@@ -349,6 +357,8 @@ conditioned_options = {
         and not args.deterministic_observed_history
     ),
     "deterministic_history_likelihood": args.deterministic_observed_history,
+    "batched_history_implementation": args.history_implementation,
+    "batched_likelihood_buffer_bytes": args.likelihood_buffer_mib * 1024**2,
 }
 if args.condition_observed_history:
     conditioned_options.update(
@@ -585,6 +595,8 @@ df["model_time_step"] = args.model_time_step
 df["max_steps"] = args.max_steps
 df["maximum_simulation_time"] = configured_decision_horizon
 df["strict_truncation"] = args.strict_truncation
+df["history_implementation"] = args.history_implementation if args.deterministic_observed_history else "not_applicable"
+df["likelihood_buffer_mib"] = args.likelihood_buffer_mib
 df = pd.concat([df, pd.DataFrame(sf_params, index=[0])], axis=1)
 
 if not args.skip_fit_output:

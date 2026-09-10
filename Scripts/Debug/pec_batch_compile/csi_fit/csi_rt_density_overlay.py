@@ -82,6 +82,7 @@ def _sample_gpu_outcomes(
     _, debug = plan.deterministic_history_log_likelihood(
         fit_function._batched_stimulus_inputs(),
         [fit_function._batched_parameter_set(values)],
+        implementation="handwritten",
         num_estimates=estimates,
         data=np.asarray(pec._data_numpy, dtype=float),
         categorical_dims=pec.data_categorical_dims,

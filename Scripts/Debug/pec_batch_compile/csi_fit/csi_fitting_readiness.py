@@ -32,6 +32,7 @@ import torch
 
 from psyneulink.core.batched import (
     BatchedCompositionCompiler,
+    LikelihoodEffectContract,
     BatchedTrialParameter,
     batched_node_op,
 )
@@ -161,7 +162,7 @@ FITTER_TIME_STEPS = {
 }
 
 
-@batched_node_op("Drift Rate Value")
+@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _batched_csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
     """Triton transcription of the original seven-input CSI drift UDF."""
     a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))

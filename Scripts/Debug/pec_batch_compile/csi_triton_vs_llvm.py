@@ -40,11 +40,12 @@ warnings.filterwarnings("ignore", message=r"The following arg\(s\) were not spec
 import psyneulink as pnl  # noqa: E402
 from psyneulink.core.batched import (  # noqa: E402
     BatchedCompositionCompiler, batched_node_op, unregister_batched_instance_op,
+    LikelihoodEffectContract,
 )
 from csi_model_surrogate import make_stab_flex  # noqa: E402
 
 
-@batched_node_op("Drift Rate Value")
+@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _drift_rate(x0, x1, x2, x3, x4, x5, x6):
     a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
     b = 1.0 / (1.0 + tl.exp(-((x1 - x0) + 4.0 * x4 - 4.0)))

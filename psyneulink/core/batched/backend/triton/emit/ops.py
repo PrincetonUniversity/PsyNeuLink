@@ -986,9 +986,10 @@ class OpEmitMixin:
                         f"post-finish policy '{budget.post_finish}'."
                     )
             mask_var = f"dynamic_s{set_id}_n{member.component_id}_active"
+            replay_gate = self._dynamic_member_replay_gate(member, slot_vars)
             self.builder.line(
                 f"{mask_var} = mask & ({done_var} == 0) & ({predicate}) & "
-                f"({budget_gate})"
+                f"({budget_gate}){replay_gate}"
             )
             member_masks[member.component_id] = mask_var
 
@@ -1101,6 +1102,10 @@ class OpEmitMixin:
         self.dynamic_active_mask = "mask"
         self.dynamic_execution_index = None
         self.builder.line()
+
+    def _dynamic_member_replay_gate(self, member, slot_vars):
+        """Ordinary execution has no observation-conditioned member gates."""
+        return ""
 
     def _dynamic_predicate_expression(
         self,

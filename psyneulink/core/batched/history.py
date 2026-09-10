@@ -68,6 +68,20 @@ def derive_history_witness(simulation_plan, observations):
     )
     if residual is not None:
         _reject("history.state_dependency_unresolved", "Unobserved event values influence a state included in the history trace.")
+    zero_gate = zero_finished = None
+    if endpoint.observation.history_timing == "ceil_fp32_8ulp":
+        event = next(member for member in members if member.component_id == clock_id)
+        predicate = event.predicate
+        if predicate.kind != "WhenFinished" or len(predicate.dependency_component_ids) != 1:
+            _reject("history.zero_gate_unsupported", "Projected replay requires a single counted deterministic prelude gate.")
+        zero_gate = predicate.dependency_component_ids[0]
+        zero_finished = predicate.finished_value_ids[0]
+        gate = next(member for member in members if member.component_id == zero_gate)
+        finished = next(value for value in kernel.finished_values if value.value_id == zero_finished)
+        if (gate.predicate.kind != "Always"
+                or finished.predicate_kind != "execution_count_at_least_effective_parameter"
+                or any(state.component_id != zero_gate for state in kernel.states)):
+            _reject("history.zero_gate_unsupported", "Zero-step replay requires one always-scheduled counted state owner.")
     return HistoryReplayWitness(
         endpoint=endpoint,
         state_ids=tuple(state.state_id for state in kernel.states),
@@ -76,6 +90,7 @@ def derive_history_witness(simulation_plan, observations):
         resolved_termination_edges=tuple(edge for edge in axis.edges if edge.kind == "schedule_termination_control"),
         guarantee=("registered_contracts_with_checked_event_replay" if endpoint.observation.history_timing == "exact"
                    else "registered_contracts_with_declared_endpoint_projection"),
+        zero_step_gate_component=zero_gate, zero_step_gate_finished=zero_finished,
     )
 
 

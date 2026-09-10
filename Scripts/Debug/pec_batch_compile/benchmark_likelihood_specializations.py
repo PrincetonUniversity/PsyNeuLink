@@ -1,10 +1,10 @@
 """Compare CSI fused fitting and generated sampling at full fitting budgets.
 
 No optimizer or cluster job is launched. The shared workload uses the real
-subject's complete task/stimulus sequence, but simulator-generated observations:
-the generated compiler does not implement the legacy ceil policy for recorded
-RTs. Both routes use the same histogram estimator through a benchmark-only
-adapter; this does not extend the public compiler's empirical-mass semantics.
+subject's complete task/stimulus sequence and either source-generated observations
+or actual recorded data (--recorded, with explicit ceiling history timing).
+Both routes use the same histogram settings; this does not extend the public
+compiler's empirical-mass semantics.
 Candidate microbatching preserves all trials and is valid with CRN=True. Never
 split the trial sequence or restart its LCA history to make it fit in memory.
 Reports are JSON lines on stdout; no output files are written automatically.
@@ -75,7 +75,7 @@ def make_case(args, dt, *, recorded=False):
             f"{lca.name}.gain": BatchedTrialParameter((np.array([15., 18., 12.]) + 0.2 * delta)[condition]),
             f"{ddm.name}.threshold": BatchedTrialParameter((np.array([.10, .09, .11]) + .001 * delta)[condition]),
             f"{ddm.name}.threshold_collapse": BatchedTrialParameter((np.array([-.020, -.015, -.025]) - .0005 * delta)[condition] * dt),
-            f"{ddm.name}.non_decision_time": BatchedTrialParameter((np.array([.20, .23, .18]) - (abs(delta) % 3) * dt)[condition]),
+            f"{ddm.name}.non_decision_time": BatchedTrialParameter((np.array([.20, .23, .18]) - (abs(delta) % 3) * (.0037 if recorded else dt))[condition]),
         })
     start = time.perf_counter()
     data = (frame[["decision", "response_time"]].to_numpy(dtype=float) if recorded
@@ -128,7 +128,7 @@ def measure(label, operation, args, dt):
 
 
 def run(args, dt):
-    simulation, generated, inputs, data, rows, include = make_case(args, dt)
+    simulation, generated, inputs, data, rows, include = make_case(args, dt, recorded=args.recorded)
     histogram = dict(bins=100, smoothing_sigma=0.5, pseudocount=0.1,
                      categorical_cardinalities=[2], include_mask=include)
     fused = generated.compile_histogram_score(categorical_dims=[0], **{key: value for key, value in histogram.items() if key != "include_mask"})
@@ -147,8 +147,15 @@ def run(args, dt):
     def specialized(strict):
         score = simulation.deterministic_history_log_likelihood(
             inputs, rows, args.estimates, data, [0], **histogram, seed=args.seed,
-            common_random_numbers=True, strict_truncation=strict,
+            common_random_numbers=True, strict_truncation=strict, implementation="handwritten",
             triton_launch_options={"block_size": 32, "num_warps": 1},
+        )
+        return np.atleast_1d(score), {}
+
+    def generated_default():
+        score = simulation.deterministic_history_log_likelihood(
+            inputs, rows, args.estimates, data, [0], **histogram, seed=args.seed,
+            triton_launch_options={"block_size": args.fused_block_size, "num_warps": args.fused_num_warps},
         )
         return np.atleast_1d(score), {}
 
@@ -188,7 +195,7 @@ def run(args, dt):
                "specialized_strict": lambda: specialized(True), "generated_histogram": generated_histogram,
                "generated_fused": generated_fused,
                "generated_score_only": lambda: generated_fused("score_only"),
-               "generated_window": lambda: generated_fused("window")}
+               "generated_window": lambda: generated_fused("window"), "generated_default": generated_default}
     with ExitStack() as stack:
         if args.profile_generated:
             from psyneulink.core.batched.endpoints import ObservedEndpointPlan
@@ -249,6 +256,9 @@ def run(args, dt):
             if method in results:
                 np.testing.assert_array_equal(results[method], results["generated_fused"])
                 emit(dict(kind="execution_score_check", dt=dt, method=method, exact_match=True))
+    if "generated_default" in results and "generated_window" in results:
+        np.testing.assert_array_equal(results["generated_default"], results["generated_window"])
+        emit(dict(kind="default_route_score_check", dt=dt, exact_match=True))
     unregister_batched_instance_op("Drift Rate Value")
 
 
@@ -256,6 +266,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, default=Path(__file__).parent / "csi_fit/data fitting/data_to_fit_study3.csv")
     parser.add_argument("--subject", type=int, default=1)
+    parser.add_argument("--recorded", action="store_true", help="Use actual recorded choice/RT data with ceiling history timing")
     parser.add_argument("--trials", type=int, default=0, help="0 means the full fitting sequence; nonzero is only a smoke test")
     parser.add_argument("--dt", type=float, nargs="+", default=[.01, .001])
     parser.add_argument("--candidates", type=int, default=11)
@@ -273,9 +284,11 @@ def main():
     parser.add_argument("--fused-candidate-batch-size", type=int)
     parser.add_argument("--fused-estimate-batch-size", type=int)
     parser.add_argument("--methods", nargs="+", choices=["specialized_fit", "specialized_strict", "generated_histogram", "generated_fused",
-                                                        "generated_score_only", "generated_window"],
+                                                        "generated_score_only", "generated_window", "generated_default"],
                         default=["specialized_fit", "specialized_strict", "generated_histogram", "generated_fused"])
     args = parser.parse_args()
+    if args.recorded and args.verify_endpoints:
+        parser.error("Exhaustive exact endpoint verification does not apply to recorded ceiling histories")
     if any(value < 1 for value in (args.candidates, args.estimates, args.microbatch, args.repeats, args.buffer_mib)):
         parser.error("Sizes must be positive")
     if not torch.cuda.is_available():

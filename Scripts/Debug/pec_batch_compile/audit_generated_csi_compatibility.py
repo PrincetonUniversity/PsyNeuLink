@@ -2,8 +2,7 @@
 
 Random interior candidates vary all three conditions continuously, including
 nondecision time, without timestep quantization. Extra high-NDT candidates
-probe zero-step histories: these must be reported as unsupported, not silently
-clamped or routed through the custom CSI kernel. The custom kernel is used only
+probe zero-step histories without clamping the DDM count to one. The custom kernel is used only
 as a deterministic count/state/path oracle, not for matched-noise score tests.
 Prints JSON to stdout; no results are written automatically.
 """
@@ -15,7 +14,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from psyneulink.core.batched import BatchedTrialParameter, EndpointReconstructionError, unregister_batched_instance_op
+from psyneulink.core.batched import BatchedTrialParameter, unregister_batched_instance_op
 from benchmark_likelihood_specializations import make_case, emit
 
 
@@ -45,18 +44,10 @@ def run(args, dt):
             print(f"dt={dt:g}: candidate {index + 1}/{args.candidates}", file=sys.stderr, flush=True)
             _, legacy = simulation.deterministic_history_log_likelihood(
                 inputs, [row], 1, data, [0], **options, include_mask=include,
-                seed=19, return_debug=True,
+                seed=19, return_debug=True, implementation="handwritten",
             )
             zero = int(np.count_nonzero(legacy["observed_steps"] < 1))
-            try:
-                device = observation.sampler.path_plan.generate_device(inputs, data, [row], max_buffer_bytes=args.buffer_mib * 1024**2)
-            except EndpointReconstructionError as error:
-                if not zero or error.code != "endpoint.projected_count_below_minimum":
-                    raise
-                records.append(dict(candidate=index, nondecision_time=ndt.tolist(), status="unsupported_zero_step_history", zero_trials=zero))
-                del legacy
-                continue
-            assert not zero
+            device = observation.sampler.path_plan.generate_device(inputs, data, [row], max_buffer_bytes=args.buffer_mib * 1024**2)
             np.testing.assert_array_equal(device.history.event_counts, legacy["observed_steps"])
             states = legacy["history_states"].cpu().numpy()
             paths = legacy["drift_paths"].cpu().numpy()
@@ -72,7 +63,7 @@ def run(args, dt):
             np.testing.assert_array_equal(fast.bin_counts[:, include], reference.bin_counts[:, include])
             np.testing.assert_array_equal(fast.log_likelihood, reference.log_likelihood)
             records.append(dict(candidate=index, nondecision_time=ndt.tolist(), status="validated",
-                                counts_exact=True, max_state_error=state_error, max_drift_error=path_error,
+                                counts_exact=True, zero_trials=zero, max_state_error=state_error, max_drift_error=path_error,
                                 histogram_counts_exact=True, log_likelihood=fast.log_likelihood.tolist()))
         emit(dict(kind="recorded_compatibility_audit", dt=dt, subject=args.subject,
                   trials=len(data), scored_trials=int(include.sum()), estimates=args.estimates, candidates=records))

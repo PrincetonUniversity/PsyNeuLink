@@ -50,6 +50,25 @@ class HistoryTraceEmitter(TritonGraphEmitter):
     def _history_trial_index(self):
         return "offsets * num_trials + trial_idx"
 
+    def _dynamic_member_replay_gate(self, member, slot_vars):
+        if self.replay and member.component_id == self.witness.zero_step_gate_component:
+            finished = self._dynamic_slot_var(slot_vars, "finished", owner=member.component_id,
+                                              finished=self.witness.zero_step_gate_finished)
+            declaration = next(item for item in self.kernel.finished_values
+                               if item.value_id == self.witness.zero_step_gate_finished)
+            effective = self.effective_parameter_vars[declaration.attrs["effective_parameter_id"]]
+            count = self._dynamic_slot_var(slot_vars, "execution_count", owner=member.component_id)
+            # The source's finished slot may still reflect the previous trial's
+            # held value. Projected zero histories use the current prelude
+            # control, including a zero published by an AtPass(0) controller.
+            required = f"tl.where({count} == 0, {effective}, tl.maximum(tl.ceil({effective}), {declaration.attrs['minimum']}))"
+            self.builder.line(f"{finished} = tl.where(history_target == 0, ({count} >= {required}).to(tl.int32), {finished})")
+            # Complete positive settling, but do not perform a post-settling
+            # persistent update for a zero-count event. In particular, an
+            # initially finished (zero-settling) gate executes no state step.
+            return f" & ~((history_target == 0) & ({finished} != 0))"
+        return ""
+
     def _emit_trial_end_inspection(self):
         self._emit_history_state(1)
         for index, component in enumerate(self.witness.component_ids):
@@ -62,6 +81,14 @@ class HistoryTraceEmitter(TritonGraphEmitter):
         super()._emit_dynamic_scheduler_updates(program, consideration_set, slot_vars, member_masks, has_run_bits)
         for member in consideration_set.members:
             component = member.component_id
+            if self.replay and component == self.witness.zero_step_gate_component:
+                finished = self._dynamic_slot_var(slot_vars, "finished", owner=component,
+                                                  finished=self.witness.zero_step_gate_finished)
+                word, bit = has_run_bits[component]
+                # A zero-length prelude is virtually completed, not executed.
+                # Satisfy AllHaveRun without incrementing calls or state. This
+                # is part of the declared projected-history policy only.
+                self.builder.line(f"{word} = tl.where(mask & (history_target == 0) & ({finished} != 0), {word} | {bit}, {word})")
             self.builder.line(
                 f"history_calls_{component} += tl.where({member_masks[component]}, 1, 0)"
             )

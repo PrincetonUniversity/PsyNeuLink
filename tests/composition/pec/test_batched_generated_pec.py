@@ -5,7 +5,7 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched import (
-    LikelihoodEffectContract, ObservationField, ObservationSpec, EndpointReconstructionError,
+    LikelihoodEffectContract, ObservationField, ObservationSpec,
     BatchedSimulationPlan, batched_node_op, unregister_batched_instance_op,
 )
 from test_batched_csi_coevolving_acceptance import _recovery_surface_model, _recovery_pec, _csi_drift_rate, _DRIFT_NODE_NAME
@@ -47,9 +47,7 @@ def test_pec_generated_objective_batches_arbitrary_ndt_and_never_calls_custom(ge
                                [opt._batched_parameter_set(row) for row in candidates],
                                num_estimates=8, seed=29, execution="window")
     np.testing.assert_array_equal(actual, expected.log_likelihood)
-    with pytest.raises(EndpointReconstructionError) as error:
-        objective(10., 10., .6)
-    assert error.value.code == "endpoint.projected_count_below_minimum"
+    assert np.isfinite(objective(10., 10., .6))
 
 
 def test_pec_rejects_reordered_observation_binding(generated_pec):

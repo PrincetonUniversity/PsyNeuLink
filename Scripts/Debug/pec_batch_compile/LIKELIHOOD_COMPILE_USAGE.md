@@ -6,9 +6,10 @@ single-event subset using the generated source scheduler. A checked boundary-pat
 deterministic inputs in candidate/trial-parallel lanes. A generated primitive
 sampler consumes these paths in candidate/trial/estimate lanes. Checked scalar
 observation gates and an explicit empirical count-domain mass objective now run
-on CPU interpreter or compiled GPU backends. PEC can explicitly opt into generated
-histogram scoring with `batched_observations`. Automatic default routing and
-broader observation/estimator support remain subsequent steps.
+on CPU interpreter or compiled GPU backends. PEC can explicitly select an
+observation schema with `batched_observations`; its deterministic-history
+choice/RT mode now uses generated histogram scoring by default. Broader
+observation/estimator support remains subsequent work.
 
 ## Example: independent DDM trials
 
@@ -402,8 +403,8 @@ buffer-budget, and lane-index bounds are checked before allocation. The buffer
 budget excludes compiler/framework workspace. The local GPU validation is
 described below. Structural diagnosis reports still say `codegen_ready=False`:
 they do not select a numerical estimator. The explicit mass compiler below is
-a separate opt-in interface. Existing CSI/PEC defaults are unchanged; the
-generated histogram route below is explicitly opt-in.
+a separate opt-in interface. CSI/PEC deterministic-history scoring now routes
+through the generated histogram compiler as described below.
 
 ## Checked observations and explicit empirical mass
 
@@ -497,8 +498,10 @@ This is an **explicit approximate point-history policy**, not exact conditioning
 not a recording/measurement model, and not marginalization over an RT bin.
 For a checked affine readout `offset + slope * count`, it evaluates coefficients
 in FP64 from FP32 leaves, rounds upward, and snaps near-integer endpoints within
-eight FP32 ULPs to that integer. The slope must be positive. All counts must
-remain within the registered positive execution-count domain and source cap.
+eight FP32 ULPs to that integer. The slope must be positive. Positive counts
+must remain within the registered execution-count domain and source cap;
+zero is a separately declared projected-history endpoint, not a supported
+zero-duration event in forward DDM simulation.
 Witness guarantees, diagnostic obligations, and histogram results label this
 policy. The exact default is unchanged; empirical mass rejects projected timing.
 Only complete, untransformed recording declarations are supported in this tier.
@@ -507,13 +510,59 @@ PEC reuses its explicit histogram configuration, seed, and score mask.
 `batched_strict_truncation=True` selects full strict execution; false selects
 checked observation-window execution, retaining every trial's history replay.
 
-**Do not switch unrestricted fitting defaults yet.** The handwritten CSI code
-allows zero overlap steps when proposed nondecision time plus cue time reaches
-or exceeds recorded RT. Generic replay currently requires at least one event
-step and raises `endpoint.projected_count_below_minimum` for that case. It must
-not silently clamp to one. Resolving zero-step replay and then validating full
-optimizer trajectories are the next retirement gates. Existing production
-scripts and the custom kernel remain available.
+### Default routing and zero-count replay (2026-09-10)
+
+`BatchedSimulationPlan.deterministic_history_log_likelihood(...)` and PEC's
+`deterministic_history_likelihood=True` now select generated code by default.
+The compatibility API declares scalar choice/RT outputs in that order and
+ceiling history timing; other observation schemas should use `ObservationSpec`.
+The checked observation plan is cached against the frozen simulation snapshot.
+Existing particle-filter, unconditional, LLVM, and continuous direct-likelihood
+routes are not changed. The fit script still requires
+`--deterministic-observed-history` to select this likelihood family.
+
+The handwritten CSI kernel is retained only as an explicitly selected oracle:
+`implementation="handwritten"` on the simulation-plan method,
+`batched_history_implementation="handwritten"` in PEC, or
+`--history-implementation handwritten` in the CSI fit script. Legacy
+`return_debug=True` requires this explicit option; it does not silently switch
+implementations. Unsupported generic structure raises instead of falling back.
+CSI UDF registrations in the fitting drivers now declare their pure likelihood
+effect contract. Undeclared third-party UDF effects are still rejected.
+
+The fitting route uses a 1 GiB generated-buffer cap, configurable through
+`max_buffer_bytes` on the compatibility API, `batched_likelihood_buffer_bytes`
+in PEC, or `--likelihood-buffer-mib` in the CSI fit driver. Smaller caps split
+candidates, never trial histories; compiler/framework workspace is additional.
+The standalone histogram API retains its conservative 256 MiB default.
+The CSI driver uses block size 32 / one warp by default, matching the validated
+fitting-budget launch configuration; both remain explicitly configurable.
+
+Zero DDM counts now replay a **completed deterministic prelude with no DDM
+integration**. The current supported structure has one always-scheduled,
+count-finished persistent state owner gating the event through `WhenFinished`.
+The witness records that gate and its finished-value identity. On a zero-event
+lane, replay uses the current prelude control, completes positive settling,
+and suppresses post-settling persistent updates. If settling is also zero, it
+preserves the source state and virtually satisfies the prelude's `AllHaveRun`
+requirement without incrementing its execution count. The event substitute
+publishes a finished count of zero; deterministic output publication and other
+required scheduled phases still run. Hypothetical DDM sampling remains a
+separate, positive-step computation from each canonical trial start.
+
+This is an explicit extension of the approximate history policy, not a claim
+that the source DDM can emit a zero-step response. Exact endpoint inversion,
+forward simulation, and empirical-mass support remain unchanged. Zero history
+does not imply positive data likelihood; smoothing/floor semantics remain
+separate estimator choices.
+
+Correction to the earlier retirement discussion: the handwritten kernel's
+zero-event branch *does complete positive settling*, including its final LCA
+step. Only zero settling preserves the incoming LCA state without an update.
+For an entirely uninitialized LCA, its unused activity placeholders are zeros
+in the custom kernel versus declared logistic outputs in the source IR. Both
+replace those values before the first active step. Tests compare initialized
+states and all drift paths, and separately verify source-state preservation.
 
 ### Recorded-data retirement audit (RTX 2080 Ti, 2026-09-09)
 
@@ -527,13 +576,24 @@ For all six interior candidates at both timesteps, endpoint counts, LCA end
 states, and drift paths matched the handwritten oracle exactly in this run.
 Generated window histogram counts and log scores matched the materialized
 generated reference exactly with 257 estimates per trial. Both boundary
-candidates were rejected as intended (55 and 33 zero-step trials). This is a
+candidates were rejected in the original audit (55 and 33 zero-step trials).
+The zero-count implementation above supersedes that limitation. This is a
 targeted correctness audit, not a fitting-budget benchmark, population-wide
 validation, or a matched-RNG comparison of handwritten and generated scores.
 
 The audit also exposed a packed-input assumption: pandas can provide
 column-major observation arrays. The fused reduction now explicitly packs
 observations into row-major layout; regression tests cover histogram and mass.
+
+The 2026-09-10 rerun passed all eight candidates at both timesteps, including
+55 and 33 zero-count trials in the high-NDT candidates. Counts, initialized LCA
+states, and drift paths matched the handwritten oracle exactly in this actual
+subject workload; fused/window histograms and log scores matched the generated
+materialized reference exactly. Unit tests additionally cover zero ITI and
+zero cue settling, interleaved zero/positive events, candidate-specific counts,
+masked history trials, virtual prelude completion, and forged zero-gate witnesses.
+Both the legacy-named API and PEC default-routing tests prohibit calls to the
+custom implementation. The broad GPU regression selection passed 133 tests.
 
 ## Explicit fused histogram surrogate
 

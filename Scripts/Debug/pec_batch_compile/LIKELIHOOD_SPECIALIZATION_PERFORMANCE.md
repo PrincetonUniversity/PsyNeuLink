@@ -439,6 +439,74 @@ it does **not** replace the fitting-budget timings above with its small
 257-estimate correctness budget. Zero-step history support and complete
 optimizer validation remain prerequisites for retiring the handwritten kernel.
 
+## Default-route retirement check (2026-09-10)
+
+The previous section is superseded: zero-count replay is supported for the
+checked counted-prelude structure, and the legacy-named deterministic-history
+API plus PEC's deterministic-history mode now select generated code by default.
+The custom kernel remains available only by explicit `handwritten` selection.
+This retires the custom *likelihood kernel's default routing*, not the registered
+primitive operations, ordinary forward simulator, or continuous direct solver.
+
+Final isolated RTX 2080 Ti timing used subject 1's **actual recorded choices and
+RTs**, all 561 trials / 485 scored, 11 condition-dependent candidates, and
+100,000 estimates per candidate per trial. NDT proposals were not quantized to
+the simulation timestep. Both methods used 100 histogram bins, sigma 0.5,
+pseudocount 0.1, seed 17, block size 32 / one warp, and observation-window
+execution. These are warm objective evaluations, not optimizer or subject-fit
+times. Each number is the median of two synchronized warm runs; no tests or
+other task workloads ran concurrently with the timing loops.
+
+| Default/API route | 10 ms | 1 ms |
+|---|---:|---:|
+| Handwritten CSI oracle, explicit opt-in | 0.799 s | 7.482 s |
+| Generated deterministic-history API, 1 GiB cap | **0.869 s** | **6.343 s** |
+
+The generated default is about 8.8% slower at 10 ms and 15.2% faster at 1 ms.
+Final warm runs were 0.797/0.801 and 7.473/7.490 seconds for handwritten,
+0.869/0.870 and 6.337/6.349 for generated. Peak Torch allocated GPU memory was
+0.028/0.277 GiB for handwritten and 0.091/0.898 GiB for generated. First calls
+were 2.231/7.531 seconds for handwritten and 1.070/6.362 for generated; JIT cache
+reuse and method order mean those are not independent cold-compilation timings.
+
+The lower-level generated histogram scorer took 6.287 seconds at 1 ms. An
+initial compatibility-API run with a 256 MiB cap took 7.839 seconds, because it
+microbatched candidates. The fitting route now exposes a configurable 1 GiB
+default; standalone histogram scoring retains its 256 MiB default. The larger
+cap closes that batching overhead without changing counts or scores. Users can
+lower it on memory-constrained devices; framework/compiler workspace is extra.
+
+Full-budget strict fused counts matched materialized generated samples exactly
+for all 30,855 count cells at each timestep. Window execution matched all 26,675
+scored count cells, retaining 221,223,174 intentional window stops at 10 ms and
+203,989,657 at 1 ms in the estimate denominator. Each materialized reference
+population contained 617,100,000 lanes (1,234,200,000 across both timesteps).
+Both the 256 MiB and 1 GiB compatibility routes produced exactly the same scores
+as the larger-budget generated window scorer. Handwritten and generated scores
+are *not* matched-draw comparisons: their random-stream mappings differ.
+
+The separate recorded-data audit passed eight candidates at both timesteps,
+including the two high-NDT candidates with 55 and 33 zero-count trials. Endpoint
+counts, LCA states and drift paths matched the handwritten oracle exactly for
+that subject workload. Small zero-settling tests separately account for unused
+uninitialized output placeholders and verify preservation of source states.
+Broad GPU regression: 133 passed / 56 skipped. Targeted interpreter checks:
+5 passed / 4 skipped, including zero settling and PEC scoring. No cluster jobs
+were submitted and no JSON result files were added.
+
+Reproduce timings and the full-budget integer check:
+
+```bash
+env -u TRITON_INTERPRET .venv/bin/python \
+  Scripts/Debug/pec_batch_compile/benchmark_likelihood_specializations.py \
+  --recorded --methods specialized_fit generated_window generated_default \
+  --fused-block-size 32 --fused-num-warps 1 --verify-fused-counts
+```
+
+The final 10 ms default/API comparison was also rerun with `--dt .01 --methods
+specialized_fit generated_default`; the table uses that final rerun. Individual
+warm timings varied by a few percent across these short runs.
+
 ## Follow-up: GPU-resident boundary trajectories
 
 The preceding work was committed as `6516590034`. Follow-up profiling of the

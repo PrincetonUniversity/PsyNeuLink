@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import cached_property
 
 from psyneulink.core.batched.bindings import (
     EMPTY_COMPONENT_BINDINGS,
@@ -565,6 +566,19 @@ class BatchedSimulationPlan:
             return float(values[0])
         return values
 
+    @cached_property
+    def _default_history_observation_plan(self):
+        """Compatibility API's declared choice/RT schema; no model-name matching."""
+        from psyneulink.core.batched.observation import ObservationField, ObservationSpec
+
+        outputs = self.ir.graph.outputs
+        if len(outputs) != 2 or any(output.width != 1 for output in outputs):
+            raise ValueError("Default deterministic-history scoring requires scalar choice/RT outputs; use ObservationSpec for other schemas.")
+        ports = [self.component_bindings.port_by_id(output.port_id) for output in outputs]
+        spec = ObservationSpec((ObservationField(ports[0], "counting"),
+                                ObservationField(ports[1], "lebesgue", role="event_time", history_timing="ceil_fp32_8ulp")))
+        return self.compile_history_replay(spec).compile_boundary_trajectories().compile_stochastic_sampler().compile_observation_sampler()
+
     def deterministic_history_log_likelihood(
         self,
         inputs,
@@ -586,8 +600,10 @@ class BatchedSimulationPlan:
         strict_truncation: bool = False,
         triton_launch_options: Mapping | None = None,
         return_debug: bool = False,
+        implementation: str = "generated",
+        max_buffer_bytes: int = 1024**3,
     ):
-        """CSI likelihood specialized for deterministic observed LCA history.
+        """Generated deterministic-history histogram likelihood for choice/RT data.
 
         The persistent LCA has no process noise in the fitted CSI model, so its
         state at each observed RT endpoint is a deterministic function of the
@@ -595,7 +611,13 @@ class BatchedSimulationPlan:
         once per parameter set, stores the resulting within-trial DDM drift
         paths, and then simulates all DDM estimates in one parallel GPU launch.
 
-        This is intentionally fail-closed to the authenticated CSI graph.  Use
+        The default uses checked generic compilation with ceiling history timing.
+        ``implementation='handwritten'`` explicitly selects the retained CSI
+        oracle, including its legacy debug format. No implicit fallback occurs.
+        ``max_buffer_bytes`` bounds generated likelihood buffers (default 1 GiB),
+        excluding framework/compiler workspace; smaller budgets microbatch
+        candidates. The handwritten oracle retains its own memory strategy.
+        Use
         :meth:`conditioned_log_likelihood` for a stochastic persistent state or
         for a histogram-bin interpretation that marginalizes possible endpoint
         histories.
@@ -616,6 +638,29 @@ class BatchedSimulationPlan:
                 "CSI deterministic-history likelihood requires the plan's "
                 "decision and response-time outputs in that order."
             )
+
+        if implementation not in ("generated", "handwritten"):
+            raise ValueError("implementation must be 'generated' or 'handwritten'.")
+        if implementation == "generated":
+            if return_debug:
+                raise ValueError("Legacy return_debug requires implementation='handwritten'; inspect the generic history/path plans instead.")
+            from psyneulink.core.batched.likelihood import _as_categorical_mask
+
+            if list(_as_categorical_mask(categorical_dims, 2)) != [True, False]:
+                raise ValueError("Default deterministic-history scoring requires categorical choice and numeric RT.")
+            histogram = self._default_history_observation_plan.compile_histogram_score(
+                categorical_dims=[0], bins=bins, bin_range=bin_range,
+                smoothing_sigma=smoothing_sigma, pseudocount=pseudocount,
+                categorical_cardinalities=categorical_cardinalities,
+            )
+            scores = histogram.score(
+                inputs, data, parameter_sets, num_estimates=num_estimates,
+                seed=0 if seed is None else int(seed), common_random_numbers=common_random_numbers,
+                include_mask=include_mask, execution="strict" if strict_truncation else "window",
+                triton_launch_options=triton_launch_options,
+                max_buffer_bytes=max_buffer_bytes,
+            ).log_likelihood.astype(float)
+            return float(scores[0]) if len(scores) == 1 else scores
 
         from psyneulink.core.batched.backend.triton.csi_deterministic import (
             run_csi_deterministic_history_likelihood,

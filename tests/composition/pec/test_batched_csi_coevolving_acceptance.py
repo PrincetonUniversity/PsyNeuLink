@@ -70,7 +70,8 @@ def _csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
 
 @pytest.fixture
 def registered_csi_drift_rate():
-    batched_node_op(_DRIFT_NODE_NAME)(_csi_drift_rate)
+    from psyneulink.core.batched import LikelihoodEffectContract
+    batched_node_op(_DRIFT_NODE_NAME, likelihood_contract=LikelihoodEffectContract())(_csi_drift_rate)
     try:
         yield
     finally:
@@ -957,7 +958,14 @@ def test_csi_three_parameter_pec_objective_compiles_and_scores(
 @pytest.mark.triton_gpu
 def test_csi_deterministic_history_routes_through_pec_objective(
     registered_csi_drift_rate,
+    monkeypatch,
 ):
+    from psyneulink.core.batched.backend.triton import csi_deterministic
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("PEC default invoked the handwritten CSI kernel")
+
+    monkeypatch.setattr(csi_deterministic, "run_csi_deterministic_history_likelihood", forbidden)
     composition, inputs, _, outputs = _recovery_surface_model()
     pec = _recovery_pec(
         composition,
@@ -1424,8 +1432,8 @@ def test_csi_deterministic_history_matches_lca_endpoint_recurrence(
         strict_truncation=True,
         return_debug=True,
     )
-    first, debug = plan.deterministic_history_log_likelihood(**kwargs)
-    replay, replay_debug = plan.deterministic_history_log_likelihood(**kwargs)
+    first, debug = plan.deterministic_history_log_likelihood(implementation="handwritten", **kwargs)
+    replay, replay_debug = plan.deterministic_history_log_likelihood(implementation="handwritten", **kwargs)
 
     assert np.isfinite(first)
     assert replay == first
@@ -1502,9 +1510,9 @@ def test_csi_deterministic_history_fused_histogram_matches_materialized_outcomes
         strict_truncation=False,
     )
 
-    fused = plan.deterministic_history_log_likelihood(**kwargs)
-    replay = plan.deterministic_history_log_likelihood(**kwargs)
-    materialized, _ = plan.deterministic_history_log_likelihood(
+    fused = plan.deterministic_history_log_likelihood(implementation="handwritten", **kwargs)
+    replay = plan.deterministic_history_log_likelihood(implementation="handwritten", **kwargs)
+    materialized, _ = plan.deterministic_history_log_likelihood(implementation="handwritten",
         **kwargs,
         return_debug=True,
     )
@@ -1526,7 +1534,7 @@ def test_csi_deterministic_history_fused_histogram_reports_truncation(
     )
 
     with pytest.raises(BatchedTruncationError):
-        plan.deterministic_history_log_likelihood(
+        plan.deterministic_history_log_likelihood(implementation="handwritten",
             inputs=inputs,
             parameter_sets=[{}],
             num_estimates=32,
@@ -1585,7 +1593,7 @@ def test_csi_deterministic_history_matches_coupled_endpoint_execution(
     )
     coupled = coupled_result.values[0, 0, :, 0]
 
-    _, debug = plan.deterministic_history_log_likelihood(
+    _, debug = plan.deterministic_history_log_likelihood(implementation="handwritten",
         inputs=inputs,
         parameter_sets=[{}],
         num_estimates=8,
@@ -1629,7 +1637,7 @@ def test_csi_deterministic_history_rejects_stochastic_lca(
     )
 
     with pytest.raises(ValueError, match="deterministic LCA noise=0"):
-        plan.deterministic_history_log_likelihood(
+        plan.deterministic_history_log_likelihood(implementation="handwritten",
             inputs=inputs,
             parameter_sets=[{}],
             num_estimates=8,

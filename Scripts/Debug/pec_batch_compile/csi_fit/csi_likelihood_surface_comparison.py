@@ -23,7 +23,7 @@ import psyneulink as pnl
 from scipy import stats
 import torch
 
-from psyneulink.core.batched import batched_node_op
+from psyneulink.core.batched import batched_node_op, LikelihoodEffectContract
 
 from direct_likelihood import (
     CSITrialData,
@@ -42,7 +42,7 @@ DEFAULT_PARAMETERS = (
 )
 
 
-@batched_node_op("Drift Rate Value")
+@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _batched_drift_rate(x0, x1, x2, x3, x4, x5, x6):
     """Triton form of the CSI model's seven-input drift-rate function."""
 
