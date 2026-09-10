@@ -27,6 +27,7 @@ class HistogramScoreResult:
     execution: str = "strict"
     sampled_trials: np.ndarray | None = None  # False: counts=-1, density/log factor=NaN.
     window_stopped: np.ndarray | None = None  # [candidate, trial], not truncation.
+    history_timing: str = "exact"
 
 
 @dataclass(frozen=True)
@@ -138,7 +139,9 @@ def prepare_histogram(plan, data, device):
     data = np.asarray(data, dtype=np.float64)
     if data.ndim != 2 or not len(data) or data.shape[1] != len(plan.observation_plan.witness.readouts) or not np.all(np.isfinite(data)):
         raise StochasticSamplingError("histogram.data", "Data must be a nonempty finite [trial, observation] array.")
-    observed = torch.tensor(data, dtype=torch.float32, device=device)
+    # Pandas columns often arrive in Fortran order; emitted kernels address
+    # observations as packed [trial, field], not using tensor strides.
+    observed = torch.tensor(data, dtype=torch.float32, device=device).contiguous()
     if not torch.isfinite(observed).all().item():
         raise StochasticSamplingError("histogram.data", "Observed values exceed finite FP32.")
     numeric = observed[:, plan.continuous_dim:plan.continuous_dim + 1]
@@ -179,7 +182,8 @@ def histogram_result(plan, counts, weights, edges, joint_bins, estimates, includ
     for array in (counts, densities, logs, total, sampled_trials, window_stopped):
         array.flags.writeable = False
     return HistogramScoreResult(counts, estimates, densities, logs, total, backend,
-                                execution=execution, sampled_trials=sampled_trials, window_stopped=window_stopped)
+                                execution=execution, sampled_trials=sampled_trials, window_stopped=window_stopped,
+                                history_timing=plan.observation_plan.witness.sampler.boundary.history.endpoint.observation.history_timing)
 
 
 def compile_histogram_score(observation_plan, *, categorical_dims, bins=100, bin_range=None,

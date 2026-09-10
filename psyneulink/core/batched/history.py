@@ -74,6 +74,8 @@ def derive_history_witness(simulation_plan, observations):
         effective_parameter_ids=tuple(item.effective_parameter_id for item in kernel.effective_parameters),
         component_ids=tuple(sorted(member.component_id for member in members)),
         resolved_termination_edges=tuple(edge for edge in axis.edges if edge.kind == "schedule_termination_control"),
+        guarantee=("registered_contracts_with_checked_event_replay" if endpoint.observation.history_timing == "exact"
+                   else "registered_contracts_with_declared_endpoint_projection"),
     )
 
 
@@ -122,7 +124,7 @@ class HistoryReplayPlan:
         return HistoryTraceEmitter(self.simulation_plan.kernel_ir, self.witness, replay=replay).emit()
 
     def reconstruct(self, inputs, data, parameter_sets=None):
-        """Replay one subject from model defaults, conditioning on exact events."""
+        """Replay one subject using its explicit observed-history timing policy."""
         from psyneulink.core.batched.backend.triton.history import run_history_trace
 
         validate_history_witness(self.simulation_plan, self.observations, self.witness)

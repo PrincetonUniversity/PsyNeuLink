@@ -328,6 +328,7 @@ def _recovery_pec(
     backend,
     include_historical_threshold_parameters,
     deterministic_history_likelihood=False,
+    batched_observations=None,
 ):
     """Build the real PEC wrapper used by the CSI recovery workflows."""
 
@@ -371,6 +372,7 @@ def _recovery_pec(
             batched_bins=20,
             batched_seed=29,
             deterministic_history_likelihood=deterministic_history_likelihood,
+            batched_observations=batched_observations,
         ),
         num_estimates=8,
         initial_seed=29,

@@ -67,6 +67,19 @@ def test_mass_fused_matches_materialized_execution(scoring_case):
     np.testing.assert_array_equal(fused.successes, sampled.successes)
 
 
+@pytest.mark.parametrize("estimator", ["histogram", "mass"])
+def test_column_major_observations_match_packed_layout(scoring_case, estimator):
+    observation, inputs, data, rows = scoring_case
+    plan = (observation.compile_empirical_mass() if estimator == "mass" else
+            observation.compile_histogram_score(categorical_dims=[0], bins=13, pseudocount=.1))
+    field = "successes" if estimator == "mass" else "bin_counts"
+    kwargs = dict(num_estimates=37, seed=19)
+    packed = plan.score(inputs, np.ascontiguousarray(data), rows, **kwargs)
+    column_major = plan.score(inputs, np.asfortranarray(data), rows, **kwargs)
+    np.testing.assert_array_equal(getattr(packed, field), getattr(column_major, field))
+    np.testing.assert_array_equal(packed.log_likelihood, column_major.log_likelihood)
+
+
 def test_histogram_outside_range_floor_and_score_mask(scoring_case):
     observation, inputs, data, rows = scoring_case
     plan = observation.compile_histogram_score(categorical_dims=[0], bins=1, bin_range=[(10., 11.)])

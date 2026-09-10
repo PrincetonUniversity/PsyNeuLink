@@ -6,8 +6,9 @@ single-event subset using the generated source scheduler. A checked boundary-pat
 deterministic inputs in candidate/trial-parallel lanes. A generated primitive
 sampler consumes these paths in candidate/trial/estimate lanes. Checked scalar
 observation gates and an explicit empirical count-domain mass objective now run
-on CPU interpreter or compiled GPU backends. Automatic PEC routing, broader
-observation/estimator support, and production performance remain subsequent steps.
+on CPU interpreter or compiled GPU backends. PEC can explicitly opt into generated
+histogram scoring with `batched_observations`. Automatic default routing and
+broader observation/estimator support remain subsequent steps.
 
 ## Example: independent DDM trials
 
@@ -150,7 +151,8 @@ Pass `method="exhaustive"` to `endpoint_plan.reconstruct(...)` to select the
 original enumeration explicitly as a numerical oracle. Both methods
 re-evaluate candidate-dependent step size, nondecision time, and affine
 parameters, including supplied trial-varying parameters. They return a count
-only when exactly one is compatible with the observed readout. It applies no
+only when exactly one is compatible with the observed readout under default
+`history_timing="exact"`. This default applies no
 nearest-bin or ceiling policy. Zero or multiple compatible counts raise
 `EndpointReconstructionError` with a diagnostic `code`; invalid parameter
 inputs can also raise the shared simulation preparation errors.
@@ -400,7 +402,8 @@ buffer-budget, and lane-index bounds are checked before allocation. The buffer
 budget excludes compiler/framework workspace. The local GPU validation is
 described below. Structural diagnosis reports still say `codegen_ready=False`:
 they do not select a numerical estimator. The explicit mass compiler below is
-a separate opt-in interface, and existing CSI/PEC fitting workflows are unchanged.
+a separate opt-in interface. Existing CSI/PEC defaults are unchanged; the
+generated histogram route below is explicitly opt-in.
 
 ## Checked observations and explicit empirical mass
 
@@ -465,8 +468,72 @@ certificate, or pseudo-marginal MCMC guarantee is supplied.
 
 This narrow estimator is useful for correctness checks and exact discrete
 observation experiments. It does **not** replace the existing smoothed CSI
-likelihood or implement a recording model for real participant RTs. PEC routing
-and such estimator/measurement choices need an explicit subsequent design.
+likelihood or implement a recording model for real participant RTs. The opt-in
+PEC route below selects the histogram surrogate, not empirical mass.
+
+## Opt-in PEC migration and approximate history timing
+
+Pass an `ObservationSpec` as `PECOptimizationFunction(batched_observations=spec,
+batched_backend="triton", ...)`. Its ports must exactly match PEC
+`outcome_variables`, in data-column order. Leave the legacy
+`conditioned_likelihood` and `deterministic_history_likelihood` flags false;
+they are mutually exclusive with this route. The function builds and caches
+history replay → boundary trajectories → stochastic sampler → observation
+sampler → histogram scorer. Unsupported structure raises an error; there is
+no fallback to a model-specific CSI kernel. Registered custom operations still
+require explicit, valid likelihood effect contracts.
+
+For recorded CSI data and continuously proposed nondecision times, use:
+
+```python
+spec = ObservationSpec((
+    ObservationField(choice_port, "counting"),
+    ObservationField(rt_port, "lebesgue", role="event_time",
+                     history_timing="ceil_fp32_8ulp"),
+))
+```
+
+This is an **explicit approximate point-history policy**, not exact conditioning,
+not a recording/measurement model, and not marginalization over an RT bin.
+For a checked affine readout `offset + slope * count`, it evaluates coefficients
+in FP64 from FP32 leaves, rounds upward, and snaps near-integer endpoints within
+eight FP32 ULPs to that integer. The slope must be positive. All counts must
+remain within the registered positive execution-count domain and source cap.
+Witness guarantees, diagnostic obligations, and histogram results label this
+policy. The exact default is unchanged; empirical mass rejects projected timing.
+Only complete, untransformed recording declarations are supported in this tier.
+
+PEC reuses its explicit histogram configuration, seed, and score mask.
+`batched_strict_truncation=True` selects full strict execution; false selects
+checked observation-window execution, retaining every trial's history replay.
+
+**Do not switch unrestricted fitting defaults yet.** The handwritten CSI code
+allows zero overlap steps when proposed nondecision time plus cue time reaches
+or exceeds recorded RT. Generic replay currently requires at least one event
+step and raises `endpoint.projected_count_below_minimum` for that case. It must
+not silently clamp to one. Resolving zero-step replay and then validating full
+optimizer trajectories are the next retirement gates. Existing production
+scripts and the custom kernel remain available.
+
+### Recorded-data retirement audit (RTX 2080 Ti, 2026-09-09)
+
+Run `audit_generated_csi_compatibility.py` in this directory. It performs no fit,
+submits no job, and writes only stdout results. Defaults use subject 1's actual
+561 trials (485 scored), six random interior candidates plus two high-NDT
+boundary candidates, and both 10 ms and 1 ms dynamics. Gain, threshold, collapse,
+and nondecision time vary across three conditions; cue counts remain fixed.
+
+For all six interior candidates at both timesteps, endpoint counts, LCA end
+states, and drift paths matched the handwritten oracle exactly in this run.
+Generated window histogram counts and log scores matched the materialized
+generated reference exactly with 257 estimates per trial. Both boundary
+candidates were rejected as intended (55 and 33 zero-step trials). This is a
+targeted correctness audit, not a fitting-budget benchmark, population-wide
+validation, or a matched-RNG comparison of handwritten and generated scores.
+
+The audit also exposed a packed-input assumption: pandas can provide
+column-major observation arrays. The fused reduction now explicitly packs
+observations into row-major layout; regression tests cover histogram and mass.
 
 ## Explicit fused histogram surrogate
 

@@ -43,13 +43,17 @@ def derive_endpoint_witness(kernel, observation):
         _reject("endpoint.not_conditioning_event", "Endpoint reconstruction requires a conditioning event field.")
     if observation.recording != "exact" or observation.availability != "complete":
         _reject("endpoint.recording_unsupported", "Only complete, exact event observations currently have a reconstruction rule.")
+    if observation.history_timing not in ("exact", "ceil_fp32_8ulp"):
+        _reject("endpoint.history_policy", "Unknown endpoint history timing policy.")
     value = derive_scalar_readout(kernel, observation)
     node = next(node for node in kernel.graph.nodes if node.component_id == value.clock_component_id)
     readout = kernel.op_specs.lookup_spec(value.clock_spec_key).likelihood_contract.event_readout
     step_id = next(parameter.parameter_id for parameter in kernel.params if parameter.name == node.params[readout.step_parameter])
     return EndpointWitness(observation, value.clock_component_id, value.clock_spec_key,
                            readout.counter_state, readout.minimum_count, step_id, value.expression,
-                           value.component_ids, value.projection_ids, value.parameter_ids)
+                           value.component_ids, value.projection_ids, value.parameter_ids,
+                           guarantee=("registered_readout_with_runtime_roundoff_guard" if observation.history_timing == "exact"
+                                      else "declared_affine_ceiling_history_projection"))
 
 
 def derive_scalar_readout(kernel, observation, *, primitive_ports=()):
@@ -376,11 +380,58 @@ def _exhaustive_count(expression, parameters, inputs, observed, minimum, maximum
     return matches[0]
 
 
+def _affine_timing_coefficients(expr, parameters, inputs):
+    """FP64 offset/slope of the checked affine readout, with FP32 leaves.
+
+    This reassociation defines an explicit compatibility policy; it must not
+    replace the operation-preserving exact endpoint enclosure evaluator.
+    """
+    if expr.kind == "count":
+        return 0., 1., True
+    if expr.kind in ("parameter", "input", "constant"):
+        value, _ = _evaluate_enclosure(expr, parameters, inputs, 0.)
+        return value, 0., False
+    left = _affine_timing_coefficients(expr.arguments[0], parameters, inputs)
+    right = _affine_timing_coefficients(expr.arguments[1], parameters, inputs)
+    if expr.kind == "add":
+        return left[0] + right[0], left[1] + right[1], left[2] or right[2]
+    if expr.kind == "multiply" and not (left[2] and right[2]):
+        return left[0] * right[0], left[1] * right[0] + left[0] * right[1], left[2] or right[2]
+    _reject("endpoint.ceiling_nonaffine", "Ceiling history timing requires an affine count readout.")
+
+
+def _ceil_history_counts(expression, parameters, inputs, observed, minimum, maximum):
+    """Positive-count projection, not exact conditioning or a recording model."""
+    offset, slope, _ = _affine_timing_coefficients(expression, parameters, inputs)
+    if not np.all(np.isfinite(offset)) or not np.all(np.isfinite(slope)) or not np.all(np.asarray(slope) > 0):
+        _reject("endpoint.ceiling_direction", "Ceiling history timing requires a finite strictly increasing affine readout.")
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        ratio = np.maximum((observed - offset) / slope, 0.)
+        nearest = np.rint(ratio)
+        reconstructed = offset + nearest * slope
+        fp32 = np.asarray(reconstructed, dtype=np.float32)
+        spacing = np.abs(np.spacing(fp32).astype(np.float64))
+        snap = np.abs(observed - reconstructed) <= 8. * spacing
+        projected = np.where(snap, nearest, np.ceil(ratio))
+    if not np.all(np.isfinite(projected)) or not np.all(np.isfinite(fp32)):
+        _reject("endpoint.arithmetic_domain", "Ceiling projection exceeds the finite arithmetic domain.")
+    if np.any(projected < minimum):
+        _reject("endpoint.projected_count_below_minimum", "Ceiling timing produced a zero-step history; this replay tier requires at least one event step.")
+    if np.any(projected > maximum):
+        _reject("endpoint.projected_count_above_cap", "Ceiling timing exceeds the source event step cap.")
+    # The chosen event's original expression must still have a supported
+    # finite readout; projected observations themselves need not lie on it.
+    _evaluate_enclosure(expression, parameters, inputs, projected)
+    return projected.astype(np.int64)
+
+
 @dataclass(frozen=True)
 class ObservedEndpointPlan:
     """Batched CPU reconstruction with explicit per-candidate runtime guards.
 
-    Success establishes a unique count inside the bounded roundoff enclosure.
+    Under default exact timing, success establishes a unique count inside the
+    bounded roundoff enclosure. Declared ceiling timing instead selects an
+    approximate point history and is labeled accordingly in the witness.
     It does not establish nonzero likelihood, observation-law equivalence, a
     complete scheduler history, or a formal floating-point certificate.
     """
@@ -396,10 +447,11 @@ class ObservedEndpointPlan:
     def reconstruct(self, inputs, data, parameter_sets=None, *, method="auto"):
         """Return integer counts shaped [candidate, trial, event] for one subject.
 
-        No nearest-bin/ceil policy is applied. Zero compatible counts or more
-        than one count in the roundoff envelope raise a structured error.
-        ``auto`` uses checked interval inversion with exhaustive fallback;
-        ``exhaustive`` selects the original enumeration for validation.
+        Default exact timing rejects zero or multiple compatible counts in the
+        roundoff envelope. ``auto`` uses checked interval inversion with
+        exhaustive fallback; ``exhaustive`` selects enumeration for validation.
+        Explicit ``ceil_fp32_8ulp`` timing instead projects an affine readout
+        to a positive count (auto only); this is not exact conditioning.
         """
         if method not in ("auto", "exhaustive"):
             raise ValueError("Endpoint reconstruction method must be 'auto' or 'exhaustive'.")
@@ -460,6 +512,13 @@ class ObservedEndpointPlan:
             for value in trial_inputs.values():
                 reject_invalid(np.isfinite(value), "endpoint.input_nonfinite", "Nonfinite readout input")
             reject_invalid(parameters[witness.step_parameter_id] > 0, "endpoint.step_nonpositive", "Event step size must be positive")
+            if witness.observation.history_timing == "ceil_fp32_8ulp":
+                if method != "auto":
+                    raise ValueError("Exhaustive exact inversion does not implement ceiling history projection.")
+                result[..., event] = _ceil_history_counts(
+                    witness.expression, relevant, trial_inputs, observed, witness.minimum_count, plan.ir.max_steps,
+                ).reshape(shape)
+                continue
             counts = (np.zeros(len(observed), dtype=np.int64) if method == "exhaustive" else
                       _invert_count_intervals(witness.expression, relevant, trial_inputs, observed,
                                               witness.minimum_count, plan.ir.max_steps))

@@ -427,6 +427,18 @@ env -u TRITON_INTERPRET .venv/bin/python \
   --fused-block-size 32 --fused-num-warps 1 --verify-fused-counts
 ```
 
+## Retirement follow-up: recorded-data compatibility
+
+The next milestone adds opt-in PEC routing through `batched_observations` and
+explicit `history_timing="ceil_fp32_8ulp"` for approximate positive-count
+histories. Existing fitting defaults remain on their previous routes.
+The recorded-data audit and limitations are documented in
+[LIKELIHOOD_COMPILE_USAGE.md](LIKELIHOOD_COMPILE_USAGE.md#opt-in-pec-migration-and-approximate-history-timing).
+That audit validates actual recorded RTs and continuously proposed NDT values;
+it does **not** replace the fitting-budget timings above with its small
+257-estimate correctness budget. Zero-step history support and complete
+optimizer validation remain prerequisites for retiring the handwritten kernel.
+
 ## Follow-up: GPU-resident boundary trajectories
 
 The preceding work was committed as `6516590034`. Follow-up profiling of the

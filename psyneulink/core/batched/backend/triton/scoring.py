@@ -174,7 +174,7 @@ def run_reduced_observations(observation_plan, inputs, data, parameter_sets, est
         raise StochasticSamplingError("sampling.memory_budget", "Even one candidate's paths/reductions exceed the budget or index domain.")
     batch_size = min(len(rows), capacity, candidate_batch_size or len(rows), (2**31 - 1) // (trials * horizon * max(1, path_width)))
     estimate_batch_size = min(estimates, estimate_batch_size or estimates)
-    observed = torch.tensor(data, dtype=torch.float32, device=device)
+    observed = torch.tensor(data, dtype=torch.float32, device=device).contiguous()
     if not torch.isfinite(observed).all().item():
         raise StochasticSamplingError("sampling.data", "Observed values exceed finite FP32.")
     dummy = torch.empty(1, device=device)

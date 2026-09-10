@@ -15,8 +15,10 @@ class ObservationField:
 
     Columns follow field order and each port's flattened value order.
     ``condition_history`` and ``score`` are distinct: a known but unscored
-    trial/field may still be needed to reconstruct subsequent state. Per-row
-    masks will be validated by a future likelihood execution API.
+    trial/field may still be needed to reconstruct subsequent state.
+    ``history_timing`` defaults to checked exact endpoint inversion. Explicit
+    ``ceil_fp32_8ulp`` selects an approximate affine ceiling point history;
+    it does not declare measurement noise or marginalization over RT bins.
     """
 
     output_port: object
@@ -27,6 +29,7 @@ class ObservationField:
     availability: str = "complete"
     condition_history: bool = True
     score: bool = True
+    history_timing: str = "exact"
 
     def __post_init__(self):
         if self.measure not in ("counting", "lebesgue"):
@@ -35,6 +38,13 @@ class ObservationField:
             raise ValueError("Observation role must be 'value' or 'event_time'.")
         if self.recording not in ("exact", "rounded", "noisy", "censored"):
             raise ValueError("Unknown observation recording policy.")
+        if self.history_timing not in ("exact", "ceil_fp32_8ulp"):
+            raise ValueError("Unknown history timing policy.")
+        if self.history_timing != "exact" and (
+            self.role != "event_time" or not self.condition_history
+            or self.recording != "exact" or self.availability != "complete"
+        ):
+            raise ValueError("Ceiling history timing requires a complete conditioning event with exact supplied values.")
         if self.availability not in ("complete", "may_be_missing"):
             raise ValueError("Unknown observation availability policy.")
         if type(self.score) is not bool or type(self.condition_history) is not bool:
@@ -91,6 +101,7 @@ class ResolvedObservationField:
     availability: str
     condition_history: bool
     score: bool
+    history_timing: str = "exact"
 
 
 def resolve_observations(spec, graph, bindings) -> tuple[ResolvedObservationField, ...]:
@@ -118,6 +129,7 @@ def resolve_observations(spec, graph, bindings) -> tuple[ResolvedObservationFiel
             output.component_id, output.port_id, output.width, column,
             field.measure, field.role, field.recording, field.precision,
             field.availability, field.condition_history, field.score,
+            field.history_timing,
         ))
         column += output.width
     return tuple(result)

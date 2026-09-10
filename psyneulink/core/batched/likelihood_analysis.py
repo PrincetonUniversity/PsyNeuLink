@@ -131,7 +131,7 @@ def analyze_likelihood(simulation, ir, kernel, bindings, observations):
         obligations.append(LikelihoodDiagnostic(
             "likelihood.endpoint_runtime_guard_required",
             "Registered readout expressions were checked. Each candidate and trial "
-            "must still have one compatible event count within the arithmetic envelope and step cap.",
+            "must still pass its declared timing policy's count-domain and arithmetic guards.",
             tuple(sorted({endpoint.clock_component_id for endpoint in endpoints})),
         ))
 
@@ -147,6 +147,11 @@ def analyze_likelihood(simulation, ir, kernel, bindings, observations):
         obligations.append(LikelihoodDiagnostic(
             "observation.recording_operator_required",
             "Recording noise, rounding, or censoring needs an explicit observation operator.",
+        ))
+    if any(field.history_timing != "exact" for field in resolved):
+        obligations.append(LikelihoodDiagnostic(
+            "observation.projected_history",
+            "A declared ceiling policy selects a point history; this is not exact conditioning or marginalization over recorded-time uncertainty.",
         ))
     if any(not field.score for field in resolved):
         obligations.append(LikelihoodDiagnostic(

@@ -625,6 +625,14 @@ class PECOptimizationFunction(OptimizationFunction):
         is deliberately restricted to the authenticated CSI graph with zero LCA
         noise.
 
+    batched_observations :
+        Optional ObservationSpec selecting the generic compiled histogram
+        likelihood. Fields must match outcome_variables in data-column order.
+        History timing is explicit in the spec; unsupported models/candidates
+        raise instead of falling back to CSI code. Mutually exclusive with
+        conditioned_likelihood and deterministic_history_likelihood. This is
+        an opt-in migration path, not a change to existing fitting defaults.
+
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
         candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
@@ -687,6 +695,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_strict_truncation: bool = False,
         conditioned_likelihood: bool = False,
         deterministic_history_likelihood: bool = False,
+        batched_observations=None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         **kwargs,
@@ -711,6 +720,14 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_strict_truncation = batched_strict_truncation
         self.conditioned_likelihood = conditioned_likelihood
         self.deterministic_history_likelihood = deterministic_history_likelihood
+        self.batched_observations = batched_observations
+        if batched_observations is not None:
+            from psyneulink.core.batched.observation import ObservationSpec
+
+            if type(batched_observations) is not ObservationSpec:
+                raise TypeError("batched_observations must be an ObservationSpec.")
+            if batched_backend is None or conditioned_likelihood or deterministic_history_likelihood:
+                raise ValueError("batched_observations requires a batched backend and is exclusive with legacy likelihood modes.")
         if conditioned_likelihood and deterministic_history_likelihood:
             raise ValueError(
                 "conditioned_likelihood and deterministic_history_likelihood "
@@ -768,6 +785,8 @@ class PECOptimizationFunction(OptimizationFunction):
         )
         # Lazily-built, cached compiled plan (only used when batched_backend is set).
         self._batched_plan = None
+        self._batched_likelihood_plan = None
+        self._batched_likelihood_simulation_plan = None
 
         # Distributed fitting is off by default, so serial paths are unchanged.
         self.distributed = distributed
@@ -1039,6 +1058,29 @@ class PECOptimizationFunction(OptimizationFunction):
             indices.append(plan_names.index(want))
         return indices
 
+    def _compile_batched_histogram_plan(self, plan):
+        """Compile generic likelihood stages against the cached simulation IR."""
+        from psyneulink.core.components.ports.outputport import OutputPort
+
+        pec = self.owner.composition
+        ports = tuple(item if isinstance(item, OutputPort) else item.output_port for item in pec.outcome_variables)
+        declared = self.batched_observations.output_ports
+        if len(ports) != len(declared) or any(a is not b for a, b in zip(ports, declared)):
+            raise OptimizationFunctionError("batched_observations must match PEC outcome_variables exactly in data-column order.")
+        if (self._batched_likelihood_plan is not None and self._batched_likelihood_simulation_plan is plan
+                and self._batched_likelihood_plan.observation_plan.sampler.path_plan.history_plan.observations is self.batched_observations):
+            return self._batched_likelihood_plan
+        history = plan.compile_history_replay(self.batched_observations)
+        observations = history.compile_boundary_trajectories().compile_stochastic_sampler().compile_observation_sampler()
+        compiled = observations.compile_histogram_score(
+            categorical_dims=pec.data_categorical_dims, bins=self.batched_bins,
+            bin_range=self.batched_bin_range, smoothing_sigma=self.batched_smoothing_sigma,
+            pseudocount=self.batched_pseudocount, categorical_cardinalities=self.batched_categorical_cardinalities,
+        )
+        self._batched_likelihood_plan = compiled
+        self._batched_likelihood_simulation_plan = plan
+        return compiled
+
     def _batched_objective_func(self, context=None):
         """Objective closure that simulates + scores via the batched plan.
 
@@ -1059,11 +1101,20 @@ class PECOptimizationFunction(OptimizationFunction):
         def parameter_batch_objfunc(parameter_values):
             plan = self._compile_batched_plan()
             inputs = self._batched_stimulus_inputs()
-            outcome_indices = self._batched_outcome_indices(plan)
             parameter_sets = [
                 self._batched_parameter_set(values)
                 for values in parameter_values
             ]
+            if self.batched_observations is not None:
+                generated = self._compile_batched_histogram_plan(plan)
+                result = generated.score(
+                    inputs, exp_data, parameter_sets, num_estimates=self.owner.num_estimates,
+                    seed=0 if seed is None else int(seed), include_mask=include_mask,
+                    execution="strict" if self.batched_strict_truncation else "window",
+                    triton_launch_options=self.batched_triton_launch_options,
+                )
+                return np.asarray(result.log_likelihood, dtype=float).reshape(-1)
+            outcome_indices = self._batched_outcome_indices(plan)
             likelihood_method = (
                 plan.deterministic_history_log_likelihood
                 if self.deterministic_history_likelihood

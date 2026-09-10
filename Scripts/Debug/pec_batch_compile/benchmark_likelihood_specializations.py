@@ -37,7 +37,7 @@ def emit(record):
     print(json.dumps(record), flush=True)
 
 
-def make_case(args, dt):
+def make_case(args, dt, *, recorded=False):
     frame = pd.read_csv(args.data)
     frame = frame[(frame.subject_nr == args.subject) & frame.sequence.isin(["NoInstruction", "RealRare", "RealFrequent"])].reset_index(drop=True)
     if args.trials:
@@ -59,7 +59,8 @@ def make_case(args, dt):
     }
     observations = ObservationSpec((
         ObservationField(_node(comp, "DECISION_GATE").output_port, "counting"),
-        ObservationField(_node(comp, "RESPONSE_GATE").output_port, "counting", role="event_time"),
+        ObservationField(_node(comp, "RESPONSE_GATE").output_port, "lebesgue" if recorded else "counting", role="event_time",
+                         history_timing="ceil_fp32_8ulp" if recorded else "exact"),
     ))
     history = BatchedCompositionCompiler.compile_history_replay(comp, observations, backend="triton", max_steps=round(args.maximum_time / dt))
     observed = history.compile_boundary_trajectories().compile_stochastic_sampler().compile_observation_sampler()
@@ -77,12 +78,13 @@ def make_case(args, dt):
             f"{ddm.name}.non_decision_time": BatchedTrialParameter((np.array([.20, .23, .18]) - (abs(delta) % 3) * dt)[condition]),
         })
     start = time.perf_counter()
-    data = history.simulate_reference(inputs, rows[0], seed=12).observations[0]
+    data = (frame[["decision", "response_time"]].to_numpy(dtype=float) if recorded
+            else history.simulate_reference(inputs, rows[0], seed=12).observations[0])
     emit(dict(kind="case", dt=dt, subject=args.subject, trials=len(frame), scored_trials=int(frame.likelihood_include_mask.sum()),
               candidates=len(rows), estimates=args.estimates, maximum_time=args.maximum_time,
-              synthetic_mean_rt=float(data[:, 1].mean()), actual_mean_rt=float(frame.response_time.mean()),
+              synthetic_mean_rt=None if recorded else float(data[:, 1].mean()), actual_mean_rt=float(frame.response_time.mean()),
               data_generation_seconds=time.perf_counter() - start,
-              observation_policy="synthetic_source_lattice_on_real_sequence", device=torch.cuda.get_device_name()))
+              observation_policy="recorded_values_ceiling_history" if recorded else "synthetic_source_lattice_on_real_sequence", device=torch.cuda.get_device_name()))
     if args.verify_endpoints:
         endpoints = history.simulation_plan.compile_observed_endpoints(observations)
         checked, timings = {}, {}

@@ -28,6 +28,8 @@ class EmpiricalMassResult:
 def _validate_mass_plan(observation_plan):
     validate_observation_sampling_witness(observation_plan.sampler, observation_plan.witness)
     fields = tuple(readout.observation for readout in observation_plan.witness.readouts)
+    if any(field.history_timing != "exact" for field in fields):
+        raise StochasticSamplingError("mass.history_policy", "Empirical event mass requires exact history timing, not a ceiling projection.")
     if not any(field.score for field in fields):
         raise StochasticSamplingError("mass.no_scored_fields", "At least one observation field must be scored.")
     if any(field.score and field.measure != "counting" for field in fields):
