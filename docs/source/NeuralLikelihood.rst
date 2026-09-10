@@ -74,8 +74,7 @@ replace.
 Fitting with one
 ----------------
 
-``likelihood_estimator="neural"`` replaces the likelihood for any fit, hierarchical or
-not::
+``likelihood_estimator="neural"`` replaces the likelihood a model is scored with::
 
     pec = ParameterEstimationComposition(
         nodes=[model],
@@ -91,6 +90,10 @@ not::
 **artifact** is either a trained `NeuralLikelihood` or the path to one. Nothing is
 simulated during the fit, so the model is never compiled and ``comp_execution_mode`` does
 not apply.
+
+In a hierarchical fit it is set on the participant models the factory builds, since that
+is where the model itself is declared; setting it on the group raises, rather than being
+accepted and then not used.
 
 A single-participant fit benefits as much as a group one: the estimator is a property of
 the model, not of how many participants are being fitted.
