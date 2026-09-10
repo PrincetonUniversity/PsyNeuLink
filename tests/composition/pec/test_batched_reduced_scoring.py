@@ -108,15 +108,15 @@ def test_memory_planner_chunks_candidates_without_changing_counts(scoring_case, 
         pytest.skip("Memory planner acceptance check uses GPU buffers")
     plan = observation.compile_histogram_score(categorical_dims=[0], bins=13)
     expected = plan.score(inputs, data, rows, num_estimates=37, common_random_numbers=False)
-    original = BoundaryTrajectoryPlan.generate
+    original = BoundaryTrajectoryPlan.generate_device
     sizes = []
 
     def capture(path, inputs, data, candidates, **kwargs):
         sizes.append(len(candidates))
         return original(path, inputs, data, candidates, **kwargs)
 
-    monkeypatch.setattr(BoundaryTrajectoryPlan, "generate", capture)
-    result = plan.score(inputs, data, rows, num_estimates=37, common_random_numbers=False, max_buffer_bytes=16 * 1024)
+    monkeypatch.setattr(BoundaryTrajectoryPlan, "generate_device", capture)
+    result = plan.score(inputs, data, rows, num_estimates=37, common_random_numbers=False, max_buffer_bytes=10 * 1024)
     assert sizes == [1, 1, 1]
     np.testing.assert_array_equal(result.bin_counts, expected.bin_counts)
 

@@ -559,6 +559,26 @@ Memory budgets cover conservatively estimated path/reduction buffers, not CUDA
 context, allocator reservations, compilation, or the user's input storage.
 The retained signed-32-bit RNG lane-index guard also bounds total workload.
 
+Fused scoring now calls `boundary_plan.generate_device(...)` internally. This
+returns `DeviceBoundaryTrajectories`: the same boundary values in a backend
+tensor, the small checked canonical `HistoryTrace`, and field metadata. On GPU,
+per-step finiteness and complete-prefix checks run in a compact reduction kernel;
+only two error flags are downloaded. The checks still reject nonfinite consumed
+values, missing/extra valid steps, and mismatched canonical start states. History
+and scheduler checks are unchanged. The scorer reuses the returned tensor without
+copying full paths through NumPy or uploading them again.
+
+`boundary_plan.generate(...)` remains the NumPy inspection oracle, including
+validity masks and scheduler pass indices. The device route generates these
+diagnostic buffers temporarily but releases them after validation; it does not
+return their per-step contents. Device tensors must be treated as read-only by
+consumers (Python's frozen dataclass cannot enforce tensor immutability). Scoring
+still reconstructs its own paths rather than accepting caller-supplied buffers.
+The interpreter supports the same interface using CPU tensors. These changes
+do not make the whole pipeline device-resident: endpoint reconstruction and the
+small canonical history snapshots remain on the CPU, and paths still span the
+requested horizon for every trial.
+
 ## Registered effect contracts
 
 Built-in compiler primitives declare complete effects. Custom implementations

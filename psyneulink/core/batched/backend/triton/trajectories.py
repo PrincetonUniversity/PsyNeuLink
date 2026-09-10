@@ -4,7 +4,49 @@ import numpy as np
 
 from psyneulink.core.batched.backend.triton.history import HistoryTraceEmitter, _run_history_trace
 from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_inputs
-from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError
+from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, DeviceBoundaryTrajectories
+
+
+_VALIDATE_PATH_SOURCE = '''
+import triton
+import triton.language as tl
+
+@triton.jit
+def validate_boundary_paths(values, valid, expected_counts, errors,
+                            SIZE: tl.constexpr, WIDTH: tl.constexpr,
+                            HORIZON: tl.constexpr, BLOCK: tl.constexpr):
+    offsets = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    mask = offsets < SIZE
+    row = offsets // WIDTH
+    present = tl.load(valid + row, mask=mask, other=False)
+    expected = (row % HORIZON) < tl.load(expected_counts + row // HORIZON, mask=mask, other=0)
+    value = tl.load(values + offsets, mask=mask, other=0.0)
+    nonfinite = mask & present & ~(tl.abs(value) <= 3.4028234663852886e38)
+    missing = mask & (present != expected)
+    tl.atomic_or(errors, tl.max(nonfinite.to(tl.int32), 0))
+    tl.atomic_or(errors + 1, tl.max(missing.to(tl.int32), 0))
+'''
+
+
+def _validate_device_paths(values, valid, expected_counts, *, interpret):
+    """Scan without path-sized temporaries; return only two host error flags."""
+    from psyneulink.core.batched.backend.triton.cache import interpret_scope, load_triton_kernel_module
+    from psyneulink.core.batched.backend.triton.runtime import _import_torch_triton
+
+    torch, triton = _import_torch_triton(interpret)
+    expected = torch.tensor(expected_counts, dtype=torch.int32, device=values.device)
+    errors = torch.zeros(2, dtype=torch.int32, device=values.device)
+    with interpret_scope(interpret):
+        module = load_triton_kernel_module(_VALIDATE_PATH_SOURCE, "boundary_validation", "generic", interpret=interpret)
+        module.validate_boundary_paths[(triton.cdiv(values.numel(), 1024),)](
+            values, valid, expected, errors, SIZE=values.numel(), WIDTH=values.shape[-1],
+            HORIZON=values.shape[-2], BLOCK=1024,
+        )
+    nonfinite, missing = errors.cpu().tolist()
+    if nonfinite:
+        raise BoundaryTrajectoryError("boundary.nonfinite", "A consumed boundary value is nonfinite.")
+    if missing:
+        raise BoundaryTrajectoryError("boundary.prefix_missing", "The generated boundary is not a complete active-step prefix.")
 
 
 class BoundaryTrajectoryEmitter(HistoryTraceEmitter):
@@ -104,10 +146,12 @@ class BoundaryTrajectoryEmitter(HistoryTraceEmitter):
         return super()._emit_dynamic_step_mechanism(op, spec)
 
 
-def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_buffer_bytes, *, reference=False, seed=0):
+def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_buffer_bytes, *, reference=False, seed=0, return_device=False):
     from psyneulink.core.batched.backend.triton.runtime import _import_torch_triton
 
     simulation = plan.history_plan.simulation_plan
+    if return_device and reference:
+        raise ValueError("The coupled inspection reference does not return device paths.")
     if simulation.backend not in ("triton_cpu", "triton"):
         raise BoundaryTrajectoryError("boundary.backend_unsupported", "Boundary execution requires a Triton plan.")
     interpret = simulation.backend == "triton_cpu"
@@ -125,6 +169,8 @@ def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_b
         raise BoundaryTrajectoryError("boundary.layout", "Boundary inspection requires nonempty candidates and one contiguous subject.")
     shape = (len(rows), trials, horizon)
     width = sum(field.width for field in plan.witness.fields)
+    if return_device and len(rows) * trials * horizon * max(1, width) >= 2**31:
+        raise BoundaryTrajectoryError("boundary.index_domain", "Device path indexing exceeds the signed int32 domain.")
     state_width = sum(state.width for state in simulation.kernel_ir.states)
     history_width = state_width + len(simulation.kernel_ir.effective_parameters)
     # Conservatively include live path buffers, copied starts, both history
@@ -132,7 +178,7 @@ def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_b
     # and framework workspace, so it is an explicit buffer limit, not an RSS cap.
     trial_slots = len(rows) * trials
     output_width = sum(output.width for output in simulation.kernel_ir.outputs)
-    required = trial_slots * (horizon * (4 * width + 1 + 4) * (1 if interpret else 2)
+    required = trial_slots * (horizon * (4 * width + 1 + 4) * (1 if interpret or return_device else 2)
                              + 8 * history_width * 4 + 3 * (len(plan.witness.history.component_ids) + 3 + output_width) * 4)
     if required > max_buffer_bytes:
         raise BoundaryTrajectoryError("boundary.memory_budget", f"Inspection buffers require approximately {required} bytes; budget is {max_buffer_bytes}.")
@@ -153,17 +199,22 @@ def run_boundary_trajectories(plan, inputs, data, parameter_sets, horizon, max_b
         source_override=plan.source(parallel_trials=not reference),
         extra_kernel_args=(values, valid, passes, starts, horizon), parallel_trial_lanes=not reference,
     )
-    values, valid, passes = values.cpu().numpy(), valid.cpu().numpy(), passes.cpu().numpy()
-    if not np.all(np.isfinite(values[valid])):
-        raise BoundaryTrajectoryError("boundary.nonfinite", "A consumed boundary value is nonfinite.")
     expected_counts = np.minimum(trace.event_counts, horizon)
-    expected_valid = np.arange(horizon)[None, None, :] < expected_counts[..., None]
-    if not np.array_equal(valid, expected_valid):
-        raise BoundaryTrajectoryError("boundary.prefix_missing", "The generated boundary is not a complete active-step prefix.")
+    if return_device:
+        _validate_device_paths(values, valid, expected_counts, interpret=interpret)
+    else:
+        values, valid, passes = values.cpu().numpy(), valid.cpu().numpy(), passes.cpu().numpy()
+        if not np.all(np.isfinite(values[valid])):
+            raise BoundaryTrajectoryError("boundary.nonfinite", "A consumed boundary value is nonfinite.")
+        expected_valid = np.arange(horizon)[None, None, :] < expected_counts[..., None]
+        if not np.array_equal(valid, expected_valid):
+            raise BoundaryTrajectoryError("boundary.prefix_missing", "The generated boundary is not a complete active-step prefix.")
     if canonical is not None:
         if (not np.array_equal(trace.start_states, canonical.start_states)
                 or not np.array_equal(trace.start_effective_parameters, canonical.start_effective_parameters)):
             raise BoundaryTrajectoryError("boundary.start_mismatch", "Trial-parallel lanes did not restore the canonical states and held controls.")
+    if return_device:
+        return DeviceBoundaryTrajectories(canonical, values, plan.witness.fields)
     for array in (values, valid, passes):
         array.flags.writeable = False
     return BoundaryTrajectories(

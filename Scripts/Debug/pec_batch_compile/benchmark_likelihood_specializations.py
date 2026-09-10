@@ -190,6 +190,7 @@ def run(args, dt):
     with ExitStack() as stack:
         if args.profile_generated:
             from psyneulink.core.batched.endpoints import ObservedEndpointPlan
+            from psyneulink.core.batched.trajectories import BoundaryTrajectoryPlan
             from psyneulink.core.batched.backend.triton import history as history_backend, trajectories as path_backend
 
             def timed(function, phase):
@@ -207,6 +208,10 @@ def run(args, dt):
             original_trace = history_backend._run_history_trace
             stack.enter_context(patch.object(history_backend, "_run_history_trace", timed(original_trace, None)))
             stack.enter_context(patch.object(path_backend, "_run_history_trace", timed(original_trace, None)))
+            stack.enter_context(patch.object(BoundaryTrajectoryPlan, "generate_device",
+                                             timed(BoundaryTrajectoryPlan.generate_device, "complete_device_path_preparation_seconds")))
+            stack.enter_context(patch.object(path_backend, "_validate_device_paths",
+                                             timed(path_backend._validate_device_paths, "device_path_validation_seconds")))
         for name in args.methods:
             results[name] = measure(name, methods[name], args, dt)
     if "specialized_fit" in results and "specialized_strict" in results:

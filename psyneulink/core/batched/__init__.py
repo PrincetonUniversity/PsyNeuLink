@@ -8,7 +8,7 @@ from psyneulink.core.batched.compiler import (
 from psyneulink.core.batched.errors import BatchedNumericalError
 from psyneulink.core.batched.endpoints import EndpointReconstructionError, ObservedEndpointPlan
 from psyneulink.core.batched.history import HistoryReplayError, HistoryReplayPlan, HistoryTrace
-from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, BoundaryTrajectoryPlan
+from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, BoundaryTrajectoryPlan, DeviceBoundaryTrajectories
 from psyneulink.core.batched.sampling import PrimitiveSamples, StochasticSamplerPlan, StochasticSamplingError
 from psyneulink.core.batched.observed_sampling import ObservationSamplerPlan, ObservationSamples
 from psyneulink.core.batched.empirical_mass import EmpiricalMassPlan, EmpiricalMassResult
@@ -109,6 +109,7 @@ __all__ = [
     "StochasticSamplingError",
     "BoundaryField",
     "BoundaryTrajectories",
+    "DeviceBoundaryTrajectories",
     "BoundaryTrajectoryError",
     "BoundaryTrajectoryPlan",
     "BoundaryTrajectoryWitness",

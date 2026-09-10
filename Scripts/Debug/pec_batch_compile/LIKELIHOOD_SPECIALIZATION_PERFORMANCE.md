@@ -426,3 +426,96 @@ env -u TRITON_INTERPRET .venv/bin/python \
   --methods specialized_fit generated_fused generated_score_only generated_window \
   --fused-block-size 32 --fused-num-warps 1 --verify-fused-counts
 ```
+
+## Follow-up: GPU-resident boundary trajectories
+
+The preceding work was committed as `6516590034`. Follow-up profiling of the
+1 ms, 11-candidate, 100,000-simulation objective found that the generated GPU
+sampling kernel itself was not slower: approximately 5.54 seconds generated
+versus 5.75 handwritten. Generated history/path kernels took about 0.42 seconds
+versus 1.58 handwritten. The generic complete path-generation/inspection stage,
+however, took 3.43–3.48 seconds, followed by 0.27–0.31 seconds uploading large
+NumPy buffers. These separate diagnostic timings motivated this change; they
+are not additive to the earlier end-to-end benchmark measurements.
+
+`BoundaryTrajectoryPlan.generate_device()` now returns backend tensor paths
+directly. A generic Triton validation kernel checks consumed-value finiteness
+and exact prefix coverage without path-sized temporary arrays, returning just
+two error flags. Canonical-start comparisons and all history/scheduler guards
+are retained. Fused empirical-mass and histogram scorers consume that tensor
+directly; no full trajectory download, NumPy inspection, or re-upload occurs.
+`generate()` remains the independent full NumPy inspection oracle. Device
+tensors are owned by their result and must be treated as read-only; scoring
+continues to construct its own paths rather than accepting external buffers.
+
+The memory planner now accounts for one device trajectory allocation instead
+of host/device copies and a second sampling-device allocation. Per-step validity
+and scheduler-pass buffers are still produced, validated, and then released.
+Canonical history snapshots and endpoint inversion remain host-side. All paths
+still span the requested horizon, including paths for unscored trials; this
+change only alters storage and validation, not generated dynamics or RNG.
+
+The same 2080 Ti workload was rerun sequentially with block 32 / one warp:
+561 chronological trials, 485 scored, 11 candidates, 100,000 simulations,
+12-second cap, and exact synthetic observations on the real trial sequence.
+Medians of two synchronized warm calls, excluding the first call:
+
+| End-to-end seconds per full candidate batch | 10 ms | 1 ms |
+|---|---:|---:|
+| Generated window, prior host-inspection benchmark | 1.223 | 9.582 |
+| Generated window, device-resident paths | 0.950 | 6.369 |
+| Handwritten production CSI, rerun control | 0.845 | 7.502 |
+
+Device-resident paths reduce the generated objective's time by **22% / 34%**
+relative to the previous stage. At 1 ms the generated objective now takes
+**15% less time** than the handwritten control (1.18x throughput). At 10 ms it
+still takes about **12% more time**. These are workload-specific objective
+measurements, not full fit times, direct CPU solver comparisons, or a claim
+that every model/GPU benefits equally.
+
+Generated warm runs were 0.955/0.945 and 6.361/6.377 seconds; first calls were
+1.177 and 6.536 seconds. Handwritten warm runs were 0.845/0.845 and
+7.473/7.531 seconds; first calls were 1.137 and 7.388 seconds. No tests ran
+concurrently with these timing loops. Peak Torch allocated GPU memory remains
+0.091 / 0.898 GiB generated versus 0.028 / 0.277 GiB handwritten: the inspection
+buffers still exist transiently on GPU, although their host copies are gone.
+
+All candidate scores and intentional-stop counts exactly match the previous
+generated window benchmark at both timesteps. The handwritten scores match
+their own previous baseline; the two implementations retain different random
+stream mappings, so their scores should not be compared as matched draws.
+
+Full-budget integer checks passed at both timesteps: all 26,675 scored window
+bin-count cells matched strict device-path scoring, and all 30,855 strict cells
+matched materialized inspection samples. Each reference population contains
+617,100,000 lanes (1,234,200,000 across both timesteps). GPU regression tests
+passed (32 passed, 27 skipped, including style checks), as did the targeted
+interpreter selection (8 passed, 8 skipped, including style checks). New tests
+check exact device/NumPy path equality, prohibit large `.cpu()` downloads,
+inject nonfinite/prefix/start-state faults, check invalid suffix masking and
+partial scan tiles, and retain witness/resource guards and scoring chunk/RNG
+identity. The smaller automatic-batch budget test now targets the device-only
+memory accounting rather than the removed host/device copies.
+The 786,624-lane coupled-source validation also passed after the storage change:
+both timesteps, both seeds, and both CRN policies had zero observation/count,
+empirical-mass, or histogram discrepancies, including masked/chunked window
+scoring. No JSON output files were added and no cluster jobs were submitted.
+
+A separate synchronized phase profile confirms the intended bottleneck was
+removed: complete device-path preparation takes **0.597–0.600 seconds**, down
+from the earlier 3.43–3.48-second inspection stage, with no subsequent full-path
+upload. Device finiteness/prefix validation takes only **1.69–1.74 ms**.
+Endpoint inversion takes 0.083–0.085 seconds, history execution 0.428–0.433,
+and the boundary execution wrapper 0.032–0.033. These are nested phase timers:
+the complete preparation time includes the other listed preparation phases,
+so they must not be added to it. The profiled objective median was 6.242 seconds;
+the uninstrumented 6.369-second value above remains the headline measurement.
+
+Reproduce:
+
+```bash
+env -u TRITON_INTERPRET .venv/bin/python \
+  Scripts/Debug/pec_batch_compile/benchmark_likelihood_specializations.py \
+  --methods specialized_fit generated_window \
+  --fused-block-size 32 --fused-num-warps 1 --verify-fused-counts
+```

@@ -158,12 +158,13 @@ def run_reduced_observations(observation_plan, inputs, data, parameter_sets, est
     history_width = sum(state.width for state in simulation.kernel_ir.states) + len(simulation.kernel_ir.effective_parameters)
     output_width = sum(output.width for output in simulation.kernel_ir.outputs)
     count_width = 1 if histogram is None else 2 * histogram.radius + 1
-    # Same conservative path-inspection accounting as the path launcher, plus
-    # its retained copy on the sampling device and compact scoring workspace.
-    path_bytes = trials * (horizon * (4 * path_width + 5) * (1 if interpret else 2)
+    # Device path generation retains no host copy; the returned tensor is the
+    # sampling input itself, not a second allocation. Include validation scratch
+    # and the small host history just as the path launcher does.
+    path_bytes = trials * (horizon * (4 * path_width + 5)
                            + 8 * history_width * 4
                            + 3 * (len(path_plan.witness.history.component_ids) + 3 + output_width) * 4)
-    extra_per_candidate = trials * (horizon * path_width * 4 + (count_width + 3) * 32 + 8
+    extra_per_candidate = trials * ((count_width + 3) * 32 + 8
                                     + len(simulation.ir.params) * 12)
     fixed = (trials * (width * 12 + count_width * 16 + 64 + sum(item.width for item in simulation.ir.graph.inputs) * 8)
              + len(rows) * trials * count_width * 32
@@ -192,8 +193,8 @@ def run_reduced_observations(observation_plan, inputs, data, parameter_sets, est
         for offset in range(0, len(rows), batch_size):
             batch = rows[offset:offset + batch_size]
             remaining = budget - fixed - len(batch) * extra_per_candidate
-            paths = path_plan.generate(inputs, data, batch, horizon=horizon, max_buffer_bytes=remaining)
-            path_values = torch.tensor(np.array(paths.values, copy=True), device=device)
+            paths = path_plan.generate_device(inputs, data, batch, horizon=horizon, max_buffer_bytes=remaining)
+            path_values = paths.values
             target = torch.tensor(np.array(paths.history.event_counts), dtype=torch.int32, device=device)
             limits = dummy
             if execution == "window":

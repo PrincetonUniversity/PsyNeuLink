@@ -87,6 +87,21 @@ class BoundaryTrajectories:
 
 
 @dataclass(frozen=True)
+class DeviceBoundaryTrajectories:
+    """Validated backend tensor paths; no host copy of per-step diagnostics.
+
+    The tensor is owned by this result and must be treated as read-only by
+    consumers. Frozen dataclasses cannot enforce tensor immutability.
+    Canonical history remains a small, checked host-side HistoryTrace.
+    """
+
+    history: HistoryTrace
+    values: object  # torch.Tensor [candidate, trial, active step, field column]
+    fields: tuple[BoundaryField, ...]
+    mode: str = "device_observed_history_paths"
+
+
+@dataclass(frozen=True)
 class BoundaryTrajectoryPlan:
     history_plan: object
     witness: BoundaryTrajectoryWitness
@@ -115,6 +130,18 @@ class BoundaryTrajectoryPlan:
 
         validate_boundary_witness(self.history_plan, self.witness)
         return run_boundary_trajectories(self, inputs, data, parameter_sets, horizon, max_buffer_bytes)
+
+    def generate_device(self, inputs, data, parameter_sets=None, *, horizon=None, max_buffer_bytes=256 * 1024**2):
+        """Generate the same checked paths, retaining values on the backend device.
+
+        Finiteness and prefix checks reduce to compact error flags on-device.
+        Use generate() for read-only NumPy paths and full per-step inspection.
+        Neither method accepts caller-supplied canonical states.
+        """
+        from psyneulink.core.batched.backend.triton.trajectories import run_boundary_trajectories
+
+        validate_boundary_witness(self.history_plan, self.witness)
+        return run_boundary_trajectories(self, inputs, data, parameter_sets, horizon, max_buffer_bytes, return_device=True)
 
     def simulate_reference(self, inputs, parameter_sets=None, *, seed=0, horizon=None, max_buffer_bytes=256 * 1024**2):
         """Capture the actual pre-step boundary in one coupled simulation lane."""
