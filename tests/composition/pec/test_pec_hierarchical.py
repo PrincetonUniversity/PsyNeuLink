@@ -1602,3 +1602,18 @@ def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
     assert pec._fit_method is None
     assert pec.parameters.curvature.get() == "full"
     assert pec.parameters.max_iterations.get() == 50
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"likelihood_estimator": "neural"},
+        {"likelihood_estimator_kwargs": {"artifact": "somewhere.pt"}},
+    ],
+    ids=["estimator", "estimator_kwargs"],
+)
+def test_hierarchical_takes_the_likelihood_from_the_factory_too(overrides):
+    """Scoring belongs to the model, which a hierarchical fit takes from the factory."""
+    with pytest.raises(ParameterEstimationCompositionError, match="likelihood_estimator describes"):
+        _build_group_pec(**overrides)
