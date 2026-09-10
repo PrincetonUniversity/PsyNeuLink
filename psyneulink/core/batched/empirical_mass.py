@@ -42,8 +42,17 @@ def _validate_mass_plan(observation_plan):
 class EmpiricalMassPlan:
     observation_plan: object
 
+    def source(self):
+        """Inspect the checked fused count-domain sampling/reduction kernel."""
+        _validate_mass_plan(self.observation_plan)
+        from psyneulink.core.batched.backend.triton.scoring import ReducedObservationEmitter
+
+        kernel = self.observation_plan.sampler.path_plan.history_plan.simulation_plan.kernel_ir
+        return ReducedObservationEmitter(kernel, self.observation_plan.witness).emit()
+
     def score(self, inputs, data, parameter_sets=None, *, num_estimates=1024, seed=0,
-              common_random_numbers=True, horizon=None, max_buffer_bytes=256 * 1024**2, reference=False):
+              common_random_numbers=True, horizon=None, max_buffer_bytes=256 * 1024**2, reference=False,
+              execution="fused", candidate_batch_size=None, estimate_batch_size=None, triton_launch_options=None):
         """Estimate conditional event-count/observation masses with fresh lanes.
 
         A scored event_time matches its unique reconstructed integration count;
@@ -58,6 +67,12 @@ class EmpiricalMassPlan:
         fields = _validate_mass_plan(self.observation_plan)
         if type(reference) is not bool:
             raise StochasticSamplingError("mass.reference", "reference must be a boolean.")
+        if execution not in ("fused", "materialized"):
+            raise ValueError("execution must be 'fused' or 'materialized'.")
+        if (reference or execution == "materialized") and any(
+            value is not None for value in (candidate_batch_size, estimate_batch_size, triton_launch_options)
+        ):
+            raise ValueError("Chunk/launch controls apply only to fused scoring, not the materialized oracle.")
         data = np.asarray(data, dtype=np.float64)
         if data.ndim != 2 or data.shape[1] != len(fields) or not np.all(np.isfinite(data)):
             raise StochasticSamplingError("mass.data", "Data must be a finite [trial, observation] array.")
@@ -66,6 +81,15 @@ class EmpiricalMassPlan:
 
         simulation = self.observation_plan.sampler.path_plan.history_plan.simulation_plan
         rows = normalize_parameter_sets(parameter_sets, simulation.ir)
+        if execution == "fused" and not reference:
+            from psyneulink.core.batched.backend.triton.scoring import run_reduced_observations
+
+            successes = run_reduced_observations(
+                self.observation_plan, inputs, data, rows, num_estimates, seed, common_random_numbers,
+                horizon, max_buffer_bytes, candidate_batch_size=candidate_batch_size,
+                estimate_batch_size=estimate_batch_size, triton_launch_options=triton_launch_options,
+            )
+            return _mass_result(successes, num_estimates, simulation.backend)
         if type(num_estimates) is not int or num_estimates < 1:
             raise StochasticSamplingError("sampling.estimates", "num_estimates must be a positive integer.")
         if type(max_buffer_bytes) is not int or max_buffer_bytes <= 0:
@@ -92,14 +116,18 @@ class EmpiricalMassPlan:
             else:
                 matched &= samples.values[..., field.column_start] == observed[None, :, None, field.column_start]
         successes = matched.sum(dim=-1).cpu().numpy()
-        probabilities = successes.astype(np.float64) / num_estimates
-        with np.errstate(divide="ignore"):
-            log_factors = np.log(probabilities)
-        totals = log_factors.sum(axis=-1)
-        zero_hits = successes == 0
-        for array in (successes, probabilities, log_factors, totals, zero_hits):
-            array.flags.writeable = False
-        return EmpiricalMassResult(successes, num_estimates, probabilities, log_factors, totals, zero_hits, simulation.backend)
+        return _mass_result(successes, num_estimates, simulation.backend)
+
+
+def _mass_result(successes, num_estimates, backend):
+    probabilities = successes.astype(np.float64) / num_estimates
+    with np.errstate(divide="ignore"):
+        log_factors = np.log(probabilities)
+    totals = log_factors.sum(axis=-1)
+    zero_hits = successes == 0
+    for array in (successes, probabilities, log_factors, totals, zero_hits):
+        array.flags.writeable = False
+    return EmpiricalMassResult(successes, num_estimates, probabilities, log_factors, totals, zero_hits, backend)
 
 
 def compile_empirical_mass(observation_plan):

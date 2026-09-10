@@ -29,6 +29,22 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
+    def compile_histogram_score(
+        composition, observations, backend="triton_cpu", max_steps=None,
+        *, ignored_control_nodes=(), categorical_dims, bins=100, bin_range=None,
+        smoothing_sigma=0., pseudocount=0., categorical_cardinalities=None,
+    ):
+        """Explicit histogram surrogate for checked observations, not an auto PEC route."""
+        history = BatchedCompositionCompiler.compile_history_replay(
+            composition, observations, backend=backend, max_steps=max_steps,
+            ignored_control_nodes=ignored_control_nodes,
+        )
+        sampler = history.compile_boundary_trajectories().compile_stochastic_sampler().compile_observation_sampler()
+        return sampler.compile_histogram_score(categorical_dims=categorical_dims, bins=bins, bin_range=bin_range,
+                                                smoothing_sigma=smoothing_sigma, pseudocount=pseudocount,
+                                                categorical_cardinalities=categorical_cardinalities)
+
+    @staticmethod
     def compile_empirical_mass(
         composition, observations, backend="triton_cpu", max_steps=None,
         *, ignored_control_nodes=(),

@@ -48,6 +48,8 @@ def validate_case(args, dt):
         )
         lowering_seconds = time.perf_counter() - started
         plan = mass.observation_plan
+        histogram = plan.compile_histogram_score(categorical_dims=[0], bins=100, smoothing_sigma=.5,
+                                                 pseudocount=.1, categorical_cardinalities=[2])
         history = plan.sampler.path_plan.history_plan
         data = history.simulate_reference(inputs, seed=12).observations[0]
         ndt = f"{_node(composition, 'DDM').name}.non_decision_time"
@@ -62,15 +64,26 @@ def validate_case(args, dt):
                 coupled = plan.simulate_reference(inputs, data, rows, **kwargs)
                 score = mass.score(inputs, data, rows, **kwargs)
                 ref_score = mass.score(inputs, data, rows, reference=True, **kwargs)
+                hist_score = histogram.score(inputs, data, rows, **kwargs)
+                hist_reference = histogram.score(inputs, data, rows, reference=True, **kwargs)
+                include = np.arange(len(data)) % 3 != 0
+                hist_window = histogram.score(inputs, data, rows, execution="window", include_mask=include,
+                                              candidate_batch_size=1, estimate_batch_size=1025, **kwargs)
+                np.testing.assert_array_equal(hist_window.bin_counts[:, include], hist_reference.bin_counts[:, include])
+                np.testing.assert_array_equal(hist_window.log_likelihood, hist_reference.log_factors[:, include].sum(-1))
                 count_mismatches = int(np.count_nonzero(sampled.event_counts != coupled.event_counts))
                 choice_mismatches = int(np.count_nonzero(sampled.values[..., 0] != coupled.values[..., 0]))
                 max_rt_error = float(np.max(np.abs(sampled.values[..., 1] - coupled.values[..., 1])))
                 hit_mismatches = int(np.count_nonzero(score.successes != ref_score.successes))
-                if count_mismatches or choice_mismatches or hit_mismatches or max_rt_error > 1e-6:
-                    raise AssertionError((dt, seed, common_random, count_mismatches, choice_mismatches, hit_mismatches, max_rt_error))
+                hist_mismatches = int(np.count_nonzero(hist_score.bin_counts != hist_reference.bin_counts))
+                hist_error = float(np.max(np.abs(hist_score.log_likelihood - hist_reference.log_likelihood)))
+                if count_mismatches or choice_mismatches or hit_mismatches or hist_mismatches or hist_error or max_rt_error > 1e-6:
+                    raise AssertionError((dt, seed, common_random, count_mismatches, choice_mismatches, hit_mismatches, hist_mismatches, hist_error, max_rt_error))
                 measurements.append(dict(seed=seed, common_random_numbers=common_random,
                                          count_mismatches=count_mismatches, choice_mismatches=choice_mismatches,
                                          score_hit_mismatches=hit_mismatches, max_rt_error_seconds=max_rt_error,
+                                         histogram_count_mismatches=hist_mismatches, histogram_log_score_max_error=hist_error,
+                                         window_count_mismatches=0, window_stopped_lanes=int(hist_window.window_stopped.sum()),
                                          zero_hit_factors=int(score.zero_hits.sum())))
         timings = {}
         for label, operation in (

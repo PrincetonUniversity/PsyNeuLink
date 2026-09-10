@@ -268,9 +268,117 @@ def _evaluate_enclosure(expr, parameters, inputs, counts):
     _reject("endpoint.expression_invalid", "Unknown endpoint arithmetic operation.")
 
 
+def _evaluate_count_interval(expr, parameters, inputs, first, last):
+    """Enclose every point enclosure in an integer interval.
+
+    This is interval evaluation of the original expression, not reassociation
+    into an affine formula. The additional flag certifies that *all* intermediate
+    arithmetic throughout the range avoids the reference evaluator's rejected
+    subnormal domain. A range crossing zero is conservatively uncertified even
+    when its discrete counts might skip the problematic values.
+    """
+    if expr.kind == "count":
+        return first, last, True
+    if expr.kind in ("parameter", "input", "constant"):
+        lower, upper = _evaluate_enclosure(expr, parameters, inputs, first)
+        return lower, upper, True
+    left = _evaluate_count_interval(expr.arguments[0], parameters, inputs, first, last)
+    right = _evaluate_count_interval(expr.arguments[1], parameters, inputs, first, last)
+    if expr.kind == "add":
+        lower, upper = left[0] + right[0], left[1] + right[1]
+    elif expr.kind == "multiply":
+        products = np.broadcast_arrays(*(a * b for a in left[:2] for b in right[:2]))
+        lower, upper = np.minimum.reduce(products), np.maximum.reduce(products)
+    else:
+        _reject("endpoint.expression_invalid", "Unknown endpoint arithmetic operation.")
+    tiny = np.finfo(np.float32).tiny
+    domain = (lower >= tiny) | (upper <= -tiny) | ((lower == 0) & (upper == 0))
+    lower, upper = _enclose(lower, upper)
+    return lower, upper, domain & left[2] & right[2]
+
+
+def _invert_count_intervals(expression, parameters, inputs, observed, minimum, maximum):
+    """Batched checked inversion; 0 means fallback, -1 no match, -2 ambiguous.
+
+    Each surviving interval is split until its original point enclosure can
+    be tested. Disjoint rejected intervals cover all other counts, so accepting
+    a singleton also establishes uniqueness. Work is bounded to avoid interval
+    dependency/cancellation causing exponential growth. No caller-supplied
+    inverse or model-specific name is trusted by this helper.
+    """
+    size = len(observed)
+    result = np.zeros(size, dtype=np.int64)
+    if minimum > maximum:
+        result.fill(-1)
+        return result
+    first = np.full(size, minimum, dtype=np.float64)
+    last = np.full(size, maximum, dtype=np.float64)
+    try:
+        lower, upper, certified = _evaluate_count_interval(expression, parameters, inputs, first, last)
+    except EndpointReconstructionError as error:
+        if error.code != "endpoint.arithmetic_domain":
+            raise
+        # Preserve reference rejection, including errors at counts far away
+        # from the observation. Do not hide them by pruning that count range.
+        return result
+    certified = np.broadcast_to(certified, (size,))
+    result[certified] = -1
+    indices = np.flatnonzero(certified & (observed >= lower) & (observed <= upper))
+    first, last = first[indices], last[indices]
+    hits = np.zeros(size, dtype=np.int64)
+    work = size
+    while len(indices):
+        # An inspection oracle is preferable to unbounded interval subdivision
+        # for degenerate readouts. These caps are independent of the count cap.
+        if len(indices) > 8 * size or work > 64 * size:
+            result[np.unique(indices)] = 0
+            break
+        lower, upper, _ = _evaluate_count_interval(
+            expression, {key: value[indices] for key, value in parameters.items()},
+            {key: value[indices] for key, value in inputs.items()}, first, last,
+        )
+        possible = (observed[indices] >= lower) & (observed[indices] <= upper)
+        indices, first, last = indices[possible], first[possible], last[possible]
+        leaves = first == last
+        if np.any(leaves):
+            leaf_ids = indices[leaves]
+            # Verify leaves with the unchanged exhaustive evaluator, rather
+            # than relying on agreement between two interval implementations.
+            lo, hi = _evaluate_enclosure(
+                expression, {key: value[leaf_ids] for key, value in parameters.items()},
+                {key: value[leaf_ids] for key, value in inputs.items()}, first[leaves],
+            )
+            accepted = (observed[leaf_ids] >= lo) & (observed[leaf_ids] <= hi)
+            accepted_ids = leaf_ids[accepted]
+            result[accepted_ids] = first[leaves][accepted].astype(np.int64)
+            np.add.at(hits, accepted_ids, 1)
+            result[hits > 1] = -2
+        split = ~leaves & (hits[indices] < 2)
+        indices, first, last = indices[split], first[split], last[split]
+        middle = np.floor((first + last) / 2)
+        indices = np.concatenate((indices, indices))
+        first, last = np.concatenate((first, middle + 1)), np.concatenate((middle, last))
+        work += len(indices)
+    return result
+
+
+def _exhaustive_count(expression, parameters, inputs, observed, minimum, maximum, location):
+    """Original enumeration kept as the fallback and numerical test oracle."""
+    matches = []
+    for start in range(minimum, maximum + 1, 256):
+        counts = np.arange(start, min(start + 256, maximum + 1), dtype=np.float64)
+        lower, upper = _evaluate_enclosure(expression, parameters, inputs, counts)
+        matches.extend(counts[(observed >= lower) & (observed <= upper)].astype(np.int64).tolist())
+        if len(matches) > 1:
+            _reject("endpoint.count_ambiguous", f"Multiple event counts are compatible with {location}.")
+    if not matches:
+        _reject("endpoint.count_incompatible", f"No event count within the step cap is compatible with {location}.")
+    return matches[0]
+
+
 @dataclass(frozen=True)
 class ObservedEndpointPlan:
-    """CPU reference reconstruction with explicit per-candidate runtime guards.
+    """Batched CPU reconstruction with explicit per-candidate runtime guards.
 
     Success establishes a unique count inside the bounded roundoff enclosure.
     It does not establish nonzero likelihood, observation-law equivalence, a
@@ -285,12 +393,16 @@ class ObservedEndpointPlan:
     def column_count(self):
         return sum(observation.width for observation in self.observations)
 
-    def reconstruct(self, inputs, data, parameter_sets=None):
+    def reconstruct(self, inputs, data, parameter_sets=None, *, method="auto"):
         """Return integer counts shaped [candidate, trial, event] for one subject.
 
         No nearest-bin/ceil policy is applied. Zero compatible counts or more
         than one count in the roundoff envelope raise a structured error.
+        ``auto`` uses checked interval inversion with exhaustive fallback;
+        ``exhaustive`` selects the original enumeration for validation.
         """
+        if method not in ("auto", "exhaustive"):
+            raise ValueError("Endpoint reconstruction method must be 'auto' or 'exhaustive'.")
         plan = self.simulation_plan
         column, seen = 0, set()
         for observation in self.observations:
@@ -320,38 +432,46 @@ class ObservedEndpointPlan:
         if first_input.shape[:2] != (1, len(observations)):
             _reject("endpoint.data_shape", "Endpoint reconstruction currently accepts one contiguous subject with matching trial inputs.")
         buffers, _ = prepare_parameter_values(plan.ir, rows, num_subjects=1, num_trials=len(observations))
-        result = np.empty((len(rows), len(observations), len(self.witnesses)), dtype=np.int64)
-        for candidate in range(len(rows)):
-            for trial in range(len(observations)):
-                parameters = {
-                    spec.parameter_id: float(buffer[candidate] if buffer.ndim == 1 else buffer[candidate, 0, trial])
-                    for spec, buffer in zip(plan.ir.params, buffers)
-                }
-                trial_inputs = {
-                    item.component_id: float(np.asarray(prepared[item.node][0, trial]).reshape(-1)[0])
-                    for item in plan.ir.graph.inputs if item.width == 1
-                }
-                for event, witness in enumerate(self.witnesses):
-                    observed = observations[trial, witness.observation.column_start]
-                    location = f"candidate {candidate}, trial {trial}, event {event}"
-                    if not np.isfinite(observed):
-                        _reject("endpoint.observation_nonfinite", f"Missing or nonfinite event at {location}.")
-                    if any(not np.isfinite(parameters[i]) for i in witness.parameter_ids):
-                        _reject("endpoint.parameter_nonfinite", f"Nonfinite readout parameter at {location}.")
-                    if not np.all(np.isfinite(tuple(trial_inputs.values()))):
-                        _reject("endpoint.input_nonfinite", f"Nonfinite readout input at {location}.")
-                    if parameters[witness.step_parameter_id] <= 0:
-                        _reject("endpoint.step_nonpositive", f"Event step size must be positive at {location}.")
-                    matches = []
-                    for start in range(witness.minimum_count, plan.ir.max_steps + 1, 256):
-                        counts = np.arange(start, min(start + 256, plan.ir.max_steps + 1), dtype=np.float64)
-                        lower, upper = _evaluate_enclosure(witness.expression, parameters, trial_inputs, counts)
-                        matches.extend(counts[(observed >= lower) & (observed <= upper)].astype(np.int64).tolist())
-                        if len(matches) > 1:
-                            _reject("endpoint.count_ambiguous", f"Multiple event counts are compatible with {location}.")
-                    if not matches:
-                        _reject("endpoint.count_incompatible", f"No event count within the step cap is compatible with {location}.")
-                    result[candidate, trial, event] = matches[0]
+        shape = (len(rows), len(observations))
+        parameters = {
+            spec.parameter_id: np.broadcast_to(buffer[:, None] if buffer.ndim == 1 else buffer[:, 0, :], shape).astype(np.float64).ravel()
+            for spec, buffer in zip(plan.ir.params, buffers)
+        }
+        trial_inputs = {
+            item.component_id: np.broadcast_to(np.asarray(prepared[item.node][0]).reshape(-1), shape).astype(np.float64).ravel()
+            for item in plan.ir.graph.inputs if item.width == 1
+        }
+        result = np.empty((*shape, len(self.witnesses)), dtype=np.int64)
+        for event, witness in enumerate(self.witnesses):
+            observed = np.broadcast_to(observations[:, witness.observation.column_start], shape).ravel()
+
+            def location(index):
+                return f"candidate {index // shape[1]}, trial {index % shape[1]}, event {event}"
+
+            def reject_invalid(valid, code, detail):
+                bad = np.flatnonzero(~valid)
+                if len(bad):
+                    _reject(code, f"{detail} at {location(bad[0])}.")
+
+            reject_invalid(np.isfinite(observed), "endpoint.observation_nonfinite", "Missing or nonfinite event")
+            relevant = {key: parameters[key] for key in witness.parameter_ids}
+            for value in relevant.values():
+                reject_invalid(np.isfinite(value), "endpoint.parameter_nonfinite", "Nonfinite readout parameter")
+            for value in trial_inputs.values():
+                reject_invalid(np.isfinite(value), "endpoint.input_nonfinite", "Nonfinite readout input")
+            reject_invalid(parameters[witness.step_parameter_id] > 0, "endpoint.step_nonpositive", "Event step size must be positive")
+            counts = (np.zeros(len(observed), dtype=np.int64) if method == "exhaustive" else
+                      _invert_count_intervals(witness.expression, relevant, trial_inputs, observed,
+                                              witness.minimum_count, plan.ir.max_steps))
+            # Reference fallback also supplies the established error messages
+            # for no match/ambiguity, without weakening any arithmetic guards.
+            for index in np.flatnonzero(counts <= 0):
+                counts[index] = _exhaustive_count(
+                    witness.expression, {key: float(value[index]) for key, value in relevant.items()},
+                    {key: float(value[index]) for key, value in trial_inputs.items()}, observed[index],
+                    witness.minimum_count, plan.ir.max_steps, location(index),
+                )
+            result[..., event] = counts.reshape(shape)
         result.flags.writeable = False
         return result
 

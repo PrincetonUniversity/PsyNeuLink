@@ -49,6 +49,12 @@ class ObservationSamplerPlan:
     sampler: object
     witness: ObservationSamplingWitness
 
+    def compile_histogram_score(self, **options):
+        """Select an explicit histogram surrogate, separate from empirical mass."""
+        from psyneulink.core.batched.histogram_score import compile_histogram_score
+
+        return compile_histogram_score(self, **options)
+
     def compile_empirical_mass(self):
         from psyneulink.core.batched.empirical_mass import compile_empirical_mass
 

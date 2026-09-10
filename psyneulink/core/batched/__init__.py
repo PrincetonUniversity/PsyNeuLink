@@ -12,6 +12,7 @@ from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryT
 from psyneulink.core.batched.sampling import PrimitiveSamples, StochasticSamplerPlan, StochasticSamplingError
 from psyneulink.core.batched.observed_sampling import ObservationSamplerPlan, ObservationSamples
 from psyneulink.core.batched.empirical_mass import EmpiricalMassPlan, EmpiricalMassResult
+from psyneulink.core.batched.histogram_score import HistogramScorePlan, HistogramScoreResult
 from psyneulink.core.batched.likelihood_ir import (
     EventCountReadout,
     HistoryReplayWitness,
@@ -93,6 +94,8 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "HistogramScorePlan",
+    "HistogramScoreResult",
     "EmpiricalMassPlan",
     "EmpiricalMassResult",
     "ObservationSamplerPlan",

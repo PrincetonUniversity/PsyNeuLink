@@ -72,7 +72,8 @@ class StochasticRegionEmitter(TritonGraphEmitter):
                 self.builder.line(f"{name} = tl.zeros((BLOCK,), tl.float32)")
             raw_vars.append(names)
         self.builder.line("sample_step = 0")
-        with self.builder.block(f"while (sample_step < PATH_STEPS) & (tl.max(tl.where(mask & ({finished} == 0), 1, 0)) > 0)"):
+        limit = self._emit_sample_limit()
+        with self.builder.block(f"while (sample_step < {limit}) & (tl.max(tl.where(mask & ({finished} == 0), 1, 0)) > 0)"):
             self.builder.line(f"sample_active = mask & ({finished} == 0)")
             self.dynamic_active_mask = "sample_active"
             self.dynamic_execution_index = "sample_step"
@@ -99,6 +100,12 @@ class StochasticRegionEmitter(TritonGraphEmitter):
                     self.builder.line(f"{target} = tl.where(sample_active, {source}, {target})")
             self.builder.line("sample_step += 1")
         self._emit_sample_outputs(raw_vars)
+        self._emit_sample_status(finished, count)
+
+    def _emit_sample_limit(self):
+        return "PATH_STEPS"
+
+    def _emit_sample_status(self, finished, count):
         for index, value in enumerate(("sample_step", finished, count)):
             self.builder.line(f"tl.store(sample_status + offsets * 3 + {index}, {value}, mask=mask)")
 
@@ -114,7 +121,7 @@ class ObservationRegionEmitter(StochasticRegionEmitter):
         super().__init__(kernel, witness.sampler)
         self.observation_witness = witness
 
-    def _emit_sample_outputs(self, raw_vars):
+    def _emit_observation_values(self, raw_vars):
         from psyneulink.core.batched.backend.triton.emit._helpers import float_literal
 
         samples = {field.port_id: names[0] for field, names in zip(self.witness.outputs, raw_vars)}
@@ -134,11 +141,17 @@ class ObservationRegionEmitter(StochasticRegionEmitter):
                 return f"(({left}) {'+' if expr.kind == 'add' else '*'} ({right}))"
             raise ValueError(f"Unsupported checked observation expression: {expr.kind}")
 
-        width = len(self.observation_witness.readouts)
+        values = []
         for readout in self.observation_witness.readouts:
             column = readout.observation.column_start
             self.builder.line(f"observation_{column} = {expression(readout.expression)}")
-            self.builder.line(f"tl.store(out + offsets * {width} + {column}, observation_{column}, mask=mask)")
+            values.append((readout.observation, f"observation_{column}"))
+        return values
+
+    def _emit_sample_outputs(self, raw_vars):
+        width = len(self.observation_witness.readouts)
+        for field, value in self._emit_observation_values(raw_vars):
+            self.builder.line(f"tl.store(out + offsets * {width} + {field.column_start}, {value}, mask=mask)")
 
 
 class CanonicalTrialReferenceEmitter(BoundaryTrajectoryEmitter):

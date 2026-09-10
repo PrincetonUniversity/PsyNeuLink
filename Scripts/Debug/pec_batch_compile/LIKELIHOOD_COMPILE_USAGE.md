@@ -135,10 +135,21 @@ rejects changed witnesses. This is translation validation under trusted
 primitive declarations, not an independent theorem checker or Lean certificate.
 Changing the live registry after compilation does not change the snapshot.
 
-For each candidate and trial, the reference evaluator checks all counts from
-the primitive's minimum through `max_steps`, using bounded-memory chunks. It
-re-evaluates candidate-dependent step size, nondecision time, and affine
-parameters, including supplied trial-varying parameters. It returns a count
+The default `method="auto"` inverts the readout using batched interval
+subdivision across candidates and trials. It encloses the original arithmetic
+over count ranges, discards ranges incompatible with the observation, and
+checks surviving individual counts through the reference point evaluator.
+No algebraic reassociation or rounded inverse changes the readout semantics.
+Before pruning, it conservatively checks the arithmetic domain across the
+whole count range; otherwise an overflow or subnormal at a discarded count
+could incorrectly disappear. Unsafe ranges or excessive subdivision fall
+back to bounded-memory enumeration. Ordinary well-conditioned affine readouts
+require roughly logarithmic rather than exhaustive count search.
+
+Pass `method="exhaustive"` to `endpoint_plan.reconstruct(...)` to select the
+original enumeration explicitly as a numerical oracle. Both methods
+re-evaluate candidate-dependent step size, nondecision time, and affine
+parameters, including supplied trial-varying parameters. They return a count
 only when exactly one is compatible with the observed readout. It applies no
 nearest-bin or ceiling policy. Zero or multiple compatible counts raise
 `EndpointReconstructionError` with a diagnostic `code`; invalid parameter
@@ -149,9 +160,9 @@ both contracted multiply-add and separate rounding in the declared expression.
 This is a roundoff guard, **not a measurement-noise model or recording tolerance**.
 Success establishes one compatible count within the configured cap; it does
 not prove exact simulator support, positive likelihood, or uniqueness outside
-that cap. Subnormal arithmetic and overflow are conservatively rejected. This
-reference implementation enumerates the bounded count domain and is not yet an
-optimized fitting hot path.
+that cap. Subnormal arithmetic and overflow are conservatively rejected.
+The fast path still relies on the same floating-point enclosure rules and
+trusted primitive contracts; it is not a formal proof certificate.
 
 Only complete observations declared `recording="exact"` are supported here.
 Rounded, noisy, censored, or potentially missing event observations cannot use
@@ -437,10 +448,18 @@ The mass estimator's target is explicitly
 - Zero hits remain zero. There is no bandwidth, smoothing, pseudocount, density
   conversion, or implicit log floor. `zero_hits` exposes sparse factors.
 
-The sampler/readout kernels run on the chosen device. For GPU scoring, the
-observation tensor stays on the GPU and Torch reduces the matching lanes there;
-small count/status and result arrays still cross the host boundary. This is not
-a fused, chunked, or fully device-resident objective. The logarithm of the Monte
+The mass score now defaults to `execution="fused"`: generated sampling/readout
+code reduces matching lanes to integer counts and compact nonfinite/truncation
+diagnostics on the GPU, without materializing individual observations or
+statuses. `execution="materialized"` retains the sample/torch matching oracle;
+`reference=True` still uses the full coupled source oracle. Automatic candidate
+batching respects the conservative path/workspace budget. Optional
+`candidate_batch_size` and `estimate_batch_size` further bound launches;
+global candidate/estimate RNG identities are preserved under both CRN policies.
+All simulation chunks accumulate integer counts before normalization. Paths
+are reused between simulation chunks, but public history/path inspection still
+crosses the host boundary: this is not a fully device-resident objective.
+The logarithm of the Monte
 Carlo mass estimate is biased and can be unstable. No gradient, uncertainty
 certificate, or pseudo-marginal MCMC guarantee is supplied.
 
@@ -448,6 +467,97 @@ This narrow estimator is useful for correctness checks and exact discrete
 observation experiments. It does **not** replace the existing smoothed CSI
 likelihood or implement a recording model for real participant RTs. PEC routing
 and such estimator/measurement choices need an explicit subsequent design.
+
+## Explicit fused histogram surrogate
+
+Histogram scoring is a separate, opt-in estimator, not a change to empirical
+mass or automatic inference of observation noise:
+
+```python
+histogram = BatchedCompositionCompiler.compile_histogram_score(
+    composition, observations, backend="triton", max_steps=12000,
+    categorical_dims=[0], bins=100, smoothing_sigma=0.5,
+    pseudocount=0.1, categorical_cardinalities=[2],
+)
+# Equivalently: observation_plan.compile_histogram_score(...estimator options...)
+result = histogram.score(
+    inputs, data, parameter_sets, num_estimates=100000,
+    seed=17, common_random_numbers=True,
+    max_buffer_bytes=6 * 1024**3, include_mask=include_mask,
+)
+print(result.log_likelihood)  # One value per candidate.
+print(result.bin_counts)      # [candidate, trial, nearby-bin offset], integers.
+```
+
+This first histogram tier accepts one numeric dimension and optional categorical
+dimensions, all declared scalar fields scored. Column order and readout algebra
+come from the checked observation plan; there are no CSI node-name rules.
+Its target is `explicit_smoothed_histogram_density_surrogate`, with the existing
+histogram estimator's data-anchored edges (or explicit `bin_range`), categorical
+absolute tolerance 1e-6, boundary convention, locally normalized Gaussian
+smoothing, pseudocount normalization, and `ZERO_PROB` floor. The fused tier
+currently limits smoothing radius to 32 bins. It is a declared numerical
+surrogate, not proof that a discrete simulator has a Lebesgue density or that
+the chosen smoothing is a valid recording model. Exact event reconstruction
+requirements are unchanged; arbitrary recorded participant RTs remain outside
+that contract.
+
+The GPU retains integer counts only for bins within the observation's smoothing
+window, plus compact diagnostic counts. `execution="strict"` (the default) runs
+all trials to their own stopping times or the cap; truncation/nonfinite output
+raises even on trials excluded by `include_mask`.
+Both histogram and empirical-mass plans expose `.source()` for inspection of
+the checked fused sampling/reduction kernel.
+
+Histogram scoring additionally supports two explicit execution policies:
+
+- `execution="score_only"`: sample only trials selected by `include_mask`.
+  **Every observed trial still conditions the history**, including excluded
+  trials before later scored ones. Original chronological trial indices and
+  global candidate/estimate indices remain the RNG identities.
+- `execution="window"`: also derive a conservative last contributing event
+  count for each candidate/trial. This uses the checked conditioning-event
+  expression and outward FP32 interval evaluation of the original operations,
+  including the supported FMA enclosure. A binary suffix search certifies that
+  every later count through the **source plan's step cap** lies outside the
+  union of contributing histogram bins. No CSI formula, name match, or assumed
+  positive time slope is used. Unsupported numeric fields or uncertified
+  arithmetic retain full execution. A shorter runtime `horizon` cannot shorten
+  the certificate's source domain or exempt unresolved contributing samples.
+
+For either faster mode, excluded trials have `sampled_trials=False`, integer
+`bin_counts=-1`, and `densities`/`log_factors=NaN`; they supply no sampling
+diagnostics or score factors. `log_likelihood` still sums only included trials.
+An empty include mask returns zero totals after checking/replaying history.
+`window_stopped[candidate, trial]` reports lanes deliberately stopped before
+their endpoints. These lanes contribute zero counts and retain their share of
+the **original simulation denominator**; neither they nor low-probability
+outcomes are dropped or renormalized. Their intermediate readouts are never
+scored. Nonfinite evaluated readouts and emitted diagnostic flags still raise;
+unresolved lanes without a certified cutoff still raise `sampling.truncated`.
+These modes cannot validate unexecuted tails or supply full-endpoint simulation
+diagnostics. The cutoff is a bounded numerical check, not a formal proof or a
+guarantee about events beyond the source's supported count domain.
+
+```python
+fast = histogram.score(
+    inputs, data, parameter_sets, num_estimates=100000,
+    include_mask=include_mask, execution="window",
+    triton_launch_options={"block_size": 32, "num_warps": 1},
+)
+print(fast.sampled_trials, fast.window_stopped)
+print(histogram.source(execution="window"))
+```
+
+`reference=True` uses materialized observation samples and torch bucketization
+as a statistics oracle and requires `execution="strict"`. Integer bin counts
+for sampled trials should agree exactly with either strict oracle. The final
+weighted sum can differ slightly from `histogram_likelihood` because grouping
+samples into counts changes FP32 summation order. Candidate/simulation batch
+sizes and optional GPU `triton_launch_options` do not change the reduced counts.
+Memory budgets cover conservatively estimated path/reduction buffers, not CUDA
+context, allocator reservations, compilation, or the user's input storage.
+The retained signed-32-bit RNG lane-index guard also bounds total workload.
 
 ## Registered effect contracts
 

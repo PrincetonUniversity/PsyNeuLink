@@ -24,7 +24,8 @@ def test_second_scored_event_time_cannot_reuse_first_count_unchecked(coupled):
     assert error.value.code == "mass.event_field"
 
 
-def test_renamed_gates_projection_and_reordered_observations(batched_backend):
+@pytest.mark.parametrize("time_sign", [1., -1.])
+def test_renamed_gates_projection_and_reordered_observations(batched_backend, time_sign):
     composition, inputs, _ = _model(ddm_noise=0.15, iti=2, csi_repeat=3, csi_switch=4,
                                     cue_values=[[0.0], [1.0]])
     choice = _node(composition, "DECISION_GATE")
@@ -34,7 +35,7 @@ def test_renamed_gates_projection_and_reordered_observations(batched_backend):
     choice.function.parameters.intercept.set(1.0)
     choice.function.parameters.scale.set(4.0)
     choice.function.parameters.offset.set(0.25)
-    timing.function.parameters.slope.set(2.0)
+    timing.function.parameters.slope.set(2.0 * time_sign)
     timing.function.parameters.intercept.set(0.125)
     timing.function.parameters.scale.set(0.5)
     timing.function.parameters.offset.set(0.25)
@@ -59,5 +60,15 @@ def test_renamed_gates_projection_and_reordered_observations(batched_backend):
         manual = ((sampled.event_counts == sampled.history.event_counts[..., None])
                   & (sampled.values[..., 1] == data[None, :, None, 1])).sum(axis=-1)
         np.testing.assert_array_equal(score.successes, manual)
+        histogram = BatchedCompositionCompiler.compile_histogram_score(
+            composition, observations, backend=batched_backend, max_steps=128,
+            categorical_dims=[1], bins=17, smoothing_sigma=.5, pseudocount=.1,
+        )
+        fused = histogram.score(inputs, data, num_estimates=33, seed=29)
+        histogram_reference = histogram.score(inputs, data, num_estimates=33, seed=29, reference=True)
+        np.testing.assert_array_equal(fused.bin_counts, histogram_reference.bin_counts)
+        window = histogram.score(inputs, data, num_estimates=33, seed=29, execution="window")
+        np.testing.assert_array_equal(window.bin_counts, histogram_reference.bin_counts)
+        np.testing.assert_array_equal(window.log_likelihood, histogram_reference.log_likelihood)
     finally:
         unregister_batched_instance_op(drift.name)
