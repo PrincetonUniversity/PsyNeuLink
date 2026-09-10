@@ -371,7 +371,7 @@ def test_training_leaves_the_model_it_was_given_intact():
     pec, inputs = _ddm_training_pec(frame)
 
     before = pec.log_likelihood(0.3, 0.6, inputs=inputs)
-    nlf._simulate(pec, inputs, np.array([[0.3, 0.6]]), 2)
+    nlf._simulate(pec, inputs, np.array([[0.3, 0.6]]), ("rate", "threshold"), 2)
     assert pec.log_likelihood(0.3, 0.6, inputs=inputs) == before
 
 
@@ -383,8 +383,10 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
     pec, _ = _ddm_training_pec(frame)
     node = pec.nodes[0]
 
-    _, _, ten = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]), 2)
-    _, _, thirty = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]), 2)
+    _, _, ten = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]),
+                          ("rate", "threshold"), 2)
+    _, _, thirty = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
+                             ("rate", "threshold"), 2)
     assert (ten, thirty) == (10, 30)
 
 
@@ -392,3 +394,89 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
 def test_a_model_without_inputs_is_rejected(ddm_data):
     with pytest.raises(nlf.NeuralLikelihoodError, match="pec requires inputs"):
         nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=object(), n_parameter_samples=8)
+
+
+def _reversed_ddm_pec(data):
+    """Declares the same parameters as _ddm_training_pec, in the opposite order."""
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
+            non_decision_time=0.15, time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    pec = pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={
+            ("threshold", decision): np.linspace(*THRESHOLD_BOUNDS, 100),
+            ("rate", decision): np.linspace(*RATE_BOUNDS, 100),
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=2, initial_seed=0, same_seed_for_all_parameter_combinations=True,
+    )
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    return pec, {comp: np.ones((len(data), 1))}
+
+
+@pytest.mark.composition
+def test_training_rejects_a_model_that_orders_its_parameters_differently():
+    """Draws are matched to parameters by position, so the two orders have to agree."""
+    with pytest.raises(nlf.NeuralLikelihoodError, match="matched by position"):
+        nlf.train_neural_likelihood(
+            BOUNDS, OUTCOMES, pec_factory=_reversed_ddm_pec,
+            n_parameter_samples=4, n_trials_per_sample=5, epochs=1,
+        )
+
+
+@pytest.mark.composition
+def test_training_rejects_a_reordered_model_when_distributing():
+    """The same check has to hold on a worker, which builds its own model."""
+    pytest.importorskip("dask.distributed")
+    with pytest.raises(Exception, match="matched by position"):
+        nlf.train_neural_likelihood(
+            BOUNDS, OUTCOMES, pec_factory=_reversed_ddm_pec,
+            n_parameter_samples=4, n_trials_per_sample=5, epochs=1,
+            distributed_options={"n_workers": 1},
+        )
+
+
+@pytest.mark.composition
+def test_excluded_trials_do_not_reach_the_estimator(ddm_data):
+    """A mask means the same for a trained estimator as it does for a simulated one."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    mask = np.array([True, False, True, False])
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood},
+                   likelihood_include_mask=mask)
+    pec._setup_neural_likelihood()
+    scored = pec.controller.function._neural_outcomes
+
+    assert len(scored) == 2
+    np.testing.assert_allclose(scored, pec._data_numpy[mask])
+
+
+@pytest.mark.composition
+def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
+    """A later call with different inputs must not be scored against the first call's."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    object.__setattr__(likelihood.provenance, "n_trial_features", 1)
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    node = pec.nodes[0]
+
+    pec._setup_neural_likelihood({node: np.arange(4.0).reshape(-1, 1)})
+    first = pec.controller.function._neural_trial_features.copy()
+    pec._setup_neural_likelihood({node: (10 + np.arange(4.0)).reshape(-1, 1)})
+    second = pec.controller.function._neural_trial_features
+
+    assert not np.allclose(first, second)
+    np.testing.assert_allclose(second.ravel(), [10.0, 11.0, 12.0, 13.0])
