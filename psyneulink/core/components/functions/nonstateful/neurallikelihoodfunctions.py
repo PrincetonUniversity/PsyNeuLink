@@ -337,12 +337,31 @@ def _split(thetas, n):
     return np.array_split(thetas, max(1, min(int(n), len(thetas))))
 
 
-def _simulate(pec, inputs, thetas, n_outcomes):
+def _check_parameters(pec, names):
+    """Raise unless `pec` fits exactly `names`, in that order.
+
+    Draws are made in the order `bounds` gives and handed to the model by position, so a
+    model that lists its parameters differently would be simulated at the wrong values --
+    and, where the ranges differ, outside the box the estimator records.
+    """
+    from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
+
+    declared = _reported_names(pec.controller.function.fit_param_names)
+    if tuple(declared) != tuple(names):
+        raise NeuralLikelihoodError(
+            f"training draws parameters in the order {list(names)}, but the model fits "
+            f"{list(declared)}. They are matched by position, so these have to agree; "
+            f"name the bounds in the order the model declares them."
+        )
+
+
+def _simulate(pec, inputs, thetas, names, n_outcomes):
     """Simulate every draw through ``pec``; returns (conditioning, outcomes, trials).
 
     How many trials each draw produces is set by ``inputs``, not by the data the model
     was built around, so it is read back from the simulation rather than assumed.
     """
+    _check_parameters(pec, names)
     n_trials = None
     features = None
 
@@ -376,7 +395,7 @@ def _simulate(pec, inputs, thetas, n_outcomes):
     return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials
 
 
-def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
+def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
     """Build a model and simulate ``thetas`` through it.
 
     This is the unit of work sent to a worker: a composition cannot be sent to another
@@ -385,7 +404,7 @@ def _simulate_chunk(pec_factory, thetas, n_trials, n_outcomes):
     import pandas as pd
 
     pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))
-    return _simulate(pec, inputs, thetas, n_outcomes)
+    return _simulate(pec, inputs, thetas, names, n_outcomes)
 
 
 def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
@@ -555,9 +574,9 @@ def train_neural_likelihood(
     # only as far as there are workers to build one each. In this process there is one
     # model and no split at all.
     if pec is not None:
-        results = [_simulate(pec, inputs, thetas, n_outcomes)]
+        results = [_simulate(pec, inputs, thetas, names, n_outcomes)]
     elif distributed_options is None:
-        results = [_simulate_chunk(pec_factory, thetas, n_trials, n_outcomes)]
+        results = [_simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes)]
     else:
         from psyneulink.core.components.functions.nonstateful import fitfunctions
 
@@ -565,7 +584,7 @@ def train_neural_likelihood(
         try:
             workers = len(client.scheduler_info().get("workers", {})) or 1
             futures = [client.submit(_simulate_chunk, pec_factory, c,
-                                     n_trials, n_outcomes, pure=False)
+                                     n_trials, names, n_outcomes, pure=False)
                        for c in _split(thetas, workers)]
             results = client.gather(futures)
         finally:
