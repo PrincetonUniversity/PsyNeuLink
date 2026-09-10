@@ -480,3 +480,99 @@ def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
 
     assert not np.allclose(first, second)
     np.testing.assert_allclose(second.ravel(), [10.0, 11.0, 12.0, 13.0])
+
+
+@pytest.fixture(scope="module")
+def trained_artifact(tmp_path_factory):
+    """A trained estimator on disk, for factories that have to load it on a worker."""
+    likelihood, _ = _toy_likelihood(epochs=3)
+    path = tmp_path_factory.mktemp("nle") / "toy.pt"
+    likelihood.save(path)
+    return str(path)
+
+
+def _neural_participant_pec(artifact, data, subject_index=None):
+    """A participant model scored by a trained estimator rather than by simulating.
+
+    Deliberately leaves comp_execution_mode unset: scoring this way compiles nothing, and
+    a model that fell back to simulating would be refused for the same reason.
+    """
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
+            non_decision_time=0.15, time_step_size=0.01,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    pec = pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={
+            ("rate", decision): np.linspace(*RATE_BOUNDS, 100),
+            ("threshold", decision): np.linspace(*THRESHOLD_BOUNDS, 100),
+        },
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        likelihood_estimator="neural",
+        likelihood_estimator_kwargs={"artifact": artifact},
+    )
+    return pec, {comp: np.ones((len(data), 1))}
+
+
+def _group_frame(n_participants=2, n_trials=6):
+    rng = np.random.default_rng(0)
+    frames = []
+    for s in range(n_participants):
+        frame = pd.DataFrame({
+            "decision": rng.integers(0, 2, n_trials).astype(float),
+            "response_time": rng.uniform(0.3, 1.2, n_trials),
+            "subject": f"S{s}",
+        })
+        frames.append(frame)
+    data = pd.concat(frames, ignore_index=True)
+    data["decision"] = data["decision"].astype("category")
+    return data
+
+
+def _fit_group(artifact, distributed=False, **distributed_options):
+    import functools
+
+    options = {"pec_factory": functools.partial(_neural_participant_pec, artifact)}
+    options.update(distributed_options)
+    pec = pnl.ParameterEstimationComposition(
+        data=_group_frame(),
+        fit_method="hierarchical",
+        hierarchical_options={
+            "subject_id": "subject", "max_iterations": 1,
+            "estep_options": {"xatol": 1e-1, "fatol": 1e-1, "maxiter": 12},
+        },
+        distributed=distributed,
+        distributed_options=options,
+    )
+    return pec.run()
+
+
+@pytest.mark.composition
+def test_a_hierarchical_fit_scores_participants_with_their_estimator(trained_artifact):
+    """Nothing is compiled, so a model that had fallen back to simulating would refuse."""
+    results = _fit_group(trained_artifact)
+    assert results.beta.shape == (1, 2)
+    assert np.isfinite(results.objective)
+
+
+@pytest.mark.composition
+def test_a_distributed_hierarchical_fit_scores_the_same_way(trained_artifact):
+    """Each worker builds and loads its own, and has to reach the same answer."""
+    pytest.importorskip("dask.distributed")
+    here = _fit_group(trained_artifact)
+    there = _fit_group(trained_artifact, distributed=True, n_workers=2)
+
+    np.testing.assert_allclose(there.beta, here.beta, rtol=1e-10)
+    np.testing.assert_allclose(there.sigma, here.sigma, rtol=1e-10)
