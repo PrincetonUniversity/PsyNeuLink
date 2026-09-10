@@ -1042,3 +1042,37 @@ def test_a_plain_fit_still_requires_a_model():
 
     with pytest.raises(ParameterEstimationCompositionError, match="are required unless"):
         pnl.ParameterEstimationComposition(name="plain", data=_group_frame())
+
+
+def _cache_participant(fit_id, subject_index):
+    """Cache a model the way a participant task does; report whether it had to build one."""
+    cache = distributedestep._worker_subject_cache()
+    built = (fit_id, subject_index) not in cache
+    cache[(fit_id, subject_index)] = "model"
+    return built
+
+
+def _worker_cache_keys(dask_worker=None):
+    """Read the worker's own cache, which is the one a release has to clear."""
+    return sorted(getattr(dask_worker, "_hierarchical_subject_cache", {}))
+
+
+@pytest.mark.composition
+def test_releasing_a_fit_clears_the_cache_on_the_worker():
+    """Releasing runs outside a task, where the worker has to be taken from Dask."""
+    dd = pytest.importorskip("dask.distributed")
+
+    with dd.LocalCluster(n_workers=1, threads_per_worker=1, processes=True,
+                         dashboard_address=None) as cluster, dd.Client(cluster) as client:
+        for fit_id, subject_index in (("fit-a", 0), ("fit-a", 1), ("fit-b", 0)):
+            client.submit(_cache_participant, fit_id, subject_index, pure=False).result()
+        assert list(client.run(_worker_cache_keys).values())[0] == [
+            ("fit-a", 0), ("fit-a", 1), ("fit-b", 0)
+        ]
+
+        client.run(distributedestep._release_fit_models, "fit-a")
+
+        # only the released fit is gone, and it is built again when next asked for
+        assert list(client.run(_worker_cache_keys).values())[0] == [("fit-b", 0)]
+        assert client.submit(_cache_participant, "fit-a", 0, pure=False).result() is True
+        assert client.submit(_cache_participant, "fit-b", 0, pure=False).result() is False

@@ -45,14 +45,15 @@ __all__ = ["make_distributed_estep_runner"]
 _SUBJECT_FALLBACK_CACHE = {}
 
 
-def _worker_subject_cache():
-    """Return the cache dict for this worker, creating it if needed."""
-    try:
-        from dask.distributed import get_worker
-        worker = get_worker()
-    except (ImportError, ValueError):
-        # No worker context: either Dask is absent, or this is running on the driver.
-        return _SUBJECT_FALLBACK_CACHE
+def _worker_subject_cache(worker=None):
+    """Return the cache dict for `worker`, or for the one running this, creating it if needed."""
+    if worker is None:
+        try:
+            from dask.distributed import get_worker
+            worker = get_worker()
+        except (ImportError, ValueError):
+            # No worker context: either Dask is absent, or this is running on the driver.
+            return _SUBJECT_FALLBACK_CACHE
     cache = getattr(worker, "_hierarchical_subject_cache", None)
     if cache is None:
         cache = worker._hierarchical_subject_cache = {}
@@ -69,9 +70,14 @@ def _worker_address():
         return None
 
 
-def _release_fit_models(fit_id):
-    """Drop the models built for one fit.  Run on every worker once the fit is over."""
-    cache = _worker_subject_cache()
+def _release_fit_models(fit_id, dask_worker=None):
+    """Drop the models built for one fit.  Run on every worker once the fit is over.
+
+    `client.run` calls this outside a task, where a worker cannot be found by asking; Dask
+    supplies it to a parameter of this name instead.  Called directly, with no worker, it
+    clears the cache used when there is none.
+    """
+    cache = _worker_subject_cache(dask_worker)
     for key in [k for k in cache if k[0] == fit_id]:
         del cache[key]
 
