@@ -6,6 +6,12 @@ from psyneulink.core.batched.compiler import (
     BatchedSimulationPlan,
 )
 from psyneulink.core.batched.errors import BatchedNumericalError
+from psyneulink.core.batched.likelihood_planning import (
+    CompiledLikelihoodPlan, HistogramEstimatorSpec, LikelihoodPlanDescription,
+    LikelihoodPlanningError,
+)
+from psyneulink.core.batched.gaussian_likelihood import GaussianLikelihoodPlan, GaussianLikelihoodResult
+from psyneulink.core.batched.ddm_likelihood import WienerLikelihoodPlan, WienerLikelihoodResult
 from psyneulink.core.batched.endpoints import EndpointReconstructionError, ObservedEndpointPlan
 from psyneulink.core.batched.history import HistoryReplayError, HistoryReplayPlan, HistoryTrace
 from psyneulink.core.batched.trajectories import BoundaryTrajectories, BoundaryTrajectoryError, BoundaryTrajectoryPlan, DeviceBoundaryTrajectories
@@ -15,6 +21,8 @@ from psyneulink.core.batched.empirical_mass import EmpiricalMassPlan, EmpiricalM
 from psyneulink.core.batched.histogram_score import HistogramScorePlan, HistogramScoreResult
 from psyneulink.core.batched.likelihood_ir import (
     EventCountReadout,
+    GaussianReadout,
+    WienerProcessReadout,
     HistoryReplayWitness,
     BoundaryField,
     BoundaryTrajectoryWitness,
@@ -94,6 +102,16 @@ from psyneulink.core.batched.ir import (
 )
 
 __all__ = [
+    "CompiledLikelihoodPlan",
+    "HistogramEstimatorSpec",
+    "LikelihoodPlanDescription",
+    "LikelihoodPlanningError",
+    "GaussianLikelihoodPlan",
+    "GaussianLikelihoodResult",
+    "GaussianReadout",
+    "WienerProcessReadout",
+    "WienerLikelihoodPlan",
+    "WienerLikelihoodResult",
     "HistogramScorePlan",
     "HistogramScoreResult",
     "EmpiricalMassPlan",

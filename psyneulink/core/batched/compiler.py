@@ -30,6 +30,18 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
+    def compile_likelihood(composition, observations, *, method="auto", process="source",
+                           backend="auto", estimator=None, max_steps=None,
+                           ignored_control_nodes=()):
+        """Select a checked likelihood method with an explicit probability target."""
+        from psyneulink.core.batched.likelihood_planning import compile_likelihood
+
+        return compile_likelihood(
+            composition, observations, method=method, process=process, backend=backend,
+            estimator=estimator, max_steps=max_steps, ignored_control_nodes=ignored_control_nodes,
+        )
+
+    @staticmethod
     def compile_histogram_score(
         composition, observations, backend="triton_cpu", max_steps=None,
         *, ignored_control_nodes=(), categorical_dims, bins=100, bin_range=None,

@@ -1,5 +1,9 @@
 # Likelihood compilation: diagnosis, history replay, paths, and primitive sampling
 
+For the new common method-selection interface and first analytic Gaussian
+provider, see [Likelihood method planning](LIKELIHOOD_METHOD_PLANNING.md).
+That interface is opt-in; the CSI defaults described below are unchanged.
+
 The implementation on `feat/likelihood_compile` diagnoses model structure,
 derives supported event readouts, and reconstructs history for a checked
 single-event subset using the generated source scheduler. A checked boundary-path interface materializes

@@ -66,6 +66,9 @@ def test_algebraic_readout_alone_does_not_authorize_clock_substitution(coupled):
     try:
         register_batched_op(replace(original, likelihood_contract=replace(
             contract, event_readout=replace(contract.event_readout, execution_rule=None),
+            # Strip the continuous reset-process assertion as well: this test
+            # deliberately leaves only an algebraic counter readout.
+            wiener_readout=None,
         )))
         # Old snapshots remain valid; new plans require the stronger rule.
         assert "history_target" in plan.source()

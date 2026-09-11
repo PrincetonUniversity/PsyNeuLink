@@ -304,6 +304,7 @@ class MechanismOpSpec:
 
 _FUNCTION_SPECS: dict[type, ElementwiseFunctionSpec] = {}
 _MECHANISM_SPECS: dict[type, MechanismOpSpec] = {}
+_FUNCTION_MECHANISM_SPECS: dict[tuple[type, type], MechanismOpSpec] = {}
 _PASSTHROUGH_SPECS: dict[type, PassthroughMechanismSpec] = {}
 _PROJECTION_SPECS: dict[type, DenseProjectionSpec] = {}
 # Instance-level ops, keyed by node *name* (not class).  A node whose class
@@ -365,8 +366,24 @@ def spec_key(component_class: type) -> str:
     return f"{component_class.__module__}.{component_class.__qualname__}"
 
 
-def register_batched_op(spec):
-    """Register a batched op spec for its exact component class."""
+def register_batched_op(spec, *, function_specific=False):
+    """Register an exact class, or opt into an exact mechanism/function pair.
+
+    Pair registrations take precedence over class registrations and leave other
+    functions on the same mechanism class untouched. Snapshots retain the pair's
+    distinct key and implementation just like ordinary op registrations.
+    """
+
+    if type(function_specific) is not bool:
+        raise BatchedOpSpecError("function_specific must be boolean.")
+    if function_specific:
+        if not isinstance(spec, MechanismOpSpec) or spec.function_class is None or spec.mechanism_class is None:
+            raise BatchedOpSpecError("Function-specific registration requires a mechanism and function class.")
+        _validate_likelihood_contract(spec)
+        spec = replace(spec, key=f"{spec_key(spec.mechanism_class)}::{spec_key(spec.function_class)}")
+        _FUNCTION_MECHANISM_SPECS[spec.mechanism_class, spec.function_class] = spec
+        _SPECS_BY_KEY[spec.key] = spec
+        return spec
 
     if isinstance(spec, ElementwiseFunctionSpec):
         target, table = spec.function_class, _FUNCTION_SPECS
@@ -425,7 +442,7 @@ def mechanism_spec_for(node) -> MechanismOpSpec | None:
         instance_spec = _INSTANCE_SPECS.get(name) or _INSTANCE_SPECS.get(_unsuffixed_name(name))
         if instance_spec is not None:
             return instance_spec
-    return _MECHANISM_SPECS.get(type(node))
+    return _FUNCTION_MECHANISM_SPECS.get((type(node), type(getattr(node, "function", None)))) or _MECHANISM_SPECS.get(type(node))
 
 
 def _unsuffixed_name(name: str) -> str:
@@ -478,7 +495,23 @@ def _validate_likelihood_contract(spec):
         raise BatchedOpSpecError("Affine likelihood rules require an elementwise affine signature.")
     if contract.value_rule == "dense_projection" and not isinstance(spec, DenseProjectionSpec):
         raise BatchedOpSpecError("Dense likelihood rules require a projection implementation.")
+    gaussian = contract.gaussian_readout
+    if gaussian is not None and (
+        not isinstance(spec, MechanismOpSpec) or len(spec.rng) != 1
+        or spec.rng[0].width != 1 or spec.states or spec.trial_states
+        or not {gaussian.mean_parameter, gaussian.standard_deviation_parameter} <= {p.arg for p in spec.params}
+    ):
+        raise BatchedOpSpecError("Gaussian readout requires a stateless scalar RNG and bound mean/standard deviation.")
     readout = contract.event_readout
+    wiener = contract.wiener_readout
+    if wiener is not None and (
+        not isinstance(spec, MechanismOpSpec) or spec.states or len(spec.rng) != 1
+        or spec.rng[0].width != 1 or readout.execution_rule != "one_step_until_finished"
+        or not {value for key, value in vars(wiener).items() if key != "choice_port"} <= {p.arg for p in spec.params}
+        or (wiener.choice_port, 1) not in {(o.port, o.width) for o in (spec.outputs or ())}
+        or not any(s.initial_parameter == wiener.starting_value_parameter and s.width == 1 for s in spec.trial_states)
+    ):
+        raise BatchedOpSpecError("Wiener interpretation requires a reset scalar event primitive with bound parameters and choice output.")
     if readout is not None and (
         not isinstance(spec, MechanismOpSpec)
         or not spec.finished_output

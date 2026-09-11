@@ -12,5 +12,6 @@ from psyneulink.core.batched.components import (  # noqa: F401
     linear,
     logistic,
     mapping_projection,
+    normal,
     passthrough,
 )

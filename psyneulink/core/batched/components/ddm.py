@@ -15,7 +15,7 @@ an ordinary fixed-threshold DDM).
 
 import psyneulink as pnl
 
-from psyneulink.core.batched.likelihood_ir import EventCountReadout
+from psyneulink.core.batched.likelihood_ir import EventCountReadout, WienerProcessReadout
 
 from psyneulink.core.batched.backend.triton.api import TritonOpCall, pnl_triton_op
 from psyneulink.core.batched.specs import (
@@ -290,6 +290,11 @@ def _ddm_readout_emit(ctx, node_spec, output_vars):
             output_port="RESPONSE_TIME", counter_state="steps",
             step_parameter="time_step_size", offset_parameter="non_decision_time",
             execution_rule="one_step_until_finished",
+        ),
+        wiener_readout=WienerProcessReadout(
+            choice_port="DECISION_OUTCOME", rate_parameter="rate", noise_parameter="noise",
+            threshold_parameter="threshold", starting_value_parameter="starting_value",
+            offset_parameter="offset", collapse_parameter="threshold_collapse",
         ),
     ),
 )

@@ -279,6 +279,8 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
     def _emit_store_final_state(self) -> None:
         """Publish every retained lane state after the final trial."""
 
+        if not self.kernel.states:
+            return
         flat_index = 0
         with self.builder.block("if STORE_FINAL_STATE"):
             for state in self.kernel.states:

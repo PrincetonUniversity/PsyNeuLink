@@ -100,6 +100,51 @@ class StochasticSamplerWitness:
 
 
 @dataclass(frozen=True)
+class GaussianReadout:
+    """Trusted ideal-real law: output = mean + standard_deviation * N(0, 1).
+
+    One fresh independent scalar draw per execution; input is ignored.
+    ``output_port=None`` names the primary output independently of its label. This
+    is a mathematical distribution contract, not a density for PRNG bit patterns.
+    """
+
+    output_port: str | None
+    mean_parameter: str
+    standard_deviation_parameter: str
+
+    def __post_init__(self):
+        if any(type(v) is not str or not v for v in (
+            self.mean_parameter, self.standard_deviation_parameter,
+        )):
+            raise ValueError("Gaussian readouts require nonempty port and parameter names.")
+        if self.output_port is not None and (type(self.output_port) is not str or not self.output_port):
+            raise ValueError("Gaussian output must be a nonempty name or None (primary output).")
+
+
+@dataclass(frozen=True)
+class WienerProcessReadout:
+    """Trusted continuous interpretation of a reset scalar diffusion primitive.
+
+    dX = rate * input * dt + noise * dW; X(0)=starting_value, bounds +/-threshold.
+    Choice is 0 at the lower bound, 1 at the upper, and RT=T+nondecision time.
+    The interpretation is available only with zero per-step offset and collapse.
+    It does not declare equivalence to finite-step endpoint-tested simulation.
+    """
+
+    choice_port: str
+    rate_parameter: str
+    noise_parameter: str
+    threshold_parameter: str
+    starting_value_parameter: str
+    offset_parameter: str
+    collapse_parameter: str
+
+    def __post_init__(self):
+        if any(type(value) is not str or not value for value in vars(self).values()):
+            raise ValueError("Wiener readout bindings must be nonempty names.")
+
+
+@dataclass(frozen=True)
 class LikelihoodEffectContract:
     """Assert that an implementation's declared effects are complete.
 
@@ -117,6 +162,8 @@ class LikelihoodEffectContract:
     version: str = "1"
     value_rule: str | None = None
     event_readout: EventCountReadout | None = None
+    gaussian_readout: GaussianReadout | None = None
+    wiener_readout: WienerProcessReadout | None = None
 
     def __post_init__(self):
         if self.randomness not in ("none", "declared_streams"):
@@ -129,6 +176,16 @@ class LikelihoodEffectContract:
             raise ValueError("event_readout must be an EventCountReadout.")
         if self.value_rule is not None and self.event_readout is not None:
             raise ValueError("A primitive cannot declare both an affine value and event readout.")
+        if self.gaussian_readout is not None:
+            if type(self.gaussian_readout) is not GaussianReadout:
+                raise ValueError("gaussian_readout must be a GaussianReadout.")
+            if self.randomness != "declared_streams" or self.value_rule is not None or self.event_readout is not None:
+                raise ValueError("A Gaussian readout requires declared randomness and no other value/readout rule.")
+        if self.wiener_readout is not None:
+            if type(self.wiener_readout) is not WienerProcessReadout:
+                raise ValueError("wiener_readout must be a WienerProcessReadout.")
+            if self.randomness != "declared_streams" or self.event_readout is None or self.gaussian_readout is not None:
+                raise ValueError("A Wiener interpretation requires a random event readout and no Gaussian-output rule.")
 
 
 @dataclass(frozen=True)
