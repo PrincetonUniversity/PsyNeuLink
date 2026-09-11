@@ -1038,9 +1038,10 @@ def test_hierarchical_takes_the_model_from_the_factory_alone(argument):
 
 @pytest.mark.composition
 def test_a_plain_fit_still_requires_a_model():
+    """Omitting them stays the TypeError it was before they were given defaults."""
     import psyneulink as pnl
 
-    with pytest.raises(ParameterEstimationCompositionError, match="are required unless"):
+    with pytest.raises(TypeError, match="required positional argument"):
         pnl.ParameterEstimationComposition(name="plain", data=_group_frame())
 
 
