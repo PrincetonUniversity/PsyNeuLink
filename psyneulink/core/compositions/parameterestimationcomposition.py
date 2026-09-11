@@ -681,8 +681,14 @@ class ParameterEstimationComposition(Composition):
                 ) if value is None
             ]
             if missing:
-                raise ParameterEstimationCompositionError(
-                    f"{sorted(missing)} are required unless fit_method is \"hierarchical\"."
+                # A TypeError, as for any argument a call is missing: these are the first
+                # three parameters and carry defaults only so that a hierarchical fit, which
+                # describes no model here, can leave them out.
+                raise TypeError(
+                    f"__init__() missing {len(missing)} required positional "
+                    f"argument{'s' if len(missing) > 1 else ''}: "
+                    f"{', '.join(repr(name) for name in sorted(missing))}; they describe the "
+                    f"model to fit, and are optional only when fit_method is \"hierarchical\"."
                 )
 
         self._validate_params(locals().copy())
