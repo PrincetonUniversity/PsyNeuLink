@@ -299,7 +299,6 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
-    ParameterSchema,
     split_stacked_data,
 )
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
