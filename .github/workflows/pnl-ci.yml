@@ -51,6 +51,7 @@ jobs:
         arch: ['x64', 'arm64']
         version-restrict: ['']
         torch: ['']
+        extras: ['']
         include:
           # fp32 run on linux python 3.12
           - python-version: '3.12'
@@ -93,6 +94,13 @@ jobs:
             os: macos
             arch: 'default'
             version-restrict: 'min'
+
+          # parameter estimation tests with optional dependencies on linux python 3.10
+          - python-version: '3.10'
+            os: ubuntu
+            arch: 'default'
+            extras: 'dask'
+            extra-args: 'tests/composition/pec'
 
         exclude:
           # Replaced with the min version run above
@@ -165,6 +173,11 @@ jobs:
       with:
         features: 'dev'
 
+    - name: Install optional dependencies
+      if: matrix.extras
+      shell: bash
+      run: pip install "${{ steps.install.outputs.wheel }}[${{ matrix.extras }}]" -c broken_trans_deps.txt
+
     - name: Save wheels cache
       uses: actions/cache/save@v6
       if: always()
@@ -227,7 +240,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v7
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}${{ matrix.extras }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
