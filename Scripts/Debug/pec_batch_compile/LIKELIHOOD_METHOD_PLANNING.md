@@ -196,8 +196,12 @@ The additional GPU/reconvergence checks passed (4 selected checks), as did both
 CSI facade comparisons in a separate required CPU-interpreter run.
 
 Reset-per-trial DDM support is now implemented in the narrow slice described
-above. Next is a checked adapter for the existing CSI numerical solver. Decomposing that adapter
-into reusable history, drift/boundary, and first-passage components follows.
+above. The CSI PDE and adjoint have since been extracted into a shared
+[numerical backend](NUMERICAL_LIKELIHOOD_BACKEND.md), selected by mathematical
+requirements rather than whole-model recognition. The existing CSI driver uses
+that shared implementation. Composition-level numerical admission is still not
+registered: next come explicit continuous primitive equations/clocks and a
+checked deterministic-history/coefficient lowering, retaining compiled loops.
 General equation synthesis, particle inference, formal proofs, numerical DDM/CSI
 providers, automatic observation-model inference, and PEC optimizer wiring are
 not implemented by this milestone.

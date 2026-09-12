@@ -55,9 +55,12 @@ stage result and timing while exposing the final `parameter_vector` at the top
 level, so it can be reused anywhere a normal fit JSON is accepted.
 
 When Ninja and an OpenMP-capable C++ compiler are available, the CPU CLI builds
-a research-local extension from `csi_kernels.cpp` on first use and fuses the
-complete subject LCA scan, batched drift paths, DDM time loop, and their reverse
-passes.
+the research-local `csi_kernels.cpp` for the subject LCA scan and batched drift
+paths, and the shared `psyneulink/core/batched/numerical/first_passage_cpu.cpp`
+for the DDM time loop and adjoint. Both retain coarse fused native calls;
+`solver.py` is now a compatibility import for the shared PDE implementation.
+See [the numerical backend milestone](../../NUMERICAL_LIKELIHOOD_BACKEND.md)
+for the model-independent interface, limitations, and compiler integration path.
 Install the small build dependency, if needed, with `uv pip install ninja`.
 The compiled extension is cached outside the repository; subsequent processes
 reuse it. `--no-native-lca-scan --no-native-ddm-forward` selects the Torch

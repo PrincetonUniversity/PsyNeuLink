@@ -1,8 +1,9 @@
 """Method selection with explicit process targets, independent of device choice.
 
 No continuous limit or sampling estimator is inferred from a request for an
-analytic likelihood. Numerical PDE solvers remain a reserved tier; the explicit
-continuous-time target now admits a registered fixed-bound Wiener series.
+analytic likelihood. The continuous-time target admits a registered fixed-bound
+Wiener series. Reusable coefficient-level PDE kernels live in ``numerical``;
+Composition-level numerical admission still requires continuous graph lowering.
 """
 
 from dataclasses import asdict, dataclass
