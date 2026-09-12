@@ -565,19 +565,20 @@ class MappingProjection(PathwayProjection_Base):
         new_variable = copy.deepcopy(self._parameter_ports[MATRIX].defaults.value)
         initial_rate = new_variable * 0.0
 
-        # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
-        # new defaults get set properly
-        self._parameter_ports[MATRIX]._instantiate_function(
-            function=AccumulatorIntegrator(
-                owner=self._parameter_ports[MATRIX],
-                default_variable=new_variable,
-                initializer=new_variable,
-                # rate=initial_rate
-            ),
-            context=context
-        )
-        self._parameter_ports[MATRIX]._instantiate_value(context)
-        self._parameter_ports[MATRIX]._update_parameter_components(context)
+        if not isinstance(self._parameter_ports[MATRIX].function, AccumulatorIntegrator):
+            # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
+            # new defaults get set properly
+            self._parameter_ports[MATRIX]._instantiate_function(
+                function=AccumulatorIntegrator(
+                    owner=self._parameter_ports[MATRIX],
+                    default_variable=new_variable,
+                    initializer=new_variable,
+                    # rate=initial_rate
+                ),
+                context=context
+            )
+            self._parameter_ports[MATRIX]._instantiate_value(context)
+            self._parameter_ports[MATRIX]._update_parameter_components(context)
 
         # # Assign ParameterPort the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_ports[MATRIX].log = self.log
