@@ -1077,3 +1077,18 @@ def test_releasing_a_fit_clears_the_cache_on_the_worker():
         assert list(client.run(_worker_cache_keys).values())[0] == [("fit-b", 0)]
         assert client.submit(_cache_participant, "fit-a", 0, pure=False).result() is True
         assert client.submit(_cache_participant, "fit-b", 0, pure=False).result() is False
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"likelihood_estimator": "neural"},
+        {"likelihood_estimator_kwargs": {"artifact": "somewhere.pt"}},
+    ],
+    ids=["estimator", "estimator_kwargs"],
+)
+def test_hierarchical_takes_the_likelihood_from_the_factory_too(overrides):
+    """Scoring belongs to the model, which a hierarchical fit takes from the factory."""
+    with pytest.raises(ParameterEstimationCompositionError, match="likelihood_estimator describes"):
+        _build_group_pec(**overrides)
