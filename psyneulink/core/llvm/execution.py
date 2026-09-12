@@ -470,9 +470,9 @@ class CompExecution(CUDAExecution):
             port_inputs = {origin_port:[proj.parameters.value._get(context) for proj in p[0].path_afferents] for (origin_port, p) in self._composition.input_CIM_ports.items()}
             inputs = {}
             for p, v in port_inputs.items():
-                data = inputs.setdefault(p.owner, [0] * len(p.owner.input_ports))
+                data = inputs.setdefault(p.owner, [ip.default_external_input(self._composition) for ip in p.owner.input_ports])
                 index = p.owner.input_ports.index(p)
-                data[index] = v[0]
+                data[index] = v
 
         assert inputs is not None or node is not self._composition.input_CIM
 
@@ -530,7 +530,7 @@ class CompExecution(CUDAExecution):
         c_input_type = (input_type * num_input_sets)
 
         # Extract input for each trial and execution id
-        run_inputs = (([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inputs.items()})) for i in range(num_input_sets))
+        run_inputs = ((x for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inputs.items()})) for i in range(num_input_sets))
         c_inputs = c_input_type(*_tupleize(run_inputs))
         if "stat" in self._debug_env:
             print("Instantiated struct: input ( size:" ,
@@ -553,9 +553,9 @@ class CompExecution(CUDAExecution):
         # Extract input for each trial
         run_inputs = (
             (
-                np.atleast_2d(x)
+                x
                 for x in self._composition._build_variable_for_input_CIM(
-                    {k: np.atleast_1d(v) for k, v in _get_item_input(inp).items()}
+                    {k: v for k, v in _get_item_input(inp).items()}
                 )
             )
             for inp in inputs

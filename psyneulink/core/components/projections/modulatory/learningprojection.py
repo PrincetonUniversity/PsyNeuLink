@@ -333,7 +333,7 @@ class LearningProjection(ModulatoryProjection_Base):
     learned_projection : MappingProjection
         the `MappingProjection` to which LearningProjection's `receiver <LearningProjection.receiver>` belongs.
 
-    variable : 2d np.array
+    variable : np.ndarray
         same as `learning_signal <LearningProjection.learning_signal>`.
 
     learning_enabled : bool or Enum[ONLINE|AFTER]
@@ -345,7 +345,7 @@ class LearningProjection(ModulatoryProjection_Base):
         by assignment after it is constructed (see `learning_enabled <LearningMechanism.learning_enabled>` for
         additional details).
 
-    learning_signal : 2d np.array
+    learning_signal : np.ndarray
         the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjection.sender>`: a matrix of
         weight changes calculated by the `LearningMechanism` to which the `sender <LearningProjection.sender>` belongs;
         rows correspond to the `sender <MappingProjection.sender>` of the `learned_projection <LearningProjection>`,
@@ -368,7 +368,7 @@ class LearningProjection(ModulatoryProjection_Base):
         (see `LearningProjection_Function_and_Learning_Rate` for additional details);
     COMMENT
 
-    weight_change_matrix : 2d np.array
+    weight_change_matrix : np.ndarray
         output of the LearningProjection's `function <LearningProjection.function>`
         COMMENT:
         , possibly modified by its `learning_rate <LearningProjection.learning_rate>`;
@@ -380,7 +380,7 @@ class LearningProjection(ModulatoryProjection_Base):
         <MappingProjection.receiver>` (i.e., the input and output of the `learned_projection
         <LearningProjection.learned_projection>`, respectively).
 
-    value : 2d np.array
+    value : np.ndarray
         same as `weight_change_matrix`.
 
     """
@@ -630,7 +630,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     def _execute(self, variable, context=None, runtime_params=None):
         """
-        :return: (2D np.array) self.weight_change_matrix
+        :return: (>=2D np.array) self.weight_change_matrix
         """
         runtime_params = runtime_params or {}
 

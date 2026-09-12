@@ -2283,14 +2283,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 # We should be able to stack now, since the ragged structure is only on input ports
                 v = torch.stack([torch.stack(b) for b in v])
 
-            if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
-                # Add input port dimension back to account for input port dimension reduction, we should have shape
-                # (batch, sequence, input_port, ... variable dimensions ) or
-                # (batch, sequence, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
-                # after collect_afferents.
-                if len(v.shape) == 3:
-                    v = v[:, :, None, ...]
-
             res.append(self.input_ports[i].function(v))
 
         try:
@@ -2307,7 +2299,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
         """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.output
+        Enforce result to be >=2d, and assign to self.output
         """
 
         # If mechanism has an integrator_function and integrator_mode is True,
@@ -2327,7 +2319,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         return self.output
 
     def execute_function(self, function, variable, fct_has_mult_args=False):
-        """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+        """Execute _gen_pytorch_fct on variable, enforce result to be >=2d, and return it.
         If fct_has_mult_args is True, treat each item in variable as an arg to the function
         If False, compute function for each item in variable and return results in a list
         """

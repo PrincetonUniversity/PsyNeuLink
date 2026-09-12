@@ -855,7 +855,7 @@ class ParameterEstimationComposition(Composition):
         else:
             raise ValueError(
                 "Invalid format for data passed to OptimizationControlMechanism. Please ensure data is "
-                "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
+                "either a >=2D numpy array or a pandas dataframe. Each row represents a single experimental "
                 "trial."
             )
 

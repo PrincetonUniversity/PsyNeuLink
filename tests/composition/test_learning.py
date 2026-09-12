@@ -7,7 +7,7 @@ import pytest
 import re
 
 from psyneulink import DEFAULT_LEARNING_RATE
-from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.globals.keywords import Loss
@@ -777,28 +777,6 @@ class TestStructural:
                              })
             np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
-        def test_target_spec_over_nesting_of_items_in_target_value_error(self):
-            A = TransferMechanism(name="learning-process-mech-A")
-            B = TransferMechanism(name="learning-process-mech-B")
-            C = TransferMechanism(name="learning-process-mech-C",
-                                  default_variable=[[0.0, 0.0]])
-            comp = Composition()
-            p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            # Elicit error with run
-            with pytest.raises(RunError) as error_text:
-                comp.run(inputs={A: [1.0, 2.0, 3.0],
-                                 p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-            error_msg = ("Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'TARGET for learning-process-mech-C' is incompatible with the shape of its external input ([array([0., 0.])]).")
-            assert error_msg in str(error_text.value)
-
-            # Elicit error with learn
-            with pytest.raises(RunError) as error_text:
-                comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                                 p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-            error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) "
-                         f"for 'TARGET for learning-process-mech-C' is incompatible with the "
-                         f"shape of its external input ([array([0., 0.])]).")
-            assert error_msg in str(error_text.value)
 
         # The input sizes were picked because the lengths conflict in set:
         # >>> print({10, 2}, {2, 10})

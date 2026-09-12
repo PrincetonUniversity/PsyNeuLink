@@ -535,7 +535,7 @@ class LCControlMechanism(ControlMechanism):
         the influence of the `FitzHughNagumoIntegrator` Function's `mode <FitzHughNagumoIntegrator.mode>` attribute
         (see `LCControlMechanism_Function` for additional details).
 
-    control_allocation : 2d np.array
+    control_allocation : np.ndarray
         contains a single item computed from the LCControlMechanism's `scaling_factor_gain
         <LCControlMechanism.scaling_factor_gain>` and `base_level_gain <LCControlMechanism.base_level_gain>`
         parameters and the `w` term (2nd value) returned by the LCControlMechanism's `FitzHughNagumoIntegrator`

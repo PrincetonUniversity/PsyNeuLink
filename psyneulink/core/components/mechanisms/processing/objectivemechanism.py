@@ -180,7 +180,7 @@ the items in its `variable <Mechanism_Base.variable>`. However, by assigning val
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `TransformFunction <Transformfunctions>`, or any python function that takes an 2d array as
+be replaced with any `TransformFunction <Transformfunctions>`, or any python function that takes a >=2d array as
 its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates
 a 1d array as its result. If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned
 from `weight <InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
@@ -465,9 +465,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     function : TransformFunction, ObjectiveFunction, function, or method
         the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
-        `TransformFunction <Transformfunctions>` or a Python function that takes a 2d array with an arbitrary
+        `TransformFunction <Transformfunctions>` or a Python function that takes a >=2d array with an arbitrary
         number of items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e.,
-        its number of input_ports) and returns a 1d array.
+        its number of input_ports) and returns a 1d ([N-1]d) array.
 
     output_port : OutputPort
         contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is
@@ -477,7 +477,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     output_ports : ContentAddressableList[OutputPort]
         by default, contains only the *OUTCOME* (`primary <OutputPort_Primary>`) OutputPort of the ObjectiveMechanism.
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         contains one item that is the value of the *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`.
 
     standard_output_ports : list[str]
@@ -486,7 +486,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         .. _OBJECTIVE_MECHANISM_OUTCOME
 
-        *OUTCOME* : 1d np.array
+        *OUTCOME* : ([N-1]d) np.array
             the value of the objective or "loss" function computed by the
             ObjectiveMechanism's `function <ObjectiveMechanism.function>`
 

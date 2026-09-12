@@ -1210,6 +1210,7 @@ except ImportError:
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
+from psyneulink.core.components.component import NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate, LinearCombination
@@ -1884,6 +1885,9 @@ class EMComposition(AutodiffComposition):
         )
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
         pytorch_mechanism_wrapper_type = PytorchExternalMemoryMechanismWrapper
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
+    _ndim_container_parameters = AutodiffComposition._ndim_container_parameters.union({'memory_template'})
 
     class Parameters(AutodiffComposition.Parameters):
         """

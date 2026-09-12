@@ -799,7 +799,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
-    VALUE, VARIABLE, WEIGHT
+    VALUE, VARIABLE, WEIGHT, INPUT_PORT
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1453,7 +1453,12 @@ class Port_Base(Port):
                     # creates a projection with value length 2, so variable becomes [0, 0, 0, 0]
                     if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
-                    self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
+                    try:
+                        self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
+                    except ValueError:
+                        self.defaults.variable = convert_all_elements_to_np_array(
+                            [x for x in variable] + [np.atleast_2d(projection.defaults.value)]
+                        )
 
                 # assign identical default variable to function if it can be modified
                 if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
@@ -2105,7 +2110,22 @@ class Port_Base(Port):
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
             if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
-                return copy_parameter_value(self.defaults.variable)
+                variable = copy_parameter_value(self.defaults.variable)
+                # TransformFunction changes the shape from variable ->
+                # value in some way. Assume that when default_input
+                # given, the variable is reshapable to the right
+                # value shape
+                if isinstance(self.function, TransformFunction):
+                    try:
+                        variable = np.reshape(variable, self.defaults.value.shape)
+                    except ValueError as e:
+                        raise PortError(
+                            f"{self}: When default_input is used, the Port's default"
+                            " variable must be numpy-reshapable to its default value."
+                            f"\n\tdefault variable: {self.defaults.variable}"
+                            f"\n\tdefault value: {self.defaults.value}"
+                        ) from e
+                return variable
 
             variable = self._get_variable_from_projections(context)
 
@@ -2461,7 +2481,7 @@ def _instantiate_port_list(owner,
         - OUTPUT_PORT
         (note: this is not a list, even if port_types is, since it is about the attribute to which the
                ports will be assigned)
-    - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
+    - reference_value (>=2D np.array): set of 1D ([N-1]D) np.ndarrays used as default values and
         for compatibility testing in instantiation of Port(s):
         - INPUT_PORT: self.defaults.variable
         - OUTPUT_PORT: self.value
@@ -3342,9 +3362,31 @@ def _parse_port_spec(port_type=None,
             port_dict[VARIABLE] = port_dict[VALUE]
         else:
             port_dict[VARIABLE] = port_dict[REFERENCE_VALUE]
+        # TODO: remove this in favor of below
+        # reference value should match port value after dimension
+        # reduction from function
+        if port_dict[VARIABLE] is not None and port_type.componentType == INPUT_PORT:
+            port_dict[VARIABLE] = [port_dict[VARIABLE]]
 
     if is_numeric(port_dict[VARIABLE]):
         port_dict[VARIABLE] = convert_all_elements_to_np_array(port_dict[VARIABLE])
+
+        # if only a variable is specified, make sure it is one dim higher than reference, for combination functions
+        # ideally this would check for the function instead of InputPort, but that info may not be available at this point
+        if port_type.componentType == INPUT_PORT:
+            try:
+                reference_value_ndim = port_dict[REFERENCE_VALUE].ndim
+            except AttributeError:
+                pass
+            else:
+                if port_dict[VARIABLE].ndim <= reference_value_ndim:
+                    # adds extra wrapper dimensions to port_dict[VARIABLE] to be one higher than port_dict[REFERENCE_VALUE]
+                    # port_dict[VARIABLE].reshape(
+                    #     (1,) * (reference_value_ndim - port_dict[VARIABLE].ndim + 1) + port_dict[VARIABLE].shape
+                    # )
+                    port_dict[VARIABLE] = np.expand_dims(
+                        port_dict[VARIABLE], tuple(range(reference_value_ndim - port_dict[VARIABLE].ndim + 1))
+                    )
 
     # get the Port's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
