@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         # Python version in matrix for easier reference
-        python-version: [3.10]
+        python-version: ['3.10']
     environment: test-pypi
     outputs:
       sdist: ${{ steps.create_dist.outputs.sdist }}
