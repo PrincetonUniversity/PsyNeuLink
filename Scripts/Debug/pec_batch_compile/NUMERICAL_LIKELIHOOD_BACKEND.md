@@ -1,5 +1,9 @@
 # Reusable numerical likelihood backend
 
+The subsequent [continuous-equation milestone](CONTINUOUS_EQUATION_COMPILATION.md)
+adds an explicit equation IR, deterministic dependency slicing, and generated
+C++ phase dynamics/adjoints. It does not yet provide Composition-level admission.
+
 This milestone extracts the existing CSI scalar first-passage solver into
 `psyneulink/core/batched/numerical`. It preserves its C++ loops and adjoint; it
 does not add a whole-model CSI recognizer or infer a continuous process from

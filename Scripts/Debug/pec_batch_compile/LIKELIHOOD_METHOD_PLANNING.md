@@ -199,9 +199,12 @@ Reset-per-trial DDM support is now implemented in the narrow slice described
 above. The CSI PDE and adjoint have since been extracted into a shared
 [numerical backend](NUMERICAL_LIKELIHOOD_BACKEND.md), selected by mathematical
 requirements rather than whole-model recognition. The existing CSI driver uses
-that shared implementation. Composition-level numerical admission is still not
-registered: next come explicit continuous primitive equations/clocks and a
-checked deterministic-history/coefficient lowering, retaining compiled loops.
+that shared implementation. An [explicit continuous equation IR and generated
+C++ phase backend](CONTINUOUS_EQUATION_COMPILATION.md) now supply deterministic
+equations, clock gradients and dependency slicing. Composition-level numerical
+admission is still not registered: next come frozen PNL primitive bindings,
+clock/reset contracts and checked observed-history lowering, retaining compiled
+subject scans rather than Python per-step callbacks.
 General equation synthesis, particle inference, formal proofs, numerical DDM/CSI
 providers, automatic observation-model inference, and PEC optimizer wiring are
 not implemented by this milestone.

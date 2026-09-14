@@ -10,8 +10,12 @@ from psyneulink.core.batched.numerical.planning import (
     FirstPassagePlan,
     compile_first_passage,
 )
+from psyneulink.core.batched.numerical.dynamics import (
+    CompiledContinuousPhase, ContinuousPhaseResult, compile_continuous_phase,
+)
 
 __all__ = [
     "FirstPassageProblem", "FirstPassageMesh", "FirstPassagePlan",
     "compile_first_passage",
+    "CompiledContinuousPhase", "ContinuousPhaseResult", "compile_continuous_phase",
 ]
