@@ -10,6 +10,10 @@ likelihood is a density estimator that is trained beforehand, on data simulated 
 used in place of those simulations. Each evaluation of the likelihood then requires a single evaluation
 of the estimator, and the likelihood varies smoothly with the parameter values.
 
+The likelihood computed by an estimator is differentiable with respect to the parameters, so a
+hierarchical fit that uses one can sample the posterior distribution of the parameters, rather than
+approximate it (see :ref:`Hierarchical_Fitting_Sampling`).
+
 
 .. _Neural_Likelihood_Training:
 
