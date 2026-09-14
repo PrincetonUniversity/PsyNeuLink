@@ -28,7 +28,7 @@ import pandas as pd
 
 from psyneulink._typing import Any, Dict, Tuple
 
-__all__ = ["HierarchicalPECResults"]
+__all__ = ["HierarchicalPECResults", "HierarchicalSamplingResults"]
 
 
 @dataclass
@@ -273,3 +273,240 @@ class HierarchicalPECResults:
             f"{len(self.fit_param_names)} parameters, {status} after {self.n_iter} "
             f"iterations, objective {self.objective:.4f}{note}>"
         )
+
+
+@dataclass
+class HierarchicalSamplingResults:
+    """What a sampled hierarchical fit found.
+
+    Where `HierarchicalPECResults` reports an estimate and a Gaussian width around it, this
+    reports the draws themselves.  Spread comes from the draws rather than from an assumed shape,
+    so an interval near a bound, or one for a parameter that trades off against another, is as
+    wide as the posterior actually is.
+
+    Attributes
+    ----------
+
+    fit_param_names, subject_labels, predictor_names : tuple
+        The parameter, participant and predictor axes, in the order every array here uses.
+
+    group_parameters : pandas.DataFrame
+        One row per parameter. ``mean_z`` and ``sd_z`` summarize the group mean in unconstrained
+        units; ``value`` is the posterior median in the model's units, and ``lower_95`` and
+        ``upper_95`` the interval the middle 95% of the draws fall in. ``lower`` and ``upper``
+        restate the search range, as they do for an EM fit.
+
+    subject_parameters : pandas.DataFrame
+        One row per participant, one column per parameter: the posterior mean in the model's
+        units.
+
+    subject_posteriors : pandas.DataFrame
+        One row per participant and parameter, with the estimate and its interval in both spaces.
+
+    group_correlation : pandas.DataFrame
+        Posterior mean correlation between the group's parameters. The identity when the fit used
+        a diagonal covariance, which records the assumption rather than a measurement.
+
+    convergence : pandas.DataFrame
+        Per group-level quantity, ``r_hat`` and ``ess``: whether the chains agree, and how many
+        independent draws they are worth. A fit whose ``r_hat`` exceeds about 1.01, or whose
+        ``ess`` is in the low hundreds, has not yet described the posterior.
+
+    diagnostics : NUTSDiagnostics
+        What the sampler did. Read ``diagnostics.warnings`` before the estimates.
+
+    group_draws, covariance_draws, subject_draws : numpy.ndarray
+        The draws themselves: ``(chains, draws, n_predictors, n_params)`` group means in
+        unconstrained units, ``(chains, draws, n_params, n_params)`` group covariances, and
+        ``(chains, draws, n_subjects, n_params)`` participant parameters in the model's units.
+
+    settings, transform_metadata : dict
+        What the fit was asked to do, and the transform it used.
+    """
+
+    fit_param_names: Tuple[str, ...]
+    subject_labels: Tuple[Any, ...]
+    predictor_names: Tuple[str, ...]
+
+    group_parameters: pd.DataFrame
+    subject_parameters: pd.DataFrame
+    subject_posteriors: pd.DataFrame
+    group_correlation: pd.DataFrame
+    convergence: pd.DataFrame
+
+    diagnostics: Any
+    group_draws: np.ndarray
+    covariance_draws: np.ndarray
+    subject_draws: np.ndarray
+
+    transform_metadata: Dict[str, Any] = field(default_factory=dict)
+    settings: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def group_covariance(self):
+        """Posterior mean group covariance ``(n_params, n_params)``, unconstrained."""
+        return self.covariance_draws.reshape(-1, *self.covariance_draws.shape[2:]).mean(axis=0)
+
+    @property
+    def converged(self):
+        """Whether the chains agree and the sampler had nothing to report.
+
+        A fit that is not converged is still returned, so that it can be inspected; its estimates
+        should not be read as describing the posterior.
+        """
+        return bool(
+            self.convergence["r_hat"].max() < 1.01
+            and not self.diagnostics.warnings
+        )
+
+    @classmethod
+    def from_draws(cls, draws, diagnostics, posterior, fit_param_names, subject_labels,
+                   predictor_names=("intercept",), settings=None):
+        """Build a result from the sampler's output and the posterior it sampled.
+
+        Arguments
+        ---------
+
+        draws : numpy.ndarray
+            ``(chains, draws, n_sampler_params)``, as `run_nuts` returns.
+
+        diagnostics : NUTSDiagnostics
+            What the sampler did, reported alongside the estimates.
+
+        posterior : HierarchicalNeuralPosterior
+            The posterior that was sampled, used to read the draws back into group and
+            participant quantities.
+
+        fit_param_names, subject_labels : sequence
+            Names for the parameter and participant axes.
+
+        predictor_names : sequence : default ("intercept",)
+            Names for the rows of the group means.
+
+        settings : dict : default None
+            What the fit was asked to do.
+        """
+        import torch
+
+        names = tuple(fit_param_names)
+        labels = tuple(subject_labels)
+        n_chains, n_draws = draws.shape[0], draws.shape[1]
+        flat = draws.reshape(-1, draws.shape[-1])
+
+        # Each draw is read back through the posterior that produced it, rather than by
+        # re-deriving the layout here, so the two cannot drift apart.
+        group, covariance, subject = [], [], []
+        for row in flat:
+            position = torch.as_tensor(row, dtype=torch.float64)
+            beta, _, _, _ = posterior.unpack(position)
+            group.append(beta.numpy().copy())
+            covariance.append(posterior.group_covariance(position).numpy())
+            subject.append(posterior.to_natural(posterior.subject_z(position)).numpy())
+
+        shape = (n_chains, n_draws)
+        group_draws = np.stack(group).reshape(*shape, posterior.n_predictors, posterior.n_params)
+        covariance_draws = np.stack(covariance).reshape(*shape, len(names), len(names))
+        subject_draws = np.stack(subject).reshape(*shape, len(labels), len(names))
+
+        mean_z = group_draws[:, :, 0, :].reshape(-1, len(names))
+        group_value = posterior.to_natural(torch.as_tensor(mean_z)).numpy()
+        lower = np.asarray(posterior.lower.numpy())
+        upper = lower + np.asarray(posterior.width.numpy())
+        group_parameters = pd.DataFrame(
+            {
+                "mean_z": mean_z.mean(axis=0),
+                "sd_z": mean_z.std(axis=0, ddof=1),
+                "value": np.median(group_value, axis=0),
+                "lower_95": np.quantile(group_value, 0.025, axis=0),
+                "upper_95": np.quantile(group_value, 0.975, axis=0),
+                "lower": lower,
+                "upper": upper,
+            },
+            index=pd.Index(names, name="parameter"),
+        )
+
+        flat_subject = subject_draws.reshape(-1, len(labels), len(names))
+        subject_mean = flat_subject.mean(axis=0)
+        subject_parameters = pd.DataFrame(
+            subject_mean, index=pd.Index(labels, name="subject"), columns=list(names)
+        )
+
+        z_draws = np.log((flat_subject - lower) / (upper - flat_subject))
+        posteriors = pd.DataFrame({
+            "subject": np.repeat(labels, len(names)),
+            "parameter": list(names) * len(labels),
+            "z_mean": z_draws.mean(axis=0).ravel(),
+            "z_sd": z_draws.std(axis=0, ddof=1).ravel(),
+            "theta_mean": subject_mean.ravel(),
+            "theta_lower_95": np.quantile(flat_subject, 0.025, axis=0).ravel(),
+            "theta_upper_95": np.quantile(flat_subject, 0.975, axis=0).ravel(),
+        })
+
+        flat_covariance = covariance_draws.reshape(-1, len(names), len(names))
+        scale = np.sqrt(np.einsum("dii->di", flat_covariance))
+        correlation = flat_covariance / (scale[:, :, None] * scale[:, None, :])
+        group_correlation = pd.DataFrame(
+            correlation.mean(axis=0), index=pd.Index(names, name="parameter"),
+            columns=list(names),
+        )
+
+        convergence = _group_convergence(draws, posterior, names, predictor_names)
+
+        return cls(
+            fit_param_names=names,
+            subject_labels=labels,
+            predictor_names=tuple(predictor_names),
+            group_parameters=group_parameters,
+            subject_parameters=subject_parameters,
+            subject_posteriors=posteriors,
+            group_correlation=group_correlation,
+            convergence=convergence,
+            diagnostics=diagnostics,
+            group_draws=group_draws,
+            covariance_draws=covariance_draws,
+            subject_draws=subject_draws,
+            transform_metadata={
+                "kind": "BoundedTransform",
+                "lower": lower.tolist(),
+                "upper": upper.tolist(),
+            },
+            settings=dict(settings or {}),
+        )
+
+    def __repr__(self):
+        status = "converged" if self.converged else "NOT converged"
+        chains, draws = self.subject_draws.shape[0], self.subject_draws.shape[1]
+        return (
+            f"<HierarchicalSamplingResults: {len(self.subject_labels)} participants, "
+            f"{len(self.fit_param_names)} parameters, {chains} chains of {draws} draws, "
+            f"{status} (worst r_hat {self.convergence['r_hat'].max():.3f}, "
+            f"{int(self.diagnostics.divergences.sum())} divergence(s))>"
+        )
+
+
+def _group_convergence(draws, posterior, names, predictor_names):
+    """R-hat and effective sample size for each group-level quantity.
+
+    Only the group quantities: there is one convergence row per parameter the group model has,
+    not one per participant, since a participant's own parameters are read off the group draws
+    rather than sampled separately in any meaningful sense.
+    """
+    from psyneulink.core.compositions.hierarchical.nuts import (
+        effective_sample_size,
+        potential_scale_reduction,
+    )
+
+    group_slice = draws[:, :, :posterior._off_end]
+    r_hat = potential_scale_reduction(group_slice)
+    ess = effective_sample_size(group_slice)
+
+    labels = [f"{predictor}.{name}" for predictor in predictor_names for name in names]
+    labels += [f"log_scale.{name}" for name in names]
+    labels += [
+        f"covariance_factor[{row},{col}]"
+        for row in range(len(names)) for col in range(row)
+    ]
+    return pd.DataFrame(
+        {"r_hat": r_hat, "ess": ess},
+        index=pd.Index(labels[:len(r_hat)], name="quantity"),
+    )

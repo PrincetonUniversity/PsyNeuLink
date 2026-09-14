@@ -169,8 +169,21 @@ class NeuralLikelihood:
         )
 
     def _conditioning(self, theta: torch.Tensor, trial_features, n_trials) -> torch.Tensor:
-        """Broadcast one parameter vector across trials and append per-trial features."""
-        cond = theta.reshape(1, -1).expand(n_trials, -1)
+        """Line parameters up with trials and append per-trial features.
+
+        One parameter vector is broadcast across every trial.  A two-dimensional `theta` is
+        taken as already having one row per trial, which is how several participants, each with
+        their own parameters, are scored in a single call.
+        """
+        if theta.ndim > 1:
+            if theta.shape[0] != n_trials:
+                raise NeuralLikelihoodError(
+                    f"theta has {theta.shape[0]} rows but there are {n_trials} trials to "
+                    f"score; give one parameter vector, or one row per trial."
+                )
+            cond = theta
+        else:
+            cond = theta.reshape(1, -1).expand(n_trials, -1)
         if self.provenance.n_trial_features:
             if trial_features is None:
                 raise NeuralLikelihoodError(
@@ -188,14 +201,27 @@ class NeuralLikelihood:
             cond = torch.cat([cond, feats], dim=-1)
         return cond
 
-    def trial_log_prob(self, theta, outcomes, trial_features=None) -> torch.Tensor:
-        """Per-trial log densities, differentiable with respect to ``theta``."""
+    def encode_outcomes(self, outcomes) -> torch.Tensor:
+        """Outcomes in the estimator's own layout, to score repeatedly without re-encoding.
+
+        Pass the result back to `trial_log_prob` as ``encoded=True``.  Sampling scores the same
+        trials tens of thousands of times, and the encoding does not change between them.
+        """
+        return self._encode_outcomes(outcomes)
+
+    def trial_log_prob(self, theta, outcomes, trial_features=None, *,
+                       encoded=False) -> torch.Tensor:
+        """Per-trial log densities, differentiable with respect to ``theta``.
+
+        `theta` is one parameter vector, or one row per trial.  `outcomes` is the observed data,
+        or the output of `encode_outcomes` when `encoded` is True.
+        """
         theta_t = (
             theta
             if isinstance(theta, torch.Tensor)
             else torch.as_tensor(np.asarray(theta, dtype=float), dtype=torch.float32)
         )
-        x = self._encode_outcomes(outcomes)
+        x = outcomes if encoded else self._encode_outcomes(outcomes)
         cond = self._conditioning(theta_t.to(torch.float32), trial_features, x.shape[0])
         return self._estimator.log_prob(x, condition=cond).reshape(-1)
 

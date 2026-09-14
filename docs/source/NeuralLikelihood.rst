@@ -13,6 +13,10 @@ of the estimator, and the likelihood varies smoothly with the parameter values.
 An estimator is trained once for a given model and range of parameter values, and can be reused for
 any fit of that model within that range, including a :ref:`hierarchical fit <HierarchicalFitting>`.
 
+The likelihood computed by an estimator is differentiable with respect to the parameters, so a
+hierarchical fit that uses one can sample the posterior distribution of the parameters, rather than
+approximate it (see :ref:`Hierarchical_Fitting_Sampling`).
+
 
 .. _Neural_Likelihood_Training:
 

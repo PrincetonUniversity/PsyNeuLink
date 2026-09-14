@@ -1524,6 +1524,8 @@ def test_settings_are_independent_between_compositions():
 @pytest.mark.parametrize("name, value", [
     ("curvature", "banded"),
     ("covariance", "banded"),
+    ("sampler", "gibbs"),
+    ("sampler_options", {"iterations": 10}),
     ("max_iterations", 0),
     ("tol", 0.0),
     ("variance_floor", -1.0),
@@ -1561,6 +1563,35 @@ def test_asking_for_group_correlations_needs_a_curvature_that_measured_them():
 
     pec.parameters.curvature.set("full")
     pec.run()
+
+
+@pytest.mark.composition
+def test_sampler_options_without_a_sampler_are_refused():
+    # Settings that would otherwise be ignored in silence: the fit would run by EM, and none of
+    # them applies to it.
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options={
+            "subject_id": "subject", "max_iterations": 1, "sampler_options": {"draws": 10},
+        },
+    )
+    with pytest.raises(ParameterEstimationCompositionError,
+                       match="only when a sampler is chosen"):
+        pec.run()
+
+
+@pytest.mark.composition
+def test_a_sampled_fit_is_refused_across_a_cluster():
+    # One evaluation of the posterior needs every participant, so there is no per-participant
+    # unit of work to send anywhere.
+    pec = _build_group_pec(
+        distributed=True,
+        distributed_options={"pec_factory": _stub_factory, "n_workers": 1},
+        hierarchical_options={"subject_id": "subject", "sampler": "nuts"},
+    )
+    with pytest.raises(ParameterEstimationCompositionError,
+                       match="nothing to send to a worker"):
+        pec.run()
 
 
 @pytest.mark.composition
