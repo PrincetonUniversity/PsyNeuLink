@@ -265,6 +265,7 @@ Class Reference
 ---------------
 
 """
+import dataclasses
 import warnings
 
 import numpy as np
@@ -294,6 +295,7 @@ from psyneulink.core.compositions.hierarchical.distributedestep import (
 )
 from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
+    HierarchicalSamplingResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
     COVARIANCE_KINDS,
@@ -301,6 +303,12 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     EStepConfig,
     fit_laplace_em,
     make_inprocess_estep_runner,
+)
+from psyneulink.core.compositions.hierarchical.nuts import (
+    HierarchicalNeuralPosterior,
+    NUTSConfig,
+    SamplingWarning,
+    run_nuts,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
@@ -907,6 +915,8 @@ class ParameterEstimationComposition(Composition):
         "subject_id": None,
         "curvature": "diagonal",
         "covariance": "diagonal",
+        "sampler": None,
+        "sampler_options": None,
         "max_iterations": 50,
         "tol": 1e-4,
         "variance_floor": 1e-6,
@@ -999,11 +1009,38 @@ class ParameterEstimationComposition(Composition):
                 f"hierarchical_options['covariance'] must be one of {list(COVARIANCE_KINDS)}; "
                 f"got {options['covariance']!r}"
             )
-        if options["covariance"] == "full" and options["curvature"] != "full":
+        if (options["covariance"] == "full" and options["curvature"] != "full"
+                and options["sampler"] is None):
+            # Only EM builds the group covariance out of measured curvature. A sampler draws the
+            # two together and never measures a curvature at all, so it has nothing to agree with.
             raise ParameterEstimationCompositionError(
                 'hierarchical_options covariance="full" needs curvature="full" as well: the '
                 "group correlations come from the participant covariances, and a curvature "
                 "measured one parameter at a time reports none."
+            )
+        if options["sampler"] not in (None, "nuts"):
+            raise ParameterEstimationCompositionError(
+                f"hierarchical_options['sampler'] must be None, which fits by EM, or \"nuts\"; "
+                f"got {options['sampler']!r}"
+            )
+        if options["sampler_options"] is not None:
+            if options["sampler"] is None:
+                raise ParameterEstimationCompositionError(
+                    "hierarchical_options['sampler_options'] applies only when a sampler is "
+                    'chosen; set sampler="nuts" as well.'
+                )
+            accepted = {field.name for field in dataclasses.fields(NUTSConfig)}
+            unknown = set(options["sampler_options"]) - accepted
+            if unknown:
+                raise ParameterEstimationCompositionError(
+                    f"unknown sampler_options {sorted(unknown)}; valid options are "
+                    f"{sorted(accepted)}"
+                )
+        if options["sampler"] is not None and self._pec_distributed:
+            raise ParameterEstimationCompositionError(
+                "sampling moves the whole group at once, so a participant cannot be fitted "
+                "apart from the rest and there is nothing to send to a worker. Run it in one "
+                "process, or fit by EM, which does distribute."
             )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
@@ -1047,6 +1084,8 @@ class ParameterEstimationComposition(Composition):
         # participant's model settles it, and the rest are held to that. Building it here is not
         # spare work even for a distributed fit, since the group prior is defined over its ranges.
         schema = provider.schema
+        if options["sampler"] == "nuts":
+            return self._sample_hierarchical(provider, options, context)
         config = EStepConfig(
             method=options["estep_method"],
             curvature=options["curvature"],
@@ -1097,6 +1136,43 @@ class ParameterEstimationComposition(Composition):
         )
         self.optimal_value = em.objective
         self.parameters.results._set(self.fit_results.subject_parameters.to_numpy(), context)
+        return self.fit_results
+
+    def _sample_hierarchical(self, provider, options, context):
+        """Sample the joint posterior over the group and every participant.
+
+        Every participant is held in this process at once: one evaluation of the posterior needs
+        all of them, so unlike EM there is no point at which a participant can be fitted on its
+        own. Their models are built here for the same reason the EM path builds them, and their
+        estimators are then what the sampler differentiates.
+        """
+        provider.warn_if_costly_in_process()
+        config = NUTSConfig(**dict(options["sampler_options"] or {}))
+        posterior = HierarchicalNeuralPosterior(
+            [provider.subject_terms(s) for s in range(provider.n_subjects)],
+            *provider.bounds,
+            covariance=options["covariance"],
+            config=config,
+        )
+        draws, diagnostics = run_nuts(
+            posterior.log_prob_grad, posterior.initial_points(config.chains, config.seed), config
+        )
+        for message in diagnostics.warnings:
+            warnings.warn(message, SamplingWarning, stacklevel=3)
+
+        self.fit_results = HierarchicalSamplingResults.from_draws(
+            draws, diagnostics, posterior, provider.fit_param_names,
+            self._subject_split.labels, settings=dict(options),
+        )
+        self.optimized_parameter_values = dict(
+            zip(provider.fit_param_names, self.fit_results.group_parameters["value"].to_numpy())
+        )
+        # A sampled fit has no single best value to report: the draws are the result, and the
+        # highest density among them is a property of where the sampler happened to go.
+        self.optimal_value = None
+        self.parameters.results._set(
+            self.fit_results.subject_parameters.to_numpy(), context
+        )
         return self.fit_results
 
     def _validate_data(self):
@@ -1404,9 +1480,30 @@ class ParameterEstimationComposition(Composition):
 
         # Excluded trials are dropped rather than scored, as they are for a simulated
         # likelihood, which sums the density over the included rows alone.
-        self.controller.function.set_neural_likelihood(
-            likelihood, self._data_numpy[included], features
-        )
+        outcomes = self._data_numpy[included]
+        self.controller.function.set_neural_likelihood(likelihood, outcomes, features)
+        return likelihood, outcomes, features
+
+    def neural_likelihood_terms(self, inputs=None):
+        """The trained estimator this composition scores with, and the trials it scores.
+
+        Gradient-based fitting differentiates the score with respect to the parameters, which a
+        simulated likelihood cannot supply, so it reaches the estimator directly rather than
+        through `log_likelihood`.
+
+        Returns
+        -------
+
+        ``(likelihood, outcomes, trial_features)``, the last being None unless the estimator was
+        trained with per-trial conditioning.
+        """
+        if self._likelihood_estimator != "neural":
+            raise ParameterEstimationCompositionError(
+                f"ParameterEstimationComposition {self.name} is scored by simulating it, which "
+                f"gives no gradient. Sampling needs likelihood_estimator=\"neural\"; see "
+                f"train_neural_likelihood()."
+            )
+        return self._setup_neural_likelihood(inputs)
 
     @handle_external_context()
     def run(self, *args, context=None, **kwargs):

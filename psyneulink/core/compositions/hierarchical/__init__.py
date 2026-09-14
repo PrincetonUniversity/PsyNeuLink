@@ -11,13 +11,21 @@
 Fits a group of participants jointly rather than one at a time, so that each participant's estimate
 is informed by the population they belong to.
 
-`HierarchicalPECResults` and `HierarchicalEMWarning` are the public surface.
+Fitting is by EM, or by sampling the posterior when a trained estimator makes the likelihood
+differentiable; `HierarchicalPECResults`, `HierarchicalSamplingResults`, `HierarchicalEMWarning`
+and `SamplingWarning` are the public surface.
 """
 
 # ParameterEstimationComposition imports this package, so nothing here may import it back at
 # module scope; use a function-local import.
 from . import hierarchicalresults, laplaceem, subjectlikelihood, transforms
-from .hierarchicalresults import HierarchicalPECResults
+from .hierarchicalresults import HierarchicalPECResults, HierarchicalSamplingResults
 from .laplaceem import HierarchicalEMWarning
+from .nuts import SamplingWarning
 
-__all__ = ["HierarchicalEMWarning", "HierarchicalPECResults"]
+__all__ = [
+    "HierarchicalEMWarning",
+    "HierarchicalPECResults",
+    "HierarchicalSamplingResults",
+    "SamplingWarning",
+]

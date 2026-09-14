@@ -1136,6 +1136,42 @@ def test_pec_rejects_out_of_range_hierarchical_options():
 
 
 @pytest.mark.composition
+def test_pec_rejects_a_sampler_it_does_not_have():
+    with pytest.raises(Exception, match="sampler"):
+        _build_group_pec(hierarchical_options={"subject_id": "subject", "sampler": "gibbs"})
+
+
+@pytest.mark.composition
+def test_pec_rejects_sampler_options_without_a_sampler():
+    # Settings that would be silently ignored: the fit would run by EM and none of them apply.
+    with pytest.raises(Exception, match="only when a sampler is chosen"):
+        _build_group_pec(hierarchical_options={
+            "subject_id": "subject", "sampler_options": {"draws": 10},
+        })
+
+
+@pytest.mark.composition
+def test_pec_rejects_unknown_sampler_options():
+    with pytest.raises(Exception, match="unknown sampler_options"):
+        _build_group_pec(hierarchical_options={
+            "subject_id": "subject", "sampler": "nuts", "sampler_options": {"iterations": 10},
+        })
+
+
+@pytest.mark.composition
+def test_pec_refuses_to_distribute_a_sampled_fit():
+    # One evaluation of the posterior needs every participant, so there is no per-participant
+    # unit of work to send anywhere.
+    def factory(data, subject_index=None):
+        return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None
+
+    with pytest.raises(Exception, match="nothing to send to a worker"):
+        _build_group_pec(
+            distributed=True,
+            distributed_options={"pec_factory": factory, "n_workers": 1},
+            hierarchical_options={"subject_id": "subject", "sampler": "nuts"},
+        )
+@pytest.mark.composition
 def test_pec_rejects_a_likelihood_include_mask():
     # The mask indexes the stacked table, but each participant is scored by its own model built
     # from its own slice, so there is nowhere for it to be applied.

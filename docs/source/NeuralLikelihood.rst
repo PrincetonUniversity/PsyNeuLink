@@ -19,6 +19,11 @@ on how many simulations the density would otherwise need: scoring 400 trials of 
 drift-diffusion model takes roughly 820 ms with ``num_estimates=300`` and roughly 4 ms with
 a trained estimator.
 
+Being differentiable is what makes gradient-based fitting possible at all. It is what a
+hierarchical fit measures a participant's full posterior covariance with, and what lets one
+sample the posterior rather than approximate it; see
+:ref:`Hierarchical_Fitting_Sampling`.
+
 
 .. _Neural_Likelihood_Training:
 
