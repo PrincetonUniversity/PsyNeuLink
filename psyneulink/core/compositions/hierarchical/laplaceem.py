@@ -10,15 +10,18 @@
 
 """Empirical-Bayes Laplace EM.
 
-The E-step maximizes ``log_likelihood(theta(z)) + log N(z | mu, diag(sigma))`` over the unconstrained
+The E-step maximizes ``log_likelihood(theta(z)) + log N(z | mu, Sigma)`` over the unconstrained
 `z` (see `transforms <transforms>`) and takes the inverse curvature at the mode as the posterior
-covariance.  The M-step updates `beta` by least squares on the modes and `sigma` from the posterior
+covariance.  The M-step updates `beta` by least squares on the modes and `Sigma` from the posterior
 second moments.
 
-Only the diagonal of the curvature is computed, matching the diagonal group covariance, so a
-participant's reported variance is ``1 / H_kk`` rather than ``(H^-1)_kk``: the variance of one
-parameter with the others held at the mode, not with them integrated out.  Where parameters trade
-off against each other the first is the smaller, so intervals err narrow.
+The group covariance `Sigma` is either diagonal or full, and the curvature is measured to match.
+Diagonal measures only ``H_kk``, so a participant's reported variance is ``1 / H_kk`` rather than
+``(H^-1)_kk``: the variance of one parameter with the others held at the mode, not with them
+integrated out.  Where parameters trade off against each other the first is the smaller, so
+intervals err narrow.  Full measures the whole curvature and inverts it, so the reported widths
+account for those trade-offs and the group model can express correlations between parameters; it
+costs ``2 P^2`` objective evaluations per participant against the ``2 P`` of the diagonal.
 
 Curvature comes from central finite differences, which requires the objective to be deterministic in
 `theta`.  Participant models must therefore be built with common random numbers; without them the
@@ -32,6 +35,7 @@ import warnings
 from dataclasses import dataclass
 
 import numpy as np
+from scipy.linalg import solve_triangular
 from scipy.optimize import minimize
 
 from psyneulink._typing import Mapping, Optional, Union
@@ -39,15 +43,20 @@ from psyneulink._typing import Mapping, Optional, Union
 __all__ = [
     "EStepConfig",
     "EStepResult",
+    "GroupPrior",
     "HierarchicalEMWarning",
     "LaplaceEMResult",
     "SubjectPosterior",
+    "as_covariance",
     "diagonal_hessian",
     "fit_laplace_em",
-    "log_gauss_diag",
+    "full_hessian",
     "make_inprocess_estep_runner",
     "subject_map_estep",
 ]
+
+#: Accepted values for the shape of the group covariance.
+COVARIANCE_KINDS = ("diagonal", "full")
 
 LOG_2PI = np.log(2.0 * np.pi)
 
@@ -65,13 +74,58 @@ MAX_HESSIAN_RETRIES = 3
 SIMPLEX_SCALE = 0.5
 
 
-def log_gauss_diag(z, mean, var):
-    """Log density of a diagonal Gaussian, summed over dimensions.
+def as_covariance(value, n_params=None):
+    """Read a group covariance given either as per-parameter variances or as a full matrix."""
+    array = np.asarray(value, dtype=float)
+    if array.ndim == 1:
+        array = np.diag(array)
+    elif array.ndim != 2 or array.shape[0] != array.shape[1]:
+        raise ValueError(
+            f"a covariance must be a vector of variances or a square matrix; got shape "
+            f"{array.shape}"
+        )
+    if n_params is not None and array.shape[0] != n_params:
+        raise ValueError(
+            f"covariance must be {n_params} by {n_params}; got shape {array.shape}"
+        )
+    return array
 
-    This is the group-level prior term in a participant's MAP objective.
+
+class GroupPrior:
+    """The group distribution ``N(mean, covariance)`` a participant is fitted against.
+
+    This is the prior term in a participant's MAP objective.  The covariance is factorized once,
+    when the prior is built, because the E-step evaluates the objective many times against a prior
+    that changes only between EM iterations.
+
+    Arguments
+    ---------
+
+    covariance : array-like
+        Group covariance, either ``(n_params,)`` variances or an ``(n_params, n_params)`` matrix.
     """
-    z = np.asarray(z, dtype=float)
-    return float(-0.5 * np.sum((z - mean) ** 2 / var + LOG_2PI + np.log(var)))
+
+    def __init__(self, covariance):
+        self.covariance = as_covariance(covariance)
+        try:
+            self.cholesky = np.linalg.cholesky(self.covariance)
+        except np.linalg.LinAlgError as error:
+            raise ValueError(
+                "the group covariance is not positive definite, so it does not describe a "
+                "distribution; raising variance_floor is usually what this calls for"
+            ) from error
+        self._log_det = 2.0 * float(np.sum(np.log(np.diag(self.cholesky))))
+
+    @property
+    def variance(self):
+        """Per-parameter group variance: the diagonal of the covariance."""
+        return np.diag(self.covariance).copy()
+
+    def log_density(self, z, mean):
+        """Log density at `z`, summed over dimensions."""
+        residual = np.asarray(z, dtype=float) - np.asarray(mean, dtype=float)
+        whitened = solve_triangular(self.cholesky, residual, lower=True)
+        return float(-0.5 * (whitened @ whitened + residual.size * LOG_2PI + self._log_det))
 
 
 def diagonal_hessian(func, z, step, f0=None):
@@ -96,11 +150,7 @@ def diagonal_hessian(func, z, step, f0=None):
     """
     z = np.asarray(z, dtype=float)
     n = z.size
-    steps = np.full(n, float(step)) if np.isscalar(step) else np.asarray(step, dtype=float)
-    if steps.shape != (n,):
-        raise ValueError(f"step must be scalar or of shape {(n,)}; got shape {steps.shape}")
-    if np.any(steps <= 0):
-        raise ValueError("step must be positive")
+    steps = _resolve_steps(step, n)
 
     if f0 is None:
         f0 = func(z)
@@ -112,6 +162,48 @@ def diagonal_hessian(func, z, step, f0=None):
         zm[k] -= h
         diag[k] = (func(zp) - 2.0 * f0 + func(zm)) / (h * h)
     return diag
+
+
+def _resolve_steps(step, n):
+    """Broadcast and check a finite-difference step against a problem of `n` dimensions."""
+    steps = np.full(n, float(step)) if np.isscalar(step) else np.asarray(step, dtype=float)
+    if steps.shape != (n,):
+        raise ValueError(f"step must be scalar or of shape {(n,)}; got shape {steps.shape}")
+    if np.any(steps <= 0):
+        raise ValueError("step must be positive")
+    return steps
+
+
+def full_hessian(func, z, step, f0=None):
+    """Full Hessian of scalar `func` at `z`, by central second differences.
+
+    The diagonal is `diagonal_hessian`; each off-diagonal entry is the four-point form
+
+    ``H_jk = (f(z + h_j e_j + h_k e_k) - f(z + h_j e_j - h_k e_k)
+              - f(z - h_j e_j + h_k e_k) + f(z - h_j e_j - h_k e_k)) / (4 h_j h_k)``
+
+    computed once and mirrored, so the result is symmetric by construction.  Arguments are as for
+    `diagonal_hessian`; the cost is ``2 n^2`` evaluations rather than ``2 n``.
+    """
+    z = np.asarray(z, dtype=float)
+    n = z.size
+    steps = _resolve_steps(step, n)
+    if f0 is None:
+        f0 = func(z)
+
+    hessian = np.zeros((n, n))
+    np.fill_diagonal(hessian, diagonal_hessian(func, z, steps, f0=f0))
+    for j in range(n):
+        for k in range(j + 1, n):
+            corners = 0.0
+            for sign_j in (1.0, -1.0):
+                for sign_k in (1.0, -1.0):
+                    shifted = z.copy()
+                    shifted[j] += sign_j * steps[j]
+                    shifted[k] += sign_k * steps[k]
+                    corners += sign_j * sign_k * func(shifted)
+            hessian[j, k] = hessian[k, j] = corners / (4.0 * steps[j] * steps[k])
+    return hessian
 
 
 @dataclass(frozen=True)
@@ -127,6 +219,12 @@ class EStepConfig:
     method : str
         Any method accepted by `scipy.optimize.minimize`.  The default is derivative-free because a
         simulation-backed likelihood has no gradient.
+
+    covariance : "diagonal" or "full"
+        Shape of both the group covariance and the curvature measured at each participant's mode.
+        ``"full"`` reports widths that account for trade-offs between parameters and lets the
+        group model express correlations, at ``2 P^2`` objective evaluations per participant
+        instead of ``2 P``.
 
     hessian_step : float or array-like or None
         Perturbation for the finite-difference curvature, in unconstrained units.  When None (the
@@ -148,9 +246,16 @@ class EStepConfig:
     """
 
     method: str = "Nelder-Mead"
+    covariance: str = "diagonal"
     hessian_step: Optional[Union[float, np.ndarray]] = None
     variance_floor: float = 1e-6
     optimizer_options: Optional[Mapping] = None
+
+    def __post_init__(self):
+        if self.covariance not in COVARIANCE_KINDS:
+            raise ValueError(
+                f"covariance must be one of {list(COVARIANCE_KINDS)}; got {self.covariance!r}"
+            )
 
     def resolve_hessian_step(self, prior_variance):
         """Return the per-dimension finite-difference step to use for this prior variance."""
@@ -161,13 +266,14 @@ class EStepConfig:
         return np.broadcast_to(step, prior_variance.shape).astype(float, copy=True)
 
 
-def subject_laplace_objective(neg_log_post, variance, n_params):
+def subject_laplace_objective(neg_log_post, covariance, n_params):
     """One participant's contribution to the Laplace marginal log-likelihood.
 
     The quantity EM is really maximizing: the log-likelihood of the participant's data with their
     parameters integrated out, under the Gaussian approximation to their posterior.
     """
-    return -neg_log_post + 0.5 * n_params * LOG_2PI + 0.5 * float(np.sum(np.log(variance)))
+    _, log_det = np.linalg.slogdet(covariance)
+    return -neg_log_post + 0.5 * n_params * LOG_2PI + 0.5 * float(log_det)
 
 
 @dataclass
@@ -175,16 +281,61 @@ class SubjectPosterior:
     """One participant's Laplace posterior, plus enough detail to tell whether to trust it."""
 
     z_hat: np.ndarray          # mode, unconstrained
-    variance: np.ndarray       # diagonal posterior variance, unconstrained
-    curvature: np.ndarray      # diagonal Hessian of the objective at the mode
+    covariance: np.ndarray     # (n_params, n_params) posterior covariance, unconstrained
+    curvature: np.ndarray      # (n_params, n_params) Hessian of the objective at the mode
     neg_log_post: float        # objective value at the mode
     success: bool              # whether the optimizer reported convergence
     message: str               # the optimizer's own account of why it stopped
     hessian_step: np.ndarray   # the step actually used, so the choice is auditable
     laplace_objective: float   # this participant's marginal, from the curvature alone
 
+    @property
+    def variance(self):
+        """Per-parameter posterior variance: the diagonal of `covariance`."""
+        return np.diag(self.covariance).copy()
 
-def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
+
+def _floor_eigenvalues(covariance, floor):
+    """Raise any eigenvalue below `floor`, so the result stays a covariance worth reporting."""
+    symmetric = 0.5 * (covariance + covariance.T)
+    values, directions = np.linalg.eigh(symmetric)
+    if np.all(values >= floor):
+        return symmetric
+    return (directions * np.maximum(values, floor)) @ directions.T
+
+
+def _posterior_covariance(curvature, prior, variance_floor):
+    """Turn the curvature at a participant's mode into a posterior covariance.
+
+    Returns the covariance to report and the one the Laplace marginal is taken under; they differ
+    only in the cap below.
+
+    Both corrections are eigenvalue clips once the curvature is expressed in the prior's own
+    scale, ``A = L' H L`` for `L` the Cholesky factor of the group covariance.  The objective
+    already includes the prior term, so in that scale `A` is the identity where the data said
+    nothing and larger where they said something: an eigenvalue of 1 means "the prior alone".
+    """
+    scaled = prior.cholesky.T @ curvature @ prior.cholesky
+    scaled = 0.5 * (scaled + scaled.T)
+    eigenvalues, directions = np.linalg.eigh(scaled)
+
+    # Curvature that is zero or negative describes a fit that is flat or rises away from the mode,
+    # which is not a width. The prior stands in and reports that this direction was not pinned
+    # down, which is an eigenvalue of 1 in this scale.
+    eigenvalues = np.where(eigenvalues > 0, eigenvalues, 1.0)
+
+    def rebuild(values):
+        inner = (directions * values) @ directions.T
+        return _floor_eigenvalues(prior.cholesky @ inner @ prior.cholesky.T, variance_floor)
+
+    # Reported: never wider than the prior, which a Gaussian prior guarantees whenever the
+    # likelihood is concave at the mode, and is the sane answer when curvature says otherwise.
+    # For the marginal, the width of the Gaussian being integrated is set by the curvature alone;
+    # capping it would report an integral over a narrower density than was approximated.
+    return rebuild(1.0 / np.maximum(eigenvalues, 1.0)), rebuild(1.0 / eigenvalues)
+
+
+def subject_map_estep(neg_log_post, z0, prior, config=None):
     """Find one participant's posterior mode and approximate the posterior around it.
 
     Arguments
@@ -198,9 +349,10 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
         Starting point, normally the group's prediction for this participant, or their previous
         mode when warm-starting.
 
-    prior_variance : array-like
-        Current group variance, per parameter.  Used both to derive the finite-difference step and
-        to bound the reported posterior variance from above.
+    prior : GroupPrior or array-like
+        Current group covariance, as a `GroupPrior` or anything `as_covariance` accepts.  Used
+        both to derive the finite-difference step and to bound the reported posterior covariance
+        from above.
 
     config : EStepConfig : default None
         Settings; a default-constructed `EStepConfig` if omitted.
@@ -212,7 +364,7 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     """
     config = config if config is not None else EStepConfig()
     z0 = np.asarray(z0, dtype=float)
-    prior_variance = np.asarray(prior_variance, dtype=float)
+    prior = prior if isinstance(prior, GroupPrior) else GroupPrior(prior)
 
     options = {}
     if config.method == "Nelder-Mead":
@@ -225,46 +377,48 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     result = minimize(neg_log_post, z0, method=config.method, options=options)
     z_hat = np.asarray(result.x, dtype=float)
 
-    step = config.resolve_hessian_step(prior_variance)
+    step = config.resolve_hessian_step(prior.variance)
     f0 = float(result.fun)
-    curvature = diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0)
 
-    # The three-point probe measures curvature only if all three land where the model allows; a
-    # step reaching an impossible parameter value returns infinity, which describes that point
-    # and not the peak. Halve the step until it fits, and use the prior if it never does.
+    def measure(step):
+        if config.covariance == "full":
+            return full_hessian(neg_log_post, z_hat, step=step, f0=f0)
+        return np.diag(diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0))
+
+    curvature = measure(step)
+
+    # A difference measures curvature only if every point it uses lands where the model allows; a
+    # step reaching an impossible parameter value returns infinity, which describes that point and
+    # not the peak. Halve the step in the dimensions involved until it fits, keeping the entries
+    # that already came back.
     for _ in range(MAX_HESSIAN_RETRIES):
         unusable = ~np.isfinite(curvature)
         if not unusable.any():
             break
-        step = np.where(unusable, 0.5 * step, step)
-        curvature = np.where(
-            unusable, diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0), curvature
-        )
+        step = np.where(unusable.any(axis=0) | unusable.any(axis=1), 0.5 * step, step)
+        curvature = np.where(unusable, measure(step), curvature)
 
-    # Curvature that is zero or negative describes a fit that is flat or rises away from the
-    # mode, and one that is still infinite describes a probe that never fit. Neither is a width,
-    # so the prior stands in and reports that this parameter was not pinned down.
-    usable = np.isfinite(curvature) & (curvature > 0)
-    inverse = np.where(usable, 1.0 / np.where(usable, curvature, 1.0), prior_variance)
+    # An entry that is still infinite describes a probe that never fit, so the prior stands in
+    # there for the inversion below. `curvature` itself keeps the infinity, so the result still
+    # shows that this part of it was never measured.
+    usable = curvature
+    if not np.isfinite(curvature).all():
+        usable = np.where(np.isfinite(curvature), curvature, np.linalg.inv(prior.covariance))
 
-    # Reported: never wider than the prior, which a Gaussian prior guarantees whenever the
-    # likelihood is concave at the mode, and is the sane answer when curvature says otherwise.
-    variance = np.maximum(np.minimum(inverse, prior_variance), config.variance_floor)
-
-    # For the marginal, the width of the Gaussian being integrated is set by the curvature alone.
-    # Capping it there would report an integral over a narrower density than was approximated.
-    laplace_variance = np.maximum(inverse, config.variance_floor)
+    covariance, laplace_covariance = _posterior_covariance(
+        usable, prior, config.variance_floor
+    )
 
     return SubjectPosterior(
         z_hat=z_hat,
-        variance=variance,
+        covariance=covariance,
         curvature=curvature,
         neg_log_post=float(result.fun),
         success=bool(result.success),
         message=str(getattr(result, "message", "")),
         hessian_step=step,
         laplace_objective=subject_laplace_objective(
-            float(result.fun), laplace_variance, z_hat.size
+            float(result.fun), laplace_covariance, z_hat.size
         ),
     )
 
@@ -282,12 +436,17 @@ class EStepResult:
     """
 
     z_hat: np.ndarray             # (n_subjects, n_params) modes
-    variance: np.ndarray          # (n_subjects, n_params) posterior variances
-    curvature: np.ndarray         # (n_subjects, n_params)
+    covariance: np.ndarray        # (n_subjects, n_params, n_params) posterior covariances
+    curvature: np.ndarray         # (n_subjects, n_params, n_params)
     hessian_step: np.ndarray      # (n_subjects, n_params) steps used
     subject_objective: np.ndarray  # (n_subjects,) per-participant Laplace marginal
     success: np.ndarray           # (n_subjects,) bool
     messages: tuple               # (index, message) for participants that did not converge
+
+    @property
+    def variance(self):
+        """Per-participant, per-parameter posterior variance: the diagonals of `covariance`."""
+        return np.diagonal(self.covariance, axis1=1, axis2=2).copy()
 
     @property
     def objective(self):
@@ -314,15 +473,16 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
     Returns
     -------
 
-    A callable ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``.
+    A callable ``runner(mu, covariance, prev_z, warm_start) -> EStepResult``.
     """
     config = config if config is not None else EStepConfig()
 
-    def runner(mu, sigma, prev_z, warm_start):
+    def runner(mu, covariance, prev_z, warm_start):
         n_subjects, n_params = mu.shape
+        prior = GroupPrior(covariance)
         z_hat = np.empty((n_subjects, n_params))
-        variance = np.empty((n_subjects, n_params))
-        curvature = np.empty((n_subjects, n_params))
+        posterior = np.empty((n_subjects, n_params, n_params))
+        curvature = np.empty((n_subjects, n_params, n_params))
         steps = np.empty((n_subjects, n_params))
         subject_objective = np.empty(n_subjects)
         success = np.empty(n_subjects, dtype=bool)
@@ -333,16 +493,16 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
 
             def neg_log_post(z, s=s, mu_s=mu_s):
                 theta = transform.to_natural(z)
-                return -float(log_likelihood(theta, s)) - log_gauss_diag(z, mu_s, sigma)
+                return -float(log_likelihood(theta, s)) - prior.log_density(z, mu_s)
 
             post = subject_map_estep(
                 neg_log_post,
                 z0=prev_z[s] if warm_start else mu_s,
-                prior_variance=sigma,
+                prior=prior,
                 config=config,
             )
             z_hat[s] = post.z_hat
-            variance[s] = post.variance
+            posterior[s] = post.covariance
             curvature[s] = post.curvature
             steps[s] = post.hessian_step
             subject_objective[s] = post.laplace_objective
@@ -352,7 +512,7 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
 
         return EStepResult(
             z_hat=z_hat,
-            variance=variance,
+            covariance=posterior,
             curvature=curvature,
             hessian_step=steps,
             subject_objective=subject_objective,
@@ -371,15 +531,25 @@ class LaplaceEMResult:
     """
 
     beta: np.ndarray          # (n_predictors, n_params) group means
-    sigma: np.ndarray         # (n_params,) group variances
+    covariance: np.ndarray    # (n_params, n_params) group covariance
     z_hat: np.ndarray         # (n_subjects, n_params) participant modes
-    variance: np.ndarray      # (n_subjects, n_params) participant posterior variances
-    objective: float          # Laplace marginal log-likelihood at the returned beta and sigma
+    posterior_covariance: np.ndarray  # (n_subjects, n_params, n_params)
+    objective: float          # Laplace marginal log-likelihood at the returned group estimate
     n_iter: int
     converged: bool
     subject_converged: np.ndarray  # (n_subjects,) bool, from the final E-step
     history: list             # one entry per iteration; see `fit_laplace_em`
     hessian_step: np.ndarray  # (n_subjects, n_params) steps used in the final E-step
+
+    @property
+    def sigma(self):
+        """Per-parameter group variance: the diagonal of `covariance`."""
+        return np.diag(self.covariance).copy()
+
+    @property
+    def variance(self):
+        """Per-participant, per-parameter posterior variance."""
+        return np.diagonal(self.posterior_covariance, axis1=1, axis2=2).copy()
 
 
 def fit_laplace_em(
@@ -392,7 +562,7 @@ def fit_laplace_em(
     max_iterations=50,
     tol=1e-4,
     init_beta=None,
-    init_sigma=None,
+    init_covariance=None,
     warm_start=True,
     final_estep=True,
 ):
@@ -400,7 +570,8 @@ def fit_laplace_em(
 
     Alternates between estimating each participant's posterior given the group (the E-step, supplied
     as `estep_runner`) and re-estimating the group from those posteriors (the M-step, here).  The
-    group model is ``z_s ~ N(X_s beta, diag(sigma))``.
+    group model is ``z_s ~ N(X_s beta, Sigma)``, with `Sigma` diagonal or full as
+    `estep_config` says.
 
     The likelihood is reached only through `estep_runner`, so the same driver fits a closed-form test
     model and a simulation-backed one without change.
@@ -409,7 +580,7 @@ def fit_laplace_em(
     ---------
 
     estep_runner : callable
-        ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``.
+        ``runner(mu, covariance, prev_z, warm_start) -> EStepResult``.
 
     n_subjects, n_params : int
         Shape of the problem.
@@ -418,13 +589,15 @@ def fit_laplace_em(
         ``(n_subjects, n_predictors)`` of participant-level predictors.  Defaults to an intercept.
 
     estep_config : EStepConfig : default None
-        Used here only for `variance_floor`; the runner holds its own copy for the E-step.
+        Used here for `variance_floor` and `covariance`; the runner holds its own copy for the
+        E-step, and the two must agree on the shape of the covariance.
 
     max_iterations, tol : int, float
         Stop after this many iterations, or once no group parameter moves by more than `tol`.
 
-    init_beta, init_sigma : array-like : default None
-        Starting group estimates; zeros and ones respectively by default.
+    init_beta, init_covariance : array-like : default None
+        Starting group estimates; zeros and the identity respectively by default.
+        `init_covariance` may be given as per-parameter variances or as a full matrix.
 
     warm_start : bool
         Start each participant from their previous mode rather than from the group prediction.
@@ -452,10 +625,15 @@ def fit_laplace_em(
             f"for {n_subjects} participants"
         )
     n_predictors = X.shape[1]
-    variance_floor = (estep_config or EStepConfig()).variance_floor
+    config = estep_config or EStepConfig()
+    variance_floor = config.variance_floor
+    full = config.covariance == "full"
 
     beta = np.zeros((n_predictors, n_params)) if init_beta is None else np.array(init_beta, float)
-    sigma = np.ones(n_params) if init_sigma is None else np.array(init_sigma, float)
+    covariance = (
+        np.eye(n_params) if init_covariance is None
+        else as_covariance(init_covariance, n_params)
+    )
 
     prev_z = X @ beta
     history = []
@@ -464,7 +642,7 @@ def fit_laplace_em(
 
     for iteration in range(max_iterations):
         mu = X @ beta
-        estep = estep_runner(mu, sigma, prev_z, warm_start)
+        estep = estep_runner(mu, covariance, prev_z, warm_start)
         prev_z = estep.z_hat
 
         if not np.all(estep.success):
@@ -478,16 +656,22 @@ def fit_laplace_em(
                 stacklevel=2,
             )
 
-        # M-step: group means by least squares on the participant modes, group variances from the
-        # posterior second moments. The posterior variances are added so that participants whose
-        # parameters are poorly determined widen the group variance rather than shrinking it.
+        # M-step: group means by least squares on the participant modes, group covariance from
+        # the posterior second moments. The posterior covariances are added so that participants
+        # whose parameters are poorly determined widen the group rather than shrinking it.
         beta_new = np.linalg.lstsq(X, estep.z_hat, rcond=None)[0]
         resid = estep.z_hat - X @ beta_new
-        sigma_new = np.maximum(np.mean(resid ** 2 + estep.variance, axis=0), variance_floor)
+        second_moment = (resid.T @ resid) / n_subjects + estep.covariance.mean(axis=0)
+        if full:
+            covariance_new = _floor_eigenvalues(second_moment, variance_floor)
+        else:
+            covariance_new = np.diag(
+                np.maximum(np.diag(second_moment), variance_floor)
+            )
 
         delta = max(
             float(np.max(np.abs(beta_new - beta))),
-            float(np.max(np.abs(sigma_new - sigma))),
+            float(np.max(np.abs(covariance_new - covariance))),
         )
 
         # The objective was computed under the group estimate that produced it, so record them
@@ -496,24 +680,24 @@ def fit_laplace_em(
             "iter": iteration,
             "objective": estep.objective,
             "beta": beta.copy(),
-            "sigma": sigma.copy(),
+            "covariance": covariance.copy(),
             "delta": delta,
             "n_subject_failures": int(np.count_nonzero(~estep.success)),
         })
 
-        beta, sigma = beta_new, sigma_new
+        beta, covariance = beta_new, covariance_new
         if delta < tol:
             converged = True
             break
 
     if final_estep and estep is not None:
-        estep = estep_runner(X @ beta, sigma, prev_z, warm_start)
+        estep = estep_runner(X @ beta, covariance, prev_z, warm_start)
 
     return LaplaceEMResult(
         beta=beta,
-        sigma=sigma,
+        covariance=covariance,
         z_hat=estep.z_hat,
-        variance=estep.variance,
+        posterior_covariance=estep.covariance,
         objective=estep.objective,
         n_iter=len(history),
         converged=converged,

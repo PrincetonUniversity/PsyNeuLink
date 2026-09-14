@@ -15,10 +15,11 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     DEFAULT_HESSIAN_STEP_SCALE,
     EStepConfig,
     EStepResult,
+    GroupPrior,
     HierarchicalEMWarning,
     diagonal_hessian,
     fit_laplace_em,
-    log_gauss_diag,
+    full_hessian,
     make_inprocess_estep_runner,
     subject_map_estep,
 )
@@ -193,6 +194,60 @@ def test_diagonal_hessian_rejects_bad_step():
         diagonal_hessian(f, np.zeros(2), step=0.0)
 
 
+def test_full_hessian_of_quadratic():
+    # A quadratic's Hessian is its own coefficient matrix, off-diagonals included.
+    a = np.array([[3.0, 0.7, -0.4], [0.7, 2.0, 0.9], [-0.4, 0.9, 1.5]])
+    f = lambda z: 0.5 * z @ a @ z + 1.3  # noqa: E731
+    measured = full_hessian(f, np.zeros(3), step=1e-3)
+    assert np.allclose(measured, a, atol=1e-4)
+
+
+def test_full_hessian_is_symmetric_and_agrees_on_the_diagonal():
+    # Each off-diagonal is computed once and mirrored, so the result is symmetric
+    # whatever the objective; the diagonal is the same probe the diagonal-only form uses.
+    rng = np.random.default_rng(0)
+    b = rng.normal(size=(3, 3))
+    f = lambda z: float(np.sum(np.tanh(b @ z) ** 2))  # noqa: E731
+    z = np.array([0.2, -0.4, 0.1])
+    measured = full_hessian(f, z, step=1e-3)
+    assert np.allclose(measured, measured.T, atol=0)
+    assert np.allclose(np.diag(measured), diagonal_hessian(f, z, step=1e-3))
+
+
+def test_full_hessian_rejects_bad_step():
+    f = lambda z: float(np.sum(z ** 2))  # noqa: E731
+    with pytest.raises(ValueError, match="step must be scalar or of shape"):
+        full_hessian(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
+    with pytest.raises(ValueError, match="step must be positive"):
+        full_hessian(f, np.zeros(2), step=0.0)
+
+
+# ===========================================================================
+# The group prior
+# ===========================================================================
+def test_group_prior_accepts_variances_or_a_matrix():
+    variances = np.array([0.4, 1.1])
+    assert np.allclose(GroupPrior(variances).covariance, np.diag(variances))
+    assert np.allclose(GroupPrior(np.diag(variances)).variance, variances)
+
+
+def test_group_prior_matches_an_independent_gaussian():
+    # With no correlation the density is the sum of one-dimensional Gaussians, which
+    # checks the factorization against arithmetic rather than against itself.
+    var = np.array([0.4, 1.1, 2.3])
+    mean = np.array([0.2, -0.5, 1.0])
+    z = np.array([0.1, 0.3, 0.9])
+    expected = float(-0.5 * np.sum((z - mean) ** 2 / var + np.log(2 * np.pi) + np.log(var)))
+    assert np.isclose(GroupPrior(var).log_density(z, mean), expected)
+
+
+def test_group_prior_rejects_a_covariance_that_is_not_a_distribution():
+    with pytest.raises(ValueError, match="not positive definite"):
+        GroupPrior(np.array([[1.0, 2.0], [2.0, 1.0]]))
+    with pytest.raises(ValueError, match="vector of variances or a square matrix"):
+        GroupPrior(np.zeros((2, 3)))
+
+
 # ===========================================================================
 # E-step against the closed-form posterior
 # ===========================================================================
@@ -203,9 +258,9 @@ def test_estep_matches_closed_form_posterior():
     s = 7
 
     def neg_log_post(z):
-        return -model.log_likelihood_s(z, s) - log_gauss_diag(z, beta, sigma)
+        return -model.log_likelihood_s(z, s) - GroupPrior(sigma).log_density(z, beta)
 
-    post = subject_map_estep(neg_log_post, z0=beta, prior_variance=sigma)
+    post = subject_map_estep(neg_log_post, z0=beta, prior=sigma)
     z_cf, v_cf = model.closed_form_posterior(np.tile(beta, (model.n_subjects, 1)), sigma)
     assert np.allclose(post.z_hat, z_cf[s], atol=1e-5)
     assert np.allclose(post.variance, v_cf[s], rtol=1e-4)
@@ -218,14 +273,14 @@ def test_estep_reports_optimizer_outcome():
     sigma = np.array([0.5, 0.7])
 
     def neg_log_post(z):
-        return -model.log_likelihood_s(z, 0) - log_gauss_diag(z, np.zeros(2), sigma)
+        return -model.log_likelihood_s(z, 0) - GroupPrior(sigma).log_density(z, np.zeros(2))
 
-    ok = subject_map_estep(neg_log_post, z0=np.zeros(2), prior_variance=sigma)
+    ok = subject_map_estep(neg_log_post, z0=np.zeros(2), prior=sigma)
     assert ok.success is True
     assert isinstance(ok.message, str)
 
     capped = subject_map_estep(
-        neg_log_post, z0=np.zeros(2), prior_variance=sigma,
+        neg_log_post, z0=np.zeros(2), prior=sigma,
         config=EStepConfig(optimizer_options={"maxiter": 1}),
     )
     assert capped.success is False
@@ -235,7 +290,7 @@ def test_estep_falls_back_to_prior_where_data_are_uninformative():
     # A flat objective has no curvature to invert; the posterior should report the
     # prior rather than a spuriously tight interval.
     sigma = np.array([0.25, 4.0])
-    post = subject_map_estep(lambda z: 0.0, z0=np.zeros(2), prior_variance=sigma)
+    post = subject_map_estep(lambda z: 0.0, z0=np.zeros(2), prior=sigma)
     assert np.allclose(post.variance, sigma)
 
 
@@ -262,7 +317,7 @@ def test_estep_records_the_step_it_used():
     # Recorded so that a fit can be audited, rather than the step being an
     # invisible choice made inside the E-step.
     sigma = np.array([0.36, 0.04])
-    post = subject_map_estep(lambda z: float(np.sum(z ** 2)), z0=np.zeros(2), prior_variance=sigma)
+    post = subject_map_estep(lambda z: float(np.sum(z ** 2)), z0=np.zeros(2), prior=sigma)
     assert np.allclose(post.hessian_step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
 
 
@@ -338,12 +393,12 @@ def test_em_history_pairs_each_objective_with_the_estimate_that_produced_it():
     # therefore carries the initial estimate, not the result of the first update.
     model = _make_toy(seed=7, n_subjects=40)
     init_beta = np.array([[0.11, -0.22]])
-    init_sigma = np.array([0.7, 1.3])
+    init_covariance = np.array([0.7, 1.3])
     result = _fit_toy(model, max_iterations=3, tol=0.0,
-                      init_beta=init_beta, init_sigma=init_sigma)
+                      init_beta=init_beta, init_covariance=init_covariance)
 
     assert np.allclose(result.history[0]["beta"], init_beta)
-    assert np.allclose(result.history[0]["sigma"], init_sigma)
+    assert np.allclose(result.history[0]["covariance"], np.diag(init_covariance))
     # Each subsequent entry carries the estimate the previous entry's update produced.
     assert not np.allclose(result.history[1]["beta"], init_beta)
 
@@ -383,7 +438,8 @@ def test_em_warns_and_records_when_a_participant_fails():
 def test_em_objective_is_summed_in_participant_order():
     # Independent of completion order, so an in-process and a distributed E-step agree.
     r = EStepResult(
-        z_hat=np.zeros((3, 2)), variance=np.ones((3, 2)), curvature=np.ones((3, 2)),
+        z_hat=np.zeros((3, 2)), covariance=np.tile(np.eye(2), (3, 1, 1)),
+        curvature=np.tile(np.eye(2), (3, 1, 1)),
         hessian_step=np.ones((3, 2)), subject_objective=np.array([1.5, -2.0, 0.25]),
         success=np.ones(3, dtype=bool), messages=(),
     )
@@ -396,6 +452,109 @@ def test_em_rejects_mismatched_design_matrix():
     with pytest.raises(ValueError, match="one row per participant"):
         fit_laplace_em(runner, model.n_subjects, model.n_params,
                        design_matrix=np.ones((3, 1)), max_iterations=1)
+
+
+# ===========================================================================
+# Full group covariance
+#
+# The same P-by-P matrix as the diagonal fit uses, with the off-diagonals no
+# longer pinned at zero.  A Gaussian likelihood whose own curvature correlates
+# the parameters gives both the posterior and the group update a known answer.
+# ===========================================================================
+_CORRELATED_NOISE = np.array([[0.30, 0.18], [0.18, 0.25]])
+
+
+def _correlated_subject(y, noise=_CORRELATED_NOISE):
+    """Negative log likelihood of one observation under known correlated noise."""
+    precision = np.linalg.inv(noise)
+
+    def log_likelihood(theta, s):
+        d = np.asarray(theta, dtype=float) - y[s]
+        return float(-0.5 * d @ precision @ d)
+
+    return log_likelihood
+
+
+def test_full_estep_recovers_the_posterior_the_diagonal_one_cannot():
+    # Posterior of a Gaussian likelihood under a Gaussian prior: (L^-1 + S^-1)^-1.
+    y = np.array([[0.7, -1.2]])
+    prior = GroupPrior(np.eye(2))
+    log_likelihood = _correlated_subject(y)
+
+    def neg_log_post(z):
+        return -log_likelihood(z, 0) - prior.log_density(z, np.zeros(2))
+
+    expected = np.linalg.inv(np.linalg.inv(_CORRELATED_NOISE) + np.eye(2))
+    full = subject_map_estep(neg_log_post, np.zeros(2), prior,
+                             EStepConfig(covariance="full", hessian_step=1e-3))
+    assert np.allclose(full.covariance, expected, atol=1e-4)
+
+    # The diagonal probe measures each parameter with the other held at the mode, so
+    # where they trade off it reports an interval narrower than the true marginal.
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), prior,
+                                 EStepConfig(hessian_step=1e-3))
+    assert np.all(diagonal.variance < np.diag(expected) - 0.05)
+
+
+def test_full_estep_reports_a_covariance_the_diagonal_one_leaves_empty():
+    y = np.array([[0.7, -1.2]])
+    prior = GroupPrior(np.eye(2))
+    log_likelihood = _correlated_subject(y)
+
+    def neg_log_post(z):
+        return -log_likelihood(z, 0) - prior.log_density(z, np.zeros(2))
+
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), prior,
+                                 EStepConfig(hessian_step=1e-3))
+    assert np.allclose(diagonal.covariance, np.diag(diagonal.variance))
+    assert diagonal.covariance.shape == (2, 2)
+
+
+def test_full_em_recovers_the_group_covariance():
+    # y_s = z_s + e_s with e_s of known covariance, so the marginal is N(beta, Sigma + noise)
+    # and the maximizer is beta = mean(y), Sigma = cov(y) - noise. EM is exact here.
+    rng = np.random.default_rng(3)
+    n_subjects = 60
+    beta_true = np.array([0.6, -0.9])
+    sigma_true = np.array([[0.80, 0.55], [0.55, 0.60]])
+    z_true = rng.multivariate_normal(beta_true, sigma_true, size=n_subjects)
+    y = z_true + rng.multivariate_normal(np.zeros(2), _CORRELATED_NOISE, size=n_subjects)
+
+    config = EStepConfig(covariance="full", hessian_step=1e-3, variance_floor=1e-9)
+    runner = make_inprocess_estep_runner(_correlated_subject(y), IdentityTransform(), config)
+    result = fit_laplace_em(runner, n_subjects, 2, estep_config=config,
+                            max_iterations=120, tol=1e-8)
+
+    assert np.allclose(result.beta[0], y.mean(axis=0), atol=1e-4)
+    assert np.allclose(result.covariance, np.cov(y.T, bias=True) - _CORRELATED_NOISE, atol=1e-3)
+
+
+def test_diagonal_em_leaves_the_off_diagonals_at_zero():
+    # The same correlated data fitted with a diagonal covariance: the fit is entitled to
+    # report no correlation, because it was told not to look for one.
+    rng = np.random.default_rng(3)
+    y = rng.multivariate_normal([0.6, -0.9], [[1.1, 0.7], [0.7, 0.85]], size=60)
+    config = EStepConfig(hessian_step=1e-3, variance_floor=1e-9)
+    runner = make_inprocess_estep_runner(_correlated_subject(y), IdentityTransform(), config)
+    result = fit_laplace_em(runner, len(y), 2, estep_config=config, max_iterations=60, tol=1e-8)
+    assert result.covariance.shape == (2, 2)
+    assert np.allclose(result.covariance, np.diag(np.diag(result.covariance)))
+    assert np.allclose(result.sigma, np.diag(result.covariance))
+
+
+def test_em_accepts_an_initial_covariance_as_either_shape():
+    model = _make_toy(seed=4, n_subjects=6)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    as_vector = fit_laplace_em(runner, model.n_subjects, model.n_params,
+                               init_covariance=np.array([0.7, 1.3]), max_iterations=2)
+    as_matrix = fit_laplace_em(runner, model.n_subjects, model.n_params,
+                               init_covariance=np.diag([0.7, 1.3]), max_iterations=2)
+    assert np.allclose(as_vector.covariance, as_matrix.covariance)
+
+
+def test_estep_config_rejects_an_unknown_covariance():
+    with pytest.raises(ValueError, match="covariance must be one of"):
+        EStepConfig(covariance="banded")
 
 
 # ===========================================================================
@@ -716,12 +875,12 @@ def clear_subject_cache():
     distributedestep._SUBJECT_FALLBACK_CACHE.clear()
 
 
-def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, sigma=None, schema=None):
-    sigma = np.array([1.0]) if sigma is None else sigma
+def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, prior=None, schema=None):
+    prior = GroupPrior(np.array([1.0])) if prior is None else prior
     if schema is None:
         schema = ParameterSchema.from_pec(_StubPEC(["rate"], [(-1.0, 1.0)]), source="the fit")
     return distributedestep._dask_subject_estep(
-        factory, subject_index, data, np.zeros(1), sigma,
+        factory, subject_index, data, np.zeros(1), prior,
         schema, np.zeros(1), worker_cores, fit_id, EStepConfig(),
     )
 
@@ -899,9 +1058,38 @@ def test_pec_rejects_out_of_range_hierarchical_options():
         ({"subject_id": "subject", "max_iterations": 0}, "max_iterations"),
         ({"subject_id": "subject", "tol": 0.0}, "tol"),
         ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
+        ({"subject_id": "subject", "covariance": "banded"}, "covariance"),
     ]:
         with pytest.raises(Exception, match=match):
             _build_group_pec(hierarchical_options=opts)
+
+
+@pytest.mark.composition
+def test_pec_reports_a_group_covariance_of_the_shape_it_was_asked_for():
+    # Both settings estimate the same parameter-by-parameter matrix; "diagonal" holds its
+    # off-diagonals at zero, and reports a correlation of the identity to say so.
+    def factory(data, subject_index=None):
+        return _StubPEC(["DDM-1.rate", "DDM-1.threshold"], [(-1.5, 1.5), (0.3, 1.5)]), None
+
+    for kind in ("diagonal", "full"):
+        pec = _build_group_pec(
+            distributed_options={"pec_factory": factory},
+            hierarchical_options={
+                "subject_id": "subject", "covariance": kind, "max_iterations": 2,
+            },
+        )
+        results = pec.run()
+        assert results.group_covariance.shape == (2, 2)
+        assert results.posterior_covariance.shape == (3, 2, 2)
+        assert list(results.group_correlation.columns) == list(results.fit_param_names)
+        assert np.allclose(np.diag(results.group_correlation.to_numpy()), 1.0)
+        assert results.settings["covariance"] == kind
+        # The diagonal of the matrix and the per-parameter variance are the same numbers.
+        assert np.allclose(results.sigma, np.diag(results.group_covariance))
+        assert np.allclose(
+            results.posterior_variance,
+            np.diagonal(results.posterior_covariance, axis1=1, axis2=2),
+        )
 
 
 @pytest.mark.composition

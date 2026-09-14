@@ -32,7 +32,7 @@ from psyneulink.core.components.functions.nonstateful import fitfunctions as _fi
 from psyneulink.core.compositions.hierarchical.laplaceem import (
     EStepConfig,
     EStepResult,
-    log_gauss_diag,
+    GroupPrior,
     subject_map_estep,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import ParameterSchema
@@ -83,7 +83,7 @@ def _release_fit_models(fit_id, dask_worker=None):
 
 
 def _dask_subject_estep(
-    pec_factory, subject_index, data_slice, mu_s, sigma, schema, z0, worker_cores,
+    pec_factory, subject_index, data_slice, mu_s, prior, schema, z0, worker_cores,
     fit_id, config,
 ):
     """Fit one participant on a worker and return their posterior summary.
@@ -108,14 +108,13 @@ def _dask_subject_estep(
         pec, inputs = cache[key]
 
         transform = BoundedTransform(lower=schema.lower, upper=schema.upper)
-        sigma = np.asarray(sigma, dtype=float)
         mu_s = np.asarray(mu_s, dtype=float)
 
         def neg_log_post(z):
             theta = transform.to_natural(z)
-            return -float(pec.log_likelihood(*theta, inputs=inputs)) - log_gauss_diag(z, mu_s, sigma)
+            return -float(pec.log_likelihood(*theta, inputs=inputs)) - prior.log_density(z, mu_s)
 
-        post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)
+        post = subject_map_estep(neg_log_post, z0=z0, prior=prior, config=config)
 
         return subject_index, post, _worker_address()
 
@@ -156,8 +155,8 @@ def make_distributed_estep_runner(
     Returns
     -------
 
-    A callable ``runner(mu, sigma, prev_z, warm_start) -> EStepResult``, interchangeable with the
-    in-process runner.  It carries a ``release()`` that drops the models this fit left on the
+    A callable ``runner(mu, covariance, prev_z, warm_start) -> EStepResult``, interchangeable with
+    the in-process runner.  It carries a ``release()`` that drops the models this fit left on the
     workers; a fit that does not call it leaves them there for the life of the cluster.
     """
     config = config if config is not None else EStepConfig()
@@ -171,8 +170,11 @@ def make_distributed_estep_runner(
     # their model instead of being rebuilt somewhere else.
     home = {}
 
-    def runner(mu, sigma, prev_z, warm_start):
+    def runner(mu, covariance, prev_z, warm_start):
         n_subjects, n_params = mu.shape
+        # Factorized once on the driver rather than once per task: within an iteration every
+        # participant is fitted against the same group prior.
+        prior = GroupPrior(covariance)
         futures = []
         for s in range(n_subjects):
             z0 = np.asarray(prev_z[s] if warm_start else mu[s], dtype=float)
@@ -182,13 +184,13 @@ def make_distributed_estep_runner(
                 # participant re-pins on the next iteration.
                 submit_kwargs.update(workers=[home[s]], allow_other_workers=True)
             futures.append(client.submit(
-                _dask_subject_estep, pec_factory, s, scattered[s], mu[s], sigma,
+                _dask_subject_estep, pec_factory, s, scattered[s], mu[s], prior,
                 schema, z0, worker_cores, fit_id, config, **submit_kwargs,
             ))
 
         z_hat = np.empty((n_subjects, n_params))
-        variance = np.empty((n_subjects, n_params))
-        curvature = np.empty((n_subjects, n_params))
+        posterior = np.empty((n_subjects, n_params, n_params))
+        curvature = np.empty((n_subjects, n_params, n_params))
         steps = np.empty((n_subjects, n_params))
         subject_objective = np.empty(n_subjects)
         success = np.empty(n_subjects, dtype=bool)
@@ -198,7 +200,7 @@ def make_distributed_estep_runner(
             # Results are placed by participant index rather than in completion order, so that a
             # distributed fit and an in-process one agree exactly.
             z_hat[subject_index] = post.z_hat
-            variance[subject_index] = post.variance
+            posterior[subject_index] = post.covariance
             curvature[subject_index] = post.curvature
             steps[subject_index] = post.hessian_step
             subject_objective[subject_index] = post.laplace_objective
@@ -210,7 +212,7 @@ def make_distributed_estep_runner(
 
         return EStepResult(
             z_hat=z_hat,
-            variance=variance,
+            covariance=posterior,
             curvature=curvature,
             hessian_step=steps,
             subject_objective=subject_objective,

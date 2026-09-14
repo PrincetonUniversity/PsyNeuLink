@@ -296,6 +296,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
+    COVARIANCE_KINDS,
     EStepConfig,
     fit_laplace_em,
     make_inprocess_estep_runner,
@@ -451,8 +452,10 @@ class ParameterEstimationComposition(Composition):
 
     hierarchical_options : Mapping : default None
         specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
-        a ``"subject_id"`` naming the column of **data** that identifies participants; see
-        :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set of keys.
+        a ``"subject_id"`` naming the column of **data** that identifies participants. ``"covariance"`` chooses
+        whether the group model treats the parameters as independent (``"diagonal"``, the default) or measures how
+        they vary together (``"full"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set of
+        keys.
 
     likelihood_estimator : "kde" or "neural" : default "kde"
         specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model and estimates a density
@@ -901,6 +904,7 @@ class ParameterEstimationComposition(Composition):
     #: Settings accepted by `hierarchical_options`, with their defaults.
     _HIERARCHICAL_OPTION_DEFAULTS = {
         "subject_id": None,
+        "covariance": "diagonal",
         "max_iterations": 50,
         "tol": 1e-4,
         "variance_floor": 1e-6,
@@ -973,6 +977,11 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(
                 "hierarchical_options requires variance_floor > 0"
             )
+        if options["covariance"] not in COVARIANCE_KINDS:
+            raise ParameterEstimationCompositionError(
+                f"hierarchical_options['covariance'] must be one of {list(COVARIANCE_KINDS)}; "
+                f"got {options['covariance']!r}"
+            )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
                 "depends_on is not supported with hierarchical fitting"
@@ -1017,6 +1026,7 @@ class ParameterEstimationComposition(Composition):
         schema = provider.schema
         config = EStepConfig(
             method=options["estep_method"],
+            covariance=options["covariance"],
             hessian_step=options["hessian_step"],
             variance_floor=options["variance_floor"],
             optimizer_options=options["estep_options"],

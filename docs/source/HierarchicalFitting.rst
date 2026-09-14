@@ -13,10 +13,12 @@ Estimation is by empirical-Bayes Laplace EM, with the group modelled as
 
 .. math::
 
-   z_s \sim \mathcal{N}(\beta,\ \mathrm{diag}(\sigma))
+   z_s \sim \mathcal{N}(\beta,\ \Sigma)
 
 where :math:`z_s` is participant :math:`s`'s parameter vector in an unconstrained space,
-and :math:`\beta` and :math:`\sigma` are estimated from the group.
+and :math:`\beta` and :math:`\Sigma` are estimated from the group. :math:`\Sigma` is the
+parameter-by-parameter covariance; by default its off-diagonals are held at zero, and the
+``covariance`` option below lets the fit estimate them.
 
 
 .. _Hierarchical_Fitting_Enabling:
@@ -127,6 +129,9 @@ being ignored.
 * ``subject_id`` (required)
     Column of ``data`` identifying participants.
 
+* ``covariance``
+    ``"diagonal"`` (the default) or ``"full"``. See :ref:`Hierarchical_Fitting_Covariance`.
+
 * ``max_iterations``
     Most EM iterations to run. Defaults to ``50``.
 
@@ -146,6 +151,37 @@ being ignored.
 
 * ``estep_options``
     Passed through to `scipy.optimize.minimize`.
+
+
+.. _Hierarchical_Fitting_Covariance:
+
+Group covariance
+----------------
+
+The group covariance :math:`\Sigma` is one parameter-by-parameter matrix. What
+``covariance`` chooses is how much of it the fit is allowed to use.
+
+``"diagonal"``, the default, holds the off-diagonals at zero: the group model asserts that
+the parameters vary independently across the population. Each participant's curvature is
+measured the same way, one parameter at a time with the others held at their mode.
+
+``"full"`` estimates the whole matrix, so the fit can report that participants with a high
+threshold tend to have a low drift rate, and each participant's posterior covariance is
+measured in full and inverted. This matters for the reported intervals as much as for the
+group: where two parameters trade off against each other, the width of one with the other
+held fixed is smaller than its width with the other integrated out, so a diagonal fit
+reports intervals that are too tight. How much too tight depends on how strongly the
+parameters trade off, and a fit cannot tell you that without measuring it.
+
+The cost is the curvature probe. Measuring the diagonal takes :math:`2P` evaluations of a
+participant's objective per EM iteration; measuring the whole matrix takes :math:`2P^2`.
+For a four-parameter model that is 32 evaluations instead of 8. Where an evaluation means
+simulating a model, that is the dominant cost of the fit; where it means calling a trained
+network (see :ref:`Neural Likelihoods <NeuralLikelihood>`) it is largely free.
+
+``fit_results.group_correlation`` reports the correlations implied by :math:`\Sigma`. A
+diagonal fit reports the identity, which records that it assumed the parameters were
+independent -- not that it measured them to be.
 
 
 .. _Hierarchical_Fitting_Running:
@@ -195,6 +231,11 @@ misrepresent an interval the transform makes asymmetric near a bound.
 spaces and whether that participant's fit converged. ``em_history`` records each iteration
 alongside the group estimate that produced it.
 
+``group_covariance`` is the full :math:`P \times P` matrix and ``group_correlation`` the
+correlations implied by it; ``posterior_covariance`` is one such matrix per participant.
+``sigma`` and ``posterior_variance`` are their diagonals, which is what a diagonal fit
+estimated in the first place.
+
 Convergence is judged by how far the group estimate moves, not by the objective, which is
 not monotone under an approximate E-step.
 
@@ -204,13 +245,9 @@ not monotone under an approximate E-step.
 Limitations
 -----------
 
-* Group covariance is diagonal: each parameter's spread across the population is estimated on
-  its own, so a tendency for two of them to move together -- participants with a high drift rate
-  also tending to have a high threshold -- is not represented.
-* Participant uncertainty is diagonal too, and is the spread of one parameter with the
-  others held at the mode rather than integrated out. Where two parameters trade off
-  against each other, that is the narrower of the two quantities, so reported intervals err
-  towards being too tight.
+* With ``covariance="diagonal"``, the default, a tendency for two parameters to move together
+  is not represented, and reported intervals err towards being too tight; see
+  :ref:`Hierarchical_Fitting_Covariance`.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood. A likelihood estimated from too few
