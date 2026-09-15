@@ -19,6 +19,7 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     HierarchicalEMWarning,
     diagonal_hessian,
     fit_laplace_em,
+    full_hessian,
     log_gauss_diag,
     make_inprocess_estep_runner,
     subject_map_estep,
@@ -192,6 +193,130 @@ def test_diagonal_hessian_rejects_bad_step():
         diagonal_hessian(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
     with pytest.raises(ValueError, match="step must be positive"):
         diagonal_hessian(f, np.zeros(2), step=0.0)
+
+
+def test_full_hessian_of_quadratic():
+    # A quadratic's Hessian is its own coefficient matrix, off-diagonals included.
+    a = np.array([[3.0, 0.7, -0.4], [0.7, 2.0, 0.9], [-0.4, 0.9, 1.5]])
+    f = lambda z: 0.5 * z @ a @ z + 1.3  # noqa: E731
+    assert np.allclose(full_hessian(f, np.zeros(3), step=1e-3), a, atol=1e-4)
+
+
+def test_full_hessian_is_symmetric_and_agrees_on_the_diagonal():
+    # Each off-diagonal is computed once and mirrored; the diagonal is the same probe the
+    # diagonal-only form uses, so the two cannot disagree about a parameter's own curvature.
+    rng = np.random.default_rng(0)
+    b = rng.normal(size=(3, 3))
+    f = lambda z: float(np.sum(np.tanh(b @ z) ** 2))  # noqa: E731
+    z = np.array([0.2, -0.4, 0.1])
+    measured = full_hessian(f, z, step=1e-3)
+    assert np.allclose(measured, measured.T, atol=0)
+    assert np.allclose(np.diag(measured), diagonal_hessian(f, z, step=1e-3))
+
+
+def test_full_hessian_rejects_bad_step():
+    f = lambda z: float(np.sum(z ** 2))  # noqa: E731
+    with pytest.raises(ValueError, match="step must be scalar or of shape"):
+        full_hessian(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
+    with pytest.raises(ValueError, match="step must be positive"):
+        full_hessian(f, np.zeros(2), step=0.0)
+
+
+# ===========================================================================
+# Measuring a participant's uncertainty in every direction at once
+#
+# A Gaussian objective has an exact posterior covariance, so what the two
+# settings report can be compared against the answer rather than each other.
+# ===========================================================================
+@pytest.mark.parametrize("coupled", [False, True], ids=["independent", "parameter_tradeoff"])
+def test_estep_variance_against_the_exact_gaussian_posterior(coupled):
+    # Standard normal priors on both parameters, and an observation of precision 9: of each
+    # parameter separately when independent, of their sum when coupled, which is what lets them
+    # trade off. Exactly quadratic, so neither simulation noise nor truncation error is in play.
+    def neg_log_post(z):
+        prior = 0.5 * np.dot(z, z)
+        residual_squared = np.sum(z) ** 2 if coupled else np.dot(z, z)
+        return float(prior + 0.5 * 9.0 * residual_squared)
+
+    full = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2),
+                             EStepConfig(curvature="full"))
+    assert full.success
+    np.testing.assert_allclose(full.z_hat, np.zeros(2), atol=1e-6)
+
+    # Independent: H = 10 I, so the posterior variance is 0.1 either way.
+    # Coupled: H = [[10, 9], [9, 10]] with determinant 19, so inv(H)[k, k] = 10 / 19.
+    exact = np.full(2, 10.0 / 19.0 if coupled else 0.1)
+    np.testing.assert_allclose(full.variance, exact, rtol=1e-4)
+
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2))
+    np.testing.assert_allclose(np.diag(diagonal.curvature), [10.0, 10.0], rtol=1e-4)
+    if coupled:
+        # The measurement the default makes: each parameter with the other held at the mode.
+        np.testing.assert_allclose(diagonal.variance, [0.1, 0.1], rtol=1e-4)
+    else:
+        np.testing.assert_allclose(diagonal.variance, exact, rtol=1e-4)
+
+
+def test_full_curvature_reports_the_off_diagonals_the_diagonal_one_leaves_empty():
+    def neg_log_post(z):
+        return float(0.5 * np.dot(z, z) + 0.5 * 9.0 * np.sum(z) ** 2)
+
+    full = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2),
+                             EStepConfig(curvature="full"))
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2))
+    # inv([[10, 9], [9, 10]]) = [[10, -9], [-9, 10]] / 19
+    np.testing.assert_allclose(full.covariance[0, 1], -9.0 / 19.0, rtol=1e-4)
+    assert np.allclose(diagonal.covariance, np.diag(diagonal.variance))
+
+
+def test_the_group_variance_reaches_its_maximum_only_with_a_full_curvature():
+    """The consequence beyond the intervals, against an independently computed answer.
+
+    Participants are observed with strongly correlated noise, so their two parameters trade off.
+    The quantity EM is maximizing is the marginal likelihood of the observations, and with a
+    diagonal group covariance that is ``prod N(y_s | beta, diag(sigma) + noise)``, maximized here
+    by direct numerical search rather than by the code under test.
+    """
+    from scipy.optimize import minimize
+
+    rng = np.random.default_rng(5)
+    n_subjects = 60
+    noise = np.array([[0.30, 0.27], [0.27, 0.30]])
+    precision = np.linalg.inv(noise)
+    y = rng.multivariate_normal([0.0, 0.0], np.eye(2) + noise, size=n_subjects)
+
+    def log_likelihood(theta, s):
+        d = np.asarray(theta, dtype=float) - y[s]
+        return float(-0.5 * d @ precision @ d)
+
+    def marginal_nll(packed):
+        mean, variances = packed[:2], np.exp(packed[2:])
+        covariance = np.diag(variances) + noise
+        residual = y - mean
+        _, log_det = np.linalg.slogdet(covariance)
+        return 0.5 * (n_subjects * log_det
+                      + np.sum(residual @ np.linalg.inv(covariance) * residual))
+
+    search = minimize(marginal_nll, np.zeros(4), method="Nelder-Mead",
+                      options={"xatol": 1e-10, "fatol": 1e-10, "maxiter": 20000})
+    maximizer = np.exp(search.x[2:])
+
+    fits = {}
+    for kind in ("diagonal", "full"):
+        config = EStepConfig(curvature=kind, hessian_step=1e-3, variance_floor=1e-9)
+        runner = make_inprocess_estep_runner(log_likelihood, IdentityTransform(), config)
+        fits[kind] = fit_laplace_em(runner, n_subjects, 2, estep_config=config,
+                                    max_iterations=200, tol=1e-9)
+
+    # Measuring each participant in every direction reaches the maximum; measuring one parameter
+    # at a time stops well below it, and always below rather than either side.
+    np.testing.assert_allclose(fits["full"].sigma, maximizer, rtol=1e-3)
+    assert np.all(fits["diagonal"].sigma < 0.9 * maximizer)
+
+
+def test_estep_config_rejects_an_unknown_curvature():
+    with pytest.raises(ValueError, match="curvature must be one of"):
+        EStepConfig(curvature="banded")
 
 
 # ===========================================================================
@@ -384,7 +509,8 @@ def test_em_warns_and_records_when_a_participant_fails():
 def test_em_objective_is_summed_in_participant_order():
     # Independent of completion order, so an in-process and a distributed E-step agree.
     r = EStepResult(
-        z_hat=np.zeros((3, 2)), variance=np.ones((3, 2)), curvature=np.ones((3, 2)),
+        z_hat=np.zeros((3, 2)), covariance=np.tile(np.eye(2), (3, 1, 1)),
+        curvature=np.tile(np.eye(2), (3, 1, 1)),
         hessian_step=np.ones((3, 2)), subject_objective=np.array([1.5, -2.0, 0.25]),
         success=np.ones(3, dtype=bool), messages=(),
     )
@@ -913,6 +1039,7 @@ def test_pec_rejects_out_of_range_hierarchical_options():
         ({"subject_id": "subject", "max_iterations": 0}, "max_iterations"),
         ({"subject_id": "subject", "tol": 0.0}, "tol"),
         ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
+        ({"subject_id": "subject", "curvature": "banded"}, "curvature"),
     ]:
         with pytest.raises(Exception, match=match):
             _build_group_pec(hierarchical_options=opts)
