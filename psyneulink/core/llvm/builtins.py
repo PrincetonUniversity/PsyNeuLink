@@ -758,12 +758,14 @@ def _setup_mt_rand_int32(ctx, state_ty):
 
 def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
 
-    out_ty = gen_int32.return_value.type
-    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty, out_ty.as_pointer()))
-    state, lower, upper, out_ptr = builder.function.args
+    builder = _setup_builtin_func_builder(ctx,
+                                          gen_int32.name + "_bounded",
+                                          (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty),
+                                          return_type=gen_int32.return_value.type)
+    state, lower, upper = builder.function.args
 
     rand_range_excl = builder.sub(upper, lower)
-    rand_range_excl = builder.zext(rand_range_excl, out_ty)
+    rand_range_excl = builder.zext(rand_range_excl, gen_int32.return_value.type)
 
     range_leading_zeros = builder.ctlz(rand_range_excl, ctx.bool_ty(1))
     mask = builder.lshr(range_leading_zeros.type(-1), range_leading_zeros)
@@ -788,8 +790,8 @@ def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
     builder.position_at_end(out_block)
     offset = builder.zext(lower, val.type)
     result = builder.add(val, offset)
-    builder.store(result, out_ptr)
-    builder.ret_void()
+
+    builder.ret(result)
 
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
     """
@@ -1170,37 +1172,36 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
     """
 
     out_ty = gen_int32.return_value.type
-    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), out_ty, out_ty, out_ty.as_pointer()))
-    state, lower, upper, out_ptr = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", [state_ty.as_pointer(), out_ty, out_ty], return_type=out_ty)
+    state, lower, upper = builder.function.args
 
     rand_range_excl = builder.sub(upper, lower)
     rand_range_excl_64 = builder.zext(rand_range_excl, ir.IntType(64))
     rand_range = builder.sub(rand_range_excl, rand_range_excl.type(1))
 
-
     val = builder.call(gen_int32, [state])
-    builder.store(val, out_ptr)
 
     is_full_range = builder.icmp_unsigned("==", rand_range, rand_range.type(0xffffffff))
     with builder.if_then(is_full_range):
-        builder.ret_void()
+        builder.ret(val)
 
     val64 = builder.zext(val, rand_range_excl_64.type)
     m = builder.mul(val64, rand_range_excl_64)
 
     # Store current result as output. It will be overwritten below if needed.
     out_val = builder.lshr(m, m.type(32))
-    out_val = builder.trunc(out_val, out_ptr.type.pointee)
+    out_val = builder.trunc(out_val, out_ty)
     out_val = builder.add(out_val, lower)
-    builder.store(out_val, out_ptr)
 
     leftover = builder.and_(m, m.type(0xffffffff))
 
     is_good = builder.icmp_unsigned(">=", leftover, rand_range_excl_64)
     with builder.if_then(is_good):
-        builder.ret_void()
+        builder.ret(out_val)
 
     # Apply rejection sampling
+    out_ptr = builder.alloca(out_ty)
+    builder.store(out_val, out_ptr)
     leftover_ptr = builder.alloca(leftover.type)
     builder.store(leftover, leftover_ptr)
 
@@ -1241,7 +1242,8 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
 
 
     builder.position_at_end(out_block)
-    builder.ret_void()
+    out_val = builder.load(out_ptr)
+    builder.ret(out_val)
 
 
 def _setup_philox_rand_double(ctx, state_ty, gen_int64):
