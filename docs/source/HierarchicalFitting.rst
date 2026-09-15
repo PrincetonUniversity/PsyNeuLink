@@ -127,6 +127,9 @@ being ignored.
 * ``subject_id`` (required)
     Column of ``data`` identifying participants.
 
+* ``curvature``
+    ``"diagonal"`` (the default) or ``"full"``. See :ref:`Hierarchical_Fitting_Curvature`.
+
 * ``max_iterations``
     Most EM iterations to run. Defaults to ``50``.
 
@@ -146,6 +149,35 @@ being ignored.
 
 * ``estep_options``
     Passed through to `scipy.optimize.minimize`.
+
+
+.. _Hierarchical_Fitting_Curvature:
+
+How each participant's uncertainty is measured
+----------------------------------------------
+
+A participant's uncertainty comes from the curvature of their fit at its peak: the more sharply
+the fit falls away, the better that parameter is determined.
+
+``curvature="diagonal"``, the default, measures one parameter at a time, moving it while the
+others are held where they are. That answers "how well is this parameter determined, given the
+others?" -- which is not the question. Where two parameters trade off, moving one alone makes
+the fit worse faster than moving it while the other compensates, so the answer comes out too
+confident. On a posterior with a known exact answer, a pair of parameters correlated at 0.9
+gives 0.10 measured this way against a true 0.53.
+
+``curvature="full"`` measures the whole matrix and inverts it, which answers the question that
+was asked: how well is this parameter determined once the others are allowed to be uncertain
+too. The cost is :math:`2P^2` evaluations of a participant's objective per EM iteration instead
+of :math:`2P` -- 32 instead of 8 for four parameters. Where an evaluation means simulating a
+model that is the dominant cost of the fit, which is why the diagonal remains the default.
+
+This affects the group estimate as well as the reported intervals. The group variance is built
+from these per-participant variances, so measuring them too small makes the population look
+less varied than it is.
+
+The group model itself treats the parameters as independent either way: ``curvature`` says how
+each participant is measured, not what the group is allowed to express.
 
 
 .. _Hierarchical_Fitting_Running:
@@ -207,10 +239,9 @@ Limitations
 * Group covariance is diagonal: each parameter's spread across the population is estimated on
   its own, so a tendency for two of them to move together -- participants with a high drift rate
   also tending to have a high threshold -- is not represented.
-* Participant uncertainty is diagonal too, and is the spread of one parameter with the
-  others held at the mode rather than integrated out. Where two parameters trade off
-  against each other, that is the narrower of the two quantities, so reported intervals err
-  towards being too tight.
+* With ``curvature="diagonal"``, the default, participant uncertainty is the spread of one
+  parameter with the others held at the mode rather than integrated out, which errs towards
+  being too tight; see :ref:`Hierarchical_Fitting_Curvature`.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood. A likelihood estimated from too few
