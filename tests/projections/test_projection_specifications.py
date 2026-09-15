@@ -55,6 +55,33 @@ class TestProjectionSpecificationFormats:
         # np.testing.assert_allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
         np.testing.assert_allclose(c.results, [[[-78.115,  -91.52, -104.925]]])
 
+    @pytest.mark.parametrize('init_accumulator_rate', [1, 2, 'matrix'])
+    def test_projection_specification_matrix_dict(self, init_accumulator_rate):
+        M2 = pnl.ProcessingMechanism(input_shapes=5)
+        M3 = pnl.ProcessingMechanism(input_shapes=4)
+        M2_M3_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+
+        if init_accumulator_rate == 'matrix':
+            init_accumulator_rate = M2_M3_matrix
+
+        M2_M3_proj = pnl.MappingProjection(
+            sender=M2,
+            receiver=M3,
+            matrix={
+                pnl.VALUE: M2_M3_matrix,
+                pnl.FUNCTION: pnl.AccumulatorIntegrator,
+                pnl.FUNCTION_PARAMS: {
+                    pnl.DEFAULT_VARIABLE: M2_M3_matrix,
+                    pnl.INITIALIZER: M2_M3_matrix,
+                    # rate=1 is false-negative for previous_value assert below
+                    pnl.RATE: init_accumulator_rate,
+                },
+            },
+            name='M2_M3_proj',
+        )
+
+        np.testing.assert_allclose(M2_M3_proj.parameter_ports[pnl.MATRIX].function.previous_value, M2_M3_matrix)
+
     @pytest.mark.parametrize('args', [
         (pnl.CONTROL, None),
         (pnl.MODULATES, None),
