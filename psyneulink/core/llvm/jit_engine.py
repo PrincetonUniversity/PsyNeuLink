@@ -345,8 +345,11 @@ class ptx_jit_engine(jit_engine):
             self._modules = {}
             self._target_machine = tm
 
-            # -dc option tells the compiler that the code will be used for linking
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(LLVMBuilderContext.get_current().float_ty)), target='cubin', options=['-dc'])
+            type_specialized_builtins = _ptx_builtin_source.format(type=str(LLVMBuilderContext.get_current().float_ty))
+
+            # The -dc option tells the compiler that the code will be used for
+            # linking and doesn't have entry points (main, kernels, ...)
+            self._generated_builtins = pycuda.compiler.compile(type_specialized_builtins, target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass
@@ -358,22 +361,22 @@ class ptx_jit_engine(jit_engine):
                 start_time = time.perf_counter()
                 ptx = self._target_machine.emit_assembly(module)
                 ptx_time = time.perf_counter()
-                mod = pycuda.compiler.DynamicModule(link_options=[(pycuda.driver.jit_option.MAX_REGISTERS, max_regs)])
-                mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
-                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
-                module_time = time.perf_counter()
-                ptx_mod = mod.link()
-                finish_time = time.perf_counter()
-                if "time_stat" in debug_env:
-                    print("Time to emit PTX module bundle '{}'({} lines): {}".format(module.name, len(ptx.splitlines()), ptx_time - start_time))
-                    print("Time to add PTX module bundle '{}': {}".format(module.name, module_time - ptx_time))
-                    print("Time to link PTX module bundle '{}': {}".format(module.name, finish_time - module_time))
-                    print("Total time to process PTX module bundle '{}': {}".format(module.name, finish_time - start_time))
-
             except Exception as e:
                 print("FAILED to generate PTX module:", e)
                 print(ptx)
-                return None
+                raise
+
+            mod = pycuda.compiler.DynamicModule(link_options=[(pycuda.driver.jit_option.MAX_REGISTERS, max_regs)])
+            mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
+            mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
+            module_time = time.perf_counter()
+            ptx_mod = mod.link()
+            finish_time = time.perf_counter()
+            if "time_stat" in debug_env:
+                print("Time to emit PTX module bundle '{}'({} lines): {}".format(module.name, len(ptx.splitlines()), ptx_time - start_time))
+                print("Time to add PTX module bundle '{}': {}".format(module.name, module_time - ptx_time))
+                print("Time to link PTX module bundle '{}': {}".format(module.name, finish_time - module_time))
+                print("Total time to process PTX module bundle '{}': {}".format(module.name, finish_time - start_time))
 
             self._modules[module] = ptx_mod
 
