@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -417,10 +417,10 @@ points to a separate InputPort. By default, if False, the recurrent_projection p
 InputPort</span></a>. If True, the recurrent_projection points to a separate InputPort, and
 the values of all input ports are combined using <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> <em>before</em>
 being passed to the RecurrentTransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
-<li><p><strong>combination_function</strong> (<em>function : default LinearCombination</em>) – specifies function used to combine the <em>RECURRENT</em> and <em>INTERNAL</em> <a class="reference internal" href="#recurrenttransfermechanism-structure"><span class="std std-ref">InputPorts</span></a>; must accept a 2d array with one or two items of the same length,
+<li><p><strong>combination_function</strong> (<em>function : default LinearCombination</em>) – specifies function used to combine the <em>RECURRENT</em> and <em>INTERNAL</em> <a class="reference internal" href="#recurrenttransfermechanism-structure"><span class="std std-ref">InputPorts</span></a>; must accept a &gt;=2d array with one or two items of the same shape,
 and generate a result that is the same size as each of these;  default simply adds the two items.</p></li>
 <li><p><strong>enable_learning</strong> (<em>boolean : default False</em>) – specifies whether the Mechanism should be configured for <code class="xref any docutils literal notranslate"><span class="pre">learning</span></code> method.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array</em><em> of </em><em>numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>np.ndarray</em><em> of </em><em>numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
 If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, the <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">default learning_rate for a LearningMechanism</span></a> is
 used; if it is assigned a value, that is used as the learning_rate (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_rate" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>learning_function</strong> (<em>function : default Hebbian</em>) – specifies the function for the LearningMechanism if <a class="reference internal" href="#recurrenttransfermechanism-learning"><span class="std std-ref">learning has been specified</span></a> for the RecurrentTransferMechanism.  It can be any function so long as
@@ -448,7 +448,7 @@ in which <code class="docutils literal notranslate"><span class="pre">rec_mech</
 <dd><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -530,7 +530,7 @@ of the <a class="reference internal" href="#psyneulink.library.components.mechan
 assignment).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, 1d or 2d np.array of numeric values : default None</p>
+<dd class="field-odd"><p>float, np.ndarray of numeric values : default None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -781,7 +781,7 @@ Subclass can override this to provide another source (e.g., see <a class="refere
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

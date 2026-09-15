@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -1880,7 +1880,7 @@ this only applies if <a class="reference internal" href="#psyneulink.core.compon
 <li><p><strong>note::</strong> (<em>..</em>) – When executing in PyTorch mode (e.g., an AutodiffComposition or a Composition run with
 <code class="docutils literal notranslate"><span class="pre">execution_mode=ExecutionMode.PyTorch</span></code>), the SoftMax <code class="docutils literal notranslate"><span class="pre">output</span></code> options are honored with parity to the
 Python path, including <em>ARG_MAX</em>, <em>ARG_MAX_INDICATOR</em>, <em>MAX_VAL</em>, <em>MAX_INDICATOR</em>, and <em>PROB</em>/<em>PROB_INDICATOR</em>.</p></li>
-<li><p><strong>per_item</strong> (<em>boolean : default True</em>) – for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+<li><p><strong>per_item</strong> (<em>boolean : default True</em>) – for &gt;=2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1995,7 +1995,7 @@ sum of values to 1 (i.e., their <a class="reference external" href="https://en.w
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.per_item">
 <span class="sig-name descname"><span class="pre">per_item</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.per_item" title="Link to this definition">¶</a></dt>
-<dd><p>for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
+<dd><p>for &gt;=2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -2206,7 +2206,7 @@ Uses base, scale, and entropy_weighting parameters of SoftMax function to comput
 <dd class="field-odd"><p><strong>derivative of values returned by SoftMax</strong></p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>1d or 2d array (depending on <em>OUTPUT_TYPE</em> of SoftMax)</p>
+<dd class="field-even"><p>np.ndarray (depending on <em>OUTPUT_TYPE</em> of SoftMax)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3606,7 +3606,7 @@ Use <code class="xref any docutils literal notranslate"><span class="pre">Hypers
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

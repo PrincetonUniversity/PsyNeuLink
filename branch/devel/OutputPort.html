@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -869,6 +869,28 @@ Used primarily during validation, when the function may not have been fully inst
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.socket_shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket_shape</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.socket_shape" title="Link to this definition">¶</a></dt>
+<dd><p>The expected shape of the input to an outgoing Projection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.socket_template">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket_template</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.socket_template" title="Link to this definition">¶</a></dt>
+<dd><p>An array of zeros in the shape of the input to an outgoing Projection (<a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.socket_shape" title="psyneulink.core.components.ports.outputport.OutputPort.socket_shape"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">socket_shape</span></code></a>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.owner_value_index">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_value_index</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.owner_value_index" title="Link to this definition">¶</a></dt>
 <dd><p>Return index or indices of items of owner.value for any to which OutputPort’s variable has been assigned
@@ -1059,6 +1081,8 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 <li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs"><code class="docutils literal notranslate"><span class="pre">OutputPort._parse_port_specific_specs()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort._get_variable_from_projections"><code class="docutils literal notranslate"><span class="pre">OutputPort._get_variable_from_projections()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort._get_port_function_value"><code class="docutils literal notranslate"><span class="pre">OutputPort._get_port_function_value()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.socket_shape"><code class="docutils literal notranslate"><span class="pre">OutputPort.socket_shape</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.socket_template"><code class="docutils literal notranslate"><span class="pre">OutputPort.socket_template</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.owner_value_index"><code class="docutils literal notranslate"><span class="pre">OutputPort.owner_value_index</span></code></a></li>
 </ul>
 </li>
@@ -1091,7 +1115,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

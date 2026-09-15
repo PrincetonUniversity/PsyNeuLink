@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -291,7 +291,7 @@ with that of the other InputPorts to generate the ObjectiveMechanism’s <a clas
 the items in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. However, by assigning values to the ‘weight
 &lt;InputPort.weight&gt;` and/or ‘exponent &lt;InputPort.exponent&gt;` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see <a class="reference internal" href="#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">example</span></a> below).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>  can also
-be replaced with any <code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code>, or any python function that takes an 2d array as
+be replaced with any <code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code>, or any python function that takes a &gt;=2d array as
 its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism’s InputPorts), and generates
 a 1d array as its result. If it implements <code class="xref std std-keyword docutils literal notranslate"><span class="pre">weight</span></code> and/or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">exponent</span></code> attributes, those are assigned
 from <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.weight" title="psyneulink.core.components.ports.inputport.InputPort.weight"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">weight</span></code></a> and <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.exponent" title="psyneulink.core.components.ports.inputport.InputPort.exponent"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">exponent</span></code></a> attributes of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (also listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor_weights_and_exponents</span></code></a> attribute);  otherwise, they are ignored.</p>
@@ -496,9 +496,9 @@ OutputPorts specified in its <a class="reference internal" href="#psyneulink.cor
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function">
 <span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="Link to this definition">¶</a></dt>
 <dd><p>the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
-<code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code> or a Python function that takes a 2d array with an arbitrary
+<code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code> or a Python function that takes a &gt;=2d array with an arbitrary
 number of items or a number equal to the number of items in the ObjectiveMechanism’s variable (i.e.,
-its number of input_ports) and returns a 1d array.</p>
+its number of input_ports) and returns a 1d ([N-1]d) array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>TransformFunction, <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">ObjectiveFunction</a>, function, or method</p>
@@ -536,7 +536,7 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <dd><p>contains one item that is the value of the <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -547,7 +547,7 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to
 the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
 <dl class="simple">
-<dt><em>OUTCOME</em><span class="classifier">1d np.array</span></dt><dd><p>the value of the objective or “loss” function computed by the
+<dt><em>OUTCOME</em><span class="classifier">([N-1]d) np.array</span></dt><dd><p>the value of the objective or “loss” function computed by the
 ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a></p>
 </dd>
 </dl>
@@ -717,7 +717,7 @@ If any one value has been assigned, assign default value (1) to all other elemen
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

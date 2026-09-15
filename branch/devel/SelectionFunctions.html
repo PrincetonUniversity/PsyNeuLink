@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -291,7 +291,7 @@ if there is a tie, which elements are returned is determined by <code class="xre
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is
+<li><p><strong>variable</strong> (<em>np.ndarray : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</p></li>
 <li><p><strong>mode</strong> (<em>DETERMINISTiC</em><em>, </em><em>PROB</em><em>, </em><em>PROB_INDICATOR</em><em>,</em>)</p></li>
 <li><p><strong>ARG_MAX</strong></p></li>
@@ -491,7 +491,7 @@ for details).</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
+<li><p><strong>variable</strong> (<em>np.ndarray : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
 probabilities (i.e., elements between 0 and 1) of equal length as the 1st item.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -617,7 +617,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

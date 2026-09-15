@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -461,7 +461,7 @@ which subsequent executions are meant to occur in step with the execution of oth
 can be configured using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_comparison_op</span></code></a> <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> can be used to configure other termination conditions.
 There are two broad types of termination condition: convergence and boundary termination.</p>
 <p id="transfermechanism-convergence-termination"><em>Convergence termination</em> – execution terminates based on the difference between the TransferMechanism’s current
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> and its previous_value. This is implemented by specifying <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a> with a function that accepts a 2d array with <em>two items</em> (1d arrays) as its
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> and its previous_value. This is implemented by specifying <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a> with a function that accepts a &gt;=2d array with <em>two items</em> (1d arrays) as its
 argument, and returns a scalar (the default for a TransferMechanism is the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> Function with <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF" title="psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">MAX_ABS_DIFF</span></code></a>
 as its metric).  After each execution, the function is passed the Mechanism’s current
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> as well as its previous_value, and the scalar returned is compared to
@@ -469,13 +469,13 @@ as its metric).  After each execution, the function is passed the Mechanism’s 
 operator specified by  <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_comparison_op</span></code></a> (which is
 <em>LESS_THAN_OR_EQUAL</em> by default).  Execution continues until this returns True. A <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> Function with other
 metrics (e.g., <em>ENERGY</em> or <em>ENTROPY</em>) can be specified as the <strong>termination_measure</strong>, as can any other function
-that accepts a single argument that is a 2d array with two entries.</p>
+that accepts a single argument that is a &gt;=2d array with two entries.</p>
 <p id="transfermechanism-boundary-termination"><em>Boundary termination</em> – Two types of boundaries can be specified:  value or time.</p>
 <blockquote>
 <div><p id="transfermechanism-termination-by-value"><em>Termination by value</em>.  This terminates execution when the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> reaches the
 the value specified by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_threshold</span></code></a> Parameter.  This is
 implemented by specifying <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a> with a function that
-accepts a 2d array with a <em>single entry</em> as its argument and returns a scalar.  The single entry is the
+accepts a &gt;=2d array with a <em>single entry</em> as its argument and returns a scalar.  The single entry is the
 TransferMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (that is, <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code> is ignored). After each execution, the function is passed the Mechanism’s
 current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, and the scalar returned is compared to <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_threshold</span></code></a> using the comparison operator specified by <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_comparison_op</span></code></a>. Execution continues until this returns True.</p>
 <p id="transfermechanism-termination-by-time"><em>Termination by time</em>.  This terminates execution when the Mechanism has executed at least a number of times equal
@@ -752,7 +752,7 @@ last True (in this case, where it left off in the preceding example, <code class
 <span id="transfermechanism-examples-termination"></span><h5><em>Terminating Integration</em><a class="headerlink" href="#terminating-integration" title="Link to this heading">¶</a></h5>
 <p><em>Termination by value</em>.  This terminates execution when the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> reaches the
 the value specified by the <strong>threshold</strong> argument.  This is implemented by specifying <strong>termination_measure</strong> with
-a function that accepts a 2d array with a <em>single entry</em> as its argument and returns a scalar.  The single
+a function that accepts a &gt;=2d array with a <em>single entry</em> as its argument and returns a scalar.  The single
 entry is the TransferMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (that is, its previous_value
 is ignored). After each execution, the function is passed the Mechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>,
 and the scalar returned is compared to <strong>termination_threshold</strong> using the comparison operator specified by
@@ -1369,7 +1369,7 @@ Function associated with this Component</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

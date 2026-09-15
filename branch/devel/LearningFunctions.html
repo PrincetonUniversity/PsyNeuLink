@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -226,7 +226,7 @@ of a LearningFunction by Component._execute, and passed to the LearningFunction�
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable">
 <span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="Link to this definition">¶</a></dt>
-<dd><p>most LearningFunctions take a list or 2d array that must contain three items:</p>
+<dd><p>most LearningFunctions take a list or array that must contain three items:</p>
 <ul class="simple">
 <li><p>the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);</p></li>
 <li><p>the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);</p></li>
@@ -294,8 +294,8 @@ can be assumed to be the one with weights most similar to the input pattern.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>List</em><em>[</em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>2d array</em><em>[</em><em>[</em><em>float64</em><em>]</em><em>]</em><em>] </em><em>: default class_defaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>variable</strong> (<em>List</em><em>[</em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>[</em><em>[</em><em>float64</em><em>]</em><em>]</em><em>] </em><em>: default class_defaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>np.ndarray</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>distance_measure</strong> (<em>GAUSSIAN</em><em>, </em><em>LINEAR</em><em>, </em><em>EXPONENTIAL</em><em>, </em><em>SINUSOID</em><em> or </em><em>function</em>) – specifies the method used to calculate the distance of each element in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[2]
 from the one with the greatest value.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
@@ -314,7 +314,7 @@ of the constructor.</p></li>
 returned by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>List[array(float64), array(float64), 2d array[[float64]]]</p>
+<dd class="field-odd"><p>List[array(float64), array(float64), array[[float64]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -324,11 +324,11 @@ returned by <a class="reference internal" href="#psyneulink.core.components.func
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="Link to this definition">¶</a></dt>
 <dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
 it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Kohonen.variable&gt;` before calculating the weight
-change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+change matrix;  if it is an array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
 learning_rate is not specified explicitly in the constructor for the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, 1d or 2d array</p>
+<dd class="field-odd"><p>float, np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,7 +385,7 @@ of the constructor.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li></li>
-<li><p><strong>weight change matrix</strong> (<em>2d array</em>) – matrix of weight changes scaled by difference of the current weights from the input pattern in
+<li><p><strong>weight change matrix</strong> (<em>np.ndarray</em>) – matrix of weight changes scaled by difference of the current weights from the input pattern in
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[0] and the distance of each element from the one with the weights most
 similar to that input pattern.</p></li>
 </ul>
@@ -449,7 +449,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the weight change matrix.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>np.ndarray</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments
 of the constructor.</p></li>
@@ -480,7 +480,7 @@ change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by 
 learning_rate is not specified explicitly in the constructor for the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, 1d or 2d array</p>
+<dd class="field-odd"><p>float, np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -535,12 +535,21 @@ of the constructor.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li></li>
-<li><p><strong>weight change matrix</strong> (<em>2d array</em>) – matrix of weight changes generated by the <a class="reference internal" href="#hebbian-learning-rule"><span class="std std-ref">Hebbian Learning rule</span></a>,
+<li><p><strong>weight change matrix</strong> (<em>np.ndarray</em>) – matrix of weight changes generated by the <a class="reference internal" href="#hebbian-learning-rule"><span class="std std-ref">Hebbian Learning rule</span></a>,
 with all diagonal elements = 0 (i.e., hollow matix).</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian._ndim_unsupported">
+<span class="sig-name descname"><span class="pre">_ndim_unsupported</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._ndim_unsupported" title="Link to this definition">¶</a></dt>
+<dd><p>indicator of known problems with using values of more than two dimensions.
+An iterable of strings contains the names of specific Parameters that
+still must be at most two dimensions.
+This and the warning in __init__ can be removed if/when support is added for all.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -601,7 +610,7 @@ activities of those elements in the <a class="reference internal" href="Contrast
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>array</em><em> of </em><em>numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments
 of the constructor.</p></li>
@@ -689,11 +698,20 @@ of the constructor.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li></li>
-<li><p><strong>weight change matrix</strong> (<em>2d array</em>) – matrix of weight changes generated by the <a class="reference internal" href="#contrastivehebbian-learning-rule"><span class="std std-ref">ContrastiveHeabbian learning rule</span></a>, with all diagonal elements = 0 (i.e., hollow matix).</p></li>
+<li><p><strong>weight change matrix</strong> (<em>np.ndarray</em>) – matrix of weight changes generated by the <a class="reference internal" href="#contrastivehebbian-learning-rule"><span class="std std-ref">ContrastiveHeabbian learning rule</span></a>, with all diagonal elements = 0 (i.e., hollow matix).</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._ndim_unsupported">
+<span class="sig-name descname"><span class="pre">_ndim_unsupported</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._ndim_unsupported" title="Link to this definition">¶</a></dt>
+<dd><p>indicator of known problems with using values of more than two dimensions.
+An iterable of strings contains the names of specific Parameters that
+still must be at most two dimensions.
+This and the warning in __init__ can be removed if/when support is added for all.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -767,7 +785,7 @@ attributes, respectively (the first item is used by other LearningFunctions as t
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>List</em><em> or </em><em>2d array : default class_defaults.variable</em>) – <p>template for the three items provided as the variable in the call to the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
+<li><p><strong>default_variable</strong> (<em>List</em><em> or </em><em>np.ndarray : default class_defaults.variable</em>) – <p>template for the three items provided as the variable in the call to the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
 (in order):</p>
 <blockquote>
 <div><ul>
@@ -801,7 +819,7 @@ arguments of the constructor.</p></li>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -895,12 +913,12 @@ learning_rate is used.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – <p>must have three items that are (in order):</p>
+<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>np.ndarray</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – <p>must have three items that are (in order):</p>
 <blockquote>
 <div><ul>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_input</span></code></a> (not used);</p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> (1d array with only one non-zero value);</p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (1d array with a single scalar element);</p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> (array with only one non-zero value);</p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (array with a single scalar element);</p></li>
 </ul>
 </div></blockquote>
 <p>(see <a class="reference internal" href="#reinforcement-note"><span class="std std-ref">note</span></a> above).</p>
@@ -913,7 +931,7 @@ arguments of the constructor.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li></li>
-<li><p><strong>error array</strong> (<em>List[1d array, 1d array]</em>) – Both 1d arrays are the same, with a single non-zero error term (see <a class="reference internal" href="#reinforcement-note"><span class="std std-ref">note</span></a> above).</p></li>
+<li><p><strong>error array</strong> (<em>np.ndarray[np.ndarray, np.ndarray]</em>) – Both arrays are the same, with a single non-zero error term (see <a class="reference internal" href="#reinforcement-note"><span class="std std-ref">note</span></a> above).</p></li>
 </ul>
 </p>
 </dd>
@@ -986,20 +1004,20 @@ the size of the predictors array and, correspondingly, the weights array returne
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>3d array : default None</em>) – first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+<li><p><strong>default_variable</strong> (<em>np.ndarray : default None</em>) – first item of axis 0 must be an array with one or more sub-arrays to use as predictor vectors, one for
 each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
 containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
 item.  If <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> is specified, but either <strong>mu_0</strong> or <strong>sigma_0 is specified, then the they are used to
 determine the shape of `variable &lt;BayesGLM.variable&gt;`.  If neither **mu_0</strong> nor <strong>sigma_0</strong> are specified,
 then the shape of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is determined by the first call to its <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>, as are <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_prior</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sigma_prior</span></code></a>,
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_shape_prior</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_size_prior</span></code></a>.</p></li>
-<li><p><strong>mu_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>1d array : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_prior</span></code></a> (the prior for the mean of the distribution for
+<li><p><strong>mu_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>np.ndarray : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_prior</span></code></a> (the prior for the mean of the distribution for
 the prediction weights returned by the function).  If a scalar is specified, the same value will be used
 for all elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_prior</span></code></a>;  if it is an array, it must be the same length as
 the predictor array(s) in axis 0 of <strong>default_variable</strong>.  If <strong>default_variable</strong> is not specified, the
 specification for <strong>mu_0</strong> is used to determine the shape of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and
 <code class="xref any docutils literal notranslate"><span class="pre">sigma_prior</span></code>.</p></li>
-<li><p><strong>sigma_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>1d array : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sigma_prior</span></code></a> (the prior for the variance of the distribution
+<li><p><strong>sigma_0</strong> (<em>int</em><em>, </em><em>float</em><em> or </em><em>np.ndarray : default 0</em>) – specifies initial value of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sigma_prior</span></code></a> (the prior for the variance of the distribution
 for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
 all elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Lambda_prior</span></code></a>;  if it is an array, it must be the same length as the
 predictor array(s) in axis 0 of <strong>default_variable</strong>.  If neither <strong>default_variable</strong> nor <strong>mu_0</strong> is
@@ -1022,11 +1040,11 @@ arguments of the constructor.</p></li>
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable">
 <span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="Link to this definition">¶</a></dt>
 <dd><p>samples used to update parameters of prediction weight distributions.
-variable[0] is a 2d array of predictor vectors, all of the same length;
+variable[0] is an array of predictor vectors, all of the same length;
 variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>3d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1038,7 +1056,7 @@ variable[1] is a 2d array of scalar dependent variables, one for each predictor 
 if it is a scalar, that value is assigned as the priors for all means.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, float or 2d array</p>
+<dd class="field-odd"><p>int, float or np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1049,7 +1067,7 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 <dd><p>current priors for the means of the distributions of the predictions weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1060,7 +1078,7 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 <dd><p>current means for the distributions of the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1072,7 +1090,7 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 weights; if it is a scalar, that value is assigned as the priors for all variances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, float or 2d array</p>
+<dd class="field-odd"><p>int, float or np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1083,7 +1101,7 @@ weights; if it is a scalar, that value is assigned as the priors for all varianc
 <dd><p>current priors for the variances of the distributions of the predictions weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1094,7 +1112,7 @@ weights; if it is a scalar, that value is assigned as the priors for all varianc
 <dd><p>current variances for the distributions of the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1162,7 +1180,7 @@ prediction weights.</p>
 <dd><p>current value of the size parameter of the gamma distribution used to sample the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array with single scalar value</p>
+<dd class="field-odd"><p>np.ndarray with single scalar value</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1185,7 +1203,7 @@ prediction weights.</p>
 <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1323,7 +1341,7 @@ element of <a class="reference internal" href="#psyneulink.core.components.funct
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>2d array</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – specifies a template for the three items provided as the variable in the call to the
+<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>np.ndarray</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – specifies a template for the three items provided as the variable in the call to the
 <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> (in order):
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_input</span></code></a> (1d array),
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> (1d array),
@@ -1358,7 +1376,7 @@ arguments of the constructor.</p></li>
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.covariates" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.covariates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">covariates</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1432,7 +1450,7 @@ is used to calculate the <a class="reference internal" href="#psyneulink.core.co
 it refers to the MATRIX parameterPort of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array or <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a></p>
+<dd class="field-odd"><p>np.ndarray or <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1495,14 +1513,14 @@ error_matrix passed in the <a class="reference internal" href="DistributionFunct
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>2d array</em><em> [</em><em>length 3 in axis 0</em><em>]</em>) – must have three items that are the values for (in order):
+<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>np.ndarray</em><em> [</em><em>length 3 in axis 0</em><em>]</em>) – must have three items that are the values for (in order):
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_input</span></code></a> (1d array),
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> (1d array),
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (1d array).</p></li>
 <li><p><strong>covariates</strong> (<em>List</em><em>[</em><em>1d array</em><em>]</em>) – values of arguments used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_derivative_fct</span></code></a>
 other than activation_input and activation_output, to compute the derivative of the activation function
 with respect to <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>.</p></li>
-<li><p><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d array</em><em>, </em><a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort"><em>ParameterPort</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – <p>matrix of weights that were used to generate the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (3rd item
+<li><p><strong>error_matrix</strong> (<em>List</em><em>, </em><em>array</em><em>, </em><a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort"><em>ParameterPort</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – <p>matrix of weights that were used to generate the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (3rd item
 of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> from <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>;
 its dimensions must be the length of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> (rows) x
 length of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> (cols).</p>
@@ -1690,6 +1708,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="docutils literal notranslate"><span class="pre">Hebbian.owner</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.prefs"><code class="docutils literal notranslate"><span class="pre">Hebbian.prefs</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._function"><code class="docutils literal notranslate"><span class="pre">Hebbian._function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._ndim_unsupported"><code class="docutils literal notranslate"><span class="pre">Hebbian._ndim_unsupported</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params"><code class="docutils literal notranslate"><span class="pre">Hebbian._validate_params()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_variable"><code class="docutils literal notranslate"><span class="pre">Hebbian._validate_variable()</span></code></a></li>
 </ul>
@@ -1701,6 +1720,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian.owner</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian.prefs</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian._function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._ndim_unsupported"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian._ndim_unsupported</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian._validate_params()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_variable"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbian._validate_variable()</span></code></a></li>
 </ul>
@@ -1784,7 +1804,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -1651,7 +1651,7 @@ can ever be retrieved (each trial is its own forward/backward pass).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchExternalMemoryMechanismWrapper.execute_function">
 <span class="sig-name descname"><span class="pre">execute_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fct_has_mult_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchExternalMemoryMechanismWrapper.execute_function" title="Link to this definition">¶</a></dt>
-<dd><p>Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+<dd><p>Execute _gen_pytorch_fct on variable, enforce result to be &gt;=2d, and return it.
 If fct_has_mult_args is True, treat each item in variable as an arg to the function
 If False, compute function for each item in variable and return results in a list</p>
 </dd></dl>
@@ -1675,6 +1675,24 @@ Note: if execute_mech=True requires that variable=True</p>
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type">
 <span class="sig-name descname"><span class="pre">pytorch_mechanism_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchExternalMemoryMechanismWrapper" title="psyneulink.library.compositions.emcomposition.pytorchEMwrappers.PytorchExternalMemoryMechanismWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">PytorchExternalMemoryMechanismWrapper</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_unsupported">
+<span class="sig-name descname"><span class="pre">_ndim_unsupported</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_unsupported" title="Link to this definition">¶</a></dt>
+<dd><p>indicator of known problems with using values of more than two dimensions.
+An iterable of strings contains the names of specific Parameters that
+still must be at most two dimensions.
+This and the warning in __init__ can be removed if/when support is added for all.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_container_parameters">
+<span class="sig-name descname"><span class="pre">_ndim_container_parameters</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'memory_template'}</span></em><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_container_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>names of any Parameters that contain one or more elements whose values
+are not supported in arbitrary dimensions
+(example: <a class="reference internal" href="MemoryFunctions.html#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ContentAddressableMemory.memory</span></code></a>, which stores multiple items
+of the same shape as its <code class="xref any docutils literal notranslate"><span class="pre">value</span></code>)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2044,6 +2062,8 @@ the cycle</span></a>.</p></li>
 </li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_composition_wrapper_type"><code class="docutils literal notranslate"><span class="pre">EMComposition.pytorch_composition_wrapper_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type"><code class="docutils literal notranslate"><span class="pre">EMComposition.pytorch_mechanism_wrapper_type</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_unsupported"><code class="docutils literal notranslate"><span class="pre">EMComposition._ndim_unsupported</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._ndim_container_parameters"><code class="docutils literal notranslate"><span class="pre">EMComposition._ndim_container_parameters</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.assign_ShowGraph"><code class="docutils literal notranslate"><span class="pre">EMComposition.assign_ShowGraph()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_combined_scores_node"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_combined_scores_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn"><code class="docutils literal notranslate"><span class="pre">EMComposition.learn()</span></code></a></li>
@@ -2077,7 +2097,7 @@ the cycle</span></a>.</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

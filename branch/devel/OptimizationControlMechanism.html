@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -524,7 +524,7 @@ the <a class="reference internal" href="#psyneulink.core.components.mechanisms.m
 </ul>
 <ul class="simple" id="optimizationcontrolmechanism-numeric-state-feature">
 <li><p><em>numeric value</em> – create a <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_port</span></code></a> has
-no <a class="reference internal" href="Mechanism.html#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span> <span class="pre">Projections</span></code></a>, and uses the specified value as the input to its
+no <a class="reference internal" href="Mechanism.html#id9" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span> <span class="pre">Projections</span></code></a>, and uses the specified value as the input to its
 <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, the result of which is assigned to the corresponding value of
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a> and provided as the input to
 the corresponding <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> InputPort each time the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a>  is <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluated</span></code></a>. The specified value must
@@ -551,7 +551,7 @@ corresponding <a class="reference internal" href="#psyneulink.core.components.me
 other than its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> need to be specified (which can be done directly using a
 <a class="reference internal" href="#optimizationcontrolmechanism-tuple-state-feature"><span class="std std-ref">2-item tuple</span></a> specification or the <strong>state_feature_function</strong>
 arg as described <a class="reference internal" href="#optimizationcontrolmechanism-state-feature-function-arg"><span class="std std-ref">below</span></a>), such as the InputPort’s
-<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.name" title="psyneulink.core.components.ports.inputport.InputPort.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> or more than a single <a class="reference internal" href="Mechanism.html#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span> <span class="pre">Projection</span></code></a>.</p>
+<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.name" title="psyneulink.core.components.ports.inputport.InputPort.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> or more than a single <a class="reference internal" href="Mechanism.html#id9" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span> <span class="pre">Projection</span></code></a>.</p>
 <div class="admonition note" id="optimizationcontrolmechanism-input-node-specification">
 <p class="admonition-title">Note</p>
 <p>Only the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>
@@ -1095,7 +1095,7 @@ their <code class="xref any docutils literal notranslate"><span class="pre">defa
 <a class="reference internal" href="#optimizationcontrolmechanism-state-input-ports"><span class="std std-ref">state_input_ports</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1430,7 +1430,7 @@ OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2032,7 +2032,7 @@ constructor string</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

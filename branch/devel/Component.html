@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -597,7 +597,7 @@ override any assigned to those parameters in arguments of the constructor.</p></
 <dd><p>see <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -630,7 +630,7 @@ override any assigned to those parameters in arguments of the constructor.</p></
 <dd><p>see <a class="reference internal" href="#component-value"><span class="std std-ref">value</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -799,6 +799,24 @@ one and only one of the following flags is always set:</p>
 <dd class="field-odd"><p>field of flags attribute</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._ndim_unsupported">
+<span class="sig-name descname"><span class="pre">_ndim_unsupported</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._ndim_unsupported" title="Link to this definition">¶</a></dt>
+<dd><p>indicator of known problems with using values of more than two dimensions.
+An iterable of strings contains the names of specific Parameters that
+still must be at most two dimensions.
+This and the warning in __init__ can be removed if/when support is added for all.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._ndim_container_parameters">
+<span class="sig-name descname"><span class="pre">_ndim_container_parameters</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._ndim_container_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>names of any Parameters that contain one or more elements whose values
+are not supported in arbitrary dimensions
+(example: <a class="reference internal" href="MemoryFunctions.html#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ContentAddressableMemory.memory</span></code></a>, which stores multiple items
+of the same shape as its <code class="xref any docutils literal notranslate"><span class="pre">value</span></code>)</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1353,6 +1371,137 @@ of the Component’s <a class="reference internal" href="#psyneulink.core.compon
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._input_is_compatible_with">
+<span class="sig-name descname"><span class="pre">_input_is_compatible_with</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._input_is_compatible_with" title="Link to this definition">¶</a></dt>
+<dd><p>Determines whether array <strong>inp</strong> is acceptable when an array <strong>target</strong>
+is expected (<strong>inp</strong> can be “reasonably”/”safely” be reshaped to fit
+<strong>target</strong>).</p>
+<p>Currently decides by whether the result arrays after standard
+<code class="xref any docutils literal notranslate"><span class="pre">np.squeeze</span></code> have the same shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<em>ArrayLike</em>) – prospective input array</p></li>
+<li><p><strong>target</strong> (<em>ArrayLike</em>) – expected input array</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>True if <strong>inp</strong> is acceptable when <strong>target</strong> is expected,</dt><dd><p>False otherwise</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._reshape_irregular_input_array">
+<span class="sig-name descname"><span class="pre">_reshape_irregular_input_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_itemwise</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._reshape_irregular_input_array" title="Link to this definition">¶</a></dt>
+<dd><p>Attempts to make <strong>inp</strong> match the shape of input template <strong>match</strong>
+(or if <strong>match_itemwise**=True items of **inp</strong> to items in <strong>match</strong>)
+only if they are compatible as determined by
+<a class="reference internal" href="#psyneulink.core.components.component.Component._input_is_compatible_with" title="psyneulink.core.components.component.Component._input_is_compatible_with"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Component._input_is_compatible_with</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<em>ArrayLike</em>) – potential input</p></li>
+<li><p><strong>match</strong> (<em>ArrayLike</em>) – desired input template</p></li>
+<li><p><strong>match_itemwise</strong> (<em>bool</em>) – if True, match items of <strong>inp</strong> to items of <strong>match</strong>, otherwise
+match <strong>inp</strong> to <strong>match</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>inp</strong> in the shape of <strong>match</strong> if compatible, otherwise None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[ArrayLike, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.parse_input_array">
+<span class="sig-name descname"><span class="pre">parse_input_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.parse_input_array" title="Link to this definition">¶</a></dt>
+<dd><p>Attempts to produce valid input to this Component from the given
+<strong>inp</strong>, to allow more flexible input. This may involve
+reshaping, broadcasting, or changing the dimension of <strong>inp</strong> to
+match this object’s <a class="reference internal" href="#psyneulink.core.components.component.Component.default_external_input" title="psyneulink.core.components.component.Component.default_external_input"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Component.default_external_input</span></code></a> if
+necessary. If <strong>inp</strong> is not provided,
+<a class="reference internal" href="#psyneulink.core.components.component.Component.default_external_input" title="psyneulink.core.components.component.Component.default_external_input"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Component.default_external_input</span></code></a> will be used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<em>Union</em><em>[</em><em>List</em><em>, </em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – The input to parse
+for use with this Component, targeting
+<a class="reference internal" href="#psyneulink.core.components.component.Component.default_external_input" title="psyneulink.core.components.component.Component.default_external_input"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Component.default_external_input</span></code></a>. Defaults to None.</p></li>
+<li><p><strong>composition</strong> (<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, optional) – The <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>
+this <a class="reference internal" href="#"><span class="doc">Component</span></a> will be executed in, if any.
+Defaults to ConnectionInfo.ALL.</p></li>
+<li><p><strong>as_sequence</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, <strong>inp</strong> will be
+interpreted and returned as a sequence of inputs,
+instead of a single input. Defaults to False.</p></li>
+<li><p><strong>as_tensor</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, <strong>inp</strong> and return value will be converted to
+<code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ComponentError</strong> – If compatible input cannot be produced from <strong>inp</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[<code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.default_external_input">
+<span class="sig-name descname"><span class="pre">default_external_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.default_external_input" title="Link to this definition">¶</a></dt>
+<dd><p>Returns an array (or None) that will be used as input to
+<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Component.execute</span></code></a> if no input is given. <strong>composition</strong> is used to
+determine what incoming <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>s are active, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>composition</strong> (Union[<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, <code class="xref any docutils literal notranslate"><span class="pre">ConnectionInfo</span></code>], optional) – The <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> this <a class="reference internal" href="#"><span class="doc">Component</span></a> will be executed in, if any.
+Defaults to ConnectionInfo.ALL.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[<code class="xref any docutils literal notranslate"><span class="pre">np.ndarray</span></code>, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.external_input_shape">
+<span class="sig-name descname"><span class="pre">external_input_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.external_input_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a numpy shape-like tuple (see <code class="xref any docutils literal notranslate"><span class="pre">shape</span></code>)
+(or None) corresponding to this <a class="reference internal" href="#"><span class="doc">Component</span></a>‘s
+<a class="reference internal" href="#psyneulink.core.components.component.Component.default_external_input" title="psyneulink.core.components.component.Component.default_external_input"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">default_external_input</span></code></a>. This can serve as a template for passing
+correctly shaped input into this Component. This could be created, for
+example, by
+<code class="xref any docutils literal notranslate"><span class="pre">pnl.zeros(my_component.external_input_shape(my_composition))</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>composition</strong> (<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, optional) – The <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>
+this <a class="reference internal" href="#"><span class="doc">Component</span></a> will be executed in, if any.
+Defaults to ConnectionInfo.ALL.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[ArrayShape]]], <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[ArrayShape, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.logged_items">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.logged_items" title="Link to this definition">¶</a></dt>
@@ -1484,6 +1633,8 @@ constructor string</p>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.parameters"><code class="docutils literal notranslate"><span class="pre">Component.parameters</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.defaults"><code class="docutils literal notranslate"><span class="pre">Component.defaults</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.initialization_status"><code class="docutils literal notranslate"><span class="pre">Component.initialization_status</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._ndim_unsupported"><code class="docutils literal notranslate"><span class="pre">Component._ndim_unsupported</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._ndim_container_parameters"><code class="docutils literal notranslate"><span class="pre">Component._ndim_container_parameters</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component._model_spec_generic_type_name"><code class="docutils literal notranslate"><span class="pre">Component._model_spec_generic_type_name</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component._model_spec_class_name_is_generic"><code class="docutils literal notranslate"><span class="pre">Component._model_spec_class_name_is_generic</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component._specified_variable_shape_flexibility"><code class="docutils literal notranslate"><span class="pre">Component._specified_variable_shape_flexibility</span></code></a></li>
@@ -1523,6 +1674,11 @@ constructor string</p>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.set_delivery_conditions"><code class="docutils literal notranslate"><span class="pre">Component.set_delivery_conditions()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.log_values"><code class="docutils literal notranslate"><span class="pre">Component.log_values()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.all_dependent_parameters"><code class="docutils literal notranslate"><span class="pre">Component.all_dependent_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._input_is_compatible_with"><code class="docutils literal notranslate"><span class="pre">Component._input_is_compatible_with()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._reshape_irregular_input_array"><code class="docutils literal notranslate"><span class="pre">Component._reshape_irregular_input_array()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.parse_input_array"><code class="docutils literal notranslate"><span class="pre">Component.parse_input_array()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.default_external_input"><code class="docutils literal notranslate"><span class="pre">Component.default_external_input()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.external_input_shape"><code class="docutils literal notranslate"><span class="pre">Component.external_input_shape()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.logged_items"><code class="docutils literal notranslate"><span class="pre">Component.logged_items</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Component.stateful_parameters</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.component.Component.function_parameters"><code class="docutils literal notranslate"><span class="pre">Component.function_parameters</span></code></a></li>
@@ -1551,7 +1707,7 @@ constructor string</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

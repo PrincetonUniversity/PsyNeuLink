@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -216,8 +216,8 @@ correctly:</p>
 <li><p>If providing a Python function, method, or lambda function, it must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
 as the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> attribute of the UDF’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.
 When the UDF calls the function or method that it wraps, an initial attempt is made to do so with <strong>variable</strong>
-as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
-2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
+as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as an
+np.ndarray, that may contain one or more items (elements in axis 0), depending upon the Component to which the
 UDF is assigned.  It is the user’s responsibility to insure that the number of items expected in the first
 argument of the function or method is compatible with the circumstances in which it will be called.
 If providing a string expression, <strong>variable</strong> is optional. However, if <strong>variable</strong> is not included in
@@ -267,7 +267,7 @@ OutputPort that receives one more more <a class="reference internal" href="Gatin
 <span class="go">array([[6]])</span>
 </pre></div>
 </div>
-<p>Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
+<p>Note that the function treats its argument, x, as at least a 2d array, and accesses its first item for the calculation.
 This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> is defined in the <strong>input_shapes</strong> argument of
 its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.input_shapes" title="psyneulink.core.components.component.Component.input_shapes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_shapes</span></code></a>).  In the
 following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
@@ -308,7 +308,7 @@ name it something else, that is fine.</p>
 with two elements (i.e. [0,0]), it is specified in the example as a 2d array with two items to make it clear that
 it matches the format of the <strong>default_variable</strong> for the ProcessingMechanism to which it will be assigned,
 which requires it be formatted this way (since the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of all Components are converted
-to a 2d array).</p>
+to an array of two or more dimensions).</p>
 <p><code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> also has two other arguments, <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code>.   When it is assigned to
 <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, those parameters are assigned to <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> of <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, which
 that be used to modify their values by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> (see <code class="xref any docutils literal notranslate"><span class="pre">example</span> <span class="pre">below</span></code>).</p>
@@ -594,7 +594,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

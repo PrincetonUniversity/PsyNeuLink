@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -583,8 +583,8 @@ the class of its owner Mechanism.</p></li>
 <li><p><strong>Existing MappingProjection</strong> – then its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> determines the
 InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Matrix specification</span></a> – its receiver dimensionality determines the
-format of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. For a standard 2d “weight” matrix (i.e., one that
-maps a 1d array from its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> to a 1d array of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>), the receiver dimensionality is its outer dimension (axis 1, or its number of
+format of the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. For a standard &gt;=2d “weight” matrix (i.e., one that
+maps a 1d ([n-1]d) array from its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> to a 1d ([n-1]d) array of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>), the receiver dimensionality is its outer dimension (axis 1, or its number of
 columns).  However, if the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> has more than one dimension, then the
 dimensionality of the receiver (used for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) is the
 dimensionality of the matrix minus the dimensionality of the sender’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
@@ -765,7 +765,7 @@ from its <a class="reference internal" href="Composition.html#psyneulink.core.co
 expected for any <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferent</span> <span class="pre">Projections</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1d array</p>
+<dd class="field-odd"><p>1d ([n-1]d) array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1014,9 +1014,51 @@ Tuple specification can be:</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.socket_template">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket_template</span></span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.socket_template" title="Link to this definition">¶</a></dt>
+<dd><p>An array of zeros in the shape of a single input from an incoming
+Projection (<a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.socket_shape" title="psyneulink.core.components.ports.inputport.InputPort.socket_shape"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">socket_shape</span></code></a>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.socket_shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket_shape</span></span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.socket_shape" title="Link to this definition">¶</a></dt>
+<dd><p>The expected shape of a single input from an incoming Projection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="id0">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_shape</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Alias for default_input_shape_template</p>
+<dd><p>shows the shape of the input to the InputPort;  that is, the
+shape of the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> expected for any
+<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferent</span> <span class="pre">Projections</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.default_external_input">
+<span class="sig-name descname"><span class="pre">default_external_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.default_external_input" title="Link to this definition">¶</a></dt>
+<dd><p>Returns an array (or None) that will be used as input to
+<code class="xref any docutils literal notranslate"><span class="pre">InputPort.execute</span></code> if no input is given. <strong>composition</strong> is used to
+determine what incoming <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>s are active, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>composition</strong> (Union[<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, <code class="xref any docutils literal notranslate"><span class="pre">ConnectionInfo</span></code>], optional) – The <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> this <a class="reference internal" href="#"><span class="doc">InputPort</span></a> will be executed in, if any.
+Defaults to ConnectionInfo.ALL.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[<code class="xref any docutils literal notranslate"><span class="pre">np.ndarray</span></code>, None]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1117,7 +1159,10 @@ can’t be called by _parse_port_spec since the InputPort itself may not yet hav
 <li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs"><code class="docutils literal notranslate"><span class="pre">InputPort._parse_port_specific_specs()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort._parse_self_port_type_spec"><code class="docutils literal notranslate"><span class="pre">InputPort._parse_self_port_type_spec()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort._port_spec_allows_override_variable"><code class="docutils literal notranslate"><span class="pre">InputPort._port_spec_allows_override_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.socket_template"><code class="docutils literal notranslate"><span class="pre">InputPort.socket_template</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.socket_shape"><code class="docutils literal notranslate"><span class="pre">InputPort.socket_shape</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">InputPort.input_shape</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.default_external_input"><code class="docutils literal notranslate"><span class="pre">InputPort.default_external_input()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort._get_port_function_value"><code class="docutils literal notranslate"><span class="pre">InputPort._get_port_function_value()</span></code></a></li>
 </ul>
 </li>
@@ -1141,7 +1186,7 @@ can’t be called by _parse_port_spec since the InputPort itself may not yet hav
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

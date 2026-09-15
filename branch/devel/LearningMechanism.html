@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningMechanism &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>LearningMechanism &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -652,7 +652,7 @@ being learned in the sequence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array</em>) – it must have three items that correspond to the three values required by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  they must each be compatible (in number and type) with the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="#learningmechanism-inputports"><span class="std std-ref">InputPort</span></a> (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.variable" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for additional details).</p></li>
+<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>np.ndarray</em>) – it must have three items that correspond to the three values required by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  they must each be compatible (in number and type) with the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="#learningmechanism-inputports"><span class="std std-ref">InputPort</span></a> (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.variable" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for additional details).</p></li>
 <li><p><strong>covariates_sources</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>list</em><em> of </em><em>them : default None</em>) – specifies the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">InputPort`(s)</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">LearningMechanism's</span> <span class="pre">`output_source</span></code></a>
 other than the one to which the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.primary_learned_projection" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.primary_learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">primary_learned_projection</span></code></a> projects. (see <code class="xref any docutils literal notranslate"><span class="pre">LearningMechanism_Covariates</span></code>
 for additional details).</p></li>
@@ -685,7 +685,7 @@ the input to the <a class="reference internal" href="#psyneulink.core.components
 that projects (i.e., of <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_source</span></code></a>); and the error signal (from <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LearningMechanism.error_sources</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -946,7 +946,7 @@ can be overridden for individual <a class="reference internal" href="LearningPro
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d np.array</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1175,7 +1175,7 @@ Sum the learning_signal and error_signal values received from each execution</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -381,6 +381,15 @@ If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the
 :param function:</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._ndim_unsupported">
+<span class="sig-name descname"><span class="pre">_ndim_unsupported</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._ndim_unsupported" title="Link to this definition">¶</a></dt>
+<dd><p>indicator of known problems with using values of more than two dimensions.
+An iterable of strings contains the names of specific Parameters that
+still must be at most two dimensions.
+This and the warning in __init__ can be removed if/when support is added for all.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._validate_params">
 <span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_params" title="Link to this definition">¶</a></dt>
@@ -416,7 +425,7 @@ If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>2d array with two items : Default class_defaults.variable</em>) – the arrays between which the distance is calculated.</p></li>
+<li><p><strong>variable</strong> (<em>np.ndarray with two items : Default class_defaults.variable</em>) – the arrays between which the distance is calculated.</p></li>
 <li><p><strong>metric</strong> (<em>keyword in DistancesMetrics : Default EUCLIDEAN</em>) – specifies a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span> <span class="pre">metric</span></code></a> used to compute the distance between the two items in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the distance by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -434,7 +443,7 @@ arguments of the constructor.</p></li>
 <dd><p>contains the arrays between which the distance is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array with two items</p>
+<dd class="field-odd"><p>np.ndarray with two items</p>
 </dd>
 </dl>
 </dd></dl>
@@ -776,7 +785,7 @@ attribute to specify the appropriate <a class="reference internal" href="#psyneu
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>2d array with two items : Default class_defaults.variable</em>) – specifies the shape and default value for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">target</span></code>
+<li><p><strong>default_variable</strong> (<em>np.ndarray with two items : Default class_defaults.variable</em>) – specifies the shape and default value for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">target</span></code>
 arrays; these are, respectively, the first and second items of the &lt;variable &lt;LossFunction.variable&gt;` attribute
 (variable[0] and variable[1]) used to compute the loss.</p></li>
 <li><p><strong>loss</strong> (<em>member</em><em> of </em><em>keyword in Loss enum : Default Loss.MSE</em>) – specifies the <a class="reference internal" href="#loss"><span class="std std-ref">loss</span></a> which is computed for the <code class="xref any docutils literal notranslate"><span class="pre">sample</span></code> array (variable[0]) with
@@ -802,7 +811,7 @@ parameters in arguments of the constructor.</p></li>
 computed with respect to <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> array (second item).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array with two items</p>
+<dd class="field-odd"><p>np.ndarray with two items</p>
 </dd>
 </dl>
 </dd></dl>
@@ -941,6 +950,7 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.prefs"><code class="docutils literal notranslate"><span class="pre">Stability.prefs</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability._function"><code class="docutils literal notranslate"><span class="pre">Stability._function()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability._instantiate_attributes_before_function"><code class="docutils literal notranslate"><span class="pre">Stability._instantiate_attributes_before_function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability._ndim_unsupported"><code class="docutils literal notranslate"><span class="pre">Stability._ndim_unsupported</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_params"><code class="docutils literal notranslate"><span class="pre">Stability._validate_params()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_variable"><code class="docutils literal notranslate"><span class="pre">Stability._validate_variable()</span></code></a></li>
 </ul>
@@ -1008,7 +1018,7 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.20.1.0+3.g791346a9a documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.20.2.0+17.g927cd028d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.1.0+3
+                  0.20.2.0+17
                 </div>
               
             
@@ -1488,7 +1488,7 @@ If there are multiple input_ports, return a tensor (or list of tensors if input 
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute" title="Link to this definition">¶</a></dt>
 <dd><p>Execute Mechanism’s _gen_pytorch version of function on variable.
-Enforce result to be 2d, and assign to self.output</p>
+Enforce result to be &gt;=2d, and assign to self.output</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
@@ -1499,7 +1499,7 @@ Enforce result to be 2d, and assign to self.output</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute_function">
 <span class="sig-name descname"><span class="pre">execute_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fct_has_mult_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute_function" title="Link to this definition">¶</a></dt>
-<dd><p>Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+<dd><p>Execute _gen_pytorch_fct on variable, enforce result to be &gt;=2d, and return it.
 If fct_has_mult_args is True, treat each item in variable as an arg to the function
 If False, compute function for each item in variable and return results in a list</p>
 </dd></dl>
@@ -2483,7 +2483,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=71c53185"></script>
+         <script src="_static/documentation_options.js?v=348444be"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
