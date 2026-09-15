@@ -23,6 +23,25 @@ class Sigmoid(sp.Function):
         return self * (1 - self)
 
 
+def validate_equations(expressions, symbols):
+    """Shared scalar algebra admission for primitive rules and phase equations."""
+    if any(not isinstance(s, sp.Symbol) or s.is_real is not True for s in symbols):
+        raise ValueError("Equation bindings must be real SymPy symbols.")
+    for expr in expressions:
+        if not isinstance(expr, sp.Expr):
+            raise TypeError("Equations must be SymPy expressions; use SymPy numbers for constants.")
+        if not expr.free_symbols <= set(symbols):
+            raise ValueError("Unbound symbols in continuous equation.")
+        for node in sp.preorder_traversal(expr):
+            if isinstance(node, sp.Number):
+                if node.is_finite is not True or node.is_real is not True or not math.isfinite(float(node)):
+                    raise ValueError("Equation constants must be finite and real.")
+            elif not isinstance(node, sp.Symbol) and node.func not in (sp.Add, sp.Mul, sp.Pow, sp.exp, sp.tanh, Sigmoid):
+                raise ValueError("Unsupported symbolic equation operation.")
+            if node.func == sp.Pow and not isinstance(node.exp, sp.Integer):
+                raise ValueError("Only integer powers are supported; other powers need additional domain rules.")
+
+
 @dataclass(frozen=True)
 class DiffusionTerm:
     """Itô amplitude on a state; equal driver names denote shared noise."""
@@ -80,19 +99,7 @@ class ContinuousDynamics:
             if type(term) is not DiffusionTerm or term.state not in self.states or (term.state, term.driver) in pairs:
                 raise ValueError("Diffusion requires unique declared state/driver pairs.")
             pairs.add((term.state, term.driver))
-        for expr in self.drift + tuple(e for _, e in self.readouts) + tuple(d.coefficient for d in self.diffusion):
-            if not isinstance(expr, sp.Expr):
-                raise TypeError("Equations must be SymPy expressions; use SymPy numbers for constants.")
-            if not expr.free_symbols <= set(symbols):
-                raise ValueError("Unbound symbols in continuous equation.")
-            for node in sp.preorder_traversal(expr):
-                if isinstance(node, sp.Number):
-                    if node.is_finite is not True or node.is_real is not True or not math.isfinite(float(node)):
-                        raise ValueError("Equation constants must be finite and real.")
-                elif not isinstance(node, sp.Symbol) and node.func not in (sp.Add, sp.Mul, sp.Pow, sp.exp, sp.tanh, Sigmoid):
-                    raise ValueError("Unsupported symbolic equation operation.")
-                if node.func == sp.Pow and not isinstance(node.exp, sp.Integer):
-                    raise ValueError("Only integer powers are supported; other powers need additional domain rules.")
+        validate_equations(self.drift + tuple(e for _, e in self.readouts) + tuple(d.coefficient for d in self.diffusion), symbols)
 
 
 @dataclass(frozen=True)

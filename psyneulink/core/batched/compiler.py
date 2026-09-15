@@ -30,6 +30,19 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
+    def derive_symbolic_values(composition, *, outputs=None, ignored_control_nodes=()):
+        """Derive ideal-real value algebra without requiring a simulation device."""
+        from psyneulink.core.batched.symbolic_values import derive_symbolic_values
+
+        report, ir, _, kernel = analyze_composition(
+            composition, backend="triton_cpu", outputs=outputs, ignored_control_nodes=ignored_control_nodes,
+        )
+        if ir is None or kernel is None:
+            raise BatchedCompileError("Symbolic value derivation requires supported source IR: "
+                                      + "; ".join(report.unsupported_reasons), capability_report=report)
+        return derive_symbolic_values(kernel)
+
+    @staticmethod
     def compile_likelihood(composition, observations, *, method="auto", process="source",
                            backend="auto", estimator=None, max_steps=None,
                            ignored_control_nodes=()):
@@ -200,6 +213,12 @@ class BatchedSimulationPlan:
     # emitted; recompiling it here would reopen the registry-mutation race.
     kernel_ir: KernelIR = field(repr=False)
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
+
+    def derive_symbolic_values(self):
+        """Derive registered stateless value algebra from this frozen snapshot."""
+        from psyneulink.core.batched.symbolic_values import derive_symbolic_values
+
+        return derive_symbolic_values(self.kernel_ir)
 
     def compile_history_replay(self, observations):
         """Check observed-event replay against this frozen simulation snapshot."""

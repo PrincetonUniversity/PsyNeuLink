@@ -17,6 +17,33 @@ from psyneulink.core.batched.likelihood_ir import (
 from psyneulink.core.batched.observation import ObservationSpec, resolve_observations
 
 
+def stateless_value_schedule(kernel, *, prefix, allow_random=False):
+    """Shared admission for registered static value algebra, not a new scheduler.
+
+    Probability laws and edge publication still require the caller's checks.
+    """
+    from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
+
+    def reject(code, detail):
+        raise LikelihoodPlanningError(prefix + "." + code, detail)
+
+    validate_kernel_ir(kernel)
+    graph = kernel.graph
+    if graph.metadata.get("schedule_kind") != "static_graph":
+        reject("schedule", "Value propagation requires the checked single-pass static schedule.")
+    if (graph.states or graph.effective_parameters or graph.modulations or graph.folded_affine_controls
+            or graph.absorbed_projections or graph.finished_values or (graph.rng_streams and not allow_random)):
+        reject("state", "Retained state, noise, controls, and stopping events require another interpretation.")
+    ids = {n.component_id for n in graph.nodes}
+    if not any(t.condition_type == "AllHaveRun" and set(t.dependency_component_ids) == ids for t in graph.termination):
+        reject("termination", "Trial termination must require all admitted nodes to run.")
+    schedule = {s.component_id: s for s in graph.scheduler}
+    if set(schedule) != ids or any(s.condition_type != "Always" and not (
+            s.condition_type in ("EveryNCalls", "AllEveryNCalls") and s.attrs.get("calls") == 1) for s in graph.scheduler):
+        reject("schedule", "Only Always and checked (All)EveryNCalls(1) static predicates are admitted.")
+    return schedule
+
+
 def _random_dependency_path(roots, targets, edges):
     """A stable shortest dependency witness, including scheduler/control edges."""
     queue = deque((root, ()) for root in sorted(roots))

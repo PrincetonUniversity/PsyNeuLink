@@ -9,8 +9,10 @@ stochastic-dependency analysis, deterministic-subsystem extraction, and C++
 generation for deterministic continuous phases. It builds on the extracted
 scalar first-passage backend without changing existing CSI fitting defaults.
 
-**This is not yet automatic lowering of a PsyNeuLink Composition.** Equations
-are explicit mathematical declarations. The compiler does not infer a continuous
+**This is not yet automatic continuous-time likelihood lowering of a PsyNeuLink
+Composition.** Stateless Linear/Logistic/dense-projection value graphs can now
+supply equations from the frozen source IR; continuous dynamics remain explicit
+mathematical declarations. The compiler does not infer a continuous
 limit from an Euler body, source scheduler passes, or the name of a model. No
 reset, termination event, cross-trial likelihood factorization, or observed RT
 history rule is inferred here. Composition-level `method="numerical"` remains
@@ -20,6 +22,8 @@ rejected until those contracts and their source bindings are implemented.
 
 | Component | Responsibility |
 | --- | --- |
+| `LikelihoodEffectContract.symbolic_value`, built-in primitive specs | Trusted scalar SymPy laws attached to existing compiled implementations |
+| `symbolic_values.py` | Frozen static graph value propagation using existing port, projection, parameter and publication identities |
 | `continuous_ir.py` | Phase metadata over SymPy expressions: drift, Itô diffusion, readouts, latent initial/input declarations, physical clock unit |
 | `analyze_continuous_dynamics` | Conservative closure of randomness through drift and diffusion dependencies, including feedback |
 | `extract_deterministic_subsystem` | Closed deterministic equation slice and explicit state/input/parameter/readout index maps |
@@ -38,6 +42,54 @@ arbitrary-Python callback inside generated integration loops.
 The mathematics is independent of a particular observation type. A continuous
 phase can return algebraic readouts, just a final state, or both. It does not
 require a decision, reaction time, or first-passage likelihood.
+
+## Deriving stateless values from PNL
+
+```python
+from psyneulink.core.batched import BatchedCompositionCompiler
+
+values = BatchedCompositionCompiler.derive_symbolic_values(
+    composition, outputs=[response.output_port],
+)
+print(values.expressions, values.explain())
+```
+
+Alternatively, call `simulation_plan.derive_symbolic_values()` to use an already
+frozen simulation snapshot. Neither path requires executing a simulation; the
+first does not require an available simulation device. Both require supported
+source IR. Subsequent mutations to live PNL nodes or global registrations do not
+change a previously frozen plan's equations.
+
+Each registered scalar law is a `sympy.Lambda` with arguments `x` and every
+registered parameter argument exactly once. Registration checks those bindings
+and the supported expression domain. Linear and Logistic carry these declarations
+beside their existing batched implementations; dense projections use their
+existing contract and frozen matrices. No CSI recognizer or separate operation
+registry is involved. These are trusted mathematical declarations, not proofs
+that a Python/Triton body implements them or promises of bitwise source arithmetic.
+
+The lowering visits the existing graph in execution order, verifies that each
+projection source publishes in an earlier consideration set, combines incoming
+values, and substitutes each scalar law. Static-schedule/stateless admission is
+shared with the existing Gaussian analyzer. Noise, retained state, controls,
+clipping, stopping events and unsupported output transforms are rejected rather
+than silently dropped. Expressions retain source dependencies and denominator
+domains under `sympy.evaluate(False)`.
+
+`SymbolicValues` holds existing `BatchedInputSpec`, `BatchedParamSpec` and
+`BatchedOutputSpec` records, their symbolic bindings, and flattened expressions.
+Inputs and outputs flatten in port/coordinate order; parameters retain canonical
+kernel order. A caller can bind these inputs to continuous state expressions
+using `xreplace` under `sympy.evaluate(False)`, then supply the resulting readouts
+to `ContinuousDynamics`. Their generated C++ and gradients use the same backend
+as explicitly authored equations. No symbolic evaluation happens inside the
+integration loop.
+
+This currently lowers a **whole admitted stateless graph**, not an automatically
+cut region inside a stateful Composition. The research CSI-style fixture builds
+its stateless response network in PNL and binds its control inputs to an explicit
+LCA phase. Its LCA ODE, response coding, timing and history remain caller-supplied.
+Passing the full stateful CSI model to this API is not yet supported.
 
 ## Example: nonlinear deterministic dynamics
 
@@ -176,6 +228,27 @@ separately; no full subject-level likelihood lowering is claimed here.
 
 ## Performance check
 
+### Graph-derived versus explicitly authored readouts
+
+`benchmark_continuous_dynamics.py --graph-readout` compares the handwritten CSI
+C++ drift stage, explicitly authored SymPy equations, and the same equations
+with the response readout derived from a PNL graph. On the local i7-9700K, with
+480 lanes, 1,000 cells at 1 ms, four threads, float64, two warmups and 21
+interleaved measurements:
+
+| Drift stage | Handwritten CSI | Explicit SymPy | Graph-derived readout |
+| --- | ---: | ---: | ---: |
+| Forward | 25.190 ms | 28.830 ms | 28.847 ms |
+| Forward + initial-state/input/parameter gradients | 78.887 ms | 80.420 ms | 79.840 ms |
+
+Graph derivation added no meaningful execution cost relative to the explicit
+equations in this run. The generated forward stage remains about 14.5% slower
+than the handwritten kernel. Against that kernel, graph-derived drift differed
+by at most 1.67e-16, final states matched exactly, and compared gradients differed
+by at most 5.12e-13. Graph construction, equation derivation and compilation are
+excluded. This is a CPU drift-stage check, not a whole-subject fit, GPU likelihood
+benchmark, or evidence that the entire CSI model is automatically compiled.
+
 ### SymPy replacement against the checkpoint
 
 After the migration, the same CSI fixture was compared directly with checkpoint
@@ -239,8 +312,10 @@ OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 .venv/bin/python \
 1. Bind explicit continuous primitive equations to frozen PNL implementations,
    parameters, ports and state initialization/reset rules. Validate clock
    interpretations rather than guessing conversions from scheduler passes.
-2. Lower projections, nonlinear readouts and controls into the common equation
-   representation, checking publication/phase semantics and dependency slices.
+2. Extend the stateless value propagation above to checked regions within
+   stateful graphs, binding phase-dependent values and controls from existing
+   source evidence. Linear/Logistic readouts and dense projections are already
+   supported for wholly stateless graphs; arbitrary controls are not.
 3. Derive numerical phases, resets and observed-history reconstruction from
    existing graph, scheduler and observation evidence. Add only missing
    continuous interpretations, not a second user-authored experiment schema.
@@ -257,6 +332,24 @@ with other data types need their own observation and probability providers;
 this milestone does not force them into a first-passage framework.
 
 ## Validation
+
+The nine-file graph-value/continuous/PDE/CSI/Gaussian/planning/Wiener/registry/
+analysis regression run passed **225 checks with 14 skips** in interpreter mode.
+The six GPU-specific checks skipped there all passed in a separate required-GPU
+run on the local RTX 2080 Ti; the other eight skips were unchanged style checks.
+Ruff and whitespace checks passed.
+
+The graph-derived value tests compare vector/reconvergent networks against PNL
+Python execution, the batched CPU interpreter and GPU execution. Every bound
+input/parameter derivative is checked by finite differences and a Torch oracle;
+another check differentiates a graph-derived readout through the shared PDE.
+Tests also cover frozen registrations/parameters, device-independent derivation,
+unsupported state/noise/event rejection, and CSI-style readout/gradient parity.
+The execution comparisons isolate CPU/GPU processes to avoid Triton's
+import-time interpreter selection leaking between tests. Broader interpreter
+regressions must start with `TRITON_INTERPRET=1`; dedicated GPU regressions start
+with that variable unset. An offline isolated wheel build includes the new
+graph-value module and updated built-in declarations.
 
 After the SymPy migration, the six-file continuous/PDE/CSI/Gaussian/Wiener/
 planning regression run passed **180 tests with 7 skips**, including the GPU

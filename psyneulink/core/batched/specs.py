@@ -488,6 +488,11 @@ def _validate_likelihood_contract(spec):
     has_rng = isinstance(spec, MechanismOpSpec) and bool(spec.rng)
     if has_rng != (contract.randomness == "declared_streams"):
         raise BatchedOpSpecError("Likelihood contract must agree with declared RNG streams.")
+    if contract.symbolic_value is not None:
+        arguments = tuple(s.name for s in contract.symbolic_value.variables)
+        if (not isinstance(spec, ElementwiseFunctionSpec) or arguments[0] != INPUT_ARG
+                or set(arguments[1:]) != {p.arg for p in spec.params} or len(set(arguments)) != len(arguments)):
+            raise BatchedOpSpecError("Symbolic value arguments must bind x and every registered elementwise parameter exactly once.")
     if contract.value_rule == "affine" and (
         not isinstance(spec, ElementwiseFunctionSpec)
         or not {"slope", "intercept", "scale", "offset"} <= {p.arg for p in spec.params}

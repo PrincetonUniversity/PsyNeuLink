@@ -164,10 +164,22 @@ class LikelihoodEffectContract:
     event_readout: EventCountReadout | None = None
     gaussian_readout: GaussianReadout | None = None
     wiener_readout: WienerProcessReadout | None = None
+    # SymPy Lambda(x, *registered_parameter_arguments): trusted ideal-real
+    # scalar value law, frozen with the implementation. Not scheduler evidence.
+    symbolic_value: object | None = None
 
     def __post_init__(self):
         if self.randomness not in ("none", "declared_streams"):
             raise ValueError("Contract randomness must be 'none' or 'declared_streams'.")
+        if self.symbolic_value is not None:
+            import sympy as sp
+            from psyneulink.core.batched.continuous_ir import validate_equations
+
+            if not isinstance(self.symbolic_value, sp.Lambda) or not self.symbolic_value.variables:
+                raise ValueError("symbolic_value must be a scalar SymPy Lambda with explicit arguments.")
+            if self.randomness != "none" or self.event_readout or self.gaussian_readout or self.wiener_readout:
+                raise ValueError("A symbolic value cannot silently replace randomness or a stopping event.")
+            validate_equations((self.symbolic_value.expr,), self.symbolic_value.variables)
         if type(self.version) is not str or not self.version:
             raise ValueError("A likelihood contract requires a nonempty version.")
         if self.value_rule not in (None, "affine", "dense_projection"):

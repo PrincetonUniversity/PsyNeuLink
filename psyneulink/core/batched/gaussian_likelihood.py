@@ -10,8 +10,7 @@ import math
 
 import numpy as np
 
-from psyneulink.core.batched.kernel_ir import validate_kernel_ir
-from psyneulink.core.batched.likelihood_analysis import analyze_likelihood
+from psyneulink.core.batched.likelihood_analysis import analyze_likelihood, stateless_value_schedule
 from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
 from psyneulink.core.batched.analytic_runtime import parameter_tensor, scalar_inputs, validate_parameter_tensor
 from psyneulink.core.batched.registry import analyze_composition
@@ -39,7 +38,7 @@ def _reject(code, detail):
 
 def derive_gaussian_witness(kernel, observations):
     """Reconstruct the admitted program from immutable source contracts."""
-    validate_kernel_ir(kernel)
+    schedule = stateless_value_schedule(kernel, prefix="gaussian", allow_random=True)
     graph = kernel.graph
     if len(observations) != 1:
         _reject("observation", "This tier requires exactly one scalar observed field, not independent marginal scores for correlated outputs.")
@@ -47,18 +46,6 @@ def derive_gaussian_witness(kernel, observations):
     if (obs.width != 1 or obs.measure != "lebesgue" or obs.role != "value"
             or obs.recording != "exact" or obs.availability != "complete" or not obs.score):
         _reject("observation", "This tier requires a complete, exact, scored scalar value with Lebesgue measure.")
-    if graph.metadata.get("schedule_kind") != "static_graph":
-        _reject("schedule", "Gaussian propagation requires the checked single-pass static schedule.")
-    if (graph.states or graph.effective_parameters or graph.modulations
-            or graph.folded_affine_controls or graph.absorbed_projections or graph.finished_values):
-        _reject("state", "Retained state, held controls, and stopping events require another likelihood rule.")
-    ids = {node.component_id for node in graph.nodes}
-    if not any(t.condition_type == "AllHaveRun" and set(t.dependency_component_ids) == ids for t in graph.termination):
-        _reject("termination", "Trial termination must require all admitted nodes to run.")
-    schedule = {s.component_id: s for s in graph.scheduler}
-    for item in graph.scheduler:
-        if item.condition_type != "Always" and not (item.condition_type in ("EveryNCalls", "AllEveryNCalls") and item.attrs.get("calls") == 1):
-            _reject("schedule", "Only Always and checked (All)EveryNCalls(1) static predicates are admitted.")
     for spec in kernel.op_specs.specs_by_key.values():
         if spec.likelihood_contract is None:
             _reject("contract", "All frozen operations require an explicit effect contract.")

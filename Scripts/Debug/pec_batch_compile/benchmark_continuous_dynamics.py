@@ -5,6 +5,7 @@ the repository root. Prints timings and numerical differences; writes no files.
 """
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 import statistics
@@ -33,12 +34,49 @@ def csi_equations():
         )
 
 
+def csi_graph_equations():
+    """Derive the CSI-style drift readout from ordinary PNL transfer pathways.
+
+    Research fixture only. The LCA ODE and observation coding remain explicit;
+    this does not claim automatic continuous/history lowering of the CSI model.
+    """
+    import numpy as np
+    import psyneulink as pnl
+    from psyneulink.core.batched import BatchedCompositionCompiler
+
+    control = pnl.TransferMechanism(default_variable=[0., 0.], name="control_activity")
+    stimulus = pnl.TransferMechanism(default_variable=[0.] * 4, name="stimulus_features")
+    hidden = pnl.TransferMechanism(default_variable=[0.] * 4, function=pnl.Logistic(bias=-4), name="hidden_activity")
+    response = pnl.TransferMechanism(default_variable=[0.] * 2, function=pnl.Logistic(), name="response_activity")
+    contrast = pnl.TransferMechanism(name="response_contrast")
+    composition = pnl.Composition(pathways=[
+        [control, np.array([[4., 4., 0., 0.], [0., 0., 4., 4.]]), hidden],
+        [stimulus, np.array([[1., -1., 0., 0.], [-1., 1., 0., 0.], [0., 0., 1., -1.], [0., 0., -1., 1.]]), hidden],
+        [hidden, np.array([[1., -1.], [-1., 1.], [1., -1.], [-1., 1.]]), response, np.array([[1.], [-1.]]), contrast],
+    ])
+    source = BatchedCompositionCompiler.compile(composition, outputs=[contrast.output_port])
+    values = source.derive_symbolic_values()
+    dynamics = csi_equations()
+    with sp.evaluate(False):
+        by_port = {control.input_port: tuple(Sigmoid(dynamics.parameters[0] * x) for x in dynamics.states),
+                   stimulus.input_port: dynamics.inputs[2:6]}
+        replacements = {s: sp.Float(p.default) for p, s in zip(values.parameters, values.parameter_symbols, strict=True)}
+        cursor = 0
+        for entry in values.inputs:
+            actual = by_port[source.component_bindings.ports_by_id[entry.port_id]]
+            replacements.update(zip(values.input_symbols[cursor:cursor + entry.width], actual, strict=True))
+            cursor += entry.width
+        readout = values.expressions[0].xreplace(replacements) * dynamics.inputs[-1]
+    return replace(dynamics, readouts=(("drift", readout),))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trials", type=int, default=480)
     parser.add_argument("--steps", type=int, default=1000)
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--repeats", type=int, default=7)
+    parser.add_argument("--graph-readout", action="store_true", help="Also benchmark the readout derived from a frozen PNL graph.")
     args = parser.parse_args()
     if min(args.trials, args.steps, args.threads, args.repeats) <= 0:
         parser.error("All counts must be positive.")
@@ -48,6 +86,7 @@ def main():
     from direct_likelihood.native import native_lca_drift_path
 
     plan = compile_continuous_phase(csi_equations())
+    graph_plan = compile_continuous_phase(csi_graph_equations()) if args.graph_readout else None
     x = torch.linspace(-.06, .04, args.trials * 2, dtype=torch.float64).reshape(args.trials, 2).requires_grad_()
     u = torch.tensor([[1., 0., 1., 0., .2, .8, 1.], [0., 1., .2, .8, .9, .1, -1.]], dtype=torch.float64)
     u = u.repeat((args.trials + 1) // 2, 1)[:args.trials].contiguous().requires_grad_()
@@ -59,8 +98,9 @@ def main():
     def run(route, grad):
         begin = time.perf_counter()
         with torch.set_grad_enabled(grad):
-            if route == "generated":
-                result = plan.integrate(state=x, inputs=u, parameters=p, duration=duration, start_time=start_time, steps=steps)
+            if route in ("generated", "graph"):
+                selected = graph_plan if route == "graph" else plan
+                result = selected.integrate(state=x, inputs=u, parameters=p, duration=duration, start_time=start_time, steps=steps)
                 values = result.readouts[..., 0], result.final_state
             else:
                 values = native_lca_drift_path(x, u[:, :2], p[:, 0], u[:, 2:6], u[:, 6],
@@ -71,7 +111,7 @@ def main():
 
     output = dict(trials=args.trials, steps=args.steps, threads=args.threads, dt=.001, dtype="float64", warmups=2)
     for grad in (False, True):
-        timings = {route: [] for route in ("handwritten", "generated")}
+        timings = {route: [] for route in (("handwritten", "generated", "graph") if graph_plan else ("handwritten", "generated"))}
         for route in timings:
             for _ in range(2):
                 run(route, grad)
@@ -81,10 +121,12 @@ def main():
             for route in routes:
                 elapsed, last[route] = run(route, grad)
                 timings[route].append(elapsed)
-        differences = []
-        for actual, reference in zip(last["generated"], last["handwritten"], strict=True):
-            torch.testing.assert_close(actual, reference, rtol=2e-9, atol=2e-10)
-            differences.append(float((actual - reference).abs().max()))
+        differences = {}
+        for route in timings:
+            differences[route] = []
+            for actual, reference in zip(last[route], last["handwritten"], strict=True):
+                torch.testing.assert_close(actual, reference, rtol=2e-9, atol=2e-10)
+                differences[route].append(float((actual - reference).abs().max()))
         output["gradient" if grad else "forward"] = dict(
             seconds={route: statistics.median(runs) for route, runs in timings.items()},
             runs=timings, max_absolute_differences=differences,
