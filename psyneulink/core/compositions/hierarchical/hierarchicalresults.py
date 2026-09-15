@@ -167,7 +167,10 @@ class HierarchicalPECResults:
         )
 
         posteriors = pd.DataFrame({
-            "subject": np.repeat(labels, len(names)),
+            # Repeated as objects: participants are identified by whatever the data used, and
+            # numpy would otherwise find one type to hold them all -- turning the distinct
+            # identifiers 1 and "1" into the same string, silently, in this frame alone.
+            "subject": np.repeat(np.asarray(labels, dtype=object), len(names)),
             "parameter": list(names) * len(labels),
             "z_hat": z_hat.ravel(),
             "z_sd": np.sqrt(variance).ravel(),
