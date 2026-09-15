@@ -1,5 +1,12 @@
 # Likelihood compiler consolidation: reuse before expansion
 
+**Historical exploration:** checkpoint `e2721cc518` preserves the code and
+experiment described below. The subsequent implementation replaces the custom
+algebra with direct SymPy expressions and removes the disposable adapter/script.
+See [the current implementation notes](CONTINUOUS_EQUATION_COMPILATION.md) for
+the migrated API, retained-domain guards, and validation. Reproduction commands
+below apply to the checkpoint, not the migrated tree.
+
 Exploratory audit and local experiment, 2026-09-14. The objective is to retain
 features and execution speed while reducing the machinery we own. This is not
 a new numerical backend registration, a source/continuous equivalence proof,

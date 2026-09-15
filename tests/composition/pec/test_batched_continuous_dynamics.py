@@ -5,11 +5,11 @@ from pathlib import Path
 import sys
 
 import pytest
+import sympy as sp
 import torch
 
 from psyneulink.core.batched.continuous_ir import (
-    ContinuousDynamics, DiffusionTerm, Equation, analyze_continuous_dynamics,
-    constant, equation_nodes, extract_deterministic_subsystem, input_value, parameter, physical_time, state,
+    ContinuousDynamics, DiffusionTerm, Sigmoid, analyze_continuous_dynamics, extract_deterministic_subsystem,
 )
 from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
 from psyneulink.core.batched.numerical.dynamics import compile_continuous_phase
@@ -22,18 +22,20 @@ native = pytest.mark.skipif(not native_kernels_available(), reason="Requires Nin
 
 
 def _decay():
-    x, k = state("x"), parameter("k")
-    return ContinuousDynamics(states=("x",), inputs=(), parameters=("k",), drift=(-k * x,),
-                              readouts=(("value", x + physical_time()),))
+    x, k, t = sp.symbols("x k t", real=True)
+    with sp.evaluate(False):
+        return ContinuousDynamics(states=(x,), inputs=(), parameters=(k,), drift=(-k * x,),
+                                  readouts=(("value", x + t),))
 
 
 def _nonlinear():
-    x, y, u, a, b, t = state("x"), state("y"), input_value("u"), parameter("a"), parameter("b"), physical_time()
-    return ContinuousDynamics(
-        states=("x", "y"), inputs=("u",), parameters=("a", "b"),
-        drift=(-a * x + (y * b).sigmoid() + u / (1 + t * t), x.tanh() - b * y + (-t).exp()),
-        readouts=(("signal", (x - y).sigmoid() + u * t), ("other", x * y + a / (1 + b))),
-    )
+    x, y, u, a, b, t = sp.symbols("x y u a b t", real=True)
+    with sp.evaluate(False):
+        return ContinuousDynamics(
+            states=(x, y), inputs=(u,), parameters=(a, b),
+            drift=(-a * x + Sigmoid(y * b) + u / (1 + t * t), sp.tanh(x) - b * y + sp.exp(-t)),
+            readouts=(("signal", Sigmoid(x - y) + u * t), ("other", x * y + a / (1 + b))),
+        )
 
 
 def _arguments(requires_grad=False):
@@ -82,27 +84,27 @@ def _reference(dynamics, *, state, inputs, parameters, duration, start_time, ste
 def test_immutable_schema_bindings_and_source_safety():
     dynamics = _nonlinear()
     assert isinstance(dynamics.states, tuple)
-    assert analyze_continuous_dynamics(dynamics).deterministic_states == ("x", "y")
+    assert analyze_continuous_dynamics(dynamics).deterministic_states == dynamics.states
     with pytest.raises(ValueError, match="Unbound"):
-        replace(dynamics, drift=(state("missing"), constant(0)))
+        replace(dynamics, drift=(sp.Symbol("missing", real=True), sp.S.Zero))
     with pytest.raises(ValueError, match="physical seconds"):
         replace(dynamics, clock_unit="scheduler_pass")
     with pytest.raises(ValueError):
-        Equation("python_callback")
+        replace(dynamics, drift=(sp.Function("python_callback")(dynamics.states[0]), sp.S.Zero))
     with pytest.raises(ValueError):
-        constant(float("nan"))
-    with pytest.raises(TypeError):
-        Equation("constant", name=[])
+        replace(dynamics, drift=(sp.nan, sp.S.Zero))
     with pytest.raises(ValueError):
-        DiffusionTerm([], "driver", constant(.1))
+        replace(dynamics, states=(sp.Symbol("complex", real=False), dynamics.states[1]))
+    with pytest.raises(ValueError):
+        DiffusionTerm([], "driver", sp.Float(.1))
     with pytest.raises(TypeError):
-        DiffusionTerm("x", "driver", .1)
+        DiffusionTerm(dynamics.states[0], "driver", .1)
     # Names are bindings only, never source identifiers or interpolated code.
     unusual = 'x; throw "bad";'
-    unusual_dynamics = ContinuousDynamics((unusual,), (), (), (-state(unusual),))
+    symbol = sp.Symbol(unusual, real=True)
+    unusual_dynamics = ContinuousDynamics((symbol,), (), (), (-symbol,))
     assert unusual not in generate_dynamics_source(unusual_dynamics)
-    shared = state("x") * parameter("a")
-    assert equation_nodes((shared + shared,)).count(shared) == 1
+    assert generate_dynamics_source(dynamics) == generate_dynamics_source(dynamics)
 
 
 def test_phase_plan_freezes_equations_and_integrator_template(monkeypatch):
@@ -122,18 +124,90 @@ def test_phase_plan_freezes_equations_and_integrator_template(monkeypatch):
     assert '#include "rk4_cpu.h"' not in source
 
 
+def test_symbolic_admission_and_retained_structural_dependencies():
+    x, y, k = sp.symbols("x y k", real=True)
+    for bad in (sp.log(x), sp.sqrt(x), x ** k, sp.oo, sp.Integer(10) ** 1000):
+        with pytest.raises(ValueError):
+            ContinuousDynamics((x,), (), (k,), (bad,))
+    with pytest.raises(ValueError, match="distinct real"):
+        ContinuousDynamics((x,), (x,), (), (-x,))
+    with sp.evaluate(False):
+        zero = 0 * y
+        canceled = y / y
+    for expression in (zero, canceled):
+        d = ContinuousDynamics((x, y), (), (), (expression, -y),
+                              diffusion=(DiffusionTerm(y, "noise", sp.Float(.1)),))
+        assert analyze_continuous_dynamics(d).stochastic_states == (x, y)
+        with pytest.raises(LikelihoodPlanningError):
+            compile_continuous_phase(d)
+        assert d.drift[0] == expression  # Analysis did not simplify the declaration.
+    # Distinct same-named bindings remain distinct; C++ uses array indices.
+    a, b = sp.Dummy("same", real=True), sp.Dummy("same", real=True)
+    d = ContinuousDynamics((a,), (), (b,), (-b * a,))
+    source = generate_dynamics_source(d)
+    assert "same" not in source
+    assert source == generate_dynamics_source(d)
+
+
+@native
+@pytest.mark.parametrize("placement", ["drift", "readout", "intermediate_stage"])
+def test_canceled_division_retains_domain_checks(placement):
+    x = sp.Symbol("x", real=True)
+    with sp.evaluate(False):
+        quotient = x / x
+        rhs = quotient if placement == "drift" else (-2 + quotient if placement == "intermediate_stage" else sp.S.Zero)
+    d = ContinuousDynamics((x,), (), (), (rhs,), (("ratio", quotient),))
+    plan = compile_continuous_phase(d)
+    assert "_domain" in plan.source
+    args = dict(state=torch.tensor([[1.]], dtype=torch.float64, requires_grad=True),
+                inputs=torch.empty(1, 0, dtype=torch.float64), parameters=torch.empty(1, 0, dtype=torch.float64),
+                duration=torch.tensor([.1], dtype=torch.float64), start_time=torch.zeros(1, dtype=torch.float64),
+                steps=torch.ones(1, dtype=torch.int64))
+    assert torch.autograd.gradcheck(lambda initial: plan.integrate(**{**args, "state": initial}).final_state,
+                                   (args["state"],), atol=1e-7, rtol=1e-5)
+    if placement == "intermediate_stage":
+        args["duration"] = torch.tensor([2.], dtype=torch.float64)
+    else:
+        args["state"] = torch.zeros_like(args["state"], requires_grad=True)
+    for enabled in (False, True):
+        with torch.set_grad_enabled(enabled), pytest.raises(FloatingPointError, match="Nonfinite"):
+            plan.integrate(**args)
+    bad = evaluate_equations((quotient,), d, torch.zeros(1, dtype=torch.float64),
+                             torch.empty(0, dtype=torch.float64), torch.empty(0, dtype=torch.float64), torch.tensor(0.))
+    assert not bool(torch.isfinite(bad).all())
+
+
+@native
+def test_symbolic_sigmoid_saturation_and_safe_names():
+    x = sp.Symbol('x; throw "bad";', real=True)
+    d = ContinuousDynamics((x,), (), (), (sp.S.Zero,), (("logistic", Sigmoid(x)),))
+    plan = compile_continuous_phase(d)
+    initial = torch.tensor([[-1000.], [-20.], [0.], [20.], [1000.]], dtype=torch.float64, requires_grad=True)
+    result = plan.integrate(state=initial, inputs=initial[:, :0], parameters=initial[:, :0],
+                            duration=initial.new_ones(5), start_time=initial.new_zeros(5), steps=torch.ones(5, dtype=torch.int64))
+    expected = initial.sigmoid()
+    torch.testing.assert_close(result.readouts[:, 0], expected)
+    torch.testing.assert_close(torch.autograd.grad(result.readouts.sum(), initial)[0], expected * (1 - expected))
+    reference = evaluate_equations((Sigmoid(x),), d, initial, initial[:, :0], initial[:, :0], initial.new_zeros(5))
+    torch.testing.assert_close(reference, expected)
+    constant_readout = replace(d, readouts=(("constant", Sigmoid(sp.S.Zero)),))
+    reference = evaluate_equations((constant_readout.readouts[0][1],), constant_readout,
+                                   initial, initial[:, :0], initial[:, :0], initial.new_zeros(5))
+    torch.testing.assert_close(reference, initial.new_full((5, 1), .5))
+
+
 @pytest.mark.parametrize("feedback, expected", [(False, ("r0", "r1")), (True, ("h0", "h1", "r0", "r1"))])
 def test_multidimensional_noise_and_feedback_closure(feedback, expected):
-    h0, h1, r0, r1 = (state(n) for n in ("h0", "h1", "r0", "r1"))
+    h0, h1, r0, r1 = sp.symbols("h0 h1 r0 r1", real=True)
     dynamics = ContinuousDynamics(
-        states=("h0", "h1", "r0", "r1"), inputs=(), parameters=(),
-        drift=(-h0 + h1 + (r0 if feedback else constant(0)), -h1 + h0.sigmoid(), h0 - r0 - r1, h1 - r1),
+        states=(h0, h1, r0, r1), inputs=(), parameters=(),
+        drift=(-h0 + h1 + (r0 if feedback else sp.S.Zero), -h1 + Sigmoid(h0), h0 - r0 - r1, h1 - r1),
         readouts=(("control", h0), ("response", r0 - r1)),
         # One driver is enough to make multiple state coordinates stochastic.
-        diffusion=(DiffusionTerm("r1", "shared_noise", constant(.1)),),
+        diffusion=(DiffusionTerm(r1, "shared_noise", sp.Float(.1)),),
     )
     report = analyze_continuous_dynamics(dynamics)
-    assert report.stochastic_states == expected
+    assert tuple(map(str, report.stochastic_states)) == expected
     assert report.noise_drivers == ("shared_noise",)
     assert report.stochastic_readouts == (("control", "response") if feedback else ("response",))
     with pytest.raises(LikelihoodPlanningError, match="cannot ignore"):
@@ -146,17 +220,18 @@ def test_multidimensional_noise_and_feedback_closure(feedback, expected):
     else:
         assert reduced.state_indices == (0, 1)
         assert reduced.readout_indices == (0,)
-        assert reduced.dynamics.states == ("h0", "h1")
+        assert reduced.dynamics.states == (h0, h1)
         assert not reduced.dynamics.diffusion
         assert compile_continuous_phase(reduced.dynamics).explain()["states"] == ("h0", "h1")
 
 
 def test_deterministic_slice_preserves_bindings_and_drops_unused_latent_inputs():
+    random, known, latent, drive, unused, rate = sp.symbols("random known latent drive unused rate", real=True)
     d = ContinuousDynamics(
-        states=("random", "known"), inputs=("latent", "drive"), parameters=("unused", "rate"),
-        drift=(input_value("latent") + state("known"), -parameter("rate") * state("known") + input_value("drive")),
-        readouts=(("observed", state("known")), ("random_readout", state("random"))),
-        latent_inputs=("latent",), latent_initial_states=("random",),
+        states=(random, known), inputs=(latent, drive), parameters=(unused, rate),
+        drift=(latent + known, -rate * known + drive),
+        readouts=(("observed", known), ("random_readout", random)),
+        latent_inputs=(latent,), latent_initial_states=(random,),
     )
     reduced = extract_deterministic_subsystem(d)
     assert (reduced.state_indices, reduced.input_indices, reduced.parameter_indices, reduced.readout_indices) == ((1,), (1,), (1,), (0,))
@@ -170,15 +245,18 @@ def test_deterministic_slice_preserves_bindings_and_drops_unused_latent_inputs()
 
 
 def test_latent_initial_state_and_inputs_are_not_treated_as_deterministic():
-    for d in (replace(_nonlinear(), latent_initial_states=("x",)), replace(_nonlinear(), latent_inputs=("u",))):
-        assert analyze_continuous_dynamics(d).stochastic_states == ("x", "y")
+    base = _nonlinear()
+    for d in (replace(base, latent_initial_states=base.states[:1]), replace(base, latent_inputs=base.inputs)):
+        assert analyze_continuous_dynamics(d).stochastic_states == base.states
         with pytest.raises(LikelihoodPlanningError):
             compile_continuous_phase(d)
-    zero_noise = replace(_decay(), diffusion=(DiffusionTerm("x", "noise", constant(0)),))
+    decay = _decay()
+    zero_noise = replace(decay, diffusion=(DiffusionTerm(decay.states[0], "noise", sp.S.Zero),))
     assert not analyze_continuous_dynamics(zero_noise).stochastic_states
     # No algebraic simplifier may erase an unknown coefficient's dependence.
-    unknown = replace(_decay(), diffusion=(DiffusionTerm("x", "noise", 0 * parameter("k")),))
-    assert analyze_continuous_dynamics(unknown).stochastic_states == ("x",)
+    with sp.evaluate(False):
+        unknown = replace(decay, diffusion=(DiffusionTerm(decay.states[0], "noise", 0 * decay.parameters[0]),))
+    assert analyze_continuous_dynamics(unknown).stochastic_states == decay.states
 
 
 @native
@@ -196,8 +274,8 @@ def test_generated_decay_against_closed_form_and_clock_readout():
 
 @native
 def test_four_state_system_without_parameters_inputs_or_readouts():
-    x, y, z, w = (state(n) for n in ("x", "y", "z", "w"))
-    dynamics = ContinuousDynamics(("x", "y", "z", "w"), (), (), (-x, x - y, y - z, z - w))
+    x, y, z, w = sp.symbols("x y z w", real=True)
+    dynamics = ContinuousDynamics((x, y, z, w), (), (), (-x, x - y, y - z, z - w))
     plan = compile_continuous_phase(dynamics)
     durations = torch.tensor([.1, .4], dtype=torch.float64, requires_grad=True)
     args = dict(state=torch.tensor([[1., 0., 0., 0.], [1., 0., 0., 0.]], dtype=torch.float64),
@@ -340,20 +418,18 @@ def test_no_tape_for_value_only_and_explicit_higher_derivative_rejection(monkeyp
 
 def csi_equations():
     """Research model equation fixture, never a compiler recognizer."""
-    x, y, gain = state("x"), state("y"), parameter("gain")
-    control0, control1 = (gain * x).sigmoid(), (gain * y).sigmoid()
-    s0, s1, s2, s3 = (input_value(f"stimulus{i}") for i in range(4))
-    a = (s0 - s1 + 4 * control0 - 4).sigmoid()
-    b = (s1 - s0 + 4 * control0 - 4).sigmoid()
-    c = (s2 - s3 + 4 * control1 - 4).sigmoid()
-    d = (s3 - s2 + 4 * control1 - 4).sigmoid()
-    contrast = a - b + c - d
-    drift = (contrast.sigmoid() - (-contrast).sigmoid()) * input_value("response")
-    return ContinuousDynamics(
-        states=("x", "y"), inputs=("task0", "task1", "stimulus0", "stimulus1", "stimulus2", "stimulus3", "response"),
-        parameters=("gain",), drift=(-12 * x + input_value("task0") - 3 * control1,
-                                    -12 * y + input_value("task1") - 3 * control0), readouts=(("drift", drift),),
-    )
+    x, y, gain = sp.symbols("x y gain", real=True)
+    task0, task1, s0, s1, s2, s3, response = sp.symbols("task0 task1 stimulus0 stimulus1 stimulus2 stimulus3 response", real=True)
+    with sp.evaluate(False):
+        control0, control1 = Sigmoid(gain * x), Sigmoid(gain * y)
+        a, b = Sigmoid(s0 - s1 + 4 * control0 - 4), Sigmoid(s1 - s0 + 4 * control0 - 4)
+        c, d = Sigmoid(s2 - s3 + 4 * control1 - 4), Sigmoid(s3 - s2 + 4 * control1 - 4)
+        contrast = a - b + c - d
+        drift = (Sigmoid(contrast) - Sigmoid(-contrast)) * response
+        return ContinuousDynamics(
+            states=(x, y), inputs=(task0, task1, s0, s1, s2, s3, response), parameters=(gain,),
+            drift=(-12 * x + task0 - 3 * control1, -12 * y + task1 - 3 * control0), readouts=(("drift", drift),),
+        )
 
 
 @native

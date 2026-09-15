@@ -11,8 +11,9 @@ import hashlib
 from pathlib import Path
 
 import torch
+import sympy as sp
 
-from psyneulink.core.batched.continuous_ir import ContinuousDynamics, analyze_continuous_dynamics, equation_nodes
+from psyneulink.core.batched.continuous_ir import ContinuousDynamics, analyze_continuous_dynamics
 from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
 from psyneulink.core.batched.numerical.dynamics_codegen import generate_dynamics_source
 
@@ -74,13 +75,16 @@ class CompiledContinuousPhase:
     def explain(self):
         return dict(
             backend="cpp_cpu", process="explicit_continuous_equations",
-            states=self.dynamics.states, inputs=self.dynamics.inputs, parameters=self.dynamics.parameters,
+            symbolic_backend=f"sympy {sp.__version__}",
+            states=tuple(map(str, self.dynamics.states)), inputs=tuple(map(str, self.dynamics.inputs)),
+            parameters=tuple(map(str, self.dynamics.parameters)),
             readouts=tuple(n for n, _ in self.dynamics.readouts),
             clock="physical seconds; explicit start_time and duration per lane",
             integrator="two RK4 half-steps per cell, midpoint readouts",
             gradient="generated equation VJPs plus reusable first-order discrete RK4 adjoint",
             gradient_inputs=("state", "inputs", "parameters", "duration", "start_time"),
             limitations=("No inferred source/continuous equivalence, resets, stopping events, or observed-history conditioning.",
+                         "Domains/dependencies apply to retained expressions; caller simplifications cannot be reversed.",
                          "Inputs and parameters are constant within a phase; step counts are nondifferentiable.",
                          "Zero-count phases require zero duration, preserve state, and return zero-padded readouts.",
                          "No formal integration error certificate or positivity guarantee."),
@@ -124,7 +128,7 @@ def compile_continuous_phase(dynamics):
     if report.stochastic_states or report.stochastic_readouts or dynamics.latent_inputs:
         raise LikelihoodPlanningError("continuous.stochastic_phase", "The deterministic RK4 backend cannot ignore diffusion or unresolved latent history/inputs.")
     expressions = dynamics.drift + tuple(e for _, e in dynamics.readouts)
-    if len(dynamics.states) > 256 or len(equation_nodes(expressions)) > 4096:
+    if len(dynamics.states) > 256 or len(set().union(*(sp.preorder_traversal(e) for e in expressions))) > 4096:
         raise LikelihoodPlanningError("continuous.codegen_size", "This backend supports at most 256 state coordinates and 4096 equation DAG nodes.")
     # Freeze the integrator body too: later template edits must not silently
     # change the semantics of an already-created phase plan before first use.

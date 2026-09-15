@@ -12,26 +12,25 @@ import sys
 import time
 
 import torch
+import sympy as sp
 
-from psyneulink.core.batched.continuous_ir import ContinuousDynamics, input_value, parameter, state
+from psyneulink.core.batched.continuous_ir import ContinuousDynamics, Sigmoid
 from psyneulink.core.batched.numerical.dynamics import compile_continuous_phase
 
 
 def csi_equations():
-    x, y, gain = state("x"), state("y"), parameter("gain")
-    control0, control1 = (gain * x).sigmoid(), (gain * y).sigmoid()
-    s0, s1, s2, s3 = (input_value(f"stimulus{i}") for i in range(4))
-    a = (s0 - s1 + 4 * control0 - 4).sigmoid()
-    b = (s1 - s0 + 4 * control0 - 4).sigmoid()
-    c = (s2 - s3 + 4 * control1 - 4).sigmoid()
-    d = (s3 - s2 + 4 * control1 - 4).sigmoid()
-    contrast = a - b + c - d
-    drift = (contrast.sigmoid() - (-contrast).sigmoid()) * input_value("response")
-    return ContinuousDynamics(
-        states=("x", "y"), inputs=("task0", "task1", "stimulus0", "stimulus1", "stimulus2", "stimulus3", "response"),
-        parameters=("gain",), drift=(-12 * x + input_value("task0") - 3 * control1,
-                                    -12 * y + input_value("task1") - 3 * control0), readouts=(("drift", drift),),
-    )
+    x, y, gain = sp.symbols("x y gain", real=True)
+    task0, task1, s0, s1, s2, s3, response = sp.symbols("task0 task1 stimulus0 stimulus1 stimulus2 stimulus3 response", real=True)
+    with sp.evaluate(False):
+        control0, control1 = Sigmoid(gain * x), Sigmoid(gain * y)
+        a, b = Sigmoid(s0 - s1 + 4 * control0 - 4), Sigmoid(s1 - s0 + 4 * control0 - 4)
+        c, d = Sigmoid(s2 - s3 + 4 * control1 - 4), Sigmoid(s3 - s2 + 4 * control1 - 4)
+        contrast = a - b + c - d
+        drift = (Sigmoid(contrast) - Sigmoid(-contrast)) * response
+        return ContinuousDynamics(
+            states=(x, y), inputs=(task0, task1, s0, s1, s2, s3, response), parameters=(gain,),
+            drift=(-12 * x + task0 - 3 * control1, -12 * y + task1 - 3 * control0), readouts=(("drift", drift),),
+        )
 
 
 def main():
