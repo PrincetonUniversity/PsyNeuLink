@@ -167,11 +167,11 @@ once per iteration.
 Results are collected by participant index rather than in completion order, so a
 distributed fit and an in-process one agree exactly.
 
-:download:`hierarchical_fitting.py <../../Scripts/Debug/pec_hierarchical/hierarchical_fitting.py>`
+:download:`hierarchical_fitting.py <../../Scripts/Examples/ParameterEstimation/hierarchical/hierarchical_fitting.py>`
 is a complete example,
-:download:`make_example_data.py <../../Scripts/Debug/pec_hierarchical/make_example_data.py>`
+:download:`make_example_data.py <../../Scripts/Examples/ParameterEstimation/hierarchical/make_example_data.py>`
 writes a synthetic table for it to fit, and
-:download:`submit_hierarchical.slurm <../../Scripts/Debug/pec_hierarchical/submit_hierarchical.slurm>`
+:download:`submit_hierarchical.slurm <../../Scripts/Examples/ParameterEstimation/hierarchical/submit_hierarchical.slurm>`
 is a multi-node batch template.
 
 

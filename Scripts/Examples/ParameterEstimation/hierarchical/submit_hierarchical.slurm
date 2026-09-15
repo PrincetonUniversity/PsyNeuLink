@@ -17,7 +17,7 @@
 
 # --- edit paths ---
 REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
-EXAMPLES=$REPO/Scripts/Debug/pec_hierarchical
+EXAMPLES=$REPO/Scripts/Examples/ParameterEstimation/hierarchical
 DATA=$EXAMPLES/group_data.csv
 
 PY=$REPO/.venv/bin/python3
