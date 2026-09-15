@@ -85,7 +85,7 @@ its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingP
 following ways:
 
   * **List or array**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
-    it must be a 2d np.array.  In each case, the outer dimension (outer list items, array axis 0,
+    it must be a np.ndarray.  In each case, the outer dimension (outer list items, array axis 0,
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
@@ -390,7 +390,7 @@ class MappingProjection(PathwayProjection_Base):
     receiver: InputPort
         the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
 
-    matrix : 2d np.array
+    matrix : np.ndarray
         the matrix used by `function <Projection_Base.function>` to transform the input from the MappingProjection's
         `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
 
@@ -592,34 +592,27 @@ class MappingProjection(PathwayProjection_Base):
         self.reshapedWeightMatrix = False
 
         # Get sender and receiver lengths
-        # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
-        try:
-            mapping_input_len = len(self.defaults.variable)
-        except TypeError:
-            mapping_input_len = 1
-        try:
-            receiver_len = self.receiver.socket_width
-        except TypeError:
-            receiver_len = 1
-
-        # Compare length of MappingProjection output and receiver's variable to be sure matrix has proper dimensions
-        try:
-            mapping_output_len = len(self.defaults.value)
-        except TypeError:
-            mapping_output_len = 1
+        mapping_input_shape = self.defaults.variable.shape
+        mapping_output_shape = self.defaults.value.shape
+        receiver_shape = self.receiver.socket_shape
 
         matrix_spec = copy_parameter_value(self.defaults.matrix)
 
         if (type(matrix_spec) == str and
                 matrix_spec == AUTO_ASSIGN_MATRIX):
-            if mapping_input_len == receiver_len:
+            if mapping_input_shape == receiver_shape:
                 matrix_spec = IDENTITY_MATRIX
             else:
                 matrix_spec = FULL_CONNECTIVITY_MATRIX
 
-        # Length of the output of the Projection doesn't match the length of the receiving InputPort
+        # Compare shape of MappingProjection output and receiver's variable to be sure matrix has proper dimensions
+        # Shape of the output of the Projection doesn't match the shape of the receiving InputPort
         #    so consider reshaping the matrix
-        if mapping_output_len != receiver_len:
+        if (
+            receiver_shape != mapping_output_shape
+            # if receiving port has a LinearCombination and variable of dimension 1,
+            and self.receiver.defaults.variable.shape != self.receiver.defaults.value.shape
+        ):
 
             if 'projection' in self.name or 'Projection' in self.name:
                 projection_string = ''
@@ -635,26 +628,26 @@ class MappingProjection(PathwayProjection_Base):
             if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
-                raise ProjectionError(f"Width ({mapping_output_len}) of the {VALUE} of '{self.name}' "
-                                      f"{projection_string}{states_string} does not match the length of its "
-                                      f"'{self.receiver.name}' InputPort ({receiver_len}).")
+                raise ProjectionError(f"Shape ({mapping_output_shape}) of the {VALUE} of '{self.name}' "
+                                      f"{projection_string}{states_string} does not match the shape of its "
+                                      f"'{self.receiver.name}' InputPort ({receiver_shape}).")
 
             elif matrix_spec == IDENTITY_MATRIX or matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError(f"Output length ({mapping_output_len}) of '{self.name}' {projection_string} "
+                raise ProjectionError(f"Output shape ({mapping_output_shape}) of '{self.name}' {projection_string} "
                                       f"from {self.sender.name} to Mechanism '{self.receiver.owner.name}' "
-                                      f"must equal length of it InputPort ({receiver_len}) to use {matrix_spec}.")
+                                      f"must equal shape of it InputPort ({receiver_shape}) to use {matrix_spec}.")
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
                 if self.prefs.verbosePref:
-                    print(f"Length ({mapping_output_len}) of the output of '{self.name}' {projection_string} "
-                          f"does not match the length ({receiver_len}) of the InputPort for the receiver "
+                    print(f"Shape ({mapping_output_shape}) of the output of '{self.name}' {projection_string} "
+                          f"does not match the shape ({receiver_shape}) of the InputPort for the receiver "
                           f"'{self.receiver.owner.name}'; the width of the matrix (number of columns) will be "
                           f"adjusted to accomodate the receiver.")
 
                 self.parameters.matrix._set(
-                    get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context),
+                    get_matrix(matrix_spec, self.defaults.variable, self.receiver.socket_shape, context=context),
                     context
                 )
 

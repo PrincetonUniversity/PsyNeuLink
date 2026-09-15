@@ -175,7 +175,7 @@ class DefaultControlMechanism(ControlMechanism):
 
         Args:
             input_port_name (str):
-            input_port_value (2D np.array):
+            input_port_value (>=2D np.array):
             context:
 
         Returns:

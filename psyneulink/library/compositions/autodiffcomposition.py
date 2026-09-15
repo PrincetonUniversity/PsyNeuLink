@@ -972,7 +972,7 @@ from psyneulink.core.globals.keywords import (
     WARNING
 )
 from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric,
-                                               convert_to_list, deprecation_warning)
+                                               convert_to_list, deprecation_warning, zeros_like)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -2190,9 +2190,8 @@ class AutodiffComposition(Composition):
                 else:
                     sample = output_port_for_learning
                     sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
-                    target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
-                                                                                   for value in output_port_for_learning.value],
-                                                                                  dtype=object),
+                    target_mech_var = zeros_like([output_port_for_learning.defaults.value])
+                    target_mech = ProcessingMechanism(default_variable=target_mech_var,
                                                       name= f"{TARGET} for " + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
                     constructed_target_mechs.append(target_mech)
@@ -2730,7 +2729,7 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
             else:
                 # It's a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(target[0][0])
+                num_outputs = len(component.output_ports)
                 curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 
         # Map value of TARGET_MECHANISMs to trained OUTPUT nodes
@@ -2921,9 +2920,29 @@ class AutodiffComposition(Composition):
         A dict mapping TARGET_MECHANISMs -> target values
         """
         target_values = {}
+
         def get_target_value(target):
             if target in self.get_nodes_by_role(NodeRole.INPUT):
-                return input_dict[target]
+                # Mechanism inputs have dimensions:
+                #   0: batch
+                #   1: sequence
+                #   2: input_ports
+                #   3: input_port input (incoming projections)
+                #   4...: input_port value shape
+                # Remove dim 3 here because this is reduced by the input ports
+                # and isn't passed to the mechanism function. Not doing this
+                # causes subtle loss calculation errors in autodiff_forward
+                res = input_dict[target]
+                return res
+                try:
+                    return res.squeeze(dim=3)
+                except AttributeError:
+                    # input_dict[target] should be a list due to target having a
+                    # ragged shape. this should also mean that the individual
+                    # input port items are already correctly shaped and so a
+                    # squeeze/reduction shouldn't be necessary
+                    return [[[x.squeeze(dim=0) for x in seq] for seq in batch] for batch in res]
+
             if len(target.path_afferents) > 1:
                 # TARGET_MECHANISMs should only have a single afferent input
                 raise AutodiffCompositionError(f"TARGET_MECHANISM '{target.name}' (for '{self.name}') "

@@ -100,8 +100,8 @@ class TestInputPorts:
 
         pnl.MappingProjection(sender=a, receiver=b)
 
-        assert b.input_port.defaults.variable.shape == np.array([0]).shape
-        assert b.input_port.function.defaults.variable.shape == np.array([0]).shape
+        assert b.input_port.defaults.variable.shape == np.array([[0]]).shape
+        assert b.input_port.function.defaults.variable.shape == np.array([[0]]).shape
 
     @pytest.mark.parametrize('num_incoming_projections', [2, 3, 4])
     def test_adding_projections_modifies_variable(self, num_incoming_projections):
