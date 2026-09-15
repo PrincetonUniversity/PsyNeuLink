@@ -293,6 +293,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
+    CURVATURE_KINDS,
     EStepConfig,
     fit_laplace_em,
     make_inprocess_estep_runner,
@@ -448,8 +449,10 @@ class ParameterEstimationComposition(Composition):
 
     hierarchical_options : Mapping : default None
         specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
-        a ``"subject_id"`` naming the column of **data** that identifies participants; see
-        :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set of keys.
+        a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"`` chooses
+        whether each participant's uncertainty is measured one parameter at a time (``"diagonal"``, the default)
+        or in all directions at once (``"full"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the
+        full set of keys.
 
 
     Attributes
@@ -877,6 +880,7 @@ class ParameterEstimationComposition(Composition):
     #: Settings accepted by `hierarchical_options`, with their defaults.
     _HIERARCHICAL_OPTION_DEFAULTS = {
         "subject_id": None,
+        "curvature": "diagonal",
         "max_iterations": 50,
         "tol": 1e-4,
         "variance_floor": 1e-6,
@@ -912,6 +916,11 @@ class ParameterEstimationComposition(Composition):
         if options["variance_floor"] <= 0:
             raise ParameterEstimationCompositionError(
                 "hierarchical_options requires variance_floor > 0"
+            )
+        if options["curvature"] not in CURVATURE_KINDS:
+            raise ParameterEstimationCompositionError(
+                f"hierarchical_options['curvature'] must be one of {list(CURVATURE_KINDS)}; "
+                f"got {options['curvature']!r}"
             )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
@@ -957,6 +966,7 @@ class ParameterEstimationComposition(Composition):
         schema = provider.schema
         config = EStepConfig(
             method=options["estep_method"],
+            curvature=options["curvature"],
             hessian_step=options["hessian_step"],
             variance_floor=options["variance_floor"],
             optimizer_options=options["estep_options"],
