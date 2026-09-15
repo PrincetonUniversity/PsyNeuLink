@@ -198,8 +198,8 @@ def make_distributed_estep_runner(
         wait(futures, return_when="ALL_COMPLETED")
 
         z_hat = np.empty((n_subjects, n_params))
-        variance = np.empty((n_subjects, n_params))
-        curvature = np.empty((n_subjects, n_params))
+        posterior = np.empty((n_subjects, n_params, n_params))
+        curvature = np.empty((n_subjects, n_params, n_params))
         steps = np.empty((n_subjects, n_params))
         subject_objective = np.empty(n_subjects)
         success = np.empty(n_subjects, dtype=bool)
@@ -209,7 +209,7 @@ def make_distributed_estep_runner(
             # Results are placed by participant index rather than in completion order, so that a
             # distributed fit and an in-process one agree exactly.
             z_hat[subject_index] = post.z_hat
-            variance[subject_index] = post.variance
+            posterior[subject_index] = post.covariance
             curvature[subject_index] = post.curvature
             steps[subject_index] = post.hessian_step
             subject_objective[subject_index] = post.laplace_objective
@@ -221,7 +221,7 @@ def make_distributed_estep_runner(
 
         return EStepResult(
             z_hat=z_hat,
-            variance=variance,
+            covariance=posterior,
             curvature=curvature,
             hessian_step=steps,
             subject_objective=subject_objective,
