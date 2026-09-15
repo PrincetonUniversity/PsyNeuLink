@@ -659,8 +659,8 @@ def _setup_mt_rand_int32(ctx, state_ty):
 
     # Generate random number generator function.
     # It produces random 32bit number in a 64bit word
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_int32", (state_ty.as_pointer(), int64_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_int32", (state_ty.as_pointer(),), return_type=int64_ty)
+    state, = builder.function.args
 
     array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -750,16 +750,15 @@ def _setup_mt_rand_int32(ctx, state_ty):
     val = builder.xor(val, tmp)
 
     # val is now random 32bit integer
-    val = builder.zext(val, out.type.pointee)
-    builder.store(val, out)
-    builder.ret_void()
+    val = builder.zext(val, builder.function.return_value.type)
+    builder.ret(val)
 
     return builder.function
 
 
 def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
 
-    out_ty = gen_int32.args[1].type.pointee
+    out_ty = gen_int32.return_value.type
     builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty, out_ty.as_pointer()))
     state, lower, upper, out_ptr = builder.function.args
 
@@ -780,8 +779,7 @@ def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
     # while r >= limit
     builder.position_at_end(loop_block)
 
-    builder.call(gen_int32, [state, out_ptr])
-    val = builder.load(out_ptr)
+    val = builder.call(gen_int32, [state])
     val = builder.and_(val, mask)
 
     is_above_limit = builder.icmp_unsigned(">=", val, rand_range_excl)
@@ -806,14 +804,8 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     builder = _setup_builtin_func_builder(ctx, "mt_rand_double", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     state, out = builder.function.args
 
-    al = builder.alloca(gen_int.args[1].type.pointee, name="al_gen_int")
-    builder.call(gen_int, [state, al])
-
-    bl = builder.alloca(gen_int.args[1].type.pointee, name="bl_gen_int")
-    builder.call(gen_int, [state, bl])
-
-    a = builder.load(al)
-    b = builder.load(bl)
+    a = builder.call(gen_int, [state])
+    b = builder.call(gen_int, [state])
 
     a = builder.lshr(a, a.type(5))  # 27bit random value
     b = builder.lshr(b, b.type(6))  # 26bit random value
@@ -824,8 +816,8 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # NOTE: The combination below could be implemented using bit ops,
     # but due to floating point rounding it'd give slightly different
     # random numbers
-    val = builder.fmul(af, af.type(67108864.0))           # Shift left 26
-    val = builder.fadd(val, bf)                                # Combine
+    val = builder.fmul(af, af.type(67108864.0))            # Shift left 26
+    val = builder.fadd(val, bf)                            # Combine
     val = builder.fdiv(val, val.type(9007199254740992.0))  # Scale
 
     # The value is in interval [0, 1)
@@ -2027,8 +2019,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
         # We don't have numeric helpers available for the desired type
         return
 
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal",
-                                         (state_ty.as_pointer(), fptype.as_pointer()))
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal", (state_ty.as_pointer(), fptype.as_pointer()))
     state, out = builder.function.args
 
     loop_block = builder.append_basic_block("gen_loop_ziggurat")

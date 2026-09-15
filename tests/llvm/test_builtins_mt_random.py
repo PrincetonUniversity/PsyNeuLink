@@ -65,7 +65,8 @@ def test_random_int32_bounded(benchmark, mode, bounds, expected):
     benchmark(f)
 
 @pytest.mark.benchmark(group="Mersenne Twister integer PRNG")
-@pytest.mark.parametrize('mode', ['Python', 'numpy',
+@pytest.mark.parametrize('mode', ['Python',
+                                  'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 def test_random_int32(benchmark, mode):
@@ -92,9 +93,7 @@ def test_random_int32(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -105,7 +104,7 @@ def test_random_int32(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
