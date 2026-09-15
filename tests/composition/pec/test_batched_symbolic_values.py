@@ -14,6 +14,7 @@ import torch
 
 import psyneulink as pnl
 from psyneulink.core.batched import BatchedCompositionCompiler as Compiler, LikelihoodEffectContract, LikelihoodPlanningError
+from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op
 from psyneulink.core.batched import specs, registry
 from psyneulink.core.batched.continuous_ir import ContinuousDynamics
 from psyneulink.core.batched.numerical import compile_continuous_phase, compile_first_passage, FirstPassageProblem, FirstPassageMesh
@@ -195,7 +196,7 @@ def test_csi_style_graph_readout_matches_explicit_equations_and_gradients(monkey
     monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile"))
     from benchmark_continuous_dynamics import csi_equations, csi_graph_equations
 
-    plans = [compile_continuous_phase(d) for d in (csi_equations(), csi_graph_equations())]
+    plans = [compile_continuous_phase(d) for d in (csi_equations(), csi_graph_equations(), csi_graph_equations(readout_region=True))]
     x = torch.tensor([[.03, -.02], [-.1, .02]], dtype=torch.float64, requires_grad=True)
     u = torch.tensor([[1., 0., 1., 0., .2, .8, 1.], [0., 1., .2, .8, .9, .1, -1.]], dtype=torch.float64, requires_grad=True)
     p = torch.tensor([[12.], [17.]], dtype=torch.float64, requires_grad=True)
@@ -205,5 +206,157 @@ def test_csi_style_graph_readout_matches_explicit_equations_and_gradients(monkey
                            start_time=x.new_zeros(2), steps=torch.full((2,), 45, dtype=torch.int64))
         results.append((r.readouts, r.final_state))
         gradients.append(torch.autograd.grad(r.readouts.square().sum() + r.final_state.sum(), (x, u, p)))
-    for a, b in zip((*results[0], *gradients[0]), (*results[1], *gradients[1]), strict=True):
-        torch.testing.assert_close(a, b, atol=2e-11, rtol=2e-10)
+    for result, gradient in zip(results[1:], gradients[1:], strict=True):
+        for a, b in zip((*results[0], *gradients[0]), (*result, *gradient), strict=True):
+            torch.testing.assert_close(a, b, atol=2e-11, rtol=2e-10)
+
+
+def _boundary_phase(values):
+    # A caller-supplied publication is a readout argument, not a claim that a
+    # stochastic boundary has become an observed deterministic trajectory.
+    states = values.input_symbols + values.boundary_symbols
+    return ContinuousDynamics(states, (), values.parameter_symbols, (sp.S.Zero,) * len(states),
+                              tuple((f"value{i}", e) for i, e in enumerate(values.expressions)))
+
+
+@native
+def test_stochastic_boundary_is_explicit_and_generated_derivatives_remain_correct():
+    ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=.1),
+                  output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME])
+    out = pnl.TransferMechanism(function=pnl.Logistic(gain=1.2, bias=-.3))
+    c = pnl.Composition(pathways=[[ddm, out]])
+    source = Compiler.compile(c, outputs=[out.output_port])
+    with pytest.raises(LikelihoodPlanningError):
+        source.derive_symbolic_values()
+    values = source.derive_symbolic_values(scope="readout")
+    assert not values.inputs
+    assert len(values.boundary_ports) == len(values.boundary_symbols) == 1
+    assert source.component_bindings.ports_by_id[values.boundary_ports[0].port_id] is ddm.output_port
+    assert "estimate" in values.boundary_dependencies[0].axes
+    assert {p.owner_component_id for p in values.parameters} == set(values.component_ids)
+    assert values.parameter_symbols == tuple(sp.Symbol(f"parameter_{p.parameter_id}", real=True) for p in values.parameters)
+    assert values.explain()["guarantee"] == "conditional_readout_at_publication"
+    json.dumps(values.explain())
+    with pytest.raises(ValueError, match="Unbound"):
+        ContinuousDynamics((sp.Symbol("unrelated", real=True),), (), values.parameter_symbols, (sp.S.Zero,),
+                           (("value", values.expressions[0]),))  # Boundaries cannot be silently omitted.
+    phase = compile_continuous_phase(_boundary_phase(values))
+    x = torch.tensor([[-.2], [.4]], dtype=torch.float64, requires_grad=True)
+    p = torch.tensor([[p.default for p in values.parameters]] * 2, dtype=torch.float64, requires_grad=True)
+
+    def evaluate(x, p):
+        return phase.integrate(state=x, inputs=x[:, :0], parameters=p, duration=x.new_full((2,), .01),
+                               start_time=x.new_zeros(2), steps=torch.ones(2, dtype=torch.int64)).readouts[:, 0]
+
+    torch.testing.assert_close(evaluate(x, p), torch.sigmoid(1.2 * (x - .3)))
+    assert torch.autograd.gradcheck(evaluate, (x, p), atol=2e-7, rtol=2e-5)
+
+
+def test_zero_weight_does_not_erase_stochastic_boundary_dependency():
+    from psyneulink.core.batched.continuous_ir import analyze_continuous_dynamics
+
+    a = pnl.ProcessingMechanism(function=pnl.NormalDist())
+    b = pnl.TransferMechanism(function=pnl.Linear())
+    c = pnl.Composition(pathways=[[a, np.array([[0.]]), b]])
+    values = Compiler.derive_symbolic_values(c, outputs=[b.output_port], scope="readout")
+    assert len(values.boundary_symbols) == 1
+    assert values.boundary_symbols[0] in values.expressions[0].free_symbols
+    phase = replace(_boundary_phase(values), latent_initial_states=values.boundary_symbols)
+    assert analyze_continuous_dynamics(phase).stochastic_readouts == ("value0",)
+
+
+@pytest.mark.parametrize("effect", ["clip", "noise", "held"])
+def test_readout_cuts_modified_and_conditionally_held_producers(effect):
+    a = pnl.TransferMechanism(function=pnl.Linear(slope=2), **(dict(clip=(.1, .9)) if effect == "clip" else
+                                                            dict(noise=.1) if effect == "noise" else {}))
+    b = pnl.TransferMechanism(function=pnl.Logistic())
+    c = pnl.Composition(pathways=[[a, b]])
+    if effect == "held":
+        c.scheduler.add_condition(a, pnl.AtPass(0))
+        c.scheduler.add_condition(b, pnl.AtPass(1))
+    source = Compiler.compile(c, outputs=[b.output_port])
+    values = source.derive_symbolic_values(scope="readout")
+    assert not values.inputs
+    assert len(values.boundary_ports) == 1
+    assert source.component_bindings.ports_by_id[values.boundary_ports[0].port_id] is a.output_port
+    assert values.boundary_reasons[0][1] == ("held_conditional_publication" if effect == "held" else "state_noise_or_other_effect")
+    assert set(values.boundary_symbols) <= values.expressions[0].free_symbols
+
+
+@pytest.fixture
+def csi_readout():
+    from test_batched_csi_coevolving_acceptance import _model, _node, _csi_drift_rate
+
+    c, inputs, _ = _model(ddm_noise=.1)
+    drift = _node(c, "Drift Rate Value")
+    batched_node_op(drift.name, likelihood_contract=LikelihoodEffectContract())(_csi_drift_rate)
+    lca = _node(c, "Task Activations [C1, C2]")
+    a = pnl.TransferMechanism(input_shapes=2, function=pnl.Logistic(gain=1.3, bias=-.4))
+    b = pnl.TransferMechanism(input_shapes=2, function=pnl.Linear(slope=2))
+    c.add_linear_processing_pathway([lca, a, np.array([[.3, -.7], [.6, .2]]), b])
+    c.scheduler.add_condition(a, pnl.WhenFinished(lca))
+    c.scheduler.add_condition(b, pnl.WhenFinished(lca))
+    try:
+        yield c, inputs, lca, a, b
+    finally:
+        unregister_batched_instance_op(drift.name)
+
+
+@native
+def test_region_in_real_csi_graph_matches_pnl_publications(csi_readout):
+    c, inputs, lca, a, b = csi_readout
+    source = Compiler.compile(c, outputs=[b.output_port])
+    values = source.derive_symbolic_values(scope="readout")
+    assert source.ir.graph.metadata["schedule_kind"] == "dynamic_lane_local"
+    assert {source.component_bindings.nodes_by_id[i] for i in values.component_ids} == {a, b}
+    assert all(s in source.ir.graph.scheduler for s in values.publication_schedule)
+    assert source.component_bindings.ports_by_id[values.boundary_ports[0].port_id] is lca.output_port
+    # Even the noise-free LCA has estimate-dependent trial-end state because
+    # stochastic DDM termination determines its number of executions.
+    assert "estimate" in values.boundary_dependencies[0].axes
+    phase = compile_continuous_phase(_boundary_phase(values))
+    actual, expected = [], []
+
+    def capture():
+        if b not in c.scheduler.execution_list[c.default_execution_id][-1]:
+            return
+        actual.append(np.asarray(lca.output_port.parameters.value.get(c)).reshape(-1).copy())
+        expected.append(np.asarray(b.output_port.parameters.value.get(c)).reshape(-1).copy())
+
+    c.run(inputs=inputs, call_after_time_step=capture)
+    assert len(actual) > len(next(iter(inputs.values())))
+    x = torch.tensor(np.asarray(actual), dtype=torch.float64)
+    p = torch.tensor([[p.default for p in values.parameters]] * len(x), dtype=torch.float64)
+    result = phase.integrate(state=x, inputs=x[:, :0], parameters=p, duration=x.new_full((len(x),), .01),
+                             start_time=x.new_zeros(len(x)), steps=torch.ones(len(x), dtype=torch.int64))
+    np.testing.assert_allclose(result.readouts[:, 0], expected, atol=2e-8, rtol=2e-7)
+    # Reuse the frozen snapshot after live parameter changes.
+    a.function.parameters.gain.set(77.)
+    assert source.derive_symbolic_values(scope="readout") == values
+
+
+@pytest.mark.parametrize("matching", [False, True])
+def test_pass_gates_preserve_held_values_instead_of_recomputing_them(matching):
+    a = pnl.TransferMechanism(function=pnl.Linear(slope=3))
+    b = pnl.TransferMechanism(function=pnl.Logistic())
+    out = pnl.TransferMechanism(function=pnl.Linear(slope=2))
+    c = pnl.Composition(pathways=[[a, b, out]])
+    c.scheduler.add_condition(a, pnl.AtPass(0))
+    c.scheduler.add_condition(b, pnl.AtPass(1))
+    c.scheduler.add_condition(out, pnl.AtPass(1 if matching else 2))
+    source = Compiler.compile(c, outputs=[out.output_port])
+    values = source.derive_symbolic_values(scope="readout")
+    assert len(values.component_ids) == (2 if matching else 1)
+    assert source.component_bindings.ports_by_id[values.boundary_ports[0].port_id] is (a if matching else b).output_port
+    assert values.boundary_reasons[0][1] == "held_conditional_publication"
+
+
+def test_readout_requires_supported_root_single_execution_and_valid_scope():
+    c, a, _, b, _ = _network()
+    with pytest.raises(ValueError, match="scope"):
+        Compiler.derive_symbolic_values(c, outputs=[b.output_port], scope="guess")
+    with pytest.raises(LikelihoodPlanningError, match="one execution"):
+        Compiler.derive_symbolic_values(c, outputs=[a.output_port, b.output_port], scope="readout")
+    b.clip = (.1, .9)
+    with pytest.raises(LikelihoodPlanningError, match="Requested execution"):
+        Compiler.derive_symbolic_values(c, outputs=[b.output_port], scope="readout")

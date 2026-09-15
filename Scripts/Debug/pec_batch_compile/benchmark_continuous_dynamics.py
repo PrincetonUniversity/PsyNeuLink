@@ -34,7 +34,7 @@ def csi_equations():
         )
 
 
-def csi_graph_equations():
+def csi_graph_equations(*, readout_region=False):
     """Derive the CSI-style drift readout from ordinary PNL transfer pathways.
 
     Research fixture only. The LCA ODE and observation coding remain explicit;
@@ -44,7 +44,10 @@ def csi_graph_equations():
     import psyneulink as pnl
     from psyneulink.core.batched import BatchedCompositionCompiler
 
-    control = pnl.TransferMechanism(default_variable=[0., 0.], name="control_activity")
+    control = (pnl.LCAMechanism(input_shapes=2, function=pnl.Logistic(gain=12), leak=12, competition=3,
+                               noise=0, time_step_size=.001, termination_measure=pnl.TimeScale.TRIAL,
+                               termination_threshold=1, name="control_activity") if readout_region else
+               pnl.TransferMechanism(default_variable=[0., 0.], name="control_activity"))
     stimulus = pnl.TransferMechanism(default_variable=[0.] * 4, name="stimulus_features")
     hidden = pnl.TransferMechanism(default_variable=[0.] * 4, function=pnl.Logistic(bias=-4), name="hidden_activity")
     response = pnl.TransferMechanism(default_variable=[0.] * 2, function=pnl.Logistic(), name="response_activity")
@@ -55,16 +58,18 @@ def csi_graph_equations():
         [hidden, np.array([[1., -1.], [-1., 1.], [1., -1.], [-1., 1.]]), response, np.array([[1.], [-1.]]), contrast],
     ])
     source = BatchedCompositionCompiler.compile(composition, outputs=[contrast.output_port])
-    values = source.derive_symbolic_values()
+    values = source.derive_symbolic_values(scope="readout" if readout_region else "graph")
     dynamics = csi_equations()
     with sp.evaluate(False):
-        by_port = {control.input_port: tuple(Sigmoid(dynamics.parameters[0] * x) for x in dynamics.states),
+        by_port = {control.output_port if readout_region else control.input_port:
+                   tuple(Sigmoid(dynamics.parameters[0] * x) for x in dynamics.states),
                    stimulus.input_port: dynamics.inputs[2:6]}
         replacements = {s: sp.Float(p.default) for p, s in zip(values.parameters, values.parameter_symbols, strict=True)}
         cursor = 0
-        for entry in values.inputs:
+        symbols = values.input_symbols + values.boundary_symbols
+        for entry in (*values.inputs, *values.boundary_ports):
             actual = by_port[source.component_bindings.ports_by_id[entry.port_id]]
-            replacements.update(zip(values.input_symbols[cursor:cursor + entry.width], actual, strict=True))
+            replacements.update(zip(symbols[cursor:cursor + entry.width], actual, strict=True))
             cursor += entry.width
         readout = values.expressions[0].xreplace(replacements) * dynamics.inputs[-1]
     return replace(dynamics, readouts=(("drift", readout),))
@@ -77,6 +82,7 @@ def main():
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--repeats", type=int, default=7)
     parser.add_argument("--graph-readout", action="store_true", help="Also benchmark the readout derived from a frozen PNL graph.")
+    parser.add_argument("--readout-region", action="store_true", help="Also extract a readout from a graph containing a persistent LCA.")
     args = parser.parse_args()
     if min(args.trials, args.steps, args.threads, args.repeats) <= 0:
         parser.error("All counts must be positive.")
@@ -87,6 +93,7 @@ def main():
 
     plan = compile_continuous_phase(csi_equations())
     graph_plan = compile_continuous_phase(csi_graph_equations()) if args.graph_readout else None
+    region_plan = compile_continuous_phase(csi_graph_equations(readout_region=True)) if args.readout_region else None
     x = torch.linspace(-.06, .04, args.trials * 2, dtype=torch.float64).reshape(args.trials, 2).requires_grad_()
     u = torch.tensor([[1., 0., 1., 0., .2, .8, 1.], [0., 1., .2, .8, .9, .1, -1.]], dtype=torch.float64)
     u = u.repeat((args.trials + 1) // 2, 1)[:args.trials].contiguous().requires_grad_()
@@ -98,8 +105,8 @@ def main():
     def run(route, grad):
         begin = time.perf_counter()
         with torch.set_grad_enabled(grad):
-            if route in ("generated", "graph"):
-                selected = graph_plan if route == "graph" else plan
+            if route in ("generated", "graph", "region"):
+                selected = dict(generated=plan, graph=graph_plan, region=region_plan)[route]
                 result = selected.integrate(state=x, inputs=u, parameters=p, duration=duration, start_time=start_time, steps=steps)
                 values = result.readouts[..., 0], result.final_state
             else:
@@ -111,7 +118,8 @@ def main():
 
     output = dict(trials=args.trials, steps=args.steps, threads=args.threads, dt=.001, dtype="float64", warmups=2)
     for grad in (False, True):
-        timings = {route: [] for route in (("handwritten", "generated", "graph") if graph_plan else ("handwritten", "generated"))}
+        timings = {route: [] for route in ("handwritten", "generated") + (("graph",) if graph_plan else ())
+                   + (("region",) if region_plan else ())}
         for route in timings:
             for _ in range(2):
                 run(route, grad)

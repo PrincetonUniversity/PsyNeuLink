@@ -10,8 +10,9 @@ generation for deterministic continuous phases. It builds on the extracted
 scalar first-passage backend without changing existing CSI fitting defaults.
 
 **This is not yet automatic continuous-time likelihood lowering of a PsyNeuLink
-Composition.** Stateless Linear/Logistic/dense-projection value graphs can now
-supply equations from the frozen source IR; continuous dynamics remain explicit
+Composition.** Linear/Logistic/dense-projection value graphs and checked readout
+regions inside stateful graphs can now supply equations from the frozen source IR;
+continuous dynamics remain explicit
 mathematical declarations. The compiler does not infer a continuous
 limit from an Euler body, source scheduler passes, or the name of a model. No
 reset, termination event, cross-trial likelihood factorization, or observed RT
@@ -85,11 +86,65 @@ to `ContinuousDynamics`. Their generated C++ and gradients use the same backend
 as explicitly authored equations. No symbolic evaluation happens inside the
 integration loop.
 
-This currently lowers a **whole admitted stateless graph**, not an automatically
-cut region inside a stateful Composition. The research CSI-style fixture builds
-its stateless response network in PNL and binds its control inputs to an explicit
-LCA phase. Its LCA ODE, response coding, timing and history remain caller-supplied.
-Passing the full stateful CSI model to this API is not yet supported.
+The default `scope="graph"` still requires a **whole admitted stateless graph**.
+The research CSI-style fixture builds its response network in PNL and binds its
+control inputs to an explicit LCA phase. Its LCA ODE, response coding, timing and
+history remain caller-supplied.
+
+### Readout regions inside stateful graphs
+
+```python
+values = BatchedCompositionCompiler.derive_symbolic_values(
+    composition, outputs=[response.output_port], scope="readout",
+)
+# Also available on an already frozen simulation plan:
+# values = simulation_plan.derive_symbolic_values(scope="readout")
+print(values.boundary_ports, values.boundary_symbols, values.explain())
+```
+
+This walks backward from one requested execution owner through supported value
+nodes. It cuts at stateful/noisy producers, modified values such as clipping,
+unregistered symbolic laws, and publications whose scheduler timing cannot be
+safely substituted. These cuts are **explicit symbolic arguments**, identified
+by existing `BatchedPortSpec` records. A cut does not declare the value observed,
+deterministic, independent across trials, or equal to the producer's initial
+state. The original simulation graph and its state/reset/scheduler declarations
+are not rewritten.
+
+Within a checked single-pass schedule, earlier value publications may be
+substituted. For multi-pass graphs, substitution currently admits Always
+producers and matching AtPass/AtTrialStart/WhenFinished gates. Finished-flag
+owners must publish before both gated nodes, so their flags cannot change
+between those reads. Other conditional producers remain held-value arguments.
+Same-set/delayed/recurrent edges and mixed held/recomputed uses of one producer
+are rejected. This is conservative, not a maximal region finder or general
+scheduler equivalence proof.
+
+The result describes `readout = F(external inputs, boundary publications,
+parameters)` **at that readout's execution**, not necessarily at trial end.
+Boundary symbols are separate from external-input symbols. Parameters retain
+source IDs and canonical order, but readout scope drops unrelated owners to
+avoid unused runtime columns and gradient work. `publication_schedule` reuses
+the relevant frozen scheduler records; `boundary_dependencies` reuses the
+existing execution-axis analysis, including stochastic stopping-time effects.
+For example, the noise-free CSI LCA can retain estimate-dependent trial-end
+state because the DDM determines how many times it executes.
+
+Readout derivatives hold supplied boundary publications fixed. A full model
+derivative additionally needs the chain rule through their dynamics and timing;
+latent boundary values need an appropriate probability treatment. Omitting
+boundary bindings fails the ordinary unbound-symbol check. A caller may explicitly
+bind deterministic boundary trajectories to continuous state expressions and
+use the existing C++ generator, but this API does not infer those trajectories.
+
+Tests attach a nonlinear readout branch to the actual stateful CSI research
+Composition and compare generated values against PNL at each readout execution.
+The existing opaque CSI drift UDF itself still needs a generic multivariate
+symbolic-law route or a supported primitive graph; this milestone does not
+recognize its name or derive arbitrary Python bodies. The benchmark's
+`--readout-region` variant uses a PNL graph containing a persistent LCA and
+extracts its response readout. Its continuous LCA boundary binding is explicit;
+it does not equate the source Euler trajectory with RK4.
 
 ## Example: nonlinear deterministic dynamics
 
@@ -228,6 +283,25 @@ separately; no full subject-level likelihood lowering is claimed here.
 
 ## Performance check
 
+### Readout-region extraction from a stateful graph
+
+With `--graph-readout --readout-region --repeats 21`, the same local CPU,
+480-lane/1,000-cell/1-ms/four-thread/float64 workload gave:
+
+| Drift stage | Handwritten CSI | Explicit SymPy | Stateless graph | Stateful graph's readout region |
+| --- | ---: | ---: | ---: | ---: |
+| Forward | 25.131 ms | 28.735 ms | 28.896 ms | 28.827 ms |
+| Forward + initial-state/input/parameter gradients | 78.689 ms | 80.060 ms | 79.804 ms | 79.938 ms |
+
+This rerun includes the explicitly bound LCA boundary described above. Region
+extraction adds no meaningful execution cost relative to authored equations in
+this run; the generated forward stage still trails the handwritten kernel by
+about 15%. Maximum drift difference against handwritten C++ was 1.67e-16,
+final states matched exactly, and compared gradients differed by at most
+5.12e-13. There were two warmups and no concurrent test/build workload during
+timing. Graph analysis, symbolic binding and compilation are excluded. These
+remain drift-stage timings, not whole-subject likelihoods or fits.
+
 ### Graph-derived versus explicitly authored readouts
 
 `benchmark_continuous_dynamics.py --graph-readout` compares the handwritten CSI
@@ -312,10 +386,10 @@ OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 .venv/bin/python \
 1. Bind explicit continuous primitive equations to frozen PNL implementations,
    parameters, ports and state initialization/reset rules. Validate clock
    interpretations rather than guessing conversions from scheduler passes.
-2. Extend the stateless value propagation above to checked regions within
-   stateful graphs, binding phase-dependent values and controls from existing
-   source evidence. Linear/Logistic readouts and dense projections are already
-   supported for wholly stateless graphs; arbitrary controls are not.
+2. Bind the checked readout regions above to continuous state publications and
+   phase-dependent controls. Linear/Logistic readouts and dense projections are
+   supported, including regions cut from stateful graphs; arbitrary controls
+   and opaque multivariate UDF algebra are not.
 3. Derive numerical phases, resets and observed-history reconstruction from
    existing graph, scheduler and observation evidence. Add only missing
    continuous interpretations, not a second user-authored experiment schema.
@@ -332,6 +406,19 @@ with other data types need their own observation and probability providers;
 this milestone does not force them into a first-passage framework.
 
 ## Validation
+
+After readout-region extraction, the same nine-file regression suite passed
+**234 checks with 14 skips**. All six dedicated GPU regressions passed separately
+on the RTX 2080 Ti. The new checks include stochastic and held boundaries,
+preserved zero-weight dependencies, parameter-ID-preserving subsets, matched and
+mismatched pass gates, native boundary/parameter finite differences, and a
+nonlinear readout branch attached to the real CSI Composition. PNL comparisons
+capture each readout execution, not a potentially different trial-end boundary.
+The stateful-graph benchmark also checks the chain rule through the explicitly
+bound continuous LCA against the handwritten drift kernel. Ruff and whitespace
+checks passed. Production fit defaults and C++ numerical kernels are unchanged.
+
+Previous whole-graph milestone validation:
 
 The nine-file graph-value/continuous/PDE/CSI/Gaussian/planning/Wiener/registry/
 analysis regression run passed **225 checks with 14 skips** in interpreter mode.

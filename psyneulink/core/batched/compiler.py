@@ -30,8 +30,14 @@ _SUPPORTED_BACKENDS = set(_BACKEND_DEVICES)
 
 class BatchedCompositionCompiler:
     @staticmethod
-    def derive_symbolic_values(composition, *, outputs=None, ignored_control_nodes=()):
-        """Derive ideal-real value algebra without requiring a simulation device."""
+    def derive_symbolic_values(composition, *, outputs=None, ignored_control_nodes=(), scope="graph"):
+        """Derive ideal-real value algebra without requiring a simulation device.
+
+        ``scope="graph"`` requires a wholly stateless graph. ``"readout"`` cuts
+        a checked region for one output owner, retaining stateful/held producer
+        publications as explicit arguments. Neither scope infers a likelihood,
+        continuous clock, or observed-history rule.
+        """
         from psyneulink.core.batched.symbolic_values import derive_symbolic_values
 
         report, ir, _, kernel = analyze_composition(
@@ -40,7 +46,7 @@ class BatchedCompositionCompiler:
         if ir is None or kernel is None:
             raise BatchedCompileError("Symbolic value derivation requires supported source IR: "
                                       + "; ".join(report.unsupported_reasons), capability_report=report)
-        return derive_symbolic_values(kernel)
+        return derive_symbolic_values(kernel, scope=scope)
 
     @staticmethod
     def compile_likelihood(composition, observations, *, method="auto", process="source",
@@ -214,11 +220,15 @@ class BatchedSimulationPlan:
     kernel_ir: KernelIR = field(repr=False)
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
 
-    def derive_symbolic_values(self):
-        """Derive registered stateless value algebra from this frozen snapshot."""
+    def derive_symbolic_values(self, *, scope="graph"):
+        """Derive a whole value graph or conditional readout from this snapshot.
+
+        Readout scope retains explicit boundary publications; it does not
+        reconstruct their dynamics or declare them observed/deterministic.
+        """
         from psyneulink.core.batched.symbolic_values import derive_symbolic_values
 
-        return derive_symbolic_values(self.kernel_ir)
+        return derive_symbolic_values(self.kernel_ir, scope=scope)
 
     def compile_history_replay(self, observations):
         """Check observed-event replay against this frozen simulation snapshot."""
