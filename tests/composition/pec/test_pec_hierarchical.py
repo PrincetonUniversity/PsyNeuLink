@@ -15,6 +15,7 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     DEFAULT_HESSIAN_STEP_SCALE,
     EStepConfig,
     EStepResult,
+    HierarchicalEMError,
     HierarchicalEMWarning,
     diagonal_hessian,
     fit_laplace_em,
@@ -642,6 +643,19 @@ def _fit_toy_for_results(n_subjects=12, seed=21):
     return em, transform, labels
 
 
+def test_results_keep_participant_identifiers_of_different_types_apart():
+    # Participants are identified by whatever the data used. 1 and "1" are two participants, and
+    # a frame that held them in one numpy array would report both under "1".
+    model = _make_toy(seed=2, n_subjects=2)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    em = fit_laplace_em(runner, model.n_subjects, model.n_params, max_iterations=1)
+    results = HierarchicalPECResults.from_em(
+        em, IdentityTransform(), ("a", "b"), subject_labels=(1, "1"),
+    )
+    assert list(results.subject_posteriors["subject"].unique()) == [1, "1"]
+    assert list(results.subject_parameters.index) == [1, "1"]
+
+
 def test_results_shapes_and_labels():
     em, transform, labels = _fit_toy_for_results()
     res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
@@ -988,6 +1002,24 @@ def _edged_posterior(mode, sd=2.0):
     return neg_log_post
 
 
+def test_estep_refuses_a_participant_with_no_posterior():
+    # An objective that is not finite at the fitted point describes no posterior, so every number
+    # taken from it would be meaningless. Falling back to the prior is for a probe that missed.
+    with pytest.raises(HierarchicalEMError, match="no posterior to summarize"):
+        subject_map_estep(lambda z: -np.inf, np.zeros(2), np.ones(2))
+
+
+def test_a_fit_names_the_participant_whose_objective_is_invalid():
+    # Without the index the message says only that some participant's data are impossible, which
+    # is no help at all in a group of fifty.
+    def log_likelihood(theta, subject_index):
+        return -np.inf if subject_index == 1 else 0.0
+
+    runner = make_inprocess_estep_runner(log_likelihood, IdentityTransform())
+    with pytest.raises(HierarchicalEMError, match="participant 1:"):
+        fit_laplace_em(runner, 3, 2, max_iterations=1)
+
+
 def test_curvature_step_is_halved_when_the_probe_leaves_the_support():
     """A step reaching an impossible value says nothing about the peak; a shorter one does."""
     mode = np.array([0.3])
@@ -1077,3 +1109,45 @@ def test_releasing_a_fit_clears_the_cache_on_the_worker():
         assert list(client.run(_worker_cache_keys).values())[0] == [("fit-b", 0)]
         assert client.submit(_cache_participant, "fit-a", 0, pure=False).result() is True
         assert client.submit(_cache_participant, "fit-b", 0, pure=False).result() is False
+
+
+def _slow_then_cache(fit_id, subject_index, delay):
+    """A participant task that takes its time before caching, as building a model does."""
+    import time
+    time.sleep(delay)
+    cache = distributedestep._worker_subject_cache()
+    cache[(fit_id, subject_index)] = "model"
+    return subject_index
+
+
+def _failing_participant(fit_id, subject_index):
+    """A participant task that fails at once, before caching anything."""
+    raise RuntimeError(f"participant {subject_index} could not be fitted")
+
+
+@pytest.mark.composition
+def test_a_failed_participant_does_not_leave_a_model_behind():
+    """One task failing must not let another finish after the fit has cleaned up.
+
+    `gather` raises as soon as any task fails.  A slower task still running would then cache its
+    model after `release` had already cleared the cache, leaving it on a cluster the caller owns
+    for the rest of that cluster's life.
+    """
+    dd = pytest.importorskip("dask.distributed")
+
+    with dd.LocalCluster(n_workers=2, threads_per_worker=1, processes=True,
+                         dashboard_address=None) as cluster, dd.Client(cluster) as client:
+        futures = [
+            client.submit(_failing_participant, "fit-x", 0, pure=False),
+            client.submit(_slow_then_cache, "fit-x", 1, 2.0, pure=False),
+        ]
+        # What the runner does: wait for every task, and only then read the results.
+        dd.wait(futures, return_when="ALL_COMPLETED")
+        with pytest.raises(RuntimeError, match="could not be fitted"):
+            client.gather(futures)
+
+        distributedestep._release_fit_models("fit-x")
+        client.run(distributedestep._release_fit_models, "fit-x")
+
+        remaining = [keys for keys in client.run(_worker_cache_keys).values() if keys]
+        assert remaining == [], f"a model outlived the fit: {remaining}"
