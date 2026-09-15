@@ -32,6 +32,7 @@ from psyneulink.core.components.functions.nonstateful import fitfunctions as _fi
 from psyneulink.core.compositions.hierarchical.laplaceem import (
     EStepConfig,
     EStepResult,
+    HierarchicalEMError,
     log_gauss_diag,
     subject_map_estep,
 )
@@ -115,7 +116,10 @@ def _dask_subject_estep(
             theta = transform.to_natural(z)
             return -float(pec.log_likelihood(*theta, inputs=inputs)) - log_gauss_diag(z, mu_s, sigma)
 
-        post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)
+        try:
+            post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)
+        except HierarchicalEMError as error:
+            raise HierarchicalEMError(f"participant {subject_index}: {error}") from None
 
         return subject_index, post, _worker_address()
 
@@ -185,6 +189,13 @@ def make_distributed_estep_runner(
                 _dask_subject_estep, pec_factory, s, scattered[s], mu[s], sigma,
                 schema, z0, worker_cores, fit_id, config, **submit_kwargs,
             ))
+
+        # Every task is waited on before any result is read. `gather` would otherwise raise as
+        # soon as one task failed, while another was still building its model; that model would
+        # then be cached after `release` had already cleared the cache, and left on a cluster the
+        # caller owns. Waiting costs the time of the slowest task, which the fit spends anyway.
+        from dask.distributed import wait
+        wait(futures, return_when="ALL_COMPLETED")
 
         z_hat = np.empty((n_subjects, n_params))
         variance = np.empty((n_subjects, n_params))
