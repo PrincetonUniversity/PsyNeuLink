@@ -53,6 +53,14 @@ def _comparable_names(qualified):
     carries a number assigned in construction order.  Since every model here is built separately,
     the same parameter appears as ``DDM-6.rate`` in one and ``DDM-7.rate`` in the next; only the
     parameter itself identifies it across models.
+
+    A model that fits one parameter on two mechanisms leaves two entries with the same name, and
+    if those two also search the same range then `ParameterSchema.check_matches` cannot tell the
+    two orders apart: nothing distinguishes them but the order itself, which is what the check
+    exists to verify.  Factories must therefore build their parameters in a fixed order.
+    Iterating a set to build them does not, since its order can differ between processes, so a
+    distributed fit would assign those two parameters each other's values on some workers and
+    not others.  Write them out, or iterate something ordered.
     """
     return tuple(name.rsplit(".", 1)[-1] for name in qualified)
 
