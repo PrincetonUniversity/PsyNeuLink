@@ -39,6 +39,7 @@ from psyneulink._typing import Mapping, Optional, Union
 __all__ = [
     "EStepConfig",
     "EStepResult",
+    "HierarchicalEMError",
     "HierarchicalEMWarning",
     "LaplaceEMResult",
     "SubjectPosterior",
@@ -225,6 +226,17 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     result = minimize(neg_log_post, z0, method=config.method, options=options)
     z_hat = np.asarray(result.x, dtype=float)
 
+    # Curvature is measured as a difference from the value at the mode, so an objective that is
+    # not finite there describes no posterior at all and every number taken from it would be
+    # meaningless. Falling back to the prior is for a probe that missed, not for this.
+    if not np.isfinite(result.fun):
+        raise HierarchicalEMError(
+            f"the objective is {result.fun} at the fitted point {z_hat.tolist()}, so this "
+            f"participant has no posterior to summarize. This usually means their data are "
+            f"impossible under their model everywhere the fit looked; check that the data and "
+            f"the model the factory builds for them go together."
+        )
+
     step = config.resolve_hessian_step(prior_variance)
     f0 = float(result.fun)
     curvature = diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0)
@@ -271,6 +283,10 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
 
 class HierarchicalEMWarning(UserWarning):
     """Raised when an EM iteration completes but something about it warrants attention."""
+
+
+class HierarchicalEMError(Exception):
+    """Raised when a fit cannot proceed, rather than proceeding on meaningless numbers."""
 
 
 @dataclass
@@ -335,12 +351,15 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
                 theta = transform.to_natural(z)
                 return -float(log_likelihood(theta, s)) - log_gauss_diag(z, mu_s, sigma)
 
-            post = subject_map_estep(
-                neg_log_post,
-                z0=prev_z[s] if warm_start else mu_s,
-                prior_variance=sigma,
-                config=config,
-            )
+            try:
+                post = subject_map_estep(
+                    neg_log_post,
+                    z0=prev_z[s] if warm_start else mu_s,
+                    prior_variance=sigma,
+                    config=config,
+                )
+            except HierarchicalEMError as error:
+                raise HierarchicalEMError(f"participant {s}: {error}") from None
             z_hat[s] = post.z_hat
             variance[s] = post.variance
             curvature[s] = post.curvature
