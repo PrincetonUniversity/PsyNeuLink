@@ -633,14 +633,20 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     decl_f = ir.Function(module, function.type.pointee, function.name)
     assert decl_f.is_declaration
+
     orig_args = function.type.pointee.args
+    function_returns_value = function.return_value.type != ir.VoidType()
 
     # remove indices if this is grid_evaluate_ranged
     is_grid_ranged = len(orig_args) == 8 and isinstance(orig_args[2], ir.IntType)
     if is_grid_ranged:
         orig_args = orig_args[:2] + orig_args[4:]
 
-    wrapper_type = ir.FunctionType(ir.VoidType(), [*orig_args, ir.IntType(32)])
+    args = [*orig_args, ir.IntType(32)]
+    if function_returns_value:
+        args.insert(-1, function.return_value.type.as_pointer())
+
+    wrapper_type = ir.FunctionType(ir.VoidType(), args)
     kernel_func = ir.Function(module, wrapper_type, function.name + "_cuda_kernel")
     # Add kernel mark metadata
     module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
@@ -663,8 +669,8 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), ntid)
     global_id = builder.add(global_id, tid)
 
-    # Index all pointer arguments. Ignore the thread count argument
-    args = list(kernel_func.args)[:-1]
+    # Index all pointer arguments. Ignore the thread count and the return value argument.
+    args = list(kernel_func.args)[:-2 if function_returns_value else -1]
     indexed_args = []
 
     # pointer args do not alias
@@ -738,7 +744,10 @@ def _gen_cuda_kernel_wrapper_module(function):
     if is_grid_ranged:
         next_id = builder.add(global_id, global_id.type(1))
         call_args = args[:2] + [global_id, next_id] + args[2:]
-        builder.call(decl_f, call_args)
+        ret = builder.call(decl_f, call_args)
+        if function_returns_value:
+            builder.store(ret, kernel_func.args[-2])
+
         builder.ret_void()
         return module
 
@@ -767,7 +776,10 @@ def _gen_cuda_kernel_wrapper_module(function):
 
         indexed_args.append(arg)
 
-    builder.call(decl_f, indexed_args)
+    ret = builder.call(decl_f, indexed_args)
+    if function_returns_value:
+        builder.store(ret, kernel_func.args[-2])
+
     builder.ret_void()
 
     return module
@@ -888,6 +900,10 @@ def _convert_llvm_ir_to_dtype(t: ir.Type):
             field_list.append(("field_" + str(i), _convert_llvm_ir_to_dtype(e)))
 
         ret_t = np.dtype(field_list, align=not t.packed)
+
+    elif isinstance(t, ir.VoidType):
+        ret_t = None
+
     else:
         assert False, "Don't know how to convert LLVM type to dtype: {}".format(t)
 
