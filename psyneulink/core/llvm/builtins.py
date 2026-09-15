@@ -391,10 +391,9 @@ def setup_is_close(ctx):
     # Make sure we always have fp64 variant
     for float_ty in {ctx.float_ty, ir.DoubleType()}:
         name = "is_close_{}".format(float_ty)
-        builder = _setup_builtin_func_builder(ctx, name, [float_ty,
-                                                          float_ty,
-                                                          float_ty,
-                                                          float_ty],
+        builder = _setup_builtin_func_builder(ctx,
+                                              name,
+                                              [float_ty, float_ty, float_ty, float_ty],
                                               return_type=ctx.bool_ty)
         val1, val2, rtol, atol = builder.function.args
 
@@ -412,8 +411,7 @@ def setup_is_close(ctx):
 
 
 def setup_csch(ctx):
-    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (2e**x)/(e**2x - 1)
@@ -430,8 +428,7 @@ def setup_csch(ctx):
 
 
 def setup_tanh(ctx):
-    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (e**2x - 1)/(e**2x + 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
@@ -445,8 +442,7 @@ def setup_tanh(ctx):
 
 
 def setup_coth(ctx):
-    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (e**2x + 1)/(e**2x - 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
