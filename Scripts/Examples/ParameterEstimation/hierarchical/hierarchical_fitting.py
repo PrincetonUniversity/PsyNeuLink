@@ -86,7 +86,7 @@ def participant_pec(data, subject_index=None):
     which would be absorbed into the group variance rather than averaging out.
     """
     comp, decision = build_model()
-    pec = pnl.ParameterEstimationComposition(
+    participant = pnl.ParameterEstimationComposition(
         name="participant",
         nodes=[comp],
         parameters={
@@ -104,8 +104,8 @@ def participant_pec(data, subject_index=None):
         initial_seed=100 + (subject_index or 0),
         same_seed_for_all_parameter_combinations=True,
     )
-    pec.controller.parameters.comp_execution_mode.set("LLVM")
-    return pec, {comp: trial_inputs(len(data))}
+    participant.controller.parameters.comp_execution_mode.set("LLVM")
+    return participant, {comp: trial_inputs(len(data))}
 
 
 def report(results):
@@ -152,9 +152,10 @@ def main():
     if args.n_workers is not None:
         distributed_options["n_workers"] = args.n_workers
 
-    # The model given here declares which parameters are fitted and which outputs are compared
-    # What is fitted, and over what range, is declared once, by the factory below.
-    pec = pnl.ParameterEstimationComposition(
+    # The group fit runs EM. It is given no model of its own: what is fitted, and over what
+    # range, is declared once by `participant_pec` above, which it calls to build one model per
+    # participant and score that participant's trials through its `log_likelihood`.
+    group_fit = pnl.ParameterEstimationComposition(
         name="group",
         data=data,
         fit_method="hierarchical",
@@ -169,7 +170,7 @@ def main():
     )
 
     started = time.time()
-    results = pec.run()
+    results = group_fit.run()
     print(f"fitted in {time.time() - started:.1f}s")
 
     report(results)
