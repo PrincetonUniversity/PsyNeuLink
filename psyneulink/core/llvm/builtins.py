@@ -841,19 +841,20 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     The range is -Inf to Inf.
     [0] https://en.wikipedia.org/wiki/Marsaglia_polar_method
     """
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", [state_ty.as_pointer()], return_type=ctx.float_ty)
+    state, = builder.function.args
 
     last_g_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     last_g_avail_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     last_g_avail = builder.load(last_g_avail_ptr)
 
+    # There's a precomputed value. use it.
     cond = builder.icmp_signed("==", last_g_avail, last_g_avail.type(1))
     with builder.if_then(cond, likely=False):
-        builder.store(builder.load(last_g_ptr), out)
+        val = builder.load(last_g_ptr)
         builder.store(last_g_ptr.type.pointee(0), last_g_ptr)
         builder.store(last_g_avail_ptr.type.pointee(0), last_g_avail_ptr)
-        builder.ret_void()
+        builder.ret(val)
 
     loop_block = builder.append_basic_block("gen_loop_gauss")
     out_block = builder.append_basic_block("gen_gauss_out")
@@ -889,13 +890,12 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     f = builder.call(sqrt_f, [f])
 
     val = builder.fmul(f, x2)
-    builder.store(val, out)
 
     next_val = builder.fmul(f, x1)
     builder.store(next_val, last_g_ptr)
     builder.store(last_g_avail_ptr.type.pointee(1), last_g_avail_ptr)
 
-    builder.ret_void()
+    builder.ret(val)
 
 
 def get_mersenne_twister_state_struct(ctx):
@@ -2007,8 +2007,8 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
         # We don't have numeric helpers available for the desired type
         return
 
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal", (state_ty.as_pointer(), fptype.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal", [state_ty.as_pointer()], return_type=fptype)
+    state, = builder.function.args
 
     loop_block = builder.append_basic_block("gen_loop_ziggurat")
 
@@ -2042,8 +2042,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     ki = _load_ki(builder, idx, itype, ki_data)
     is_lt_ki = builder.icmp_unsigned("<", rabs, ki)
     with builder.if_then(is_lt_ki, likely=True):
-        builder.store(x, out)
-        builder.ret_void()
+        builder.ret(x)
 
     is_idx0 = builder.icmp_unsigned("==", idx.type(0), idx)
     with builder.if_then(is_idx0):
@@ -2075,8 +2074,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
             sign_cond = builder.lshr(rabs, rabs.type(8))
             sign_cond = builder.trunc(sign_cond, ctx.bool_ty)
             val = builder.select(sign_cond, neg_val, val)
-            builder.store(val, out)
-            builder.ret_void()
+            builder.ret(val)
 
         builder.branch(inner_loop_block)
 
@@ -2099,8 +2097,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
 
     should_ret = builder.fcmp_ordered("<", lhs, exp_x_sqnh)
     with builder.if_then(should_ret):
-        builder.store(x, out)
-        builder.ret_void()
+        builder.ret(x)
 
     builder.branch(loop_block)
 
