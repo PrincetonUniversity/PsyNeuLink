@@ -21,8 +21,10 @@ parameter with the others held at the mode, not with them integrated out.  Where
 off against each other the first is the smaller, so intervals err narrow.
 
 Curvature comes from central finite differences, which requires the objective to be deterministic in
-`theta`.  Participant models must therefore be built with common random numbers; without them the
-differences measure simulation noise rather than curvature.
+`theta`: without that the differences measure simulation noise rather than curvature.  A simulated
+model is made deterministic by `same_seed_for_all_parameter_combinations`, which
+`check_scoring_is_deterministic <subjectlikelihood>` requires of every participant model before a
+fit begins.
 
 The likelihood is reached only through the E-step runner passed to `fit_laplace_em`, so the driver is
 independent of how participants are fitted or where.
