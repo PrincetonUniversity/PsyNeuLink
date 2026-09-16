@@ -51,7 +51,6 @@ jobs:
         arch: ['x64', 'arm64']
         version-restrict: ['']
         torch: ['']
-        extras: ['dask']
         include:
           # code-coverage run on macos python 3.12
           - python-version: '3.12'
@@ -170,12 +169,7 @@ jobs:
       uses: ./.github/actions/install-pnl
       id: install
       with:
-        features: 'dev'
-
-    - name: Install optional dependencies
-      if: matrix.extras
-      shell: bash
-      run: pip install "${{ steps.install.outputs.wheel }}[${{ matrix.extras }}]" -c broken_trans_deps.txt
+        features: 'dev,dask'
 
     - name: Save wheels cache
       uses: actions/cache/save@v6
@@ -239,7 +233,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v7
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}${{ matrix.extras }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
