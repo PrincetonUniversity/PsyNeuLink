@@ -54,14 +54,6 @@ def _comparable_names(qualified):
     carries a number assigned in construction order.  Since every model here is built separately,
     the same parameter appears as ``DDM-6.rate`` in one and ``DDM-7.rate`` in the next; only the
     parameter itself identifies it across models.
-
-    A model that fits one parameter on two mechanisms leaves two entries with the same name, and
-    if those two also search the same range then `ParameterSchema.check_matches` cannot tell the
-    two orders apart: nothing distinguishes them but the order itself, which is what the check
-    exists to verify.  Factories must therefore build their parameters in a fixed order.
-    Iterating a set to build them does not, since its order can differ between processes, so a
-    distributed fit would assign those two parameters each other's values on some workers and
-    not others.  Write them out, or iterate something ordered.
     """
     return tuple(name.rsplit(".", 1)[-1] for name in qualified)
 
@@ -139,7 +131,15 @@ class ParameterSchema:
         )
 
     def check_matches(self, other):
-        """Raise unless `other` fits the same parameters, in the same order, over the same ranges."""
+        """Raise unless `other` fits the same parameters, in the same order, over the same ranges.
+
+        One case is beyond reach: a model fitting the same parameter on two mechanisms leaves two
+        entries with the same comparable name, and if those two also search the same range then
+        nothing here separates the two orders, because nothing distinguishes them but the order
+        itself.  Factories must therefore build their parameters in a fixed order.  Iterating a
+        set does not, since its order can differ between processes, so a distributed fit would
+        assign those two parameters each other's values on some workers and not others.
+        """
         if other.names != self.names:
             raise ValueError(
                 f"{other.source} fits {list(other.names)}, but {self.source} fits "
