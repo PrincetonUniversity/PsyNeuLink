@@ -250,8 +250,9 @@ CPU fresh-score agreement, and GPU rescoring with two independent seeds. That
 workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
 2080 Ti. On Della, the setup script also successfully created a scratch
 environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
-full-fit job submissions were accepted. Acceptance alone does not validate
-completion or runtime; inspect the job results before starting an array.
+full-fit job submissions were accepted. The Della CPU timing below includes a
+completed full fit; Della GPU completion and timing have not yet been validated.
+Inspect the job results before starting an array.
 
 A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
 first-use native compilation and the independent fresh-score check, on an
@@ -274,6 +275,22 @@ Its fitting schedule also used eight starts, previous fits as initial points,
 and more polishing; matching its bounds alone does not reproduce that schedule.
 To refit an existing CPU result within the expanded bounds, keep it as one
 starting point using `--initial-parameters /path/to/fit.json`.
+
+With the expanded bounds and corrected threading, Della CPU job `13971325_1`
+completed subject 1 in **3 minutes 25 seconds**, including startup, fitting,
+and independent rescoring, on `della-h17n6`. It used eight allocated CPUs,
+four starts (one initialized from the earlier narrow-bound fit), 32 screened
+candidates, up to 200 iterations/start, and default polishing. The run recorded
+865 evaluations and approximately 2.54 GiB peak resident memory. Its manifest
+confirmed eight Torch threads, and a process sample confirmed CPU work on all
+eight solver threads. All four starts reported optimizer success. The final
+log likelihood was -3063.504140, with exact fresh-score agreement and no invalid
+or zero-probability included rows. The earlier upper-bound hits were resolved;
+the NoInstruction collapse rate still reached its lower bound of -0.3, and the
+stricter stationarity checks remained false. This supports the 30-minute CPU
+request for this configuration, but does not establish convergence or predict
+all subjects' runtimes. Changed bounds, initial points, and node hardware mean
+this is not a controlled speedup comparison with the earlier one-thread run.
 
 For a historical timing reference, the archived GB300 recovery study
 `gpu1ms-comprehensive-recovery-1475` contains 384 completed fits with 100,000
