@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=csi-gpu
-#SBATCH --partition=gpu
 #SBATCH --constraint=gpu40
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
@@ -14,6 +13,8 @@
 #SBATCH --error=csi-gpu-%A_%a.err
 
 set -euo pipefail
+# Della selects the GPU partition from the resource request; its submission
+# policy rejects an explicit --partition=gpu.
 # submit.sh overrides the literal scratch chdir/log defaults above.
 export CSI_REPO_ROOT="${CSI_REPO_ROOT:-/scratch/gpfs/CSES/dmturner/PsyNeuLink}"
 exec bash "$CSI_REPO_ROOT/Scripts/Debug/pec_batch_compile/csi_fit/handoff/run.sh" gpu "$@"

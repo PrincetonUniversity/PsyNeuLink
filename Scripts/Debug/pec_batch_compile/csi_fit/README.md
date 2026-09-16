@@ -209,9 +209,11 @@ sbatch --export=ALL --account=cses --array=1 \
 # For GPU use della_gpu.slurm and distinct gpu-%A_%a log names.
 ```
 
-CPU template: 8 cores, 8 GB RAM, 4 hours. GPU template: one `gpu40` GPU on the
-`gpu` partition, 4 cores, 16 GB host RAM, 24 hours. `--mem` controls host RAM,
-not GPU memory. These are initial requests, not runtime guarantees. Start with
+CPU template: 8 cores, 8 GB RAM, 4 hours. GPU template: one `gpu40` GPU,
+4 cores, 16 GB host RAM, 24 hours. Della selects the GPU partition from the
+resource request; its submission policy rejects an explicit `--partition=gpu`.
+`--mem` controls host RAM, not GPU memory. These are initial requests, not
+runtime guarantees. Start with
 one participant, inspect `jobstats JOBID` and `sacct -j JOBID`, then tune memory,
 time, and array concurrency. Each GPU process batches candidates on **one**
 GPU; allocating more GPUs does not accelerate that process. Arrays distribute
@@ -221,18 +223,18 @@ memory; changing `--batch-size` also changes the CMA-ES population.
 Princeton's [Della documentation](https://researchcomputing.princeton.edu/systems/della)
 describes the CPU/GPU login hosts, `gpu40` constraint, and automatically selected
 QOS. It also explains scratch storage and differences between node CPUs.
-These templates follow that published guidance. Live SSH inspection was blocked
-by authentication during preparation; no Della jobs were submitted or validated.
-Check `sinfo`, `qos`, and your account permissions on the cluster before the
-first submission. These scripts target ordinary x86-64 Della nodes, not the
-ARM Grace Hopper or restricted H100/H200 partitions.
+The templates also incorporate live submission checks on Della: leave the GPU
+partition and QOS unspecified. Check `sinfo`, `qos`, and your account permissions
+on the cluster before the first submission. These scripts target ordinary
+x86-64 Della nodes, not the ARM Grace Hopper or restricted H100/H200 partitions.
 
 Preparation checks passed locally on subject 1: CPU and GPU smoke fits, exact
 CPU fresh-score agreement, and GPU rescoring with two independent seeds. That
 workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
-2080 Ti. The Python 3.12 CPU and CUDA 12.8 dependency sets also resolved; those
-fresh environments and full production fits were not executed during these
-checks. Run the cluster smoke tasks before starting an array.
+2080 Ti. On Della, the setup script also successfully created a scratch
+environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
+full-fit job submissions were accepted. Acceptance alone does not validate
+completion or runtime; inspect the job results before starting an array.
 
 ## Outputs and follow-up checks
 
