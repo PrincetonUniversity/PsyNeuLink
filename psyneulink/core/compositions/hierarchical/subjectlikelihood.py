@@ -35,6 +35,7 @@ from psyneulink.core.compositions.hierarchical.transforms import BoundedTransfor
 
 __all__ = [
     "PECFactorySubjectLikelihood",
+    "check_scoring_is_deterministic",
     "ParameterSchema",
     "SubjectLikelihoodProvider",
     "SubjectSplit",
@@ -74,6 +75,37 @@ def _reported_names(qualified):
     """
     stripped = _comparable_names(qualified)
     return stripped if len(set(stripped)) == len(stripped) else tuple(qualified)
+
+
+def check_scoring_is_deterministic(pec, source):
+    """Raise unless a participant's model scores the same parameters the same way twice.
+
+    Curvature is measured by finite differences, which subtract one score from another and
+    divide by a small number.  A model that simulates fresh noise on every call returns a
+    different score for the same parameters, and the difference then measures that noise rather
+    than the shape of the fit -- amplified, because the divisor is small.  On a drift-diffusion
+    model scored from 60 simulations, repeated calls at one parameter setting vary by tens of
+    log-likelihood units, against curvature of order one.
+
+    What makes a simulated model deterministic is `same_seed_for_all_parameter_combinations`:
+    every evaluation then draws the same noise, so scores differ only where the parameters do.
+    It is checked here rather than assumed because nothing about the result would reveal that it
+    was missing: the fit runs, converges, and reports intervals that are noise.
+    """
+    controller = getattr(pec, "controller", None)
+    parameters = getattr(controller, "parameters", None)
+    setting = getattr(parameters, "same_seed_for_all_allocations", None)
+    if setting is None:
+        # Not a model this check understands; the fit will say so where it needs to.
+        return
+    if not setting.get():
+        raise ValueError(
+            f"{source} was built without same_seed_for_all_parameter_combinations, so scoring "
+            f"the same parameters twice gives different answers and the finite differences this "
+            f"fit takes would measure simulation noise rather than curvature. Pass "
+            f"same_seed_for_all_parameter_combinations=True to the participant models the "
+            f"factory builds."
+        )
 
 
 @dataclass(frozen=True)
@@ -303,9 +335,9 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
             return self._cache[subject_index]
 
         pec, inputs = self._factory(self._data_slices[subject_index], subject_index)
-        schema = ParameterSchema.from_pec(
-            pec, source=f"the model built for participant {subject_index}"
-        )
+        source = f"the model built for participant {subject_index}"
+        check_scoring_is_deterministic(pec, source)
+        schema = ParameterSchema.from_pec(pec, source=source)
         if self._schema is None:
             self._schema = schema
         else:
