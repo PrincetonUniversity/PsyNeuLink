@@ -2111,25 +2111,21 @@ def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
         return
 
     args = [state_ty.as_pointer(), # state
-            ctx.int32_ty.as_pointer(), # N - total number of draws
-            fptype.as_pointer(),  # p - prob of success
-            ctx.int32_ty.as_pointer()] # output
+            ctx.int32_ty,          # N - total number of draws
+            fptype]                # p - prob of success
 
-    builder = _setup_builtin_func_builder(ctx, prefix + "_rand_binomial", args)
-    state, n_ptr, p_ptr, out_ptr = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, prefix + "_rand_binomial", args, return_type=ctx.int32_ty)
+    state, n, p = builder.function.args
 
-    n = builder.load(n_ptr)
-    p = builder.load(p_ptr)
     q = builder.fsub(p.type(1), p)
 
-    success = out_ptr.type.pointee(1)
-    failure = out_ptr.type.pointee(0)
+    success = ctx.int32_ty(1)
+    failure = ctx.int32_ty(0)
 
     # N > 1 (!=1) is not supported
     is_large_n = builder.icmp_unsigned("!=", n, n.type(1))
     with builder.if_then(is_large_n):
-        builder.store(out_ptr.type.pointee(0), out_ptr)
-        builder.ret_void()
+        builder.ret(ctx.int32_ty(-1))
 
     draw = builder.call(gen_float, [state])
 
@@ -2137,15 +2133,14 @@ def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
     is_less_than_p = builder.fcmp_ordered("<", draw, p)
     large_p_result = builder.select(is_less_than_p, success, failure)
 
-
     # The draw check is reverted for small p
     is_less_than_q = builder.fcmp_ordered("<", draw, q)
     small_p_result = builder.select(is_less_than_q, failure, success)
 
     is_small_p = builder.fcmp_ordered("<=", p, p.type(0.5))
     result = builder.select(is_small_p, small_p_result, large_p_result)
-    builder.store(result, out_ptr)
-    builder.ret_void()
+
+    builder.ret(result)
 
 def get_philox_state_struct(ctx):
     int64_ty = ir.IntType(64)

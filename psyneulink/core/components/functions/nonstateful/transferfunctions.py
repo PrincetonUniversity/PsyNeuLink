@@ -2897,23 +2897,15 @@ class BinomialDistort(
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        p_ptr = ctx.get_param_or_state_ptr(builder, self, 'p', param_struct_ptr=params)
+        p_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.p, param_struct_ptr=params)
         p = builder.load(p_ptr)
         mod_p = builder.fsub(p.type(1), p)
-        p_mod_ptr = builder.alloca(mod_p.type)
-        builder.store(mod_p, p_mod_ptr)
-
-        n_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(n_ptr.type.pointee(1), n_ptr)
 
         rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
         binomial_f = ctx.get_binomial_dist_function_by_state(rand_state_ptr)
 
-        rvalp = builder.alloca(binomial_f.args[-1].type.pointee, name="random_out")
-        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_mod_ptr, rvalp])
-
         val = builder.load(ptri)
-        rval = builder.load(rvalp)
+        rval = builder.call(binomial_f, [rand_state_ptr, binomial_f.args[1].type(1), mod_p])
         rval = builder.uitofp(rval, val.type)
         val = builder.fmul(val, rval)
 
