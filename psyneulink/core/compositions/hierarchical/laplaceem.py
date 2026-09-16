@@ -15,10 +15,8 @@ The E-step maximizes ``log_likelihood(theta(z)) + log N(z | mu, diag(sigma))`` o
 covariance.  The M-step updates `beta` by least squares on the modes and `sigma` from the posterior
 second moments.
 
-Only the diagonal of the curvature is computed, matching the diagonal group covariance, so a
-participant's reported variance is ``1 / H_kk`` rather than ``(H^-1)_kk``: the variance of one
-parameter with the others held at the mode, not with them integrated out.  Where parameters trade
-off against each other the first is the smaller, so intervals err narrow.
+How much of the curvature is measured is `EStepConfig.curvature`; the group covariance is
+diagonal either way.
 
 Curvature comes from central finite differences, which requires the objective to be deterministic in
 `theta`: without that the differences measure simulation noise rather than curvature.  A simulated
@@ -249,8 +247,7 @@ class SubjectPosterior:
     def variance(self):
         """Per-parameter posterior variance: the diagonal of `covariance`.
 
-        With a full curvature this is the variance of one parameter with the others integrated
-        out; with a diagonal one it is the variance with the others held at the mode.
+        What that diagonal means depends on `EStepConfig.curvature`.
         """
         return np.diag(self.covariance).copy()
 
@@ -423,8 +420,7 @@ class EStepResult:
     def variance(self):
         """Per-participant, per-parameter posterior variance: the diagonals of `covariance`.
 
-        What the group update uses, since the group covariance is diagonal: the variance of one
-        parameter across participants, whatever the curvature measured about the others.
+        What the group update uses, since the group covariance is diagonal.
         """
         return np.diagonal(self.covariance, axis1=1, axis2=2).copy()
 
