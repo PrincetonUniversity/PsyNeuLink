@@ -52,12 +52,6 @@ jobs:
         version-restrict: ['']
         torch: ['']
         include:
-          # fp32 run on linux python 3.12
-          - python-version: '3.12'
-            os: ubuntu
-            arch: 'default'
-            extra-args: '--fp-precision=fp32'
-
           # code-coverage run on macos python 3.12
           - python-version: '3.12'
             os: macos
@@ -69,6 +63,18 @@ jobs:
             os: windows
             arch: 'default'
             torch: 'notorch'
+
+          # fp32 run on linux arm64 python 3.12
+          - python-version: '3.12'
+            os: ubuntu
+            arch: 'arm64'
+            extra-args: '--fp-precision=fp32'
+
+          # fp32 run on windows x64 python 3.11
+          - python-version: '3.11'
+            os: ubuntu
+            arch: 'x64'
+            extra-args: '--fp-precision=fp32'
 
           # --forked run of python only tests
           # Python tests are enough to test potential naming issues
