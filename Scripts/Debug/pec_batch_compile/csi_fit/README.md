@@ -1,0 +1,331 @@
+# CSI fitting handoff
+
+Use the `feat/likelihood_compile` branch. The scripts in [handoff/](handoff/)
+run one participant per process or Slurm array task, with no existing fit or
+warm-start files required. They use the Study 3 real-sequence model with fixed
+LCA leak 12, competition 3, LCA noise 0, and DDM noise 0.1.
+
+| Runner | Implementation | Default fitting configuration |
+| --- | --- | --- |
+| `cpu` | Continuous direct likelihood; native C++/OpenMP LCA and DDM PDE kernels; exact-gradient L-BFGS-B | Float64; 1 ms DDM mesh, 65 spatial points, RK4 LCA step at most 10 ms; 4 starts, 32 screened random candidates, 200 iterations/start plus polishing |
+| `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 10,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
+
+Both fit 13 parameters: three gains, one switch CSI, three thresholds, three
+collapse rates, and three nondecision times. Default physical bounds agree:
+gain 5–35, CSI 0–0.3 s, threshold 0.05–0.25, collapse rate −0.3–0 per second,
+and nondecision time 0.1–0.4 s. Repeat CSI is zero. These are starting fitting
+configurations, not a guarantee of convergence or an equivalence between the
+two objectives. See the caveats below before interpreting results.
+
+## Checkout, storage, and data
+
+On Della, place the checkout and all large files on scratch. David's checkout is
+`/scratch/gpfs/CSES/dmturner/PsyNeuLink`; substitute your own writable allocation.
+The same scratch checkout can be accessed from `della` and `della-gpu`.
+
+```bash
+export CSI_REPO_ROOT=/scratch/gpfs/CSES/dmturner/PsyNeuLink
+export CSI_WORK_ROOT=/scratch/gpfs/CSES/dmturner/csi-handoff
+
+# For a new checkout (choose your own paths above first):
+git clone --branch feat/likelihood_compile --single-branch \
+  https://github.com/PrincetonUniversity/PsyNeuLink.git "$CSI_REPO_ROOT"
+
+export CSI_DATA_FILE="$CSI_REPO_ROOT/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/data_to_fit_study3.csv"
+source "$CSI_REPO_ROOT/Scripts/Debug/pec_batch_compile/csi_fit/handoff/environment.sh"
+```
+
+For an existing checkout, select `feat/likelihood_compile` there instead of
+cloning over it. **Obtain the behavioral CSV separately from the data owner;
+it is intentionally not in git.** Its default location, if `CSI_DATA_FILE` is
+unset, is `csi_fit/data fitting/data_to_fit_study3.csv` in the checkout.
+
+Set these exports in each new login session, or keep them in your own small
+configuration file and source it. Set them **before** sourcing `environment.sh`.
+All paths must be absolute. The repository defaults to the checkout containing
+the handoff scripts; the raw `.slurm` files default to David's path because
+Slurm executes a spooled copy of the job script.
+
+| Variable | Default / purpose |
+| --- | --- |
+| `CSI_REPO_ROOT` | Checkout containing the scripts; override for another checkout |
+| `CSI_WORK_ROOT` | `/scratch/gpfs/CSES/$USER/csi-handoff`; Python downloads, environments, caches, temporary files |
+| `CSI_VENV` | `$CSI_WORK_ROOT/venv` |
+| `CSI_RESULTS_ROOT` | `$CSI_WORK_ROOT/results`; runs and Slurm logs |
+| `CSI_DATA_FILE` | Behavioral CSV, as described above |
+| `CSI_PYTHON` | `$CSI_VENV/bin/python`; override to use an existing compatible environment |
+| `CSI_CPUS` | Local OpenMP threads, default 4; Slurm uses `SLURM_CPUS_PER_TASK` |
+
+The environment file redirects uv/Python downloads, pip, Torch extensions,
+TorchInductor, Triton, CUDA, Matplotlib, and temporary storage to scratch, even
+if the login environment has cache variables pointing at home. It refuses
+storage/output paths under home, including symlinks into home. Setup puts the
+virtual environment on scratch. Scratch is working storage: archive results,
+data provenance, and environment records in your group's durable storage.
+
+## Python and dependencies with uv
+
+Use Linux x86-64 for this handoff. A CUDA environment supports both runners;
+alternatively install a smaller CPU-only environment. Use a recent `uv`
+supporting `uv pip install --torch-backend`. If `uv` is already installed, reuse
+it. Otherwise, after sourcing `environment.sh` above:
+
+```bash
+mkdir -p "$CSI_WORK_ROOT/bin" "$TMPDIR"
+curl -LsSf https://astral.sh/uv/install.sh -o "$TMPDIR/install-uv.sh"
+UV_INSTALL_DIR="$CSI_WORK_ROOT/bin" UV_NO_MODIFY_PATH=1 sh "$TMPDIR/install-uv.sh"
+export PATH="$CSI_WORK_ROOT/bin:$PATH"
+uv --version
+```
+
+`setup.sh` installs Python 3.12 with uv, creates the environment, installs the
+editable checkout and Ninja, checks dependencies, and saves
+`$CSI_VENV/requirements-resolved.txt`. Override `CSI_PYTHON_VERSION` if needed.
+No conda activation or system Python changes are needed. Python installations
+stay under `UV_PYTHON_INSTALL_DIR=$CSI_WORK_ROOT/python`; keep that directory
+because the virtual environment refers to it. See uv's
+[Python guide](https://docs.astral.sh/uv/guides/install-python/) and
+[storage settings](https://docs.astral.sh/uv/reference/storage/).
+
+```bash
+# On della-gpu, for one environment that can run BOTH CPU and GPU fits:
+bash "$CSI_HANDOFF_DIR/setup.sh" gpu
+
+# ALTERNATIVE: on della, for a CPU-only environment:
+# bash "$CSI_HANDOFF_DIR/setup.sh" cpu
+```
+
+A C++ compiler with OpenMP support must be on `PATH` at setup **and job time**.
+The RHEL system GCC may suffice; otherwise inspect `module avail gcc` and load
+an available GCC module before setup and submission. Set `CXX` to its executable
+if necessary. Native kernels compile on first use and are cached on scratch;
+Ninja is installed by setup. Build parallelism is limited to two processes
+(`CSI_BUILD_JOBS` overrides it). Avoid compiler flags such as `-march=native`
+that can make a login-node build incompatible with a compute node.
+
+GPU setup explicitly requests CUDA 12.8 Torch wheels (`CSI_TORCH_BACKEND=cu128`),
+so setup does not require a visible GPU. Check compatibility with the allocated
+node's NVIDIA driver. If necessary, select a different supported CUDA wheel
+backend in a **new** environment, e.g. export `CSI_TORCH_BACKEND=cu126` before
+setup. Torch and the checkout's `triton` extra must resolve together. Installing
+a CUDA module alone does not convert CPU-only Torch into a GPU build. See
+[uv's PyTorch guidance](https://docs.astral.sh/uv/guides/integration/pytorch/).
+
+Setup refuses to overwrite an existing environment. To use your existing
+scratch `.venv`, set `CSI_PYTHON="$CSI_REPO_ROOT/.venv/bin/python"` and skip setup
+after checking it contains the checkout dependencies, Triton (for GPU), and
+Ninja. Batch jobs only use that interpreter; they never install packages or run
+`uv sync`. The root `uv.lock` is not required. This is a resolved installation,
+not a pinned dependency lock; retain the package snapshot and `run.json`, and
+do not update the checkout or environment while jobs are using it.
+
+## Validate and run locally or in an allocation
+
+All wrapper subject arguments are **actual `subject_nr` values**, including
+Slurm array IDs. The runner translates these into the GPU driver's internal
+one-based, first-seen CSV subject index. Never assume those two numbers agree
+for a reordered or subset CSV.
+
+```bash
+# Read-only preflight: validate data, subject mapping, and show exact commands.
+bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 --dry-run
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 --dry-run
+bash "$CSI_HANDOFF_DIR/run.sh" --help
+
+# In a suitable compute allocation (or on a local workstation):
+bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 --smoke
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 --smoke
+
+# Full fits, each in a new output directory:
+bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 --seed 17 --starts 8
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 --seed 17 --simulation-seed 31
+```
+
+Dry-run does not import Torch, compile kernels, allocate a GPU, create output,
+or fit. It needs the configured interpreter and CSV. Smoke mode keeps the data
+and model resolution but uses one CPU start and iteration without polishing, or
+64 GPU estimates and 22 candidate evaluations. First-run compilation still
+takes time. Smoke results are **not usable scientific fits**. Run real fits and
+GPU smoke tests on allocated compute nodes, not login nodes.
+
+CSV columns required by both paths:
+`subject_nr, sequence, T1, T2, S1, S2, S3, S4, correct_response, decision,
+response_time, likelihood_include_mask`. Use integer subject IDs, finite inputs,
+choices 0/1, correct response −1/+1, and RTs in **seconds**, including masked
+rows. Encode the entire mask column consistently as `0/1` or `True/False` with
+no blanks. This wrapper requires included observations in all three conditions
+(`NoInstruction`, `RealRare`, `RealFrequent`). It preserves CSV row order and
+retains masked rows in the state history; do not drop them or sort by RT.
+Other sequence conditions are filtered out by both drivers. Optional GPU
+predictive output also requires `task_transition` and `congruence` columns.
+
+## Submit on Della
+
+Log into `della.princeton.edu` for CPU work and `della-gpu.princeton.edu` for GPU
+work. Export your configuration and source `environment.sh` on that host.
+The helper creates scratch log directories **before** calling `sbatch`, sets
+the job working directory to scratch, and exports the configuration to the job.
+It works from any current directory. Options before `--` go to Slurm; options
+after `--` go to the fitting runner.
+
+```bash
+# Inspect only: this does NOT submit a job.
+bash "$CSI_HANDOFF_DIR/submit.sh" cpu --dry-run --account=cses --array=1 -- --smoke
+bash "$CSI_HANDOFF_DIR/submit.sh" gpu --dry-run --account=cses --array=1 -- --smoke
+
+# Submit one smoke task first, then inspect its logs and outputs:
+bash "$CSI_HANDOFF_DIR/submit.sh" cpu --account=cses --array=1 -- --smoke
+bash "$CSI_HANDOFF_DIR/submit.sh" gpu --account=cses --array=1 -- --smoke
+
+# Full arrays: ONLY use 1-97 if these are the actual IDs in your CSV.
+bash "$CSI_HANDOFF_DIR/submit.sh" cpu --account=cses --array=1-97%8
+bash "$CSI_HANDOFF_DIR/submit.sh" gpu --account=cses --array=1-97%2
+
+# Sparse subject IDs and a different fit budget:
+bash "$CSI_HANDOFF_DIR/submit.sh" gpu --account=cses --array=4,12,27%2 \
+  --time=12:00:00 -- --estimates 20000 --iterations 10000 --seed 43
+```
+
+Replace `cses` with an account authorized for you, or omit `--account` to use
+your site's default. Account and QOS are deliberately not hard-coded in the
+templates. Do not pass a fixed `--subject` or fixed `--output` to an array:
+every task would select that subject or compete for that directory. Use
+`--array` for IDs and `CSI_RESULTS_ROOT` for a shared results parent.
+
+You can also submit the `.slurm` files directly. Slurm does not expand shell
+variables in `#SBATCH` lines, and it opens logs before running the script.
+The raw templates default their working directory and logs to David's scratch
+checkout, so even a submission from home writes logs to scratch. For another
+checkout, override `--chdir` and the log paths as below (`submit.sh` does this
+automatically):
+
+```bash
+mkdir -p "$CSI_RESULTS_ROOT/logs" "$CSI_WORK_ROOT"
+sbatch --export=ALL --account=cses --array=1 \
+  --chdir="$CSI_WORK_ROOT" \
+  --output="$CSI_RESULTS_ROOT/logs/cpu-%A_%a.out" \
+  --error="$CSI_RESULTS_ROOT/logs/cpu-%A_%a.err" \
+  "$CSI_HANDOFF_DIR/della_cpu.slurm"
+# For GPU use della_gpu.slurm and distinct gpu-%A_%a log names.
+```
+
+CPU template: 8 cores, 8 GB RAM, 4 hours. GPU template: one `gpu40` GPU on the
+`gpu` partition, 4 cores, 16 GB host RAM, 24 hours. `--mem` controls host RAM,
+not GPU memory. These are initial requests, not runtime guarantees. Start with
+one participant, inspect `jobstats JOBID` and `sacct -j JOBID`, then tune memory,
+time, and array concurrency. Each GPU process batches candidates on **one**
+GPU; allocating more GPUs does not accelerate that process. Arrays distribute
+participants. Lower `--buffer-mib` to microbatch with less likelihood buffer
+memory; changing `--batch-size` also changes the CMA-ES population.
+
+Princeton's [Della documentation](https://researchcomputing.princeton.edu/systems/della)
+describes the CPU/GPU login hosts, `gpu40` constraint, and automatically selected
+QOS. It also explains scratch storage and differences between node CPUs.
+These templates follow that published guidance. Live SSH inspection was blocked
+by authentication during preparation; no Della jobs were submitted or validated.
+Check `sinfo`, `qos`, and your account permissions on the cluster before the
+first submission. These scripts target ordinary x86-64 Della nodes, not the
+ARM Grace Hopper or restricted H100/H200 partitions.
+
+Preparation checks passed locally on subject 1: CPU and GPU smoke fits, exact
+CPU fresh-score agreement, and GPU rescoring with two independent seeds. That
+workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
+2080 Ti. The Python 3.12 CPU and CUDA 12.8 dependency sets also resolved; those
+fresh environments and full production fits were not executed during these
+checks. Run the cluster smoke tasks before starting an array.
+
+## Outputs and follow-up checks
+
+Each invocation creates a distinct directory under `CSI_RESULTS_ROOT`, prints
+its location, and records `run.json`: exact commands, subject mapping, data
+SHA-256, Git revision/status, package versions, host, and job settings.
+`source.diff` records tracked changes relative to HEAD; untracked source files
+are listed in status but are not archived. For reproducibility use a committed
+checkout. `--output /absolute/scratch/path` chooses an exact **new** directory;
+existing directories are rejected to prevent accidental overwrites.
+
+- CPU: `fit.json` and `fresh-score.json`. The runner initially writes
+  `fit.partial.json`, independently scores it in a fresh process on the same
+  mesh, checks finite likelihood, agreement within `1e-8`, and absence of
+  invalid/zero-probability included rows, then renames it to `fit.json`.
+- GPU: `fit.csv`, including parameter and estimator settings. Add
+  `--predictive-simulations 100` for a potentially large free-running predictive
+  CSV. This is a plug-in simulation at the fitted vector, not Bayesian
+  posterior sampling. It is off by default.
+- Slurm stdout/stderr: `CSI_RESULTS_ROOT/logs/csi-{cpu,gpu}-JOB_TASK.{out,err}`.
+  Local runs print to the terminal; redirect or use `tee` if you need a log.
+
+`run.json` status `complete` means the workflow finished its checks; it does
+not certify optimizer convergence. Inspect CPU `success`, `message`,
+`stationary`, `coordinate_stationary`, `run_results`, and bound hits. A killed
+or timed-out process can leave `status=running` and partial files. There is no
+automatic optimizer checkpoint/resume; rerun in a new directory. A completed
+CPU fit can be reused with `--initial-parameters /path/to/fit.json`.
+
+Rescore GPU parameters using larger simulation counts and independent seeds:
+
+```bash
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
+  --rescore /absolute/path/to/fit.csv --estimates 100000 \
+  --rescore-seeds 101 102 103
+
+# CPU mesh-refinement fit, initialized at an existing solution:
+bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 \
+  --initial-parameters /absolute/path/to/fit.json --starts 1 \
+  --ddm-time-step 0.0005 --ddm-spatial-points 129 --lca-max-step 0.005
+```
+
+Use these commands in compute allocations, or pass the runner options after
+`--` to `submit.sh`. GPU rescoring reads parameter columns only: explicitly
+repeat the original `--time-step`, `--bins`, `--smoothing-sigma`, `--pseudocount`,
+and horizon if they differed from the handoff defaults. Keep the same data and
+subject. Compare scores under the same settings across multiple seeds.
+
+## Scientific and operational caveats
+
+- **CPU and GPU are different numerical objectives.** The direct solver models
+  a continuous LCA/diffusion with moving boundaries and integrates choice flux
+  over the default 1 ms RT recording interval. GPU fitting uses discrete Euler
+  simulation, endpoint boundary checks, and a smoothed choice/RT histogram.
+  Do not compare their raw likelihoods, AIC, or BIC as if on a common scale.
+  Use within-objective rescoring, predictions, and recovery checks.
+- Both handoff paths condition persistent LCA state on observed RT history.
+  GPU `generated` history uses the batched compiler, not the handwritten CSI
+  history oracle. This assumes deterministic LCA noise; adding LCA noise needs
+  a different likelihood strategy. Neither wrapper uses the legacy LLVM
+  likelihood as the CPU fitting route.
+- The GPU default is **1 ms**, finer and more expensive than the older 10 ms
+  experiments. `--time-step 0.01` selects that coarser model. The driver rescales
+  ITI, switch CSI, boundary increments, and maximum steps together. CPU CSI is
+  continuous seconds; GPU CSI is scheduler steps, and collapse is per step in
+  GPU CSVs. Never copy parameter numbers between formats without conversions.
+- GPU simulations are capped at 50 s of DDM time, with strict truncation
+  enabled. If any trajectory hits the cap, the run fails; increase `--horizon`
+  and rerun. The cap is a safety limit, not intended censoring. A horizon above
+  the largest observed RT alone does not guarantee all simulated tails finish.
+- Smoothing and pseudocounts stabilize the GPU objective but change it; these
+  handoff defaults intentionally differ from the raw driver's unsmoothed
+  defaults. Finite Monte Carlo scores can hide poorly supported histogram
+  cells. Repeat optimizer seeds and independently rescore, especially near
+  ties; a single optimizer result is insufficient evidence of a best fit.
+- The direct solver remains a research prototype. Multi-start optimization,
+  bound checks, mesh refinement, and parameter recovery remain necessary.
+  Direct fits can hit the legacy gain ceiling 35; CPU bound overrides are
+  exposed, but changing them changes the fitting study and breaks matched
+  bounds with the GPU driver. The older population job scripts used wider
+  bounds and private warm starts; this handoff does not reproduce those runs.
+- Trial ordering and masking affect the persistent state. The existing
+  convention compares the first retained task with the last retained task to
+  determine its switch status; it does not introduce block resets. Confirm
+  this and the assumed 1 ms RT recording resolution match your experiment.
+- Keep package/compiler versions fixed across a campaign. The first native
+  extension or Triton compilation can be slow; warm one task before launching
+  a large array sharing the cache. Avoid mixing incompatible environments in
+  one cache root. Review storage growth and archive successful fits before
+  scratch cleanup.
+
+Implementation background and validation limits are in
+[DIRECT_LIKELIHOOD_NOTES.md](DIRECT_LIKELIHOOD_NOTES.md). The underlying CLIs
+offer additional diagnostics: `csi_direct_likelihood.py --help` (including
+`staged-fit` and `grid-refinement`) and
+`data fitting/expectation_fit_study3.2_real_sequences_single_csi_leak12.py --help`.
