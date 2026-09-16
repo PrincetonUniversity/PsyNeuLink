@@ -188,10 +188,11 @@ def main():
                 "commands": commands, "git_commit": git(repo, "rev-parse", "HEAD"),
                 "git_status": git(repo, "status", "--short"), "host": socket.gethostname(),
                 "python": sys.version, "torch_cuda": torch.version.cuda,
+                "torch_num_threads": torch.get_num_threads(),
                 "gpu": torch.cuda.get_device_name(0) if args.backend == "gpu" else None,
                 "packages": {d.metadata["Name"]: d.version for d in metadata.distributions()},
                 "environment": {k: v for k, v in os.environ.items() if k.startswith(("CSI_", "SLURM_")) or k in
-                                ("OMP_NUM_THREADS", "CXX", "TORCH_EXTENSIONS_DIR", "TRITON_CACHE_DIR")}}
+                                ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "CXX", "TORCH_EXTENSIONS_DIR", "TRITON_CACHE_DIR")}}
     (output / "source.diff").write_text(git(repo, "diff", "HEAD"))
     manifest_path = output / "run.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")

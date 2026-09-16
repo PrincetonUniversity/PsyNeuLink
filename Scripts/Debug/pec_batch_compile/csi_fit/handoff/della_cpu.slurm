@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=8G
-#SBATCH --time=04:00:00
+#SBATCH --time=00:30:00
 #SBATCH --array=1
 #SBATCH --chdir=/scratch/gpfs/CSES/dmturner/PsyNeuLink
 #SBATCH --output=csi-cpu-%A_%a.out

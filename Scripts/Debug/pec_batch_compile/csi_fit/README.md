@@ -56,6 +56,11 @@ Slurm executes a spooled copy of the job script.
 | `CSI_PYTHON` | `$CSI_VENV/bin/python`; override to use an existing compatible environment |
 | `CSI_CPUS` | Local OpenMP threads, default 4; Slurm uses `SLURM_CPUS_PER_TASK` |
 
+The environment sets both `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to that CPU
+count. Keep them aligned: setting `MKL_NUM_THREADS=1` makes PyTorch use one
+thread even when OpenMP requests more. Each run records the effective Torch
+thread count in `run.json`.
+
 The environment file redirects uv/Python downloads, pip, Torch extensions,
 TorchInductor, Triton, CUDA, Matplotlib, and temporary storage to scratch, even
 if the login environment has cache variables pointing at home. It refuses
@@ -209,7 +214,7 @@ sbatch --export=ALL --account=cses --array=1 \
 # For GPU use della_gpu.slurm and distinct gpu-%A_%a log names.
 ```
 
-CPU template: 8 cores, 8 GB RAM, 4 hours. GPU template: one `gpu40` GPU,
+CPU template: 8 cores, 8 GB RAM, 30 minutes. GPU template: one `gpu40` GPU,
 4 cores, 16 GB host RAM, 4 hours. Della selects the GPU partition from the
 resource request; its submission policy rejects an explicit `--partition=gpu`.
 `--mem` controls host RAM, not GPU memory. These are initial requests, not
@@ -235,6 +240,19 @@ workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
 environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
 full-fit job submissions were accepted. Acceptance alone does not validate
 completion or runtime; inspect the job results before starting an array.
+
+A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
+first-use native compilation and the independent fresh-score check, on an
+Intel Core i7-9700K with eight Torch/OpenMP threads. This used the defaults:
+1 ms DDM mesh, four starts, 32 screened candidates, up to 200 iterations/start,
+and polishing, with 561 retained rows and 485 included observations. The run
+recorded 815 evaluations and approximately 1.61 GiB peak resident memory;
+the fresh score reproduced the fitted likelihood exactly. This is a timing
+reference for one participant, not a Della runtime guarantee. The optimizer
+reported success but its stricter stationarity checks were false, so completion
+and reproducible scoring alone do not establish convergence. The 30-minute CPU
+request leaves headroom for this configuration; increase `--time` for larger
+fit budgets or participants that need longer.
 
 For a historical timing reference, the archived GB300 recovery study
 `gpu1ms-comprehensive-recovery-1475` contains 384 completed fits with 100,000
