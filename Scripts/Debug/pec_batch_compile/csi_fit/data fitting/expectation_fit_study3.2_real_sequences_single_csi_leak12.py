@@ -26,6 +26,12 @@ parser.add_argument(
 )
 parser.add_argument("--num_estimates", "--num-estimates", default=10000, type=int)
 parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=int)
+parser.add_argument("--gain-upper-bound", type=float, default=120.0,
+                    help="Gain ceiling; grid spacing remains 0.1.")
+parser.add_argument("--threshold-upper-bound", type=float, default=0.30,
+                    help="Threshold ceiling; grid spacing remains 0.0005.")
+parser.add_argument("--non-decision-time-upper-bound", type=float, default=0.50,
+                    help="Nondecision-time ceiling in seconds; grid spacing remains 0.001.")
 parser.add_argument("--max_steps", "--max-steps", default=None, type=int)
 parser.add_argument(
     "--model-time-step",
@@ -174,6 +180,21 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+# Retain the original physical grid spacing when widening the search interval.
+fit_grids = {}
+for name, lower, step in (
+    ("gain_upper_bound", 5.0, 0.1),
+    ("threshold_upper_bound", 0.05, 0.0005),
+    ("non_decision_time_upper_bound", 0.1, 0.001),
+):
+    upper = getattr(args, name)
+    option = "--" + name.replace("_", "-")
+    if not math.isfinite(upper) or upper <= lower:
+        parser.error(f"{option} must be finite and greater than {lower}.")
+    intervals = round((upper - lower) / step)
+    if intervals < 1 or not math.isclose(upper - lower, intervals * step, rel_tol=1e-10, abs_tol=1e-12):
+        parser.error(f"{option} must lie on the grid starting at {lower} with spacing {step}.")
+    fit_grids[name] = np.linspace(lower, upper, intervals + 1)
 optimizer_seed = args.seed if args.optimizer_seed is None else args.optimizer_seed
 simulation_seed = args.seed if args.simulation_seed is None else args.simulation_seed
 if args.posterior_predictive_simulations < 1:
@@ -339,15 +360,15 @@ responseGate        = get_node(comp, "RESPONSE_GATE")
 
 maximum_csi_steps = round(0.3 / args.model_time_step)
 fit_parameters = {
-    ("gain",                       controlExecution):    np.linspace(5.0,   35.0,  301),
+    ("gain",                       controlExecution):    fit_grids["gain_upper_bound"],
     ("slope",                      cueStimulusInterval): np.linspace(
         0, maximum_csi_steps, maximum_csi_steps + 1
     ),
-    ("intercept",                  thresholdMechanism):  np.linspace(0.05,  0.25,  401),
+    ("intercept",                  thresholdMechanism):  fit_grids["threshold_upper_bound"],
     ("offset-integrator_function", thresholdMechanism):  np.linspace(
         -0.3 * args.model_time_step, 0.0, 301
     ),
-    ("non_decision_time",          decisionMaker):       np.linspace(0.1,   0.4,   301),
+    ("non_decision_time",          decisionMaker):       fit_grids["non_decision_time_upper_bound"],
 }
 
 batched_options = {}
@@ -597,6 +618,9 @@ df["maximum_simulation_time"] = configured_decision_horizon
 df["strict_truncation"] = args.strict_truncation
 df["history_implementation"] = args.history_implementation if args.deterministic_observed_history else "not_applicable"
 df["likelihood_buffer_mib"] = args.likelihood_buffer_mib
+df["gain_upper_bound"] = args.gain_upper_bound
+df["threshold_upper_bound"] = args.threshold_upper_bound
+df["non_decision_time_upper_bound"] = args.non_decision_time_upper_bound
 df = pd.concat([df, pd.DataFrame(sf_params, index=[0])], axis=1)
 
 if not args.skip_fit_output:

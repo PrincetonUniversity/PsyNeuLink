@@ -8,23 +8,26 @@ LCA leak 12, competition 3, LCA noise 0, and DDM noise 0.1.
 | Runner | Implementation | Default fitting configuration |
 | --- | --- | --- |
 | `cpu` | Continuous direct likelihood; native C++/OpenMP LCA and DDM PDE kernels; exact-gradient L-BFGS-B | Float64; 1 ms DDM mesh, 65 spatial points, RK4 LCA step at most 10 ms; 4 starts, 32 screened random candidates, 200 iterations/start plus polishing |
-| `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 10,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
+| `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 12 s horizon with checked histogram-window stopping; 10,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
 
 Both fit 13 parameters: three gains, one switch CSI, three thresholds, three
-collapse rates, and three nondecision times. The CPU defaults use the expanded
+collapse rates, and three nondecision times. Both runners use the expanded
 bounds from the archived GB300 population run `direct-all-subjects-expanded-1867`:
 
-| Parameter | CPU direct bounds | GPU bounds |
-| --- | --- | --- |
-| Gain | 5–120 | 5–35 |
-| Switch CSI | 0–0.3 s | 0–0.3 s |
-| Threshold | 0.05–0.30 | 0.05–0.25 |
-| Collapse rate | −0.3–0 per second | −0.3–0 per second |
-| Nondecision time | 0.1–0.50 s | 0.1–0.40 s |
+| Parameter | CPU and GPU bounds |
+| --- | --- |
+| Gain | 5–120 |
+| Switch CSI | 0–0.3 s |
+| Threshold | 0.05–0.30 |
+| Collapse rate | −0.3–0 per second |
+| Nondecision time | 0.1–0.50 s |
 
-Repeat CSI is zero. CPU upper bounds can be overridden with `--gain-upper-bound`,
-`--threshold-upper-bound`, and `--non-decision-time-upper-bound`; these options
-apply only to the CPU runner. The GPU driver retains its original bounds.
+Repeat CSI is zero. Both runners accept `--gain-upper-bound`,
+`--threshold-upper-bound`, and `--non-decision-time-upper-bound` overrides.
+CPU fitting searches continuously; the GPU retains its original grid spacings
+of 0.1 for gain, 0.0005 for threshold, and 0.001 s for nondecision time, using
+more grid points for the wider bounds. GPU upper-bound overrides must lie on
+those grids. GPU CSVs record the three upper bounds alongside estimator settings.
 These are starting fitting configurations, not a guarantee of convergence or
 an equivalence between the two objectives. See the caveats below before
 interpreting results.
@@ -227,8 +230,11 @@ sbatch --export=ALL --account=cses --array=1 \
 ```
 
 CPU template: 8 cores, 8 GB RAM, 30 minutes. GPU template: one `gpu40` GPU,
-4 cores, 16 GB host RAM, 4 hours. Della selects the GPU partition from the
+4 cores, 16 GB host RAM, 1 hour. Della selects the GPU partition from the
 resource request; its submission policy rejects an explicit `--partition=gpu`.
+One-hour GPU submissions are assigned to `gpu-test`; longer requests use a
+different scheduling class. Changing an existing job's walltime alone did not
+change its class in our live check, so a new submission was needed for that move.
 `--mem` controls host RAM, not GPU memory. These are initial requests, not
 runtime guarantees. Start with
 one participant, inspect `jobstats JOBID` and `sacct -j JOBID`, then tune memory,
@@ -251,7 +257,8 @@ workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
 2080 Ti. On Della, the setup script also successfully created a scratch
 environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
 full-fit job submissions were accepted. The Della CPU timing below includes a
-completed full fit; Della GPU completion and timing have not yet been validated.
+completed full fit; the initial GPU run timed out as described below. A completed
+Della GPU fit with the current window-scoring defaults is not yet validated.
 Inspect the job results before starting an array.
 
 A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
@@ -297,11 +304,29 @@ For a historical timing reference, the archived GB300 recovery study
 estimates/candidate, 5,000 candidate evaluations, and a 1 ms model step.
 Their recorded `fit_duration` values range from 18.8 to 25.0 minutes, with a
 21.1-minute median and a 24.0-minute 95th percentile. These were synthetic
-recovery fits with strict truncation disabled and a 12 s horizon. Hardware,
-compiler changes, and the handoff's strict trajectory checks make this a
-reference rather than a prediction for Della. The 4-hour GPU request provides
-initial headroom; tune it using completed Della runs instead of treating it as
-the expected fit duration.
+recovery fits with strict truncation disabled and a 12 s horizon. Their code
+predated the generated likelihood default. Hardware, data, and compiler changes
+make this a reference rather than a prediction for Della.
+
+Della job `13983447_1` ran on a full A100 40 GB with the earlier narrow GPU
+bounds, a 50 s horizon, and strict trajectory completion. It timed out after
+logging 4,874 of 5,000 evaluations at 100,000 estimates/candidate; Slurm recorded
+65 minutes 23 seconds elapsed against a one-hour request. No final fit was saved.
+That timing does not measure the current window-scoring configuration.
+
+A controlled local RTX 2080 Ti comparison used subject 1's recorded data,
+11 fixed representative candidates, 100,000 estimates, 1 ms steps, and a 1 GiB
+buffer budget. Medians of two warm calls per setting were:
+
+| Horizon | Strict completion | Window scoring |
+| --- | --- | --- |
+| 50 s | 18.09 s/batch | 9.00 s/batch |
+| 12 s | 15.64 s/batch | 6.20 s/batch |
+
+All eleven scores matched exactly across all four settings. These objective
+batch timings support the faster default; they are not full-fit timings or a
+validation of every candidate in the expanded search space. Tune the one-hour
+GPU request using completed Della fits and increase `--time` when needed.
 
 ## Outputs and follow-up checks
 
@@ -338,6 +363,11 @@ bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
   --rescore /absolute/path/to/fit.csv --estimates 100000 \
   --rescore-seeds 101 102 103
 
+# Optional full-trajectory validation, using a longer horizon:
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
+  --rescore /absolute/path/to/fit.csv --estimates 100000 \
+  --rescore-seeds 101 --strict-truncation --horizon 50
+
 # CPU mesh-refinement fit, initialized at an existing solution:
 bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 \
   --initial-parameters /absolute/path/to/fit.json --starts 1 \
@@ -368,10 +398,15 @@ subject. Compare scores under the same settings across multiple seeds.
   ITI, switch CSI, boundary increments, and maximum steps together. CPU CSI is
   continuous seconds; GPU CSI is scheduler steps, and collapse is per step in
   GPU CSVs. Never copy parameter numbers between formats without conversions.
-- GPU simulations are capped at 50 s of DDM time, with strict truncation
-  enabled. If any trajectory hits the cap, the run fails; increase `--horizon`
-  and rerun. The cap is a safety limit, not intended censoring. A horizon above
-  the largest observed RT alone does not guarantee all simulated tails finish.
+- GPU fitting defaults to a 12 s DDM horizon and checked histogram-window
+  stopping (`--no-strict-truncation`). A simulated trajectory can stop early
+  only when later outcomes cannot contribute to the required histogram bins;
+  it remains in the original probability denominator. Stochastic sampling of
+  unscored trials is skipped, but all observed state history is retained.
+  Nonfinite samples and unresolved horizon truncations without a valid window
+  cutoff still fail. This mode does not validate unexecuted tails. Use
+  `--strict-truncation --horizon 50` for full-trajectory validation of selected
+  fits; even that finite cap need not accommodate every simulated tail.
 - Smoothing and pseudocounts stabilize the GPU objective but change it; these
   handoff defaults intentionally differ from the raw driver's unsmoothed
   defaults. Finite Monte Carlo scores can hide poorly supported histogram
@@ -379,10 +414,10 @@ subject. Compare scores under the same settings across multiple seeds.
   ties; a single optimizer result is insufficient evidence of a best fit.
 - The direct solver remains a research prototype. Multi-start optimization,
   bound checks, mesh refinement, and parameter recovery remain necessary.
-  Direct fits can hit the legacy gain ceiling 35; CPU bound overrides are
-  exposed, but changing them changes the fitting study and breaks matched
-  bounds with the GPU driver. The older population job scripts used wider
-  bounds and private warm starts; this handoff does not reproduce those runs.
+  Upper-bound overrides change the fitting study; pass the same values to both
+  runners when matched bounds are intended. The older population job scripts
+  also used private warm starts and different optimization budgets; matching
+  bounds alone does not reproduce those runs.
 - Trial ordering and masking affect the persistent state. The existing
   convention compares the first retained task with the last retained task to
   determine its switch status; it does not introduce block resets. Confirm

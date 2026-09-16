@@ -70,6 +70,10 @@ def arguments():
     parser.add_argument("--smoke", action="store_true", help="Tiny optimizer/simulation budget; not a scientific fit.")
     parser.add_argument("--seed", type=int, default=1, help="Optimizer seed (both backends).")
     parser.add_argument("--iterations", type=int, help="CPU iterations per start; GPU candidate-evaluation budget.")
+    bounds = parser.add_argument_group("Search bounds (both backends)")
+    bounds.add_argument("--gain-upper-bound", type=float, default=120.0)
+    bounds.add_argument("--threshold-upper-bound", type=float, default=0.30)
+    bounds.add_argument("--non-decision-time-upper-bound", type=float, default=0.50)
     cpu = parser.add_argument_group("CPU direct solver")
     cpu.add_argument("--starts", type=int, default=4)
     cpu.add_argument("--random-start-candidates", type=int, default=32)
@@ -77,12 +81,11 @@ def arguments():
     cpu.add_argument("--ddm-time-step", type=float, default=0.001)
     cpu.add_argument("--ddm-spatial-points", type=int, default=65)
     cpu.add_argument("--lca-max-step", type=float, default=0.01)
-    cpu.add_argument("--gain-upper-bound", type=float, default=120.0)
-    cpu.add_argument("--threshold-upper-bound", type=float, default=0.30)
-    cpu.add_argument("--non-decision-time-upper-bound", type=float, default=0.50)
     gpu = parser.add_argument_group("GPU generated batched likelihood")
     gpu.add_argument("--time-step", type=float, default=0.001)
-    gpu.add_argument("--horizon", type=float, default=50.0, help="Maximum DDM simulation time in seconds; strict truncation.")
+    gpu.add_argument("--horizon", type=float, default=12.0, help="Maximum DDM simulation time in seconds.")
+    gpu.add_argument("--strict-truncation", action=argparse.BooleanOptionalAction, default=False,
+                     help="Require every trajectory to finish; default uses checked histogram-window stopping.")
     gpu.add_argument("--estimates", type=int, default=10000)
     gpu.add_argument("--batch-size", type=int, default=11)
     gpu.add_argument("--buffer-mib", type=int, default=1024)
@@ -131,7 +134,11 @@ def make_commands(args, repo, data, output, selection):
     command = [sys.executable, "-u", str(fit_dir / "data fitting/expectation_fit_study3.2_real_sequences_single_csi_leak12.py"),
                "--backend", "triton", "--subject-id", str(selection["gpu_subject_index"]), "--data-file", str(data),
                "--condition-observed-history", "--deterministic-observed-history", "--history-implementation", "generated",
-               "--strict-truncation", "--maximum-simulation-time", str(args.horizon),
+               "--strict-truncation" if args.strict_truncation else "--no-strict-truncation",
+               "--maximum-simulation-time", str(args.horizon),
+               "--gain-upper-bound", str(args.gain_upper_bound),
+               "--threshold-upper-bound", str(args.threshold_upper_bound),
+               "--non-decision-time-upper-bound", str(args.non_decision_time_upper_bound),
                "--model-time-step", str(args.time_step), "--num-estimates", str(64 if args.smoke else args.estimates),
                "--max-iterations", str(args.iterations or (22 if args.smoke else 5000)),
                "--parameter-batch-size", str(args.batch_size), "--likelihood-buffer-mib", str(args.buffer_mib),
