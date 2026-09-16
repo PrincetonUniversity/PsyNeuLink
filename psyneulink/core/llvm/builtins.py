@@ -803,8 +803,8 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     [0] http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/CODES/mt19937ar.c
     """
     # Generate random float number generator function
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_double", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_double", [state_ty.as_pointer()], return_type=ctx.float_ty)
+    state, = builder.function.args
 
     a = builder.call(gen_int, [state])
     b = builder.call(gen_int, [state])
@@ -828,8 +828,7 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     upper_bound = builder.fcmp_ordered("<", val, val.type(1.0))
     builder.assume(upper_bound)
 
-    builder.store(val, out)
-    builder.ret_void()
+    builder.ret(val)
 
     return builder.function
 
@@ -861,17 +860,14 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 
     builder.branch(loop_block)
     builder.position_at_end(loop_block)
-    tmp = builder.alloca(out.type.pointee, name="mt_rand_normal_tmp")
 
     # X1 is in (-1, 1)
-    builder.call(gen_float, [state, tmp])
-    x1 = builder.load(tmp)
+    x1 = builder.call(gen_float, [state])
     x1 = builder.fmul(x1, x1.type(2.0))
     x1 = builder.fsub(x1, x1.type(1.0))
 
     # x2 is in (-1, 1)
-    builder.call(gen_float, [state, tmp])
-    x2 = builder.load(tmp)
+    x2 = builder.call(gen_float, [state])
     x2 = builder.fmul(x2, x2.type(2.0))
     x2 = builder.fsub(x2, x2.type(1.0))
 
@@ -1249,8 +1245,8 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
 def _setup_philox_rand_double(ctx, state_ty, gen_int64):
     # Generate random float number generator function
     double_ty = ir.DoubleType()
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_double", (state_ty.as_pointer(), double_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_double", [state_ty.as_pointer()], return_type=double_ty)
+    state, = builder.function.args
 
     # (rnd >> 11) * (1.0 / 9007199254740992.0)
     rhs = double_ty(1.0 / 9007199254740992.0)
@@ -1263,9 +1259,8 @@ def _setup_philox_rand_double(ctx, state_ty, gen_int64):
     lhs = builder.uitofp(lhs_shift, double_ty)
 
     res = builder.fmul(lhs, rhs)
-    builder.store(res, out)
 
-    builder.ret_void()
+    builder.ret(res)
 
     return builder.function
 
@@ -1273,8 +1268,8 @@ def _setup_philox_rand_double(ctx, state_ty, gen_int64):
 def _setup_philox_rand_float(ctx, state_ty, gen_int32):
     # Generate random float number generator function
     float_ty = ir.FloatType()
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_float", (state_ty.as_pointer(), float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_float", [state_ty.as_pointer()], return_type=float_ty)
+    state, = builder.function.args
 
     # (next_uint32(bitgen_state) >> 9) * (1.0f / 8388608.0f);
     rhs = float_ty(1.0 / 8388608.0)
@@ -1287,9 +1282,8 @@ def _setup_philox_rand_float(ctx, state_ty, gen_int32):
     lhs = builder.uitofp(lhs_shift, float_ty)
 
     res = builder.fmul(lhs, rhs)
-    builder.store(res, out)
 
-    builder.ret_void()
+    builder.ret(res)
 
     return builder.function
 
@@ -2007,7 +2001,7 @@ def _load_fi(builder, idx, fptype, data):
 
 
 def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_data, fi_data):
-    fptype = gen_float.args[1].type.pointee
+    fptype = gen_float.return_value.type
     itype = gen_int.return_value.type
     if fptype != ctx.float_ty:
         # We don't have numeric helpers available for the desired type
@@ -2017,10 +2011,6 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     state, out = builder.function.args
 
     loop_block = builder.append_basic_block("gen_loop_ziggurat")
-
-    # Allocate storage for calling int/float PRNG
-    # outside of the loop
-    tmp_fptype = builder.alloca(fptype, name="tmp_fp")
 
     # Enter the main generation loop
     builder.branch(loop_block)
@@ -2063,15 +2053,13 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
         ZIGGURAT_NOR_INV_R = 0.27366123732975827203338247596
 
         # xx = -ziggurat_nor_inv_r * npy_log1p(-next_double(bitgen_state));
-        builder.call(gen_float, [state, tmp_fptype])
-        xx = builder.load(tmp_fptype)
+        xx = builder.call(gen_float, [state])
         xx = helpers.fneg(builder, xx)
         xx = helpers.log1p(ctx, builder, xx)
         xx = builder.fmul(xx.type(-ZIGGURAT_NOR_INV_R), xx)
 
         # yy = -npy_log1p(-next_double(bitgen_state));
-        builder.call(gen_float, [state, tmp_fptype])
-        yy = builder.load(tmp_fptype)
+        yy = builder.call(gen_float, [state])
         yy = helpers.fneg(builder, yy)
         yy = helpers.log1p(ctx, builder, yy)
         yy = helpers.fneg(builder, yy)
@@ -2101,9 +2089,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     exp_x_sqnh = helpers.exp(ctx, builder, x_sq_nh)
 
     # next uniform random number
-    r_ptr = tmp_fptype
-    builder.call(gen_float, [state, r_ptr])
-    r = builder.load(r_ptr)
+    r = builder.call(gen_float, [state])
 
     # if (((fi_double[idx - 1] - fi_double[idx]) * next_double(bitgen_state) +
     #       fi_double[idx]) < exp(-0.5 * x * x))
@@ -2119,7 +2105,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     builder.branch(loop_block)
 
 def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
-    fptype = gen_float.args[1].type.pointee
+    fptype = gen_float.return_value.type
     if fptype != ctx.float_ty:
         # We don't have numeric helpers available for the desired type
         return
@@ -2145,9 +2131,7 @@ def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
         builder.store(out_ptr.type.pointee(0), out_ptr)
         builder.ret_void()
 
-    uniform_draw_ptr = builder.alloca(fptype, name="tmp_fp")
-    builder.call(gen_float, [state, uniform_draw_ptr])
-    draw = builder.load(uniform_draw_ptr)
+    draw = builder.call(gen_float, [state])
 
     # If 'p' is large enough, success == draw < p
     is_less_than_p = builder.fcmp_ordered("<", draw, p)
