@@ -70,7 +70,6 @@ def _worker_address():
         from dask.distributed import get_worker
         return get_worker().address
     except (ImportError, ValueError):
-        # No worker context: either Dask is absent, or this is running on the driver.
         return None
 
 
