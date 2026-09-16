@@ -913,6 +913,16 @@ class ParameterEstimationComposition(Composition):
         "estep_options": None,
     }
 
+    @property
+    def scores_by_simulation(self):
+        """Whether scoring runs the model, or evaluates a trained estimator of its likelihood.
+
+        A simulated score carries the noise of the simulations behind it, and only repeats itself
+        if the model was built to draw the same noise every time.  A trained estimator is a fixed
+        function of its inputs, so it repeats itself either way.
+        """
+        return self._likelihood_estimator != "neural"
+
     def _validate_likelihood_estimator(self):
         """Check the likelihood settings before anything is built from them."""
         if self._fit_method == "hierarchical" and (
