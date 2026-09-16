@@ -11,11 +11,23 @@ LCA leak 12, competition 3, LCA noise 0, and DDM noise 0.1.
 | `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 10,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
 
 Both fit 13 parameters: three gains, one switch CSI, three thresholds, three
-collapse rates, and three nondecision times. Default physical bounds agree:
-gain 5–35, CSI 0–0.3 s, threshold 0.05–0.25, collapse rate −0.3–0 per second,
-and nondecision time 0.1–0.4 s. Repeat CSI is zero. These are starting fitting
-configurations, not a guarantee of convergence or an equivalence between the
-two objectives. See the caveats below before interpreting results.
+collapse rates, and three nondecision times. The CPU defaults use the expanded
+bounds from the archived GB300 population run `direct-all-subjects-expanded-1867`:
+
+| Parameter | CPU direct bounds | GPU bounds |
+| --- | --- | --- |
+| Gain | 5–120 | 5–35 |
+| Switch CSI | 0–0.3 s | 0–0.3 s |
+| Threshold | 0.05–0.30 | 0.05–0.25 |
+| Collapse rate | −0.3–0 per second | −0.3–0 per second |
+| Nondecision time | 0.1–0.50 s | 0.1–0.40 s |
+
+Repeat CSI is zero. CPU upper bounds can be overridden with `--gain-upper-bound`,
+`--threshold-upper-bound`, and `--non-decision-time-upper-bound`; these options
+apply only to the CPU runner. The GPU driver retains its original bounds.
+These are starting fitting configurations, not a guarantee of convergence or
+an equivalence between the two objectives. See the caveats below before
+interpreting results.
 
 ## Checkout, storage, and data
 
@@ -243,7 +255,8 @@ completion or runtime; inspect the job results before starting an array.
 
 A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
 first-use native compilation and the independent fresh-score check, on an
-Intel Core i7-9700K with eight Torch/OpenMP threads. This used the defaults:
+Intel Core i7-9700K with eight Torch/OpenMP threads. This used the original,
+narrower upper bounds (gain 35, threshold 0.25, nondecision time 0.4 s) with a
 1 ms DDM mesh, four starts, 32 screened candidates, up to 200 iterations/start,
 and polishing, with 561 retained rows and 485 included observations. The run
 recorded 815 evaluations and approximately 1.61 GiB peak resident memory;
@@ -252,7 +265,15 @@ reference for one participant, not a Della runtime guarantee. The optimizer
 reported success but its stricter stationarity checks were false, so completion
 and reproducible scoring alone do not establish convergence. The 30-minute CPU
 request leaves headroom for this configuration; increase `--time` for larger
-fit budgets or participants that need longer.
+fit budgets or participants that need longer. Reassess runtime after expanding
+bounds; the timing above predates the expanded CPU defaults.
+
+The archived GB300 expanded-bound subject-1 fit reached gain 38.61, threshold
+0.275, and nondecision time 0.4385 s, exceeding each of those earlier ceilings.
+Its fitting schedule also used eight starts, previous fits as initial points,
+and more polishing; matching its bounds alone does not reproduce that schedule.
+To refit an existing CPU result within the expanded bounds, keep it as one
+starting point using `--initial-parameters /path/to/fit.json`.
 
 For a historical timing reference, the archived GB300 recovery study
 `gpu1ms-comprehensive-recovery-1475` contains 384 completed fits with 100,000
