@@ -210,7 +210,7 @@ sbatch --export=ALL --account=cses --array=1 \
 ```
 
 CPU template: 8 cores, 8 GB RAM, 4 hours. GPU template: one `gpu40` GPU,
-4 cores, 16 GB host RAM, 24 hours. Della selects the GPU partition from the
+4 cores, 16 GB host RAM, 4 hours. Della selects the GPU partition from the
 resource request; its submission policy rejects an explicit `--partition=gpu`.
 `--mem` controls host RAM, not GPU memory. These are initial requests, not
 runtime guarantees. Start with
@@ -235,6 +235,17 @@ workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
 environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
 full-fit job submissions were accepted. Acceptance alone does not validate
 completion or runtime; inspect the job results before starting an array.
+
+For a historical timing reference, the archived GB300 recovery study
+`gpu1ms-comprehensive-recovery-1475` contains 384 completed fits with 100,000
+estimates/candidate, 5,000 candidate evaluations, and a 1 ms model step.
+Their recorded `fit_duration` values range from 18.8 to 25.0 minutes, with a
+21.1-minute median and a 24.0-minute 95th percentile. These were synthetic
+recovery fits with strict truncation disabled and a 12 s horizon. Hardware,
+compiler changes, and the handoff's strict trajectory checks make this a
+reference rather than a prediction for Della. The 4-hour GPU request provides
+initial headroom; tune it using completed Della runs instead of treating it as
+the expected fit duration.
 
 ## Outputs and follow-up checks
 
