@@ -85,18 +85,17 @@ class BoundedTransform:
 class IdentityTransform:
     """A transform that does nothing: ``theta == z``.
 
-    For unbounded parameters, and for tests whose reference model is defined directly on the
-    unconstrained scale.
+    For a likelihood whose parameters are already unbounded.  A fit driven through
+    `ParameterEstimationComposition <ParameterEstimationComposition>` never uses this, because
+    a parameter is specified there as the values to search over and is bounded by construction;
+    it is for `fit_laplace_em <laplaceem>` driven directly, against a likelihood of one's own.
     """
 
     def to_natural(self, z):
-        """Return `z` unchanged, as a float array."""
         return np.asarray(z, dtype=float)
 
     def to_unconstrained(self, theta):
-        """Return `theta` unchanged, as a float array."""
         return np.asarray(theta, dtype=float)
 
     def dtheta_dz(self, z):
-        """Return ones, the derivative of the identity map."""
         return np.ones_like(np.asarray(z, dtype=float))
