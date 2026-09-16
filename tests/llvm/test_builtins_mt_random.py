@@ -145,9 +145,7 @@ def test_random_float(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -158,7 +156,7 @@ def test_random_float(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
