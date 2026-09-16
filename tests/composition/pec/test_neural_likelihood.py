@@ -568,6 +568,27 @@ def test_a_hierarchical_fit_scores_participants_with_their_estimator(trained_art
 
 
 @pytest.mark.composition
+def test_a_participant_scored_by_an_estimator_needs_no_common_random_numbers(trained_artifact):
+    """A hierarchical fit requires participant models that repeat themselves.
+
+    A simulated model manages that only with common random numbers, and is refused without them.
+    A trained estimator is a fixed function of its inputs, so the requirement is already met and
+    the setting has nothing to do -- which is what lets these factories leave it alone.
+    """
+    from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+        check_scoring_is_deterministic,
+    )
+
+    # One participant's own trials, as the factory receives them: the column identifying which
+    # participant they came from has been removed by then.
+    trials = _group_frame(n_participants=1).drop(columns=["subject"])
+    pec, _ = _neural_participant_pec(trained_artifact, trials)
+    assert pec.scores_by_simulation is False
+    assert pec.controller.parameters.same_seed_for_all_allocations.get() in (None, False)
+    check_scoring_is_deterministic(pec, "a participant scored by an estimator")
+
+
+@pytest.mark.composition
 def test_a_distributed_hierarchical_fit_scores_the_same_way(trained_artifact):
     """Each worker builds and loads its own, and has to reach the same answer."""
     pytest.importorskip("dask.distributed")
