@@ -100,14 +100,20 @@ fitting uses (see :ref:`DistributedFitting`).
 
 Requirements on what it returns:
 
-* **Common random numbers**
-    ``same_seed_for_all_parameter_combinations=True`` with a fixed ``initial_seed``.
-    Posterior curvature comes from finite differences, which measure simulation noise
-    rather than curvature if the likelihood is not deterministic in its parameters.
+* **Common random numbers** (required, and checked)
+    ``same_seed_for_all_parameter_combinations=True``. Posterior curvature comes from finite
+    differences, which measure simulation noise rather than curvature if scoring the same
+    parameters twice gives different answers. Without it, a drift-diffusion model scored from
+    60 simulations returns values tens of log-likelihood units apart for one parameter
+    setting, against curvature of order one. A participant model built without it is refused
+    before the fit begins, since nothing in the result would show that it was missing.
 
-* **A distinct seed per participant**
-    Use ``subject_index``. A shared seed gives every participant the same stream of
-    simulation noise, which is absorbed into the group variance rather than averaging out.
+* **A distinct, fixed seed per participant**
+    Use ``initial_seed=<base> + subject_index``. A shared seed gives every participant the
+    same stream of simulation noise, which is absorbed into the group variance rather than
+    averaging out. Fixing it also matters for a distributed fit: a participant whose model is
+    rebuilt on another worker would otherwise draw a different stream from the one the
+    previous iterations used, and the objective would shift underneath the fit.
 
 * **LLVM execution, and the same parameters and ranges for every participant**
     The group model is defined in terms of those ranges, so ranges that varied between
