@@ -36,7 +36,10 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     log_gauss_diag,
     subject_map_estep,
 )
-from psyneulink.core.compositions.hierarchical.subjectlikelihood import ParameterSchema
+from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+    ParameterSchema,
+    check_scoring_is_deterministic,
+)
 from psyneulink.core.compositions.hierarchical.transforms import BoundedTransform
 
 __all__ = ["make_distributed_estep_runner"]
@@ -101,10 +104,11 @@ def _dask_subject_estep(
                 set_num_threads(worker_cores)
             pec, inputs = pec_factory(data_slice, subject_index)
             # Checked before scoring: a model fitting different parameters would otherwise be
-            # handed `theta` positionally, in the wrong order.
-            schema.check_matches(ParameterSchema.from_pec(
-                pec, source=f"the model built for participant {subject_index}"
-            ))
+            # handed `theta` positionally, in the wrong order, and one that scores the same
+            # parameters differently each time gives curvature made of noise.
+            source = f"the model built for participant {subject_index}"
+            check_scoring_is_deterministic(pec, source)
+            schema.check_matches(ParameterSchema.from_pec(pec, source=source))
             cache[key] = (pec, inputs)
         pec, inputs = cache[key]
 
