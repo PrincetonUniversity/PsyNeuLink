@@ -5,6 +5,7 @@ checked against a Gaussian model whose posterior is available in closed form.  I
 PsyNeuLink nor a cluster, so it runs under a plain ``[dev]`` install.
 """
 
+import types
 from dataclasses import FrozenInstanceError, dataclass
 
 import numpy as np
@@ -33,6 +34,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+    check_scoring_is_deterministic,
     PECFactorySubjectLikelihood,
     ParameterSchema,
     SubjectLikelihoodProvider,
@@ -1193,6 +1195,56 @@ def test_hierarchical_takes_the_model_from_the_factory_alone(argument):
     }
     with pytest.raises(ParameterEstimationCompositionError, match="describe a model"):
         _build_group_pec(**{argument: plausible[argument]})
+
+
+class _NoiseSetting:
+    """Stands in for the controller parameter that decides whether scoring repeats itself."""
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
+
+
+class _SimulatingPEC(_StubPEC):
+    """A stub that reports whether it was built with common random numbers, as a real one does."""
+
+    def __init__(self, names, bounds, common_random_numbers, value=-1.0):
+        super().__init__(names, bounds, value=value)
+        self.controller.parameters = types.SimpleNamespace(
+            same_seed_for_all_allocations=_NoiseSetting(common_random_numbers)
+        )
+
+
+@pytest.mark.parametrize("setting", [False, None], ids=["off", "unset"])
+def test_a_participant_model_that_does_not_repeat_itself_is_refused(setting):
+    # Nothing in the result would show this was missing: the fit runs, converges, and reports
+    # intervals measured from simulation noise.
+    provider = PECFactorySubjectLikelihood(
+        lambda data, subject_index=None: (
+            _SimulatingPEC(["rate"], [(-1.0, 1.0)], setting), None
+        ),
+        [pd.DataFrame({"rt": [0.1]}), pd.DataFrame({"rt": [0.2]})],
+    )
+    with pytest.raises(ValueError, match="same_seed_for_all_parameter_combinations"):
+        provider.log_likelihood(np.zeros(1), 0)
+
+
+def test_a_participant_model_that_does_repeat_itself_is_accepted():
+    provider = PECFactorySubjectLikelihood(
+        lambda data, subject_index=None: (
+            _SimulatingPEC(["rate"], [(-1.0, 1.0)], True), None
+        ),
+        [pd.DataFrame({"rt": [0.1]}), pd.DataFrame({"rt": [0.2]})],
+    )
+    assert provider.log_likelihood(np.zeros(1), 0) == -1.0
+
+
+def test_a_model_that_does_not_report_the_setting_is_left_alone():
+    # The driver is used against closed-form test models too, which have no controller to ask.
+    check_scoring_is_deterministic(_StubPEC(["rate"], [(-1.0, 1.0)]), "a test model")
+    check_scoring_is_deterministic(object(), "something else entirely")
 
 
 @pytest.mark.composition
