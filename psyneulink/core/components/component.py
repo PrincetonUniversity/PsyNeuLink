@@ -3625,6 +3625,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return self.parameters.is_finished_flag._get(context)
 
     def _parse_param_port_sources(self):
+        # parameter ports may be created for objects that aren't instantiated yet.
+        # in this case, an operator.attrgetter object referencing the source Parameter is stored.
+        # try to resolve those here.
         if hasattr(self, '_parameter_ports'):
             for param_port in self._parameter_ports:
                 try:
