@@ -1330,3 +1330,18 @@ def test_a_failed_participant_does_not_leave_a_model_behind():
 
         remaining = [keys for keys in client.run(_worker_cache_keys).values() if keys]
         assert remaining == [], f"a model outlived the fit: {remaining}"
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"likelihood_estimator": "neural"},
+        {"likelihood_estimator_kwargs": {"artifact": "somewhere.pt"}},
+    ],
+    ids=["estimator", "estimator_kwargs"],
+)
+def test_hierarchical_takes_the_likelihood_from_the_factory_too(overrides):
+    """Scoring belongs to the model, which a hierarchical fit takes from the factory."""
+    with pytest.raises(ParameterEstimationCompositionError, match="likelihood_estimator describes"):
+        _build_group_pec(**overrides)
