@@ -18,10 +18,10 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     EStepResult,
     HierarchicalEMError,
     HierarchicalEMWarning,
+    GroupPrior,
     diagonal_hessian,
     fit_laplace_em,
     full_hessian,
-    log_gauss_diag,
     make_inprocess_estep_runner,
     subject_map_estep,
 )
@@ -316,6 +316,92 @@ def test_the_group_variance_reaches_its_maximum_only_with_a_full_curvature():
     assert np.all(fits["diagonal"].sigma < 0.9 * maximizer)
 
 
+def test_the_group_covariance_records_how_parameters_vary_together():
+    # y_s = z_s + e_s with e_s of known covariance, so the marginal is N(beta, Sigma + noise) and
+    # the maximizer is beta = mean(y), Sigma = cov(y) - noise.
+    rng = np.random.default_rng(3)
+    n_subjects = 250
+    noise = np.array([[0.30, 0.10], [0.10, 0.25]])
+    precision = np.linalg.inv(noise)
+    truth = np.array([[0.80, 0.55], [0.55, 0.60]])
+    z = rng.multivariate_normal([0.6, -0.9], truth, size=n_subjects)
+    y = z + rng.multivariate_normal(np.zeros(2), noise, size=n_subjects)
+
+    def log_likelihood(theta, s):
+        d = np.asarray(theta, dtype=float) - y[s]
+        return float(-0.5 * d @ precision @ d)
+
+    config = EStepConfig(curvature="full", hessian_step=1e-3, variance_floor=1e-9)
+    runner = make_inprocess_estep_runner(log_likelihood, IdentityTransform(), config)
+    result = fit_laplace_em(runner, n_subjects, 2, estep_config=config, covariance="full",
+                            max_iterations=250, tol=1e-9)
+
+    assert np.allclose(result.beta[0], y.mean(axis=0), atol=1e-4)
+    assert np.allclose(result.covariance, np.cov(y.T, bias=True) - noise, atol=1e-3)
+    correlation = result.covariance[0, 1] / np.sqrt(np.prod(np.diag(result.covariance)))
+    assert abs(correlation - truth[0, 1] / np.sqrt(np.prod(np.diag(truth)))) < 0.05
+
+
+def test_a_diagonal_group_covariance_holds_its_off_diagonals_at_zero():
+    # The same correlated data: the fit is entitled to report no correlation, having been told
+    # not to look for one.
+    rng = np.random.default_rng(3)
+    y = rng.multivariate_normal([0.6, -0.9], [[1.1, 0.7], [0.7, 0.85]], size=60)
+    precision = np.linalg.inv(np.array([[0.30, 0.10], [0.10, 0.25]]))
+
+    def log_likelihood(theta, s):
+        d = np.asarray(theta, dtype=float) - y[s]
+        return float(-0.5 * d @ precision @ d)
+
+    config = EStepConfig(hessian_step=1e-3, variance_floor=1e-9)
+    runner = make_inprocess_estep_runner(log_likelihood, IdentityTransform(), config)
+    result = fit_laplace_em(runner, len(y), 2, estep_config=config, max_iterations=60, tol=1e-8)
+    assert result.covariance.shape == (2, 2)
+    assert np.allclose(result.covariance, np.diag(np.diag(result.covariance)))
+    assert np.allclose(result.sigma, np.diag(result.covariance))
+
+
+def test_a_full_group_covariance_needs_a_full_curvature():
+    # Off-diagonals estimated from a curvature that never measured them would come from the modes
+    # alone, which is not what the group covariance is meant to be.
+    model = _make_toy(seed=4, n_subjects=6)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    with pytest.raises(ValueError, match="needs curvature"):
+        fit_laplace_em(runner, model.n_subjects, model.n_params,
+                       estep_config=EStepConfig(), covariance="full", max_iterations=1)
+
+
+def test_em_rejects_an_unknown_covariance():
+    model = _make_toy(seed=4, n_subjects=6)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    with pytest.raises(ValueError, match="covariance must be one of"):
+        fit_laplace_em(runner, model.n_subjects, model.n_params,
+                       covariance="banded", max_iterations=1)
+
+
+def test_group_prior_accepts_variances_or_a_matrix():
+    variances = np.array([0.4, 1.1])
+    assert np.allclose(GroupPrior(variances).covariance, np.diag(variances))
+    assert np.allclose(GroupPrior(np.diag(variances)).variance, variances)
+
+
+def test_group_prior_matches_an_independent_gaussian():
+    # With no correlation the density is the sum of one-dimensional Gaussians, which checks the
+    # factorization against arithmetic rather than against itself.
+    var = np.array([0.4, 1.1, 2.3])
+    mean = np.array([0.2, -0.5, 1.0])
+    z = np.array([0.1, 0.3, 0.9])
+    expected = float(-0.5 * np.sum((z - mean) ** 2 / var + np.log(2 * np.pi) + np.log(var)))
+    assert np.isclose(GroupPrior(var).log_density(z, mean), expected)
+
+
+def test_group_prior_rejects_a_covariance_that_is_not_a_distribution():
+    with pytest.raises(ValueError, match="not positive definite"):
+        GroupPrior(np.array([[1.0, 2.0], [2.0, 1.0]]))
+    with pytest.raises(ValueError, match="vector of variances or a square matrix"):
+        GroupPrior(np.zeros((2, 3)))
+
+
 def test_estep_config_rejects_an_unknown_curvature():
     with pytest.raises(ValueError, match="curvature must be one of"):
         EStepConfig(curvature="banded")
@@ -331,9 +417,9 @@ def test_estep_matches_closed_form_posterior():
     s = 7
 
     def neg_log_post(z):
-        return -model.log_likelihood_s(z, s) - log_gauss_diag(z, beta, sigma)
+        return -model.log_likelihood_s(z, s) - GroupPrior(sigma).log_density(z, beta)
 
-    post = subject_map_estep(neg_log_post, z0=beta, prior_variance=sigma)
+    post = subject_map_estep(neg_log_post, z0=beta, prior=sigma)
     z_cf, v_cf = model.closed_form_posterior(np.tile(beta, (model.n_subjects, 1)), sigma)
     assert np.allclose(post.z_hat, z_cf[s], atol=1e-5)
     assert np.allclose(post.variance, v_cf[s], rtol=1e-4)
@@ -346,14 +432,14 @@ def test_estep_reports_optimizer_outcome():
     sigma = np.array([0.5, 0.7])
 
     def neg_log_post(z):
-        return -model.log_likelihood_s(z, 0) - log_gauss_diag(z, np.zeros(2), sigma)
+        return -model.log_likelihood_s(z, 0) - GroupPrior(sigma).log_density(z, np.zeros(2))
 
-    ok = subject_map_estep(neg_log_post, z0=np.zeros(2), prior_variance=sigma)
+    ok = subject_map_estep(neg_log_post, z0=np.zeros(2), prior=sigma)
     assert ok.success is True
     assert isinstance(ok.message, str)
 
     capped = subject_map_estep(
-        neg_log_post, z0=np.zeros(2), prior_variance=sigma,
+        neg_log_post, z0=np.zeros(2), prior=sigma,
         config=EStepConfig(optimizer_options={"maxiter": 1}),
     )
     assert capped.success is False
@@ -363,7 +449,7 @@ def test_estep_falls_back_to_prior_where_data_are_uninformative():
     # A flat objective has no curvature to invert; the posterior should report the
     # prior rather than a spuriously tight interval.
     sigma = np.array([0.25, 4.0])
-    post = subject_map_estep(lambda z: 0.0, z0=np.zeros(2), prior_variance=sigma)
+    post = subject_map_estep(lambda z: 0.0, z0=np.zeros(2), prior=sigma)
     assert np.allclose(post.variance, sigma)
 
 
@@ -390,7 +476,7 @@ def test_estep_records_the_step_it_used():
     # Recorded so that a fit can be audited, rather than the step being an
     # invisible choice made inside the E-step.
     sigma = np.array([0.36, 0.04])
-    post = subject_map_estep(lambda z: float(np.sum(z ** 2)), z0=np.zeros(2), prior_variance=sigma)
+    post = subject_map_estep(lambda z: float(np.sum(z ** 2)), z0=np.zeros(2), prior=sigma)
     assert np.allclose(post.hessian_step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
 
 
@@ -466,12 +552,12 @@ def test_em_history_pairs_each_objective_with_the_estimate_that_produced_it():
     # therefore carries the initial estimate, not the result of the first update.
     model = _make_toy(seed=7, n_subjects=40)
     init_beta = np.array([[0.11, -0.22]])
-    init_sigma = np.array([0.7, 1.3])
+    init_covariance = np.array([0.7, 1.3])
     result = _fit_toy(model, max_iterations=3, tol=0.0,
-                      init_beta=init_beta, init_sigma=init_sigma)
+                      init_beta=init_beta, init_covariance=init_covariance)
 
     assert np.allclose(result.history[0]["beta"], init_beta)
-    assert np.allclose(result.history[0]["sigma"], init_sigma)
+    assert np.allclose(result.history[0]["covariance"], np.diag(init_covariance))
     # Each subsequent entry carries the estimate the previous entry's update produced.
     assert not np.allclose(result.history[1]["beta"], init_beta)
 
@@ -858,12 +944,12 @@ def clear_subject_cache():
     distributedestep._SUBJECT_FALLBACK_CACHE.clear()
 
 
-def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, sigma=None, schema=None):
-    sigma = np.array([1.0]) if sigma is None else sigma
+def _dask_task(factory, subject_index, data, fit_id, worker_cores=None, prior=None, schema=None):
+    prior = GroupPrior(np.array([1.0])) if prior is None else prior
     if schema is None:
         schema = ParameterSchema.from_pec(_StubPEC(["rate"], [(-1.0, 1.0)]), source="the fit")
     return distributedestep._dask_subject_estep(
-        factory, subject_index, data, np.zeros(1), sigma,
+        factory, subject_index, data, np.zeros(1), prior,
         schema, np.zeros(1), worker_cores, fit_id, EStepConfig(),
     )
 
@@ -1042,6 +1128,8 @@ def test_pec_rejects_out_of_range_hierarchical_options():
         ({"subject_id": "subject", "tol": 0.0}, "tol"),
         ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
         ({"subject_id": "subject", "curvature": "banded"}, "curvature"),
+        ({"subject_id": "subject", "covariance": "banded"}, "covariance"),
+        ({"subject_id": "subject", "covariance": "full"}, "needs curvature"),
     ]:
         with pytest.raises(Exception, match=match):
             _build_group_pec(hierarchical_options=opts)

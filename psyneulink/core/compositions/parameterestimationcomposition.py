@@ -296,6 +296,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
+    COVARIANCE_KINDS,
     CURVATURE_KINDS,
     EStepConfig,
     fit_laplace_em,
@@ -454,8 +455,8 @@ class ParameterEstimationComposition(Composition):
         specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
         a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"`` chooses
         whether each participant's uncertainty is measured one parameter at a time (``"diagonal"``, the default)
-        or in all directions at once (``"full"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the
-        full set of keys.
+        or in all directions at once (``"full"``), and ``"covariance"`` whether the group model may express how
+        parameters vary together; see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set of keys.
 
     likelihood_estimator : "kde" or "neural" : default "kde"
         specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model and estimates a density
@@ -905,6 +906,7 @@ class ParameterEstimationComposition(Composition):
     _HIERARCHICAL_OPTION_DEFAULTS = {
         "subject_id": None,
         "curvature": "diagonal",
+        "covariance": "diagonal",
         "max_iterations": 50,
         "tol": 1e-4,
         "variance_floor": 1e-6,
@@ -992,6 +994,17 @@ class ParameterEstimationComposition(Composition):
                 f"hierarchical_options['curvature'] must be one of {list(CURVATURE_KINDS)}; "
                 f"got {options['curvature']!r}"
             )
+        if options["covariance"] not in COVARIANCE_KINDS:
+            raise ParameterEstimationCompositionError(
+                f"hierarchical_options['covariance'] must be one of {list(COVARIANCE_KINDS)}; "
+                f"got {options['covariance']!r}"
+            )
+        if options["covariance"] == "full" and options["curvature"] != "full":
+            raise ParameterEstimationCompositionError(
+                'hierarchical_options covariance="full" needs curvature="full" as well: the '
+                "group correlations come from the participant covariances, and a curvature "
+                "measured one parameter at a time reports none."
+            )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
                 "depends_on is not supported with hierarchical fitting"
@@ -1045,6 +1058,7 @@ class ParameterEstimationComposition(Composition):
 
         fit_kwargs = dict(
             estep_config=config,
+            covariance=options["covariance"],
             max_iterations=options["max_iterations"],
             tol=options["tol"],
         )
