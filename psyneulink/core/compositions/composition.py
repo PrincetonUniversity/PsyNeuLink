@@ -14171,8 +14171,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         assert index is not None
 
-        if node in self.scheduler.conditions:
-            return index, self.scheduler.conditions[node]
+        # Structural conditions have already shaped the consideration queue.
+        # Only the basic condition is a runtime predicate; ConditionSet[node]
+        # can instead return a list containing both kinds of condition.
+        if node in self.scheduler.conditions.conditions_basic:
+            return index, self.scheduler.conditions.conditions_basic[node]
 
         return index, Always()
 
