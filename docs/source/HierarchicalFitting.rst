@@ -13,10 +13,11 @@ Estimation is by empirical-Bayes Laplace EM, with the group modelled as
 
 .. math::
 
-   z_s \sim \mathcal{N}(\beta,\ \mathrm{diag}(\sigma))
+   z_s \sim \mathcal{N}(\beta,\ \Sigma)
 
 where :math:`z_s` is participant :math:`s`'s parameter vector in an unconstrained space,
-and :math:`\beta` and :math:`\sigma` are estimated from the group.
+and :math:`\beta` and :math:`\Sigma` are estimated from the group. By default
+:math:`\Sigma` is diagonal; ``covariance`` lets it express how parameters vary together.
 
 
 .. _Hierarchical_Fitting_Enabling:
@@ -138,6 +139,10 @@ settled when the composition is built.
 * ``curvature``
     ``"full"`` (the default) or ``"diagonal"``. See :ref:`Hierarchical_Fitting_Curvature`.
 
+* ``covariance``
+    ``"diagonal"`` (the default) or ``"full"``. See :ref:`Hierarchical_Fitting_Covariance`.
+    ``"full"`` cannot be combined with ``curvature="diagonal"``.
+
 * ``max_iterations``
     Most EM iterations to run. Defaults to ``50``.
 
@@ -190,6 +195,28 @@ The group model itself treats the parameters as independent either way: ``curvat
 each participant is measured, not what the group is allowed to express.
 
 
+.. _Hierarchical_Fitting_Covariance:
+
+Covariance
+----------
+
+``curvature`` is about one participant; ``covariance`` is about the population. With
+``covariance="diagonal"``, the default, the group model says each parameter varies across
+participants on its own. ``"full"`` lets it also say that they vary together -- that
+participants with a high threshold tend to have a low drift rate -- and
+``fit_results.group_correlation`` reports what it found.
+
+The two settings are not independent: a fit that asks for ``covariance="full"`` with
+``curvature="diagonal"`` is refused. The group covariance is built from the participants'
+posterior covariances, so off-diagonals estimated from a curvature that never measured any
+would come from the spread of the modes alone -- which says how the point estimates happen to
+line up, not how the population varies.
+
+Estimating them costs :math:`P(P-1)/2` more group parameters, so it wants enough
+participants to support them. A diagonal fit reports a correlation of the identity, which
+records that it assumed independence rather than that it measured it.
+
+
 .. _Hierarchical_Fitting_Running:
 
 Running
@@ -237,6 +264,10 @@ misrepresent an interval the transform makes asymmetric near a bound.
 spaces and whether that participant's fit converged. ``em_history`` records each iteration
 alongside the group estimate that produced it.
 
+``group_covariance`` is the group covariance in full and ``group_correlation`` the
+correlations implied by it; ``sigma`` is its diagonal, which is what a diagonal fit
+estimated in the first place.
+
 Convergence is judged by how far the group estimate moves, not by the objective, which is
 not monotone under an approximate E-step.
 
@@ -252,6 +283,8 @@ Limitations
 * With ``curvature="diagonal"``, participant uncertainty is the spread of one parameter with the
   others held at the mode rather than integrated out, which errs towards being too tight; see
   :ref:`Hierarchical_Fitting_Curvature`.
+* With ``covariance="diagonal"``, the default, a tendency for two parameters to move together
+  across the population is not represented; see :ref:`Hierarchical_Fitting_Covariance`.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood. A likelihood estimated from too few

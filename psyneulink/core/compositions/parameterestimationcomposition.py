@@ -298,6 +298,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
+    Covariance,
     Curvature,
     EStepConfig,
     fit_laplace_em,
@@ -473,8 +474,9 @@ class ParameterEstimationComposition(Composition):
         specifies options for hierarchical fitting, and may be given only when **fit_method** is ``"hierarchical"``.
         Must include a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"``
         chooses whether each participant's uncertainty is measured in all directions at once (``"full"``, the
-        default) or one parameter at a time (``"diagonal"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>`
-        for the full set of keys.
+        default) or one parameter at a time (``"diagonal"``), and ``"covariance"`` whether the group model may
+        express how parameters vary together; see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the full set
+        of keys.
 
     likelihood_estimator : "kde" or "neural" : default "kde"
         specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model **num_estimates** times
@@ -643,6 +645,7 @@ class ParameterEstimationComposition(Composition):
         # anything it computes, and they hold still for the length of a fit, so none of them is
         # stateful, modulable or logged.  They are the only place their defaults are written down.
         curvature = Parameter(Curvature.FULL, stateful=False, modulable=False, loggable=False)
+        covariance = Parameter(Covariance.DIAGONAL, stateful=False, modulable=False, loggable=False)
         max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False)
         tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False)
         variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False)
@@ -656,6 +659,11 @@ class ParameterEstimationComposition(Composition):
         def _validate_curvature(self, curvature):
             if curvature not in Curvature:
                 return f"must be one of {[c.value for c in Curvature]}"
+            return None
+
+        def _validate_covariance(self, covariance):
+            if covariance not in Covariance:
+                return f"must be one of {[c.value for c in Covariance]}"
             return None
 
         def _validate_max_iterations(self, max_iterations):
@@ -1005,6 +1013,7 @@ class ParameterEstimationComposition(Composition):
     #: when the composition is built (see `_setup_hierarchical`).
     _HIERARCHICAL_SOLVER_SETTINGS = (
         "curvature",
+        "covariance",
         "max_iterations",
         "tol",
         "variance_floor",
@@ -1082,6 +1091,16 @@ class ParameterEstimationComposition(Composition):
         settings["estep_options"] = copy.deepcopy(settings["estep_options"])
         # Validation accepts any whole number, 3.0 included, but it counts iterations.
         settings["max_iterations"] = int(settings["max_iterations"])
+        # Each setting is valid on its own, but not in every combination: the group correlations
+        # are built from the participant covariances, so asking for them without a curvature that
+        # measured any would read them off the modes alone.  Neither Parameter can see the other
+        # as it is assigned, so the pair is checked here, where a fit reads them together.
+        if settings["covariance"] == Covariance.FULL and settings["curvature"] != Curvature.FULL:
+            raise ParameterEstimationCompositionError(
+                'covariance="full" needs curvature="full" as well: the group correlations come '
+                "from the participant covariances, and a curvature measured one parameter at a "
+                "time reports none"
+            )
         return settings
 
     def _setup_hierarchical(self, likelihood_include_mask):
@@ -1155,6 +1174,7 @@ class ParameterEstimationComposition(Composition):
 
         fit_kwargs = dict(
             estep_config=config,
+            covariance=options["covariance"],
             max_iterations=options["max_iterations"],
             tol=options["tol"],
         )

@@ -57,8 +57,17 @@ class HierarchicalPECResults:
         One row per participant and parameter, with the estimate and its uncertainty in both spaces,
         and whether that participant's fit converged.
 
-    beta, sigma : numpy.ndarray
-        Group means ``(n_predictors, n_params)`` and variances ``(n_params,)``, unconstrained.
+    group_correlation : pandas.DataFrame
+        Correlation between the group's parameters, implied by the group covariance.  The identity
+        when the fit held the off-diagonals at zero, which records the assumption rather than a
+        measurement.
+
+    beta, group_covariance : numpy.ndarray
+        Group means ``(n_predictors, n_params)`` and covariance ``(n_params, n_params)``,
+        unconstrained.
+
+    sigma : numpy.ndarray
+        Per-parameter group variance ``(n_params,)``: the diagonal of `group_covariance`.
 
     z_hat : numpy.ndarray
         Per-participant estimates ``(n_subjects, n_params)``, unconstrained.
@@ -101,8 +110,10 @@ class HierarchicalPECResults:
     subject_parameters: pd.DataFrame
     subject_posteriors: pd.DataFrame
 
+    group_correlation: pd.DataFrame
+
     beta: np.ndarray
-    sigma: np.ndarray
+    group_covariance: np.ndarray
     z_hat: np.ndarray
     posterior_covariance: np.ndarray
 
@@ -119,6 +130,11 @@ class HierarchicalPECResults:
     def posterior_variance(self):
         """Per-participant, per-parameter variance: the diagonal of `posterior_covariance`."""
         return np.diagonal(self.posterior_covariance, axis1=1, axis2=2).copy()
+
+    @property
+    def sigma(self):
+        """Per-parameter group variance: the diagonal of `group_covariance`."""
+        return np.diag(self.group_covariance).copy()
 
     @classmethod
     def from_em(
@@ -157,7 +173,8 @@ class HierarchicalPECResults:
         posterior_covariance = np.asarray(em_result.posterior_covariance, dtype=float)
         variance = np.diagonal(posterior_covariance, axis1=1, axis2=2)
         beta = np.asarray(em_result.beta, dtype=float)
-        sigma = np.asarray(em_result.sigma, dtype=float)
+        group_covariance = np.asarray(em_result.covariance, dtype=float)
+        sigma = np.diag(group_covariance)
 
         # Each participant's estimate, in the model's own units.
         theta_hat = np.vstack([transform.to_natural(z_hat[s]) for s in range(z_hat.shape[0])])
@@ -187,6 +204,14 @@ class HierarchicalPECResults:
             theta_hat, index=pd.Index(labels, name="subject"), columns=list(names)
         )
 
+        # A fit that held the off-diagonals at zero reports the identity here, which says it
+        # assumed the parameters were independent rather than that it found them to be.
+        scale = np.sqrt(np.outer(sigma, sigma))
+        group_correlation = pd.DataFrame(
+            group_covariance / scale,
+            index=pd.Index(names, name="parameter"), columns=list(names),
+        )
+
         # One row per participant and parameter, with the estimate in both spaces.
         posteriors = pd.DataFrame({
             # Repeated as objects: participants are identified by whatever the data used, and
@@ -209,7 +234,7 @@ class HierarchicalPECResults:
                 "delta": h["delta"],
                 "n_subject_failures": h["n_subject_failures"],
                 **{f"beta_{n}": h["beta"][0][k] for k, n in enumerate(names)},
-                **{f"sigma_{n}": h["sigma"][k] for k, n in enumerate(names)},
+                **{f"sigma_{n}": h["covariance"][k, k] for k, n in enumerate(names)},
             }
             for h in em_result.history
         ])
@@ -221,8 +246,9 @@ class HierarchicalPECResults:
             group_parameters=group_parameters,
             subject_parameters=subject_parameters,
             subject_posteriors=posteriors,
+            group_correlation=group_correlation,
             beta=beta,
-            sigma=sigma,
+            group_covariance=group_covariance,
             z_hat=z_hat,
             posterior_covariance=posterior_covariance,
             objective=float(em_result.objective),
