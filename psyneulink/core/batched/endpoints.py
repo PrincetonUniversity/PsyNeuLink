@@ -169,7 +169,7 @@ def derive_scalar_readout(kernel, observation, *, primitive_ports=()):
                 event_ids = clock_ids(result)
                 if event_ids:
                     if (
-                        predicate.condition_type != "WhenFinished"
+                        predicate.condition_type not in {"WhenFinished", "WhenFinishedAndEveryNCalls"}
                         or set(predicate.dependency_component_ids) != event_ids
                     ):
                         _reject("endpoint.publication_unproven", "An event-dependent readout must execute after its event is finished.")
@@ -198,7 +198,8 @@ def derive_scalar_readout(kernel, observation, *, primitive_ports=()):
             if item.condition_type == "AllHaveRun" for component in item.dependency_component_ids
         }
         if observation.component_id not in termination_ids or not any(
-            item.component_id in termination_ids and item.condition_type == "WhenFinished"
+            item.component_id in termination_ids
+            and item.condition_type in {"WhenFinished", "WhenFinishedAndEveryNCalls"}
             and item.dependency_component_ids == (clock_id,) for item in graph.scheduler
         ):
             _reject("endpoint.termination_unproven", "Trial termination must require publication after the observed event finishes.")

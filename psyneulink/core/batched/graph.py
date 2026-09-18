@@ -62,6 +62,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
     ControlMechanism,
 )
 from psyneulink.core.scheduling.condition import (
+    AddEdgeTo,
     All,
     AllHaveRun,
     Always,
@@ -581,7 +582,7 @@ def lower_composition(
             follower_names = {
                 condition.node
                 for condition in graph.scheduler
-                if condition.condition_type == "WhenFinished"
+                if condition.condition_type in {"WhenFinished", "WhenFinishedAndEveryNCalls"}
             }
             rejected_conditions = [
                 diagnostic
@@ -592,8 +593,10 @@ def lower_composition(
                     and (
                         (
                             diagnostic.component in follower_names
-                            and diagnostic.detail
-                            == "WhenFinished requires dynamic_lane_local"
+                            and diagnostic.detail in {
+                                "WhenFinished requires dynamic_lane_local",
+                                "All requires dynamic_lane_local",
+                            }
                         )
                         or diagnostic.detail
                         == _COEVOLVING_SCHEDULE_DIAGNOSTIC_DETAIL
@@ -1499,7 +1502,7 @@ def _dynamic_scheduled_graph_eligible(
             ):
                 return False
             continue
-        if condition.condition_type != "WhenFinished" or not exact_attrs(
+        if condition.condition_type not in {"WhenFinished", "WhenFinishedAndEveryNCalls"} or not exact_attrs(
             condition.attrs,
             {"predicate": "is_finished"},
         ):
@@ -2334,9 +2337,15 @@ def _dynamic_control_declarations_supported(
             == target_condition.finished_value_ids
             and len(controller_condition.dependency_component_ids) == 1
             and consideration_set_by_component_id[controller.component_id]
-            < consideration_set_by_component_id[
+            != consideration_set_by_component_id[
                 controller_condition.dependency_component_ids[0]
             ]
+            and max(
+                consideration_set_by_component_id[controller.component_id],
+                consideration_set_by_component_id[
+                    controller_condition.dependency_component_ids[0]
+                ],
+            )
             < consideration_set_by_component_id[target.component_id]
             and not any(
                 projection.sender_component_id == controller.component_id
@@ -4597,8 +4606,31 @@ def _supported_ddm_threshold_override(composition, control, source, target) -> b
     target_condition = _scheduler_conditions(composition).get(target)
     if source_condition is None:
         return False
-    return _same_condition(source_condition, control_condition) and _same_condition(
+    if not (_same_condition(source_condition, control_condition) and _same_condition(
         source_condition, target_condition
+    )):
+        return False
+    # Folding the source counter into the controller is exact only if both
+    # see the same finished flag in a pass. Support either the legacy held
+    # first-step threshold or a fresh threshold, but never a source/controller
+    # pair straddling the stepper's update (their counts would differ).
+    dependencies = tuple(getattr(source_condition, "args", ()))
+    if type(source_condition) is not WhenFinished or len(dependencies) != 1:
+        return False
+    levels = {
+        node: index
+        for index, group in enumerate(composition.scheduler.consideration_queue)
+        for node in group
+    }
+    if any(node not in levels for node in (source, control, target, dependencies[0])):
+        return False
+    source_level, control_level, target_level, stepper_level = (
+        levels[node] for node in (source, control, target, dependencies[0])
+    )
+    return (
+        source_level < control_level < target_level
+        and (control_level < stepper_level < target_level
+             or stepper_level < source_level)
     )
 
 
@@ -5261,7 +5293,7 @@ def _scheduler_ir_specs(
     conditions = _scheduler_conditions(composition)
     if dependency_dict is None:
         dependency_dict = getattr(
-            composition.graph_processing,
+            composition.scheduler,
             "dependency_dict",
             {},
         )
@@ -5275,7 +5307,7 @@ def _scheduler_ir_specs(
     )
     declared = []
     finished_dependencies = {}
-    complete = queue_complete and not _scheduler_structural_conditions(composition)
+    complete = queue_complete and not _unsupported_scheduler_structural_conditions(composition)
 
     # Use dependency order rather than condition insertion order so component,
     # predicate, and finished-value IDs are deterministic across equivalent
@@ -5354,8 +5386,8 @@ def _scheduler_ir_specs(
                 "pass_index": pass_index,
                 "time_scale": time_scale,
             }
-        elif condition_type == "WhenFinished":
-            args = tuple(getattr(condition, "args", ()))
+        elif condition_type in {"WhenFinished", "WhenFinishedAndEveryNCalls"}:
+            args = (_fresh_finished_dependency(condition),) if condition_type == "WhenFinishedAndEveryNCalls" else tuple(getattr(condition, "args", ()))
             if len(args) != 1 or id(args[0]) not in component_ids:
                 complete = False
                 continue
@@ -5404,7 +5436,7 @@ def _scheduler_ir_specs(
             finished_value_ids=tuple(
                 finished_value_ids[component_id]
                 for component_id in condition.dependency_component_ids
-            ) if condition.condition_type == "WhenFinished" else (),
+            ) if condition.condition_type in {"WhenFinished", "WhenFinishedAndEveryNCalls"} else (),
         )
         for condition in declared
     )
@@ -5665,7 +5697,7 @@ def _classify_schedule(
     coevolving=False,
 ) -> tuple[str, list[str], list[BatchedDiagnostic]]:
     conditions = _scheduler_conditions(composition)
-    structural_conditions = _scheduler_structural_conditions(composition)
+    structural_conditions = _unsupported_scheduler_structural_conditions(composition)
     structural_rejections = [
         BatchedDiagnostic(
             component=_node_name(node),
@@ -5934,6 +5966,8 @@ def _condition_schedule_kind(
         return UNSUPPORTED_SCHEDULE
     if condition_name in {"Always", "AtTrialStart"}:
         return STATIC_GRAPH_SCHEDULE
+    if condition_name == "WhenFinishedAndEveryNCalls":
+        return DYNAMIC_LANE_LOCAL_SCHEDULE
     if condition_name == "WhenFinished":
         args = getattr(condition, "args", ())
         if len(args) != 1:
@@ -6006,9 +6040,27 @@ _SUPPORTED_SCHEDULER_CONDITION_TYPES = {
 def _supported_scheduler_condition_name(condition) -> str | None:
     """Name an exact supported PNL condition class; subclasses fail closed."""
 
+    if _fresh_finished_dependency(condition) is not None:
+        return "WhenFinishedAndEveryNCalls"
     if not is_canonical_condition(condition):
         return None
     return _SUPPORTED_SCHEDULER_CONDITION_TYPES.get(type(condition))
+
+
+def _fresh_finished_dependency(condition):
+    """Recognize All(WhenFinished(x), EveryNCalls(x, 1)), in either order."""
+    if type(condition) is not All or not is_canonical_condition(condition):
+        return None
+    operands = condition.args
+    if len(operands) != 2:
+        return None
+    finished = next((item for item in operands if type(item) is WhenFinished), None)
+    calls = next((item for item in operands if type(item) is EveryNCalls), None)
+    if finished is None or calls is None or not is_canonical_condition(finished):
+        return None
+    if len(finished.args) != 1 or not _is_default_every_n_calls(calls, finished.args[0]):
+        return None
+    return finished.args[0]
 
 
 def _at_pass_spec(condition) -> tuple[int, str] | None:
@@ -6098,6 +6150,44 @@ def _scheduler_structural_conditions(composition):
     return conditions_structural
 
 
+def _unsupported_scheduler_structural_conditions(composition):
+    """Allow exact ordering edges already represented in the scheduler graph.
+
+    AddEdgeTo has no runtime predicate. Its effect is captured by the effective
+    dependency graph and consideration sets, including implicit EveryNCalls
+    defaults. Other graph rewrites and customized instances remain unsupported.
+    """
+    scheduler = composition.scheduler
+    dependency_dict = scheduler.dependency_dict
+    queue_levels = {
+        node: index
+        for index, group in enumerate(scheduler.consideration_queue)
+        for node in group
+    }
+    unsupported = {}
+    for owner, conditions in _scheduler_structural_conditions(composition).items():
+        for condition in conditions:
+            nodes = getattr(condition, "nodes", ())
+            canonical_methods = all(
+                inspect.ismethod(getattr(condition, name, None))
+                and getattr(condition, name).__self__ is condition
+                and getattr(condition, name).__func__ is getattr(AddEdgeTo, name)
+                for name in ("modify_graph", "_modify_graph", "_preprocess", "_process", "_postprocess")
+            )
+            supported = (
+                type(condition) is AddEdgeTo
+                and condition.owner is owner
+                and type(nodes) is tuple and len(nodes) == 1
+                and owner in queue_levels and nodes[0] in queue_levels
+                and queue_levels[owner] < queue_levels[nodes[0]]
+                and owner in dependency_dict.get(nodes[0], ())
+                and canonical_methods
+            )
+            if not supported:
+                unsupported.setdefault(owner, []).append(condition)
+    return unsupported
+
+
 def _is_implicit_scheduler_default(condition, dependencies) -> bool:
     """Whether ``condition`` is exactly graph-scheduler's generated default."""
 
@@ -6141,15 +6231,15 @@ def _is_default_every_n_calls(condition, dependency) -> bool:
 def _dependency_topological_order(composition, nodes):
     """Return a deterministic dependency order and any nodes in dependency cycles.
 
-    PsyNeuLink's processing dependency graph is authoritative for execution
-    precedence.  Self dependencies represent recurrent state (for example an
+    The analyzed scheduler graph includes explicit structural ordering edges.
+    Self dependencies represent recurrent state (for example an
     LCA's AutoAssociativeProjection) and do not constrain within-pass emission.
     Nodes at the same topological level are ordered by their stable PNL names so
     disconnected components do not inherit Composition insertion order.
     """
 
     node_set = set(nodes)
-    dependency_dict = getattr(composition.graph_processing, "dependency_dict", {})
+    dependency_dict = getattr(composition.scheduler, "dependency_dict", {})
     dependencies = {
         node: {
             dependency

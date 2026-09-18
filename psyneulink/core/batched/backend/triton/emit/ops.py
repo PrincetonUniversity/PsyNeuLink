@@ -1118,7 +1118,7 @@ class OpEmitMixin:
         if predicate.kind in {"AtPass", "AtTrialStart"}:
             pass_var = self._dynamic_slot_var(slot_vars, "pass_index")
             return f"{pass_var} == {predicate.pass_index}"
-        if predicate.kind in {"EveryNCalls", "AllEveryNCalls"}:
+        if predicate.kind in {"EveryNCalls", "AllEveryNCalls", "WhenFinishedAndEveryNCalls"}:
             credits = [
                 self._dynamic_slot_var(
                     slot_vars,
@@ -1128,9 +1128,17 @@ class OpEmitMixin:
                 )
                 for dependency_id in predicate.dependency_component_ids
             ]
-            return " & ".join(
+            called = " & ".join(
                 f"({credit} >= {predicate.call_count})" for credit in credits
             )
+            if predicate.kind == "WhenFinishedAndEveryNCalls":
+                finished = self._dynamic_slot_var(
+                    slot_vars, "finished",
+                    owner=predicate.dependency_component_ids[0],
+                    finished=predicate.finished_value_ids[0],
+                )
+                return f"({called}) & ({finished} != 0)"
+            return called
         if predicate.kind == "WhenFinished":
             return self._dynamic_slot_var(
                 slot_vars,
@@ -1199,9 +1207,12 @@ class OpEmitMixin:
             produced = member_masks.get(slot.producer_component_id)
             consumed = member_masks.get(slot.consumer_component_id)
             produced_delta = f"tl.where({produced}, 1, 0)" if produced else "0"
-            consumed_delta = f"tl.where({consumed}, 1, 0)" if consumed else "0"
+            # A consumer discards all accumulated calls, including calls that
+            # arrived while its WhenFinished conjunct was false. Keeping a
+            # backlog would allow another execution without a fresh producer.
+            remaining = f"tl.where({consumed}, 0, {credit_var})" if consumed else credit_var
             self.builder.line(
-                f"{credit_var} = {credit_var} + {produced_delta} - {consumed_delta}"
+                f"{credit_var} = {remaining} + {produced_delta}"
             )
 
         finished_by_id = {

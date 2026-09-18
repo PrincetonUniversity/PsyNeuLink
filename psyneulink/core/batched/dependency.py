@@ -248,6 +248,7 @@ def analyze_axis_dependencies(
             "EveryNCalls",
             "AllEveryNCalls",
             "WhenFinished",
+            "WhenFinishedAndEveryNCalls",
         }
         repeated_component_ids = tuple(
             condition.component_id

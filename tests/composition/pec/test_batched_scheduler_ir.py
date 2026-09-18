@@ -366,6 +366,42 @@ def test_nondefault_at_pass_clock_is_declaration_incomplete():
     assert "time_scale=ENVIRONMENT_SEQUENCE" in lowering.rejected_conditions[0].detail
 
 
+def test_add_edge_lowers_effective_order_and_implicit_call_dependency():
+    first = pnl.TransferMechanism(name="z ordering source")
+    second = pnl.TransferMechanism(name="a ordering target")
+    composition = pnl.Composition(nodes=[second, first])
+    composition.scheduler.add_condition(first, pnl.AtPass(1))
+    composition.scheduler.add_condition(first, pnl.AddEdgeTo(second))
+
+    before = lower_composition(composition)
+    assert before.graph is not None
+    assert not before.rejected_conditions
+    assert before.graph.execution_order == (first.name, second.name)
+    conditions = {item.node: item for item in before.graph.scheduler}
+    assert conditions[second.name].condition_type == "EveryNCalls"
+    assert conditions[second.name].dependencies == (first.name,)
+    assert conditions[first.name].consideration_set_id < conditions[second.name].consideration_set_id
+
+    # Running materializes implicit defaults in the live ConditionSet. Both
+    # lowering paths must still describe the same effective scheduler graph.
+    composition.run(inputs={first: [[1.]], second: [[2.]]})
+    after = lower_composition(composition)
+    assert after.graph.scheduler == before.graph.scheduler
+    assert after.graph.consideration_sets == before.graph.consideration_sets
+
+
+def test_customized_add_edge_remains_unsupported():
+    first = pnl.TransferMechanism(name="edge source")
+    second = pnl.TransferMechanism(name="edge target")
+    composition = pnl.Composition(nodes=[first, second])
+    condition = pnl.AddEdgeTo(second)
+    composition.scheduler.add_condition(first, condition)
+    condition._process = lambda graph: graph
+    lowering = lower_composition(composition)
+    assert lowering.graph is None
+    assert any("unsupported structural" in item.reason for item in lowering.rejected_conditions)
+
+
 @pytest.mark.parametrize(
     "condition_owner, condition_factory, expected_detail",
     (

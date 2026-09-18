@@ -151,6 +151,7 @@ _DYNAMIC_MEMBER_PREDICATES = frozenset({
     "EveryNCalls",
     "AllEveryNCalls",
     "WhenFinished",
+    "WhenFinishedAndEveryNCalls",
 })
 _DYNAMIC_SCHEDULE_PREDICATES = _DYNAMIC_MEMBER_PREDICATES | {"AllHaveRun"}
 _DYNAMIC_SCHEDULE_SLOT_KINDS = frozenset({
@@ -209,6 +210,7 @@ class KernelSchedulePredicate:
             "AtTrialStart": (0, 0, True, False),
             "EveryNCalls": (1, 0, False, True),
             "WhenFinished": (1, 1, False, False),
+            "WhenFinishedAndEveryNCalls": (1, 1, False, True),
         }
         valid_shape = (
             shape == fixed_shapes.get(self.kind)
@@ -811,7 +813,7 @@ def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) ->
             None,
         )
         for member in members
-        if member.predicate.kind in {"EveryNCalls", "AllEveryNCalls"}
+        if member.predicate.kind in {"EveryNCalls", "AllEveryNCalls", "WhenFinishedAndEveryNCalls"}
         for dependency_id in member.predicate.dependency_component_ids
     } | {
         (
@@ -823,7 +825,7 @@ def _validate_dynamic_schedule_program(program: KernelDynamicScheduleProgram) ->
             None,
         )
         for member in members
-        if member.predicate.kind == "WhenFinished"
+        if member.predicate.kind in {"WhenFinished", "WhenFinishedAndEveryNCalls"}
     }
     carry_keys = tuple(
         _dynamic_carry_key(carry) for carry in program.loop_carries
@@ -3305,7 +3307,7 @@ def _validate_kernel_finished_scheduler(kernel: KernelIR) -> None:
             raise ValueError(
                 "KernelIR scheduler finished-value IDs must be a typed tuple."
             )
-        if condition.condition_type != "WhenFinished":
+        if condition.condition_type not in {"WhenFinished", "WhenFinishedAndEveryNCalls"}:
             if condition.finished_value_ids:
                 raise ValueError(
                     "KernelIR finished-value IDs are valid only on WhenFinished "
@@ -4633,7 +4635,7 @@ def _canonical_dynamic_schedule_program(
     }
     for consumer_id in member_ids:
         predicate = predicates[consumer_id]
-        if predicate.kind in {"EveryNCalls", "AllEveryNCalls"}:
+        if predicate.kind in {"EveryNCalls", "AllEveryNCalls", "WhenFinishedAndEveryNCalls"}:
             for producer_id in predicate.dependency_component_ids:
                 slots.append(
                     KernelSchedulerStateSlot(
@@ -4649,7 +4651,7 @@ def _canonical_dynamic_schedule_program(
                 )
     finished_slot_keys = set()
     for predicate in predicates.values():
-        if predicate.kind != "WhenFinished":
+        if predicate.kind not in {"WhenFinished", "WhenFinishedAndEveryNCalls"}:
             continue
         key = (
             predicate.dependency_component_ids[0],
@@ -4809,7 +4811,7 @@ def _canonical_dynamic_member_predicate(
             call_count=1,
         )
     if (
-        kind != "WhenFinished"
+        kind not in {"WhenFinished", "WhenFinishedAndEveryNCalls"}
         or attrs != {"predicate": "is_finished"}
         or len(condition.dependency_component_ids) != 1
         or len(condition.finished_value_ids) != 1
@@ -4822,6 +4824,7 @@ def _canonical_dynamic_member_predicate(
         kind,
         dependency_component_ids=condition.dependency_component_ids,
         finished_value_ids=condition.finished_value_ids,
+        call_count=1 if kind == "WhenFinishedAndEveryNCalls" else None,
     )
 
 

@@ -281,6 +281,15 @@ def make_stab_flex(
         controlExecution, pnl.Always()
     )
 
+    # Publish this trial's collapsing threshold in the same pass that the LCA
+    # first finishes, before the first DDM step. Without this ordering edge,
+    # the threshold source/controller are considered before the LCA and miss
+    # that pass, leaving the DDM with the previous trial's held threshold.
+    # This changes scheduling only; it does not add an input to the threshold.
+    stabilityFlexibility.scheduler.add_condition(
+        controlExecution, pnl.AddEdgeTo(thresholdMechanism)
+    )
+
     # # We schedule driftRate, thresholdMechanism, thresholdOverride, and decisionMaker, to start once
     # the ITI and CSI are both over, which is indicated by the controlExecutions's is_finished flag.
     stabilityFlexibility.scheduler.add_condition(
@@ -314,12 +323,14 @@ def make_stab_flex(
         sender=decisionMaker.output_ports[1], receiver=responseGate
     )
 
-    # Sets scheduler conditions, so the gates do not execute (and composition doesn't finish) until DDM is finished
+    # Require a new DDM execution as well as a finished decision. During the
+    # ITI, is_finished can still be true against a previous negative boundary;
+    # publishing reset outputs then would prematurely satisfy AllHaveRun.
     stabilityFlexibility.scheduler.add_condition(
-        decisionGate, pnl.WhenFinished(decisionMaker)
+        decisionGate, pnl.All(pnl.WhenFinished(decisionMaker), pnl.EveryNCalls(decisionMaker, 1))
     )
     stabilityFlexibility.scheduler.add_condition(
-        responseGate, pnl.WhenFinished(decisionMaker)
+        responseGate, pnl.All(pnl.WhenFinished(decisionMaker), pnl.EveryNCalls(decisionMaker, 1))
     )
 
     # Lastly, so that the surrogate CSI is added to the overall response time of the composition, we add a projection
