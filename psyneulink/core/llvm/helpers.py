@@ -64,6 +64,7 @@ def memcpy(builder, dst, src):
 
     bool_ty = ir.IntType(1)
     char_ptr_ty = ir.IntType(8).as_pointer()
+
     ptr_src = builder.bitcast(src, char_ptr_ty)
     ptr_dst = builder.bitcast(dst, char_ptr_ty)
 
@@ -72,22 +73,9 @@ def memcpy(builder, dst, src):
     # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
     obj_size = builder.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
 
-    if "unaligned_copy" in debug_env:
-        memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
-        memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
-        builder.call(memcpy_f, [ptr_dst, ptr_src, obj_size, bool_ty(0)])
-    else:
-        int_ty = ir.IntType(32)
-        int_ptr_ty = int_ty.as_pointer()
-        obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
-        obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
-        ptr_src = builder.bitcast(src, int_ptr_ty)
-        ptr_dst = builder.bitcast(dst, int_ptr_ty)
-
-        with for_loop_zero_inc(builder, obj_size, id="memcopy_loop") as (b, idx):
-            src = b.gep(ptr_src, [idx])
-            dst = b.gep(ptr_dst, [idx])
-            b.store(b.load(src), dst)
+    memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
+    memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
+    builder.call(memcpy_f, [ptr_dst, ptr_src, obj_size, bool_ty(0)])
 
     return builder
 
