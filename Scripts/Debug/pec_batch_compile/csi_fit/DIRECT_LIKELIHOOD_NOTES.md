@@ -794,3 +794,445 @@ uv run python Scripts/Debug/pec_batch_compile/csi_fit/csi_fitting_readiness.py \
   summarize-generations <resolution-ladder-root>/generation \
   --output generation-summary.json --csv-output generation-summary.csv
 ```
+
+## Expanded direct-solution distribution audit (2026-09-16)
+
+**Historical, before the scheduling fix below.** Values described as current
+in this section refer to that earlier revision, not the corrected handoff.
+
+`csi_direct_solution_distributions.py` evaluates the generated GPU sampler,
+retained handwritten GPU reference, and continuous PDE at a saved direct-fit
+JSON vector. It also runs an independent Brownian-bridge diagnostic using the
+direct model's own conditional drift/history. It plots both choices on common
+10 ms display bins, selects median-RT trials before looking at discrepancies,
+and saves per-trial scores for every included observation. GPU simulation uses
+1 ms steps; only CSI is rounded to that clock. Other physical parameters are
+copied exactly, without rounding to the optimizer's parameter grid.
+
+At the expanded-bounds subject-1 Della CPU solution (job `13971325_1`), using
+100,000 estimates and seed 101 on an RTX 2080 Ti, the 485-observation scores were:
+
+| Evaluator | Sum of observed log densities |
+| --- | ---: |
+| Direct PDE, 1 ms recording mass divided by 0.001 s | 286.7572 |
+| Retained handwritten GPU, 1 ms endpoints | 283.3751 |
+| Current generated GPU, 1 ms endpoints | 197.0753 |
+
+The direct raw interval log likelihood was reproduced exactly at
+`-3063.504140003025`. These density scores have a common unit convention, but
+the PDE uses 1 ms recording intervals while GPU scores use the fitting
+histogram estimator (100 bins, smoothing sigma 0.5, pseudocount 0.1).
+
+This audit exposed a held-threshold discrepancy relative to the direct model
+at this parameter vector. **The LLVM follow-up below established that the
+generated path preserves the original composition's behavior; this is not a
+compiler-only reset bug.** Eight scored trials start with a negative effective DDM
+threshold: retained-row indices 48, 120, 130, 219, 409, 418, 448, and 541 (zero
+based). For representative NoInstruction trial 418, the first threshold is
+`-0.0505233`, followed by the expected positive value `0.2746767` on the next
+step. All its generated samples terminate on the first step with choice 0.
+The first threshold reflects held control/history state rather than the new
+trial's reset boundary. The production fused scorer agrees with likelihoods
+computed from materialized generated samples to maximum absolute density
+error `7e-7`; this is not merely a plotting-sampler discrepancy.
+
+Those eight rows contribute 86.7222 of the 89.6819 log-unit generated/direct
+gap (96.7%). On the other 477 observations, direct, generated GPU, and retained
+GPU scores are 281.4557, 278.4960, and 278.7110. This finding qualifies earlier
+interpretations of the expanded-bounds GPU/direct fit comparison: a large gap
+cannot be attributed solely to endpoint versus continuous crossings. The
+initial audit did not identify whether the difference came from source
+scheduling or compilation; the LLVM model-output comparison below resolves
+that question. The production model and compiler remain unchanged.
+
+For the three median-RT trials, the bridge diagnostic's maximum joint CDF
+deviations from the PDE are 0.40, 0.27, and 0.23 percentage points for
+NoInstruction, RealRare, and RealFrequent. The retained endpoint GPU's values
+are 1.81, 9.17, and 1.73 points. Thus the continuous-process check is close, but
+the selected RealRare trial still has a visible discrepancy in both endpoint
+implementations. The bridge diagnostic also uses direct-model drift/history,
+so that residual cannot be assigned exclusively to missed bridge crossings.
+Near agreement of total objective values does not imply identical conditional
+distributions on every trial.
+
+The native PDE flux curves integrate to their solver probabilities (maximum
+mass error below `2e-11`), reproduce the observed-bin probabilities, and leave
+negligible survival mass. GPU samples were checked for truncation. Artifacts
+for this run are in the local ignored directory
+`data fitting/audit/della-direct-solution-distributions-20260916/`.
+
+```bash
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_direct_solution_distributions.py \
+  --parameters /path/to/direct_fit.json --subject 1 \
+  --estimates 100000 --chunk-estimates 10000 --seed 101 \
+  --output /scratch/path/to/new-distribution-audit
+```
+
+Use the project's CUDA environment and scratch-based compiler caches. The
+output directory must not already exist. The saved figures are conditional
+single-trial likelihoods, with observed history retained, rather than an
+unconditional mixture over a participant's trial sequence.
+
+## LLVM ground-truth follow-up (2026-09-16)
+
+**Historical, before the fix below.** The original and generated models were
+both unchanged for this audit. The subsequent section records the corrected
+source schedule and its independent LLVM validation.
+
+The original PNL CSI composition's **model outputs**, executed with `LLVMRun`,
+define the reference behavior. Its legacy likelihood implementation is not
+used in this audit. The preceding negative-threshold finding does **not**
+establish a generated-simulator bug: the original LLVM model exhibits it too.
+
+The source scheduler considers the threshold mechanism and its controller
+before the LCA. On the pass when the LCA first becomes finished, those earlier
+nodes have already been considered, but the later DDM is now eligible. Its
+first execution therefore consumes the previously held threshold. Resetting
+the threshold integrator does not reset that ControlSignal. The direct model
+and older handwritten GPU likelihood instead assume a fresh initial boundary.
+
+A focused three-trial test with zero DDM noise drives the first trial through
+boundary collapse, then supplies positive drift on the next trial. LLVM and
+generated GPU execution both return choice 0 and an RT of nondecision time
+plus 1 ms on that next trial. The checked-in regression
+`tests/composition/pec/test_batched_csi_llvm_threshold.py` also verifies the
+negative first/positive second boundary and observed-history event count.
+Clamping or resetting only the generated path would change the source model.
+
+The expanded direct-fit vector was also audited on the full 561-row subject-1
+input sequence at 1 ms, with leak 12, competition 3, deterministic LCA, and
+DDM noise 0.1 for the stochastic check:
+
+| Check | Generated GPU | Original LLVM |
+| --- | ---: | ---: |
+| Deterministic choices | All identical | Reference |
+| Maximum deterministic RT error | `3.242e-8` s | Reference |
+| Independent stochastic sequences | 256 | 32 |
+| Accuracy across all input trials | 0.938531 | 0.938001 |
+| Mean RT | 0.769116 s | 0.770147 s |
+
+The accuracy difference is 0.30 sequence-level standard errors and the RT
+difference is -0.83 standard errors. Stratified mean checks pass. These are
+full-sequence simulations, not replay of observed RTs and not evaluations of
+either likelihood. RNG layouts differ, so stochastic trajectories are compared
+as distributions rather than matched draws. The audit now accepts
+`--time-step` and `--samples-output` and initializes each LLVM replicate with
+a fresh execution context and seed, restoring held controls as well as state.
+
+The RealRare discrepancy has an additional deterministic-history explanation.
+At representative trial 251, the direct method's initial drift is about
+`+0.012435`, whereas generated PNL drift is `-0.019470`. An independent scalar
+calculation gives the following maximum drift differences over the first
+20 DDM steps:
+
+| History/drift convention | Difference from generated PNL |
+| --- | ---: |
+| Continuous durations, RK4 | 0.0499463 |
+| Rounded CSI/RT, PNL overlapping execution counts, RK4 | 0.0073254 |
+| Same PNL timing, Euler integration | `3.96e-7` |
+
+The final Euler/timing calculation also matches the selected NoInstruction
+and RealFrequent drift paths within `1.2e-7`. Merely reducing the direct
+history RK4 mesh from 10 ms to 1 ms changes the full direct log likelihood by
+only `2.2e-6`; it does not remove the model-timing difference. These are checks
+at the three plotted trials, not proof for every parameter vector.
+
+The source composition and generated simulator have not been changed. A CPU
+likelihood intended to match original PNL exactly would need its execution
+counts, Euler LCA/history, held-control boundary at trial onset, and endpoint
+crossing rule. The current continuous direct fit should remain identified as
+an approximation with different semantics. Brownian-bridge agreement verifies
+the continuous diffusion calculation but does not verify these PNL conventions.
+
+Reproduce the model-output audit in a CUDA environment, with caches on scratch:
+
+```bash
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_gpu_llvm_simulation_audit.py \
+  --data-file /path/to/data_to_fit_study3.csv --subject 1 \
+  --parameter-file /path/to/direct_fit.json --time-step .001 \
+  --max-steps 12000 --gpu-replicates 256 --llvm-replicates 32 \
+  --samples-output /scratch/path/llvm-gpu-outputs.npz \
+  --output /scratch/path/llvm-gpu-audit.json
+```
+
+Local artifacts, output-distribution overlays, and the scalar timing ablation
+are in `data fitting/audit/llvm-threshold-ground-truth-20260916/`.
+
+## Threshold scheduling fix (2026-09-16)
+
+The source model has now been fixed, with the same behavior implemented through
+ordinary generated scheduler execution. This changes the model used by GPU
+fits; previous GPU fits should be rerun. The direct solver is unchanged.
+
+Two missing scheduling dependencies caused the artifact:
+
+1. ThresholdMechanism and its controller were considered before the LCA.
+   `WhenFinished(LCA)` therefore became true too late for them on the first
+   decision pass. Add `LCA: AddEdgeTo(ThresholdMechanism)` so that the order is
+   LCA → threshold source → threshold controller → DDM. The first threshold is
+   now `B0 + collapse_rate * dt`, on the same LCA pass as before. No extra
+   millisecond is inserted and no boundary is artificially clamped.
+2. The response/decision gates had only `WhenFinished(DDM)`. During the ITI,
+   reset evidence could already exceed a previous negative held threshold,
+   allowing the gates to publish reset outputs before the DDM ran. With only
+   the ordering edge fixed, the reproduction still gave a zero-decision-time
+   response. Both gates now use
+   `All(WhenFinished(DDM), EveryNCalls(DDM, 1))`.
+
+This is a source-model scheduling defect, not a failure to reset the DDM
+integrator. An independent LLVM compilation defect also prevented the explicit
+ordering fix: `Composition._get_processing_condition_set` returned a list of
+basic and structural conditions for LLVM to evaluate. It now returns the
+basic predicate; structural conditions have already shaped the consideration
+queue. A Python/LLVM regression checks this separation and the effective
+implicit call dependency.
+
+The batched compiler now admits exact `AddEdgeTo` ordering edges and the exact
+fresh-finished conjunction above (either operand order). It snapshots the
+effective scheduler dependency graph, preserves one-call freshness, and
+validates that the folded threshold source/controller see the same LCA
+finished flag. Unsupported/customized conditions and a threshold chain
+straddling the LCA update still fail closed. Held controller state is retained;
+it is the model's publication order that changes. Legacy scheduling remains
+faithfully supported and is exercised in a separate regression case.
+
+The deterministic collapse reproduction uses zero noise, 1 ms steps, threshold
+0.05005, collapse -0.0003 per step, and NDT 0.2 s. Its second trial changes from
+`(choice=0, RT=0.201)` to `(choice=1, RT=0.308)` in both LLVM and generated GPU
+execution. Observed-history replay also sees the fresh boundary and 108 event
+steps rather than the spurious single step.
+
+At the *same saved direct-fit solution* for subject 1, with all 561 history rows
+retained and 485 rows scored:
+
+| Comparable log-density sum | Before fix | After fix |
+| --- | ---: | ---: |
+| Direct PDE | 286.757170 | 286.757170 |
+| Generated GPU, 100,000 estimates, seed 101 | 197.075317 | 283.336914 |
+| Direct minus generated GPU | 89.681853 | 3.420256 |
+| Included rows with negative first-step thresholds | 8 | 0 |
+
+The gap shrank by **96.19%**. Direct interval probabilities are divided by the
+1 ms recording width for this table; its unchanged raw interval log-likelihood
+is -3063.504140. GPU settings remain 100 histogram bins, smoothing sigma 0.5,
+pseudocount 0.1, 1 ms simulation, and a 12 s horizon. Only CSI is rounded to
+whole GPU steps; the other direct-fit parameters are unrounded. These are
+rescoring checks, not new fits.
+
+Across seeds 101–105 at 100,000 estimates, fixed GPU scores are 283.336914,
+283.325867, 283.821259, 283.706268, and 283.192261 (mean 283.476514, sample SD
+0.271394). The remaining gap is larger than this measured Monte Carlo scatter.
+The earlier handwritten score is 283.375122, but it remains a historical
+comparison rather than compiler ground truth.
+
+Independent **model-output** validation on the corrected original composition
+also passes: all 561 deterministic choices match LLVM and maximum RT error is
+`3.242e-8` s. Across 256 generated and 32 LLVM full-sequence stochastic replicates,
+accuracy is 0.938537 versus 0.939895 (-0.73 sequence-level standard errors) and
+mean RT is 0.768832 versus 0.771097 s (-1.68 standard errors). All stratified
+accuracy/mean-RT checks pass. The legacy LLVM likelihood was not used.
+
+The objectives are still not identical. At representative RealRare trial 251,
+the source's initial drift remains -0.019470 versus the continuous direct
+history's +0.012435; the earlier timing/Euler ablation explains this difference.
+The fixed GPU/direct joint choice-1 CDF discrepancy there is about 0.090,
+compared with 0.013 and 0.016 in the selected NoInstruction and RealFrequent
+trials. Aggregate score agreement does not establish distributional identity.
+Continuous versus rounded LCA history, Euler versus RK4 integration, endpoint
+versus continuous crossings, and histogram smoothing remain distinct numerical
+choices. We have not changed direct-model history or added Brownian-bridge
+crossings to production PNL simulation.
+
+Validation: the scheduler, GraphIR/KernelIR, existing CSI acceptance, and
+Python/LLVM structural tests passed (157 passed, 15 skipped); the updated
+original-model collapse/admission regressions passed (9 passed, including
+style checks). GPU-only skipped interpreter cases in the broader suite retain
+their existing skip policy. The diagnostic also checked that materialized
+sample densities and fused strict scoring agree within 1e-5 and that there
+were no truncated samples.
+
+Artifacts, parameter JSON, five-seed scores, source hashes, and both PNG/PDF
+figures are in `data fitting/audit/threshold-schedule-fix-20260916/`:
+
+- `likelihood_before_after.png`: per-trial observed log densities before/after.
+- `fixed_direct_gpu_distributions.png`: direct and corrected generated
+  distributions for the same three representative trials, both choices.
+- `manifest.json`, `trial_scores.csv`, `fixed-full-audit.json`, and
+  `fixed-full-samples.npz`: numerical results and independent model outputs.
+
+Reproduce the likelihood comparison with CUDA, an installed checkout, and
+Torch/Triton/cache directories on scratch (output must be a new directory):
+
+```bash
+OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 \
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_direct_solution_distributions.py \
+  --parameters /path/to/direct_fit.json --subject 1 \
+  --estimates 100000 --chunk-estimates 10000 --score-repeats 5 \
+  --output /scratch/path/threshold-fix-comparison
+```
+
+Use the model-output audit command in the preceding section to independently
+check the current original composition against LLVM. Historical pre-fix results
+in that section are retained as evidence and are not the current defaults.
+
+## Local cross-dataset likelihood sweep (2026-09-16)
+
+The corrected original GPU composition and continuous direct solver agree
+approximately near fitted parameters, but their objectives remain different.
+The local audit evaluated all **97 subjects** at saved direct solutions, then
+**313 parameter–dataset combinations** across subjects 1, 4, 7, 42, 71, and 81
+and two independently generated, full-sequence GPU datasets. All 13 parameters
+were probed individually, alongside joint changes and search-bound stress
+cases. Subject 1's deep sweep uses the expanded-bound solution.
+
+The main sweep uses 20,000 estimates and seeds 101–103; 32 selected points were
+rechecked at 100,000 estimates with the same three seeds. GPU dt is 1 ms,
+histograms use 100 bins, smoothing sigma 0.5, and pseudocount 0.1. The direct
+solver uses 8 threads, 1 ms DDM steps, 65 spatial points, and native RK4 history.
+Both objectives receive CSI rounded to the nearest millisecond; exact saved
+vectors and unsnapped direct scores are retained separately. Complete trial
+histories and original inclusion masks are preserved. Direct probabilities
+are divided by the 1 ms recording interval to compare density units.
+
+- All 97 saved-solution direct totals are finite. Median subject-level mean
+  absolute per-trial difference: **0.04864 log units**. Median signed difference:
+  **−0.00655**; largest absolute mean signed difference: **0.02131**.
+- All 210 anchor/local points are finite. Across 98,155 included trial–parameter
+  pairs, median absolute difference is **0.03499**, the 95th percentile is
+  **0.17387**, and **99.76%** are within 0.5 log units. These are descriptive
+  comparisons, not a claim of statistical equivalence.
+- Local ranks differ, particularly among nearly tied points. For subject 4,
+  decreasing NoInstruction NDT by 10 ms changes the direct score by **−1.186**
+  but the 100,000-estimate GPU score by **+0.728**. All three paired GPU seed
+  differences are positive (+0.691 to +0.757), so this is not just sampling
+  noise. Other apparent low-sample improvements disappear on recheck.
+- At poor joint parameters, pseudocounts dominate empty bins. One subject-4
+  point has a GPU-minus-direct gap of about **1,485** at 20,000 estimates and
+  **1,265** at 100,000; both scores are much worse than the fitted solution.
+  Fifteen stress points produce zero direct support for some observations.
+  Finite histogram scores at those points are not evidence of agreement.
+
+The largest local per-trial difference is explained mostly by estimator
+geometry. Reducing subject 1's NoInstruction threshold by 5% puts trial index
+133 (row ID 202, RT 1.012 s) close to the collapse deadline at 1.021260 s.
+The GPU RT bin is **26.3 ms** wide and pools earlier response mass. At 100,000
+estimates, the direct 1 ms log density is −11.8365 and GPU log density is
+−2.4152. Integrating the direct PDE flux over the **same bins**, then applying
+the same smoothing and pseudocount normalization, gives −2.9375: the gap
+shrinks from **9.42 to 0.52**. A 257-point, 0.5 ms PDE gives a matched-bin score
+of −2.9389, confirming this explanation. The residual difference remains;
+histogram matching does not prove identical underlying model dynamics.
+
+Direct mesh checks at all eight deep anchors changed total scores by at most
+0.36 log units when using 257 spatial points and 0.5 ms steps. Reducing the
+RK4 LCA maximum step to 1 ms changed anchor scores by less than 0.000015.
+Strict/window GPU scoring agreed at all eight anchors (512 estimates), and
+all completed sweep calls respected truncation checks. Maximum direct mass
+error across the deep sweep was 1.23e−9.
+
+This audit changes no production model semantics. The preceding independent
+LLVM/GPU **model-output** validation remains the compiler reference; no LLVM
+likelihood scores are used here. Remaining differences include observation
+binning/smoothing, pseudocounts, and discrete versus continuous dynamics.
+
+Artifacts: `data fitting/audit/likelihood-sweep-local-20260916/`, including the
+full report, PNG/PDF plots, per-trial seed scores, all input rows and parameters,
+convergence checks, and source provenance. `likelihood_sweep_overview.png`
+summarizes the sweep; `collapse_deadline_explanation.png` illustrates the
+largest local outlier. The reusable scripts are
+`csi_likelihood_parameter_sweep.py` and `csi_likelihood_sweep_report.py`; see
+the parent README's **Local likelihood parameter sweep** section for commands.
+Audit artifacts and historical fit inputs are local outputs, not shipped with
+a clean checkout. Use `--replay-from` to reproduce the archived parameter set.
+
+## Histogram resolution and smoothing follow-up (2026-09-17)
+
+Eight histogram settings were compared at five points across subjects 1 and 4
+and the moderate synthetic dataset, using 100,000 estimates and seeds 101–103.
+The PNL model, compiler, and direct-solver sources were unchanged from the
+preceding sweep. Fixed grids use a six-second span, with cells centered on
+integer multiples of their width. Smoothing is specified in physical time.
+
+Mean absolute per-trial log-density differences at the three anchors:
+
+| Histogram | Subject 1 | Subject 4 | Synthetic |
+| --- | ---: | ---: | ---: |
+| Original 100 bins, sigma 0.5 bin | 0.0556 | 0.0740 | 0.0400 |
+| Fixed 1 ms, unsmoothed | 0.0613 | 0.0656 | 0.0869 |
+| Fixed 1 ms, sigma 2 ms | 0.0355 | 0.0512 | 0.0431 |
+
+The fixed-grid rows scale pseudocounts with bin width to preserve pseudocount
+density. Keeping alpha=0.1 per 1 ms bin was tested separately: over six seconds
+it contributes 1,200 joint choice/time pseudo-observations, versus 20 under the
+old 100-bin histogram. The resulting higher floor must not be mistaken for
+better estimation of a rare event.
+
+A 1 ms grid with modest smoothing is promising, but improvement is not
+universal and the score becomes noisier. For subject 1, the three-seed total
+score SD was 0.283 for the original estimator, 4.708 for unsmoothed 1 ms bins,
+and 2.117 for 1 ms bins with sigma 2 ms. Simply removing smoothing from the
+wide original bins does not remove within-bin averaging bias.
+
+**A residual rare-tail discrepancy survives matching the histogram.** For
+subject 1's 5% lower NoInstruction threshold at trial index 133, an unsmoothed
+1 ms interval received 17 GPU hits in 9 million conditional simulations
+(three seeds, 3 million each). A 257-point, 0.5 ms direct PDE integrated over
+the exact same cell predicts 0.101 hits. Raw GPU/direct densities are about
+0.001889 versus 0.00001126 per second, a factor of 168. The GPU density's 95%
+binomial interval is [0.001100, 0.003024]. These estimates use raw counts without
+pseudocount correction. Window scoring and fully completed included-trial
+scoring produced identical counts at seed 201 with 3 million estimates.
+
+Thus the earlier broad-bin comparison (9.42 log units reduced to 0.52 by
+matching estimators) did not establish agreement in narrower tail intervals.
+This follow-up identifies a model-probability difference, but does not isolate
+which timing/history/integration or boundary-crossing convention causes it.
+PNL/LLVM remains the model reference; histogram tuning alone cannot eliminate
+this difference between the GPU simulation and continuous direct calculation.
+
+The reusable `csi_histogram_sensitivity.py` script and full results are described
+in `data fitting/audit/histogram-sensitivity-20260917/README.md`. That directory
+also contains plots, raw histogram counts, exact edges/weights, all input rows
+and parameters, and the targeted high-sample tail diagnostic.
+
+## Isolating the rare-tail cause (2026-09-17)
+
+A subsequent controlled calculation resolves the main cause of the preceding
+subject-1, trial-133 discrepancy: **continuous versus discrete endpoint boundary
+crossing**. We extracted the original compiled composition's deterministic
+drift/threshold paths and compared them with the direct model's paths. Holding
+the observation interval, boundary, and noise fixed gives:
+
+| Crossing rule | Expected hits / 9 million, direct drift | Expected hits / 9 million, PNL drift |
+| --- | ---: | ---: |
+| Continuous absorption, refined PDE | 0.113409 | 0.113499 |
+| Absorption at 1 ms endpoints, deterministic propagation | 17.573306 | 17.587265 |
+| Actual GPU simulation | — | 17 observed |
+
+The direct/PNL drift substitution changes endpoint probability by only 0.0794%
+here. The generated threshold matches its intended linear trajectory within
+2.06e−8 through the relevant steps, so stale threshold publication is not the
+explanation for this case. Endpoint propagation with the PNL drift predicts
+probability 1.95414e−6, within the GPU's binomial 95% interval
+[1.10035e−6, 3.02429e−6]. No histogram smoothing or pseudocount correction enters
+these probability comparisons.
+
+PNL checks the boundary after a 1 ms update. Continuous absorption also removes
+paths that cross and return inside between updates. Close to boundary collapse,
+this difference greatly changes the remaining tail mass: the half-boundary is
+about 0.00278, comparable with the per-step noise SD of 0.00316. This is a
+stochastic-process difference at fixed dt, not simply inadequate PDE resolution.
+Refining the endpoint evidence grid from 8191 to 16383 points changes predicted
+counts from 17.587 to 17.591. Refining the continuous PDE from 257/0.5 ms to
+1025/0.125 ms changes counts from 0.101 to 0.113.
+
+This isolates the cause of this particular NoInstruction tail discrepancy.
+Previously demonstrated RealRare LCA/history differences remain separate.
+PNL/LLVM is still the reference; matching it requires a direct calculation
+with its endpoint rule and timing/history conventions. The existing endpoint
+solver is a forward diagnostic, not yet a drop-in fitting backend. No production
+model changes were made. The new check extracts paths from the already audited
+compiler; it does not add an independent LLVM sampling run.
+
+Full derivation, prescribed paths, convergence results, source hashes, and the
+reproduction script are in `data fitting/audit/tail-dynamics-20260917/`.

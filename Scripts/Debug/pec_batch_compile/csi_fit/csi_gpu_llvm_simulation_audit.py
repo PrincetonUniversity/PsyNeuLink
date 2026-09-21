@@ -11,7 +11,7 @@ replicates.  It deliberately bypasses both likelihood implementations.
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import importlib.util
 import json
 import math
@@ -24,6 +24,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp, wasserstein_distance
+import triton.language as tl
 
 import psyneulink as pnl
 from psyneulink.core.batched import (
@@ -243,7 +244,7 @@ def _load_parameter_vector(path: Path) -> np.ndarray:
     return vector
 
 
-def _fitted_scenario(path: Path, trials) -> Scenario:
+def _fitted_scenario(path: Path, trials, time_step=0.01) -> Scenario:
     if "condition_index" not in trials:
         raise ValueError("--parameter-file requires --data-file and --subject.")
     vector = _load_parameter_vector(path)
@@ -251,9 +252,9 @@ def _fitted_scenario(path: Path, trials) -> Scenario:
     return Scenario(
         name=f"fitted_{path.stem}",
         gain=vector[0:3][condition],
-        csi_switch=np.full(len(condition), round(vector[3] / 0.01)),
+        csi_switch=np.full(len(condition), round(vector[3] / time_step)),
         threshold=vector[4:7][condition],
-        collapse=vector[7:10][condition] * 0.01,
+        collapse=vector[7:10][condition] * time_step,
         non_decision_time=vector[10:13][condition],
     )
 
@@ -280,7 +281,7 @@ def _outputs(composition):
     )
 
 
-def _selected_composition_results(composition, outputs):
+def _selected_composition_results(composition, outputs, context=None):
     result_indices = []
     for output in outputs:
         matches = tuple(
@@ -304,7 +305,7 @@ def _selected_composition_results(composition, outputs):
                 float(np.asarray(trial[index]).reshape(-1)[0])
                 for index in result_indices
             ]
-            for trial in composition.results
+            for trial in (composition.results if context is None else composition.parameters.results.get(context))
         ]
     )
 
@@ -382,7 +383,9 @@ def _scenario_blocks(scenario, trial_count):
     return tuple((int(start), int(stop), values[start]) for start, stop in zip(starts, stops))
 
 
-def _set_llvm_parameters(composition, values):
+def _set_llvm_parameters(composition, values, context=None):
+    if context is None:
+        context = composition
     lca = _node(composition, "Task Activations [C1, C2]")
     cue = _node(composition, "Cue Stimulus Interval")
     threshold = _node(composition, "Threshold Mechanism")
@@ -414,10 +417,21 @@ def _set_llvm_parameters(composition, values):
     )
     for node, port_name, parameter, value, function_array in settings:
         function_value = np.asarray([value]) if function_array else float(value)
-        parameter.set(function_value, context=composition)
+        parameter.set(function_value, context=context)
         node.parameter_ports[port_name].parameters.value.set(
-            np.asarray([value]), context=composition, override=True
+            np.asarray([value]), context=context, override=True
         )
+
+
+def _model_options(time_step):
+    return {
+        **BASE_MODEL_OPTIONS,
+        "lca_time_step_size": time_step,
+        "ddm_time_step_size": time_step,
+        "iti": round(1.0 / time_step),
+        "csi_switch": BASE_MODEL_OPTIONS["csi_switch"] * .01 / time_step,
+        "threshold_collapse": BASE_MODEL_OPTIONS["threshold_collapse"] * time_step / .01,
+    }
 
 
 def _gpu_simulations(
@@ -429,9 +443,10 @@ def _gpu_simulations(
     seed: int,
     max_steps: int,
     ddm_noise: float,
+    time_step: float = 0.01,
 ):
     composition = model.make_stab_flex(
-        **{**BASE_MODEL_OPTIONS, "ddm_noise": ddm_noise}
+        **{**_model_options(time_step), "ddm_noise": ddm_noise}
     )
     outputs = _outputs(composition)
     start = time.perf_counter()
@@ -474,15 +489,15 @@ def _llvm_simulations(
     replicates: int,
     seed: int,
     ddm_noise: float,
+    time_step: float = 0.01,
 ):
     values = np.empty(
         (len(scenarios), replicates, len(trials["cue"]), 2), dtype=float
     )
     scenario_seconds = {}
     for scenario_index, scenario in enumerate(scenarios):
-        # LLVM owns a sequential random stream. Resetting the Composition before
-        # each run restores the canonical LCA/DDM state while the stream moves
-        # forward to fresh draws for the next independent sequence replicate.
+        # A fresh context restores held control outputs as well as integrator
+        # state. Composition.reset() alone does not reset those held outputs.
         set_global_seed(seed + scenario_index)
         trial_varying = _is_trial_varying(scenario)
         model_values = {
@@ -498,7 +513,7 @@ def _llvm_simulations(
         }
         composition = model.make_stab_flex(
             **{
-                **BASE_MODEL_OPTIONS,
+                **_model_options(time_step),
                 **model_values,
                 "ddm_noise": ddm_noise,
             }
@@ -508,19 +523,23 @@ def _llvm_simulations(
         blocks = _scenario_blocks(scenario, len(trials["cue"]))
         start = time.perf_counter()
         for replicate in range(replicates):
-            composition.reset(clear_results=True)
+            context = pnl.Context(execution_id=f"csi-audit-{scenario_index}-{replicate}")
+            _node(composition, "DDM").function.parameters.seed.set(seed + scenario_index * replicates + replicate, context=context)
             for block_start, block_stop, block_values in blocks:
-                _set_llvm_parameters(composition, block_values)
+                _set_llvm_parameters(composition, block_values, context=context)
                 composition.run(
                     inputs={
                         node: value[block_start:block_stop]
                         for node, value in inputs.items()
                     },
                     execution_mode=pnl.ExecutionMode.LLVMRun,
+                    context=context,
                 )
             values[scenario_index, replicate] = (
-                _selected_composition_results(composition, outputs)
+                _selected_composition_results(composition, outputs, context=context)
             )
+            if replicate == 0 or (replicate + 1) % 8 == 0:
+                print(f"LLVM noise={ddm_noise:g}: {replicate + 1}/{replicates} sequences", file=sys.stderr, flush=True)
         scenario_seconds[scenario.name] = time.perf_counter() - start
     return values, {
         "run_seconds": float(sum(scenario_seconds.values())),
@@ -544,7 +563,7 @@ def _standardized_difference(left, right):
 
 
 def _group_masks(trials):
-    return {
+    groups = {
         "all": np.ones(len(trials["cue"]), dtype=bool),
         "repeat": trials["cue"] == 0.0,
         "switch": trials["cue"] != 0.0,
@@ -553,14 +572,18 @@ def _group_masks(trials):
         "correct_positive": trials["correct_response"] > 0.0,
         "correct_negative": trials["correct_response"] < 0.0,
     }
+    if "condition_index" in trials:
+        groups.update({name: trials["condition_index"] == index for index, name in
+                       enumerate(("NoInstruction", "RealRare", "RealFrequent"))})
+    return groups
 
 
-def _rt_grid_error(values, trials, scenario):
+def _rt_grid_error(values, trials, scenario, time_step=0.01):
     trial_count = len(trials["cue"])
     csi_seconds = (
         trials["cue"]
         * _trial_values(scenario.csi_switch, trial_count)
-        * 0.01
+        * time_step
     )
     non_decision_time = _trial_values(
         scenario.non_decision_time, trial_count
@@ -569,7 +592,7 @@ def _rt_grid_error(values, trials, scenario):
         values[..., 1]
         - non_decision_time[None, :]
         - csi_seconds[None, :]
-    ) / 0.01
+    ) / time_step
     return float(np.max(np.abs(decision_steps - np.round(decision_steps))))
 
 
@@ -595,7 +618,7 @@ def _scenario_description(scenario):
     }
 
 
-def _summarize_scenario(gpu, llvm, trials, scenario):
+def _summarize_scenario(gpu, llvm, trials, scenario, time_step=0.01):
     # The model uses ``correct_response`` to flip the drift into a
     # correctness-aligned frame. DECISION_OUTCOME is consequently 1 for a
     # correct response and 0 for an error, regardless of response direction.
@@ -661,8 +684,8 @@ def _summarize_scenario(gpu, llvm, trials, scenario):
         "passes_mean_checks": passed,
         "gpu_decisions": sorted(np.unique(gpu[..., 0]).tolist()),
         "llvm_decisions": sorted(np.unique(llvm[..., 0]).tolist()),
-        "gpu_rt_grid_max_error_steps": _rt_grid_error(gpu, trials, scenario),
-        "llvm_rt_grid_max_error_steps": _rt_grid_error(llvm, trials, scenario),
+        "gpu_rt_grid_max_error_steps": _rt_grid_error(gpu, trials, scenario, time_step),
+        "llvm_rt_grid_max_error_steps": _rt_grid_error(llvm, trials, scenario, time_step),
         "maximum_trial_accuracy_difference": float(
             np.max(np.abs(trial_accuracy_difference))
         ),
@@ -693,7 +716,7 @@ def run_audit(args):
         )
     selected = set(args.scenario or ())
     if args.parameter_file is not None:
-        scenarios = (_fitted_scenario(args.parameter_file.expanduser(), trials),)
+        scenarios = (_fitted_scenario(args.parameter_file.expanduser(), trials, args.time_step),)
     else:
         scenarios = tuple(
             scenario
@@ -703,6 +726,8 @@ def run_audit(args):
         unknown = selected.difference(scenario.name for scenario in SCENARIOS)
         if unknown:
             raise ValueError(f"Unknown scenarios: {sorted(unknown)}")
+        scenarios = tuple(replace(s, csi_switch=s.csi_switch * .01 / args.time_step,
+                                  collapse=s.collapse * args.time_step / .01) for s in scenarios)
 
     deterministic_gpu, deterministic_gpu_timing = _gpu_simulations(
         model,
@@ -712,6 +737,7 @@ def run_audit(args):
         seed=args.gpu_seed,
         max_steps=args.max_steps,
         ddm_noise=0.0,
+        time_step=args.time_step,
     )
     deterministic_llvm, deterministic_llvm_timing = _llvm_simulations(
         model,
@@ -720,6 +746,7 @@ def run_audit(args):
         replicates=1,
         seed=args.llvm_seed,
         ddm_noise=0.0,
+        time_step=args.time_step,
     )
     deterministic_error = np.max(
         np.abs(deterministic_gpu - deterministic_llvm), axis=(1, 2, 3)
@@ -733,6 +760,7 @@ def run_audit(args):
         seed=args.gpu_seed,
         max_steps=args.max_steps,
         ddm_noise=0.1,
+        time_step=args.time_step,
     )
     llvm, llvm_timing = _llvm_simulations(
         model,
@@ -741,21 +769,26 @@ def run_audit(args):
         replicates=args.llvm_replicates,
         seed=args.llvm_seed,
         ddm_noise=0.1,
+        time_step=args.time_step,
     )
     summaries = [
         _summarize_scenario(
-            gpu[index], llvm[index], trials, scenario
+            gpu[index], llvm[index], trials, scenario, args.time_step
         )
         for index, scenario in enumerate(scenarios)
     ]
     deterministic_passed = bool(np.all(deterministic_error <= 1.0e-5))
+    if args.samples_output is not None:
+        args.samples_output.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(args.samples_output, deterministic_gpu=deterministic_gpu,
+                            deterministic_llvm=deterministic_llvm, gpu=gpu, llvm=llvm)
     payload = {
         "purpose": (
             "Compare the CSI Triton and original LLVM simulators directly; "
             "neither likelihood calculation is exercised."
         ),
         "model_source": MODEL_PATH,
-        "base_model_options": BASE_MODEL_OPTIONS,
+        "base_model_options": _model_options(args.time_step),
         "trial_count": len(trials["cue"]),
         "trial_source": trials["source"],
         "subject_nr": trials.get("subject_nr"),
@@ -768,11 +801,15 @@ def run_audit(args):
         "gpu_seed": args.gpu_seed,
         "llvm_seed": args.llvm_seed,
         "max_steps": args.max_steps,
+        "time_step": args.time_step,
+        "llvm_initialization": "fresh context and DDM seed per independent sequence",
         "deterministic_maximum_absolute_errors": {
             scenario.name: float(deterministic_error[index])
             for index, scenario in enumerate(scenarios)
         },
         "deterministic_passed": deterministic_passed,
+        "deterministic_decision_mismatches": int(np.count_nonzero(deterministic_gpu[..., 0] != deterministic_llvm[..., 0])),
+        "deterministic_maximum_rt_error_seconds": float(np.max(np.abs(deterministic_gpu[..., 1] - deterministic_llvm[..., 1]))),
         "statistical_passed": all(
             summary["passes_mean_checks"] for summary in summaries
         ),
@@ -831,6 +868,9 @@ def make_parser():
     )
     parser.add_argument("--gpu-seed", type=int, default=29)
     parser.add_argument("--llvm-seed", type=int, default=31)
+    parser.add_argument("--time-step", type=float, default=0.01,
+                        help="LCA/DDM step in seconds; CSI, ITI, and collapse preserve physical units.")
+    parser.add_argument("--samples-output", type=Path, help="Optional compressed NumPy model outputs, bypassing likelihood code.")
     parser.add_argument(
         "--max-steps",
         type=int,
@@ -882,6 +922,8 @@ def _print_summary(payload):
 
 def main():
     args = make_parser().parse_args()
+    if not np.isfinite(args.time_step) or args.time_step <= 0 or not np.isclose(round(1 / args.time_step) * args.time_step, 1., rtol=0, atol=1e-12):
+        raise SystemExit("--time-step must divide the one-second ITI exactly.")
     if args.data_file is None and (args.trials < 8 or args.trials % 8):
         raise SystemExit("--trials must be a positive multiple of eight.")
     if args.parameter_file is not None and args.data_file is None:

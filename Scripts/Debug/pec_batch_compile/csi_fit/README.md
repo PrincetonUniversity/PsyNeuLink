@@ -8,7 +8,7 @@ LCA leak 12, competition 3, LCA noise 0, and DDM noise 0.1.
 | Runner | Implementation | Default fitting configuration |
 | --- | --- | --- |
 | `cpu` | Continuous direct likelihood; native C++/OpenMP LCA and DDM PDE kernels; exact-gradient L-BFGS-B | Float64; 1 ms DDM mesh, 65 spatial points, RK4 LCA step at most 10 ms; 4 starts, 32 screened random candidates, 200 iterations/start plus polishing |
-| `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 12 s horizon with checked histogram-window stopping; 10,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
+| `gpu` | PsyNeuLink PEC, Triton **generated batched likelihood**, deterministic observed LCA history, simulated DDM, CMA-ES | 1 ms model step; 12 s horizon with checked histogram-window stopping; 100,000 estimates/candidate; batches of 11 candidates; 5,000 candidate evaluations; 100 RT bins, smoothing sigma 0.5 bins, pseudocount 0.1/cell |
 
 Both fit 13 parameters: three gains, one switch CSI, three thresholds, three
 collapse rates, and three nondecision times. Both runners use the expanded
@@ -50,8 +50,19 @@ export CSI_DATA_FILE="$CSI_REPO_ROOT/Scripts/Debug/pec_batch_compile/csi_fit/dat
 source "$CSI_REPO_ROOT/Scripts/Debug/pec_batch_compile/csi_fit/handoff/environment.sh"
 ```
 
-For an existing checkout, select `feat/likelihood_compile` there instead of
-cloning over it. **Obtain the behavioral CSV separately from the data owner;
+For an existing checkout, fetch before selecting the branch:
+
+```bash
+cd "$CSI_REPO_ROOT" &&
+git fetch origin &&
+git switch feat/likelihood_compile &&
+git pull --ff-only
+```
+
+If Git reports local or untracked files that would be overwritten, preserve
+those files before switching; do not force checkout or delete them blindly.
+After switching, source the handoff environment as above.
+**Obtain the behavioral CSV separately from the data owner;
 it is intentionally not in git.** Its default location, if `CSI_DATA_FILE` is
 unset, is `csi_fit/data fitting/data_to_fit_study3.csv` in the checkout.
 
@@ -255,11 +266,14 @@ Preparation checks passed locally on subject 1: CPU and GPU smoke fits, exact
 CPU fresh-score agreement, and GPU rescoring with two independent seeds. That
 workstation used Python 3.13.3, Torch 2.13.0+cu130, Triton 3.7.1, and an RTX
 2080 Ti. On Della, the setup script also successfully created a scratch
-environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0, and both
-full-fit job submissions were accepted. The Della CPU timing below includes a
-completed full fit; the initial GPU run timed out as described below. A completed
-Della GPU fit with the current window-scoring defaults is not yet validated.
-Inspect the job results before starting an array.
+environment with Python 3.12.14, Torch 2.11.0+cu128, and Triton 3.6.0. Full CPU
+and GPU fits subsequently completed, as described below. Those historical fits
+predate the threshold scheduling fix (`0b15c416f8`); they do not validate the
+corrected GPU model. On 2026-09-21, the corrected checkout passed 40 focused
+scheduling/compiler regressions, CPU and GPU smoke fits, exact CPU fresh-score
+agreement, and GPU rescoring at the new 100,000-estimate default with two
+independent seeds. Fresh full-fit validation on Della is pending. Inspect the
+job results before starting an array.
 
 A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
 first-use native compilation and the independent fresh-score check, on an
@@ -314,6 +328,15 @@ logging 4,874 of 5,000 evaluations at 100,000 estimates/candidate; Slurm recorde
 65 minutes 23 seconds elapsed against a one-hour request. No final fit was saved.
 That timing does not measure the current window-scoring configuration.
 
+The later generated-path Della A100 job `13988705_1` completed in **23 minutes
+15 seconds** (22 minutes 47 seconds inside fitting), using 100,000 estimates,
+5,000 candidate evaluations, 1 ms steps, expanded bounds, a 12 s maximum
+horizon, and checked histogram-window stopping. It predates the scheduling
+fix, so its fitted parameters require refitting. The separate historical
+handwritten-path replay took 39 minutes 31 seconds inside fitting on A100
+versus 21 minutes 4 seconds on GB300; that hardware comparison uses a different
+code path from this handoff and is not a runtime prediction for it.
+
 A controlled local RTX 2080 Ti comparison used subject 1's recorded data,
 11 fixed representative candidates, 100,000 estimates, 1 ms steps, and a 1 GiB
 buffer budget. Medians of two warm calls per setting were:
@@ -360,12 +383,12 @@ Rescore GPU parameters using larger simulation counts and independent seeds:
 
 ```bash
 bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
-  --rescore /absolute/path/to/fit.csv --estimates 100000 \
+  --rescore /absolute/path/to/fit.csv --estimates 200000 \
   --rescore-seeds 101 102 103
 
 # Optional full-trajectory validation, using a longer horizon:
 bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
-  --rescore /absolute/path/to/fit.csv --estimates 100000 \
+  --rescore /absolute/path/to/fit.csv --estimates 200000 \
   --rescore-seeds 101 --strict-truncation --horizon 50
 
 # CPU mesh-refinement fit, initialized at an existing solution:
@@ -380,8 +403,82 @@ repeat the original `--time-step`, `--bins`, `--smoothing-sigma`, `--pseudocount
 and horizon if they differed from the handoff defaults. Keep the same data and
 subject. Compare scores under the same settings across multiple seeds.
 
+## Local likelihood parameter sweep
+
+`csi_likelihood_parameter_sweep.py` rescores saved direct solutions with both
+objectives; it does not run new fits. It retains complete observed histories,
+uses the original inclusion masks, compares densities in the same units, and
+records individual trial scores across seeds. The original PNL/LLVM model
+remains the reference for simulation behavior.
+
+From an activated CUDA environment at the repository root:
+
+```bash
+export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1
+export CSI_AUDIT_ROOT=/tmp/csi-likelihood-audit
+
+# Fit JSON files must be arranged as subject-N/fit.json beneath --fits.
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_likelihood_parameter_sweep.py \
+  --data "$CSI_DATA_FILE" --fits /path/to/saved-direct-fits --subjects all \
+  --estimates 20000 --repeats 3 --output "$CSI_AUDIT_ROOT/screen"
+
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_likelihood_parameter_sweep.py \
+  --data "$CSI_DATA_FILE" --fits /path/to/saved-direct-fits \
+  --subjects 1,4,7,42,71,81 --deep --synthetic \
+  --estimates 20000 --repeats 3 --output "$CSI_AUDIT_ROOT/deep"
+
+# Recheck anchors, selected local discrepancies, and one poor joint point.
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_likelihood_parameter_sweep.py \
+  --data "$CSI_DATA_FILE" --refine-from "$CSI_AUDIT_ROOT/deep" \
+  --estimates 100000 --repeats 3 \
+  --output "$CSI_AUDIT_ROOT/refinement"
+
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_likelihood_parameter_sweep.py \
+  --data "$CSI_DATA_FILE" --direct-convergence-from "$CSI_AUDIT_ROOT/deep" \
+  --output "$CSI_AUDIT_ROOT/convergence"
+
+python Scripts/Debug/pec_batch_compile/csi_fit/csi_likelihood_sweep_report.py \
+  "$CSI_AUDIT_ROOT"
+```
+
+Saved population fits and audit artifacts are local research outputs, not part
+of a clean checkout. Supply `--fits` explicitly when using another account.
+Use `--expanded-subject-one --expanded-fit /path/to/fit.json` to substitute an
+expanded-bound subject-1 anchor. Use `--replay-from /path/to/archived/deep` with
+a new `--output` to rescore every archived candidate and dataset exactly.
+Completed dataset directories are skipped on resume; use a new output root
+when changing settings. Native direct scoring requires `ninja` on `PATH`.
+Use the handoff environment's scratch cache settings on Della.
+
+The report separates local probes from broad search-bound stress cases and
+records zero direct probabilities and empty GPU bins. Close per-trial scores
+do not establish identical optimization surfaces: histogram smoothing,
+pseudocounts, and model discretization can change nearby parameter rankings.
+
 ## Scientific and operational caveats
 
+- **The original PNL composition executed with LLVM defines model behavior.**
+  Compare simulated choices and RTs directly when checking compiler fidelity;
+  the legacy LLVM likelihood implementation is not the reference likelihood.
+  A subject-1 audit at the expanded direct-fit solution, with 1 ms steps and
+  all 561 trial inputs, found identical deterministic choices and a maximum
+  RT difference of `3.25e-8` s. Independent stochastic sequences also agreed
+  (256 GPU and 32 LLVM replicates). See the
+  [scheduling-fix audit](DIRECT_LIKELIHOOD_NOTES.md#threshold-scheduling-fix-2026-09-16).
+- **Refit GPU results obtained before the threshold scheduling fix.** The source
+  now publishes a fresh threshold before the first DDM step and requires a
+  fresh DDM call before publishing a finished response. Previously, held
+  thresholds could carry over between trials and produce spurious responses.
+  The generated path follows the corrected source schedule. At the saved
+  subject-1 direct solution, this reduced the comparable log-density gap from
+  89.68 to 3.42 (100,000 estimates, 1 ms). It does not make the two objectives
+  identical. Do not pool pre-fix and post-fix GPU scores or fit results.
+- **The CPU direct solver does not reproduce every PNL scheduling convention.**
+  Continuous versus discrete LCA history timing can matter at the expanded
+  gains, particularly in RealRare trials. These differences
+  can affect fitted parameters; close aggregate scores or a Brownian-bridge
+  check alone do not establish that the fitted models are equivalent. Do not
+  reset or clamp the compiler's threshold independently of the source model.
 - **CPU and GPU are different numerical objectives.** The direct solver models
   a continuous LCA/diffusion with moving boundaries and integrates choice flux
   over the default 1 ms RT recording interval. GPU fitting uses discrete Euler

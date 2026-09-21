@@ -86,7 +86,7 @@ def arguments():
     gpu.add_argument("--horizon", type=float, default=12.0, help="Maximum DDM simulation time in seconds.")
     gpu.add_argument("--strict-truncation", action=argparse.BooleanOptionalAction, default=False,
                      help="Require every trajectory to finish; default uses checked histogram-window stopping.")
-    gpu.add_argument("--estimates", type=int, default=10000)
+    gpu.add_argument("--estimates", type=int, default=100000)
     gpu.add_argument("--batch-size", type=int, default=11)
     gpu.add_argument("--buffer-mib", type=int, default=1024)
     gpu.add_argument("--bins", type=int, default=100)

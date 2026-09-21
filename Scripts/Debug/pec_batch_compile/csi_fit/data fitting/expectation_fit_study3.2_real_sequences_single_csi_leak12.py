@@ -24,7 +24,7 @@ parser.add_argument(
     default="llvm",
     help="Likelihood simulator backend; use 'triton' for a CUDA GPU.",
 )
-parser.add_argument("--num_estimates", "--num-estimates", default=10000, type=int)
+parser.add_argument("--num_estimates", "--num-estimates", default=100000, type=int)
 parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=int)
 parser.add_argument("--gain-upper-bound", type=float, default=120.0,
                     help="Gain ceiling; grid spacing remains 0.1.")
