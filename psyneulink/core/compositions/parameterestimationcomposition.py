@@ -353,7 +353,7 @@ class ParameterEstimationCompositionError(CompositionError):
 
 # -- checking the hierarchical solver settings -------------------------------------------------
 #
-# Each check reports what is wrong with a value, or nothing.  They are reached twice: through the
+# Each check returns what is wrong with a value, or None.  They are reached twice: through the
 # Parameter's validation method, which guards the value a composition is built with, and through
 # its setter, which guards one assigned afterwards.  Both go through the same function so the two
 # cannot come to disagree.
@@ -361,21 +361,25 @@ class ParameterEstimationCompositionError(CompositionError):
 def _check_curvature(value):
     if value not in Curvature:
         return f"must be one of {[c.value for c in Curvature]}; got {value!r}"
+    return None
 
 
 def _check_max_iterations(value):
     if value < 1:
         return f"must be at least 1; got {value!r}"
+    return None
 
 
 def _check_tol(value):
     if value <= 0:
         return f"must be greater than 0; got {value!r}"
+    return None
 
 
 def _check_variance_floor(value):
     if value <= 0:
         return f"must be greater than 0; got {value!r}"
+    return None
 
 
 def _check_hessian_step(value):
@@ -383,16 +387,19 @@ def _check_hessian_step(value):
     # E-step, which is the first place the number of parameters is known.
     if value is not None and np.any(np.asarray(value, dtype=float) <= 0):
         return f"must be positive; got {value!r}"
+    return None
 
 
 def _check_estep_method(value):
     if not isinstance(value, str):
         return f"must name a method scipy.optimize.minimize accepts; got {value!r}"
+    return None
 
 
 def _check_estep_options(value):
     if value is not None and not isinstance(value, Mapping):
         return f"must be a mapping of options for the optimizer; got {value!r}"
+    return None
 
 
 _HIERARCHICAL_CHECKS = {
