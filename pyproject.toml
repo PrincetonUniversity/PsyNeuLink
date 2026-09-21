@@ -115,6 +115,7 @@ markers = [
     "mimo: Tests using multiple inputs and outputs",
     "model: Tests based on existing models",
     "pytorch: Tests using Torch",
+    "dask: Tests using the optional Dask distributed backend",
     "higher_dims: Tests using arrays with more than two dimensions",
 ]
 

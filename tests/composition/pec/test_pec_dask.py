@@ -302,6 +302,7 @@ def test_dask_evaluate_loglik_de_sign():
     assert _dask_evaluate_loglik_de(factory, None, "D", "minimize", "fit-a", [0.0]) == 5.0
 
 
+@pytest.mark.dask
 def test_require_dask_present_returns_module():
     dd = pytest.importorskip("dask.distributed")
     assert _require_dask() is dd
@@ -588,6 +589,7 @@ def ddm_data():
     return make_ddm_data()
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_distributed_loglik_matches_serial(ddm_data, cluster_client):
     """Which worker scored a candidate must not matter: distributed == serial."""
@@ -642,6 +644,7 @@ def _distributed_options(cluster_client, **overrides):
     return opts
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_distributed_fit_end_to_end_and_worker_cache(ddm_data, cluster_client):
     batch = 4
@@ -667,6 +670,7 @@ def test_distributed_fit_end_to_end_and_worker_cache(ddm_data, cluster_client):
     assert any(caches.values())
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_distributed_fit_matches_serial_with_crn(ddm_data, cluster_client):
     """With common random numbers, distributed optimized values == serial.
@@ -708,6 +712,7 @@ def test_distributed_fit_matches_serial_with_crn(ddm_data, cluster_client):
     np.testing.assert_allclose(dist_val, serial_val, rtol=1e-10)
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_distributed_differential_evolution_runs(ddm_data, cluster_client):
     """The distributed differential_evolution path completes and recovers finite params."""
@@ -726,6 +731,7 @@ def test_distributed_differential_evolution_runs(ddm_data, cluster_client):
     assert all(np.isfinite(v) for v in recovered.values())
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_distributed_without_crn_warns(ddm_data, cluster_client):
     """A distributed fit with CRN off is valid but warns about non-reproducibility."""
