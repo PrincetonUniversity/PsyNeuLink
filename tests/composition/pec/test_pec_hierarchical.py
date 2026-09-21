@@ -1380,12 +1380,6 @@ def test_a_failed_participant_does_not_leave_a_model_behind():
 # carries are ordinary Parameters afterwards: readable, assignable between
 # fits, and holding their own defaults.
 # ===========================================================================
-_SOLVER_SETTINGS = (
-    "curvature", "max_iterations", "tol", "variance_floor",
-    "hessian_step", "estep_method", "estep_options",
-)
-
-
 def _stub_factory(data, subject_index=None):  # noqa: U100
     return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None
 
