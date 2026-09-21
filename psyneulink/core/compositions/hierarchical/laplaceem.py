@@ -30,14 +30,16 @@ independent of how participants are fitted or where.
 
 import warnings
 from dataclasses import dataclass
+from enum import auto
 
 import numpy as np
 from scipy.optimize import minimize
 
 from psyneulink._typing import Mapping, Optional, Union
+from psyneulink.core.globals.utilities import PNLStrEnum
 
 __all__ = [
-    "CURVATURE_KINDS",
+    "Curvature",
     "EStepConfig",
     "EStepResult",
     "HierarchicalEMError",
@@ -52,8 +54,22 @@ __all__ = [
     "subject_map_estep",
 ]
 
-#: How much of the curvature at a participant's mode to measure.  See `EStepConfig.curvature`.
-CURVATURE_KINDS = ("diagonal", "full")
+class Curvature(PNLStrEnum):
+    """How much of the curvature at a participant's mode to measure.
+
+    Attributes
+    ----------
+
+    DIAGONAL
+        One parameter at a time, with the others held at the mode.
+
+    FULL
+        The whole matrix, so a parameter's width accounts for the others being uncertain too.
+    """
+
+    DIAGONAL = auto()
+    FULL = auto()
+
 
 LOG_2PI = np.log(2.0 * np.pi)
 
@@ -172,7 +188,7 @@ class EStepConfig:
         Any method accepted by `scipy.optimize.minimize`.  The default is derivative-free because a
         simulation-backed likelihood has no gradient.
 
-    curvature : "diagonal" or "full"
+    curvature : Curvature or str
         How much of the curvature at each participant's mode to measure.  ``"diagonal"`` measures
         one parameter at a time with the others held at the mode; ``"full"`` measures the whole
         matrix and inverts it, so a parameter's reported width accounts for the others being
@@ -206,9 +222,10 @@ class EStepConfig:
     optimizer_options: Optional[Mapping] = None
 
     def __post_init__(self):
-        if self.curvature not in CURVATURE_KINDS:
+        if self.curvature not in Curvature:
             raise ValueError(
-                f"curvature must be one of {list(CURVATURE_KINDS)}; got {self.curvature!r}"
+                f"curvature must be one of {[c.value for c in Curvature]}; "
+                f"got {self.curvature!r}"
             )
 
     def resolve_hessian_step(self, prior_variance):
@@ -350,7 +367,7 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     f0 = float(result.fun)
 
     def measure(step):
-        if config.curvature == "full":
+        if config.curvature == Curvature.FULL:
             return full_hessian(neg_log_post, z_hat, step=step, f0=f0)
         return np.diag(diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0))
 
