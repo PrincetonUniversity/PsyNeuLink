@@ -209,6 +209,7 @@ def split_stacked_data(data, subject_id):
 
     A `SubjectSplit`.
     """
+    # The column has to exist, be named, and say who produced every trial.
     if not isinstance(data, pd.DataFrame):
         raise ValueError(
             f"hierarchical fitting requires data as a pandas DataFrame so that the "
@@ -237,6 +238,9 @@ def split_stacked_data(data, subject_id):
             f"holds {len(labels)}. With one participant the group variance is not identified."
         )
 
+    # One frame of trials per participant, and the mask that selected it, so a caller can line a
+    # result back up with the rows it came from. The identifying column goes: what is left is
+    # the outcome variables, which is what a participant's model is given.
     masks, frames = [], []
     for label in labels:
         mask = column == label
@@ -335,14 +339,19 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
             return self._cache[subject_index]
 
         pec, inputs = self._factory(self._data_slices[subject_index], subject_index)
+
+        # Checked before it is ever scored, and before it is kept.
         source = f"the model built for participant {subject_index}"
         check_scoring_is_deterministic(pec, source)
         schema = ParameterSchema.from_pec(pec, source=source)
+
+        # The first model settles what is fitted; every other one is held to it.
         if self._schema is None:
             self._schema = schema
         else:
             self._schema.check_matches(schema)
 
+        # Built once: constructing a model compiles it, which is the expensive part.
         self._cache[subject_index] = (pec, inputs)
         return self._cache[subject_index]
 

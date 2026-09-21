@@ -339,6 +339,7 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     z0 = np.asarray(z0, dtype=float)
     prior_variance = np.asarray(prior_variance, dtype=float)
 
+    # Nelder-Mead is given its starting simplex outright; see SIMPLEX_SCALE for why.
     options = {}
     if config.method == "Nelder-Mead":
         n = z0.size
@@ -347,12 +348,12 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     if config.optimizer_options:
         options.update(config.optimizer_options)
 
+    # Find the peak.
     result = minimize(neg_log_post, z0, method=config.method, options=options)
     z_hat = np.asarray(result.x, dtype=float)
 
-    # Curvature is measured as a difference from the value at the mode, so an objective that is
-    # not finite there describes no posterior at all and every number taken from it would be
-    # meaningless. Falling back to the prior is for a probe that missed, not for this.
+    # An objective that is not finite at the peak describes no posterior at all, and the
+    # fallbacks below are for a probe that missed rather than for a peak that is not one.
     if not np.isfinite(result.fun):
         raise HierarchicalEMError(
             f"the objective is {result.fun} at the fitted point {z_hat.tolist()}, so this "
@@ -361,6 +362,7 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
             f"the model the factory builds for them go together."
         )
 
+    # Then measure how sharply the fit falls away from it.
     step = config.resolve_hessian_step(prior_variance)
     f0 = float(result.fun)
 
@@ -371,10 +373,9 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
 
     curvature = measure(step)
 
-    # A difference measures curvature only if every point it uses lands where the model allows; a
-    # step reaching an impossible parameter value returns infinity, which describes that point and
-    # not the peak. Halve the step in the dimensions involved until it fits, keeping the entries
-    # that already came back.
+    # A difference measures curvature only if every point it uses lands where the model allows;
+    # one that reaches an impossible parameter value returns infinity, describing that point and
+    # not the peak. Halve the step where that happened and try again, keeping what came back.
     for _ in range(MAX_HESSIAN_RETRIES):
         unusable = ~np.isfinite(curvature)
         if not unusable.any():
@@ -382,13 +383,13 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
         step = np.where(unusable.any(axis=0) | unusable.any(axis=1), 0.5 * step, step)
         curvature = np.where(unusable, measure(step), curvature)
 
-    # An entry that is still infinite describes a probe that never fit, so the prior stands in
-    # there for the inversion below. `curvature` keeps the infinity, so the result still shows
-    # that this part of it was never measured.
+    # Whatever is still infinite was never measured, so the prior stands in for it below.
+    # `curvature` keeps the infinity, so the result still shows which part that was.
     usable = curvature
     if not np.isfinite(curvature).all():
         usable = np.where(np.isfinite(curvature), curvature, np.diag(1.0 / prior_variance))
 
+    # Invert it: sharp curvature is a narrow posterior.
     covariance, laplace_covariance = _posterior_covariance(
         usable, prior_variance, config.variance_floor
     )
@@ -469,6 +470,7 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
     config = config if config is not None else EStepConfig()
 
     def runner(mu, sigma, prev_z, warm_start):
+        # One row per participant, filled in below and handed back as one result.
         n_subjects, n_params = mu.shape
         z_hat = np.empty((n_subjects, n_params))
         posterior = np.empty((n_subjects, n_params, n_params))
@@ -481,6 +483,9 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
         for s in range(n_subjects):
             mu_s = mu[s]
 
+            # What this participant is fitted against: their own likelihood, and the group as a
+            # prior on where their parameters should be. Bound as defaults so each closure keeps
+            # the participant it was made for.
             def neg_log_post(z, s=s, mu_s=mu_s):
                 theta = transform.to_natural(z)
                 return -float(log_likelihood(theta, s)) - log_gauss_diag(z, mu_s, sigma)
@@ -494,6 +499,7 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
                 )
             except HierarchicalEMError as error:
                 raise HierarchicalEMError(f"participant {s}: {error}") from None
+
             z_hat[s] = post.z_hat
             posterior[s] = post.covariance
             curvature[s] = post.curvature
@@ -621,10 +627,14 @@ def fit_laplace_em(
     estep = None
 
     for iteration in range(max_iterations):
+        # E-step: what the group predicts for each participant, then where each of them
+        # actually sits and how sure of it we are.
         mu = X @ beta
         estep = estep_runner(mu, sigma, prev_z, warm_start)
         prev_z = estep.z_hat
 
+        # A participant whose own fit did not converge still contributes, so say so rather than
+        # dropping them silently.
         if not np.all(estep.success):
             failed = np.flatnonzero(~estep.success)
             warnings.warn(
@@ -643,6 +653,7 @@ def fit_laplace_em(
         resid = estep.z_hat - X @ beta_new
         sigma_new = np.maximum(np.mean(resid ** 2 + estep.variance, axis=0), variance_floor)
 
+        # How far the group moved, which is what convergence is judged on.
         delta = max(
             float(np.max(np.abs(beta_new - beta))),
             float(np.max(np.abs(sigma_new - sigma))),
@@ -664,6 +675,8 @@ def fit_laplace_em(
             converged = True
             break
 
+    # One more E-step, so that what is reported about each participant was measured against the
+    # group estimate being returned rather than the one before it.
     if final_estep and estep is not None:
         estep = estep_runner(X @ beta, sigma, prev_z, warm_start)
 
