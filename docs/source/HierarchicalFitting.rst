@@ -21,7 +21,7 @@ and :math:`\beta` and :math:`\sigma` are estimated from the group.
 
 .. _Hierarchical_Fitting_Enabling:
 
-Enabling hierarchical fitting
+Enabling Hierarchical Fitting
 -----------------------------
 
 Pass ``fit_method="hierarchical"``, name the column of ``data`` that identifies
@@ -71,7 +71,7 @@ instead.
 
 .. _Hierarchical_Fitting_Factory:
 
-The participant factory
+The Participant Factory
 -----------------------
 
 ``pec_factory(data, subject_index=None) -> (pec, inputs)`` is a top-level, picklable
