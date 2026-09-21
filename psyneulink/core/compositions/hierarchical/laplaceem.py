@@ -189,12 +189,10 @@ class EStepConfig:
         simulation-backed likelihood has no gradient.
 
     curvature : Curvature or str
-        How much of the curvature at each participant's mode to measure.  ``"diagonal"`` measures
-        one parameter at a time with the others held at the mode; ``"full"`` measures the whole
-        matrix and inverts it, so a parameter's reported width accounts for the others being
-        uncertain too.  Where parameters trade off the first is the smaller of the two, so it
-        reports intervals that are too tight and group variances that are too low.  ``"full"``
-        costs ``2 P^2`` evaluations of a participant's objective instead of ``2 P``.
+        How much of the curvature at each participant's mode to measure; see `Curvature`.  Where
+        parameters trade off, measuring one at a time reports intervals that are too tight and
+        group variances that are too low, at ``2 P`` evaluations of a participant's objective
+        against the ``2 P^2`` the whole matrix costs.
 
     hessian_step : float or array-like or None
         Perturbation for the finite-difference curvature, in unconstrained units.  When None (the

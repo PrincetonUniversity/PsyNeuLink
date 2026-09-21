@@ -130,18 +130,9 @@ Options
 ``hierarchical_options`` accepts the following keys. An unrecognised key raises rather than
 being ignored.
 
-Apart from ``subject_id``, each is a `Parameter` of the composition once it is built, so it can
-be read back and changed between fits::
-
-    pec.parameters.curvature.get()          # 'diagonal'
-    pec.parameters.curvature.set("full")    # the next run() uses this
-
-A fit reads them once when it starts, so changing one mid-fit cannot affect the fit already
-running, and ``fit_results.settings`` records the values that fit actually used. An invalid value
-is refused either way -- when the composition is built, and when one is assigned afterwards.
-
-``subject_id`` is not among them: it says how ``data`` is divided into participants, which is
-settled when the composition is built.
+Apart from ``subject_id``, each becomes a `Parameter` of the composition and can be changed
+between fits; see :ref:`Hierarchical_Fitting_Changing`. ``subject_id`` is not among them: it says
+how ``data`` is divided into participants, which is settled when the composition is built.
 
 * ``subject_id`` (required)
     Column of ``data`` identifying participants.
@@ -223,6 +214,8 @@ without rebuilding anything::
     careful.settings["curvature"]    # 'full'
 
 Each result keeps the settings its own fit ran under, so the two remain readable side by side.
+A value that is not usable is refused both when the composition is built and when it is assigned
+here.
 
 
 .. _Hierarchical_Fitting_Running:

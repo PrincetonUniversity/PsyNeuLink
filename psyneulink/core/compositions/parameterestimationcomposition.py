@@ -860,8 +860,8 @@ class ParameterEstimationComposition(Composition):
                                                                      modulation=OVERRIDE)
             self.model.add_node(self.pec_control_mechs[(pname, mech)])
 
-        # The solver settings are Parameters, so they are initialized and validated the way every
-        # other Parameter is rather than being stashed on the instance.
+        # The solver settings are Parameters, so they are initialized and validated the way
+        # every other Parameter is.
         solver_settings, subject_id = self._split_hierarchical_options(hierarchical_options)
 
         super().__init__(
