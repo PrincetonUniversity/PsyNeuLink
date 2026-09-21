@@ -150,6 +150,7 @@ class HierarchicalPECResults:
         settings : dict : default None
             What the fit was asked to do.
         """
+        # What the fit produced, in the space it worked in.
         names = tuple(fit_param_names)
         labels = tuple(subject_labels)
         z_hat = np.asarray(em_result.z_hat, dtype=float)
@@ -158,12 +159,15 @@ class HierarchicalPECResults:
         beta = np.asarray(em_result.beta, dtype=float)
         sigma = np.asarray(em_result.sigma, dtype=float)
 
+        # Each participant's estimate, in the model's own units.
         theta_hat = np.vstack([transform.to_natural(z_hat[s]) for s in range(z_hat.shape[0])])
-        # Delta method: a standard deviation in unconstrained units, scaled by the local slope of
-        # the transform, approximates the same spread in the model's units.
+
+        # And its spread, carried across by the delta method: a standard deviation scaled by the
+        # local slope of the transform approximates the same spread on the other side of it.
         slope = np.vstack([transform.dtheta_dz(z_hat[s]) for s in range(z_hat.shape[0])])
         theta_sd = np.abs(slope) * np.sqrt(variance)
 
+        # One row per parameter: the group estimate, and the range it was searched over.
         group_value = transform.to_natural(beta[0])
         lower = np.broadcast_to(transform.lower, (len(names),))
         upper = np.broadcast_to(transform.upper, (len(names),))
@@ -178,10 +182,12 @@ class HierarchicalPECResults:
             index=pd.Index(names, name="parameter"),
         )
 
+        # One row per participant, one column per parameter.
         subject_parameters = pd.DataFrame(
             theta_hat, index=pd.Index(labels, name="subject"), columns=list(names)
         )
 
+        # One row per participant and parameter, with the estimate in both spaces.
         posteriors = pd.DataFrame({
             # Repeated as objects: participants are identified by whatever the data used, and
             # numpy would otherwise find one type to hold them all -- turning the distinct
@@ -195,6 +201,7 @@ class HierarchicalPECResults:
             "converged": np.repeat(np.asarray(em_result.subject_converged, dtype=bool), len(names)),
         })
 
+        # One row per iteration, with the group estimate spread across a column per parameter.
         history = pd.DataFrame([
             {
                 "iter": h["iter"],

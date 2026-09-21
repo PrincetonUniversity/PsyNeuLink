@@ -45,6 +45,7 @@ class BoundedTransform:
     def __init__(self, lower, upper):
         self.lower = np.asarray(lower, dtype=float)
         self.upper = np.asarray(upper, dtype=float)
+        # Same shape, and a range with something in it, or the map below is not one-to-one.
         if self.lower.shape != self.upper.shape:
             raise ValueError(
                 f"lower and upper bounds must have the same shape; "
@@ -55,6 +56,7 @@ class BoundedTransform:
             raise ValueError(
                 f"upper bounds must exceed lower bounds; violated at index/indices {bad.tolist()}"
             )
+        # Held rather than recomputed: every mapping in both directions needs it.
         self.width = self.upper - self.lower
 
     def to_natural(self, z):
@@ -62,13 +64,11 @@ class BoundedTransform:
         return self.lower + self.width * expit(np.asarray(z, dtype=float))
 
     def to_unconstrained(self, theta):
-        """Map bounded parameters `theta` to unconstrained `z`.
-
-        Values are clipped just inside the bounds first, since the bounds themselves map to
-        infinity.
-        """
+        """Map bounded parameters `theta` to unconstrained `z`."""
         theta = np.asarray(theta, dtype=float)
+        # Where in the range each value sits, as a fraction.
         u = (theta - self.lower) / self.width
+        # Held just inside it: the bounds themselves map to infinity.
         u = np.clip(u, 1e-12, 1.0 - 1e-12)
         return np.log(u) - np.log1p(-u)
 
