@@ -1,5 +1,6 @@
 import contextlib
 import doctest
+import importlib.util
 import inspect
 import io
 import itertools
@@ -22,12 +23,7 @@ else:
     # Check that torch is usable if installed
     assert torch_available, "Torch module is available, but not usable by PNL"
 
-try:
-    import dask.distributed  # noqa: F401
-except ImportError:
-    dask_available = False
-else:
-    dask_available = True
+dask_available = importlib.util.find_spec('dask.distributed') is not None
 
 # def pytest_addoption(parser):
 #     parser.addoption(
