@@ -22,6 +22,13 @@ else:
     # Check that torch is usable if installed
     assert torch_available, "Torch module is available, but not usable by PNL"
 
+try:
+    import dask.distributed  # noqa: F401
+except ImportError:
+    dask_available = False
+else:
+    dask_available = True
+
 # def pytest_addoption(parser):
 #     parser.addoption(
 #         '--pnl-seed',
@@ -66,6 +73,9 @@ def pytest_runtest_setup(item):
 
     if 'pytorch' in item.keywords and not torch_available:
         pytest.skip('pytorch not available')
+
+    if 'dask' in item.keywords and not dask_available:
+        pytest.skip('dask not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 

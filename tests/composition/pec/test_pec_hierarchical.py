@@ -1073,6 +1073,7 @@ def test_pec_log_likelihood_refuses_in_hierarchical_mode():
         pec.log_likelihood(0.3)
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_pec_uses_the_cluster_when_distributed(monkeypatch):
     # `distributed` selects where participants are fitted; the group update is unaffected.
@@ -1269,6 +1270,7 @@ def _worker_cache_keys(dask_worker=None):
     return sorted(getattr(dask_worker, "_hierarchical_subject_cache", {}))
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_releasing_a_fit_clears_the_cache_on_the_worker():
     """Releasing runs outside a task, where the worker has to be taken from Dask."""
@@ -1304,6 +1306,7 @@ def _failing_participant(fit_id, subject_index):
     raise RuntimeError(f"participant {subject_index} could not be fitted")
 
 
+@pytest.mark.dask
 @pytest.mark.composition
 def test_a_failed_participant_does_not_leave_a_model_behind():
     """One task failing must not let another finish after the fit has cleaned up.
