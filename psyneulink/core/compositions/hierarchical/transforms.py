@@ -85,11 +85,16 @@ class BoundedTransform:
 class IdentityTransform:
     """A transform that does nothing: ``theta == z``.
 
+    Its bounds are infinite, so that anything reading a range off a transform reads one here too.
+
     For a likelihood whose parameters are already unbounded.  A fit driven through
     `ParameterEstimationComposition <ParameterEstimationComposition>` never uses this, because
     a parameter is specified there as the values to search over and is bounded by construction;
     it is for `fit_laplace_em <laplaceem>` driven directly, against a likelihood of one's own.
     """
+
+    lower = -np.inf
+    upper = np.inf
 
     def to_natural(self, z):
         return np.asarray(z, dtype=float)

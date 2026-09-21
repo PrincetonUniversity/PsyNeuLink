@@ -165,15 +165,15 @@ class HierarchicalPECResults:
         theta_sd = np.abs(slope) * np.sqrt(variance)
 
         group_value = transform.to_natural(beta[0])
-        lower = getattr(transform, "lower", np.full(len(names), -np.inf))
-        upper = getattr(transform, "upper", np.full(len(names), np.inf))
+        lower = np.broadcast_to(transform.lower, (len(names),))
+        upper = np.broadcast_to(transform.upper, (len(names),))
         group_parameters = pd.DataFrame(
             {
                 "mean_z": beta[0],
                 "sd_z": np.sqrt(sigma),
                 "value": group_value,
-                "lower": np.broadcast_to(lower, (len(names),)),
-                "upper": np.broadcast_to(upper, (len(names),)),
+                "lower": lower,
+                "upper": upper,
             },
             index=pd.Index(names, name="parameter"),
         )
