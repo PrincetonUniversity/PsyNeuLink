@@ -98,11 +98,14 @@ def _cpu_jit_constructor():
 
     opt_level = int(debug_env.get('opt', 2))
 
-    # Create compilation target, use triple from the current process
+    # Create compilation target, use triple from current process
+    # FIXME: reloc='static' is needed to avoid crashes on win64
+    # see: https://github.com/numba/llvmlite/issues/457
     cpu_target = binding.Target.from_triple(binding.get_process_triple())
     cpu_target_machine = cpu_target.create_target_machine(cpu=binding.get_host_cpu_name(),
                                                           features=binding.get_host_cpu_features().flatten(),
-                                                          opt=opt_level)
+                                                          opt=opt_level,
+                                                          reloc='static')
 
     pass_builder = _create_pass_builder(cpu_target_machine, opt_level)
 
