@@ -275,6 +275,31 @@ agreement, and GPU rescoring at the new 100,000-estimate default with two
 independent seeds. Fresh full-fit validation on Della is pending. Inspect the
 job results before starting an array.
 
+The fresh Della validation jobs submitted on 2026-09-21 use a clean, fixed
+checkout of `4f162dac607f40fd14ba85858ec49326f1848122`, subject 1, and the full
+defaults above (no smoke mode or warm starts):
+
+| Backend | Slurm task | Resources | Initial status |
+| --- | --- | --- | --- |
+| CPU direct | `14246453_1` | 8 cores, 8 GB, 30 minutes | Running on `della-i13n3`; manifest confirms 8 Torch threads |
+| GPU generated | `14246454_1` | 1 A100 (`gpu40`), 4 cores, 16 GB, 1 hour | Queued on priority |
+
+These are submission/startup observations, not completed-fit validation.
+Results and logs are under
+`/scratch/gpfs/CSES/dmturner/csi-handoff/results/validation-4f162dac60`.
+Check the current status with:
+
+```bash
+squeue -j 14246453,14246454
+sacct -j 14246453,14246454 \
+  --format=JobID,State,Elapsed,AllocCPUS,MaxRSS,ExitCode
+```
+
+After Slurm reports `COMPLETED`, also inspect each `run.json` for `complete`
+and review the optimizer diagnostics as described below. Both jobs retain
+the same 561 history rows and 485 included observations, with input SHA-256
+`80ac0f31fa5cf01411d1448b3097b0b8fd2a7073e1ef4f5473e7ab501ac94408`.
+
 A full local CPU fit of Study 3 subject 1 took **4 minutes 7 seconds**, including
 first-use native compilation and the independent fresh-score check, on an
 Intel Core i7-9700K with eight Torch/OpenMP threads. This used the original,
