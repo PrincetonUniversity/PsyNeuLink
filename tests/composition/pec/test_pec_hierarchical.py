@@ -1371,3 +1371,199 @@ def test_a_failed_participant_does_not_leave_a_model_behind():
 
         remaining = [keys for keys in client.run(_worker_cache_keys).values() if keys]
         assert remaining == [], f"a model outlived the fit: {remaining}"
+
+
+# ===========================================================================
+# The solver settings as Parameters
+#
+# `hierarchical_options` is still how a fit is configured, but the settings it
+# carries are ordinary Parameters afterwards: readable, assignable between
+# fits, and holding their own defaults.
+# ===========================================================================
+_SOLVER_SETTINGS = (
+    "curvature", "max_iterations", "tol", "variance_floor",
+    "hessian_step", "estep_method", "estep_options",
+)
+
+
+def _stub_factory(data, subject_index=None):  # noqa: U100
+    return _StubPEC(["DDM-1.rate"], [(-1.5, 1.5)], value=-1.0), None
+
+
+@pytest.mark.composition
+def test_constructor_options_become_parameters():
+    pec = _build_group_pec(hierarchical_options={
+        "subject_id": "subject", "curvature": "full", "max_iterations": 7,
+        "tol": 1e-2, "variance_floor": 1e-3, "hessian_step": 0.2,
+        "estep_method": "Powell", "estep_options": {"maxiter": 5},
+    })
+    assert pec.parameters.curvature.get() == "full"
+    assert pec.parameters.max_iterations.get() == 7
+    assert pec.parameters.tol.get() == 1e-2
+    assert pec.parameters.variance_floor.get() == 1e-3
+    assert pec.parameters.hessian_step.get() == 0.2
+    assert pec.parameters.estep_method.get() == "Powell"
+    assert pec.parameters.estep_options.get() == {"maxiter": 5}
+
+
+@pytest.mark.composition
+def test_unset_options_take_the_parameter_defaults():
+    # The Parameter declarations are where the defaults live; nothing else restates them.
+    pec = _build_group_pec()
+    assert pec.parameters.curvature.get() == "diagonal"
+    assert pec.parameters.max_iterations.get() == 50
+    assert pec.parameters.tol.get() == 1e-4
+    assert pec.parameters.variance_floor.get() == 1e-6
+    assert pec.parameters.hessian_step.get() is None
+    assert pec.parameters.estep_method.get() == "Nelder-Mead"
+    assert pec.parameters.estep_options.get() is None
+
+
+@pytest.mark.composition
+def test_settings_are_independent_between_compositions():
+    # One composition's settings are its own; changing them must not reach another.
+    first = _build_group_pec(hierarchical_options={"subject_id": "subject", "max_iterations": 3})
+    second = _build_group_pec()
+    first.parameters.curvature.set("full")
+    first.parameters.estep_options.set({"maxiter": 11})
+
+    assert second.parameters.max_iterations.get() == 50
+    assert second.parameters.curvature.get() == "diagonal"
+    assert second.parameters.estep_options.get() is None
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize("name, value", [
+    ("curvature", "banded"),
+    ("max_iterations", 0),
+    ("tol", 0.0),
+    ("variance_floor", -1.0),
+    ("hessian_step", -0.1),
+    ("estep_method", 3),
+    ("estep_options", 5),
+])
+def test_an_invalid_setting_is_refused_however_it_arrives(name, value):
+    # Both ways in: the value a composition is built with, and one assigned afterwards.
+    with pytest.raises(Exception, match=name):
+        _build_group_pec(hierarchical_options={"subject_id": "subject", name: value})
+
+    pec = _build_group_pec()
+    with pytest.raises(ParameterEstimationCompositionError, match=name):
+        getattr(pec.parameters, name).set(value)
+
+
+@pytest.mark.composition
+def test_a_setting_changed_between_fits_reaches_the_next_one(monkeypatch):
+    # Each fit reads the settings as they stand when it starts, so an assignment between two
+    # fits reaches the second and leaves the first as it was.
+    from psyneulink.core.compositions import parameterestimationcomposition as pec_module
+
+    seen = []
+    real = pec_module.fit_laplace_em
+
+    def spy(runner, n_subjects, n_params, **kwargs):
+        seen.append((kwargs["max_iterations"], kwargs["estep_config"].curvature))
+        return real(runner, n_subjects, n_params, **kwargs)
+
+    monkeypatch.setattr(pec_module, "fit_laplace_em", spy)
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options={"subject_id": "subject", "max_iterations": 1},
+    )
+    first = pec.run()
+
+    pec.parameters.max_iterations.set(3)
+    pec.parameters.curvature.set("full")
+    second = pec.run()
+
+    assert seen == [(1, "diagonal"), (3, "full")]
+    assert first.settings["max_iterations"] == 1
+    assert first.settings["curvature"] == "diagonal"
+    assert second.settings["max_iterations"] == 3
+    assert second.settings["curvature"] == "full"
+
+
+@pytest.mark.composition
+def test_recorded_settings_are_not_changed_by_later_assignment():
+    # The mapping handed in is taken by value, so a later edit cannot rewrite what a finished
+    # fit reports it ran with.
+    options = {"maxiter": 4}
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options={
+            "subject_id": "subject", "max_iterations": 1, "estep_options": options,
+        },
+    )
+    results = pec.run()
+    assert results.settings["estep_options"] == {"maxiter": 4}
+    assert results.settings["subject_id"] == "subject"
+
+    options["maxiter"] = 999
+    pec.parameters.estep_options.set({"maxiter": 123})
+    assert results.settings["estep_options"] == {"maxiter": 4}
+
+
+def _captured_settings(monkeypatch, **build):
+    """Run a fit, returning the EStepConfig and driver arguments the solver was given."""
+    from psyneulink.core.compositions import parameterestimationcomposition as pec_module
+
+    seen = {}
+    real = pec_module.fit_laplace_em
+
+    def spy(runner, n_subjects, n_params, **kwargs):
+        seen.update(kwargs)
+        return real(runner, n_subjects, n_params, **kwargs)
+
+    monkeypatch.setattr(pec_module, "fit_laplace_em", spy)
+    pec = _build_group_pec(**build)
+    pec.run()
+    return seen
+
+
+@pytest.mark.composition
+@pytest.mark.dask
+def test_both_execution_paths_are_given_the_same_settings(monkeypatch):
+    options = {
+        "subject_id": "subject", "max_iterations": 2, "tol": 1e-2,
+        "curvature": "full", "variance_floor": 1e-5, "estep_method": "Powell",
+    }
+    here = _captured_settings(
+        monkeypatch,
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options=dict(options),
+    )
+    there = _captured_settings(
+        monkeypatch,
+        distributed=True,
+        distributed_options={"pec_factory": _stub_factory, "n_workers": 1},
+        hierarchical_options=dict(options),
+    )
+    assert here["max_iterations"] == there["max_iterations"] == 2
+    assert here["tol"] == there["tol"] == 1e-2
+    assert here["estep_config"] == there["estep_config"]
+    assert here["estep_config"].curvature == "full"
+    assert here["estep_config"].method == "Powell"
+
+
+@pytest.mark.composition
+def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
+    # They configure hierarchical fitting; a plain PEC carries them at their defaults and is
+    # built and validated exactly as before.
+    import psyneulink as pnl
+
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionAnalytical(drift_rate=0.3, threshold=0.6),
+        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME], name="DDM",
+    )
+    comp = pnl.Composition(pathways=decision)
+    pec = pnl.ParameterEstimationComposition(
+        name="ordinary",
+        nodes=[comp],
+        parameters={("drift_rate", decision): np.linspace(0.1, 0.5, 5)},
+        outcome_variables=[decision.output_ports[pnl.DECISION_VARIABLE]],
+        objective_function=lambda x: 0.0,
+        optimization_function="differential_evolution",
+    )
+    assert pec._fit_method is None
+    assert pec.parameters.curvature.get() == "diagonal"
+    assert pec.parameters.max_iterations.get() == 50
