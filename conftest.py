@@ -23,7 +23,12 @@ else:
     # Check that torch is usable if installed
     assert torch_available, "Torch module is available, but not usable by PNL"
 
-dask_available = importlib.util.find_spec('dask.distributed') is not None
+try:
+    # find_spec raises rather than returning None when the parent package is the missing one,
+    # which is the usual case here: builds that do not install the extra have no dask at all.
+    dask_available = importlib.util.find_spec('dask.distributed') is not None
+except ModuleNotFoundError:
+    dask_available = False
 
 # def pytest_addoption(parser):
 #     parser.addoption(
