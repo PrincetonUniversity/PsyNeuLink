@@ -124,9 +124,12 @@ Options
 ``hierarchical_options`` accepts the following keys. An unrecognised key raises rather than
 being ignored.
 
-Apart from ``subject_id``, each becomes a `Parameter` of the composition and can be changed
-between fits; see :ref:`Hierarchical_Fitting_Changing`. ``subject_id`` is not among them: it says
-how ``data`` is divided into participants, which is settled when the composition is built.
+Apart from ``subject_id``, each becomes a `Parameter` of the composition, so it can be changed
+between fits with ``pec.parameters.<name>.set(...)`` and is checked then as it is at construction.
+A fit reads them once as it starts, and ``fit_results.settings`` records the values it used.
+
+``subject_id`` is not among them: it says how ``data`` is divided into participants, which is
+settled when the composition is built.
 
 * ``subject_id`` (required)
     Column of ``data`` identifying participants.
@@ -182,34 +185,6 @@ less varied than it is.
 
 The group model itself treats the parameters as independent either way: ``curvature`` says how
 each participant is measured, not what the group is allowed to express.
-
-
-.. _Hierarchical_Fitting_Changing:
-
-Changing a setting between fits
--------------------------------
-
-The settings are read at the start of each fit, so a second fit can be run under different ones
-without rebuilding anything::
-
-    pec = pnl.ParameterEstimationComposition(
-        data=data,
-        fit_method="hierarchical",
-        hierarchical_options={"subject_id": "subject", "max_iterations": 10},
-        distributed_options={"pec_factory": build_participant},
-    )
-    quick = pec.run()
-
-    pec.parameters.curvature.set("full")
-    pec.parameters.max_iterations.set(40)
-    careful = pec.run()
-
-    quick.settings["curvature"]      # 'diagonal'
-    careful.settings["curvature"]    # 'full'
-
-Each result keeps the settings its own fit ran under, so the two remain readable side by side.
-A value that is not usable is refused both when the composition is built and when it is assigned
-here.
 
 
 .. _Hierarchical_Fitting_Running:
