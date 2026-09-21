@@ -124,9 +124,9 @@ Options
 ``hierarchical_options`` accepts the following keys. An unrecognised key raises rather than
 being ignored.
 
-Apart from ``subject_id``, each becomes a `Parameter` of the composition, so it can be changed
-between fits with ``pec.parameters.<name>.set(...)`` and is checked then as it is at construction.
-A fit reads them once as it starts, and ``fit_results.settings`` records the values it used.
+Apart from ``subject_id``, each is a `Parameter` of the composition, read and set like any other
+and checked the same way whenever it is set. ``fit_results.settings`` records the values a fit
+ran with.
 
 ``subject_id`` is not among them: it says how ``data`` is divided into participants, which is
 settled when the composition is built.
@@ -160,8 +160,8 @@ settled when the composition is built.
 
 .. _Hierarchical_Fitting_Curvature:
 
-How each participant's uncertainty is measured
-----------------------------------------------
+Curvature
+---------
 
 A participant's uncertainty comes from the curvature of their fit at its peak: the more sharply
 the fit falls away, the better that parameter is determined.
