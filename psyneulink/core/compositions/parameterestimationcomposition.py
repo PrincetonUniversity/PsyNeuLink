@@ -263,6 +263,7 @@ Class Reference
 
 """
 import warnings
+from enum import auto
 
 import numpy as np
 import pandas as pd
@@ -272,7 +273,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal, Mapping
 
 import psyneulink.core.llvm as pnllvm
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array
+from psyneulink.core.globals.utilities import ContentAddressableList, PNLStrEnum, convert_to_np_array
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.components.ports.port import Port_Base
@@ -293,7 +294,7 @@ from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
-    CURVATURE_KINDS,
+    Curvature,
     EStepConfig,
     fit_laplace_em,
     make_inprocess_estep_runner,
@@ -319,7 +320,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 
 
 
-__all__ = ["ParameterEstimationComposition", "ParameterEstimationCompositionError"]
+__all__ = ["FitMethod", "ParameterEstimationComposition", "ParameterEstimationCompositionError"]
 
 COMPOSITION_SPECIFICATION_ARGS = {"nodes", "pathways", "projections"}
 CONTROLLER_SPECIFICATION_ARGS = {
@@ -330,6 +331,20 @@ CONTROLLER_SPECIFICATION_ARGS = {
     "controller_condition",
     "retain_old_simulation_data",
 }
+
+
+class FitMethod(PNLStrEnum):
+    """How a `ParameterEstimationComposition` fits its `data`.
+
+    Attributes
+    ----------
+
+    HIERARCHICAL
+        Every participant fitted jointly, each estimate informed by the rest of the group.  See
+        :ref:`Hierarchical Fitting <HierarchicalFitting>`.
+    """
+
+    HIERARCHICAL = auto()
 
 
 class ParameterEstimationCompositionError(CompositionError):
@@ -634,7 +649,7 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
-        fit_method: Optional[Literal["hierarchical"]] = None,
+        fit_method: Optional[Union[FitMethod, str]] = None,
         hierarchical_options: Optional[Mapping] = None,
         **kwargs,
     ):
@@ -917,10 +932,10 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(
                 "hierarchical_options requires variance_floor > 0"
             )
-        if options["curvature"] not in CURVATURE_KINDS:
+        if options["curvature"] not in Curvature:
             raise ParameterEstimationCompositionError(
-                f"hierarchical_options['curvature'] must be one of {list(CURVATURE_KINDS)}; "
-                f"got {options['curvature']!r}"
+                f"hierarchical_options['curvature'] must be one of "
+                f"{[c.value for c in Curvature]}; got {options['curvature']!r}"
             )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
