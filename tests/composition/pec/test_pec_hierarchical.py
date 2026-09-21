@@ -784,6 +784,44 @@ def test_results_keep_participant_identifiers_of_different_types_apart():
     assert list(results.subject_parameters.index) == [1, "1"]
 
 
+def test_results_carry_the_whole_participant_covariance():
+    # A full curvature measures how each participant's parameters trade off. Reporting only the
+    # diagonal would discard what those extra evaluations were spent on.
+    y = np.array([[0.7, -1.2]])
+    noise = np.array([[0.30, 0.27], [0.27, 0.30]])
+    precision = np.linalg.inv(noise)
+
+    def log_likelihood(theta, s):
+        d = np.asarray(theta, dtype=float) - y[s]
+        return float(-0.5 * d @ precision @ d)
+
+    config = EStepConfig(curvature="full", hessian_step=1e-3)
+    runner = make_inprocess_estep_runner(log_likelihood, IdentityTransform(), config)
+    em = fit_laplace_em(runner, 1, 2, estep_config=config, max_iterations=2)
+    results = HierarchicalPECResults.from_em(
+        em, IdentityTransform(), ("a", "b"), subject_labels=("S0",)
+    )
+
+    assert results.posterior_covariance.shape == (1, 2, 2)
+    assert abs(results.posterior_covariance[0, 0, 1]) > 0.01
+    np.testing.assert_allclose(
+        results.posterior_variance,
+        np.diagonal(results.posterior_covariance, axis1=1, axis2=2),
+    )
+
+
+def test_a_diagonal_fit_reports_no_off_diagonals():
+    # It did not measure them, and says so by leaving them at zero.
+    model = _make_toy(seed=2, n_subjects=3)
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    em = fit_laplace_em(runner, model.n_subjects, model.n_params, max_iterations=2)
+    results = HierarchicalPECResults.from_em(
+        em, IdentityTransform(), ("a", "b"), subject_labels=("S0", "S1", "S2")
+    )
+    off_diagonal = results.posterior_covariance[:, 0, 1]
+    np.testing.assert_allclose(off_diagonal, 0.0)
+
+
 def test_results_shapes_and_labels():
     em, transform, labels = _fit_toy_for_results()
     res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)

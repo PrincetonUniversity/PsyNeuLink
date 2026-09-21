@@ -60,8 +60,18 @@ class HierarchicalPECResults:
     beta, sigma : numpy.ndarray
         Group means ``(n_predictors, n_params)`` and variances ``(n_params,)``, unconstrained.
 
-    z_hat, posterior_variance : numpy.ndarray
-        Per-participant estimates and variances ``(n_subjects, n_params)``, unconstrained.
+    z_hat : numpy.ndarray
+        Per-participant estimates ``(n_subjects, n_params)``, unconstrained.
+
+    posterior_covariance : numpy.ndarray
+        Per-participant posterior covariance ``(n_subjects, n_params, n_params)``, unconstrained.
+        Its off-diagonals say how a participant's parameters trade off against each other, and are
+        measured only when the fit ran with ``curvature="full"``; a diagonal fit reports zeros
+        there, which records that they were not measured.
+
+    posterior_variance : numpy.ndarray
+        Per-participant variances ``(n_subjects, n_params)``: the diagonal of
+        `posterior_covariance`.
 
     objective : float
         Laplace marginal log-likelihood at the group estimate reported here.
@@ -94,7 +104,7 @@ class HierarchicalPECResults:
     beta: np.ndarray
     sigma: np.ndarray
     z_hat: np.ndarray
-    posterior_variance: np.ndarray
+    posterior_covariance: np.ndarray
 
     objective: float
     n_iter: int
@@ -104,6 +114,11 @@ class HierarchicalPECResults:
 
     transform_metadata: Dict[str, Any] = field(default_factory=dict)
     settings: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def posterior_variance(self):
+        """Per-participant, per-parameter variance: the diagonal of `posterior_covariance`."""
+        return np.diagonal(self.posterior_covariance, axis1=1, axis2=2).copy()
 
     @classmethod
     def from_em(
@@ -138,7 +153,8 @@ class HierarchicalPECResults:
         names = tuple(fit_param_names)
         labels = tuple(subject_labels)
         z_hat = np.asarray(em_result.z_hat, dtype=float)
-        variance = np.asarray(em_result.variance, dtype=float)
+        posterior_covariance = np.asarray(em_result.posterior_covariance, dtype=float)
+        variance = np.diagonal(posterior_covariance, axis1=1, axis2=2)
         beta = np.asarray(em_result.beta, dtype=float)
         sigma = np.asarray(em_result.sigma, dtype=float)
 
@@ -201,7 +217,7 @@ class HierarchicalPECResults:
             beta=beta,
             sigma=sigma,
             z_hat=z_hat,
-            posterior_variance=variance,
+            posterior_covariance=posterior_covariance,
             objective=float(em_result.objective),
             n_iter=int(em_result.n_iter),
             converged=bool(em_result.converged),
