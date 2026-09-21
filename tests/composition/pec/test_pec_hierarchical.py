@@ -122,7 +122,7 @@ def test_bounded_transform_roundtrip():
     t = BoundedTransform(lower=[0.0, -2.0], upper=[1.0, 3.0])
     theta = np.array([0.2, 1.5])
     z = t.to_unconstrained(theta)
-    assert np.allclose(t.to_natural(z), theta, atol=1e-10)
+    np.testing.assert_allclose(t.to_natural(z), theta, atol=1e-10)
 
 
 def test_bounded_transform_respects_bounds():
@@ -152,7 +152,7 @@ def test_dtheta_dz_matches_numerical():
         (t.to_natural(z + h * e)[k] - t.to_natural(z - h * e)[k]) / (2 * h)
         for k, e in enumerate(np.eye(2))
     ])
-    assert np.allclose(t.dtheta_dz(z), num, rtol=1e-5)
+    np.testing.assert_allclose(t.dtheta_dz(z), num, rtol=1e-5)
 
 
 def test_bounded_transform_rejects_bad_bounds():
@@ -165,9 +165,9 @@ def test_bounded_transform_rejects_bad_bounds():
 def test_identity_transform_is_the_identity():
     t = IdentityTransform()
     theta = np.array([-3.0, 0.0, 2.5])
-    assert np.allclose(t.to_natural(theta), theta)
-    assert np.allclose(t.to_unconstrained(theta), theta)
-    assert np.allclose(t.dtheta_dz(theta), np.ones_like(theta))
+    np.testing.assert_allclose(t.to_natural(theta), theta)
+    np.testing.assert_allclose(t.to_unconstrained(theta), theta)
+    np.testing.assert_allclose(t.dtheta_dz(theta), np.ones_like(theta))
 
 
 # ===========================================================================
@@ -179,14 +179,14 @@ def test_diagonal_hessian_of_quadratic():
     c = np.array([1.0, -3.0, 0.5])
     f = lambda z: 0.5 * np.sum(a * (z - c) ** 2)  # noqa: E731
     diag = diagonal_hessian(f, np.array([0.0, 0.0, 0.0]), step=1e-3)
-    assert np.allclose(diag, a, rtol=1e-5)
+    np.testing.assert_allclose(diag, a, rtol=1e-5)
 
 
 def test_diagonal_hessian_accepts_per_dimension_step():
     a = np.array([2.0, 5.0])
     f = lambda z: 0.5 * np.sum(a * z ** 2)  # noqa: E731
     diag = diagonal_hessian(f, np.zeros(2), step=np.array([1e-3, 1e-2]))
-    assert np.allclose(diag, a, rtol=1e-5)
+    np.testing.assert_allclose(diag, a, rtol=1e-5)
 
 
 def test_diagonal_hessian_rejects_bad_step():
@@ -201,7 +201,7 @@ def test_full_hessian_of_quadratic():
     # A quadratic's Hessian is its own coefficient matrix, off-diagonals included.
     a = np.array([[3.0, 0.7, -0.4], [0.7, 2.0, 0.9], [-0.4, 0.9, 1.5]])
     f = lambda z: 0.5 * z @ a @ z + 1.3  # noqa: E731
-    assert np.allclose(full_hessian(f, np.zeros(3), step=1e-3), a, atol=1e-4)
+    np.testing.assert_allclose(full_hessian(f, np.zeros(3), step=1e-3), a, atol=1e-4)
 
 
 def test_full_hessian_is_symmetric_and_agrees_on_the_diagonal():
@@ -212,8 +212,8 @@ def test_full_hessian_is_symmetric_and_agrees_on_the_diagonal():
     f = lambda z: float(np.sum(np.tanh(b @ z) ** 2))  # noqa: E731
     z = np.array([0.2, -0.4, 0.1])
     measured = full_hessian(f, z, step=1e-3)
-    assert np.allclose(measured, measured.T, atol=0)
-    assert np.allclose(np.diag(measured), diagonal_hessian(f, z, step=1e-3))
+    np.testing.assert_allclose(measured, measured.T, atol=0)
+    np.testing.assert_allclose(np.diag(measured), diagonal_hessian(f, z, step=1e-3))
 
 
 def test_full_hessian_rejects_bad_step():
@@ -268,7 +268,7 @@ def test_full_curvature_reports_the_off_diagonals_the_diagonal_one_leaves_empty(
     diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2))
     # inv([[10, 9], [9, 10]]) = [[10, -9], [-9, 10]] / 19
     np.testing.assert_allclose(full.covariance[0, 1], -9.0 / 19.0, rtol=1e-4)
-    assert np.allclose(diagonal.covariance, np.diag(diagonal.variance))
+    np.testing.assert_allclose(diagonal.covariance, np.diag(diagonal.variance))
 
 
 def test_the_group_variance_reaches_its_maximum_only_with_a_full_curvature():
@@ -335,8 +335,8 @@ def test_estep_matches_closed_form_posterior():
 
     post = subject_map_estep(neg_log_post, z0=beta, prior_variance=sigma)
     z_cf, v_cf = model.closed_form_posterior(np.tile(beta, (model.n_subjects, 1)), sigma)
-    assert np.allclose(post.z_hat, z_cf[s], atol=1e-5)
-    assert np.allclose(post.variance, v_cf[s], rtol=1e-4)
+    np.testing.assert_allclose(post.z_hat, z_cf[s], atol=1e-5)
+    np.testing.assert_allclose(post.variance, v_cf[s], rtol=1e-4)
 
 
 def test_estep_reports_optimizer_outcome():
@@ -364,7 +364,7 @@ def test_estep_falls_back_to_prior_where_data_are_uninformative():
     # prior rather than a spuriously tight interval.
     sigma = np.array([0.25, 4.0])
     post = subject_map_estep(lambda z: 0.0, z0=np.zeros(2), prior_variance=sigma)
-    assert np.allclose(post.variance, sigma)
+    np.testing.assert_allclose(post.variance, sigma)
 
 
 # ===========================================================================
@@ -373,7 +373,7 @@ def test_estep_falls_back_to_prior_where_data_are_uninformative():
 def test_hessian_step_is_derived_from_the_prior_variance():
     sigma = np.array([0.36, 0.04])
     step = EStepConfig().resolve_hessian_step(sigma)
-    assert np.allclose(step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
+    np.testing.assert_allclose(step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
     # Pin a concrete value, so the rule is checked against arithmetic and not
     # merely against its own implementation.
     assert np.isclose(step[0], 0.15)
@@ -381,9 +381,9 @@ def test_hessian_step_is_derived_from_the_prior_variance():
 
 def test_explicit_hessian_step_overrides_the_derived_one():
     sigma = np.array([0.36, 0.04])
-    assert np.allclose(EStepConfig(hessian_step=1e-3).resolve_hessian_step(sigma), 1e-3)
+    np.testing.assert_allclose(EStepConfig(hessian_step=1e-3).resolve_hessian_step(sigma), 1e-3)
     per_dim = np.array([1e-3, 1e-2])
-    assert np.allclose(EStepConfig(hessian_step=per_dim).resolve_hessian_step(sigma), per_dim)
+    np.testing.assert_allclose(EStepConfig(hessian_step=per_dim).resolve_hessian_step(sigma), per_dim)
 
 
 def test_estep_records_the_step_it_used():
@@ -391,7 +391,7 @@ def test_estep_records_the_step_it_used():
     # invisible choice made inside the E-step.
     sigma = np.array([0.36, 0.04])
     post = subject_map_estep(lambda z: float(np.sum(z ** 2)), z0=np.zeros(2), prior_variance=sigma)
-    assert np.allclose(post.hessian_step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
+    np.testing.assert_allclose(post.hessian_step, DEFAULT_HESSIAN_STEP_SCALE * np.sqrt(sigma))
 
 
 def test_estep_config_is_immutable():
@@ -434,22 +434,22 @@ def test_em_matches_closed_form_em():
     model = _make_toy(seed=3, n_subjects=120)
     beta_cf, sigma_cf = _closed_form_em(model)
     result = _fit_toy(model)
-    assert np.allclose(result.beta.ravel(), beta_cf, atol=5e-3)
-    assert np.allclose(result.sigma, sigma_cf, atol=5e-3)
+    np.testing.assert_allclose(result.beta.ravel(), beta_cf, atol=5e-3)
+    np.testing.assert_allclose(result.sigma, sigma_cf, atol=5e-3)
 
 
 def test_em_beta_equals_mean_ybar_at_convergence():
     # With an intercept-only design the group mean is the mean of the per-participant data means.
     model = _make_toy(seed=4, n_subjects=150)
     result = _fit_toy(model)
-    assert np.allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=5e-3)
+    np.testing.assert_allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=5e-3)
 
 
 def test_em_recovers_ground_truth():
     model = _make_toy(seed=5, n_subjects=400, n_obs=40)
     result = _fit_toy(model, tol=1e-7)
-    assert np.allclose(result.beta.ravel(), [0.5, -1.0], atol=0.15)
-    assert np.allclose(result.sigma, [0.4, 0.9], atol=0.2)
+    np.testing.assert_allclose(result.beta.ravel(), [0.5, -1.0], atol=0.15)
+    np.testing.assert_allclose(result.sigma, [0.4, 0.9], atol=0.2)
 
 
 def test_em_objective_nondecreasing():
@@ -470,8 +470,8 @@ def test_em_history_pairs_each_objective_with_the_estimate_that_produced_it():
     result = _fit_toy(model, max_iterations=3, tol=0.0,
                       init_beta=init_beta, init_sigma=init_sigma)
 
-    assert np.allclose(result.history[0]["beta"], init_beta)
-    assert np.allclose(result.history[0]["sigma"], init_sigma)
+    np.testing.assert_allclose(result.history[0]["beta"], init_beta)
+    np.testing.assert_allclose(result.history[0]["sigma"], init_sigma)
     # Each subsequent entry carries the estimate the previous entry's update produced.
     assert not np.allclose(result.history[1]["beta"], init_beta)
 
@@ -486,7 +486,7 @@ def test_em_result_describes_the_group_estimate_it_returns():
     recomputed = runner(
         np.ones((model.n_subjects, 1)) @ result.beta, result.sigma, result.z_hat, True
     )
-    assert np.allclose(recomputed.z_hat, result.z_hat, atol=1e-6)
+    np.testing.assert_allclose(recomputed.z_hat, result.z_hat, atol=1e-6)
     assert np.isclose(recomputed.objective, result.objective, rtol=1e-10)
 
 
@@ -615,8 +615,8 @@ def test_provider_reads_names_and_bounds_from_the_model():
     assert provider.fit_param_names == ("rate", "threshold")
     assert provider.n_params == 2 and provider.n_subjects == 3
     lower, upper = provider.bounds
-    assert np.allclose(lower, [-1.5, 0.3]) and np.allclose(upper, [1.5, 1.5])
-    assert np.allclose(provider.transform.to_natural([0.0, 0.0]), [0.0, 0.9])
+    np.testing.assert_allclose(lower, [-1.5, 0.3]) and np.allclose(upper, [1.5, 1.5])
+    np.testing.assert_allclose(provider.transform.to_natural([0.0, 0.0]), [0.0, 0.9])
 
 
 def test_provider_builds_each_model_once_and_routes_by_participant():
@@ -737,7 +737,7 @@ def test_provider_reports_a_supplied_schema_without_building_a_model():
     provider = PECFactorySubjectLikelihood(factory, frames, schema=schema)
     assert provider.fit_param_names == ("rate", "threshold")
     assert provider.n_params == 2
-    assert np.allclose(provider.bounds[0], [-1.5, 0.3])
+    np.testing.assert_allclose(provider.bounds[0], [-1.5, 0.3])
 
 
 def test_driver_fits_through_the_provider_interface_alone():
@@ -756,7 +756,7 @@ def test_driver_fits_through_the_provider_interface_alone():
     provider = _ToyProvider()
     runner = make_inprocess_estep_runner(provider.log_likelihood, IdentityTransform())
     result = fit_laplace_em(runner, provider.n_subjects, provider.n_params, max_iterations=25)
-    assert np.allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=0.05)
+    np.testing.assert_allclose(result.beta.ravel(), model.ybar.mean(axis=0), atol=0.05)
 
 
 # ===========================================================================
@@ -837,9 +837,9 @@ def test_results_convert_estimates_into_the_models_units():
     em, transform, labels = _fit_toy_for_results()
     res = HierarchicalPECResults.from_em(em, transform, ("a", "b"), labels)
     expected = np.vstack([transform.to_natural(z) for z in res.z_hat])
-    assert np.allclose(res.subject_parameters.to_numpy(), expected)
+    np.testing.assert_allclose(res.subject_parameters.to_numpy(), expected)
     # The group value is the transformed group mean, i.e. a median (see module docstring).
-    assert np.allclose(res.group_parameters["value"].to_numpy(), transform.to_natural(res.beta[0]))
+    np.testing.assert_allclose(res.group_parameters["value"].to_numpy(), transform.to_natural(res.beta[0]))
 
 
 def test_results_uncertainty_uses_the_delta_method():
@@ -848,7 +848,7 @@ def test_results_uncertainty_uses_the_delta_method():
     slope = np.vstack([transform.dtheta_dz(z) for z in res.z_hat])
     expected = np.abs(slope) * np.sqrt(res.posterior_variance)
     got = res.subject_posteriors["theta_sd"].to_numpy().reshape(len(labels), 2)
-    assert np.allclose(got, expected)
+    np.testing.assert_allclose(got, expected)
 
 
 def test_results_history_pairs_objective_with_its_own_estimate():
