@@ -130,6 +130,19 @@ Options
 ``hierarchical_options`` accepts the following keys. An unrecognised key raises rather than
 being ignored.
 
+Apart from ``subject_id``, each is a `Parameter` of the composition once it is built, so it can
+be read back and changed between fits::
+
+    pec.parameters.curvature.get()          # 'diagonal'
+    pec.parameters.curvature.set("full")    # the next run() uses this
+
+A fit reads them once when it starts, so changing one mid-fit cannot affect the fit already
+running, and ``fit_results.settings`` records the values that fit actually used. An invalid value
+is refused either way -- when the composition is built, and when one is assigned afterwards.
+
+``subject_id`` is not among them: it says how ``data`` is divided into participants, which is
+settled when the composition is built.
+
 * ``subject_id`` (required)
     Column of ``data`` identifying participants.
 
@@ -184,6 +197,32 @@ less varied than it is.
 
 The group model itself treats the parameters as independent either way: ``curvature`` says how
 each participant is measured, not what the group is allowed to express.
+
+
+.. _Hierarchical_Fitting_Changing:
+
+Changing a setting between fits
+-------------------------------
+
+The settings are read at the start of each fit, so a second fit can be run under different ones
+without rebuilding anything::
+
+    pec = pnl.ParameterEstimationComposition(
+        data=data,
+        fit_method="hierarchical",
+        hierarchical_options={"subject_id": "subject", "max_iterations": 10},
+        distributed_options={"pec_factory": build_participant},
+    )
+    quick = pec.run()
+
+    pec.parameters.curvature.set("full")
+    pec.parameters.max_iterations.set(40)
+    careful = pec.run()
+
+    quick.settings["curvature"]      # 'diagonal'
+    careful.settings["curvature"]    # 'full'
+
+Each result keeps the settings its own fit ran under, so the two remain readable side by side.
 
 
 .. _Hierarchical_Fitting_Running:
