@@ -351,6 +351,71 @@ class ParameterEstimationCompositionError(CompositionError):
     pass
 
 
+# -- checking the hierarchical solver settings -------------------------------------------------
+#
+# Each check reports what is wrong with a value, or nothing.  They are reached twice: through the
+# Parameter's validation method, which guards the value a composition is built with, and through
+# its setter, which guards one assigned afterwards.  Both go through the same function so the two
+# cannot come to disagree.
+
+def _check_curvature(value):
+    if value not in Curvature:
+        return f"must be one of {[c.value for c in Curvature]}; got {value!r}"
+
+
+def _check_max_iterations(value):
+    if value < 1:
+        return f"must be at least 1; got {value!r}"
+
+
+def _check_tol(value):
+    if value <= 0:
+        return f"must be greater than 0; got {value!r}"
+
+
+def _check_variance_floor(value):
+    if value <= 0:
+        return f"must be greater than 0; got {value!r}"
+
+
+def _check_hessian_step(value):
+    # Whether it has one entry per parameter is checked against the model being fitted, by the
+    # E-step, which is the first place the number of parameters is known.
+    if value is not None and np.any(np.asarray(value, dtype=float) <= 0):
+        return f"must be positive; got {value!r}"
+
+
+def _check_estep_method(value):
+    if not isinstance(value, str):
+        return f"must name a method scipy.optimize.minimize accepts; got {value!r}"
+
+
+def _check_estep_options(value):
+    if value is not None and not isinstance(value, Mapping):
+        return f"must be a mapping of options for the optimizer; got {value!r}"
+
+
+_HIERARCHICAL_CHECKS = {
+    "curvature": _check_curvature,
+    "max_iterations": _check_max_iterations,
+    "tol": _check_tol,
+    "variance_floor": _check_variance_floor,
+    "hessian_step": _check_hessian_step,
+    "estep_method": _check_estep_method,
+    "estep_options": _check_estep_options,
+}
+
+
+def _solver_setting_setter(name):
+    """Refuse an invalid assignment, as validation refuses an invalid default."""
+    def setter(value, owning_component=None, context=None):  # noqa: U100
+        message = _HIERARCHICAL_CHECKS[name](value)
+        if message is not None:
+            raise ParameterEstimationCompositionError(f"{name} {message}")
+        return value
+    return setter
+
+
 class ParameterEstimationComposition(Composition):
     """
     Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
@@ -621,6 +686,45 @@ class ParameterEstimationComposition(Composition):
         initial_seed = SharedParameter(attribute_name='controller')
         same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
 
+        # How a hierarchical fit is run.  These configure the composition rather than describing
+        # anything it computes, and they hold still for the length of a fit, so none of them is
+        # stateful, modulable or logged.  They are the only place their defaults are written down.
+        curvature = Parameter(Curvature.DIAGONAL, stateful=False, modulable=False, loggable=False,
+                              setter=_solver_setting_setter("curvature"))
+        max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False,
+                                   setter=_solver_setting_setter("max_iterations"))
+        tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False,
+                        setter=_solver_setting_setter("tol"))
+        variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False,
+                                   setter=_solver_setting_setter("variance_floor"))
+        hessian_step = Parameter(None, stateful=False, modulable=False, loggable=False,
+                                 setter=_solver_setting_setter("hessian_step"))
+        estep_method = Parameter("Nelder-Mead", stateful=False, modulable=False, loggable=False,
+                                 setter=_solver_setting_setter("estep_method"))
+        estep_options = Parameter(None, stateful=False, modulable=False, loggable=False,
+                                  setter=_solver_setting_setter("estep_options"))
+
+        def _validate_curvature(self, curvature):
+            return _check_curvature(curvature)
+
+        def _validate_max_iterations(self, max_iterations):
+            return _check_max_iterations(max_iterations)
+
+        def _validate_tol(self, tol):
+            return _check_tol(tol)
+
+        def _validate_variance_floor(self, variance_floor):
+            return _check_variance_floor(variance_floor)
+
+        def _validate_hessian_step(self, hessian_step):
+            return _check_hessian_step(hessian_step)
+
+        def _validate_estep_method(self, estep_method):
+            return _check_estep_method(estep_method)
+
+        def _validate_estep_options(self, estep_options):
+            return _check_estep_options(estep_options)
+
     @handle_external_context()
     @check_user_specified
     @beartype
@@ -756,11 +860,16 @@ class ParameterEstimationComposition(Composition):
                                                                      modulation=OVERRIDE)
             self.model.add_node(self.pec_control_mechs[(pname, mech)])
 
+        # The solver settings are Parameters, so they are initialized and validated the way every
+        # other Parameter is rather than being stashed on the instance.
+        solver_settings, subject_id = self._split_hierarchical_options(hierarchical_options)
+
         super().__init__(
             name=name,
             controller_mode=BEFORE,
             controller_time_scale=TimeScale.RUN,
             enable_controller=True,
+            **solver_settings,
             **kwargs,
         )
 
@@ -775,7 +884,7 @@ class ParameterEstimationComposition(Composition):
         # Hierarchical fitting reads one column of `data` to tell participants apart, then removes
         # it: the remaining columns are the outcome variables, which is what _validate_data expects.
         self._fit_method = fit_method
-        self._hierarchical_options = dict(hierarchical_options or {})
+        self._subject_id = subject_id
         # Kept on the composition rather than read back off the optimization function, which only
         # receives them when `distributed` is set; a hierarchical fit needs the factory either way.
         self._pec_distributed_options = dict(distributed_options or {})
@@ -783,7 +892,7 @@ class ParameterEstimationComposition(Composition):
         self._subject_split = None
         self.hierarchical_data = None
         self.fit_results = None
-        if fit_method == "hierarchical":
+        if fit_method == FitMethod.HIERARCHICAL:
             self._setup_hierarchical(likelihood_include_mask)
 
             # Everything below describes the model this composition fits and the search over it.
@@ -892,30 +1001,53 @@ class ParameterEstimationComposition(Composition):
         # this to avoid infinite recursion.
         self._run_called = False
 
-    #: Settings accepted by `hierarchical_options`, with their defaults.
-    _HIERARCHICAL_OPTION_DEFAULTS = {
-        "subject_id": None,
-        "curvature": "diagonal",
-        "max_iterations": 50,
-        "tol": 1e-4,
-        "variance_floor": 1e-6,
-        "hessian_step": None,
-        "estep_method": "Nelder-Mead",
-        "estep_options": None,
-    }
+    #: The solver settings `hierarchical_options` carries, each a `Parameter` that holds its own
+    #: default.  `subject_id` is not among them: it says how `data` is divided, which is settled
+    #: when the composition is built (see `_setup_hierarchical`).
+    _HIERARCHICAL_SOLVER_SETTINGS = (
+        "curvature",
+        "max_iterations",
+        "tol",
+        "variance_floor",
+        "hessian_step",
+        "estep_method",
+        "estep_options",
+    )
 
-    def _setup_hierarchical(self, likelihood_include_mask):
-        """Divide the data by participant and check the fit was configured coherently."""
-        unknown = set(self._hierarchical_options) - set(self._HIERARCHICAL_OPTION_DEFAULTS)
+    @classmethod
+    def _split_hierarchical_options(cls, hierarchical_options):
+        """Separate the solver settings from the rest, rejecting anything unrecognised."""
+        options = dict(hierarchical_options or {})
+        accepted = set(cls._HIERARCHICAL_SOLVER_SETTINGS) | {"subject_id"}
+        unknown = set(options) - accepted
         if unknown:
             raise ParameterEstimationCompositionError(
                 f"unknown hierarchical_options {sorted(unknown)}; valid options are "
-                f"{sorted(self._HIERARCHICAL_OPTION_DEFAULTS)}"
+                f"{sorted(accepted)}"
             )
-        options = {**self._HIERARCHICAL_OPTION_DEFAULTS, **self._hierarchical_options}
+        solver = {k: options.pop(k) for k in list(options)
+                  if k in cls._HIERARCHICAL_SOLVER_SETTINGS}
+        return solver, options.get("subject_id")
 
-        subject_id = options["subject_id"]
-        if not isinstance(subject_id, str):
+    def _hierarchical_settings(self, context=None):
+        """The solver settings as ordinary values, read from the Parameters as they stand now."""
+        settings = {
+            name: getattr(self.parameters, name).get(context)
+            for name in self._HIERARCHICAL_SOLVER_SETTINGS
+        }
+        # Taken by value: a mapping handed in at construction, or set later, must not be able to
+        # change what an earlier fit recorded.
+        if settings["estep_options"] is not None:
+            settings["estep_options"] = dict(settings["estep_options"])
+        return settings
+
+    def _setup_hierarchical(self, likelihood_include_mask):
+        """Divide the data by participant and check the fit was configured coherently.
+
+        The solver settings are Parameters and were validated on their way in; what is left here
+        is the data configuration, which is settled once because the split depends on it.
+        """
+        if not isinstance(self._subject_id, str):
             raise ParameterEstimationCompositionError(
                 "hierarchical fitting requires hierarchical_options['subject_id'], the name of the "
                 "column of `data` identifying which participant produced each trial"
@@ -923,19 +1055,6 @@ class ParameterEstimationComposition(Composition):
         if self.data is None:
             raise ParameterEstimationCompositionError(
                 "hierarchical fitting requires `data`"
-            )
-        if options["max_iterations"] < 1 or options["tol"] <= 0:
-            raise ParameterEstimationCompositionError(
-                "hierarchical_options requires max_iterations >= 1 and tol > 0"
-            )
-        if options["variance_floor"] <= 0:
-            raise ParameterEstimationCompositionError(
-                "hierarchical_options requires variance_floor > 0"
-            )
-        if options["curvature"] not in Curvature:
-            raise ParameterEstimationCompositionError(
-                f"hierarchical_options['curvature'] must be one of "
-                f"{[c.value for c in Curvature]}; got {options['curvature']!r}"
             )
         if self.depends_on:
             raise ParameterEstimationCompositionError(
@@ -950,10 +1069,9 @@ class ParameterEstimationComposition(Composition):
             )
 
         # split_stacked_data raises if the column is missing or holds fewer than two participants.
-        self._subject_split = split_stacked_data(self.data, subject_id)
+        self._subject_split = split_stacked_data(self.data, self._subject_id)
         self.hierarchical_data = self.data
-        self.data = self.data.drop(columns=[subject_id])
-        self._hierarchical_options = options
+        self.data = self.data.drop(columns=[self._subject_id])
 
     def _resolve_pec_factory(self):
         """Return the factory that builds one participant's model, or raise."""
@@ -968,8 +1086,12 @@ class ParameterEstimationComposition(Composition):
         return factory
 
     def _run_hierarchical(self, context):
-        """Fit every participant jointly and record the result on `fit_results`."""
-        options = self._hierarchical_options
+        """Fit every participant jointly and record the result on `fit_results`.
+
+        The settings are read once here, so a fit is run against the values in force when it
+        started and both execution paths are given the same ones.
+        """
+        options = self._hierarchical_settings(context)
         # Participants are fitted independently within an iteration, so `distributed` sends one
         # per task; the group update stays here either way.
         provider = PECFactorySubjectLikelihood(
@@ -1021,7 +1143,7 @@ class ParameterEstimationComposition(Composition):
 
         self.fit_results = HierarchicalPECResults.from_em(
             em, transform, provider.fit_param_names, self._subject_split.labels,
-            settings=dict(options),
+            settings={**options, "subject_id": self._subject_id},
         )
         self.optimized_parameter_values = dict(
             zip(provider.fit_param_names, transform.to_natural(em.beta[0]))
