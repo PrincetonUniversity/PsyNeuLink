@@ -96,30 +96,24 @@ callable that builds one participant's model from their rows::
 
 A `Composition` cannot be copied, so each participant's model is built rather than cloned.
 The factory lives in ``distributed_options``, the same key distributed maximum-likelihood
-fitting uses (see :ref:`DistributedFitting`).
+fitting uses (see :ref:`DistributedFitting`). Compiling each participant's model, as the
+example does, is a speed choice and not a requirement.
 
-Requirements on what it returns:
+The models it returns must meet three conditions. The first two are checked before the fit
+begins; the third is the caller's to get right.
 
-* **Common random numbers** (required, and checked)
-    ``same_seed_for_all_parameter_combinations=True``. Posterior curvature comes from finite
-    differences, which measure simulation noise rather than curvature if scoring the same
-    parameters twice gives different answers. Without it, a drift-diffusion model scored from
-    60 simulations returns values tens of log-likelihood units apart for one parameter
-    setting, against curvature of order one. A participant model built without it is refused
-    before the fit begins, since nothing in the result would show that it was missing.
+* ``same_seed_for_all_parameter_combinations=True``, so that scoring the same parameters
+  twice gives the same answer. Curvature is measured by finite differences, and a model
+  without this returns curvature made of simulation noise.
 
-* **A distinct, fixed seed per participant**
-    Use ``initial_seed=<base> + subject_index``. A shared seed gives every participant the
-    same stream of simulation noise, which is absorbed into the group variance rather than
-    averaging out. Fixing it also matters for a distributed fit: a participant whose model is
-    rebuilt on another worker would otherwise draw a different stream from the one the
-    previous iterations used, and the objective would shift underneath the fit.
+* The same parameters, in the same order, over the same ranges, for every participant. The
+  group model is defined over those ranges, so ranges that differed would mean different
+  things for different people.
 
-* **LLVM execution, and the same parameters and ranges for every participant**
-    The group model is defined in terms of those ranges, so ranges that varied between
-    participants would mean different things for different people. The first participant's
-    model settles what they are, and every other one is held to it, in-process and on a
-    worker alike, before it is scored.
+* A seed of its own per participant, fixed: ``initial_seed=<base> + subject_index``. A shared
+  seed gives every participant the same noise, which is absorbed into the group variance
+  instead of averaging out, and a fixed one keeps a model scoring the way it did before if a
+  worker rebuilds it.
 
 
 .. _Hierarchical_Fitting_Options:
