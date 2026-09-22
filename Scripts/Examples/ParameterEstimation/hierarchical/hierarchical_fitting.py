@@ -32,7 +32,6 @@ import numpy as np
 import pandas as pd
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction
 
 # Ranges searched for each parameter.  These are also the support of the group model, so every
 # participant must be fitted over the same ranges.
@@ -97,9 +96,6 @@ def participant_pec(data, subject_index=None):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         num_estimates=NUM_ESTIMATES,
         initial_seed=100 + (subject_index or 0),
         same_seed_for_all_parameter_combinations=True,

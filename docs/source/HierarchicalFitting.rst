@@ -85,14 +85,15 @@ callable that builds one participant's model from their rows::
             outcome_variables=[decision.output_ports[DECISION_OUTCOME],
                                decision.output_ports[RESPONSE_TIME]],
             data=data,
-            optimization_function=PECOptimizationFunction(
-                method="differential_evolution", max_iterations=1),
             num_estimates=300,
             initial_seed=100 + subject_index,
             same_seed_for_all_parameter_combinations=True,
         )
         pec.controller.parameters.comp_execution_mode.set("LLVM")
         return pec, {comp: trial_inputs(len(data))}
+
+The factory specifies no ``optimization_function``: the fit only asks each participant's model
+to score the parameter values EM chooses, and never has it search for its own.
 
 A `Composition` cannot be copied, so each participant's model is built rather than cloned.
 The factory lives in ``distributed_options``, the same key distributed maximum-likelihood

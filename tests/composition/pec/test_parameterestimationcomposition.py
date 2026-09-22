@@ -505,7 +505,15 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     )
 
 
-def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
+_DEFAULT_SEARCH = object()
+
+
+def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20,
+                                 optimization_function=_DEFAULT_SEARCH, data=None):
+    if optimization_function is _DEFAULT_SEARCH:
+        optimization_function = PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        )
     trial_inputs = np.ones((num_trials, 1))
     ddm_params = dict(
         starting_value=0.0,
@@ -516,6 +524,8 @@ def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
         time_step_size=0.01,
     )
     comp, data_to_fit = _run_ddm_with_params(**ddm_params, trial_inputs=trial_inputs)
+    if data is not None:
+        data_to_fit = data
     decision = comp.nodes[0]
 
     pec = pnl.ParameterEstimationComposition(
@@ -531,9 +541,7 @@ def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
+        optimization_function=optimization_function,
         num_estimates=num_estimates,
         initial_seed=42,
     )
@@ -564,6 +572,41 @@ def test_pec_log_likelihood_llvm_scalar_sim_data_and_input_immutability():
     assert sim_data.ndim == 3
     assert sim_data.shape[0] == len(trial_inputs)
     assert sim_data.shape[2] == len(pec.outcome_variables)
+
+
+@pytest.mark.composition
+def test_a_pec_given_no_search_scores_as_one_given_a_search_does():
+    # The search plays no part in scoring, so leaving it out changes nothing log_likelihood reports.
+    # Both are given the same data: the helper otherwise simulates a new set on every call.
+    searching, comp, trial_inputs, params = _make_ddm_log_likelihood_pec()
+    scoring, scoring_comp, _, _ = _make_ddm_log_likelihood_pec(
+        optimization_function=None, data=searching.data
+    )
+    np.testing.assert_allclose(
+        scoring.log_likelihood(*params, inputs={scoring_comp: trial_inputs}),
+        searching.log_likelihood(*params, inputs={comp: trial_inputs}),
+        rtol=1e-12,
+    )
+
+
+@pytest.mark.composition
+def test_a_pec_given_no_search_refuses_to_run():
+    pec, comp, trial_inputs, _ = _make_ddm_log_likelihood_pec(optimization_function=None)
+    with pytest.raises(pnl.ParameterEstimationCompositionError, match="no search to run"):
+        pec.run(inputs={comp: trial_inputs})
+
+
+@pytest.mark.composition
+def test_a_pec_without_data_still_requires_a_search():
+    # Without data there is nothing to score, so a search is all the composition could do.
+    decision = pnl.DDM(name="DDM")
+    with pytest.raises(TypeError, match="optimization_function"):
+        pnl.ParameterEstimationComposition(
+            nodes=[pnl.Composition(pathways=decision)],
+            parameters={("rate", decision): np.linspace(0.0, 1.0, 5)},
+            outcome_variables=[decision.output_ports[pnl.DECISION_VARIABLE]],
+            objective_function=lambda x: 0.0,
+        )
 
 
 @pytest.mark.composition
