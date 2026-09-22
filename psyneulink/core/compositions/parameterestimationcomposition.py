@@ -262,6 +262,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import warnings
 from enum import auto
 
@@ -353,7 +354,8 @@ class ParameterEstimationCompositionError(CompositionError):
 
 # -- checking the hierarchical solver settings -------------------------------------------------
 #
-# Each check returns what is wrong with a value, or None.  They are reached twice: through the
+# Each check returns what is wrong with a value, or None.  They test for finiteness first:
+# every comparison below is False against NaN, so a NaN would otherwise pass all of them.  They are reached twice: through the
 # Parameter's validation method, which guards the value a composition is built with, and through
 # its setter, which guards one assigned afterwards.  Both go through the same function so the two
 # cannot come to disagree.
@@ -365,28 +367,31 @@ def _check_curvature(value):
 
 
 def _check_max_iterations(value):
-    if value < 1:
-        return f"must be at least 1; got {value!r}"
+    if not np.isfinite(value) or value != int(value) or value < 1:
+        return f"must be a whole number of at least 1; got {value!r}"
     return None
 
 
 def _check_tol(value):
-    if value <= 0:
-        return f"must be greater than 0; got {value!r}"
+    if not np.isfinite(value) or value <= 0:
+        return f"must be finite and greater than 0; got {value!r}"
     return None
 
 
 def _check_variance_floor(value):
-    if value <= 0:
-        return f"must be greater than 0; got {value!r}"
+    if not np.isfinite(value) or value <= 0:
+        return f"must be finite and greater than 0; got {value!r}"
     return None
 
 
 def _check_hessian_step(value):
     # Whether it has one entry per parameter is checked against the model being fitted, by the
     # E-step, which is the first place the number of parameters is known.
-    if value is not None and np.any(np.asarray(value, dtype=float) <= 0):
-        return f"must be positive; got {value!r}"
+    if value is None:
+        return None
+    step = np.asarray(value, dtype=float)
+    if not np.all(np.isfinite(step)) or np.any(step <= 0):
+        return f"must be finite and positive; got {value!r}"
     return None
 
 
@@ -1042,10 +1047,10 @@ class ParameterEstimationComposition(Composition):
             name: getattr(self.parameters, name).get(context)
             for name in self._HIERARCHICAL_SOLVER_SETTINGS
         }
-        # Taken by value: a mapping handed in at construction, or set later, must not be able to
-        # change what an earlier fit recorded.
-        if settings["estep_options"] is not None:
-            settings["estep_options"] = dict(settings["estep_options"])
+        # Taken by value, and deeply: an option can itself be mutable -- scipy's initial_simplex
+        # is an array -- and neither the fit about to run nor the record it leaves should share
+        # one with the caller.
+        settings["estep_options"] = copy.deepcopy(settings["estep_options"])
         return settings
 
     def _setup_hierarchical(self, likelihood_include_mask):
