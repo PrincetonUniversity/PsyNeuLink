@@ -22,7 +22,7 @@ a trained estimator.
 
 .. _Neural_Likelihood_Training:
 
-Training an estimator
+Training an Estimator
 ---------------------
 
 Training is explicit and offline: it takes minutes to hours, and reusing a saved estimator
@@ -71,8 +71,8 @@ replace.
 
 .. _Neural_Likelihood_Fitting:
 
-Fitting with one
-----------------
+Fitting with an Estimator
+-------------------------
 
 ``likelihood_estimator="neural"`` replaces the likelihood a model is scored with::
 
@@ -101,8 +101,8 @@ the model, not of how many participants are being fitted.
 
 .. _Neural_Likelihood_Conditioning:
 
-What the estimator is conditioned on
-------------------------------------
+Conditioning
+------------
 
 The conditioning vector is the fitted parameters followed by the per-trial features, which
 are the values entering the composition's input nodes on that trial. A model whose trials
@@ -120,7 +120,7 @@ a different conditioning.
 
 .. _Neural_Likelihood_Provenance:
 
-What an estimator is valid for
+What an Estimator Is Valid For
 ------------------------------
 
 An estimator trained for one model will score a different one without complaint, returning
