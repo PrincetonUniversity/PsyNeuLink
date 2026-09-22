@@ -495,6 +495,9 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.parameters>` values to be estimated. This is usually a ``PECOptimizationFunction``,
         which supports SciPy differential evolution and Optuna sampler instances, sampler classes, or studies. Passing
         ``"differential_evolution"`` is a shorthand for ``PECOptimizationFunction(method="differential_evolution")``.
+        It may be omitted when **data** is specified and the composition is used only to score parameter values it is
+        given, with `log_likelihood <ParameterEstimationComposition.log_likelihood>`; `run
+        <ParameterEstimationComposition.run>` then raises, since there is no search to run.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -810,18 +813,25 @@ class ParameterEstimationComposition(Composition):
                 name for name, value in (
                     ("parameters", parameters),
                     ("outcome_variables", outcome_variables),
-                    ("optimization_function", optimization_function),
                 ) if value is None
             ]
+            # With data, a composition can score parameter values it is handed without ever
+            # searching over them, and needs no search to be specified. Without data there is
+            # nothing to score, so a search is all it can do.
+            if optimization_function is None and data is None:
+                missing.append("optimization_function")
             if missing:
                 # A TypeError, as for any argument a call is missing: these are the first
                 # three parameters and carry defaults only so that a hierarchical fit, which
-                # describes no model here, can leave them out.
+                # describes no model here, can leave them out, and a composition that only
+                # scores can leave out the search.
                 raise TypeError(
                     f"__init__() missing {len(missing)} required positional "
                     f"argument{'s' if len(missing) > 1 else ''}: "
                     f"{', '.join(repr(name) for name in sorted(missing))}; they describe the "
-                    f"model to fit, and are optional only when fit_method is \"hierarchical\"."
+                    f"model to fit and how to fit it. All three are optional when fit_method is "
+                    f"\"hierarchical\", and optimization_function also when data is given, to "
+                    f"score parameter values without searching."
                 )
 
         self._validate_params(locals().copy())
@@ -1352,11 +1362,10 @@ class ParameterEstimationComposition(Composition):
             objective_function = f
 
         if optimization_function is None:
-            warnings.warn(
-                "optimization_function argument to PEC was not specified, defaulting to gridsearch, this is slow!"
-            )
+            # Scoring is carried out through this function too, so one is built all the same; with
+            # no method, it scores and cannot search.
             optimization_function = PECOptimizationFunction(
-                method="gridsearch", objective_function=objective_function
+                method=None, objective_function=objective_function
             )
         elif type(optimization_function) == str:
             optimization_function = PECOptimizationFunction(
@@ -1426,6 +1435,13 @@ class ParameterEstimationComposition(Composition):
                     f"in distributed_options returns alongside it."
                 )
             return self._run_hierarchical(context)
+
+        if self.controller.function.method is None:
+            raise ParameterEstimationCompositionError(
+                f"ParameterEstimationComposition {self.name} was given no optimization_function, so "
+                f"it can score parameter values with log_likelihood() but has no search to run. "
+                f"Specify an optimization_function to fit."
+            )
 
         # Clear any old results from the composition
         if self.parameters.results._get(context, fallback_value=None) is not None:
