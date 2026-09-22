@@ -14164,15 +14164,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
-    def _get_processing_condition_set(self, node):
+    def _get_processing_basic_condition(self, node):
+        """Return the node's consideration-queue index and basic runtime condition.
+
+        Structural conditions are already reflected in the scheduler's
+        consideration queue and do not need runtime compilation. Reading
+        conditions_basic avoids ConditionSet[node] returning a list containing
+        both basic and structural conditions.
+        """
         for index, group in enumerate(self.scheduler.consideration_queue):
             if node in group:
                 break
 
         assert index is not None
 
-        if node in self.scheduler.conditions:
-            return index, self.scheduler.conditions[node]
+        if node in self.scheduler.conditions.conditions_basic:
+            return index, self.scheduler.conditions.conditions_basic[node]
 
         return index, Always()
 
