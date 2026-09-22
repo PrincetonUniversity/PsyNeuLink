@@ -189,10 +189,10 @@ class EStepConfig:
         simulation-backed likelihood has no gradient.
 
     curvature : Curvature or str
-        How much of the curvature at each participant's mode to measure; see `Curvature`.  Where
-        parameters trade off, measuring one at a time reports intervals that are too tight and
-        group variances that are too low, at ``2 P`` evaluations of a participant's objective
-        against the ``2 P^2`` the whole matrix costs.
+        How much of the curvature at each participant's mode to measure; see `Curvature`.  The
+        whole matrix, the default, costs ``2 P^2`` evaluations of a participant's objective.  One
+        parameter at a time costs ``2 P``, but where parameters trade off it reports intervals that
+        are too tight and group variances that are too low.
 
     hessian_step : float or array-like or None
         Perturbation for the finite-difference curvature, in unconstrained units.  When None (the
@@ -214,7 +214,7 @@ class EStepConfig:
     """
 
     method: str = "Nelder-Mead"
-    curvature: str = "diagonal"
+    curvature: str = "full"
     hessian_step: Optional[Union[float, np.ndarray]] = None
     variance_floor: float = 1e-6
     optimizer_options: Optional[Mapping] = None

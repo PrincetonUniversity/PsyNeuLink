@@ -244,10 +244,11 @@ def test_estep_variance_against_the_exact_gaussian_posterior(coupled):
     exact = np.full(2, 10.0 / 19.0 if coupled else 0.1)
     np.testing.assert_allclose(full.variance, exact, rtol=1e-4)
 
-    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2))
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2),
+                                 EStepConfig(curvature="diagonal"))
     np.testing.assert_allclose(np.diag(diagonal.curvature), [10.0, 10.0], rtol=1e-4)
     if coupled:
-        # The measurement the default makes: each parameter with the other held at the mode.
+        # The measurement the diagonal makes: each parameter with the other held at the mode.
         np.testing.assert_allclose(diagonal.variance, [0.1, 0.1], rtol=1e-4)
     else:
         np.testing.assert_allclose(diagonal.variance, exact, rtol=1e-4)
@@ -259,7 +260,8 @@ def test_full_curvature_reports_the_off_diagonals_the_diagonal_one_leaves_empty(
 
     full = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2),
                              EStepConfig(curvature="full"))
-    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2))
+    diagonal = subject_map_estep(neg_log_post, np.zeros(2), np.ones(2),
+                                 EStepConfig(curvature="diagonal"))
     # inv([[10, 9], [9, 10]]) = [[10, -9], [-9, 10]] / 19
     np.testing.assert_allclose(full.covariance[0, 1], -9.0 / 19.0, rtol=1e-4)
     np.testing.assert_allclose(diagonal.covariance, np.diag(diagonal.variance))
@@ -807,7 +809,8 @@ def test_results_carry_the_whole_participant_covariance():
 def test_a_diagonal_fit_reports_no_off_diagonals():
     # It did not measure them, and says so by leaving them at zero.
     model = _make_toy(seed=2, n_subjects=3)
-    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform())
+    runner = make_inprocess_estep_runner(model.log_likelihood_s, IdentityTransform(),
+                                         EStepConfig(curvature="diagonal"))
     em = fit_laplace_em(runner, model.n_subjects, model.n_params, max_iterations=2)
     results = HierarchicalPECResults.from_em(
         em, IdentityTransform(), ("a", "b"), subject_labels=("S0", "S1", "S2")
@@ -1369,11 +1372,11 @@ def _stub_factory(data, subject_index=None):  # noqa: U100
 @pytest.mark.composition
 def test_constructor_options_become_parameters():
     pec = _build_group_pec(hierarchical_options={
-        "subject_id": "subject", "curvature": "full", "max_iterations": 7,
+        "subject_id": "subject", "curvature": "diagonal", "max_iterations": 7,
         "tol": 1e-2, "variance_floor": 1e-3, "hessian_step": 0.2,
         "estep_method": "Powell", "estep_options": {"maxiter": 5},
     })
-    assert pec.parameters.curvature.get() == "full"
+    assert pec.parameters.curvature.get() == "diagonal"
     assert pec.parameters.max_iterations.get() == 7
     assert pec.parameters.tol.get() == 1e-2
     assert pec.parameters.variance_floor.get() == 1e-3
@@ -1386,7 +1389,7 @@ def test_constructor_options_become_parameters():
 def test_unset_options_take_the_parameter_defaults():
     # The Parameter declarations are where the defaults live; nothing else restates them.
     pec = _build_group_pec()
-    assert pec.parameters.curvature.get() == "diagonal"
+    assert pec.parameters.curvature.get() == "full"
     assert pec.parameters.max_iterations.get() == 50
     assert pec.parameters.tol.get() == 1e-4
     assert pec.parameters.variance_floor.get() == 1e-6
@@ -1400,11 +1403,11 @@ def test_settings_are_independent_between_compositions():
     # One composition's settings are its own; changing them must not reach another.
     first = _build_group_pec(hierarchical_options={"subject_id": "subject", "max_iterations": 3})
     second = _build_group_pec()
-    first.parameters.curvature.set("full")
+    first.parameters.curvature.set("diagonal")
     first.parameters.estep_options.set({"maxiter": 11})
 
     assert second.parameters.max_iterations.get() == 50
-    assert second.parameters.curvature.get() == "diagonal"
+    assert second.parameters.curvature.get() == "full"
     assert second.parameters.estep_options.get() is None
 
 
@@ -1475,14 +1478,14 @@ def test_a_setting_changed_between_fits_reaches_the_next_one(monkeypatch):
     first = pec.run()
 
     pec.parameters.max_iterations.set(3)
-    pec.parameters.curvature.set("full")
+    pec.parameters.curvature.set("diagonal")
     second = pec.run()
 
-    assert seen == [(1, "diagonal"), (3, "full")]
+    assert seen == [(1, "full"), (3, "diagonal")]
     assert first.settings["max_iterations"] == 1
-    assert first.settings["curvature"] == "diagonal"
+    assert first.settings["curvature"] == "full"
     assert second.settings["max_iterations"] == 3
-    assert second.settings["curvature"] == "full"
+    assert second.settings["curvature"] == "diagonal"
 
 
 @pytest.mark.composition
@@ -1527,7 +1530,7 @@ def _captured_settings(monkeypatch, **build):
 def test_both_execution_paths_are_given_the_same_settings(monkeypatch):
     options = {
         "subject_id": "subject", "max_iterations": 2, "tol": 1e-2,
-        "curvature": "full", "variance_floor": 1e-5, "estep_method": "Powell",
+        "curvature": "diagonal", "variance_floor": 1e-5, "estep_method": "Powell",
     }
     here = _captured_settings(
         monkeypatch,
@@ -1543,7 +1546,7 @@ def test_both_execution_paths_are_given_the_same_settings(monkeypatch):
     assert here["max_iterations"] == there["max_iterations"] == 2
     assert here["tol"] == there["tol"] == 1e-2
     assert here["estep_config"] == there["estep_config"]
-    assert here["estep_config"].curvature == "full"
+    assert here["estep_config"].curvature == "diagonal"
     assert here["estep_config"].method == "Powell"
 
 
@@ -1567,5 +1570,5 @@ def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
         optimization_function="differential_evolution",
     )
     assert pec._fit_method is None
-    assert pec.parameters.curvature.get() == "diagonal"
+    assert pec.parameters.curvature.get() == "full"
     assert pec.parameters.max_iterations.get() == 50
