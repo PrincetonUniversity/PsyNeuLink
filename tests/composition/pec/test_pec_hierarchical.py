@@ -1435,6 +1435,15 @@ def test_settings_are_independent_between_compositions():
     ("hessian_step", -0.1),
     ("estep_method", 3),
     ("estep_options", 5),
+    # Every check is a comparison, and a comparison against NaN is False, so one would pass all
+    # of them. A NaN step is the quiet case: the curvature is never measured, the prior stands
+    # in for it, and the fit reports the prior back as if it had found it.
+    ("max_iterations", float("nan")),
+    ("tol", float("nan")),
+    ("variance_floor", float("nan")),
+    ("hessian_step", float("nan")),
+    ("tol", float("inf")),
+    ("hessian_step", float("inf")),
 ])
 def test_an_invalid_setting_is_refused_however_it_arrives(name, value):
     # Both ways in: the value a composition is built with, and one assigned afterwards.
@@ -1444,6 +1453,23 @@ def test_an_invalid_setting_is_refused_however_it_arrives(name, value):
     pec = _build_group_pec()
     with pytest.raises(ParameterEstimationCompositionError, match=name):
         getattr(pec.parameters, name).set(value)
+
+
+@pytest.mark.composition
+def test_recorded_settings_do_not_share_an_optimizer_option():
+    # scipy takes arrays among its options; copying only the mapping would leave one shared with
+    # the caller, and editing it afterwards would rewrite what the fit reports it ran with.
+    simplex = np.array([[0.0], [0.5]])
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options={
+            "subject_id": "subject", "max_iterations": 1,
+            "estep_options": {"initial_simplex": simplex},
+        },
+    )
+    results = pec.run()
+    simplex[0, 0] = 99.0
+    np.testing.assert_allclose(results.settings["estep_options"]["initial_simplex"], [[0.0], [0.5]])
 
 
 @pytest.mark.composition
