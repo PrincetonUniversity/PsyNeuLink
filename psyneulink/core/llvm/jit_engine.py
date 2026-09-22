@@ -105,7 +105,7 @@ def _cpu_jit_constructor():
     cpu_target_machine = cpu_target.create_target_machine(cpu=binding.get_host_cpu_name(),
                                                           features=binding.get_host_cpu_features().flatten(),
                                                           opt=opt_level,
-                                                          reloc='static')
+                                                          reloc='dynamicnopic' if sys.platform.startswith('win') else 'default')
 
     pass_builder = _create_pass_builder(cpu_target_machine, opt_level)
 
