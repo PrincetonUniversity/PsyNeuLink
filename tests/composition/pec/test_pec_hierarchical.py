@@ -611,7 +611,8 @@ def test_provider_reads_names_and_bounds_from_the_model():
     assert provider.fit_param_names == ("rate", "threshold")
     assert provider.n_params == 2 and provider.n_subjects == 3
     lower, upper = provider.bounds
-    np.testing.assert_allclose(lower, [-1.5, 0.3]) and np.allclose(upper, [1.5, 1.5])
+    np.testing.assert_allclose(lower, [-1.5, 0.3])
+    np.testing.assert_allclose(upper, [1.5, 1.5])
     np.testing.assert_allclose(provider.transform.to_natural([0.0, 0.0]), [0.0, 0.9])
 
 
