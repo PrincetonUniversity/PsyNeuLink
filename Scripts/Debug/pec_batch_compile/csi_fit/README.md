@@ -272,9 +272,9 @@ predate the threshold scheduling fix (`0b15c416f8`); they do not validate the
 corrected GPU model. On 2026-09-21, the corrected checkout passed 40 focused
 scheduling/compiler regressions, CPU and GPU smoke fits, exact CPU fresh-score
 agreement, and GPU rescoring at the new 100,000-estimate default with two
-independent seeds. The fresh full CPU fit on Della also passed; the GPU fit
-is awaiting execution as recorded below. Inspect its results before starting
-a GPU array.
+independent seeds. Fresh full CPU and GPU fits on Della also passed, as
+recorded below. This validates the handoff for subject 1; other participants
+can require different optimizer budgets or runtimes.
 
 The fresh Della validation jobs submitted on 2026-09-21 use a clean, fixed
 checkout of `4f162dac607f40fd14ba85858ec49326f1848122`, subject 1, and the full
@@ -283,7 +283,7 @@ defaults above (no smoke mode or warm starts):
 | Backend | Slurm task | Resources | Status checked 2026-09-21 |
 | --- | --- | --- | --- |
 | CPU direct | `14246453_1` | 8 cores, 8 GB, 30 minutes | Completed in 4 minutes 58 seconds on `della-i13n3`, exit 0 |
-| GPU generated | `14246454_1` | 1 A100 (`gpu40`), 4 cores, 16 GB, 1 hour | Queued on priority |
+| GPU generated | `14246454_1` | 1 A100 (`gpu40`), 4 cores, 16 GB, 1 hour | Completed in 23 minutes 27 seconds on `della-i12g1`, exit 0 |
 
 The CPU manifest confirms eight Torch threads and a clean checkout. Its
 899 evaluations reached log likelihood `-3063.504140003025`; independent
@@ -291,8 +291,19 @@ fresh scoring reproduced it exactly, with no invalid or zero-probability
 included rows. Peak host memory was approximately 2.50 GiB. Optimizer success
 was true, but `stationary` and `coordinate_stationary` remained false, and
 the NoInstruction collapse rate reached its lower bound of −0.3. Completion
-therefore establishes that the handoff runs, not convergence. The GPU has
-only passed submission checks on Della so far; its full result is pending.
+therefore establishes that the handoff runs, not convergence.
+
+The GPU manifest confirms an NVIDIA A100 PCIe 40 GB, a clean checkout, and
+`status=complete`. The generated path completed all 5,000 candidate evaluations
+at 100,000 estimates/candidate with 1 ms steps, expanded bounds, a 12 s maximum
+horizon, and checked histogram-window stopping. Time inside fitting was
+23 minutes 3 seconds, and the finite saved histogram log likelihood was
+`270.7007751464844`. Peak host memory was approximately 1.63 GiB (this is not
+GPU memory). Both jobs have Slurm state `COMPLETED` and exit code `0:0`.
+The GPU score is not directly comparable to the CPU interval log likelihood;
+independent rescoring and the scientific checks below remain necessary when
+assessing the fitted parameters.
+
 Results and logs are under
 `/scratch/gpfs/CSES/dmturner/csi-handoff/results/validation-4f162dac60`.
 Check the current status with:
