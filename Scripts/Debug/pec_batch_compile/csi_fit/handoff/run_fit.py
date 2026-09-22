@@ -70,6 +70,8 @@ def arguments():
     parser.add_argument("--smoke", action="store_true", help="Tiny optimizer/simulation budget; not a scientific fit.")
     parser.add_argument("--seed", type=int, default=1, help="Optimizer seed (both backends).")
     parser.add_argument("--iterations", type=int, help="CPU iterations per start; GPU candidate-evaluation budget.")
+    parser.add_argument("--initial-parameters", type=Path, action="append", default=[],
+                        help="Direct fit JSON; CPU accepts multiple starts, GPU accepts one CMA-ES center.")
     bounds = parser.add_argument_group("Search bounds (both backends)")
     bounds.add_argument("--gain-upper-bound", type=float, default=120.0)
     bounds.add_argument("--threshold-upper-bound", type=float, default=0.30)
@@ -77,7 +79,6 @@ def arguments():
     cpu = parser.add_argument_group("CPU direct solver")
     cpu.add_argument("--starts", type=int, default=4)
     cpu.add_argument("--random-start-candidates", type=int, default=32)
-    cpu.add_argument("--initial-parameters", type=Path, action="append", default=[])
     cpu.add_argument("--ddm-time-step", type=float, default=0.001)
     cpu.add_argument("--ddm-spatial-points", type=int, default=65)
     cpu.add_argument("--lca-max-step", type=float, default=0.01)
@@ -99,6 +100,8 @@ def arguments():
     args = parser.parse_args()
     if args.rescore and args.backend != "gpu":
         parser.error("--rescore is for GPU CSVs. CPU fits are automatically rescored.")
+    if args.backend == "gpu" and args.initial_parameters and (len(args.initial_parameters) != 1 or args.rescore):
+        parser.error("GPU --initial-parameters requires one direct fit JSON and cannot be combined with --rescore.")
     for name in ("starts", "estimates", "batch_size", "buffer_mib", "bins", "random_start_candidates"):
         if getattr(args, name) < 1:
             parser.error(f"--{name.replace('_', '-')} must be positive")
@@ -150,6 +153,8 @@ def make_commands(args, repo, data, output, selection):
         command += ["--posterior-predictive-simulations", str(args.predictive_simulations)]
     else:
         command += ["--skip-posterior-predictive"]
+    if args.initial_parameters:
+        command += ["--initial-parameters", str(args.initial_parameters[0].expanduser().resolve(strict=True))]
     if args.rescore:
         command += ["--rescore-parameter-file", str(args.rescore.expanduser().resolve(strict=True)),
                     "--rescore-simulation-seeds", *map(str, args.rescore_seeds)]

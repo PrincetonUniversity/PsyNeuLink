@@ -170,7 +170,27 @@ bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 --smoke
 # Full fits, each in a new output directory:
 bash "$CSI_HANDOFF_DIR/run.sh" cpu --subject 1 --seed 17 --starts 8
 bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 --seed 17 --simulation-seed 31
+
+# GPU fit initialized at a saved CPU direct solution:
+bash "$CSI_HANDOFF_DIR/run.sh" gpu --subject 1 \
+  --initial-parameters /absolute/path/to/cpu/fit.json
 ```
+
+For GPU fitting, `--initial-parameters` accepts one direct-fit JSON for the
+same subject. It converts physical seconds/collapse rates to model steps,
+rounds all coordinates to the actual GPU search grids, and rejects values
+outside the configured bounds. The rounded point is both the CMA-ES center
+and the first evaluated candidate; this evaluation counts toward the normal
+5,000-candidate budget and remains eligible as the final best result.
+The initial search spread (`sigma0=0.2`), bounds, and seed defaults are unchanged.
+This uses Optuna's [initial center](https://optuna.readthedocs.io/en/v4.9.0/reference/samplers/generated/optuna.samplers.CmaEsSampler.html)
+and [queued trial](https://optuna.readthedocs.io/en/v4.9.0/reference/generated/optuna.study.Study.html#optuna.study.Study.enqueue_trial)
+interfaces. `initialization.json` records the conversion, initial GPU score,
+and improvement; `initial_parameters.json` preserves the input fit, and
+`optimizer_trials.csv` records evaluated candidates. The direct score is never
+used as a GPU optimizer observation. Use the same data/history as the saved
+fit. For Slurm, pass the option after `--` to `submit.sh` and select one subject.
+An initialized fit tests refinement near that solution, not independent recovery.
 
 Dry-run does not import Torch, compile kernels, allocate a GPU, create output,
 or fit. It needs the configured interpreter and CSV. Smoke mode keeps the data

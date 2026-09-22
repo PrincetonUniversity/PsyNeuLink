@@ -8,6 +8,7 @@ import optuna
 import re
 import copy
 import math
+import json
 from datetime import datetime
 from pathlib import Path
 from psyneulink.core.batched import batched_node_op, LikelihoodEffectContract
@@ -26,6 +27,8 @@ parser.add_argument(
 )
 parser.add_argument("--num_estimates", "--num-estimates", default=100000, type=int)
 parser.add_argument("--max_iterations", "--max-iterations", default=5000, type=int)
+parser.add_argument("--initial-parameters", type=Path,
+                    help="Direct fit JSON: center CMA-ES on its rounded parameters and evaluate them first.")
 parser.add_argument("--gain-upper-bound", type=float, default=120.0,
                     help="Gain ceiling; grid spacing remains 0.1.")
 parser.add_argument("--threshold-upper-bound", type=float, default=0.30,
@@ -180,6 +183,8 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+if args.initial_parameters is not None and (args.backend != "triton" or args.rescore_parameter_file is not None):
+    parser.error("--initial-parameters requires GPU fitting (--backend triton), without --rescore-parameter-file.")
 # Retain the original physical grid spacing when widening the search interval.
 fit_grids = {}
 for name, lower, step in (
@@ -454,13 +459,39 @@ pec = pnl.ParameterEstimationComposition(
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
+initialization = None
+warm_start_study = None
+if args.initial_parameters is not None:
+    from csi_warm_start import load_direct_start
+    try:
+        initial_parameters, initialization = load_direct_start(
+            args.initial_parameters, int(actual_subject_id), args.model_time_step,
+            pec.controller.function.fit_param_bounds,
+        )
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    # x0 centers CMA-ES; enqueue_trial also evaluates that exact point during
+    # the startup trial, retaining it as a candidate within the same budget.
+    warm_start_study = optuna.create_study(
+        sampler=optuna.samplers.CmaEsSampler(
+            x0=initial_parameters, sigma0=0.2, lr_adapt=True,
+            popsize=cma_population_size, seed=optimizer_seed,
+        ),
+        direction="maximize",
+    )
+    warm_start_study.enqueue_trial(initial_parameters)
+    pec.controller.function.method = warm_start_study
+    initialization.update(sigma0=0.2, optimizer_seed=optimizer_seed,
+                          simulation_seed=simulation_seed, initial_point_counts_toward_budget=True)
+
 inputs = make_input_dict(comp, taskSequence, stimulusSequence, correctResponseSequence)
 
 print(f"Parameters used to initialize the composition: ")
 print(sf_params)
 
 print(
-    f"Fit Expectation Study 3.2 Real Sequences, No Warm Start, Single Surrogate CSI, "
+    f"Fit Expectation Study 3.2 Real Sequences, "
+    f"{'Direct Warm Start' if initialization else 'No Warm Start'}, Single Surrogate CSI, "
     f"{num_estimates} Num Estimates, Sigma 0.2, LR Adapt = True, Leak = 12, "
     f"Participant {actual_subject_id}, Slurm Array {args.subject_id}, "
     f"Backend {args.backend}, Parameter Batch Size {args.parameter_batch_size}, "
@@ -482,6 +513,10 @@ output_dir = args.output_dir.expanduser()
 if not output_dir.is_absolute():
     output_dir = SCRIPT_DIR / output_dir
 output_dir.mkdir(parents=True, exist_ok=True)
+if initialization is not None:
+    (output_dir / "initialization.json").write_text(json.dumps(initialization, indent=2) + "\n")
+    (output_dir / "initial_parameters.json").write_bytes(args.initial_parameters.expanduser().read_bytes())
+    print("CMA-ES initial parameters (rounded to the GPU grid):", initialization["gpu_parameters"], flush=True)
 output_suffix = "" if args.backend == "llvm" else f"_{args.backend}"
 output_stem = (
     "expectation_3.2_real_sequences_single_csi_leak12"
@@ -582,6 +617,25 @@ print(optimal_parameters)
 print(f"Optimal Log-Likelihood: {pec.optimal_value}")
 print("Fit Complete!")
 
+if warm_start_study is not None:
+    trials = warm_start_study.get_trials(deepcopy=False)
+    if not trials or trials[0].state != optuna.trial.TrialState.COMPLETE:
+        raise RuntimeError("The queued initial point was not evaluated.")
+    if any(not math.isclose(trials[0].params[name], value, rel_tol=0, abs_tol=1e-12)
+           for name, value in initial_parameters.items()):
+        raise RuntimeError("The first optimizer trial did not use the requested initial point.")
+    if not math.isfinite(trials[0].value) or float(pec.optimal_value) < trials[0].value - 1e-8:
+        raise RuntimeError("The fit failed to retain the finite initial candidate.")
+    initialization.update(initial_log_likelihood=trials[0].value,
+                          final_log_likelihood=float(pec.optimal_value),
+                          improvement=float(pec.optimal_value) - trials[0].value,
+                          completed_evaluations=sum(t.state == optuna.trial.TrialState.COMPLETE for t in trials))
+    (output_dir / "initialization.json").write_text(json.dumps(initialization, indent=2) + "\n")
+    warm_start_study.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
+        output_dir / "optimizer_trials.csv", index=False,
+    )
+    print(f"Initial GPU log-likelihood: {trials[0].value}; improvement: {initialization['improvement']}")
+
 # -- Save fit results ----------------------------------------------------------
 df = pd.DataFrame({k: [v] for k, v in optimal_parameters.items()})
 
@@ -603,6 +657,9 @@ df["cpu_count"] = args.cpu_count
 df["backend"] = args.backend
 df["history_mode"] = history_mode
 df["optimizer_seed"] = optimizer_seed
+df["initial_parameter_file"] = initialization["source"] if initialization else ""
+df["initial_log_likelihood"] = initialization["initial_log_likelihood"] if initialization else np.nan
+df["cma_sigma0"] = 0.2
 df["simulation_seed"] = simulation_seed
 df["bins"] = args.bins
 df["smoothing_sigma"] = args.smoothing_sigma
