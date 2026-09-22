@@ -135,7 +135,7 @@ settled when the composition is built.
     Column of ``data`` identifying participants.
 
 * ``curvature``
-    ``"diagonal"`` (the default) or ``"full"``. See :ref:`Hierarchical_Fitting_Curvature`.
+    ``"full"`` (the default) or ``"diagonal"``. See :ref:`Hierarchical_Fitting_Curvature`.
 
 * ``max_iterations``
     Most EM iterations to run. Defaults to ``50``.
@@ -166,18 +166,20 @@ Curvature
 A participant's uncertainty comes from the curvature of their fit at its peak: the more sharply
 the fit falls away, the better that parameter is determined.
 
-``curvature="diagonal"``, the default, measures one parameter at a time, moving it while the
-others are held where they are. That answers "how well is this parameter determined, given the
-others?" -- which is not the question. Where two parameters trade off, moving one alone makes
-the fit worse faster than moving it while the other compensates, so the answer comes out too
-confident. On a posterior with a known exact answer, a pair of parameters correlated at 0.9
-gives 0.10 measured this way against a true 0.53.
+``curvature="full"``, the default, measures the whole matrix and inverts it. That answers how
+well a parameter is determined once the others are allowed to be uncertain too. It costs
+:math:`2P^2` evaluations of a participant's objective per EM iteration -- 32 for four
+parameters -- and where an evaluation means simulating a model, that is the dominant cost of the
+fit.
 
-``curvature="full"`` measures the whole matrix and inverts it, which answers the question that
-was asked: how well is this parameter determined once the others are allowed to be uncertain
-too. The cost is :math:`2P^2` evaluations of a participant's objective per EM iteration instead
-of :math:`2P` -- 32 instead of 8 for four parameters. Where an evaluation means simulating a
-model that is the dominant cost of the fit, which is why the diagonal remains the default.
+``curvature="diagonal"`` measures one parameter at a time, moving it while the others are held
+where they are, for :math:`2P` evaluations -- 8 for four parameters. That answers "how well is
+this parameter determined, given the others?", which is a different question. Where two
+parameters trade off, moving one alone makes the fit worse faster than moving it while the other
+compensates, so the answer comes out too confident. On a posterior with a known exact answer, a
+pair of parameters correlated at 0.9 gives 0.10 measured this way against a true 0.53. It is the
+cheaper choice where parameters are known not to trade off, or where evaluations are too costly
+for the whole matrix.
 
 This affects the group estimate as well as the reported intervals. The group variance is built
 from these per-participant variances, so measuring them too small makes the population look
@@ -246,9 +248,9 @@ Limitations
 * Group covariance is diagonal: each parameter's spread across the population is estimated on
   its own, so a tendency for two of them to move together -- participants with a high drift rate
   also tending to have a high threshold -- is not represented.
-* With ``curvature="diagonal"``, the default, participant uncertainty is the spread of one
-  parameter with the others held at the mode rather than integrated out, which errs towards
-  being too tight; see :ref:`Hierarchical_Fitting_Curvature`.
+* With ``curvature="diagonal"``, participant uncertainty is the spread of one parameter with the
+  others held at the mode rather than integrated out, which errs towards being too tight; see
+  :ref:`Hierarchical_Fitting_Curvature`.
 * Participant estimates are posterior modes with a Gaussian approximation around them, not
   posterior means.
 * Interval width tracks the quality of the likelihood. A likelihood estimated from too few

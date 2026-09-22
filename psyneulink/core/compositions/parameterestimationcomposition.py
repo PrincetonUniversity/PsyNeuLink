@@ -542,8 +542,8 @@ class ParameterEstimationComposition(Composition):
     hierarchical_options : Mapping : default None
         specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
         a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"`` chooses
-        whether each participant's uncertainty is measured one parameter at a time (``"diagonal"``, the default)
-        or in all directions at once (``"full"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the
+        whether each participant's uncertainty is measured in all directions at once (``"full"``, the default) or
+        one parameter at a time (``"diagonal"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the
         full set of keys.
 
 
@@ -701,7 +701,7 @@ class ParameterEstimationComposition(Composition):
         # How a hierarchical fit is run.  These configure the composition rather than describing
         # anything it computes, and they hold still for the length of a fit, so none of them is
         # stateful, modulable or logged.  They are the only place their defaults are written down.
-        curvature = Parameter(Curvature.DIAGONAL, stateful=False, modulable=False, loggable=False,
+        curvature = Parameter(Curvature.FULL, stateful=False, modulable=False, loggable=False,
                               setter=_solver_setting_setter("curvature"))
         max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False,
                                    setter=_solver_setting_setter("max_iterations"))
