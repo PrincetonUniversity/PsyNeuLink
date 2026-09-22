@@ -189,12 +189,14 @@ def test_diagonal_hessian_accepts_per_dimension_step():
     np.testing.assert_allclose(diag, a, rtol=1e-5)
 
 
-def test_diagonal_hessian_rejects_bad_step():
+@pytest.mark.parametrize("probe", [diagonal_hessian, full_hessian],
+                         ids=["diagonal", "full"])
+def test_a_hessian_probe_rejects_a_bad_step(probe):
     f = lambda z: float(np.sum(z ** 2))  # noqa: E731
     with pytest.raises(ValueError, match="step must be scalar or of shape"):
-        diagonal_hessian(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
+        probe(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
     with pytest.raises(ValueError, match="step must be positive"):
-        diagonal_hessian(f, np.zeros(2), step=0.0)
+        probe(f, np.zeros(2), step=0.0)
 
 
 def test_full_hessian_of_quadratic():
@@ -214,14 +216,6 @@ def test_full_hessian_is_symmetric_and_agrees_on_the_diagonal():
     measured = full_hessian(f, z, step=1e-3)
     np.testing.assert_allclose(measured, measured.T, atol=0)
     np.testing.assert_allclose(np.diag(measured), diagonal_hessian(f, z, step=1e-3))
-
-
-def test_full_hessian_rejects_bad_step():
-    f = lambda z: float(np.sum(z ** 2))  # noqa: E731
-    with pytest.raises(ValueError, match="step must be scalar or of shape"):
-        full_hessian(f, np.zeros(3), step=np.array([1e-3, 1e-3]))
-    with pytest.raises(ValueError, match="step must be positive"):
-        full_hessian(f, np.zeros(2), step=0.0)
 
 
 # ===========================================================================
