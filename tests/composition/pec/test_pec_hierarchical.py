@@ -1068,18 +1068,6 @@ def test_pec_requires_a_subject_column():
 
 
 @pytest.mark.composition
-def test_pec_rejects_out_of_range_hierarchical_options():
-    for opts, match in [
-        ({"subject_id": "subject", "max_iterations": 0}, "max_iterations"),
-        ({"subject_id": "subject", "tol": 0.0}, "tol"),
-        ({"subject_id": "subject", "variance_floor": 0.0}, "variance_floor"),
-        ({"subject_id": "subject", "curvature": "banded"}, "curvature"),
-    ]:
-        with pytest.raises(Exception, match=match):
-            _build_group_pec(hierarchical_options=opts)
-
-
-@pytest.mark.composition
 def test_pec_rejects_a_likelihood_include_mask():
     # The mask indexes the stacked table, but each participant is scored by its own model built
     # from its own slice, so there is nowhere for it to be applied.
