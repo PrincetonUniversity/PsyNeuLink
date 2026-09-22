@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.20.2.0+25.g3f142e98f documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.20.2.0+30.g07b3297de documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.20.2.0+25
+                  0.20.2.0+30
                 </div>
               
             
@@ -5929,6 +5929,16 @@ self.most_recent_execution_context if one is not specified.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_processing_basic_condition">
+<span class="sig-name descname"><span class="pre">_get_processing_basic_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_processing_basic_condition" title="Link to this definition">¶</a></dt>
+<dd><p>Return the node’s consideration-queue index and basic runtime condition.</p>
+<p>Structural conditions are already reflected in the scheduler’s
+consideration queue and do not need runtime compilation. Reading
+conditions_basic avoids ConditionSet[node] returning a list containing
+both basic and structural conditions.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._is_learning">
 <span class="sig-name descname"><span class="pre">_is_learning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._is_learning" title="Link to this definition">¶</a></dt>
 <dd><p>Returns <code class="docutils literal notranslate"><span class="pre">True</span></code> if the Composition can learn in the given context</p>
@@ -6746,6 +6756,7 @@ last_values: the list of values assigned</p>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.reset"><code class="docutils literal notranslate"><span class="pre">Composition.reset()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.initialize"><code class="docutils literal notranslate"><span class="pre">Composition.initialize()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.disable_all_history"><code class="docutils literal notranslate"><span class="pre">Composition.disable_all_history()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition._get_processing_basic_condition"><code class="docutils literal notranslate"><span class="pre">Composition._get_processing_basic_condition()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition._is_learning"><code class="docutils literal notranslate"><span class="pre">Composition._is_learning()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition._build_variable_for_input_CIM"><code class="docutils literal notranslate"><span class="pre">Composition._build_variable_for_input_CIM()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition._assign_execution_ids"><code class="docutils literal notranslate"><span class="pre">Composition._assign_execution_ids()</span></code></a></li>
@@ -6830,7 +6841,7 @@ last_values: the list of values assigned</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=69bfdff2"></script>
+         <script src="_static/documentation_options.js?v=aaa7d485"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
