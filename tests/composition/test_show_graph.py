@@ -895,10 +895,10 @@ class TestControl:
 
     @pytest.mark.parametrize(
         'show_graph_kwargs, expected_output',
-        zip(
+        list(zip(
             _nested_show_graph_kwargs,
             _of_show_nested_show_cim_and_show_node_structure_expected_outputs
-        ),
+        )),
         ids=[str(x) for x in _nested_show_graph_kwargs]
     )
     def test_of_show_nested_show_cim_and_show_node_structure(self,
@@ -947,10 +947,10 @@ class TestControl:
 
     @pytest.mark.parametrize(
         'show_graph_kwargs, expected_output',
-        zip(
+        list(zip(
             _nested_show_graph_kwargs,
             _of_show_3_level_nested_show_cim_and_show_node_structure_outputs
-        ),
+        )),
         ids=[str(x) for x in _nested_show_graph_kwargs]
     )
     def test_of_show_3_level_nested_show_cim_and_show_node_structure(self,
@@ -1006,10 +1006,10 @@ class TestControl:
     # unskip last item in _nested_show_graph_kwargs when FIX comment above is resolved
     @pytest.mark.parametrize(
         'show_graph_kwargs, expected_output',
-        zip(
+        list(zip(
             _nested_show_graph_kwargs[:-1],
             _of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last_outputs
-        ),
+        )),
         ids=[str(x) for x in _nested_show_graph_kwargs[:-1]]
     )
     def test_of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last(self,
