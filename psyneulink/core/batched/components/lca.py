@@ -225,10 +225,10 @@ def _lca_step_emit(ctx, node_spec, inputs, outputs, step_var, finished_var):
     return (act0, act1)
 
 
-def _lca_supports(node) -> BatchedDiagnostic | None:
+def _lca_supports(node, *, extended=False) -> BatchedDiagnostic | None:
     name = getattr(node, "name", str(node))
     width = _primary_output_width(node)
-    if width != 2:
+    if width != 2 and not extended:
         return BatchedDiagnostic(
             name,
             "unsupported LCA width for batched v2",
@@ -277,7 +277,7 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
             "requires zero",
         )
     noise_values = []
-    for noise_owner in (node, integrator):
+    for noise_owner in (() if extended else (node, integrator)):
         noise_value = _finite_broadcast_scalar_parameter(noise_owner, "noise")
         if noise_value is None:
             return BatchedDiagnostic(
@@ -286,7 +286,7 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
                 "requires a finite float32 scalar or broadcast-scalar numeric value",
             )
         noise_values.append(noise_value)
-    if noise_values[0] != noise_values[1]:
+    if noise_values and noise_values[0] != noise_values[1]:
         return BatchedDiagnostic(
             name,
             "unsupported LCA noise for batched v2",
@@ -355,7 +355,7 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
         ]
     )
     matrix = np.asarray(_raw_parameter(node, "matrix", expected_matrix))
-    if (
+    if not extended and (
         matrix.shape != (2, 2)
         or matrix.dtype.kind not in "biuf"
         or not np.all(np.isfinite(matrix))
@@ -367,7 +367,7 @@ def _lca_supports(node) -> BatchedDiagnostic | None:
             "requires canonical self-excitation/competition matrix",
         )
 
-    if _raw_parameter(node, "termination_measure", None) != TimeScale.TRIAL:
+    if not extended and _raw_parameter(node, "termination_measure", None) != TimeScale.TRIAL:
         return BatchedDiagnostic(
             name,
             "unsupported LCA termination measure for batched v2",
@@ -609,6 +609,8 @@ def _control_monitor_source_for(composition, controlled_node):
         id(projection) for projection in getattr(composition, "projections", ())
     }
     for parameter_port in getattr(controlled_node, "parameter_ports", ()):
+        if parameter_port.name != "termination_threshold":
+            continue
         for control_projection in getattr(parameter_port, "mod_afferents", ()):
             control = getattr(getattr(control_projection, "sender", None), "owner", None)
             signal = getattr(control_projection, "sender", None)

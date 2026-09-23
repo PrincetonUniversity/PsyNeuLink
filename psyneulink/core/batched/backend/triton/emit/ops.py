@@ -632,9 +632,10 @@ class OpEmitMixin:
                             f"{value} = tl.full((BLOCK,), "
                             f"{float_literal(initial)}, tl.float32)"
                         )
-            elif carry.kind == "effective_parameter":
+            elif carry.kind in {"effective_parameter", "sampled_parameter"}:
                 try:
-                    values = [self.effective_parameter_vars[carry.value_id]]
+                    storage = self.effective_parameter_vars if carry.kind == "effective_parameter" else self.sampled_parameter_vars
+                    values = [storage[carry.value_id]]
                 except KeyError as error:
                     raise ValueError(
                         "Triton dynamic carry references uninitialized effective "
@@ -1438,8 +1439,19 @@ class OpEmitMixin:
                     for value in input_values
                 ]
         output_vars = self._component_vars(op.outputs[0].name, op.outputs[0].width)
+        sampled = {}
+        ids = op.attrs.get("sampled_effective_parameter_ids", ())
+        if ids:
+            parameters = {p.effective_parameter_id: p for p in self.kernel.effective_parameters}
+            if len(op.inputs) != 1 + len(ids):
+                raise ValueError("Function call must supply its exact effective-parameter inputs.")
+            for parameter_id, value in zip(ids, op.inputs[1:]):
+                parameter = parameters[parameter_id]
+                if parameter.target_component_id != node.component_id or value.width != 1:
+                    raise ValueError("Function effective parameter must belong to its target.")
+                sampled[parameter.target_parameter] = self._get_value(value.name)[0]
         param_args = tuple(
-            self.param_vars[node.params[binding.arg]] for binding in spec.params
+            sampled.get(binding.arg, self.param_vars[node.params[binding.arg]]) for binding in spec.params
         )
         ctx = TritonEmitContext(self)
         for input_value, output_var in zip(input_values, output_vars):

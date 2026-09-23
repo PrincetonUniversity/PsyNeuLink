@@ -87,6 +87,7 @@ def prepare_inputs(
     }
     termination_step_sources.update(
         modulation.source for modulation in ir.graph.modulations
+        if modulation.target_parameter == "termination_threshold"
     )
     values = {}
     for input_spec in ir.graph.inputs:
@@ -246,7 +247,7 @@ def _validate_dynamic_lca_step_counts(
     matching_modulations = tuple(
         modulation
         for modulation in ir.graph.modulations
-        if modulation.source == source
+        if modulation.source == source and modulation.target_parameter == "termination_threshold"
     )
     if not matching_modulations:
         return
@@ -299,7 +300,8 @@ def _dynamic_lca_effective_counts(
     if graph is None:
         return np.asarray(values, dtype=float)
     matching = tuple(
-        modulation for modulation in graph.modulations if modulation.source == source
+        modulation for modulation in graph.modulations
+        if modulation.source == source and modulation.target_parameter == "termination_threshold"
     )
     if len(matching) != 1:
         return np.asarray(values, dtype=float)
@@ -422,6 +424,7 @@ def lca_max_steps(
     if ir.graph is not None:
         dynamic_sources = {
             modulation.source for modulation in ir.graph.modulations
+            if modulation.target_parameter == "termination_threshold"
         }
         rows = parameter_sets or [dict(ir.param_defaults)]
         for source in dynamic_sources:

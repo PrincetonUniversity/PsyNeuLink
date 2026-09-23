@@ -187,6 +187,11 @@ def run_triton(
     )
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
     kernel_ir = kernel_ir or lower_to_kernel_ir(ir)
+    if initial_states is not None and any(node.attrs.get("scalar_override_control") for node in kernel_ir.graph.nodes):
+        raise ValueError(
+            "Resuming scalar OVERRIDE networks requires held and sampled control values; "
+            "initial_states currently restores only mechanism state. Run each subject's complete sequence together."
+        )
     slots = diag_slots(kernel_ir) if ir.graph is not None else ()
     stateful_fusions = {STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION}
     if defer_device_checks and (

@@ -260,6 +260,8 @@ class MechanismOpSpec:
     supports: Callable | None = None
     extract_attrs: Callable | None = None
     triton_emit: Callable | None = None
+    # Structural variants may authenticate variable output widths/selectors.
+    validate_outputs: Callable | None = None
     # Co-evolution: emit ONE integration step instead of running to completion,
     # so coupled stateful mechanisms can step together in a fused per-step loop.
     # step_emit(ctx, node, inputs, outputs, step_var) updates lane state in place
@@ -270,6 +272,9 @@ class MechanismOpSpec:
     # state into its modeled outputs after the step loop (e.g. DDM decision/RT).
     readout_emit: Callable | None = None
     finished_output: str = ""
+    # A scheduler can execute some mechanisms again after is_finished becomes
+    # true; unlike an absorbing DDM, a stepwise LCA continues integrating.
+    continue_after_finished: bool = False
     single_node_model_kind: str | None = None
     param_alias_prefixes: tuple[str, ...] = ()
     diagnostics: tuple[str, ...] = ()
@@ -304,6 +309,7 @@ class MechanismOpSpec:
 
 _FUNCTION_SPECS: dict[type, ElementwiseFunctionSpec] = {}
 _MECHANISM_SPECS: dict[type, MechanismOpSpec] = {}
+_MECHANISM_SPECIALIZERS: dict[type, Callable] = {}
 _FUNCTION_MECHANISM_SPECS: dict[tuple[type, type], MechanismOpSpec] = {}
 _PASSTHROUGH_SPECS: dict[type, PassthroughMechanismSpec] = {}
 _PROJECTION_SPECS: dict[type, DenseProjectionSpec] = {}
@@ -442,7 +448,26 @@ def mechanism_spec_for(node) -> MechanismOpSpec | None:
         instance_spec = _INSTANCE_SPECS.get(name) or _INSTANCE_SPECS.get(_unsuffixed_name(name))
         if instance_spec is not None:
             return instance_spec
+    specializer = _MECHANISM_SPECIALIZERS.get(type(node))
+    if specializer is not None:
+        specialized = specializer(node)
+        if specialized is not None:
+            _validate_likelihood_contract(specialized)
+            if not specialized.key:
+                raise BatchedOpSpecError("A specialized mechanism spec requires a stable key.")
+            _SPECS_BY_KEY[specialized.key] = specialized
+            return specialized
     return _FUNCTION_MECHANISM_SPECS.get((type(node), type(getattr(node, "function", None)))) or _MECHANISM_SPECS.get(type(node))
+
+
+def register_batched_specializer(mechanism_class, factory):
+    """Resolve an exact class's structural variants before capturing a spec.
+
+    Factories return immutable, object-free specs with distinct stable keys,
+    or None to use the ordinary registration. Frozen plans retain the resolved
+    implementation, so later construction or registration cannot change them.
+    """
+    _MECHANISM_SPECIALIZERS[mechanism_class] = factory
 
 
 def _unsuffixed_name(name: str) -> str:

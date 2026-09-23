@@ -1,0 +1,489 @@
+{
+  "date": "2026-09-23",
+  "measurements": [
+    {
+      "backend": "llvm",
+      "subject": 1,
+      "trials": 64,
+      "estimates": 1000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 4.313757034018636,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        1.7381218249211088,
+        1.7471026349812746,
+        1.7283318260451779
+      ],
+      "first_seconds": 7.9411549440119416,
+      "shape": [
+        64,
+        1000,
+        2
+      ],
+      "mean_rt": 0.9793257812500001,
+      "mean_decision": 0.529984375,
+      "rt_quantiles": [
+        0.65,
+        0.94,
+        1.3599999999999999,
+        1.73,
+        2.56
+      ],
+      "median_seconds": 1.7381218249211088
+    },
+    {
+      "backend": "triton",
+      "subject": 1,
+      "trials": 64,
+      "estimates": 1000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 5.744471436017193,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        0.06921377801336348,
+        0.06779176194686443,
+        0.06705755402799696
+      ],
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "first_seconds": 11.814884135965258,
+      "shape": [
+        64,
+        1000,
+        2
+      ],
+      "mean_rt": 0.9794625043869019,
+      "mean_decision": 0.5296249985694885,
+      "rt_quantiles": [
+        0.6589999675750787,
+        0.9399999976158142,
+        1.3600000143051147,
+        1.7200000286102295,
+        2.5999999046325684
+      ],
+      "median_seconds": 0.06779176194686443
+    },
+    {
+      "backend": "llvm",
+      "subject": 1,
+      "trials": 64,
+      "estimates": 10000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 4.4134055390022695,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        15.88563787098974,
+        15.340061230934225,
+        15.587425542995334
+      ],
+      "first_seconds": 23.86875845992472,
+      "shape": [
+        64,
+        10000,
+        2
+      ],
+      "mean_rt": 0.9790198125,
+      "mean_decision": 0.5305515625,
+      "rt_quantiles": [
+        0.66,
+        0.94,
+        1.3599999999999999,
+        1.72,
+        2.93
+      ],
+      "median_seconds": 15.587425542995334
+    },
+    {
+      "backend": "triton",
+      "subject": 1,
+      "trials": 64,
+      "estimates": 10000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 5.707086630980484,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        0.07612516800872982,
+        0.07229492499027401,
+        0.06859868299216032
+      ],
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "first_seconds": 11.495313804945908,
+      "shape": [
+        64,
+        10000,
+        2
+      ],
+      "mean_rt": 0.9784716963768005,
+      "mean_decision": 0.5304999947547913,
+      "rt_quantiles": [
+        0.6599999666213989,
+        0.9399999976158142,
+        1.3600000143051147,
+        1.7200000286102295,
+        2.5999999046325684
+      ],
+      "median_seconds": 0.07229492499027401
+    },
+    {
+      "backend": "llvm",
+      "subject": 1,
+      "trials": 760,
+      "estimates": 1000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 4.296408830094151,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        19.329190270975232,
+        19.525600905995816,
+        18.64764781203121
+      ],
+      "first_seconds": 24.176029725000262,
+      "shape": [
+        760,
+        1000,
+        2
+      ],
+      "mean_rt": 0.9733071578947368,
+      "mean_decision": 0.4987671052631579,
+      "rt_quantiles": [
+        0.65,
+        0.94,
+        1.35,
+        1.72,
+        2.85
+      ],
+      "median_seconds": 19.329190270975232
+    },
+    {
+      "backend": "triton",
+      "subject": 1,
+      "trials": 760,
+      "estimates": 1000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 5.419378355029039,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        0.3628574729664251,
+        0.3667351281037554,
+        0.3629939940292388
+      ],
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "first_seconds": 1.804767818073742,
+      "shape": [
+        760,
+        1000,
+        2
+      ],
+      "mean_rt": 0.9731131792068481,
+      "mean_decision": 0.4987263083457947,
+      "rt_quantiles": [
+        0.6499999761581421,
+        0.9299999475479126,
+        1.350000023841858,
+        1.7100000381469727,
+        2.7100000381469727
+      ],
+      "median_seconds": 0.3629939940292388
+    },
+    {
+      "backend": "llvm",
+      "subject": 1,
+      "trials": 760,
+      "estimates": 10000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 4.358795806067064,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        178.65062869305257
+      ],
+      "requested_warm_repeats": 1,
+      "same_seed_for_all_parameter_combinations": true,
+      "first_seconds": 185.08178564091213,
+      "shape": [
+        760,
+        10000,
+        2
+      ],
+      "dtype": "float64",
+      "mean_rt": 0.9732447644736842,
+      "mean_decision": 0.4986953947368421,
+      "rt_quantiles": [
+        0.65,
+        0.94,
+        1.35,
+        1.71,
+        3.1500000000000004
+      ],
+      "mean_rt_estimate_standard_error": 8.52079221047395e-05,
+      "mean_decision_estimate_standard_error": 4.514213623351906e-05,
+      "median_seconds": 178.65062869305257
+    },
+    {
+      "backend": "triton",
+      "subject": 1,
+      "trials": 760,
+      "estimates": 10000,
+      "candidates": 1,
+      "threads": 8,
+      "seed": 29,
+      "deterministic": false,
+      "schedule": "recurrent",
+      "max_steps": 2000,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa_lca_model/flanker_data_part1.csv",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "setup_seconds": 5.439128934987821,
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "versions": {
+        "psyneulink": "0.19.1.0+143.ge826488923",
+        "llvmlite": "0.48.0",
+        "triton": "3.7.1",
+        "torch": "2.13.0"
+      },
+      "scope": "simulation including preparation and host output; no likelihood or optimizer",
+      "warm_seconds": [
+        0.44239295506849885,
+        0.42229492496699095,
+        0.4227608470246196
+      ],
+      "requested_warm_repeats": 3,
+      "same_seed_for_all_parameter_combinations": true,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "first_seconds": 1.8774962719762698,
+      "shape": [
+        760,
+        10000,
+        2
+      ],
+      "dtype": "float32",
+      "mean_rt": 0.9731804132461548,
+      "mean_decision": 0.4987306594848633,
+      "rt_quantiles": [
+        0.6499999761581421,
+        0.9399999976158142,
+        1.350000023841858,
+        1.7100000381469727,
+        2.940000057220459
+      ],
+      "mean_rt_estimate_standard_error": 8.447994478046894e-05,
+      "mean_decision_estimate_standard_error": 4.5576211996376514e-05,
+      "median_seconds": 0.4227608470246196
+    }
+  ],
+  "comparisons": [
+    {
+      "trials": 64,
+      "estimates": 1000,
+      "llvm_seconds": 1.7381218249211088,
+      "triton_seconds": 0.06779176194686443,
+      "speedup": 25.63913040471582
+    },
+    {
+      "trials": 64,
+      "estimates": 10000,
+      "llvm_seconds": 15.587425542995334,
+      "triton_seconds": 0.07229492499027401,
+      "speedup": 215.60884868602247
+    },
+    {
+      "trials": 760,
+      "estimates": 1000,
+      "llvm_seconds": 19.329190270975232,
+      "triton_seconds": 0.3629939940292388,
+      "speedup": 53.249339076993884
+    },
+    {
+      "trials": 760,
+      "estimates": 10000,
+      "llvm_seconds": 178.65062869305257,
+      "triton_seconds": 0.4227608470246196,
+      "speedup": 422.580827790443
+    }
+  ],
+  "deterministic_validation": {
+    "tested_trials": 4,
+    "choices_equal": true,
+    "max_triton_llvm_rt_difference_seconds": 0.0100000214576721,
+    "first_trial_triton_python_max_state_difference": 7.62134666e-08,
+    "note": "LLVM returns 0.97 s on the first retained real-data trial; Python and Triton return 0.96 s. Three subsequent trial RTs agree within float32 precision. This discrepancy is unresolved."
+  },
+  "code_git_head": "525d76a1282cd32548ac51d947a0b2daa2a62f70",
+  "code_working_tree": "Includes uncommitted DAWA PEC compiler support",
+  "model_source_sha256": "fddee3c92e76da1bf64f0cf08b58d4c24df40974efa6bd79c8bd894b49cea7aa"
+}

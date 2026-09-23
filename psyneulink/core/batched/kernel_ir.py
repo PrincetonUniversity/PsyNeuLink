@@ -163,7 +163,7 @@ _DYNAMIC_SCHEDULE_SLOT_KINDS = frozenset({
     "rng_clock",
 })
 _DYNAMIC_SCHEDULE_CARRY_KINDS = frozenset(
-    {"state", "trial_state", "effective_parameter", "output", "diagnostic"}
+    {"state", "trial_state", "effective_parameter", "sampled_parameter", "output", "diagnostic"}
 )
 _DYNAMIC_SCHEDULE_PUBLICATION_KINDS = (
     _DYNAMIC_SCHEDULE_CARRY_KINDS | {"finished"}
@@ -973,14 +973,19 @@ def dynamic_truncation_value(
 
 def initialize_effective_parameter_op(
     parameter: BatchedEffectiveParameterSpec,
+    sampled_base_parameter_id: int | None = None,
 ) -> KernelOp:
     """Initialize one lane-persistent effective-parameter value."""
 
     return KernelOp(
         kind="InitializeEffectiveParameter",
         target=parameter.target,
-        outputs=(effective_parameter_value(parameter),),
-        attrs=_effective_parameter_initializer_attrs(parameter),
+        outputs=(effective_parameter_value(parameter),) + (
+            (sampled_parameter_value(parameter),) if sampled_base_parameter_id is not None else ()
+        ),
+        attrs={**_effective_parameter_initializer_attrs(parameter), **(
+            {"sampled_base_parameter_id": sampled_base_parameter_id} if sampled_base_parameter_id is not None else {}
+        )},
     )
 
 
@@ -1028,11 +1033,20 @@ def _effective_parameter_initializer_attrs(
     }
 
 
+def sampled_parameter_value(parameter):
+    return KernelValue(f"sampled:{parameter.effective_parameter_id}", 1, "float32")
+
+
+def _sampled_modulations(graph):
+    return tuple(m for m in graph.modulations if graph.node(m.controller).attrs.get("scalar_override_control"))
+
+
 def _validate_initialize_effective_parameter(op: KernelOp) -> None:
-    if op.inputs or len(op.outputs) != 1:
+    sampled = "sampled_base_parameter_id" in op.attrs
+    if op.inputs or len(op.outputs) != 1 + int(sampled):
         raise ValueError(
             "KernelIR InitializeEffectiveParameter requires no inputs and "
-            "exactly one output."
+            "one held output, plus a sampled output when declared."
         )
     effective_parameter_id = op.attrs.get("effective_parameter_id")
     expected_keys = {
@@ -1049,6 +1063,11 @@ def _validate_initialize_effective_parameter(op: KernelOp) -> None:
         "sample_event",
     }
     output = op.outputs[0]
+    if sampled:
+        expected_keys.add("sampled_base_parameter_id")
+        if (not _valid_dynamic_id(op.attrs["sampled_base_parameter_id"])
+                or not _kernel_value_matches(op.outputs[1], KernelValue(f"sampled:{effective_parameter_id}", 1, "float32"))):
+            raise ValueError("Sampled parameter initializer requires its exact parameter identity.")
     if (
         set(op.attrs) != expected_keys
         or type(effective_parameter_id) is not int
@@ -1287,7 +1306,7 @@ def _validate_for_passes(op: KernelOp) -> None:
             persistent_values = tuple(
                 carry.value
                 for carry in program.loop_carries
-                if carry.kind in {"state", "effective_parameter"}
+                if carry.kind in {"state", "effective_parameter", "sampled_parameter"}
             )
             carried_values = tuple(
                 carry.value for carry in program.loop_carries
@@ -1514,9 +1533,10 @@ def _validate_step_mechanism(op: KernelOp) -> None:
 
 
 def _validate_reset_state(op: KernelOp) -> None:
-    if op.inputs or not op.outputs:
+    if not op.outputs or any(value.width != 1 or value.dtype != "float32" or not value.name.startswith("sampled:")
+                             for value in op.inputs):
         raise ValueError(
-            "KernelIR ResetState requires no inputs and at least one state output."
+            "KernelIR ResetState requires scalar sampled-parameter inputs and at least one state output."
         )
     attrs = op.attrs
     if set(attrs) != {"component_id", "state_ids", "condition_type", "region"}:
@@ -1978,6 +1998,10 @@ def validate_kernel_ir(kernel: KernelIR) -> None:
                 or any(state.component_id != reset.component_id for state in declared_states)
                 or op.target != reset.node
                 or op.outputs != expected_outputs
+                or op.inputs != tuple(sampled_parameter_value(p) for p in kernel.effective_parameters
+                                      if kernel.executable
+                                      if p.target_component_id == reset.component_id
+                                      and p.effective_parameter_id in {m.effective_parameter_id for m in _sampled_modulations(kernel.graph)})
                 or dict(op.attrs) != {
                     "component_id": reset.component_id,
                     "state_ids": reset.state_ids,
@@ -3493,6 +3517,10 @@ def _validate_kernel_modulations(kernel: KernelIR) -> None:
     modulation_ids = tuple(
         modulation.modulation_id for modulation in kernel.modulations
     )
+    if any(node.attrs.get("scalar_override_control") for node in kernel.graph.nodes):
+        if not _dynamic_scheduled_graph_eligible(kernel.graph, kernel.params, op_specs=kernel.op_specs):
+            raise ValueError("Scalar OVERRIDE controls require an authenticated dynamic graph.")
+        return
     effective_parameter_ids = tuple(
         modulation.effective_parameter_id for modulation in kernel.modulations
     ) + tuple(
@@ -4205,11 +4233,16 @@ def _validate_dynamic_schedule_stateful_capabilities(
     expected_effective_samples = tuple(sorted(
         (control.target_component_id, control.effective_parameter_id)
         for control in kernel.folded_affine_controls
+    ) + sorted(
+        (control.target_component_id, control.effective_parameter_id)
+        for control in kernel.modulations
+        if kernel.graph.node(control.controller).attrs.get("scalar_override_control")
     ))
+    expected_effective_samples = tuple(sorted(expected_effective_samples))
     actual_effective_samples = tuple(sorted(
         (member.component_id, parameter_id)
-        for member, step in steps
-        for parameter_id in step.attrs["sampled_effective_parameter_ids"]
+        for member in members for step in member.body
+        for parameter_id in step.attrs.get("sampled_effective_parameter_ids", ())
     ))
     if actual_effective_samples != expected_effective_samples:
         raise ValueError(
@@ -4365,6 +4398,7 @@ def _dynamic_component_execution_budget(
     finished: BatchedFinishedValueSpec | None,
     schedule_fuel: int,
     local_maximum: int,
+    continue_after_finished: bool = False,
 ) -> KernelComponentExecutionBudget:
     """Declare total and pre-finish limits without backend inference."""
 
@@ -4383,7 +4417,7 @@ def _dynamic_component_execution_budget(
         maximum,
         finished_value_id=finished.value_id,
         unfinished_maximum=min(local_maximum, maximum),
-        post_finish="stop" if dynamic_terminator else "continue",
+        post_finish="stop" if dynamic_terminator and not continue_after_finished else "continue",
     )
 
 
@@ -4435,6 +4469,11 @@ def _canonical_dynamic_schedule_program(
         )
         for parameter in kernel.effective_parameters
     )
+    sampled_ids = {m.effective_parameter_id for m in _sampled_modulations(graph)}
+    sampled_carries = tuple(
+        KernelLoopCarry("sampled_parameter", p.target_component_id, p.effective_parameter_id, sampled_parameter_value(p))
+        for p in kernel.effective_parameters if p.effective_parameter_id in sampled_ids
+    )
     output_carries = []
     for node in graph.nodes:
         for port_id in node.output_port_ids:
@@ -4475,6 +4514,7 @@ def _canonical_dynamic_schedule_program(
         *state_carries,
         *trial_state_carries,
         *effective_carries,
+        *sampled_carries,
         *output_carries,
         *diagnostic_carries,
     )
@@ -4482,10 +4522,9 @@ def _canonical_dynamic_schedule_program(
     if len(carries_by_key) != len(carries):
         raise ValueError("KernelIR dynamic carry inventory is not unique.")
 
-    modulation_by_controller_id = {
-        modulation.controller_component_id: modulation
-        for modulation in kernel.modulations
-    }
+    modulation_by_controller_id = {}
+    for modulation in kernel.modulations:
+        modulation_by_controller_id.setdefault(modulation.controller_component_id, []).append(modulation)
     modulation_by_target_id = {
         modulation.target_component_id: modulation
         for modulation in kernel.modulations
@@ -4499,9 +4538,7 @@ def _canonical_dynamic_schedule_program(
         for control in kernel.folded_affine_controls
     }
     if (
-        len(modulation_by_controller_id) != len(kernel.modulations)
-        or len(modulation_by_target_id) != len(kernel.modulations)
-        or len(folded_by_controller_id) != len(kernel.folded_affine_controls)
+        len(folded_by_controller_id) != len(kernel.folded_affine_controls)
         or len(folded_by_target_id) != len(kernel.folded_affine_controls)
         or set(modulation_by_controller_id).intersection(folded_by_controller_id)
         or set(modulation_by_target_id).intersection(folded_by_target_id)
@@ -4539,15 +4576,18 @@ def _canonical_dynamic_schedule_program(
             target_modulation = modulation_by_target_id.get(component_id)
             folded_control = folded_by_controller_id.get(component_id)
             if controller_modulation is not None:
-                body, publications, effects = _dynamic_controller_member(
-                    kernel,
-                    node,
-                    modulation=controller_modulation,
-                    parameter=effective_by_id[
-                        controller_modulation.effective_parameter_id
-                    ],
-                    carries_by_key=carries_by_key,
-                )
+                body, publications, effects = (), (), ()
+                seen_signals = set()
+                for modulation in controller_modulation:
+                    local_body, local_publications, local_effects = _dynamic_controller_member(
+                        kernel, node, modulation=modulation,
+                        parameter=effective_by_id[modulation.effective_parameter_id], carries_by_key=carries_by_key,
+                    )
+                    if modulation.control_signal_port_id not in seen_signals:
+                        body += local_body
+                        publications += local_publications
+                        seen_signals.add(modulation.control_signal_port_id)
+                    effects += local_effects
             elif folded_control is not None:
                 body, publications, effects = (
                     _dynamic_folded_affine_controller_member(
@@ -4564,7 +4604,8 @@ def _canonical_dynamic_schedule_program(
                     and carry.value_id
                     in {
                         control.effective_parameter_id
-                        for control in kernel.folded_affine_controls
+                        for control in (*kernel.folded_affine_controls, *(
+                            m for m in kernel.modulations if graph.node(m.controller).attrs.get("scalar_override_control")))
                         if control.target_component_id == component_id
                     }
                 )
@@ -4736,6 +4777,10 @@ def _canonical_dynamic_schedule_program(
             finished=finished_by_component.get(component_id),
             schedule_fuel=schedule_fuel,
             local_maximum=kernel.max_steps,
+            continue_after_finished=bool(
+                (owner_spec := kernel.op_specs.lookup_spec(nodes_by_id[component_id].attrs["spec_key"]))
+                and isinstance(owner_spec, MechanismOpSpec) and owner_spec.continue_after_finished
+            ) if nodes_by_id[component_id].attrs.get("spec_key") else False,
         )
         for component_id in member_ids
     )
@@ -5021,6 +5066,9 @@ def _dynamic_ordinary_member(
             if key != "onset_step"
         }
         if op.kind != "CallMechanism":
+            if op.kind == "CallFunction" and sampled_effective_parameters:
+                inputs += tuple(carry.value for carry in sampled_effective_parameters)
+                attrs["sampled_effective_parameter_ids"] = tuple(carry.value_id for carry in sampled_effective_parameters)
             body.append(
                 KernelOp(
                     op.kind,
@@ -5165,6 +5213,13 @@ def _dynamic_ordinary_member(
         )
 
     publications = []
+    for carry in sampled_effective_parameters:
+        sampled_key = ("sampled_parameter", node.component_id, carry.value_id)
+        if sampled_key in carries_by_key:
+            value = KernelValue(f"sampled:{carry.value_id}:candidate", 1)
+            body.append(KernelOp("ExtractSlice", node.name, inputs=(carry.value,), outputs=(value,),
+                                 attrs={"start": 0, "stop": 1}))
+            publications.append(KernelPublication(value, "sampled_parameter", node.component_id, carry.value_id))
     for port_id in node.output_port_ids:
         carry = carries_by_key[("output", node.component_id, port_id)]
         try:
@@ -5241,7 +5296,7 @@ def _canonical_dynamic_schedule_kernel_ops(
     persistent_values = tuple(
         carry.value
         for carry in program.loop_carries
-        if carry.kind in {"state", "effective_parameter"}
+        if carry.kind in {"state", "effective_parameter", "sampled_parameter"}
     )
     carried_values = tuple(carry.value for carry in program.loop_carries)
     region = KernelOp(
@@ -5295,7 +5350,11 @@ def _canonical_dynamic_schedule_kernel_ops(
     return (
         KernelOp("InitializeState", "lane", outputs=state_values),
         *(
-            initialize_effective_parameter_op(parameter)
+            initialize_effective_parameter_op(parameter, next((
+                p.parameter_id for p in kernel.params
+                if p.name == graph.node(parameter.target).params.get(parameter.target_parameter)
+                and parameter.effective_parameter_id in {m.effective_parameter_id for m in _sampled_modulations(graph)}
+            ), None))
             for parameter in kernel.effective_parameters
         ),
         KernelOp(
@@ -5493,7 +5552,7 @@ def lower_to_kernel_ir(
         )
     if lane_layout.kind == STATEFUL_LANE_LAYOUT:
         initial_state_values = _state_kernel_values(graph)
-        trial_reset_ops = _trial_reset_ops(graph, initial_state_values)
+        trial_reset_ops = _trial_reset_ops(graph, initial_state_values, sample_parameters=False)
         ops = (
             KernelOp(
                 kind="InitializeState",
@@ -5588,6 +5647,8 @@ def _dynamic_schedule_lowering_eligible(kernel: KernelIR) -> bool:
             target_spec = kernel.op_specs.lookup_spec(target.attrs["spec_key"])
         except (BatchedOpSpecError, KeyError):
             return False
+        if controller.attrs.get("scalar_override_control"):
+            continue
         if not (
             isinstance(target_spec, MechanismOpSpec)
             and target_spec.can_step
@@ -5766,6 +5827,8 @@ def _state_kernel_values(graph: BatchedGraphIR) -> tuple[KernelValue, ...]:
 def _trial_reset_ops(
     graph: BatchedGraphIR,
     state_values: tuple[KernelValue, ...],
+    *,
+    sample_parameters: bool = True,
 ) -> tuple[KernelOp, ...]:
     values_by_state_id = {
         state.state_id: value
@@ -5789,6 +5852,10 @@ def _trial_reset_ops(
             KernelOp(
                 kind="ResetState",
                 target=reset.node,
+                inputs=tuple(sampled_parameter_value(p) for p in graph.effective_parameters
+                             if sample_parameters
+                             if p.target_component_id == reset.component_id
+                             and p.effective_parameter_id in {m.effective_parameter_id for m in _sampled_modulations(graph)}),
                 outputs=outputs,
                 attrs={
                     "component_id": reset.component_id,

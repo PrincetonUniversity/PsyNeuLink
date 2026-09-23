@@ -223,13 +223,16 @@ def test_event_readout_registration_authenticates_primitive_bindings(attribute, 
         register_batched_op(replace(original, likelihood_contract=replace(contract, event_readout=invalid)))
 
 
-def test_premature_rt_gate_is_rejected_by_source_schedule_lowering(coupled):
+def test_premature_rt_gate_is_rejected_by_endpoint_publication_validation(coupled):
     composition, _, outputs = coupled
     composition.scheduler.add_condition(outputs[1].owner, pnl.Always())
-    # This schedule is outside the source compiler's current supported region.
-    # Endpoint compilation must preserve that rejection, not bypass lowering.
-    with pytest.raises(BatchedCompileError, match="requires a supported simulation IR"):
+    # Continuous readouts are executable, but do not establish the publication
+    # ordering required for reconstruction from an observed finishing event.
+    simulation = BatchedCompositionCompiler.compile(composition, outputs=outputs, max_steps=128)
+    assert simulation.kernel_ir.executable
+    with pytest.raises(EndpointReconstructionError) as error:
         BatchedCompositionCompiler.compile_observed_endpoints(composition, _spec(outputs), max_steps=128)
+    assert error.value.code == "endpoint.publication_unproven"
 
 
 def test_endpoint_plan_does_not_require_a_cuda_device(monkeypatch):

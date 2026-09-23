@@ -15,10 +15,14 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import (
     TransferMechanism,
 )
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 
 register_batched_op(PassthroughMechanismSpec(
     TransferMechanism, likelihood_contract=LikelihoodEffectContract(),
 ))
 register_batched_op(PassthroughMechanismSpec(
     ProcessingMechanism, likelihood_contract=LikelihoodEffectContract(),
+))
+register_batched_op(PassthroughMechanismSpec(
+    ObjectiveMechanism, likelihood_contract=LikelihoodEffectContract(),
 ))

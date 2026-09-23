@@ -1502,6 +1502,20 @@ def _dynamic_scheduled_graph_eligible(
             ):
                 return False
             continue
+        if condition.condition_type in {"EveryNCalls", "AllEveryNCalls"}:
+            dependencies = condition.dependency_component_ids
+            if not (
+                exact_attrs(condition.attrs, {"implicit": True, "calls": 1,
+                                               "time_scale": "ENVIRONMENT_STATE_UPDATE"})
+                and dependencies
+                and len(set(dependencies)) == len(dependencies)
+                and condition.dependencies == tuple(nodes_by_id[d].name for d in dependencies if d in nodes_by_id)
+                and all(d in nodes_by_id and set_by_component_id[d] < set_by_component_id[component_id]
+                        for d in dependencies)
+                and not condition.finished_value_ids
+            ):
+                return False
+            continue
         if condition.condition_type not in {"WhenFinished", "WhenFinishedAndEveryNCalls"} or not exact_attrs(
             condition.attrs,
             {"predicate": "is_finished"},
@@ -1615,7 +1629,6 @@ def _dynamic_scheduled_graph_eligible(
             return False
     if not (
         dynamic_finished_ids
-        and count_finished_ids
         and referenced_finished_ids == set(finished_by_id)
     ):
         return False
@@ -1623,18 +1636,12 @@ def _dynamic_scheduled_graph_eligible(
     finished_owner_ids = {
         finished.component_id for finished in graph.finished_values
     }
-    always_component_ids = {
-        component_id
-        for component_id, condition in scheduler_by_id.items()
-        if condition.condition_type == "Always"
-    }
     dynamic_owner_ids = {
         finished_by_id[value_id].component_id
         for value_id in dynamic_finished_ids
     }
     if (
-        not always_component_ids <= finished_owner_ids
-        or any(
+        any(
             not isinstance(node_specs[component_id], specs.MechanismOpSpec)
             or not node_specs[component_id].can_step
             for component_id in finished_owner_ids
@@ -1836,7 +1843,11 @@ def _dynamic_control_declarations_supported(
         == tuple(range(len(modulation_effective_ids), len(effective_ids)))
         and len(set((*modulation_effective_ids, *folded_effective_ids)))
         == len(effective_ids)
-        and len(set(producer_controller_ids)) == len(producer_controller_ids)
+        and all(
+            producer_controller_ids.count(component_id) == 1
+            or nodes_by_id[component_id].attrs.get("scalar_override_control") is True
+            for component_id in producer_controller_ids
+        )
         and len(set(effective_target_ports)) == len(effective_target_ports)
     ):
         return False
@@ -1866,7 +1877,10 @@ def _dynamic_control_declarations_supported(
         graph.finished_values[value_id].attrs["effective_parameter_id"]
         for value_id in effective_count_finished_ids
     }
-    if finished_effective_ids != set(modulation_effective_ids):
+    if finished_effective_ids != {
+        modulation.effective_parameter_id for modulation in graph.modulations
+        if not nodes_by_id[modulation.controller_component_id].attrs.get("scalar_override_control")
+    }:
         return False
 
     absorbed_by_id = {
@@ -1901,6 +1915,11 @@ def _dynamic_control_declarations_supported(
         target_parameter_port = ports_by_id.get(
             modulation.target_parameter_port_id
         )
+        if controller is not None and controller.attrs.get("scalar_override_control") is True:
+            if not _scalar_override_declaration_supported(graph, parameters, modulation, node_specs):
+                return False
+            referenced_absorbed_ids.extend((modulation.monitor_projection_id, modulation.control_projection_id))
+            continue
         if not (
             controller is not None
             and source is not None
@@ -2389,6 +2408,89 @@ def _dynamic_control_declarations_supported(
     return typed_controller_ids == set(producer_controller_ids)
 
 
+def _scalar_override_declaration_supported(graph, parameters, modulation, node_specs):
+    """Authenticate scalar fan-out using frozen component and port identities."""
+    nodes = {node.component_id: node for node in graph.nodes}
+    ports = {port.port_id: port for port in graph.ports}
+    effective = {p.effective_parameter_id: p for p in graph.effective_parameters}
+    projections = {p.projection_id: p for p in graph.absorbed_projections}
+    params = {p.name: p for p in parameters}
+    try:
+        control, source, target = (nodes[i] for i in (modulation.controller_component_id,
+                                                    modulation.source_component_id, modulation.target_component_id))
+        held = effective[modulation.effective_parameter_id]
+        monitor = projections[modulation.monitor_projection_id]
+        projection = projections[modulation.control_projection_id]
+        source_port, input_port, signal, target_port = (ports[i] for i in (
+            modulation.source_port_id, modulation.controller_input_port_id,
+            modulation.control_signal_port_id, modulation.target_parameter_port_id))
+        target_parameter = params[target.params[modulation.target_parameter]]
+        control_spec = node_specs[control.component_id]
+        bindings = modulation.controller_param_bindings
+        target_spec = node_specs[target.component_id]
+    except KeyError:
+        return False
+    if not (
+        control.component_type == "ControlMechanism" and control.function_type in {"Linear", "Identity"}
+        and control.attrs.get("scalar_override_control") is True
+        and control.attrs.get("spec_kind") == "control"
+        and (
+            (isinstance(control_spec, specs.ElementwiseFunctionSpec) and control_spec.function_class is Linear
+             and control.attrs.get("control_function") == "registered"
+             and modulation.controller_function_spec_key == control_spec.key == control.attrs.get("spec_key"))
+            or (control_spec is None and control.function_type == "Identity"
+                and control.attrs.get("control_function") == "identity"
+                and not modulation.controller_function_spec_key and not bindings and not control.params)
+        )
+        and modulation.controller == control.name and modulation.source == source.name and modulation.target == target.name
+        and len({control.component_id, source.component_id, target.component_id}) == 3
+        and modulation.mode == "OVERRIDE" and modulation.width == 1 and modulation.dtype == "float32"
+        and modulation.absorbed_identity_chain is True
+        and control.input_port_ids == (input_port.port_id,) and signal.port_id in control.output_port_ids
+        and source_port.port_id in source.output_port_ids
+        and all(port.width == 1 for port in (source_port, input_port, signal, target_port))
+        and (source_port.kind, input_port.kind, signal.kind, target_port.kind)
+        == ("OutputPort", "InputPort", "ControlSignal", "ParameterPort")
+        and (source_port.owner_component_id, input_port.owner_component_id, signal.owner_component_id,
+             target_port.owner_component_id) == (source.component_id, control.component_id, control.component_id, target.component_id)
+        and (source_port.name, input_port.name, signal.name, target_port.name)
+        == (modulation.source_port, modulation.controller_input_port, modulation.control_signal_port, modulation.target_parameter)
+        and dict(target.parameter_port_ids).get(modulation.target_parameter) == target_port.port_id
+        and target_parameter.owner_component_id == target.component_id
+        and isinstance(target_spec, (specs.MechanismOpSpec, specs.ElementwiseFunctionSpec))
+        and modulation.target_parameter in {binding.arg for binding in target_spec.params}
+        and (not isinstance(target_spec, specs.MechanismOpSpec) or target_spec.can_step)
+        and held.target == target.name and held.target_component_id == target.component_id
+        and held.target_parameter == modulation.target_parameter and held.target_parameter_port_id == target_port.port_id
+        and held.base_value == (target_parameter.default,)
+        and held.storage == "lane_persistent" and held.reset == "Never"
+        and held.update_event == "after_controller_execution" and held.sample_event == "at_target_parameter_update"
+        and held.width == 1 and held.dtype == "float32"
+        and tuple(binding.argument for binding in bindings) == tuple(binding.arg for binding in (control_spec.params if control_spec else ()))
+    ):
+        return False
+    for binding in bindings:
+        parameter = params.get(binding.parameter)
+        if not (parameter is not None and parameter.parameter_id == binding.parameter_id
+                and parameter.owner_component_id == control.component_id
+                and control.params.get(binding.argument) == parameter.name
+                and parameter.default == (1.0 if binding.argument in {"slope", "scale"} else 0.0)
+                and not parameter.runtime_mutable):
+            return False
+    edges = ((monitor, source, source_port, control, input_port, "MappingProjection", ()),
+             (projection, control, signal, target, target_port, "ControlProjection", held.initial_modulation_value))
+    for edge, sender, sender_port, receiver, receiver_port, kind, initial in edges:
+        if not (edge.kind == kind and edge.sender == sender.name and edge.sender_component_id == sender.component_id
+                and edge.sender_port == sender_port.name and edge.sender_port_id == sender_port.port_id
+                and edge.receiver == receiver.name and edge.receiver_component_id == receiver.component_id
+                and edge.receiver_port == receiver_port.name and edge.receiver_port_id == receiver_port.port_id
+                and edge.width == 1 and edge.reason == "typed_scalar_override" and edge.initial_value == initial):
+            return False
+    siblings = [m for m in graph.modulations if m.controller_component_id == control.component_id]
+    return (set(control.output_port_ids) == {m.control_signal_port_id for m in siblings}
+            and all(m.source_port_id == source_port.port_id and m.controller_input_port_id == input_port.port_id for m in siblings))
+
+
 def _dynamic_controlled_finished_component_ids(
     composition,
     nodes,
@@ -2453,12 +2555,19 @@ def _modulation_ir_specs(
     absorbed_projections = []
     absorbed_projection_bindings_by_id: dict[int, object] = {}
     bindings_by_id: dict[int, object] = {}
+    chains = []
     for control in nodes:
         if type(control) is not ControlMechanism:
+            continue
+        generic = _scalar_override_chains(control, composition)
+        if generic:
+            chains.extend((control, chain, True) for chain in generic)
             continue
         chain, chain_diagnostic = _resolve_control_chain(control, composition)
         if chain_diagnostic is not None or chain is None:
             continue
+        chains.append((control, chain, False))
+    for control, chain, generic in chains:
         signal = chain.signal
         control_projection = chain.control_projection
         source_port = chain.source_port
@@ -2466,7 +2575,7 @@ def _modulation_ir_specs(
         target_parameter_port = chain.target_parameter_port
         source = chain.source
         target = chain.target
-        if not _typed_dynamic_control_chain_supported(
+        if not generic and not _typed_dynamic_control_chain_supported(
             composition,
             control,
             chain,
@@ -2477,7 +2586,8 @@ def _modulation_ir_specs(
             continue
 
         base_value = _finite_fp32_scalar_value(
-            _parameter_value(target, chain.target_port, None)
+            _parameter_value(target, chain.target_port,
+                             _parameter_value(target.function, chain.target_port, None))
         )
         initial_modulation_value = _finite_fp32_scalar_value(
             _parameter_default_value(control_projection, "value", None)
@@ -2560,6 +2670,8 @@ def _modulation_ir_specs(
             )
         )
         for argument, parameter_name in source_node_spec.params.items():
+            if generic:
+                continue
             if dynamic_coevolving_source and argument in {
                 "slope",
                 "intercept",
@@ -2579,7 +2691,8 @@ def _modulation_ir_specs(
                 binding.argument: binding.parameter
                 for binding in controller_param_bindings
             },
-            attrs={**node_spec.attrs, **control_function_attrs},
+            attrs={**node_spec.attrs, **control_function_attrs,
+                   **({"scalar_override_control": True} if generic else {})},
         )
         source_port_id, controller_input_port_id, signal_port_id, target_port_id = (
             endpoint_port_ids
@@ -3044,6 +3157,9 @@ def _node_spec(
             )
         if mechanism_spec.extract_attrs is not None:
             attrs.update(mechanism_spec.extract_attrs(node, composition))
+        if attrs.get("scheduled_lca") and not attrs.get("canonical_recurrence"):
+            for argument in ("competition", "self_excitation"):
+                params.freeze(param_map[argument], "custom LCA recurrent matrix is frozen in KernelIR")
         if mechanism_spec.outputs is not None:
             attrs["op_outputs"] = tuple((decl.port, decl.width) for decl in mechanism_spec.outputs)
         else:
@@ -3239,7 +3355,9 @@ def _single_input_support_diagnostic(node) -> BatchedDiagnostic | None:
         )
     mechanism_spec = specs.mechanism_spec_for(node)
     if mechanism_spec is not None:
-        if mechanism_spec.outputs is not None:
+        if mechanism_spec.validate_outputs is not None:
+            diagnostic = mechanism_spec.validate_outputs(node)
+        elif mechanism_spec.outputs is not None:
             diagnostic = _mechanism_output_port_support_diagnostic(
                 node,
                 output_ports,
@@ -3640,6 +3758,12 @@ def _lca_execution_support_diagnostic(
         stepwise_ddm_pair
         or counted_finished_pair
         or dynamic_controlled_finished
+        or any(
+            (candidate_spec := specs.mechanism_spec_for(candidate)) is not None
+            and candidate_spec.is_terminator
+            and not bool(_parameter_value(candidate, "execute_until_finished", True))
+            for candidate in composition.nodes
+        )
     )
     reset_condition = getattr(node, "reset_stateful_function_when", None)
     if (
@@ -4061,6 +4185,8 @@ def _ignored_parameter_control_is_lowered(
 def _resolve_control_chain(
     control,
     composition,
+    *,
+    projection=None,
 ) -> tuple[_ResolvedControlChain | None, BatchedDiagnostic | None]:
     """Validate and resolve the exact scalar control chain once.
 
@@ -4071,14 +4197,16 @@ def _resolve_control_chain(
 
     name = _node_name(control)
     signals, efferents, monitors = _control_edges(control)
-    if len(signals) != 1 or len(efferents) != 1 or len(monitors) != 1:
+    if len(monitors) != 1 or (projection is None and (len(signals) != 1 or len(efferents) != 1)):
         return None, BatchedDiagnostic(
             name,
             "unsupported generic ControlMechanism for batched v2",
             "requires exactly one monitor, ControlSignal, and ControlProjection",
         )
-    signal = signals[0]
-    control_projection = efferents[0]
+    control_projection = efferents[0] if projection is None else projection
+    signal = getattr(control_projection, "sender", None)
+    if signal not in signals or control_projection not in efferents:
+        return None, BatchedDiagnostic(name, "unsupported control signal ownership")
     monitor_projection = monitors[0]
     if (
         type(control_projection) is not ControlProjection
@@ -4224,10 +4352,40 @@ def _resolve_control_chain(
     )
 
 
+def _scalar_override_chains(control, composition):
+    """Authenticate scalar OVERRIDE fan-out to registered numeric arguments."""
+    if not _is_coevolving(composition, [node for node in composition.nodes if type(node) is not ControlMechanism]):
+        return ()
+    if type(control.function) is not Identity and not _is_identity_linear(control.function):
+        return ()
+    signals, efferents, monitors = _control_edges(control)
+    if not signals or not efferents or len(monitors) != 1:
+        return ()
+    chains = []
+    active = {id(node) for node in composition.nodes}
+    for projection in efferents:
+        chain, diagnostic = _resolve_control_chain(control, composition, projection=projection)
+        if diagnostic is not None or chain is None or chain.target_port in {"threshold", "termination_threshold"}:
+            return ()
+        if id(chain.source) not in active or id(chain.target) not in active or _port_width(chain.source_port) != 1:
+            return ()
+        target_spec = specs.mechanism_spec_for(chain.target) or specs.function_spec_for(chain.target.function)
+        if target_spec is None or chain.target_port not in {p.arg for p in target_spec.params}:
+            return ()
+        if _port_width(chain.signal) != 1 or _port_width(chain.target_parameter_port) != 1:
+            return ()
+        chains.append(chain)
+    if {id(chain.signal) for chain in chains} != {id(signal) for signal in signals}:
+        return ()
+    return tuple(chains)
+
+
 def _control_support_diagnostic(control, composition) -> BatchedDiagnostic | None:
     """Accept only control edges whose semantics are explicitly folded by an op."""
 
     name = _node_name(control)
+    if _scalar_override_chains(control, composition):
+        return None
     chain, diagnostic = _resolve_control_chain(control, composition)
     if diagnostic is not None:
         return diagnostic
@@ -5107,18 +5265,18 @@ def _fusion_kind(model_kind: str | None, nodes, composition=None) -> str | None:
 
 
 def _is_coevolving(composition, executable_nodes) -> bool:
-    """A stateful terminator op (e.g. DDM, with a ``finished_output``) co-evolves
-    with an upstream persistent stateful op that runs the whole trial (scheduled
-    ``Always()``, e.g. an LCA), so they must step together in a fused loop rather
-    than run sequentially.  Cue-terminated upstream ops (the toy stab-flex LCA,
-    which settles before the DDM) are NOT ``Always`` and stay sequential.
+    """Whether a finishing event requires scheduler-driven integration.
+
+    An Always-scheduled persistent ancestor and its terminator must step
+    together. A stepwise terminator with WhenFinished followers also needs a
+    shared pass loop, even without a separate preparation stage.
     """
 
     return _coevolving_stepper(composition, executable_nodes) is not None
 
 
 def _coevolving_stepper(composition, executable_nodes):
-    """Return the persistent node in an Always/WhenFinished coupled loop."""
+    """Return a representative persistent stepper or scheduled terminator."""
 
     conditions = _scheduler_conditions(composition)
     terminators = [
@@ -5146,6 +5304,14 @@ def _coevolving_stepper(composition, executable_nodes):
             for terminator in terminators
         ):
             return node
+    # A scheduled terminator can also drive a trial without an upstream
+    # persistent stepper or a separate counted-finished preparation stage.
+    for terminator in terminators:
+        if not bool(_parameter_value(terminator, "execute_until_finished", True)) and any(
+            _when_finished_depends_on(condition, terminator)
+            for condition in conditions.values()
+        ):
+            return terminator
     return None
 
 

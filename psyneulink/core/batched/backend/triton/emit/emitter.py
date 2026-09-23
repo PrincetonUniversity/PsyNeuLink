@@ -59,6 +59,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.param_vars: dict[str, str] = {}
         self.state_vars: dict[tuple[str, int], str] = {}
         self.effective_parameter_vars: dict[int, str] = {}
+        self.sampled_parameter_vars: dict[int, str] = {}
         self.value_vars: dict[str, list[str]] = {}
         # Dynamic consideration-set emission temporarily narrows the ordinary
         # lane mask and supplies a component-local execution clock while a
@@ -317,10 +318,28 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         )
         self.effective_parameter_vars[effective_parameter_id] = storage_var
         self._set_value(output.name, [storage_var])
+        if "sampled_base_parameter_id" in op.attrs:
+            parameter = self.kernel.params[op.attrs["sampled_base_parameter_id"]]
+            if parameter.owner_component_id != op.attrs["target_component_id"]:
+                raise ValueError("Sampled parameter initializer must belong to the target.")
+            sampled = op.outputs[1]
+            sampled_var = self._component_vars(sampled.name, 1)[0]
+            self.builder.line(f"{sampled_var} = {self.param_vars[parameter.name]}")
+            self.sampled_parameter_vars[effective_parameter_id] = sampled_var
+            self._set_value(sampled.name, [sampled_var])
         self.builder.line()
 
     def _emit_reset_state(self, op: KernelOp) -> None:
         states_by_id = {state.state_id: state for state in self.kernel.states}
+        saved_params = dict(self.param_vars)
+        for value in op.inputs:
+            matches = [p for p in self.kernel.effective_parameters
+                       if value.name == f"sampled:{p.effective_parameter_id}" and p.target == op.target]
+            if len(matches) != 1:
+                raise ValueError("ResetState requires target-owned sampled parameter inputs.")
+            parameter = matches[0]
+            public_name = self.graph.node(op.target).params[parameter.target_parameter]
+            self.param_vars[public_name] = self._get_value(value.name)[0]
         self.builder.line(
             f"# reset component {op.attrs['component_id']} state at trial start"
         )
@@ -332,6 +351,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
                 self._emit_state_initializer_value(state, idx, value, var)
                 state_vars.append(var)
             self._set_value(output.name, state_vars)
+        self.param_vars = saved_params
         self.builder.line()
 
     def _emit_state_initializer_value(self, state, index: int, value, output: str) -> None:

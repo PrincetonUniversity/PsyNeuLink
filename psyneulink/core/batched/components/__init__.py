@@ -8,7 +8,9 @@ example for registering new components.
 
 from psyneulink.core.batched.components import (  # noqa: F401
     ddm,
+    fitzhugh_nagumo,
     lca,
+    lca_general,
     linear,
     logistic,
     mapping_projection,

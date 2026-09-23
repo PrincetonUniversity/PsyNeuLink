@@ -62,7 +62,8 @@ class TritonEmitContext:
         self._emitter.builder.line(text)
 
     def param(self, node_spec, local_name: str) -> str:
-        return self._emitter.param_vars[node_spec.params[local_name]]
+        return (self.sampled_effective_parameter(node_spec, local_name)
+                or self._emitter.param_vars[node_spec.params[local_name]])
 
     def state(self, state_name: str, index: int) -> str:
         return self._emitter.state_vars[(state_name, index)]
