@@ -1804,6 +1804,7 @@ class OptimizationControlMechanism(ControlMechanism):
         def _validate_noise_stream_policy(self, value):
             if value not in ('independent', 'shared_seed'):
                 return "must be 'independent' or 'shared_seed'"
+            return None
 
         def _validate_state_feature_default_spec(self, state_feature_default):
             if not (isinstance(state_feature_default, (InputPort, OutputPort, Mechanism))
