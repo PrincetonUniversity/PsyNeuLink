@@ -602,8 +602,12 @@ class PECOptimizationFunction(OptimizationFunction):
     batched_triton_launch_options :
         Optional mapping of compiled-GPU launch controls used by the experimental
         batched Triton backend. Supported keys are ``block_size``, ``num_warps``,
-        and ``maxnreg``. Omit this mapping to use the established 128-lane,
-        four-warp launch without a register cap.
+        ``maxnreg``, and ``normal_rng``. Omit this mapping to use the established
+        128-lane, four-warp launch without a register cap. Vector Gaussian draws
+        default to ``normal_rng='philox4x_v1'``, grouping up to four independent
+        normals per component execution. ``normal_rng='legacy'`` reproduces the
+        earlier per-coordinate draws. Seeded vector samples differ between
+        modes; scalar normal pairing and the model distribution are unchanged.
 
     batched_strict_truncation :
         If True, raise an error when any batched likelihood simulation reaches

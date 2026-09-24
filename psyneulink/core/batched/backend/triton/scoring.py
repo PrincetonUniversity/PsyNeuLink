@@ -3,6 +3,7 @@
 import numpy as np
 
 from psyneulink.core.batched.backend.triton.sampling import ObservationRegionEmitter
+from psyneulink.core.batched.backend.triton.emit.lanes import DEFAULT_NORMAL_RNG
 from psyneulink.core.batched.kernel_ir import diag_slots
 from psyneulink.core.batched.observed_sampling import validate_observation_sampling_witness
 from psyneulink.core.batched.prep import lca_max_steps, normalize_parameter_sets, prepare_inputs
@@ -16,8 +17,8 @@ class ReducedObservationEmitter(ObservationRegionEmitter):
     Only lane packing and output consumption differ from sample inspection.
     """
 
-    def __init__(self, kernel, witness, histogram=None, *, execution="strict"):
-        super().__init__(kernel, witness)
+    def __init__(self, kernel, witness, histogram=None, *, execution="strict", normal_rng=DEFAULT_NORMAL_RNG):
+        super().__init__(kernel, witness, normal_rng=normal_rng)
         self.histogram = histogram
         self.execution = execution
 
@@ -184,7 +185,8 @@ def run_reduced_observations(observation_plan, inputs, data, parameter_sets, est
 
         observed, edges, observed_bin, valid, weights, joint_bins = prepare_histogram(histogram, data, device)
     launch = _normalize_launch_options(triton_launch_options, interpret=interpret)
-    source = ReducedObservationEmitter(simulation.kernel_ir, observation_plan.witness, histogram, execution=execution).emit()
+    source = ReducedObservationEmitter(simulation.kernel_ir, observation_plan.witness, histogram,
+                                       execution=execution, normal_rng=launch["normal_rng"]).emit()
     input_tensors = _input_tensors(torch, simulation.ir.graph, prepared, device)
     device_trial_ids = torch.tensor(trial_ids, device=device)
     results, stopped = [], []

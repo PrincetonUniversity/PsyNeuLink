@@ -99,6 +99,18 @@ class TritonEmitContext:
 
         return self._emitter.normal_draw(node_name, step)
 
+    def normal_draws(self, node_name: str, step: str) -> tuple[str, ...]:
+        """Emit one independent normal per coordinate of a declared RNG vector.
+
+        Request the complete vector once per component execution, using that
+        component's RNG clock. The backend groups draws within this execution;
+        it does not share draws with other components or retain unused draws.
+        This supports any vector width and leaves the distribution, active
+        lane masks and scheduler semantics to the component adapter.
+        """
+
+        return self._emitter.normal_draws(node_name, step)
+
     def emit_trial_random_base_if_needed(self) -> None:
         self._emitter.emit_trial_random_base_if_needed()
 

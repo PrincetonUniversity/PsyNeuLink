@@ -520,3 +520,91 @@ export filename. Compact measurements, sampling metadata, and the plan are
 recorded under `post_smoothing_profile_and_plan` in
 [dawa_benchmark_results.json](dawa_benchmark_results.json). Large traces and
 Nsight reports remain outside the repository.
+
+## Grouped Gaussian generation
+
+The shared Triton emitter now provides `ctx.normal_draws(node.name, step)` for
+a complete declared vector of independent Gaussian draws. The scheduled LCA
+adapter uses it for every supported width, with no DAWA-specific compiler
+logic. `philox4x_v1` groups up to four coordinates within one component
+execution, using both Box–Muller outputs and both Philox uniform pairs when
+needed. DAWA's widths 2, 4, 2, and 2 require **four Philox invocations instead
+of ten**, and five Box–Muller pairs instead of ten. All ten Gaussian values
+are still generated. No unused draws are retained across steps or shared
+between different component clocks.
+
+The new mode is the default. Select `normal_rng="legacy"` in
+`triton_launch_options` (or PEC's `batched_triton_launch_options`) to reproduce
+the previous per-coordinate generator. Modes differ in seeded trajectories;
+both preserve the intended distributions and common-random-number alignment.
+Record the mode with the seed. Scalar DDM temporal pairing is unchanged.
+
+### Full-subject throughput
+
+Fresh measurements on the WSL RTX 2080 Ti, September 24, 2026: subject 1,
+760 ordered trials (720 scored), **100,000 estimates per trial per candidate**,
+the same four fitting proposals, Gaussian SD 0.1 in all LCAs, LCA dt 0.01 s,
+100 RT bins on [0, 3], smoothing sigma 0.5, and pseudocount 1. Launches use
+32 lanes and one warp. Each entry is the median of three warmed full-pool
+evaluations divided by four candidates; a separate cold run is excluded.
+Timings include PEC preparation and scoring, but not optimizer convergence.
+
+| Candidate batch size | Legacy seconds/candidate | Grouped seconds/candidate | Speedup | Runtime reduction |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 2.2312 | 1.7405 | 1.282× | 22.0% |
+| 4 | 2.1876 | 1.6645 | 1.314× | 23.9% |
+
+Live Torch buffer peaks are unchanged: 0.3218 MiB for batch size 1 and
+0.4961 MiB for batch size 4. CUDA context/code and allocator reservations are
+additional. At the batch-four rate, 5,000 candidate evaluations would take
+about 2.31 hours instead of 3.04 hours, before optimizer overhead. This is a
+throughput extrapolation, not a measured fit.
+
+A separate Torch/CUPTI profile of the first proposal measured the simulation
+kernel at 2.7267 s with legacy draws and 2.0861 s with grouped draws. These
+instrumented runs are excluded from the table. Registers per thread fell
+from 238 to 230; Triton still reports eight spills. Simulation remains over
+99.99% of GPU kernel time. Source equations, time steps, trial synchronization,
+and scheduling clocks were not changed by this optimization.
+
+### Validation
+
+- Legacy mode exactly reproduces the previous benchmark's hash of all 3,040
+  trial densities. Both modes replay exactly and retain the same trial
+  densities when changing candidate batch size from one to four.
+- At 100,000 estimates, the grouped fused scorer matches the materialized
+  sampler for all 3,040 densities: maximum relative difference
+  `3.7463e-7`, within the established FP32 weighting tolerance of `2e-6`.
+- Complete sequences were also sampled with 16,384 estimates per mode and
+  independent seeds, checking every trial's choice/RT distribution, including
+  unscored trials. Maximum choice/RT sub-CDF differences across the four
+  proposals were 0.02008, 0.01819, 0.01898, and 0.01929, below the conservative
+  simultaneous 99% bound of 0.04237. The bound uses two one-sample DKW bounds
+  and a union bound across proposals, trials, and choices; it allows dependence
+  across trials. These are checks of trial marginals after running complete
+  histories, not a test of the entire high-dimensional joint sequence law.
+- Analytic normal moments, tails, and correlations were checked for widths
+  1, 2, 3, 4, 5, 7, and 32, including distinct RNG owners and execution steps.
+  Replay tests cover common randomness, independent candidate/subject streams,
+  changed seeds, launch geometry, persistent state, and split-sequence resume.
+- The focused suites passed 59 GPU vector/launch/histogram checks, 70 GPU
+  CSI/DDM/reduced-scoring checks, and 41 interpreter vector/histogram checks.
+  Existing Gaussian LCA network and persistent-noise GPU checks also passed.
+
+Reproduce the throughput and distribution comparison from the repository root:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 4 --repeats 3 \
+  --block-size 32 --num-warps 1 --smoothing-sigma 0.5 --pseudocount 1 \
+  --normal-rng philox4x_v1 --verify-materialized --validate-normal-rngs \
+  --output /tmp/dawa_gaussian_grouped.json
+```
+
+Use `--normal-rng legacy` for the baseline timing. `--validation-estimates`
+controls the separate distribution comparison (default 16,384); it does not
+change the 100,000-estimate timing workload. Add `--profile /tmp/trace.json`
+to collect a separate warmed first-proposal profile instead of timing the pool.
+The compact results are under `grouped_gaussian_generation` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json). Large traces and raw
+simulation arrays are not tracked.

@@ -25,6 +25,66 @@ from psyneulink.core.batched.likelihood import _sum_histogram_log_likelihood
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 
 
+def validate_normal_rngs(function, candidates, estimates, seed, max_steps):
+    """Compare complete noisy histories using independent seeds in each mode.
+
+    Check the joint choice/RT sub-CDF for every trial, including unscored ones.
+    The conservative bound combines two one-sample DKW bounds by the triangle
+    inequality, then a union bound over candidates, trials and choices. It
+    allows correlations across trials within a simulated subject trajectory.
+    """
+    plan = function._compile_batched_plan()
+    inputs = function._batched_stimulus_inputs()
+    indices = function._batched_outcome_indices(plan)
+    modes = ("legacy", "philox4x_v1")
+    seeds = (seed, seed + 1000000)
+    report = {"estimates_per_mode": estimates, "modes": list(modes), "seeds": list(seeds),
+              "familywise_alpha": .01, "candidates": []}
+    for candidate, values in enumerate(candidates):
+        parameters = function._batched_parameter_set(values)
+        intercept = parameters["RT_GATE.intercept"]
+        intercept = np.asarray(getattr(intercept, "values", intercept)).reshape(-1, 1)
+        summaries = []
+        for mode, mode_seed in zip(modes, seeds):
+            options = {**function.batched_triton_launch_options, "normal_rng": mode}
+            samples = plan.run(inputs, [parameters], estimates, seed=mode_seed,
+                               strict_truncation=True, triton_launch_options=options).values[0, 0]
+            selected = samples[..., indices]
+            choice, rt = selected[..., 0], selected[..., 1]
+            steps_float = (rt - intercept) / .01
+            steps = np.rint(steps_float).astype(np.int32)
+            np.testing.assert_allclose(steps_float, steps, atol=1e-3, rtol=0)
+            assert np.all((choice == 0) | (choice == 1))
+            assert np.all((steps >= 1) & (steps <= max_steps))
+            cdf = np.empty((len(rt), 2, max_steps + 1))
+            for trial in range(len(rt)):
+                index = choice[trial].astype(np.int32) * (max_steps + 1) + steps[trial]
+                counts = np.bincount(index, minlength=2 * (max_steps + 1)).reshape(2, -1)
+                cdf[trial] = np.cumsum(counts, axis=1) / estimates
+            summaries.append((cdf, rt.mean(axis=1, dtype=np.float64), rt.var(axis=1, dtype=np.float64)))
+            del samples, selected, choice, rt, steps_float, steps
+        old, new = summaries
+        comparisons = len(candidates) * len(old[0]) * 2
+        limit = float(np.sqrt(2 * np.log(4 * comparisons / report["familywise_alpha"]) / estimates))
+        difference = float(np.max(np.abs(old[0] - new[0])))
+        standard_error = np.sqrt((old[2] + new[2]) / estimates)
+        record = {
+            "candidate": candidate, "trials": len(old[0]),
+            "mean_rt_by_mode": dict(zip(modes, [float(s[1].mean()) for s in summaries])),
+            "max_abs_trial_mean_rt_difference": float(np.max(np.abs(old[1] - new[1]))),
+            "max_standardized_trial_mean_rt_difference": float(np.max(
+                np.abs(old[1] - new[1]) / np.maximum(standard_error, 1e-12))),
+            "max_abs_choice_probability_difference": float(np.max(np.abs(old[0][:, :, -1] - new[0][:, :, -1]))),
+            "max_abs_choice_rt_subcdf_difference": difference,
+            "simultaneous_subcdf_bound": limit, "passed": difference <= limit,
+        }
+        report["candidates"].append(record)
+        print(json.dumps({"rng_distribution_validation": record}), flush=True)
+        if not record["passed"]:
+            raise AssertionError(f"Vector RNG distribution comparison failed: {record}")
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, default=SOURCE.parent / "flanker_data_part1.csv")
@@ -38,13 +98,17 @@ def main():
     parser.add_argument("--block-size", type=int, default=128)
     parser.add_argument("--num-warps", type=int, default=4)
     parser.add_argument("--maxnreg", type=int)
+    parser.add_argument("--normal-rng", choices=["legacy", "philox4x_v1"], default="philox4x_v1",
+                        help="Vector Gaussian generator; legacy reproduces earlier seeded samples")
     parser.add_argument("--smoothing-sigma", type=float, default=0., help="Gaussian width in histogram-bin units")
     parser.add_argument("--pseudocount", type=float, default=1., help="Symmetric prior count per joint choice/RT bin")
     parser.add_argument("--materialized", action="store_true", help="Use the original materialized scoring path")
     parser.add_argument("--verify-materialized", action="store_true", help="Compare all trial probabilities to the original scorer after timing")
+    parser.add_argument("--validate-normal-rngs", action="store_true", help="Compare full-sequence choice/RT distributions under both generators after timing")
+    parser.add_argument("--validation-estimates", type=int, default=16384)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    if min(args.estimates, args.repeats, args.max_steps, *args.batch_sizes) < 1:
+    if min(args.estimates, args.repeats, args.max_steps, args.validation_estimates, *args.batch_sizes) < 1:
         parser.error("Counts must be positive")
     if any(not np.isfinite(value) or value < 0 for value in (args.smoothing_sigma, args.pseudocount)):
         parser.error("Smoothing sigma and pseudocount must be finite and nonnegative")
@@ -80,7 +144,7 @@ def main():
             batched_bin_range=[(0., 3.)], batched_pseudocount=args.pseudocount,
             batched_smoothing_sigma=args.smoothing_sigma,
             batched_triton_launch_options={"block_size": args.block_size, "num_warps": args.num_warps,
-                                           "maxnreg": args.maxnreg},
+                                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng},
         ),
         num_estimates=args.estimates, initial_seed=args.seed,
         same_seed_for_all_parameter_combinations=True,
@@ -112,7 +176,8 @@ def main():
         "noise": noise, "lca_dt": .01, "seed": args.seed,
         "max_steps": args.max_steps, "strict_truncation": True,
         "fused_likelihood": not args.materialized,
-        "launch_options": {"block_size": args.block_size, "num_warps": args.num_warps, "maxnreg": args.maxnreg},
+        "launch_options": {"block_size": args.block_size, "num_warps": args.num_warps,
+                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng},
         "gpu": torch.cuda.get_device_name(), "platform": platform.platform(),
         "torch_version": torch.__version__, "plan_outputs": list(plan.ir.output_names),
         "data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
@@ -240,6 +305,10 @@ def main():
             "max_absolute_density_error": float(np.max(np.abs(reference_likelihoods - materialized))),
             "max_relative_density_error": float(np.max(np.abs(reference_likelihoods - materialized) / materialized)),
         }
+        save()
+    if args.validate_normal_rngs:
+        report["normal_rng_distribution_validation"] = validate_normal_rngs(
+            function, candidates, args.validation_estimates, args.seed, args.max_steps)
         save()
     print(json.dumps(report, indent=2), flush=True)
 

@@ -195,11 +195,10 @@ def _step(ctx, node, inputs, outputs, step_var, finished_var):
         else:
             terms = [f"{act[i]} * {float(node.attrs['recurrent_matrix'][i][j])}" for i in range(width)]
         ctx.line(f"{stem}_rec_{j} = {' + '.join(terms)}")
+    draws = ctx.normal_draws(node.name, step_var) if node.attrs["gaussian_noise"] else ()
     for j in range(width):
         if node.attrs["gaussian_noise"]:
-            offset = ctx.rng_stream_offset(node.name, j) - ctx.rng_stream_offset(node.name, 0)
-            draw = f"tl.randn({ctx.seed}, {ctx.rng_base(node.name)} + {offset} + {step_var})"
-            noise = f"({params['noise_mean']} + {params['noise_standard_deviation']} * {draw})"
+            noise = f"({params['noise_mean']} + {params['noise_standard_deviation']} * {draws[j]})"
         else:
             noise = params["noise"]
         ctx.line(f"{pre[j]} = tl.where({finished_var} == 0.0, {pre[j]} + "

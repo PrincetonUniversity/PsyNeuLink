@@ -198,8 +198,19 @@ for timings, memory, and numerical validation.
 
 The [post-smoothing profile and optimization plan](dawa_benchmark_results.md#post-smoothing-profile-and-optimization-plan)
 identifies Gaussian generation, register use, and waiting for slower estimates
-as the next targets. It recommends grouped Gaussian generation first, followed
-by parameter/scheduler simplification and a larger trial-scheduling prototype.
+as performance targets. Grouped Gaussian generation is now implemented in the
+shared Triton backend. All scheduled Gaussian LCAs use it, regardless of model;
+other component adapters can request a vector through `ctx.normal_draws`.
+DAWA now obtains its ten independent Gaussian values from four Philox
+invocations per pass, without caching spare values across executions.
+
+The default mode is `normal_rng="philox4x_v1"`. It preserves the noise
+distribution but changes seeded trajectories. To reproduce previous simulations,
+add `"normal_rng": "legacy"` to `batched_triton_launch_options`, or pass
+`--normal-rng legacy` to `dawa_pec_fit_benchmark.py`. Record the mode along with
+the seed. Trial synchronization and model dynamics are unchanged. See the
+[Gaussian benchmark](dawa_benchmark_results.md#grouped-gaussian-generation)
+for timing and distribution checks.
 
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports

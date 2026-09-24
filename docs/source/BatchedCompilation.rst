@@ -34,6 +34,49 @@ Capability diagnosis is staged:
 ``can_execute``
   All applicable stages above succeeded.
 
+Gaussian random generation
+--------------------------
+
+The Triton backend groups vector Gaussian draws within a component execution.
+The default ``normal_rng='philox4x_v1'`` uses up to four independent standard
+normals from one Philox invocation, using both outputs of each Box-Muller pair.
+Scheduled Gaussian LCAs use this shared backend facility at every vector width;
+it has no DAWA-specific model checks. Scalar DDM temporal pairing is unchanged.
+
+For reproducibility of simulations made before this optimization, select the
+previous per-coordinate generator explicitly:
+
+.. code-block:: python
+
+   result = plan.run(
+       inputs, parameter_sets, num_estimates=100_000, seed=29,
+       triton_launch_options={"normal_rng": "legacy"},
+   )
+
+The same option applies to ``plan.log_likelihood`` and to PEC through
+``batched_triton_launch_options={"normal_rng": "legacy"}``. The direct plan API
+also accepts the RNG selection in the CPU interpreter; block size, warp count
+and register controls remain compiled-GPU options. Simulation result metadata
+records the normalized options under ``triton_launch_options``. Kernel source
+and cache identity reflect the selected lowering.
+
+Both modes preserve the intended noise distribution, per-component execution
+clocks, trial history, and common-random-number alignment across candidate
+parameters. They produce different seeded vector samples, so record the mode
+with the seed when saving results. Replaying within one mode is independent
+of launch geometry and step caps. Stream allocation still reserves ``2**32``
+counter positions per coordinate: a group starts at its first coordinate's
+original slot and leaves the remaining slots unused. Grouping never crosses
+component owners or execution clocks and retains no spare draw between steps.
+
+Component adapters request the full declared vector once per execution with
+``ctx.normal_draws(node.name, step)`` and then apply their own scale, mean and
+state updates. The returned tuple has the width of the component's ``RngDecl``.
+Widths not divisible by four are supported; a one-coordinate tail retains its
+direct normal draw. Adapters must use their component-local RNG clock, and
+must not combine this request with other draws from the same stream/clock.
+The separate ``ctx.normal_draw`` API retains its scalar temporal cache.
+
 IR layers
 ---------
 

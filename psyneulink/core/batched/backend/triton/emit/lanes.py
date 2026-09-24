@@ -18,8 +18,10 @@ from psyneulink.core.batched.backend.triton.emit._helpers import primary_output_
 # Philox counter space reserved per RNG stream.  Stream identity is packed into
 # the high 32 bits of the offset and a step-derived counter into the low 32,
 # which `randint4x` splits back into two counter words.  Direct draws use the
-# step itself; scheduled standard-normal draws pack an even/odd pair into one
-# counter and retain the second Box-Muller result.  The point of a fixed stride
+# step itself; scalar scheduled normals pack an even/odd pair into one counter
+# and retain the second Box-Muller result. Vector normals can instead group
+# coordinates within an execution, keeping the original slot allocation.
+# The point of a fixed stride
 # is that offsets -- and so the draws -- do not depend on MAX_STEPS or
 # LCA_MAX_STEPS: raising a step cap for safety no longer changes results.
 #
@@ -28,6 +30,13 @@ from psyneulink.core.batched.backend.triton.emit._helpers import primary_output_
 # the high word on the GPU (the offset stays 32-bit), which collapses every
 # stream onto the same draws.
 RNG_STREAM_STRIDE = 1 << 32
+DEFAULT_NORMAL_RNG = "philox4x_v1"
+
+
+def validate_normal_rng(mode):
+    if not isinstance(mode, str) or mode not in ("legacy", DEFAULT_NORMAL_RNG):
+        raise ValueError("Triton normal_rng must be 'legacy' or 'philox4x_v1'.")
+    return mode
 
 
 class LaneEmitMixin:
@@ -198,6 +207,48 @@ class LaneEmitMixin:
             )
         return draw
 
+    def normal_draws(self, node_name: str, step: str) -> tuple[str, ...]:
+        """Draw the declared vector of independent normals at one RNG clock.
+
+        philox4x_v1 can use both Box-Muller pairs from one Philox invocation.
+        Groups belong to one component execution, never to different clocks or
+        owners. Group j starts at the *original* stream slot 4*j; the other
+        reserved slots remain unused. Keeping the stream inventory and step
+        addressing unchanged prevents overlap with other components and keeps
+        replay independent of launch geometry, step caps and scheduler masks.
+
+        No spare values survive this execution. In particular, a width-one
+        request retains its legacy direct draw; scalar temporal pairing is a
+        separate contract provided by normal_draw().
+        """
+
+        width = self.rng_stream_width[node_name]
+        if self.normal_rng == "legacy":
+            return tuple(
+                f"tl.randn(SEED, random_base + {self._rng_stream_offset(node_name, i)} + {step})"
+                for i in range(width)
+            )
+        result = []
+        for start in range(0, width, 4):
+            offset = self._rng_stream_offset(node_name, start)
+            base = f"random_base + {offset} + {step}"
+            count = min(4, width - start)
+            if count == 1:
+                result.append(f"tl.randn(SEED, {base})")
+                continue
+            stem = f"vector_rng_{self.rng_stream_slot[node_name] + start}"
+            uniforms = tuple(f"{stem}_u{i}" for i in range(4))
+            draws = tuple(f"{stem}_z{i}" for i in range(4))
+            self.builder.line(f"{', '.join(uniforms)} = tl.rand4x(SEED, {base})")
+            for pair in range((count + 1) // 2):
+                i = pair * 2
+                self.builder.line(
+                    f"{draws[i]}, {draws[i + 1]} = tl.pair_uniform_to_normal("
+                    f"{uniforms[i]}, {uniforms[i + 1]})"
+                )
+            result.extend(draws[:count])
+        return tuple(result)
+
     def _index_rng_streams(self) -> None:
         # One flat pool: every stream gets the same stride, so which step cap
         # bounds a stream no longer affects where it lives.
@@ -220,3 +271,4 @@ class LaneEmitMixin:
             stream_count += stream.width
         self.rng_stream_slot = stream_slot
         self.rng_stream_count = stream_count
+        self.rng_stream_width = {stream.node: stream.width for stream in self.kernel.rng_streams}

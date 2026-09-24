@@ -2405,5 +2405,303 @@
       "The CPU copy event mostly waits for the simulation kernel; measured GPU copies total about 57 microseconds.",
       "Optimization suggestions are a plan; no additional compiler optimization was implemented during this profile."
     ]
+  },
+  "grouped_gaussian_generation": {
+    "date": "2026-09-24",
+    "base_commit": "bdd2ae5a32",
+    "implementation": "working tree; grouped vector normals in shared Triton emitter",
+    "default_normal_rng": "philox4x_v1",
+    "compatibility_normal_rng": "legacy",
+    "workload": {
+      "subject": 1,
+      "trials": 760,
+      "scored_trials": 720,
+      "estimates_per_trial_per_candidate": 100000,
+      "candidate_coordinates": [
+        [
+          "termination_threshold",
+          "Response Units\n[Left, Right]",
+          "1"
+        ],
+        [
+          "intercept",
+          "RT_GATE",
+          "1"
+        ],
+        [
+          "intercept",
+          "Bias Mechanism",
+          "None"
+        ],
+        [
+          "gain",
+          "Control Units\n[Color, Location]",
+          "1"
+        ],
+        [
+          "mode",
+          "LC",
+          "0.0"
+        ],
+        [
+          "mode",
+          "LC",
+          "1.0"
+        ],
+        [
+          "slope",
+          "LC",
+          "1"
+        ],
+        [
+          "intercept",
+          "LC",
+          "None"
+        ]
+      ],
+      "candidates": [
+        [
+          0.3,
+          0.2,
+          -0.45,
+          10.0,
+          0.9,
+          0.9,
+          1.0,
+          5.0
+        ],
+        [
+          0.4,
+          0.22,
+          -0.4,
+          12.0,
+          0.7,
+          0.8,
+          1.5,
+          5.5
+        ],
+        [
+          0.5,
+          0.18,
+          -0.35,
+          8.0,
+          0.5,
+          0.7,
+          2.0,
+          6.0
+        ],
+        [
+          0.6,
+          0.25,
+          -0.3,
+          15.0,
+          0.3,
+          0.6,
+          2.5,
+          7.0
+        ]
+      ],
+      "noise": {
+        "c_noise": 0.1,
+        "s_noise": 0.1,
+        "d_noise": 0.1,
+        "r_noise": 0.1
+      },
+      "lca_dt": 0.01,
+      "seed": 29,
+      "max_steps": 2000,
+      "strict_truncation": true,
+      "estimator": {
+        "kind": "trial_marginal_histogram",
+        "bins": 100,
+        "rt_range": [
+          0.0,
+          3.0
+        ],
+        "pseudocount": 1.0,
+        "smoothing_sigma": 0.5
+      },
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "torch_version": "2.13.0+cu130",
+      "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+      "model_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a"
+    },
+    "launch": {
+      "block_size": 32,
+      "num_warps": 1,
+      "maxnreg": null
+    },
+    "measurement": "Median of three warmed complete four-proposal evaluations for each mode/batch size; one cold warmup excluded. Includes PEC input/parameter preparation and histogram scoring, excludes optimizer convergence.",
+    "timings": [
+      {
+        "normal_rng": "legacy",
+        "candidate_batch_size": 1,
+        "candidate_count": 4,
+        "warm_pool_seconds": [
+          8.74652555398643,
+          8.924837256083265,
+          9.060901888995431
+        ],
+        "seconds_per_candidate": 2.2312093140208162,
+        "peak_live_torch_mib": 0.32177734375,
+        "trial_density_sha256": "e450001c113c2a40859e7026a815043c5b2b0a235fc1a609ce8f949af8de95bd"
+      },
+      {
+        "normal_rng": "legacy",
+        "candidate_batch_size": 4,
+        "candidate_count": 4,
+        "warm_pool_seconds": [
+          8.657961670076475,
+          8.750475969049148,
+          8.815126778092235
+        ],
+        "seconds_per_candidate": 2.187618992262287,
+        "peak_live_torch_mib": 0.49609375,
+        "trial_density_sha256": "e450001c113c2a40859e7026a815043c5b2b0a235fc1a609ce8f949af8de95bd"
+      },
+      {
+        "normal_rng": "philox4x_v1",
+        "candidate_batch_size": 1,
+        "candidate_count": 4,
+        "warm_pool_seconds": [
+          6.863283446058631,
+          6.961917725973763,
+          7.0119318519718945
+        ],
+        "seconds_per_candidate": 1.7404794314934406,
+        "peak_live_torch_mib": 0.32177734375,
+        "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+      },
+      {
+        "normal_rng": "philox4x_v1",
+        "candidate_batch_size": 4,
+        "candidate_count": 4,
+        "warm_pool_seconds": [
+          6.6074893730692565,
+          6.65809031308163,
+          6.7921581289265305
+        ],
+        "seconds_per_candidate": 1.6645225782704074,
+        "peak_live_torch_mib": 0.49609375,
+        "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+      }
+    ],
+    "speedup_by_batch_size": {
+      "1": 1.2819509806595637,
+      "4": 1.3142621318693226
+    },
+    "profiles": {
+      "legacy": {
+        "candidate": 0,
+        "simulation_kernel_seconds": 2.726663494,
+        "all_gpu_kernel_seconds": 2.7267549819999997,
+        "registers_per_thread": 238,
+        "spills": 8,
+        "note": "Separate instrumented first-candidate run; excluded from throughput medians."
+      },
+      "philox4x_v1": {
+        "candidate": 0,
+        "simulation_kernel_seconds": 2.086115962,
+        "all_gpu_kernel_seconds": 2.086209017,
+        "registers_per_thread": 230,
+        "spills": 8,
+        "note": "Separate instrumented first-candidate run; excluded from throughput medians."
+      }
+    },
+    "philox_calls_per_scheduled_pass": {
+      "legacy": 10,
+      "philox4x_v1": 4
+    },
+    "box_muller_pairs_per_scheduled_pass": {
+      "legacy": 10,
+      "philox4x_v1": 5
+    },
+    "legacy_matches_previous_density_hash": true,
+    "grouped_materialized_validation": {
+      "passed": true,
+      "rtol": 2e-06,
+      "atol": 1e-08,
+      "max_absolute_density_error": 1.9073486328125e-06,
+      "max_relative_density_error": 3.746324068742979e-07
+    },
+    "normal_rng_distribution_validation": {
+      "estimates_per_mode": 16384,
+      "modes": [
+        "legacy",
+        "philox4x_v1"
+      ],
+      "seeds": [
+        29,
+        1000029
+      ],
+      "familywise_alpha": 0.01,
+      "candidates": [
+        {
+          "candidate": 0,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "legacy": 0.9825954915449864,
+            "philox4x_v1": 0.9827245961483425
+          },
+          "max_abs_trial_mean_rt_difference": 0.010634155521984212,
+          "max_standardized_trial_mean_rt_difference": 3.1050153023626916,
+          "max_abs_choice_probability_difference": 0.0081787109375,
+          "max_abs_choice_rt_subcdf_difference": 0.02008056640625,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 1,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "legacy": 0.9363108914036322,
+            "philox4x_v1": 0.9362762346702574
+          },
+          "max_abs_trial_mean_rt_difference": 0.006521606517708278,
+          "max_standardized_trial_mean_rt_difference": 2.948425870133225,
+          "max_abs_choice_probability_difference": 0.00225830078125,
+          "max_abs_choice_rt_subcdf_difference": 0.0181884765625,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 2,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "legacy": 0.941932234233881,
+            "philox4x_v1": 0.9418676421693027
+          },
+          "max_abs_trial_mean_rt_difference": 0.007290038891369477,
+          "max_standardized_trial_mean_rt_difference": 2.8248081201738042,
+          "max_abs_choice_probability_difference": 0.00164794921875,
+          "max_abs_choice_rt_subcdf_difference": 0.01898193359375,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 3,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "legacy": 0.720389435305814,
+            "philox4x_v1": 0.7203421419051163
+          },
+          "max_abs_trial_mean_rt_difference": 0.0053387449352158,
+          "max_standardized_trial_mean_rt_difference": 3.1360854365848625,
+          "max_abs_choice_probability_difference": 0.0037841796875,
+          "max_abs_choice_rt_subcdf_difference": 0.019287109375,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        }
+      ]
+    },
+    "tests": {
+      "gpu_vector_launch_and_histogram": 59,
+      "gpu_csi_ddm_and_reduced_scoring": 70,
+      "interpreter_vector_and_histogram": 41,
+      "note": "All passed. Also ran the existing Gaussian LCA network and persistent-noise GPU tests."
+    },
+    "scope": "No changes to source-model equations, dt, scheduler clocks, trial synchronization, LLVM, or scalar DDM normal pairing. Modes intentionally differ in seeded vector samples.",
+    "raw_artifacts": "Untracked /tmp/dawa_gaussian_*.json and .log; Chrome traces omitted from repository."
   }
 }

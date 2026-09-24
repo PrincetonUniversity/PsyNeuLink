@@ -35,7 +35,8 @@ def _model(backend, max_steps=32):
 
 @pytest.mark.parametrize("common_random", [True, False])
 @pytest.mark.parametrize("smoothing", [0., .5])
-def test_fused_matches_materialized_persistent_sequences(batched_backend, common_random, smoothing, monkeypatch):
+@pytest.mark.parametrize("normal_rng", ["legacy", "philox4x_v1"])
+def test_fused_matches_materialized_persistent_sequences(batched_backend, common_random, smoothing, normal_rng, monkeypatch):
     plan, lca = _model(batched_backend)
     inputs = {lca: [[3., 1.], [1., 3.], [2., 1.], [1., 3.], [3., 1.], [1., 2.]]}
     candidates = [{}, {f"{lca.name}.gain": BatchedTrialParameter(np.linspace(.9, 1.2, 6))}]
@@ -51,6 +52,7 @@ def test_fused_matches_materialized_persistent_sequences(batched_backend, common
                    outcome_indices=[3, 2], bins=7, bin_range=[(0., 2.)], pseudocount=.3,
                    categorical_cardinalities=[2], include_mask=[True, False, True],
                    subject_slices=[slice(0, 3), slice(3, 6)], seed=29,
+                   triton_launch_options={"normal_rng": normal_rng},
                    smoothing_sigma=smoothing,
                    common_random_numbers=common_random, strict_truncation=True)
     actual = plan.log_likelihood(inputs, candidates, 37, **options)

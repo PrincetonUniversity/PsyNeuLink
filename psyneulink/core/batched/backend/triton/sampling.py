@@ -3,6 +3,7 @@
 import numpy as np
 
 from psyneulink.core.batched.backend.triton.emit.emitter import TritonGraphEmitter
+from psyneulink.core.batched.backend.triton.emit.lanes import DEFAULT_NORMAL_RNG
 from psyneulink.core.batched.backend.triton.trajectories import BoundaryTrajectoryEmitter
 from psyneulink.core.batched.history import replay_program
 from psyneulink.core.batched.kernel_ir import diag_slots, node_output_value_name
@@ -21,8 +22,8 @@ def _emit_sample_lanes(emitter):
 
 
 class StochasticRegionEmitter(TritonGraphEmitter):
-    def __init__(self, kernel, witness):
-        super().__init__(kernel)
+    def __init__(self, kernel, witness, *, normal_rng=DEFAULT_NORMAL_RNG):
+        super().__init__(kernel, normal_rng=normal_rng)
         self.witness = witness
         self.program = replay_program(kernel)
         self.step = stochastic_step(kernel, witness.boundary.consumer_component_id)
@@ -117,8 +118,8 @@ class StochasticRegionEmitter(TritonGraphEmitter):
 
 
 class ObservationRegionEmitter(StochasticRegionEmitter):
-    def __init__(self, kernel, witness):
-        super().__init__(kernel, witness.sampler)
+    def __init__(self, kernel, witness, *, normal_rng=DEFAULT_NORMAL_RNG):
+        super().__init__(kernel, witness.sampler, normal_rng=normal_rng)
         self.observation_witness = witness
 
     def _emit_observation_values(self, raw_vars):

@@ -193,6 +193,12 @@ class RngDecl:
     ``RNG_STREAM_STRIDE`` of Philox counter space, so draws do not shift when a
     cap changes.  It is checked against that stride at launch.
     ``width=None`` resolves to the node's primary output width.
+
+    Triton adapters can request a complete Gaussian vector using
+    ``ctx.normal_draws(node.name, step)``. The backend may group independent
+    coordinates into one Philox invocation while retaining this allocation;
+    stream ownership and RNG clocks remain unchanged. This does not promise
+    the same seeded samples across different RNG lowering versions.
     """
 
     name: str

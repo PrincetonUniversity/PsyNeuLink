@@ -16,6 +16,7 @@ def test_triton_launch_option_defaults_are_stable():
         "block_size": 128,
         "num_warps": 4,
         "maxnreg": None,
+        "normal_rng": "philox4x_v1",
     }
 
 
@@ -25,6 +26,7 @@ def test_triton_launch_option_defaults_are_stable():
         {"block_size": 64},
         {"num_warps": 2},
         {"maxnreg": 128},
+        {"normal_rng": "legacy"},
         {"block_size": 256, "num_warps": 8, "maxnreg": 96},
     ],
 )
@@ -34,6 +36,7 @@ def test_triton_launch_options_accept_benchmark_configurations(options):
         "block_size": 128,
         "num_warps": 4,
         "maxnreg": None,
+        "normal_rng": "philox4x_v1",
         **options,
     }
 
@@ -44,6 +47,8 @@ def test_triton_launch_options_accept_benchmark_configurations(options):
         ({"unknown": 1}, "Unknown Triton launch option"),
         ({"block_size": 96}, "power-of-two"),
         ({"block_size": True}, "block_size"),
+        ({"normal_rng": "fast"}, "normal_rng"),
+        ({"normal_rng": None}, "normal_rng"),
         ({"num_warps": 3}, "num_warps"),
         ({"num_warps": 4.0}, "num_warps"),
         ({"maxnreg": 256}, "maxnreg"),
@@ -58,6 +63,10 @@ def test_triton_launch_options_reject_invalid_values(options, message):
 def test_custom_triton_launch_options_reject_cpu_interpreter():
     with pytest.raises(ValueError, match="compiled GPU backend"):
         _normalize_launch_options({"block_size": 64}, interpret=True)
+
+
+def test_rng_selection_is_available_in_interpreter():
+    assert _normalize_launch_options({"normal_rng": "legacy"}, interpret=True)["normal_rng"] == "legacy"
 
 
 @pytest.mark.triton_gpu
@@ -99,4 +108,5 @@ def test_custom_triton_launch_options_match_default_gpu_result():
         "block_size": 64,
         "num_warps": 2,
         "maxnreg": 96,
+        "normal_rng": "philox4x_v1",
     }

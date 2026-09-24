@@ -30,13 +30,16 @@ from psyneulink.core.batched.backend.triton.cache import (
     load_triton_kernel_module,
 )
 from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
-from psyneulink.core.batched.backend.triton.emit.lanes import RNG_STREAM_STRIDE
+from psyneulink.core.batched.backend.triton.emit.lanes import (
+    DEFAULT_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
+)
 
 
 _DEFAULT_LAUNCH_OPTIONS = {
     "block_size": 128,
     "num_warps": 4,
     "maxnreg": None,
+    "normal_rng": DEFAULT_NORMAL_RNG,
 }
 _SUPPORTED_LAUNCH_OPTIONS = frozenset(_DEFAULT_LAUNCH_OPTIONS)
 
@@ -53,13 +56,14 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
         raise ValueError(
             "Unknown Triton launch option(s): " + ", ".join(sorted(unknown))
         )
-    if interpret and options:
+    if interpret and set(options) - {"normal_rng"}:
         raise ValueError(
             "Custom Triton launch_options require the compiled GPU backend "
             "(device='cuda'), not the CPU interpreter."
         )
 
     result = {**_DEFAULT_LAUNCH_OPTIONS, **options}
+    validate_normal_rng(result["normal_rng"])
     block_size = result["block_size"]
     if (
         isinstance(block_size, bool)
@@ -155,10 +159,12 @@ def run_triton(
     a downstream consumer (e.g. the histogram likelihood) can run on the GPU
     without a host round-trip.
 
-    ``launch_options`` exposes a small, validated set of GPU-only Triton tuning
-    controls for benchmarking: ``block_size``, ``num_warps``, and ``maxnreg``.
-    Omitting it preserves the historical 128-lane/four-warp launch with no
-    compiler register cap.
+    ``launch_options`` exposes GPU tuning controls ``block_size``, ``num_warps``
+    and ``maxnreg``, defaulting to 128 lanes/four warps without a register cap.
+    ``normal_rng='philox4x_v1'`` (default) groups vector Gaussian draws within
+    each component execution. ``'legacy'`` reproduces the earlier per-coordinate
+    draws. This RNG selection also works in the interpreter and leaves scalar
+    normal_draw() pairing unchanged. Seeded vector samples differ between modes.
 
     Stateful and co-evolving kernels may be resumed from ``initial_states``
     shaped ``[parameter_set, subject, estimate, state]``. When
@@ -210,7 +216,8 @@ def run_triton(
         )
 
     with interpret_scope(interpret):
-        module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret)
+        module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret,
+                                     normal_rng=launch["normal_rng"])
 
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
@@ -613,11 +620,12 @@ def _load_kernel_module(
     *,
     kernel_ir: KernelIR | None = None,
     interpret: bool = False,
+    normal_rng=DEFAULT_NORMAL_RNG,
 ):
     if ir.graph is None or ir.graph.fusion_kind is None:
         raise ValueError(
             "The Triton batched backend requires a lowered graph with a "
             "supported fusion kind."
         )
-    source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir))
+    source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir), normal_rng=normal_rng)
     return load_triton_kernel_module(source, ir.graph.fusion_kind, ir.model_kind, interpret=interpret)

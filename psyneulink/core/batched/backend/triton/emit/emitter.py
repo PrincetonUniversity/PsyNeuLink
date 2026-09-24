@@ -33,7 +33,9 @@ from psyneulink.core.batched.backend.triton.source_builder import (
     emit_triton_imports,
 )
 from psyneulink.core.batched.backend.triton.emit._helpers import float_literal
-from psyneulink.core.batched.backend.triton.emit.lanes import LaneEmitMixin
+from psyneulink.core.batched.backend.triton.emit.lanes import (
+    DEFAULT_NORMAL_RNG, LaneEmitMixin, validate_normal_rng,
+)
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
 from psyneulink.core.batched.specs import ElementwiseFunctionSpec
 
@@ -47,7 +49,8 @@ _KERNEL_NAMES = {
 
 
 class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
-    def __init__(self, kernel: KernelIR):
+    def __init__(self, kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG):
+        self.normal_rng = validate_normal_rng(normal_rng)
         self.kernel = kernel
         self.graph = kernel.graph
         self.builder = SourceBuilder()
@@ -82,6 +85,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         self.dynamic_sampled_effective_parameters: dict[int, str] = {}
         self.dynamic_consumed_effective_parameter_ids: set[int] = set()
         self.rng_stream_slot: dict[str, int] = {}
+        self.rng_stream_width: dict[str, int] = {}
         self.rng_stream_count = 0
         self.output_cursor = 0
         self.lane_out_emitted = False
@@ -437,7 +441,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         return value
 
 
-def triton_graph_kernel_source(kernel: KernelIR) -> str:
+def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG) -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel).emit()
+    return TritonGraphEmitter(kernel, normal_rng=normal_rng).emit()

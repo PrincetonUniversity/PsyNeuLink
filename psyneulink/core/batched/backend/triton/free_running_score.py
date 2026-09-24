@@ -10,6 +10,7 @@ and weights them after simulation. Categories are never smoothed together.
 import numpy as np
 
 from psyneulink.core.batched.backend.triton.emit import TritonGraphEmitter
+from psyneulink.core.batched.backend.triton.emit.lanes import DEFAULT_NORMAL_RNG
 from psyneulink.core.batched.graph import STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION
 from psyneulink.core.batched.kernel_ir import diag_slots
 from psyneulink.core.batched.likelihood import (
@@ -19,8 +20,8 @@ from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_input
 
 
 class HistogramEmitter(TritonGraphEmitter):
-    def __init__(self, kernel, indices, categorical, radius=0):
-        super().__init__(kernel)
+    def __init__(self, kernel, indices, categorical, radius=0, *, normal_rng=DEFAULT_NORMAL_RNG):
+        super().__init__(kernel, normal_rng=normal_rng)
         self.indices = tuple(indices)
         self.categorical = tuple(categorical)
         self.radius = radius
@@ -188,7 +189,7 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
                                    num_trials=trials, subject_slices=subject_slices)
     lca_steps = lca_max_steps(ir, prepared, rows)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
-    emitter = HistogramEmitter(kernel, indices, categorical, radius)
+    emitter = HistogramEmitter(kernel, indices, categorical, radius, normal_rng=launch["normal_rng"])
     source = emitter.emit()
     dummy = torch.empty(1, device=device)
     with interpret_scope(interpret):
