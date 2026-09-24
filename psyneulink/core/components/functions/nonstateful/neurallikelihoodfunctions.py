@@ -591,7 +591,8 @@ def train_neural_likelihood(
 
         client, close_fn = fitfunctions._dask_client(distributed_options)
         try:
-            workers = len(client.scheduler_info().get("workers", {})) or 1
+            # nthreads() lists every worker; scheduler_info() lists only the first few.
+            workers = len(client.nthreads()) or 1
             futures = [client.submit(_simulate_chunk, pec_factory, c,
                                      n_trials, names, n_outcomes, pure=False)
                        for c in _split(thetas, workers)]
