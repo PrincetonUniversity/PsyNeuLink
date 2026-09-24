@@ -292,6 +292,9 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
         optimization_function=PECOptimizationFunction(
             method=opt_method, optuna_kwargs=optuna_kwargs, max_iterations=50, direction="maximize"
         ),
+        # Preserve the seeded trajectory used by these optimizer regression results.
+        # DDM and its integrator expose separate seed Parameters.
+        noise_stream_policy='shared_seed',
         num_estimates=num_estimates,
         initial_seed=42,
     )
