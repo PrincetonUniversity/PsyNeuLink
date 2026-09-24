@@ -1073,6 +1073,12 @@ def test_fit_method_is_read_however_it_is_written(given):
 
 
 @pytest.mark.composition
+def test_hierarchical_options_are_refused_without_a_hierarchical_fit():
+    with pytest.raises(ParameterEstimationCompositionError, match="applies only when fit_method"):
+        _build_group_pec(fit_method=None, hierarchical_options={"subject_id": "subject"})
+
+
+@pytest.mark.composition
 def test_an_unknown_fit_method_is_refused():
     with pytest.raises(ParameterEstimationCompositionError, match="fit_method must be"):
         _build_group_pec(fit_method="hierachical")
