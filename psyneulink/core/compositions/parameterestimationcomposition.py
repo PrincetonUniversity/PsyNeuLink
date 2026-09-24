@@ -1061,6 +1061,8 @@ class ParameterEstimationComposition(Composition):
         # is an array -- and neither the fit about to run nor the record it leaves should share
         # one with the caller.
         settings["estep_options"] = copy.deepcopy(settings["estep_options"])
+        # Validation accepts any whole number, 3.0 included, but it counts iterations.
+        settings["max_iterations"] = int(settings["max_iterations"])
         return settings
 
     def _setup_hierarchical(self, likelihood_include_mask):
