@@ -1490,6 +1490,19 @@ def test_a_setting_changed_between_fits_reaches_the_next_one(monkeypatch):
 
 
 @pytest.mark.composition
+@pytest.mark.parametrize("given", [3.0, np.float64(3.0)], ids=["float", "numpy"])
+def test_a_whole_number_of_iterations_given_as_a_float_is_counted(given):
+    # Accepted as a whole number, so the fit has to be able to count with it.
+    pec = _build_group_pec(
+        distributed_options={"pec_factory": _stub_factory},
+        hierarchical_options={"subject_id": "subject", "max_iterations": given},
+    )
+    results = pec.run()
+    assert results.settings["max_iterations"] == 3
+    assert isinstance(results.settings["max_iterations"], int)
+
+
+@pytest.mark.composition
 def test_recorded_settings_are_not_changed_by_later_assignment():
     # The mapping handed in is taken by value, so a later edit cannot rewrite what a finished
     # fit reports it ran with.
