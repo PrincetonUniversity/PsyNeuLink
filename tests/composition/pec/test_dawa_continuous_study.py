@@ -108,6 +108,51 @@ def test_native_coefficients_and_all_coefficient_gradients_match_reference():
         torch.testing.assert_close(a, b, atol=1.e-9, rtol=1.e-11)
 
 
+def test_native_rates_are_smooth_across_bernoulli_branches_and_large_drifts():
+    # Exercise both signs, both sides of the series cutoff, half-cell boundary
+    # faces, and exp underflow. Check derivatives against Torch, not the native
+    # polynomial, so a coefficient optimization cannot silently change the PDE.
+    cfg = ContinuousConfig(points=11, leak=0., competition=0.)
+    q = torch.tensor([-1500., -30., -.2, -.10000001, -.1, -.09999999, -1.e-8,
+                      0., 1.e-8, .09999999, .1, .10000001, .2, 30., 1500.], dtype=torch.float64)
+    inputs = (q * (.5 * cfg.noise**2) * cfg.points / .5)[:, None].repeat(1, 2).requires_grad_()
+    gain, bias = torch.ones_like(q), q.new_zeros(())
+    boundary, speed = torch.full_like(q, .25).requires_grad_(), torch.zeros_like(q).requires_grad_()
+    values = (inputs, gain, bias, boundary, speed)
+    expected = ContinuousResponseSolver(cfg)._rates(*values)
+    actual = ContinuousResponseSolver(replace(cfg, flux_backend="native"))._rates(*values)
+    torch.testing.assert_close(actual, expected, atol=1.e-10, rtol=2.e-13)
+    weights = torch.randn(expected.shape, dtype=q.dtype, generator=torch.Generator().manual_seed(12))
+    for a, b in zip(*(torch.autograd.grad((r * weights).sum(), (inputs, boundary, speed))
+                      for r in (actual, expected))):
+        torch.testing.assert_close(a, b, atol=2.e-9, rtol=2.e-11)
+
+
+@pytest.mark.parametrize("backend", ["torch", "native"])
+def test_rate_retention_preserves_cfl_probabilities_and_all_coefficient_gradients(backend):
+    cfg = ContinuousConfig(points=9, time_step=.002, checkpoint_steps=3, flux_backend=backend)
+    t = torch.arange(8, dtype=torch.float64) * cfg.time_step
+    values = [torch.stack((1. + t, .7 - t), dim=1), 4. + t, t.new_tensor(-.3),
+              .1 + .3 * t, torch.full_like(t, .3)]
+    values = [v.requires_grad_() for v in values]
+
+    def evaluate(retain):
+        result = ContinuousResponseSolver(replace(cfg, recompute_rates=not retain)).solve_coefficients(*values)
+        # Cover both exits, lower loss, and final surviving mass.
+        weights = torch.arange(len(t) - 1, dtype=t.dtype)[:, None] + t.new_tensor([.3, -.7])
+        loss = (result.choice_mass * weights).sum() + .2 * result.survival + .4 * result.lower_loss
+        return result, torch.autograd.grad(loss, values)
+
+    actual, actual_grad = evaluate(True)
+    expected, expected_grad = evaluate(False)
+    assert actual.substeps == expected.substeps
+    assert actual.maximum_cfl == expected.maximum_cfl
+    torch.testing.assert_close(actual.choice_mass, expected.choice_mass, atol=0., rtol=0.)
+    assert float(actual.mass_error) < 1.e-12
+    for a, b in zip(actual_grad, expected_grad):
+        torch.testing.assert_close(a, b, atol=1.e-12, rtol=1.e-11)
+
+
 def test_native_sequential_likelihood_matches_torch_and_ndt_finite_difference():
     p = torch.tensor([[.18, .193, -.43, 11., .75, 1.3, 5.2]] * 2, dtype=torch.float64, requires_grad=True)
     cfg = ContinuousConfig(points=25, time_step=.002)

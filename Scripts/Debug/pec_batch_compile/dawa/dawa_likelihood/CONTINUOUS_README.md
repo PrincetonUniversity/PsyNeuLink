@@ -114,6 +114,28 @@ are of the numerical likelihood; grid deposition, RT-bin interpolation, and
 integer integration counts make it piecewise smooth. Refinement is necessary
 to establish useful accuracy of both values and gradients.
 
+For CPU execution, select `ode_backend="generated"` and `flux_backend="native"`.
+Set `cpu_threads=4` to parallelize native grid updates and rate calculations;
+the default is one thread. Each trial's time steps and the sequence's control
+history remain ordered. This setting does not change PyTorch's global thread pool.
+
+For GPU execution, place parameters on CUDA and select `ode_backend="generated"`
+and `flux_backend="triton"`. Fused float64 kernels compute rates, propagation,
+and first-order adjoints. CUDA graphs amortize launches over each checkpoint
+block; `gpu_graphs=False` disables capture. Graphs are cached by device, stream,
+shape, substep count, and time step, with at most eight cached graphs. Changing
+those settings can incur capture overhead. Graph buffers are private and returned
+outputs are copied before reuse. The generated deterministic ODE and its adjoint
+still run on CPU, with differentiable transfers of the small coefficient paths.
+
+With `recompute_rates=False`, the solver retains coefficient blocks and reuses
+them for both the stability check and propagation. This also retains all blocks
+during the forward stability check; the default `True` uses less forward memory.
+See the [CPU profiling and GPU comparison](PERFORMANCE_README.md) for timings,
+numerical parity, and reproducible benchmark commands. Both optimized backends
+require float64 and support first-order derivatives. No mixed-precision model
+approximation is introduced.
+
 ## Running it
 
 From the repository root:
@@ -129,6 +151,12 @@ PYTHONWARNINGS=ignore .venv/bin/python \
 .venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_likelihood.py score \
   --device cpu --trials 12 --points 65 --output /tmp/dawa_continuous_score.json
 
+# Same sequential score with the generated ODE and fused GPU density solver.
+PATH="$PWD/.venv/bin:$PATH" .venv/bin/python \
+  Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_likelihood.py score \
+  --device cuda --ode-backend generated --flux-backend triton --retain-rates \
+  --trials 12 --points 65 --output /tmp/dawa_continuous_gpu_score.json
+
 # Small bounded gradient-ascent smoke test, with backtracking.
 .venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_likelihood.py fit \
   --device cpu --trials 12 --points 65 --iterations 1 \
@@ -143,7 +171,7 @@ settings; it requires CUDA for Monte Carlo and device comparisons even with
 CPU density calculations. The SDE sampler uses independent random trajectories
 with Brownian-bridge crossing corrections and checks two time steps.
 
-Library example, with `Scripts/Debug/pec_batch_compile` on `PYTHONPATH`:
+Library example, with `Scripts/Debug/pec_batch_compile/dawa` on `PYTHONPATH`:
 
 ```python
 import torch

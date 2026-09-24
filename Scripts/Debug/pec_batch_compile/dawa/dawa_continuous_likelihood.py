@@ -25,7 +25,10 @@ def main():
     parser.add_argument("--time-step", type=float, default=.001)
     parser.add_argument("--ode-step", type=float, default=.0005)
     parser.add_argument("--ode-backend", choices=("torch", "generated"), default="torch")
-    parser.add_argument("--flux-backend", choices=("torch", "native"), default="torch")
+    parser.add_argument("--flux-backend", choices=("torch", "native", "triton"), default="torch")
+    parser.add_argument("--cpu-threads", type=int, default=1, help="Threads in native finite-volume kernels")
+    parser.add_argument("--no-gpu-graphs", action="store_true")
+    parser.add_argument("--retain-rates", action="store_true", help="Retain coefficient blocks to save recomputation")
     parser.add_argument("--lower-bound", type=float, default=-.25)
     parser.add_argument("--lc-clock-ratio", type=float, default=20.)
     parser.add_argument("--threads", type=int, default=1)
@@ -38,16 +41,20 @@ def main():
     parser.add_argument("--estimates", type=int, default=100000)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    if min(args.threads, args.trials, args.iterations, args.estimates) < 1:
+    if min(args.threads, args.cpu_threads, args.trials, args.iterations, args.estimates) < 1:
         parser.error("Thread, trial, iteration, and estimate counts must be positive")
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("CUDA is unavailable; select --device cpu")
     if args.flux_backend == "native" and args.device != "cpu":
         parser.error("The native flux backend requires --device cpu")
+    if args.flux_backend == "triton" and args.device != "cuda":
+        parser.error("The Triton flux backend requires --device cuda")
     torch.set_num_threads(args.threads)
     cfg = ContinuousConfig(points=args.points, time_step=args.time_step, ode_step=args.ode_step,
                            lower_bound=args.lower_bound, lc_clock_ratio=args.lc_clock_ratio,
-                           ode_backend=args.ode_backend, flux_backend=args.flux_backend)
+                           ode_backend=args.ode_backend, flux_backend=args.flux_backend,
+                           cpu_threads=args.cpu_threads, gpu_graphs=not args.no_gpu_graphs,
+                           recompute_rates=not args.retain_rates)
     report = {"process": "continuous", "device": args.device, "dtype": "float64", "torch": torch.__version__,
               "history": "candidate-dependent RT - nondecision time; RT-bin-center reconstruction",
               "observation": "recorded RT interval; no added Gaussian measurement noise"}
@@ -79,6 +86,8 @@ def main():
                        "points": cfg.points, "time_step": cfg.time_step, "ode_step": cfg.ode_step,
                        "ode_backend": cfg.ode_backend,
                        "flux_backend": cfg.flux_backend,
+                       "cpu_threads": cfg.cpu_threads, "gpu_graphs": cfg.gpu_graphs,
+                       "recompute_rates": cfg.recompute_rates,
                        "lc_clock_ratio": cfg.lc_clock_ratio, "lower_bound": cfg.lower_bound,
                        "rt_resolution": args.resolution, "parameter_scope": "one shared seven-parameter vector",
                        "evaluations": []})

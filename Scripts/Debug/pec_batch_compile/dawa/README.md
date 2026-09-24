@@ -115,3 +115,10 @@ parity with the original 10 ms scheduler.
 A [source-convergence and synthetic-recovery study](dawa_likelihood/STUDY_README.md)
 now checks that connection explicitly, using 100,000 estimates per case and
 joint refinement of the original LCA and LC time steps at a fixed clock ratio.
+
+The [CPU and GPU performance audit](dawa_likelihood/PERFORMANCE_README.md) compares
+threaded CPU and fused GPU direct likelihoods, including all parameter gradients,
+against continuous GPU sampling. Both backends preserve sequential control-state
+history. Run
+[dawa_continuous_benchmark.py](dawa_continuous_benchmark.py) to reproduce the
+two-condition workload, including 100,000 GPU estimates per condition.

@@ -36,6 +36,7 @@ model directories and remain ignored by Git.
 | [gpu_batch_compile_benchmark.py](gpu_batch_compile_benchmark.py) | General batch compiler workloads |
 | [benchmark_continuous_dynamics.py](benchmark_continuous_dynamics.py) | Generated ODE integration and gradients, using a CSI fixture |
 | [benchmark_first_passage_backend.py](benchmark_first_passage_backend.py) | Generic first-passage solver performance |
+| [benchmark_csi_dawa_first_passage.py](benchmark_csi_dawa_first_passage.py) | Matched continuous CSI/DAWA sampling and direct costs; [results](CSI_DAWA_PERFORMANCE.md) |
 | [benchmark_likelihood_specializations.py](benchmark_likelihood_specializations.py) | Generated and specialized likelihood routes, using CSI data |
 | [validate_likelihood_compile_gpu.py](validate_likelihood_compile_gpu.py) | Conditional GPU sampling and scoring checks |
 

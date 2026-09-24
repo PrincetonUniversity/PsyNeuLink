@@ -1,0 +1,1154 @@
+{
+  "scope": "Matched continuous CSI/DAWA first-passage costs and numerical refinement.\n\nOne candidate, two conditional trials, the same horizon and noise, 100,000\nfloat32 GPU samples/trial, and float64 direct solves. Nonlinear deterministic\npaths use each model's existing native equations. Path construction is timed\nseparately from the stochastic stage. This is not a sequential subject fit.\n",
+  "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "repeats": 3,
+  "horizon": 1.4,
+  "direct_dt": 0.001,
+  "sampling_dt": 0.00025,
+  "noise": 0.1,
+  "window": 0.025,
+  "estimates_per_trial": 100000,
+  "dawa_parameters": {
+    "threshold": 0.2879657211820791,
+    "non_decision_time": 0.17650170847169946,
+    "bias": -0.42202839162343536,
+    "control_gain": 12.339782551339166,
+    "lc_mode": 0.8795587632626213,
+    "lc_scaling": 4.0,
+    "lc_base_gain": 5.119875177906493
+  },
+  "csi_parameters": {
+    "gain": [
+      10.0,
+      20.0
+    ],
+    "threshold": [
+      0.12,
+      0.12
+    ],
+    "collapse": [
+      -0.01,
+      -0.02
+    ],
+    "iti": 1.0,
+    "cue_duration": 0.05,
+    "leak": 12.0,
+    "competition": 3.0
+  },
+  "timing": "One candidate; fixed conditioned paths; construction timed separately. Stochastic timings include transfers and host probability summaries. Three output categories and a final 25 ms choice-0 bin for both models. No likelihood gradients or optimization. GPU synchronized; warmed medians.",
+  "cases": [
+    {
+      "model": "csi",
+      "trials": 2,
+      "path_construction_direct": {
+        "seconds": [
+          0.00215592491440475,
+          0.0020384229719638824,
+          0.0017236190615221858
+        ],
+        "median_seconds": 0.0020384229719638824
+      },
+      "path_construction_sampling": {
+        "seconds": [
+          0.0035545401042327285,
+          0.003601241041906178,
+          0.003684040973894298
+        ],
+        "median_seconds": 0.003601241041906178
+      },
+      "direct": [
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 33,
+          "density_cells_per_trial": 31,
+          "seconds": [
+            0.002079723053611815,
+            0.001989223062992096,
+            0.0019569220021367073
+          ],
+          "median_seconds": 0.001989223062992096,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10432530547896435,
+              0.7020667518558508,
+              0.1936079426651845
+            ],
+            [
+              0.027301373970594497,
+              0.9377073360051075,
+              0.0349912900242979
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035488297278228,
+            9.672892686933366e-05
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 33,
+          "density_cells_per_trial": 31,
+          "seconds": [
+            0.0011425130069255829,
+            0.0011488129384815693,
+            0.0010937119368463755
+          ],
+          "median_seconds": 0.0011425130069255829,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10432530547896435,
+              0.7020667518558508,
+              0.1936079426651845
+            ],
+            [
+              0.027301373970594497,
+              0.9377073360051075,
+              0.0349912900242979
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035488297278228,
+            9.672892686933366e-05
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 65,
+          "density_cells_per_trial": 63,
+          "seconds": [
+            0.00395234499592334,
+            0.003820942947641015,
+            0.003862743964418769
+          ],
+          "median_seconds": 0.003862743964418769,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10433883662617678,
+              0.7021956232700207,
+              0.19346554010380138
+            ],
+            [
+              0.027287821809213974,
+              0.9378646309289898,
+              0.0348475472617965
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035855614722462,
+            9.646018037824981e-05
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 65,
+          "density_cells_per_trial": 63,
+          "seconds": [
+            0.0022025249199941754,
+            0.002065023989416659,
+            0.002018522936850786
+          ],
+          "median_seconds": 0.002065023989416659,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10433883662617678,
+              0.7021956232700207,
+              0.19346554010380138
+            ],
+            [
+              0.027287821809213974,
+              0.9378646309289898,
+              0.0348475472617965
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035855614722462,
+            9.646018037824981e-05
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 129,
+          "density_cells_per_trial": 127,
+          "seconds": [
+            0.007852289010770619,
+            0.00801969098392874,
+            0.007908990024589002
+          ],
+          "median_seconds": 0.007908990024589002,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10434222807248746,
+              0.7022278980550837,
+              0.19342987387242966
+            ],
+            [
+              0.0272844244035202,
+              0.9379039574539831,
+              0.034811618142497676
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035943667023854,
+            9.639291334381744e-05
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 129,
+          "density_cells_per_trial": 127,
+          "seconds": [
+            0.004226448014378548,
+            0.0044464500388130546,
+            0.004000546061433852
+          ],
+          "median_seconds": 0.004226448014378548,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10434222807248746,
+              0.7022278980550837,
+              0.19342987387242966
+            ],
+            [
+              0.0272844244035202,
+              0.9379039574539831,
+              0.034811618142497676
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035943667023854,
+            9.639291334381744e-05
+          ]
+        }
+      ],
+      "sampling": {
+        "seconds": [
+          0.052409493015147746,
+          0.05230379197746515,
+          0.0526879969984293
+        ],
+        "median_seconds": 0.052409493015147746,
+        "probabilities_first_two_trials": [
+          [
+            0.10333,
+            0.70317,
+            0.1935
+          ],
+          [
+            0.02799,
+            0.93746,
+            0.03455
+          ]
+        ],
+        "window_choice0_probability_first_two_trials": [
+          0.00075,
+          6e-05
+        ],
+        "mean_decision_time_including_censoring_first_two_trials": [
+          0.8414592742919922,
+          0.6113790273666382
+        ]
+      }
+    },
+    {
+      "model": "dawa",
+      "trials": 2,
+      "path_construction_direct": {
+        "seconds": [
+          0.003103235037997365,
+          0.0031423360342159867,
+          0.0030909349443390965
+        ],
+        "median_seconds": 0.003103235037997365
+      },
+      "path_construction_sampling": {
+        "seconds": [
+          0.008923501009121537,
+          0.010564020019955933,
+          0.00965841009747237
+        ],
+        "median_seconds": 0.00965841009747237
+      },
+      "direct": [
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 33,
+          "density_cells_per_trial": 1089,
+          "seconds": [
+            0.14567545999307185,
+            0.1379703729180619,
+            0.137236263952218
+          ],
+          "median_seconds": 0.1379703729180619,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.8370383148869917,
+              0.1629057433833308,
+              5.594172967699852e-05
+            ],
+            [
+              0.07478131266826543,
+              0.9252186434694024,
+              4.3862331861596086e-08
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            3.7318903787899904e-05,
+            5.566813703001853e-13
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 33,
+          "density_cells_per_trial": 1089,
+          "seconds": [
+            0.0789700000314042,
+            0.08296674606390297,
+            0.07761648495215923
+          ],
+          "median_seconds": 0.0789700000314042,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.8370383148869915,
+              0.16290574338333083,
+              5.594172967699852e-05
+            ],
+            [
+              0.07478131266826546,
+              0.9252186434694026,
+              4.38623318615961e-08
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            3.731890378789991e-05,
+            5.566813703001854e-13
+          ]
+        },
+        {
+          "backend": "triton",
+          "threads": 1,
+          "points": 33,
+          "density_cells_per_trial": 1089,
+          "seconds": [
+            0.1242173999780789,
+            0.17385531996842474,
+            0.09382006002124399
+          ],
+          "median_seconds": 0.1242173999780789,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.837038314886992,
+              0.16290574338333097,
+              5.594172967699839e-05
+            ],
+            [
+              0.07478131266826551,
+              0.9252186434694027,
+              4.3862331861595974e-08
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            3.731890378789982e-05,
+            5.56681370300186e-13
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 65,
+          "density_cells_per_trial": 4225,
+          "seconds": [
+            0.5961141720181331,
+            0.595713387010619,
+            0.6089861940126866
+          ],
+          "median_seconds": 0.5961141720181331,
+          "substeps": 2,
+          "probabilities_first_two_trials": [
+            [
+              0.8453439381223447,
+              0.1546331681497296,
+              2.2893727925832962e-05
+            ],
+            [
+              0.06532150483803037,
+              0.934678488909161,
+              6.252809293848752e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.728267959807723e-05,
+            8.594497135460182e-14
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 65,
+          "density_cells_per_trial": 4225,
+          "seconds": [
+            0.35049608803819865,
+            0.4199256550054997,
+            0.3275131849804893
+          ],
+          "median_seconds": 0.35049608803819865,
+          "substeps": 2,
+          "probabilities_first_two_trials": [
+            [
+              0.8453439381223449,
+              0.15463316814972966,
+              2.289372792583297e-05
+            ],
+            [
+              0.06532150483803038,
+              0.9346784889091606,
+              6.252809293848749e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.7282679598077237e-05,
+            8.594497135460177e-14
+          ]
+        },
+        {
+          "backend": "triton",
+          "threads": 1,
+          "points": 65,
+          "density_cells_per_trial": 4225,
+          "seconds": [
+            0.16165402892511338,
+            0.15376935491804034,
+            0.15885480295401067
+          ],
+          "median_seconds": 0.15885480295401067,
+          "substeps": 2,
+          "probabilities_first_two_trials": [
+            [
+              0.8453439381223444,
+              0.15463316814972977,
+              2.2893727925832918e-05
+            ],
+            [
+              0.06532150483803045,
+              0.9346784889091604,
+              6.252809293848745e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.728267959807719e-05,
+            8.59449713546022e-14
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 1,
+          "points": 129,
+          "density_cells_per_trial": 16641,
+          "seconds": [
+            3.7196704600937665,
+            3.743398583959788,
+            3.9301053999224678
+          ],
+          "median_seconds": 3.743398583959788,
+          "substeps": 5,
+          "probabilities_first_two_trials": [
+            [
+              0.8484570179321483,
+              0.1515251474723585,
+              1.7834595493469398e-05
+            ],
+            [
+              0.06200118493732328,
+              0.9379988114890612,
+              3.5736158041807638e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.3919446587997844e-05,
+            5.0500588549000433e-14
+          ]
+        },
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 129,
+          "density_cells_per_trial": 16641,
+          "seconds": [
+            2.479607890942134,
+            2.1917112689698115,
+            2.2742329610046
+          ],
+          "median_seconds": 2.2742329610046,
+          "substeps": 5,
+          "probabilities_first_two_trials": [
+            [
+              0.8484570179321481,
+              0.1515251474723584,
+              1.7834595493469398e-05
+            ],
+            [
+              0.0620011849373233,
+              0.9379988114890614,
+              3.573615804180762e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.3919446587997844e-05,
+            5.050058854900041e-14
+          ]
+        },
+        {
+          "backend": "triton",
+          "threads": 1,
+          "points": 129,
+          "density_cells_per_trial": 16641,
+          "seconds": [
+            0.408500091987662,
+            0.4106610269518569,
+            0.41356506990268826
+          ],
+          "median_seconds": 0.4106610269518569,
+          "substeps": 5,
+          "probabilities_first_two_trials": [
+            [
+              0.8484570179321482,
+              0.15152514747235846,
+              1.783459549346943e-05
+            ],
+            [
+              0.06200118493732325,
+              0.9379988114890612,
+              3.573615804180772e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.3919446587997868e-05,
+            5.0500588549000484e-14
+          ]
+        }
+      ],
+      "sampling": {
+        "seconds": [
+          0.0511670809937641,
+          0.05010266904719174,
+          0.050784876104444265
+        ],
+        "median_seconds": 0.050784876104444265,
+        "probabilities_first_two_trials": [
+          [
+            0.84888,
+            0.1511,
+            2e-05
+          ],
+          [
+            0.0617,
+            0.9383,
+            0.0
+          ]
+        ],
+        "window_choice0_probability_first_two_trials": [
+          2e-05,
+          0.0
+        ],
+        "mean_decision_time_including_censoring_first_two_trials": [
+          0.6401464343070984,
+          0.5621284246444702
+        ]
+      }
+    },
+    {
+      "model": "csi",
+      "trials": 16,
+      "path_construction_direct": {
+        "seconds": [
+          0.0117508580442518,
+          0.01172395795583725,
+          0.011574956006370485
+        ],
+        "median_seconds": 0.01172395795583725
+      },
+      "path_construction_sampling": {
+        "seconds": [
+          0.02535044203978032,
+          0.02546604396775365,
+          0.026268554967828095
+        ],
+        "median_seconds": 0.02546604396775365
+      },
+      "direct": [
+        {
+          "backend": "native",
+          "threads": 4,
+          "points": 129,
+          "density_cells_per_trial": 127,
+          "seconds": [
+            0.016250520013272762,
+            0.016627524979412556,
+            0.015855013974942267
+          ],
+          "median_seconds": 0.016250520013272762,
+          "substeps": 1,
+          "probabilities_first_two_trials": [
+            [
+              0.10434222807248746,
+              0.7022278980550837,
+              0.19342987387242966
+            ],
+            [
+              0.0272844244035202,
+              0.9379039574539831,
+              0.034811618142497676
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            0.0009035943667023854,
+            9.639291334381744e-05
+          ]
+        }
+      ],
+      "sampling": {
+        "seconds": [
+          0.3271113149821758,
+          0.3260076099541038,
+          0.3200279331067577
+        ],
+        "median_seconds": 0.3260076099541038,
+        "probabilities_first_two_trials": [
+          [
+            0.10333,
+            0.70317,
+            0.1935
+          ],
+          [
+            0.02799,
+            0.93746,
+            0.03455
+          ]
+        ],
+        "window_choice0_probability_first_two_trials": [
+          0.00075,
+          6e-05
+        ],
+        "mean_decision_time_including_censoring_first_two_trials": [
+          0.8414592742919922,
+          0.6113790273666382
+        ]
+      }
+    },
+    {
+      "model": "dawa",
+      "trials": 16,
+      "path_construction_direct": {
+        "seconds": [
+          0.024980638059787452,
+          0.025407444103620946,
+          0.025049338932149112
+        ],
+        "median_seconds": 0.025049338932149112
+      },
+      "path_construction_sampling": {
+        "seconds": [
+          0.075787827023305,
+          0.07374449796043336,
+          0.07742084900382906
+        ],
+        "median_seconds": 0.075787827023305
+      },
+      "direct": [
+        {
+          "backend": "triton",
+          "threads": 1,
+          "points": 129,
+          "density_cells_per_trial": 16641,
+          "seconds": [
+            3.414716864004731,
+            3.3477538850856945,
+            3.3501800290541723
+          ],
+          "median_seconds": 3.3501800290541723,
+          "substeps": 5,
+          "probabilities_first_two_trials": [
+            [
+              0.8484570179321482,
+              0.15152514747235846,
+              1.783459549346943e-05
+            ],
+            [
+              0.06200118493732325,
+              0.9379988114890612,
+              3.573615804180772e-09
+            ]
+          ],
+          "window_choice0_probability_first_two_trials": [
+            1.3919446587997868e-05,
+            5.0500588549000484e-14
+          ]
+        }
+      ],
+      "sampling": {
+        "seconds": [
+          0.41505193698685616,
+          0.4143578229704872,
+          0.41171630600001663
+        ],
+        "median_seconds": 0.4143578229704872,
+        "probabilities_first_two_trials": [
+          [
+            0.84888,
+            0.1511,
+            2e-05
+          ],
+          [
+            0.0617,
+            0.9383,
+            0.0
+          ]
+        ],
+        "window_choice0_probability_first_two_trials": [
+          2e-05,
+          0.0
+        ],
+        "mean_decision_time_including_censoring_first_two_trials": [
+          0.6401464343070984,
+          0.5621284246444702
+        ]
+      }
+    }
+  ],
+  "refinement": {
+    "csi": {
+      "cutoffs": [
+        0.1,
+        0.2,
+        0.30000000000000004,
+        0.4,
+        0.5,
+        0.6,
+        0.7000000000000001,
+        0.8,
+        0.9,
+        1.0,
+        1.1,
+        1.2000000000000002,
+        1.3000000000000003,
+        1.4000000000000001
+      ],
+      "reference_points": 257,
+      "reference_dt": 0.0005,
+      "reference_joint_cdf": [
+        [
+          [
+            0.00010265304901893622,
+            0.0002711538643607042
+          ],
+          [
+            0.004307469307186501,
+            0.015045843162852067
+          ],
+          [
+            0.015028950919544263,
+            0.06330125483477837
+          ],
+          [
+            0.028033693168214413,
+            0.1343651648620036
+          ],
+          [
+            0.04071127293960673,
+            0.2138624168840352
+          ],
+          [
+            0.05217781841320693,
+            0.29296471551073244
+          ],
+          [
+            0.06226793992048191,
+            0.3672734705081913
+          ],
+          [
+            0.07106153627163928,
+            0.434934707374164
+          ],
+          [
+            0.07870487098010656,
+            0.4954178857072852
+          ],
+          [
+            0.0853480818725265,
+            0.5488483333603851
+          ],
+          [
+            0.09112602046141695,
+            0.5956614689217253
+          ],
+          [
+            0.09615462225650276,
+            0.6364254814665891
+          ],
+          [
+            0.10053237017835351,
+            0.6717495616142222
+          ],
+          [
+            0.1043430113602985,
+            0.7022359632437408
+          ]
+        ],
+        [
+          [
+            6.648462991664391e-05,
+            0.0005060221682192324
+          ],
+          [
+            0.002178903136481312,
+            0.03218828228355857
+          ],
+          [
+            0.006516619168066859,
+            0.13804588495697154
+          ],
+          [
+            0.010963926838045377,
+            0.28368003673927866
+          ],
+          [
+            0.014754923370556072,
+            0.42885893613194576
+          ],
+          [
+            0.017802716474200633,
+            0.5549559229999248
+          ],
+          [
+            0.020204814590072676,
+            0.657374104132647
+          ],
+          [
+            0.02208625713426962,
+            0.7375813365565608
+          ],
+          [
+            0.023557807246085985,
+            0.7990183508122057
+          ],
+          [
+            0.02470859342676584,
+            0.8453750864353848
+          ],
+          [
+            0.025608213514885864,
+            0.8799597517959189
+          ],
+          [
+            0.026310682619192213,
+            0.9055244207519055
+          ],
+          [
+            0.026858056068629753,
+            0.9242698907434639
+          ],
+          [
+            0.027283278029228537,
+            0.9379139225926378
+          ]
+        ]
+      ],
+      "direct": [
+        {
+          "points": 33,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 0.0016312293094671582
+        },
+        {
+          "points": 65,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 0.000388678917738694
+        },
+        {
+          "points": 129,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 7.735497004892483e-05
+        },
+        {
+          "points": 257,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 1.7010096413376443e-06
+        }
+      ],
+      "sampling": [
+        {
+          "dt": 0.00025,
+          "seed": 43,
+          "maximum_joint_cdf_error": 0.0027389361319457572
+        },
+        {
+          "dt": 0.00025,
+          "seed": 71,
+          "maximum_joint_cdf_error": 0.0018016666396148961
+        },
+        {
+          "dt": 0.00025,
+          "seed": 103,
+          "maximum_joint_cdf_error": 0.003995922999924795
+        },
+        {
+          "dt": 0.000125,
+          "seed": 43,
+          "maximum_joint_cdf_error": 0.0011900367392786437
+        },
+        {
+          "dt": 0.000125,
+          "seed": 71,
+          "maximum_joint_cdf_error": 0.002645284489267541
+        },
+        {
+          "dt": 0.000125,
+          "seed": 103,
+          "maximum_joint_cdf_error": 0.002146529491808713
+        }
+      ]
+    },
+    "dawa": {
+      "cutoffs": [
+        0.1,
+        0.2,
+        0.30000000000000004,
+        0.4,
+        0.5,
+        0.6,
+        0.7000000000000001,
+        0.8,
+        0.9,
+        1.0,
+        1.1,
+        1.2000000000000002,
+        1.3000000000000003,
+        1.4000000000000001
+      ],
+      "reference_points": 257,
+      "reference_dt": 0.0005,
+      "reference_joint_cdf": [
+        [
+          [
+            2.176525095137597e-07,
+            2.2440935802423074e-07
+          ],
+          [
+            0.0010544919522753958,
+            0.0011218331505004648
+          ],
+          [
+            0.016671123995986567,
+            0.01656905369073634
+          ],
+          [
+            0.06782108983900735,
+            0.05569613743757032
+          ],
+          [
+            0.1627349887614966,
+            0.10011811532515788
+          ],
+          [
+            0.29772556191676736,
+            0.1303925836589204
+          ],
+          [
+            0.46132756080568404,
+            0.14451813453821072
+          ],
+          [
+            0.6256761081009248,
+            0.14923392768558316
+          ],
+          [
+            0.7509151634811568,
+            0.15037239421858162
+          ],
+          [
+            0.8178752495399773,
+            0.15057397968543018
+          ],
+          [
+            0.8421458944390325,
+            0.1506009979078795
+          ],
+          [
+            0.8481699566983028,
+            0.15060386787120295
+          ],
+          [
+            0.8492366332638456,
+            0.1506041221087646
+          ],
+          [
+            0.8493791406595712,
+            0.1506041418015655
+          ]
+        ],
+        [
+          [
+            2.1624128068456826e-07,
+            2.2586352935835852e-07
+          ],
+          [
+            0.0009643250002927967,
+            0.001225808573741571
+          ],
+          [
+            0.012219519953880752,
+            0.022461368500235418
+          ],
+          [
+            0.03446371420017258,
+            0.10620801946550623
+          ],
+          [
+            0.05212769597388776,
+            0.2843102269608516
+          ],
+          [
+            0.05924377891891612,
+            0.5343108735721449
+          ],
+          [
+            0.0608227213744693,
+            0.7653393845787178
+          ],
+          [
+            0.06102495642832187,
+            0.8928426602722117
+          ],
+          [
+            0.06104099212184945,
+            0.9316964000701398
+          ],
+          [
+            0.061041861517576734,
+            0.938251894797375
+          ],
+          [
+            0.061041897340904955,
+            0.9389117250068733
+          ],
+          [
+            0.061041898569378514,
+            0.9389558331105129
+          ],
+          [
+            0.06104189860689153,
+            0.9389580114430944
+          ],
+          [
+            0.0610418986079593,
+            0.9389580983047874
+          ]
+        ]
+      ],
+      "direct": [
+        {
+          "points": 33,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 0.04241302640177502
+        },
+        {
+          "points": 65,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 0.011381759966419436
+        },
+        {
+          "points": 129,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 0.002396292307264458
+        },
+        {
+          "points": 257,
+          "dt": 0.001,
+          "maximum_joint_cdf_error": 4.1276675072365876e-07
+        }
+      ],
+      "sampling": [
+        {
+          "dt": 0.00025,
+          "seed": 43,
+          "maximum_joint_cdf_error": 0.002170226960851618
+        },
+        {
+          "dt": 0.00025,
+          "seed": 71,
+          "maximum_joint_cdf_error": 0.0024997730391483897
+        },
+        {
+          "dt": 0.00025,
+          "seed": 103,
+          "maximum_joint_cdf_error": 0.002340615421282277
+        },
+        {
+          "dt": 0.000125,
+          "seed": 43,
+          "maximum_joint_cdf_error": 0.002462439194315935
+        },
+        {
+          "dt": 0.000125,
+          "seed": 71,
+          "maximum_joint_cdf_error": 0.0013491264278551185
+        },
+        {
+          "dt": 0.000125,
+          "seed": 103,
+          "maximum_joint_cdf_error": 0.0037091264278551472
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "Scripts/Debug/pec_batch_compile/csi/csi_fit/direct_likelihood/continuous_monte_carlo.py": "4a4aeee255df4026ece96175eee27d0528c95ef0fe20156fcf036bca9795bb6d",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_monte_carlo.py": "5b5141b0717cc9c9175da7095253647e33a2bbdd7767ceb786818cc7e6dbba47",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_flux_gpu.py": "b5022709a36b3cc15ad488e352f008b4eeb37b00f50772bdc8a5b007f28e6bba",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_flux_cpu.cpp": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+    "psyneulink/core/batched/numerical/first_passage_cpu.cpp": "a30b56a23e1c7fd46338dc20aa643242a62b13b4e015d7f783f334cb497bf1bc"
+  },
+  "compilation_probe": {
+    "probe": "DAWA fixed-horizon sampler after bias changed by 0.000137; deterministic path construction excluded; same sample count and seed. First call may compile a new bias specialization.",
+    "seconds": [
+      0.7530913230730221,
+      0.06112017389386892,
+      0.053336075972765684
+    ],
+    "bias_before": -0.42202839162343536,
+    "bias_after": -0.42189139162343536
+  },
+  "validation": "4 new test checks passed (2 numerical/input tests and 2 style checks). All benchmark CPU-thread/GPU parity, conservation, positive-mass, and lower-truncation assertions passed.",
+  "limitations": [
+    "Current implementations, fixed parameter vectors, conditional fresh-trial workloads; not a full sequential fitting benchmark.",
+    "The 16-trial workload repeats the two conditions eight times without reusing their distributions. No subject histories or model reset rules were changed.",
+    "Direct float64 versus Monte Carlo float32. Numerical error measured in joint choice/time CDF against a 257-point, 0.5 ms reference, not exact truth or equal tail-likelihood accuracy.",
+    "CSI uses a new continuous GPU validation sampler here, with the same 0.25 ms Euler/bridge convention as DAWA, not its scheduled PEC fitting sampler.",
+    "CSI direct solver batches trials across CPU threads; DAWA direct GPU currently processes them consecutively. This comparison does not isolate dimensionality from all implementation differences.",
+    "Compilation and graph capture excluded from warmed medians. DAWA sampler bias is a compile-time specialization; changing it can trigger compilation. The separate probe records this overhead."
+  ],
+  "benchmark_driver_source": {
+    "sha256_during_run": "076db94e17c329ee76dcd3aa0ad140a2d66960207e37a32bb26f6b6e2b98c7f4",
+    "sha256_after_metadata_fix": "92bfc462711778785e1e3026a999f22743be6160dc1351ad06398648f4453f2f",
+    "change": "After the audit, CPU identification was changed to read the current machine instead of using the prior audit CPU field. The timed functions and numerical algorithms were unchanged; both report the same i7-9700K here."
+  }
+}

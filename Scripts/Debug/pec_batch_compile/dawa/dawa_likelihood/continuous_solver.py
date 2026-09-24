@@ -30,12 +30,16 @@ class ContinuousConfig:
     recompute_rates: bool = True
     ode_backend: str = "torch"
     flux_backend: str = "torch"
+    cpu_threads: int = 1
+    gpu_graphs: bool = True
 
     def __post_init__(self):
         if self.ode_backend not in ("torch", "generated"):
             raise ValueError("ODE backend must be 'torch' or 'generated'.")
-        if self.flux_backend not in ("torch", "native"):
-            raise ValueError("Flux backend must be 'torch' or 'native'.")
+        if self.flux_backend not in ("torch", "native", "triton"):
+            raise ValueError("Flux backend must be 'torch', 'native', or 'triton'.")
+        if not isinstance(self.cpu_threads, int) or self.cpu_threads < 1:
+            raise ValueError("cpu_threads must be a positive integer.")
         if self.points < 8 or self.checkpoint_steps < 0:
             raise ValueError("Invalid grid/checkpoint size.")
         values = (self.time_step, self.ode_step, self.noise, self.lc_clock_ratio, self.cfl)
@@ -115,6 +119,9 @@ class ContinuousResponseSolver:
         if self.config.flux_backend == "native":
             from .continuous_flux import native_rates
             return native_rates(inputs, gain, bias, boundary, boundary_rate, self.config)
+        if self.config.flux_backend == "triton":
+            from .continuous_flux_gpu import gpu_rates
+            return gpu_rates(inputs, gain, bias, boundary, boundary_rate, self.config)
         n, lower = self.config.points, self.config.lower_bound
         h = 1. / n
         faces = torch.linspace(0., 1., n + 1, dtype=gain.dtype, device=gain.device)
@@ -139,11 +146,17 @@ class ContinuousResponseSolver:
 
     def _block(self, mass, inputs, gain, bias, boundary, boundary_rate, substeps, dt):
         rates = self._rates(inputs, gain, bias, boundary, boundary_rate)
+        return self._propagate(mass, rates, substeps, dt)
+
+    def _propagate(self, mass, rates, substeps, dt):
         if self.config.flux_backend == "native":
             from .continuous_flux import native_flux_block
-            return native_flux_block(mass, rates, substeps, dt)
+            return native_flux_block(mass, rates, substeps, dt, self.config.cpu_threads)
+        if self.config.flux_backend == "triton":
+            from .continuous_flux_gpu import gpu_flux_block
+            return gpu_flux_block(mass, rates, substeps, dt, graphs=self.config.gpu_graphs)
         exits, minimum = [], mass.min()
-        for k in range(len(gain) - 1):
+        for k in range(len(rates) - 1):
             flux = mass.new_zeros(3)
             for j in range(substeps):
                 r0 = rates[k] + (j / substeps) * (rates[k + 1] - rates[k])
@@ -176,19 +189,34 @@ class ContinuousResponseSolver:
         # A parameter-dependent integer stability count is numerical topology;
         # values/gradients retain the physical dt and all operator coefficients.
         maximum = 0.
-        with torch.no_grad():
-            for start in range(0, length, 64):
-                sl = slice(start, start + 64)
+        block = self.config.checkpoint_steps or (length - 1)
+        retained = []
+        if not self.config.recompute_rates:
+            # The retention option already saves these tensors for the adjoint.
+            # Reuse them for the CFL scan instead of evaluating every nonlinear
+            # coefficient twice. Inference also opts into this memory tradeoff.
+            for start in range(0, length - 1, block):
+                sl = slice(start, min(start + block + 1, length))
                 rate = self._rates(inputs[sl], gain[sl], bias, boundary[sl], boundary_rate[sl])
-                maximum = max(maximum, float(rate.sum(dim=-3).max()))
+                retained.append(rate)
+                with torch.no_grad():
+                    maximum = max(maximum, float(rate.sum(dim=-3).max()))
+        else:
+            with torch.no_grad():
+                for start in range(0, length, 64):
+                    sl = slice(start, start + 64)
+                    rate = self._rates(inputs[sl], gain[sl], bias, boundary[sl], boundary_rate[sl])
+                    maximum = max(maximum, float(rate.sum(dim=-3).max()))
         substeps = max(1, math.ceil(dt * maximum / self.config.cfl))
         parts, minimum = [], mass.min()
-        block = self.config.checkpoint_steps or (length - 1)
-        for start in range(0, length - 1, block):
+        for index, start in enumerate(range(0, length - 1, block)):
             stop = min(start + block + 1, length)
             args = (mass, inputs[start:stop], gain[start:stop], bias,
                     boundary[start:stop], boundary_rate[start:stop], substeps, dt)
-            if self.config.checkpoint_steps and self.config.recompute_rates and torch.is_grad_enabled() and any(v.requires_grad for v in args[:6]):
+            if retained:
+                mass, flux, local_min = self._propagate(mass, retained[index], substeps, dt)
+                retained[index] = None  # Release inference coefficients after use.
+            elif self.config.checkpoint_steps and self.config.recompute_rates and torch.is_grad_enabled() and any(v.requires_grad for v in args[:6]):
                 mass, flux, local_min = checkpoint(self._block, *args, use_reentrant=False)
             else:
                 mass, flux, local_min = self._block(*args)

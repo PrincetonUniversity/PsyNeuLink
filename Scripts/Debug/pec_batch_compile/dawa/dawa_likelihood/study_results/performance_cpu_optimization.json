@@ -1,0 +1,201 @@
+{
+  "scope": "Warmed fixed-workload CPU optimization audit, not parameter recovery or a full-fit/equal-accuracy benchmark.",
+  "baseline_revision": "883333709d30b3d46adf9b54cb54cc94e9aa8799",
+  "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "threads": 1,
+  "dtype": "float64",
+  "config": {
+    "points": 129,
+    "time_step": 0.001,
+    "ode_step": 0.0005,
+    "lower_bound": -0.25,
+    "noise": 0.1,
+    "leak": 8.0,
+    "competition": 8.0,
+    "lc_clock_ratio": 20.0,
+    "cfl": 0.8,
+    "checkpoint_steps": 16,
+    "recompute_rates": false,
+    "ode_backend": "generated",
+    "flux_backend": "native"
+  },
+  "parameters": {
+    "threshold": 0.2879657211820791,
+    "non_decision_time": 0.17650170847169946,
+    "bias": -0.42202839162343536,
+    "control_gain": 12.339782551339166,
+    "lc_mode": 0.8795587632626213,
+    "lc_scaling": 4.0,
+    "lc_base_gain": 5.119875177906493
+  },
+  "conditions": [
+    "color_incongruent",
+    "location_incongruent"
+  ],
+  "decision_horizon": 1.401,
+  "training_observations": 4000,
+  "observation_counts_source": "recovery_two.json",
+  "repeats": 3,
+  "warmup_calls_per_case": 1,
+  "timing_context": "Original code snapshot and optimized code measured sequentially, with no overlapping benchmark or test jobs. Native entry-point timing included in both.",
+  "before": {
+    "native_source_sha256": "2c35119643b92c3297fbc2dd5c9e64ae8b984d84799155c64f947525892eb7bc",
+    "peak_process_rss_mib": 2453.69921875,
+    "forward": {
+      "seconds": [
+        12.433593503083102,
+        12.488127271062694,
+        12.435249272035435
+      ],
+      "median_seconds": 12.435249272035435,
+      "phase_median_seconds": {
+        "coefficients": 9.790750232641585,
+        "forward": 2.4051422741031274
+      },
+      "native_calls": {
+        "coefficients": 220,
+        "forward": 176
+      },
+      "substeps": [
+        5
+      ],
+      "mean_negative_log_likelihood": 3.5723857413308067,
+      "gradient": null
+    },
+    "value_and_gradient": {
+      "seconds": [
+        29.92006944795139,
+        30.122984983958304,
+        30.392687867977656
+      ],
+      "median_seconds": 30.122984983958304,
+      "phase_median_seconds": {
+        "coefficients": 9.700982837704942,
+        "forward": 2.393070858786814,
+        "backward": 8.869923944119364,
+        "coefficients_vjp": 8.828208284103312
+      },
+      "native_calls": {
+        "coefficients": 220,
+        "forward": 176,
+        "backward": 176,
+        "coefficients_vjp": 176
+      },
+      "substeps": [
+        5
+      ],
+      "mean_negative_log_likelihood": 3.5723857413308067,
+      "gradient": [
+        -2.9761424455432284e-07,
+        -3.1812714129664244e-09,
+        1.3719407197798628e-07,
+        3.269831722280212e-10,
+        3.3456149760302534e-09,
+        -1.8627757963015306e-05,
+        -7.079877422386596e-09
+      ]
+    }
+  },
+  "after": {
+    "native_source_sha256": "536700d2ddcfc86873753ea75600b2285de9b8364948130a6b468a03297c8d0c",
+    "peak_process_rss_mib": 3187.4765625,
+    "forward": {
+      "seconds": [
+        3.8382620769552886,
+        3.998721417039633,
+        3.8341572219505906
+      ],
+      "median_seconds": 3.8382620769552886,
+      "phase_median_seconds": {
+        "coefficients": 1.3339606340741739,
+        "forward": 2.1660054344683886
+      },
+      "native_calls": {
+        "coefficients": 176,
+        "forward": 176
+      },
+      "substeps": [
+        5
+      ],
+      "mean_negative_log_likelihood": 3.5723857413308067,
+      "gradient": null
+    },
+    "value_and_gradient": {
+      "seconds": [
+        11.3133203209145,
+        11.012696817982942,
+        11.321421946049668
+      ],
+      "median_seconds": 11.3133203209145,
+      "phase_median_seconds": {
+        "coefficients": 1.221727644908242,
+        "forward": 2.2226755197625607,
+        "backward": 5.520419175038114,
+        "coefficients_vjp": 1.8448918267386034
+      },
+      "native_calls": {
+        "coefficients": 176,
+        "forward": 176,
+        "backward": 176,
+        "coefficients_vjp": 176
+      },
+      "substeps": [
+        5
+      ],
+      "mean_negative_log_likelihood": 3.5723857413308067,
+      "gradient": [
+        -2.976142641497592e-07,
+        -3.181272162366966e-09,
+        1.3719409044238295e-07,
+        3.2698318442529566e-10,
+        3.3456151633803888e-09,
+        -1.862775796302269e-05,
+        -7.079878049272292e-09
+      ]
+    }
+  },
+  "speedups": {
+    "forward": 3.2398124522804155,
+    "value_and_gradient": 2.6626122243061663
+  },
+  "continuous_sampling": {
+    "seconds": [
+      0.07058269996196032,
+      0.07056320295669138,
+      0.07077790598850697
+    ],
+    "median_seconds": 0.07058269996196032,
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "response_dtype": "float32",
+    "estimates_per_condition": 100000,
+    "time_step": 0.00025,
+    "ode_step": 0.00025,
+    "decision_horizon": 1.401,
+    "seed": 43,
+    "histogram_scoring_median_seconds": 0.0073379139648750424,
+    "sample_and_score_median_seconds": 0.07796061900444329,
+    "mean_negative_log_likelihood": 3.573003515413773,
+    "zero_observed_bins": 0,
+    "maximum_joint_cdf_difference_from_direct": 0.0031401549892505765,
+    "limitations": "Empirical RT-bin probabilities without smoothing or a probability floor; no parameter gradients. Different discretization and precision from the CPU solver."
+  },
+  "validation": {
+    "forward_maximum_probability_difference": 5.551115123125783e-16,
+    "forward_loss_difference": 0.0,
+    "value_and_gradient_maximum_probability_difference": 5.551115123125783e-16,
+    "value_and_gradient_loss_difference": 0.0,
+    "maximum_parameter_gradient_difference": 1.9595436384634013e-14,
+    "substeps_unchanged": true,
+    "tests": "35 passed, 2 skipped across the discrete and continuous DAWA likelihood suites; includes coefficient/adjoint parity, series-cutoff and extreme-drift tests, rate-retention parity, sequential gradients, finite differences, analytic absorption and conservation."
+  },
+  "limitations": [
+    "One parameter vector and two fresh-state conditions; no sequential subject fit.",
+    "GPU response states use float32 and Euler/bridge first passage at 0.25 ms; CPU uses float64 finite volume with 1 ms coefficients and CFL substeps. No equal-accuracy claim.",
+    "Sampling and empirical histogram scoring provide no parameter gradients. No density smoothing or probability floor was added.",
+    "recompute_rates=False now caches coefficient blocks during the forward stability scan as well as for backward; recompute_rates=True remains the lower-memory option.",
+    "Peak RSS covers the whole benchmark process, imports and warmup, not just the solver; the optimized run also initializes CUDA."
+  ]
+}

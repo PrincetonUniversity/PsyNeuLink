@@ -18,6 +18,10 @@ The original fitting model is
 Local behavioral data and generated fit outputs remain inside `csi_fit/` and
 are not tracked. The existing filenames and command-line options are retained.
 
+The [matched CSI/DAWA comparison](../CSI_DAWA_PERFORMANCE.md) measures direct
+first-passage solvers and continuous GPU sampling with the same trial counts,
+sample count, and decision horizon, including numerical refinement.
+
 For example, from the repository root:
 
 ```bash

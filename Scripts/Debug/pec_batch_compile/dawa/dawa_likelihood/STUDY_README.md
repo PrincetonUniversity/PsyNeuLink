@@ -158,7 +158,11 @@ single-trial audit. The native flux loop itself agrees with the Torch loop and
 its rate/state/absorbing-flux derivatives to roughly `1e-15` on the small random
 operator test.
 
-## Current direct and sampling timings
+## Earlier direct and sampling timings
+
+The [CPU optimization audit](PERFORMANCE_README.md) provides updated timings,
+component profiles, and a reusable CPU/GPU benchmark. The measurements below
+precede that optimization and are retained as historical results.
 
 A later [short warmed timing check](study_results/performance.json) uses the
 unrestricted refined-recovery estimate, both incongruent conditions, and a
@@ -182,9 +186,10 @@ at one parameter vector, with different numerical approximations and precision;
 it does not establish equal-accuracy likelihood or full-fit throughput. These
 sampling timings are not measurements of the original scheduled PEC simulator.
 
-The optimized native direct backend remains CPU-only. The Torch reference can
-also run the density calculation on CUDA; a dedicated fused GPU density solver
-has not been implemented.
+The native backend now supports CPU threading. A dedicated Triton GPU backend
+also implements the finite-volume rates, density propagation, and their
+first-order adjoints in float64. See the updated
+[parallel CPU and GPU timings](PERFORMANCE_README.md).
 
 ## Reproduce
 

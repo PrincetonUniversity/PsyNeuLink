@@ -12,6 +12,8 @@
 !/study_results/local_information.json
 !/study_results/profile.json
 !/study_results/performance.json
+!/study_results/performance_cpu_optimization.json
+!/study_results/performance_parallel_gpu.json
 !/study_results/recovery_all.json
 !/study_results/recovery_two.json
 !/study_results/distribution_error_convergence.png

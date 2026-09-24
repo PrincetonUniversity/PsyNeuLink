@@ -1,0 +1,552 @@
+{
+  "scope": "Same nonlinear continuous DAWA likelihood: CPU threads and fused float64 GPU kernels, including gradients. Fresh-trial performance benchmark; sequential-history correctness tested separately.",
+  "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "parameters": {
+    "threshold": 0.2879657211820791,
+    "non_decision_time": 0.17650170847169946,
+    "bias": -0.42202839162343536,
+    "control_gain": 12.339782551339166,
+    "lc_mode": 0.8795587632626213,
+    "lc_scaling": 4.0,
+    "lc_base_gain": 5.119875177906493
+  },
+  "conditions": [
+    "color_incongruent",
+    "location_incongruent"
+  ],
+  "training_observations": 4000,
+  "observation_counts_source": "recovery_two.json",
+  "repeats": 3,
+  "warmup_calls_per_case": 1,
+  "timing_context": "Each backend measured in a separate process, sequentially, without overlapping tests or other benchmark jobs. CUDA timings synchronized. Compilation and graph construction excluded from warmed medians; warmup evaluation times are also retained.",
+  "cases": {
+    "cpu1": {
+      "device": "cpu",
+      "threads": 1,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "native",
+        "cpu_threads": 1,
+        "gpu_graphs": true
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 3187.359375,
+      "forward": {
+        "seconds": [
+          3.851775094983168,
+          3.7777910999720916,
+          3.792011350975372
+        ],
+        "median_seconds": 3.792011350975372,
+        "phase_median_seconds": {
+          "coefficients": 1.2786320389714092,
+          "forward": 2.1439540730789304
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 4.4734789410140365,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 0.0,
+        "speedup_over_cpu1": 1.0
+      },
+      "value_and_gradient": {
+        "seconds": [
+          11.004907888011076,
+          10.74684212799184,
+          11.177159490063787
+        ],
+        "median_seconds": 11.004907888011076,
+        "phase_median_seconds": {
+          "coefficients": 0.9996791775338352,
+          "forward": 2.1789837571559474,
+          "backward": 5.596048973151483,
+          "coefficients_vjp": 1.8492454786319286
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176,
+          "backward": 176,
+          "coefficients_vjp": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 11.442051374004222,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": [
+          -2.976142641497592e-07,
+          -3.181272162366966e-09,
+          1.371940902897273e-07,
+          3.2698318442529566e-10,
+          3.3456151633803888e-09,
+          -1.862775796302269e-05,
+          -7.079878049272292e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 0.0,
+        "speedup_over_cpu1": 1.0,
+        "maximum_gradient_difference_from_cpu1": 0.0
+      }
+    },
+    "cpu2": {
+      "device": "cpu",
+      "threads": 2,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "native",
+        "cpu_threads": 2,
+        "gpu_graphs": true
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 3187.62890625,
+      "forward": {
+        "seconds": [
+          4.0650844420306385,
+          4.0591187389800325,
+          4.179964373004623
+        ],
+        "median_seconds": 4.0650844420306385,
+        "phase_median_seconds": {
+          "coefficients": 0.7577234576456249,
+          "forward": 2.92635017237626
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 4.647454838035628,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 0.9328247432619486
+      },
+      "value_and_gradient": {
+        "seconds": [
+          11.518355790991336,
+          11.830569525947794,
+          11.535710799042135
+        ],
+        "median_seconds": 11.535710799042135,
+        "phase_median_seconds": {
+          "coefficients": 0.5422480634879321,
+          "forward": 2.934694267110899,
+          "backward": 6.758691227296367,
+          "coefficients_vjp": 1.0027330116136
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176,
+          "backward": 176,
+          "coefficients_vjp": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 12.250435071997344,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": [
+          -2.9761425537899733e-07,
+          -3.1812718293000586e-09,
+          1.37194083441039e-07,
+          3.269831368830304e-10,
+          3.345614901437144e-09,
+          -1.8627757963014957e-05,
+          -7.079877887726169e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 0.9539861114518288,
+        "maximum_gradient_difference_from_cpu1": 8.770761894538737e-15
+      }
+    },
+    "cpu4": {
+      "device": "cpu",
+      "threads": 4,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "native",
+        "cpu_threads": 4,
+        "gpu_graphs": true
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 3189.93359375,
+      "forward": {
+        "seconds": [
+          2.3308174670673907,
+          2.218346399953589,
+          2.206892416928895
+        ],
+        "median_seconds": 2.218346399953589,
+        "phase_median_seconds": {
+          "coefficients": 0.34386197733692825,
+          "forward": 1.5616835760883987
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 3.1459538660710678,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 1.7093864831275705
+      },
+      "value_and_gradient": {
+        "seconds": [
+          6.609700161963701,
+          7.499017436988652,
+          6.93769767798949
+        ],
+        "median_seconds": 6.93769767798949,
+        "phase_median_seconds": {
+          "coefficients": 0.31690167903434485,
+          "forward": 1.58090065268334,
+          "backward": 3.8737616502912715,
+          "coefficients_vjp": 0.5724767335923389
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176,
+          "backward": 176,
+          "coefficients_vjp": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 6.856316116987728,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": [
+          -2.976142699923079e-07,
+          -3.181270719077034e-09,
+          1.3719409848109154e-07,
+          3.269831378859174e-10,
+          3.3456149135802082e-09,
+          -1.86277579630179e-05,
+          -7.079878399469594e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 1.5862478301591605,
+        "maximum_gradient_difference_from_cpu1": 8.191364253562483e-15
+      }
+    },
+    "cpu8": {
+      "device": "cpu",
+      "threads": 8,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "native",
+        "cpu_threads": 8,
+        "gpu_graphs": true
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 3190.53125,
+      "forward": {
+        "seconds": [
+          2.595166385988705,
+          2.511832236079499,
+          2.606097358977422
+        ],
+        "median_seconds": 2.595166385988705,
+        "phase_median_seconds": {
+          "coefficients": 0.29560585191939026,
+          "forward": 2.012854925589636
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 3.694745699991472,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 1.4611823625060918
+      },
+      "value_and_gradient": {
+        "seconds": [
+          8.447177969035693,
+          11.842854738002643,
+          12.484761961968616
+        ],
+        "median_seconds": 11.842854738002643,
+        "phase_median_seconds": {
+          "coefficients": 0.28155131288804114,
+          "forward": 3.2741667778464034,
+          "backward": 7.5512848037760705,
+          "coefficients_vjp": 0.4259000935126096
+        },
+        "native_calls": {
+          "coefficients": 176,
+          "forward": 176,
+          "backward": 176,
+          "coefficients_vjp": 176
+        },
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 11.180835779057816,
+        "mean_negative_log_likelihood": 3.572385741330807,
+        "gradient": [
+          -2.9761427002006346e-07,
+          -3.1812708856104877e-09,
+          1.3719409856088882e-07,
+          3.269831374251315e-10,
+          3.3456149127128465e-09,
+          -1.8627757963017945e-05,
+          -7.079878400120115e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 2.220446049250313e-16,
+        "speedup_over_cpu1": 0.9292445218210207,
+        "maximum_gradient_difference_from_cpu1": 8.271161533457416e-15
+      }
+    },
+    "gpu": {
+      "device": "cuda",
+      "threads": 1,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "triton",
+        "cpu_threads": 1,
+        "gpu_graphs": true
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 1514.24609375,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "gpu_source_sha256": "b5022709a36b3cc15ad488e352f008b4eeb37b00f50772bdc8a5b007f28e6bba",
+      "peak_cuda_allocated_mib": 1600.9716796875,
+      "peak_cuda_reserved_mib": 1912.0,
+      "forward": {
+        "seconds": [
+          0.4107749729882926,
+          0.41134269000031054,
+          0.4025197810260579
+        ],
+        "median_seconds": 0.4107749729882926,
+        "phase_median_seconds": {},
+        "native_calls": {},
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 2.776595690054819,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 2.7755575615628914e-17,
+        "speedup_over_cpu1": 9.231359260739206
+      },
+      "value_and_gradient": {
+        "seconds": [
+          0.969818223034963,
+          0.960730419959873,
+          0.951506516081281
+        ],
+        "median_seconds": 0.960730419959873,
+        "phase_median_seconds": {},
+        "native_calls": {},
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 1.218933395924978,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": [
+          -2.976142450539232e-07,
+          -3.1812684986309847e-09,
+          1.3719407644663395e-07,
+          3.2698307017749173e-10,
+          3.3456150228677872e-09,
+          -1.8627757963024393e-05,
+          -7.079877995712705e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 2.7755575615628914e-17,
+        "speedup_over_cpu1": 11.454730337851403,
+        "maximum_gradient_difference_from_cpu1": 1.9095836023552692e-14
+      }
+    },
+    "gpu_eager": {
+      "device": "cuda",
+      "threads": 1,
+      "torch_threads": 1,
+      "config": {
+        "points": 129,
+        "time_step": 0.001,
+        "ode_step": 0.0005,
+        "lower_bound": -0.25,
+        "noise": 0.1,
+        "leak": 8.0,
+        "competition": 8.0,
+        "lc_clock_ratio": 20.0,
+        "cfl": 0.8,
+        "checkpoint_steps": 16,
+        "recompute_rates": false,
+        "ode_backend": "generated",
+        "flux_backend": "triton",
+        "cpu_threads": 1,
+        "gpu_graphs": false
+      },
+      "native_source_sha256": "f99a0fc09d0485a38216f37def64a37a245c0b87e464a7b72ee952c475af130a",
+      "peak_process_rss_mib": 1502.1328125,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "gpu_source_sha256": "b5022709a36b3cc15ad488e352f008b4eeb37b00f50772bdc8a5b007f28e6bba",
+      "peak_cuda_allocated_mib": 1567.8232421875,
+      "peak_cuda_reserved_mib": 1824.0,
+      "forward": {
+        "seconds": [
+          1.06865737400949,
+          0.9768636670196429,
+          0.9566587009467185
+        ],
+        "median_seconds": 0.9768636670196429,
+        "phase_median_seconds": {},
+        "native_calls": {},
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 3.0483540310524404,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": null,
+        "maximum_probability_difference_from_cpu1": 2.7755575615628914e-17,
+        "speedup_over_cpu1": 3.881822488643261
+      },
+      "value_and_gradient": {
+        "seconds": [
+          3.6650004650000483,
+          3.8184999639634043,
+          3.8224584199488163
+        ],
+        "median_seconds": 3.8184999639634043,
+        "phase_median_seconds": {},
+        "native_calls": {},
+        "substeps": [
+          5
+        ],
+        "warmup_evaluation_seconds": 4.055243122042157,
+        "mean_negative_log_likelihood": 3.5723857413308067,
+        "gradient": [
+          -2.976142450539232e-07,
+          -3.1812684986309847e-09,
+          1.3719407644663395e-07,
+          3.2698307017749173e-10,
+          3.3456150228677872e-09,
+          -1.8627757963024393e-05,
+          -7.079877995712705e-09
+        ],
+        "maximum_probability_difference_from_cpu1": 2.7755575615628914e-17,
+        "speedup_over_cpu1": 2.8819976409240433,
+        "maximum_gradient_difference_from_cpu1": 1.9095836023552692e-14
+      }
+    }
+  },
+  "continuous_sampling": {
+    "seconds": [
+      0.05512588401325047,
+      0.054859081050381064,
+      0.055969396024011075
+    ],
+    "median_seconds": 0.05512588401325047,
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "response_dtype": "float32",
+    "estimates_per_condition": 100000,
+    "time_step": 0.00025,
+    "ode_step": 0.00025,
+    "decision_horizon": 1.401,
+    "seed": 43,
+    "histogram_scoring_median_seconds": 0.006938686943612993,
+    "sample_and_score_median_seconds": 0.06224917294457555,
+    "mean_negative_log_likelihood": 3.573003515413773,
+    "zero_observed_bins": 0,
+    "maximum_joint_cdf_difference_from_direct": 0.0031401549892506875,
+    "limitations": "Empirical RT-bin probabilities without smoothing or a probability floor; no parameter gradients. Different discretization and precision from the CPU solver."
+  },
+  "validation": "47 passed, 4 skipped. Includes CPU threading, GPU eager/graph parity for values and adjoints, all coefficient gradients, changing graph inputs, conservation, sequential control carryover and excluded-trial NDT gradients, checkpoint/retention parity, and finite differences.",
+  "limitations": [
+    "One fixed parameter vector and two fresh-trial conditions, not an equal-accuracy or full-subject fitting benchmark.",
+    "All direct backends use float64, 129x129 cells, 1 ms coefficient intervals, 0.5 ms deterministic ODE steps, 16-interval blocks, and five CFL substeps here. The equations and integration scheme are unchanged.",
+    "GPU sampling uses float32 response states with 0.25 ms Euler/bridge steps and no likelihood gradients.",
+    "CUDA graph caches hold up to eight graphs; a different shape, substep count, timestep, device, or stream may require recapture.",
+    "Native CPU thread count is explicit and independent of the one-thread Torch pool. More threads are not necessarily faster.",
+    "Native CPU and Triton support first-order derivatives only. Generated ODE integration and its adjoint remain on CPU."
+  ],
+  "sequential_cli_validation": {
+    "trials": 12,
+    "included_trials": 3,
+    "points": 65,
+    "log_likelihood_absolute_difference": 0.0,
+    "maximum_gradient_absolute_difference": 6.821210263296962e-13,
+    "maximum_mass_error": 6.661338147750939e-16,
+    "scope": "CLI integration check on 12 real-data rows (9 warmups, 3 included), generated ODE with CPU 4 threads versus CUDA Triton, float64; not a performance benchmark."
+  }
+}
