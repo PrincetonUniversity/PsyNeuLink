@@ -58,6 +58,29 @@ def _toy_likelihood(epochs=3, seed=0):
     ), raw
 
 
+def test_the_estimator_returned_is_the_one_its_held_out_score_describes():
+    # A setting whose held-out score is best a few epochs before the last one.
+    theta, raw = _toy_arrays(n=2000)
+    categorical = nlf._infer_categorical(raw)
+    categories = tuple(
+        tuple(float(v) for v in np.unique(raw[:, j])) if c else ()
+        for j, c in enumerate(categorical)
+    )
+    x = nlf._encode_outcomes(raw, categorical, categories, OUTCOMES)
+    cond = torch.as_tensor(theta, dtype=torch.float32)
+    seed = 2
+    estimator, val_nll = nlf._fit_estimator(
+        x, cond, categorical, categories, True, epochs=6, batch_size=128,
+        learning_rate=0.02, validation_fraction=0.1, seed=seed,
+    )
+    # The same held-out rows the training chose.
+    order = torch.randperm(x.shape[0], generator=torch.Generator().manual_seed(seed))
+    val_idx = order[:max(1, int(0.1 * x.shape[0]))]
+    with torch.no_grad():
+        rescored = float(estimator.loss(x[val_idx], condition=cond[val_idx]).mean())
+    assert rescored == pytest.approx(val_nll, rel=1e-6)
+
+
 # ---------------------------------------------------------------- provenance
 
 

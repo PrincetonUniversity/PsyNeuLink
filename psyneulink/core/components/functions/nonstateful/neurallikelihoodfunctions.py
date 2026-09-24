@@ -24,6 +24,7 @@ trial it is scoring rather than on the parameters alone.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import warnings
@@ -409,7 +410,11 @@ def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
 
 def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
                    batch_size, learning_rate, validation_fraction, seed):
-    """Train a density estimator by maximum likelihood; returns it and its held-out NLL."""
+    """Train a density estimator by maximum likelihood; returns it and its held-out NLL.
+
+    The weights returned are those of the epoch with the lowest held-out NLL, which is the one
+    reported.
+    """
     generator = torch.Generator().manual_seed(seed)
     n = x.shape[0]
     n_val = max(1, int(validation_fraction * n))
@@ -419,7 +424,7 @@ def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
     estimator = _build_estimator(x[train_idx], cond[train_idx], categorical, categories,
                                  log_transform)
     optimizer = torch.optim.Adam(estimator.parameters(), lr=learning_rate)
-    best = float("inf")
+    best, best_state = float("inf"), None
     for _ in range(epochs):
         shuffled = train_idx[torch.randperm(train_idx.numel(), generator=generator)]
         for start in range(0, shuffled.numel(), batch_size):
@@ -428,7 +433,11 @@ def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
             estimator.loss(x[batch], condition=cond[batch]).mean().backward()
             optimizer.step()
         with torch.no_grad():
-            best = min(best, float(estimator.loss(x[val_idx], condition=cond[val_idx]).mean()))
+            held_out = float(estimator.loss(x[val_idx], condition=cond[val_idx]).mean())
+        if held_out < best:
+            best, best_state = held_out, copy.deepcopy(estimator.state_dict())
+    if best_state is not None:
+        estimator.load_state_dict(best_state)
     estimator.eval()
     return estimator, best
 
