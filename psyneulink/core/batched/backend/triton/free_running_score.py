@@ -3,6 +3,8 @@
 Every estimate executes the full trial sequence with its own retained state.
 Only output consumption changes: reduce matches and diagnostics in the kernel
 instead of retaining an outcome and diagnostic array for every estimate.
+For one continuous outcome, Gaussian smoothing retains neighboring bin counts
+and weights them after simulation. Categories are never smoothed together.
 """
 
 import numpy as np
@@ -17,10 +19,11 @@ from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_input
 
 
 class HistogramEmitter(TritonGraphEmitter):
-    def __init__(self, kernel, indices, categorical):
+    def __init__(self, kernel, indices, categorical, radius=0):
         super().__init__(kernel)
         self.indices = tuple(indices)
         self.categorical = tuple(categorical)
+        self.radius = radius
         self.histogram_outputs = {}
 
     def _emit_lane_decode(self):
@@ -57,18 +60,32 @@ class HistogramEmitter(TritonGraphEmitter):
 
     def _emit_trial_end_inspection(self):
         width = len(self.indices)
+        count_width = 2 * self.radius + 1
         self.builder.line("hist_match = mask & (tl.load(observed_valid + trial_idx) != 0)")
         for column, index in enumerate(self.indices):
             value = self.histogram_outputs[index]
             address = f"trial_idx * {width} + {column}"
             if self.categorical[column]:
                 self.builder.line(f"hist_match = hist_match & (tl.abs({value} - tl.load(observed + {address})) <= 1.0e-6)")
-            else:
+            elif not self.radius:
                 self.builder.line(f"hist_lower = tl.load(lower + {address})")
                 self.builder.line(f"hist_upper = tl.load(upper + {address})")
                 self.builder.line(f"hist_inclusive = tl.load(lower_inclusive + {address})")
                 self.builder.line(f"hist_match = hist_match & tl.where(hist_inclusive != 0, {value} >= hist_lower, {value} > hist_lower) & ({value} <= hist_upper)")
-        self.builder.line("tl.atomic_add(out + hist_row, tl.sum(hist_match.to(tl.int32), 0))")
+        if self.radius:
+            column = self.categorical.index(False)
+            value = self.histogram_outputs[self.indices[column]]
+            # A loop keeps code/register growth bounded as sigma increases.
+            # Every offset is reduced as integers, independently of block order.
+            with self.builder.block(f"for hist_slot in range({count_width})"):
+                address = f"(trial_idx * {width} + {column}) * {count_width} + hist_slot"
+                self.builder.line(f"hist_lower = tl.load(lower + {address})")
+                self.builder.line(f"hist_upper = tl.load(upper + {address})")
+                self.builder.line(f"hist_inclusive = tl.load(lower_inclusive + {address})")
+                self.builder.line(f"hist_hit = hist_match & (hist_inclusive >= 0) & tl.where(hist_inclusive == 1, {value} >= hist_lower, {value} > hist_lower) & ({value} <= hist_upper)")
+                self.builder.line(f"tl.atomic_add(out + hist_row * {count_width} + hist_slot, tl.sum(hist_hit.to(tl.int32), 0))")
+        else:
+            self.builder.line("tl.atomic_add(out + hist_row, tl.sum(hist_match.to(tl.int32), 0))")
         self.builder.line(
             f"tl.atomic_add(diag + hist_row * {self.diag_slot_count + 1} + {self.diag_slot_count}, "
             "tl.sum(tl.where(mask, hist_nonfinite, 0), 0))"
@@ -82,14 +99,21 @@ class HistogramEmitter(TritonGraphEmitter):
         return (*args, "observed", "lower", "upper", "lower_inclusive", "observed_valid")
 
 
-def supports_fused_histogram(plan, smoothing_sigma):
-    return (plan.backend in ("triton", "triton_cpu") and smoothing_sigma == 0
-            and plan.ir.graph is not None
-            and plan.ir.graph.fusion_kind in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION))
+def supports_fused_histogram(plan, smoothing_sigma, categorical_dims=None, outcome_indices=None):
+    if (plan.backend not in ("triton", "triton_cpu") or plan.ir.graph is None
+            or plan.ir.graph.fusion_kind not in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION)):
+        return False
+    if smoothing_sigma == 0:
+        return True
+    width = (sum(output.width for output in plan.kernel_ir.outputs)
+             if outcome_indices is None else len(outcome_indices))
+    # Joint neighborhoods grow exponentially with the number of numeric axes.
+    # Keep the materialized oracle for multidimensional smoothing.
+    return np.count_nonzero(~_as_categorical_mask(categorical_dims, width)) <= 1
 
 
 def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, data, categorical_dims,
-                                   *, outcome_indices, bins, bin_range, pseudocount, categorical_cardinalities,
+                                   *, outcome_indices, bins, bin_range, smoothing_sigma, pseudocount, categorical_cardinalities,
                                    include_mask, subject_slices, seed, common_random_numbers,
                                    strict_truncation, triton_launch_options):
     from psyneulink.core.batched.backend.triton.cache import interpret_scope, load_triton_kernel_module
@@ -104,6 +128,8 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
         raise ValueError(f"bins must be a positive integer, got {bins!r}.")
     if not np.isfinite(pseudocount) or pseudocount < 0:
         raise ValueError("pseudocount must be finite and nonnegative.")
+    if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
+        raise ValueError("smoothing_sigma must be finite and nonnegative.")
     if not isinstance(num_estimates, (int, np.integer)) or not 0 < num_estimates < 2**31:
         raise ValueError("num_estimates must be a positive int32 count.")
     interpret = plan.backend == "triton_cpu"
@@ -125,29 +151,44 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     if data.shape != (trials, len(indices)):
         raise ValueError("Data must match the simulation's trial and selected outcome axes.")
     categorical = _as_categorical_mask(categorical_dims, len(indices))
-    observed = torch.tensor(data, dtype=torch.float32, device=device).contiguous()
-    lower, upper = torch.zeros_like(observed), torch.zeros_like(observed)
-    inclusive = torch.zeros_like(observed, dtype=torch.int32)
-    valid = torch.ones(trials, dtype=torch.bool, device=device)
     numeric = np.flatnonzero(~categorical).tolist()
+    # Clip before multiplying by three, including for very large finite sigma.
+    radius = (min(bins - 1, max(1, int(np.ceil(3 * min(float(smoothing_sigma), bins)))))
+              if smoothing_sigma and numeric else 0)
+    count_width = 2 * radius + 1
+    observed = torch.tensor(data, dtype=torch.float32, device=device).contiguous()
+    lower = torch.zeros((*observed.shape, count_width), device=device)
+    upper = torch.zeros_like(lower)
+    inclusive = torch.zeros_like(lower, dtype=torch.int32)
+    valid = torch.ones(trials, dtype=torch.bool, device=device)
     numeric_values = observed[:, numeric]
     edges = _bin_edges(numeric_values, numeric_values, bins, bin_range, torch)
     volume = torch.tensor(1., device=device)
+    weights = None
     for j, column in enumerate(numeric):
         edge = edges[j]
         index = torch.bucketize(observed[:, column].contiguous(), edge[1:-1])
-        lower[:, column], upper[:, column] = edge[index], edge[index + 1]
-        inclusive[:, column] = (index == 0).to(torch.int32)
+        offsets = torch.arange(-radius, radius + 1, device=device)
+        neighbors = index[:, None] + offsets
+        valid_neighbors = (neighbors >= 0) & (neighbors < bins)
+        safe = neighbors.clamp(0, bins - 1)
+        lower[:, column], upper[:, column] = edge[safe], edge[safe + 1]
+        # -1 marks an offset beyond the finite range; 0/1 are lower-edge rules.
+        inclusive[:, column] = torch.where(valid_neighbors, (safe == 0).to(torch.int32), -1)
+        if radius:
+            kernel_weights = torch.exp(-.5 * (offsets.float() / float(smoothing_sigma)) ** 2)
+            weights = kernel_weights[None, :] * valid_neighbors
+            weights = weights / weights.sum(-1, keepdim=True)
         valid &= (observed[:, column] >= edge[0]) & (observed[:, column] <= edge[-1])
         volume *= edge[1] - edge[0]
     slots = diag_slots(kernel)
-    counts = torch.zeros((len(rows), subjects, trials), dtype=torch.int32, device=device)
-    diagnostics = torch.zeros((*counts.shape, len(slots) + 1), dtype=torch.int64, device=device)
+    counts = torch.zeros((len(rows), subjects, trials, count_width), dtype=torch.int32, device=device)
+    diagnostics = torch.zeros((*counts.shape[:-1], len(slots) + 1), dtype=torch.int64, device=device)
     params, strides = _param_tensors(torch, ir, rows, device, num_subjects=subjects,
                                    num_trials=trials, subject_slices=subject_slices)
     lca_steps = lca_max_steps(ir, prepared, rows)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
-    emitter = HistogramEmitter(kernel, indices, categorical)
+    emitter = HistogramEmitter(kernel, indices, categorical, radius)
     source = emitter.emit()
     dummy = torch.empty(1, device=device)
     with interpret_scope(interpret):
@@ -172,7 +213,10 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     _report_truncation(truncated, ir.max_steps, strict_truncation)
     cardinalities = _categorical_cardinalities(data, categorical, categorical_cardinalities) if pseudocount else ()
     joint_bins = float(bins ** len(numeric) * np.prod(cardinalities))
-    density = (counts.to(torch.float32) + pseudocount) / ((num_estimates + pseudocount * joint_bins) * volume)
+    weighted = counts[..., 0].to(torch.float32) if weights is None else (counts.to(torch.float32) * weights).sum(-1)
+    # The edge-normalized weights sum to one, so smoothing the symmetric prior
+    # adds exactly one pseudocount here. Its denominator covers every joint bin.
+    density = (weighted + pseudocount) / ((num_estimates + pseudocount * joint_bins) * volume)
     density = torch.clamp(density, min=ZERO_PROB).reshape(len(rows) * subjects, trials).cpu().numpy()
     totals = np.asarray(_sum_histogram_log_likelihood(density, include_mask)).reshape(len(rows), subjects).sum(1)
     return float(totals[0]) if len(rows) == 1 else totals

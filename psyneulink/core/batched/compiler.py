@@ -338,10 +338,12 @@ class BatchedSimulationPlan:
         :func:`psyneulink.core.batched.likelihood.histogram_log_likelihood` for
         ``categorical_dims`` / ``bins`` / ``bin_range`` / smoothing semantics.
 
-        By default, unsmoothed stateful histograms reduce counts during
-        simulation, without allocating per-estimate outcome arrays. Every
-        trial still executes and carries state normally. ``fused=False``
-        retains the materialized simulation/scoring path as a reference.
+        By default, stateful histograms reduce counts during simulation,
+        without allocating per-estimate outcome arrays. Gaussian smoothing
+        supports one continuous outcome plus optional categories; smoothing
+        multiple continuous outcomes retains the materialized path. Pseudocounts
+        work in either path. Every trial still executes and carries state
+        normally. ``fused=False`` selects the materialized reference explicitly.
 
         Returns a scalar for a single parameter set, else one log-likelihood per
         parameter set.
@@ -351,10 +353,11 @@ class BatchedSimulationPlan:
             fused_histogram_log_likelihood, supports_fused_histogram,
         )
 
-        if fused and supports_fused_histogram(self, smoothing_sigma):
+        if fused and supports_fused_histogram(self, smoothing_sigma, categorical_dims, outcome_indices):
             return fused_histogram_log_likelihood(
                 self, inputs, parameter_sets, num_estimates, data, categorical_dims,
                 outcome_indices=outcome_indices, bins=bins, bin_range=bin_range,
+                smoothing_sigma=smoothing_sigma,
                 pseudocount=pseudocount, categorical_cardinalities=categorical_cardinalities,
                 include_mask=include_mask, subject_slices=subject_slices, seed=seed,
                 common_random_numbers=common_random_numbers, strict_truncation=strict_truncation,

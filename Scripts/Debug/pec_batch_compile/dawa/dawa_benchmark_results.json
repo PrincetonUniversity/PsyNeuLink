@@ -1827,5 +1827,294 @@
       "Register-cap profiling is an unsuccessful experiment, not a recommended configuration.",
       "CSI comparison uses the existing recorded 561-trial deterministic-history/window-score workload."
     ]
+  },
+  "smoothed_count_only_scoring": {
+    "date": "2026-09-24",
+    "baseline_commit": "f0ecba5891",
+    "subject": 1,
+    "trials": 760,
+    "scored_trials": 720,
+    "estimates_per_trial_per_candidate": 100000,
+    "candidate_coordinates": [
+      [
+        "termination_threshold",
+        "Response Units\n[Left, Right]",
+        "1"
+      ],
+      [
+        "intercept",
+        "RT_GATE",
+        "1"
+      ],
+      [
+        "intercept",
+        "Bias Mechanism",
+        "None"
+      ],
+      [
+        "gain",
+        "Control Units\n[Color, Location]",
+        "1"
+      ],
+      [
+        "mode",
+        "LC",
+        "0.0"
+      ],
+      [
+        "mode",
+        "LC",
+        "1.0"
+      ],
+      [
+        "slope",
+        "LC",
+        "1"
+      ],
+      [
+        "intercept",
+        "LC",
+        "None"
+      ]
+    ],
+    "candidates": [
+      [
+        0.3,
+        0.2,
+        -0.45,
+        10.0,
+        0.9,
+        0.9,
+        1.0,
+        5.0
+      ],
+      [
+        0.4,
+        0.22,
+        -0.4,
+        12.0,
+        0.7,
+        0.8,
+        1.5,
+        5.5
+      ],
+      [
+        0.5,
+        0.18,
+        -0.35,
+        8.0,
+        0.5,
+        0.7,
+        2.0,
+        6.0
+      ],
+      [
+        0.6,
+        0.25,
+        -0.3,
+        15.0,
+        0.3,
+        0.6,
+        2.5,
+        7.0
+      ]
+    ],
+    "noise": {
+      "c_noise": 0.1,
+      "s_noise": 0.1,
+      "d_noise": 0.1,
+      "r_noise": 0.1
+    },
+    "lca_dt": 0.01,
+    "seed": 29,
+    "max_steps": 2000,
+    "launch_options": {
+      "block_size": 32,
+      "num_warps": 1,
+      "maxnreg": null
+    },
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "torch_version": "2.13.0+cu130",
+    "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+    "model_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+    "histogram": {
+      "bins": 100,
+      "rt_range": [
+        0.0,
+        3.0
+      ],
+      "categorical_cardinality": 2,
+      "pseudocount": 1.0
+    },
+    "code_sha256": {
+      "psyneulink/core/batched/backend/triton/free_running_score.py": "4715ac1d5c45602ebe7a21ba699de54e4a8c0a9a38123ca84660c5f72bd28997",
+      "psyneulink/core/batched/compiler.py": "e30d077f262d8cb9f1d5da5296180edf7fd3586b97f76cc47ecc58c933bee7b1",
+      "psyneulink/core/components/functions/nonstateful/fitfunctions.py": "eb8e5edd77f69de4bb049fbdff9814d71f6410524dcbdd7fefd2fb5c32d94452",
+      "tests/composition/pec/test_batched_fused_histogram.py": "66baf8dcd726fc221a4ca53d2afbb3e9936de721d62ef0d5cfbb3609fc02f237",
+      "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py": "cada298c54e9a6f5364f8c1fb1c83941e40e60f10b69108cd3047b60320c07a9"
+    },
+    "measurements": [
+      {
+        "scorer": "count_only",
+        "smoothing_sigma": 0.0,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 1,
+        "warm_total_seconds": [
+          9.31530425301753,
+          9.423175482079387,
+          9.53996307903435
+        ],
+        "median_total_seconds": 9.423175482079387,
+        "seconds_per_candidate": 2.3557938705198467,
+        "peak_live_torch_mib": 0.1572265625,
+        "peak_reserved_torch_mib": 2.0,
+        "scores": [
+          -415.6920166015625,
+          -1036.1519775390625,
+          -1310.3798828125,
+          242.09323120117188
+        ],
+        "trial_density_sha256": "11d9789f1af1bbf6e7fbc557f164f9ce467d9b6d29f1e1d70d5a9750cfcee7d8"
+      },
+      {
+        "scorer": "count_only",
+        "smoothing_sigma": 0.0,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 4,
+        "warm_total_seconds": [
+          9.120334976934828,
+          9.329817045945674,
+          9.460475464933552
+        ],
+        "median_total_seconds": 9.329817045945674,
+        "seconds_per_candidate": 2.3324542614864185,
+        "peak_live_torch_mib": 0.24462890625,
+        "peak_reserved_torch_mib": 2.0,
+        "scores": [
+          -415.69232177734375,
+          -1036.1524658203125,
+          -1310.3787841796875,
+          242.0931396484375
+        ],
+        "trial_density_sha256": "11d9789f1af1bbf6e7fbc557f164f9ce467d9b6d29f1e1d70d5a9750cfcee7d8"
+      },
+      {
+        "scorer": "count_only",
+        "smoothing_sigma": 0.5,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 1,
+        "warm_total_seconds": [
+          9.22406965692062,
+          9.319941540947184,
+          9.423887002980337
+        ],
+        "median_total_seconds": 9.319941540947184,
+        "seconds_per_candidate": 2.329985385236796,
+        "peak_live_torch_mib": 0.32177734375,
+        "peak_reserved_torch_mib": 2.0,
+        "scores": [
+          -414.46685791015625,
+          -1014.7437744140625,
+          -1273.5975341796875,
+          276.37933349609375
+        ],
+        "trial_density_sha256": "e450001c113c2a40859e7026a815043c5b2b0a235fc1a609ce8f949af8de95bd"
+      },
+      {
+        "scorer": "count_only",
+        "smoothing_sigma": 0.5,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 4,
+        "warm_total_seconds": [
+          8.939482950023375,
+          8.950121558038518,
+          8.979130750056356
+        ],
+        "median_total_seconds": 8.950121558038518,
+        "seconds_per_candidate": 2.2375303895096295,
+        "peak_live_torch_mib": 0.49609375,
+        "peak_reserved_torch_mib": 2.0,
+        "scores": [
+          -414.46685791015625,
+          -1014.74365234375,
+          -1273.5972900390625,
+          276.37933349609375
+        ],
+        "trial_density_sha256": "e450001c113c2a40859e7026a815043c5b2b0a235fc1a609ce8f949af8de95bd"
+      },
+      {
+        "scorer": "count_only",
+        "smoothing_sigma": 1.0,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 4,
+        "warm_total_seconds": [
+          9.308155662962236,
+          9.45170476497151,
+          9.457671563955955
+        ],
+        "median_total_seconds": 9.45170476497151,
+        "seconds_per_candidate": 2.3629261912428774,
+        "peak_live_torch_mib": 0.63232421875,
+        "peak_reserved_torch_mib": 2.0,
+        "scores": [
+          -409.5387268066406,
+          -949.1802978515625,
+          -1164.685546875,
+          360.2449035644531
+        ],
+        "trial_density_sha256": "fc08cda0f44aad83bdbbeb69bd3ae40763cea3b4183b01f9eaa88aa5ae99c9b1"
+      },
+      {
+        "scorer": "materialized",
+        "smoothing_sigma": 0.5,
+        "pseudocount": 1.0,
+        "candidate_batch_size": 1,
+        "warm_total_seconds": [
+          10.457052152021788,
+          10.699800031026825,
+          10.787508545909077
+        ],
+        "median_total_seconds": 10.699800031026825,
+        "seconds_per_candidate": 2.6749500077567063,
+        "peak_live_torch_mib": 4349.86328125,
+        "peak_reserved_torch_mib": 4498.0,
+        "scores": [
+          -414.46685791015625,
+          -1014.7438354492188,
+          -1273.5975341796875,
+          276.3792419433594
+        ],
+        "trial_density_sha256": "d4a60318fde8d0a44883d8ca6f76a185b84495648cbc05e2a314902f077e46f0"
+      }
+    ],
+    "materialized_validation": {
+      "0.5": {
+        "passed": true,
+        "rtol": 2e-06,
+        "atol": 1e-08,
+        "max_absolute_density_error": 1.430511474609375e-06,
+        "max_relative_density_error": 3.347387576013716e-07
+      },
+      "1.0": {
+        "passed": true,
+        "rtol": 2e-06,
+        "atol": 1e-08,
+        "max_absolute_density_error": 1.430511474609375e-06,
+        "max_relative_density_error": 4.239173847508937e-07
+      }
+    },
+    "tests": {
+      "gpu": "27 passed, 25 skipped",
+      "cpu_and_histogram_reference": "42 passed, 2 skipped, 25 deselected"
+    },
+    "notes": [
+      "Fresh sequential processes on the same GPU; warm medians exclude the first repetition and compilation.",
+      "Every candidate simulates all 760 trials; 720 are scored. No observed-window stopping or latent-history substitution.",
+      "Integer bin reductions preserve exact trial densities across repeated calls and candidate batch sizes.",
+      "Smoothed materialized comparisons permit rtol=2e-6, atol=1e-8 because weights are summed per bin instead of per estimate.",
+      "Live Torch memory excludes CUDA context/code, allocator reservations, and register-spill storage.",
+      "Smoothing one continuous outcome with optional categorical outcomes is fused; multidimensional smoothing falls back."
+    ]
   }
 }

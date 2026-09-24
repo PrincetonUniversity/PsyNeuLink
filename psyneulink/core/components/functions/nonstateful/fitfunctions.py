@@ -612,10 +612,12 @@ class PECOptimizationFunction(OptimizationFunction):
         times would bias the objective. Defaults to False for compatibility.
 
     batched_fused_likelihood :
-        Reduce ordinary unsmoothed stateful histogram scores during simulation
-        instead of retaining all estimate outcomes. Defaults to True. False
-        selects the materialized reference path. This does not change the
-        estimator, trial history, or observation-conditioned likelihood paths.
+        Reduce ordinary stateful histogram scores during simulation instead of
+        retaining all estimate outcomes. Supports pseudocounts and Gaussian
+        smoothing of one continuous outcome plus optional categories; smoothing
+        multiple continuous outcomes uses the materialized path. Defaults to
+        True. False selects the materialized reference path. This does not change
+        the estimator, trial history, or observation-conditioned likelihood paths.
 
     conditioned_likelihood :
         If True, score the CSI model one trial at a time and resample its

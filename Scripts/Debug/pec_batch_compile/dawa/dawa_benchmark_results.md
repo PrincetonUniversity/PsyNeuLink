@@ -238,8 +238,10 @@ than writing every estimate's outcomes. Persistent state remains within each
 simulated sequence. Masked trials still execute, and all outputs are checked
 for nonfinite values even when they are not selected for scoring. There is no
 observed-RT cutoff, change to integration steps, or replacement of latent history.
-Smoothed histograms and other unsupported fusion kinds retain the existing
-materialized path. `fused=False` on the plan or
+Gaussian smoothing of one continuous outcome now also uses count-only scoring,
+as described in the extension below. Smoothing multiple continuous outcomes
+and unsupported fusion kinds retain the existing materialized path.
+`fused=False` on the plan or
 `batched_fused_likelihood=False` on `PECOptimizationFunction` selects the
 reference path explicitly; ordinary `plan.run` still returns raw samples.
 
@@ -303,3 +305,71 @@ Add `--profile /tmp/dawa_profile.json` to profile a single warmed candidate
 instead of running the timing loop. It writes a Chrome trace, operator timing
 and memory tables, and compiler register/spill metadata. Use `--materialized`
 and `--block-size 128 --num-warps 4` to profile the original configuration.
+
+## Smoothing and pseudocounts with count-only scoring
+
+The stateful scorer now supports Gaussian smoothing of one continuous outcome
+plus optional categorical outcomes. Setting `batched_smoothing_sigma` on
+`PECOptimizationFunction` uses this path automatically; `batched_pseudocount`
+works with both smoothed and unsmoothed counts. Defaults are unchanged.
+Smoothing multiple continuous outcomes still uses the materialized reference.
+
+For positive sigma, the scorer retains `2 * radius + 1` integer counts per
+candidate/subject/trial, where `radius = min(bins - 1, ceil(3 * sigma))`.
+Sigma 0.5 therefore keeps five counts and sigma 1.0 keeps seven. Only estimates
+matching the observed choice contribute. Gaussian weights are applied after
+simulation and renormalized over valid neighbors at histogram boundaries.
+All simulated trial histories, integration steps, and diagnostics are preserved.
+
+For DAWA's choice/RT observations, the density is
+`(weighted_count + alpha) / ((N + alpha * B) * RT_bin_width)`, where `alpha`
+is the pseudocount and `B` is the number of joint choice/RT bins. With two
+choices and 100 RT bins, `B = 200`. The prior is added once after weighting,
+since the Gaussian weights sum to one; it is not multiplied by the number of
+neighbor bins. An explicit `batched_categorical_cardinalities=[2]` preserves
+both possible choices when scoring an observed subset containing only one.
+
+Fresh sequential-process measurements on the 2080 Ti used the same four
+proposals, 760 simulated trials (720 scored), 100,000 estimates per trial per
+candidate, noise in all four LCAs, 10 ms LCA steps, and 32-lane/one-warp launches.
+Each timing is the median of three warm repetitions, excluding compilation.
+All rows use 100 RT bins over 0–3 seconds and a pseudocount of one per joint bin.
+
+| Scorer | Sigma | Candidates per call | Seconds per candidate | Peak live Torch memory |
+| --- | ---: | ---: | ---: | ---: |
+| Count-only | 0 | 1 | 2.356 s | 0.157 MiB |
+| Count-only | 0 | 4 | 2.332 s | 0.245 MiB |
+| Count-only | 0.5 | 1 | 2.330 s | 0.322 MiB |
+| Count-only | 0.5 | 4 | 2.238 s | 0.496 MiB |
+| Count-only | 1.0 | 4 | 2.363 s | 0.632 MiB |
+| Materialized | 0.5 | 1 | 2.675 s | 4.248 GiB |
+
+Smoothing has comparable runtime to unsmoothed counting in these measurements.
+The main benefit remains memory: sigma 0.5 uses 0.322 MiB for one candidate,
+versus 4.248 GiB with the original smoothed scorer. Live Torch memory excludes
+CUDA context/code, register-spill storage, and allocator reservations. These
+fixed-proposal timings do not measure a complete fitting run.
+
+Both sigma 0.5 and 1.0 pass comparisons of all 3,040 trial densities against
+the original materialized scorer. Maximum relative differences are respectively
+`3.35e-7` and `4.24e-7`, attributable to weighting integer bin counts instead of
+summing a weight per estimate in FP32. Repeated fused runs are bit-for-bit
+reproducible; sigma 0.5 trial densities also match exactly across candidate batch
+sizes one and four. The unsmoothed comparison remains exact. CPU and GPU tests
+cover pseudocounts of zero and positive values, boundary normalization, absent
+choices, out-of-range observations, exact bin edges, masked trials, retained
+state, multiple subjects, and invalid settings.
+
+Reproduce the smoothed evaluation and reference comparison:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 4 --repeats 3 \
+  --block-size 32 --num-warps 1 --smoothing-sigma 0.5 --pseudocount 1 \
+  --verify-materialized --output /tmp/dawa_pec_fit_smoothed.json
+```
+
+Use `--smoothing-sigma 0` for the unsmoothed baseline, or
+`--materialized --batch-sizes 1` for the original smoothed scorer. Compact
+measurements, source hashes, and validation errors are recorded under
+`smoothed_count_only_scoring` in [dawa_benchmark_results.json](dawa_benchmark_results.json).

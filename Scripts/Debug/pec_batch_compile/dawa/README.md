@@ -170,6 +170,32 @@ buffers fall from 3.1 GiB per candidate to 0.23 MiB for four candidates together
 CUDA context/code and allocator reservations are additional. These are
 throughput extrapolations; a complete optimizer run has not been measured.
 
+The count-only scorer also supports Gaussian RT smoothing and symmetric
+pseudocounts without retaining individual simulated outcomes. For example,
+configure the PEC optimization function with:
+
+```python
+batched_backend="triton",
+batched_bins=100,
+batched_bin_range=[(0., 3.)],
+batched_smoothing_sigma=0.5,
+batched_pseudocount=1.,
+batched_categorical_cardinalities=[2],
+batched_triton_launch_options={"block_size": 32, "num_warps": 1},
+```
+
+These are example estimator settings, not calibrated fitting defaults. Sigma is
+measured in bins (approximately 15 ms here), and the pseudocount is per joint
+choice/RT bin. The cardinality specifies both possible choices even if an
+observed subset contains only one. Smoothing keeps integer counts for neighboring
+RT bins, then applies Gaussian weights with boundary renormalization. It never mixes choices
+or changes the dynamics, random streams, or latent trial history. Both settings
+can be varied independently, including zero. The extension covers one continuous
+outcome plus any categorical outcomes; smoothing multiple continuous outcomes
+still uses the materialized reference. See the
+[smoothing benchmark](dawa_benchmark_results.md#smoothing-and-pseudocounts-with-count-only-scoring)
+for timings, memory, and numerical validation.
+
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports
 gradients through all seven fitting parameters in its RT observation model.

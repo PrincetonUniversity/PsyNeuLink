@@ -38,12 +38,16 @@ def main():
     parser.add_argument("--block-size", type=int, default=128)
     parser.add_argument("--num-warps", type=int, default=4)
     parser.add_argument("--maxnreg", type=int)
+    parser.add_argument("--smoothing-sigma", type=float, default=0., help="Gaussian width in histogram-bin units")
+    parser.add_argument("--pseudocount", type=float, default=1., help="Symmetric prior count per joint choice/RT bin")
     parser.add_argument("--materialized", action="store_true", help="Use the original materialized scoring path")
     parser.add_argument("--verify-materialized", action="store_true", help="Compare all trial probabilities to the original scorer after timing")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if min(args.estimates, args.repeats, args.max_steps, *args.batch_sizes) < 1:
         parser.error("Counts must be positive")
+    if any(not np.isfinite(value) or value < 0 for value in (args.smoothing_sigma, args.pseudocount)):
+        parser.error("Smoothing sigma and pseudocount must be finite and nonnegative")
 
     start = time.perf_counter()
     set_global_seed(args.seed)
@@ -73,7 +77,8 @@ def main():
             batched_max_steps=args.max_steps, batched_seed=args.seed,
             batched_strict_truncation=True, batched_bins=100,
             batched_fused_likelihood=not args.materialized,
-            batched_bin_range=[(0., 3.)], batched_pseudocount=1.,
+            batched_bin_range=[(0., 3.)], batched_pseudocount=args.pseudocount,
+            batched_smoothing_sigma=args.smoothing_sigma,
             batched_triton_launch_options={"block_size": args.block_size, "num_warps": args.num_warps,
                                            "maxnreg": args.maxnreg},
         ),
@@ -113,7 +118,7 @@ def main():
         "data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
         "model_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
         "estimator": {"kind": "trial_marginal_histogram", "bins": 100, "rt_range": [0., 3.],
-                      "pseudocount": 1., "smoothing_sigma": 0.},
+                      "pseudocount": args.pseudocount, "smoothing_sigma": args.smoothing_sigma},
         "setup_seconds": time.perf_counter() - start, "cases": [],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -220,8 +225,21 @@ def main():
                     objective([row])
         finally:
             function.batched_fused_likelihood = original_fused
-        np.testing.assert_array_equal(np.concatenate(captured_likelihoods), reference_likelihoods)
-        report["materialized_trial_probabilities_match_exactly"] = True
+        materialized = np.concatenate(captured_likelihoods)
+        if args.smoothing_sigma:
+            # Integer neighbor counts are reproducible; weighting counts versus
+            # individual samples changes FP32 summation order in the oracle.
+            np.testing.assert_allclose(reference_likelihoods, materialized, rtol=2e-6, atol=1e-8)
+        else:
+            np.testing.assert_array_equal(materialized, reference_likelihoods)
+        report["materialized_trial_probabilities_match_exactly"] = bool(np.array_equal(materialized, reference_likelihoods))
+        report["materialized_validation"] = {
+            "passed": True,
+            "rtol": 2e-6 if args.smoothing_sigma else 0.,
+            "atol": 1e-8 if args.smoothing_sigma else 0.,
+            "max_absolute_density_error": float(np.max(np.abs(reference_likelihoods - materialized))),
+            "max_relative_density_error": float(np.max(np.abs(reference_likelihoods - materialized) / materialized)),
+        }
         save()
     print(json.dumps(report, indent=2), flush=True)
 
