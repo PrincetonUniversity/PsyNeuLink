@@ -26,7 +26,6 @@ import numpy as np
 import pandas as pd
 
 import psyneulink as pnl
-from psyneulink import train_neural_likelihood
 from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction
 
 # Ranges searched when fitting, and the region the estimator is trained over.  Fitting
@@ -118,7 +117,7 @@ def main():
 
     print("training a neural likelihood", flush=True)
     started = time.time()
-    likelihood = train_neural_likelihood(
+    likelihood = pnl.train_neural_likelihood(
         FIT_RANGES,
         OUTCOME_NAMES,
         pec_factory=build_pec,
