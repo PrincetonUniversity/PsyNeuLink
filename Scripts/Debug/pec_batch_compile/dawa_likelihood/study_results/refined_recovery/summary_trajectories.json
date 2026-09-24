@@ -1,0 +1,92 @@
+[
+  {
+    "label": "Generating model",
+    "parameters": {
+      "threshold": 0.28,
+      "non_decision_time": 0.17,
+      "bias": -0.43,
+      "control_gain": 12.0,
+      "lc_mode": 0.6,
+      "lc_scaling": 1.5,
+      "lc_base_gain": 5.4
+    },
+    "condition": "color_incongruent",
+    "maximum_lc_fast_state": 0.15513977743702345,
+    "maximum_gain": 5.669364772233847,
+    "ode_step": 0.00025,
+    "path_time_step": 0.001,
+    "lc_clock_ratio": 20.0
+  },
+  {
+    "label": "Unrestricted fit",
+    "parameters": {
+      "threshold": 0.2879657211820791,
+      "non_decision_time": 0.17650170847169946,
+      "bias": -0.42202839162343536,
+      "control_gain": 12.339782551339166,
+      "lc_mode": 0.8795587632626213,
+      "lc_scaling": 4.0,
+      "lc_base_gain": 5.119875177906493
+    },
+    "condition": "color_incongruent",
+    "maximum_lc_fast_state": 0.8673307022475445,
+    "maximum_gain": 5.932229349910043,
+    "ode_step": 0.00025,
+    "path_time_step": 0.001,
+    "lc_clock_ratio": 20.0
+  },
+  {
+    "label": "lc mode = 0.3",
+    "parameters": {
+      "threshold": 0.2878465127289812,
+      "non_decision_time": 0.16856003433212208,
+      "bias": -0.42376937194346925,
+      "control_gain": 12.47882624995303,
+      "lc_mode": 0.3,
+      "lc_scaling": 1.0,
+      "lc_base_gain": 5.2294812111025895
+    },
+    "condition": "color_incongruent",
+    "maximum_lc_fast_state": 0.14378756938865977,
+    "maximum_gain": 5.527498035683022,
+    "ode_step": 0.00025,
+    "path_time_step": 0.001,
+    "lc_clock_ratio": 20.0
+  },
+  {
+    "label": "lc mode = 0.6",
+    "parameters": {
+      "threshold": 0.293772898403751,
+      "non_decision_time": 0.17503747580674345,
+      "bias": -0.412875209165486,
+      "control_gain": 12.211087285933843,
+      "lc_mode": 0.6,
+      "lc_scaling": 4.0,
+      "lc_base_gain": 4.804131692569074
+    },
+    "condition": "color_incongruent",
+    "maximum_lc_fast_state": 0.8524008005555863,
+    "maximum_gain": 5.635609414788593,
+    "ode_step": 0.00025,
+    "path_time_step": 0.001,
+    "lc_clock_ratio": 20.0
+  },
+  {
+    "label": "lc scaling = 1.5",
+    "parameters": {
+      "threshold": 0.29114113050776824,
+      "non_decision_time": 0.175333313821239,
+      "bias": -0.41817198484965856,
+      "control_gain": 12.390074722869404,
+      "lc_mode": 0.9,
+      "lc_scaling": 1.5,
+      "lc_base_gain": 5.331839675363421
+    },
+    "condition": "color_incongruent",
+    "maximum_lc_fast_state": 0.8338113770196931,
+    "maximum_gain": 5.643034908573618,
+    "ode_step": 0.00025,
+    "path_time_step": 0.001,
+    "lc_clock_ratio": 20.0
+  }
+]

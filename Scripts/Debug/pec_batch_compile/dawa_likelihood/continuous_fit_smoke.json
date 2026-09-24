@@ -1,0 +1,123 @@
+{
+  "process": "continuous",
+  "device": "cpu",
+  "dtype": "float64",
+  "torch": "2.13.0+cu130",
+  "history": "candidate-dependent RT - nondecision time; RT-bin-center reconstruction",
+  "observation": "recorded RT interval; no added Gaussian measurement noise",
+  "subject": 1,
+  "trials": 12,
+  "included_trials": 3,
+  "points": 65,
+  "time_step": 0.001,
+  "ode_step": 0.0005,
+  "lc_clock_ratio": 20.0,
+  "lower_bound": -0.25,
+  "rt_resolution": 0.001,
+  "parameter_scope": "one shared seven-parameter vector",
+  "evaluations": [
+    {
+      "log_likelihood": -22.14351962369365,
+      "parameters": {
+        "threshold": 0.3,
+        "non_decision_time": 0.2,
+        "bias": -0.45,
+        "control_gain": 10.0,
+        "lc_mode": 0.9,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.0
+      },
+      "gradient": [
+        -129.40652902346895,
+        -29.80243241671083,
+        109.0609271095494,
+        0.8962545124982202,
+        0.05718520394839867,
+        -0.029227904460193424,
+        0.12773836398437538
+      ],
+      "seconds": 46.33775872702245,
+      "maximum_mass_error": 2.220446049250313e-16,
+      "maximum_lower_loss": 2.4375997001495865e-50,
+      "minimum_mass": 0.0,
+      "maximum_cfl": 0.6185492860379112,
+      "maximum_substeps": 2
+    },
+    {
+      "log_likelihood": -24.29945627381264,
+      "parameters": {
+        "threshold": 0.255,
+        "non_decision_time": 0.19795288141665002,
+        "bias": -0.40317902086782553,
+        "control_gain": 10.346294162768123,
+        "lc_mode": 0.9,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.0107485214445555
+      },
+      "gradient": [
+        440.1365471219895,
+        49.84043038925196,
+        -245.42368090763708,
+        -2.014725131232601,
+        -1.3698765617767237,
+        0.9619223989265889,
+        7.622937446729937
+      ],
+      "seconds": 44.560070209088735,
+      "maximum_mass_error": 1.1102230246251565e-16,
+      "maximum_lower_loss": 3.275884377526364e-58,
+      "minimum_mass": 0.0,
+      "maximum_cfl": 0.7582951774607212,
+      "maximum_substeps": 2
+    },
+    {
+      "log_likelihood": -18.768072984941476,
+      "parameters": {
+        "threshold": 0.27749999999999997,
+        "non_decision_time": 0.19897644070832504,
+        "bias": -0.4265895104339128,
+        "control_gain": 10.173147081384062,
+        "lc_mode": 0.9,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.005374260722278
+      },
+      "gradient": [
+        -14.757836559940024,
+        -3.636579301977632,
+        16.992976414416106,
+        0.13504498967072456,
+        -0.13245284109918373,
+        0.053762857662566874,
+        0.29241731199601256
+      ],
+      "seconds": 42.43492789706215,
+      "maximum_mass_error": 4.440892098500626e-16,
+      "maximum_lower_loss": 1.7433962137549403e-55,
+      "minimum_mass": 0.0,
+      "maximum_cfl": 0.6799434500706274,
+      "maximum_substeps": 2
+    }
+  ],
+  "fit": {
+    "success": false,
+    "message": "Iteration limit reached",
+    "iterations": 1,
+    "log_likelihood": -18.768072984941476,
+    "parameters": {
+      "threshold": 0.27749999999999997,
+      "non_decision_time": 0.19897644070832504,
+      "bias": -0.4265895104339128,
+      "control_gain": 10.173147081384062,
+      "lc_mode": 0.9,
+      "lc_scaling": 1.0,
+      "lc_base_gain": 5.005374260722278
+    },
+    "accepted_log_likelihoods": [
+      -22.14351962369365,
+      -18.768072984941476
+    ],
+    "rejected_proposals": 1,
+    "optimizer": "projected gradient ascent with Armijo backtracking in unit coordinates"
+  },
+  "timing_note": "Audit timing with concurrent validation work; not a controlled throughput benchmark."
+}

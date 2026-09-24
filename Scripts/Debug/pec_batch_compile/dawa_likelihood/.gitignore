@@ -1,0 +1,22 @@
+# Keep generated samples, plots, reports, and optimizer checkpoints local.
+# The exceptions below are the curated numerical evidence cited by the READMEs.
+*.json
+*.npy
+*.npz
+*.pdf
+*.png
+!/validation_results.json
+!/continuous_validation_results.json
+!/continuous_fit_smoke.json
+!/study_results/convergence.json
+!/study_results/local_information.json
+!/study_results/profile.json
+!/study_results/performance.json
+!/study_results/recovery_all.json
+!/study_results/recovery_two.json
+!/study_results/distribution_error_convergence.png
+!/study_results/refined_recovery/provenance.json
+!/study_results/refined_recovery/ode_reference.json
+!/study_results/refined_recovery/summary.json
+!/study_results/refined_recovery/summary_trajectories.json
+!/study_results/refined_recovery/summary_trajectories.png

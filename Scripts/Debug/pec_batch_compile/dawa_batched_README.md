@@ -1,8 +1,9 @@
 The DAWA LC/LCA network can now use the ordinary batched compiler and PEC
 simulation objective on Triton. `dawa_batched_simulation.py` loads the local
-`dawa_lca_model/full_lca_model_lc.py`. The shared model builder is exempted from
-the directory's gitignore rule; subject data and other local files remain
-ignored. All three `flanker_fit_lc_part*.py` scripts use this same model builder.
+`dawa_lca_model/full_lca_model_lc.py`. The
+[source model, original fitting scripts, and Slurm examples](dawa_lca_model/README.md)
+are tracked; subject data and generated outputs remain ignored.
+All three `flanker_fit_lc_part*.py` scripts use this same model builder.
 
 The compiler additions cover scheduled Logistic LCAs of width 1–32, finite dense
 recurrent matrices, scalar numeric or `NormalDist` noise, maximum-activity
@@ -90,3 +91,21 @@ see [the benchmark results](dawa_benchmark_results.md) and
 [reusable benchmark driver](dawa_llvm_benchmark.py). Measurements include
 1,000 and 10,000 estimates over both 64-trial slices and a full 760-trial subject,
 with setup and likelihood scoring separated from simulation timing.
+
+A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
+available. It propagates the joint response-state distribution and supports
+gradients through all seven fitting parameters in its RT observation model.
+The documentation distinguishes direct stopping-step scoring from the
+empirical-RT mode's fixed history approximation and records validation results.
+
+The separate [continuous-time DAWA likelihood](dawa_likelihood/CONTINUOUS_README.md)
+uses coupled ODE dynamics and a two-dimensional absorbing Fokker–Planck solver.
+It scores RT intervals without added measurement noise, differentiates all seven
+parameters, and updates history using candidate-dependent decision durations.
+Its instantaneous gain modulation defines a continuous extension of the source
+model; validation uses an independent continuous SDE sampler rather than expecting
+parity with the original 10 ms scheduler.
+
+A [source-convergence and synthetic-recovery study](dawa_likelihood/STUDY_README.md)
+now checks that connection explicitly, using 100,000 estimates per case and
+joint refinement of the original LCA and LC time steps at a fixed clock ratio.

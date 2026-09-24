@@ -1,0 +1,25 @@
+{
+  "coordinate_system": "parameter bounds scaled to [0,1]",
+  "samples_per_condition": 2000,
+  "singular_values_of_weighted_sensitivity": [
+    1210.1924493870408,
+    208.8249769780254,
+    71.82134535797843,
+    27.890411893575095,
+    24.962277252563645,
+    0.6348372032176314,
+    0.2085025572996515
+  ],
+  "condition_number": 5804.209142853825,
+  "weakest_parameter_direction": {
+    "threshold": 0.0032712708642921836,
+    "non_decision_time": 0.01378627272824254,
+    "bias": 0.0014828867725901074,
+    "control_gain": 0.006249828177668379,
+    "lc_mode": -0.27470867402316296,
+    "lc_scaling": -0.9601391128657366,
+    "lc_base_gain": 0.04925450768808869
+  },
+  "relative_rank_at_1e_minus_6": 7,
+  "note": "Local expected information for these binned fresh-trial conditions, not a global identifiability proof."
+}

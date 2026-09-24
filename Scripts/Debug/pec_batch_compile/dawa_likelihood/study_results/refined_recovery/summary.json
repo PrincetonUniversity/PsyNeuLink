@@ -1,0 +1,303 @@
+{
+  "truth": {
+    "threshold": 0.28,
+    "non_decision_time": 0.17,
+    "bias": -0.43,
+    "control_gain": 12.0,
+    "lc_mode": 0.6,
+    "lc_scaling": 1.5,
+    "lc_base_gain": 5.4
+  },
+  "conditions": [
+    "color_incongruent",
+    "location_incongruent"
+  ],
+  "points": 129,
+  "time_step": 0.001,
+  "training_trials": 4000,
+  "heldout_trials": 20000,
+  "records": [
+    {
+      "fixed": {},
+      "initial": {
+        "threshold": 0.3,
+        "non_decision_time": 0.2,
+        "bias": -0.45,
+        "control_gain": 10.0,
+        "lc_mode": 0.75,
+        "lc_scaling": 1.3,
+        "lc_base_gain": 5.2
+      },
+      "fitted": {
+        "threshold": 0.2879657211820791,
+        "non_decision_time": 0.17650170847169946,
+        "bias": -0.42202839162343536,
+        "control_gain": 12.339782551339166,
+        "lc_mode": 0.8795587632626213,
+        "lc_scaling": 4.0,
+        "lc_base_gain": 5.119875177906493
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 43,
+      "projected_gradient_norm": 1.3392641004528194e-07,
+      "training_log_likelihood": -14289.542965323226,
+      "verification_training_log_likelihood": -14289.818770801603,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71824.60584019485,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0010087781023153226,
+      "paired_heldout_standard_error": 0.00039046732330040313,
+      "maximum_joint_cdf_difference_fit_truth": 0.008054668254340647,
+      "evaluations": 53,
+      "evaluation_seconds": 2128.921532000997,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.0023981260731253066,
+      "training_log_likelihood_gap": 0.0,
+      "verification_training_log_likelihood_gap": 5.181507731322199e-06,
+      "heldout_log_score_difference_from_best_per_trial": 0.0,
+      "paired_standard_error_against_best": 0.0
+    },
+    {
+      "fixed": {},
+      "initial": {
+        "threshold": 0.29,
+        "non_decision_time": 0.18,
+        "bias": -0.44,
+        "control_gain": 13.0,
+        "lc_mode": 0.4,
+        "lc_scaling": 2.5,
+        "lc_base_gain": 5.0
+      },
+      "fitted": {
+        "threshold": 0.2879657348741396,
+        "non_decision_time": 0.17650170474425583,
+        "bias": -0.42202837658773995,
+        "control_gain": 12.33978287265472,
+        "lc_mode": 0.8795584993556838,
+        "lc_scaling": 4.0,
+        "lc_base_gain": 5.119874743767255
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 39,
+      "projected_gradient_norm": 3.1364377264808674e-07,
+      "training_log_likelihood": -14289.542965323231,
+      "verification_training_log_likelihood": -14289.81877079874,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71824.60583868617,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0010087780268810474,
+      "paired_heldout_standard_error": 0.0003904672231721021,
+      "maximum_joint_cdf_difference_fit_truth": 0.008054681231929539,
+      "evaluations": 52,
+      "evaluation_seconds": 2010.1413694462972,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.0023981256842095693,
+      "training_log_likelihood_gap": 5.4569682106375694e-12,
+      "verification_training_log_likelihood_gap": 5.178644642001018e-06,
+      "heldout_log_score_difference_from_best_per_trial": 7.543427602563213e-11,
+      "paired_standard_error_against_best": 3.121040374829912e-10
+    },
+    {
+      "fixed": {},
+      "initial": {
+        "threshold": 0.2926139734412706,
+        "non_decision_time": 0.18071959015916716,
+        "bias": -0.4175498056985102,
+        "control_gain": 12.63534472089892,
+        "lc_mode": 0.8980025799750532,
+        "lc_scaling": 1.8288012771975142,
+        "lc_base_gain": 5.315512942005913
+      },
+      "fitted": {
+        "threshold": 0.287965634483743,
+        "non_decision_time": 0.17650167193009655,
+        "bias": -0.42202850163923034,
+        "control_gain": 12.339781133501077,
+        "lc_mode": 0.8795600737354715,
+        "lc_scaling": 4.0,
+        "lc_base_gain": 5.11987717105972
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 20,
+      "projected_gradient_norm": 2.898595533873394e-07,
+      "training_log_likelihood": -14289.542965323339,
+      "verification_training_log_likelihood": -14289.818765620095,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71824.6057823661,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0010087752108775528,
+      "paired_heldout_standard_error": 0.0003904672082523932,
+      "maximum_joint_cdf_difference_fit_truth": 0.008054600690726166,
+      "evaluations": 34,
+      "evaluation_seconds": 1435.884712215513,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.0023981278681424693,
+      "training_log_likelihood_gap": 1.127773430198431e-10,
+      "verification_training_log_likelihood_gap": 0.0,
+      "heldout_log_score_difference_from_best_per_trial": 2.891437770502492e-09,
+      "paired_standard_error_against_best": 1.5455578479034085e-09
+    },
+    {
+      "fixed": {
+        "lc_mode": 0.3
+      },
+      "initial": {
+        "threshold": 0.2877,
+        "non_decision_time": 0.1709,
+        "bias": -0.4232,
+        "control_gain": 12.4,
+        "lc_mode": 0.3,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.3
+      },
+      "fitted": {
+        "threshold": 0.2878465127289812,
+        "non_decision_time": 0.16856003433212208,
+        "bias": -0.42376937194346925,
+        "control_gain": 12.47882624995303,
+        "lc_mode": 0.3,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.2294812111025895
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 8,
+      "projected_gradient_norm": 3.52326726543728e-08,
+      "training_log_likelihood": -14292.401985146253,
+      "verification_training_log_likelihood": -14292.43722173604,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71819.3284883132,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0007449105082317084,
+      "paired_heldout_standard_error": 0.0002379471826948028,
+      "maximum_joint_cdf_difference_fit_truth": 0.012258568300738681,
+      "evaluations": 9,
+      "evaluation_seconds": 337.45436094200704,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.0023785341479678696,
+      "training_log_likelihood_gap": 2.859019823026756,
+      "verification_training_log_likelihood_gap": 2.6184561159443547,
+      "heldout_log_score_difference_from_best_per_trial": 0.00026386759408361405,
+      "paired_standard_error_against_best": 0.0003102965387775527
+    },
+    {
+      "fixed": {
+        "lc_mode": 0.6
+      },
+      "initial": {
+        "threshold": 0.28,
+        "non_decision_time": 0.17,
+        "bias": -0.43,
+        "control_gain": 12.0,
+        "lc_mode": 0.6,
+        "lc_scaling": 1.5,
+        "lc_base_gain": 5.4
+      },
+      "fitted": {
+        "threshold": 0.28749289957859203,
+        "non_decision_time": 0.1707496271381551,
+        "bias": -0.4235426618899661,
+        "control_gain": 12.40229855508182,
+        "lc_mode": 0.6,
+        "lc_scaling": 1.0,
+        "lc_base_gain": 5.364422936470545
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 13,
+      "projected_gradient_norm": 4.200154291034153e-08,
+      "training_log_likelihood": -14292.149863808703,
+      "verification_training_log_likelihood": -14292.215089005816,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71818.96166211714,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0007265691984295409,
+      "paired_heldout_standard_error": 0.00023915865846336484,
+      "maximum_joint_cdf_difference_fit_truth": 0.011869388837741246,
+      "evaluations": 19,
+      "evaluation_seconds": 725.4506815372733,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.002461957911890034,
+      "training_log_likelihood_gap": 2.606898485477359,
+      "verification_training_log_likelihood_gap": 2.396323385721189,
+      "heldout_log_score_difference_from_best_per_trial": 0.00028220890388578164,
+      "paired_standard_error_against_best": 0.00029487848099921045
+    },
+    {
+      "fixed": {
+        "lc_mode": 0.6
+      },
+      "initial": {
+        "threshold": 0.2879656,
+        "non_decision_time": 0.1765017,
+        "bias": -0.4220285,
+        "control_gain": 12.33978,
+        "lc_mode": 0.6,
+        "lc_scaling": 4.0,
+        "lc_base_gain": 4.9
+      },
+      "fitted": {
+        "threshold": 0.293772898403751,
+        "non_decision_time": 0.17503747580674345,
+        "bias": -0.412875209165486,
+        "control_gain": 12.211087285933843,
+        "lc_mode": 0.6,
+        "lc_scaling": 4.0,
+        "lc_base_gain": 4.804131692569074
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 20,
+      "projected_gradient_norm": 2.6629213834006293e-08,
+      "training_log_likelihood": -14290.475738801815,
+      "verification_training_log_likelihood": -14290.761799887523,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71823.7081195105,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0009638920680974383,
+      "paired_heldout_standard_error": 0.00033414476093151173,
+      "maximum_joint_cdf_difference_fit_truth": 0.014353379610598016,
+      "evaluations": 33,
+      "evaluation_seconds": 1089.3818043706706,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.0022374138248627954,
+      "training_log_likelihood_gap": 0.9327734785892972,
+      "verification_training_log_likelihood_gap": 0.9430342674277199,
+      "heldout_log_score_difference_from_best_per_trial": 4.48860342178854e-05,
+      "paired_standard_error_against_best": 0.000168151697975504
+    },
+    {
+      "fixed": {
+        "lc_scaling": 1.5
+      },
+      "initial": {
+        "threshold": 0.28,
+        "non_decision_time": 0.17,
+        "bias": -0.43,
+        "control_gain": 12.0,
+        "lc_mode": 0.6,
+        "lc_scaling": 1.5,
+        "lc_base_gain": 5.4
+      },
+      "fitted": {
+        "threshold": 0.29114113050776824,
+        "non_decision_time": 0.175333313821239,
+        "bias": -0.41817198484965856,
+        "control_gain": 12.390074722869404,
+        "lc_mode": 0.9,
+        "lc_scaling": 1.5,
+        "lc_base_gain": 5.331839675363421
+      },
+      "converged": true,
+      "termination": "Projected gradient tolerance reached",
+      "iterations": 19,
+      "projected_gradient_norm": 3.1126217983623583e-07,
+      "training_log_likelihood": -14290.473443970604,
+      "verification_training_log_likelihood": -14290.732766678235,
+      "verification_points": 257,
+      "verification_heldout_log_likelihood": -71819.91781994284,
+      "heldout_log_score_difference_from_truth_per_trial": -0.0007743770897143829,
+      "paired_heldout_standard_error": 0.0002907107280401687,
+      "maximum_joint_cdf_difference_fit_truth": 0.011870028410475353,
+      "evaluations": 27,
+      "evaluation_seconds": 966.3255483228713,
+      "maximum_joint_cdf_change_under_grid_refinement": 0.002434855960259449,
+      "training_log_likelihood_gap": 0.9304786473785498,
+      "verification_training_log_likelihood_gap": 0.9140010581395472,
+      "heldout_log_score_difference_from_best_per_trial": 0.00023440101260094,
+      "paired_standard_error_against_best": 0.00017006481705620228
+    }
+  ],
+  "interpretation": "Verification scores re-evaluate the fitted parameters without refitting. Sparse fixed-mode fits are profile samples, not confidence intervals. Paired holdout SE describes sampling variation of the log-score difference."
+}

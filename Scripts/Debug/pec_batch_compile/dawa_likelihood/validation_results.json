@@ -1,0 +1,192 @@
+{
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "dtype": "float64",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "native_replay_max_errors": [
+    2.220446049250313e-16,
+    3.3306690738754696e-16
+  ],
+  "refinement": {
+    "estimates": 100000,
+    "seed": 29,
+    "empirical_choice": [
+      0.0011300000000000008,
+      0.9988699999999712
+    ],
+    "empirical_mean_rt": 0.9230017066001892,
+    "grids": [
+      {
+        "points": 65,
+        "forward_seconds": 0.6644739379407838,
+        "choice_probability": [
+          0.0011822533214710031,
+          0.9988160112163403
+        ],
+        "mean_rt": 0.9234031796662744,
+        "survival": 1.7354621874383841e-06,
+        "lower_loss": 1.1258456760673861e-119,
+        "mass_error": 9.992007221626409e-16,
+        "quadrature_defect": 0.005247811713553818,
+        "monte_carlo_joint_cdf_max_error": 0.002283793827217808
+      },
+      {
+        "points": 97,
+        "forward_seconds": 0.45895353704690933,
+        "choice_probability": [
+          0.0011767996132017013,
+          0.9988214907018199
+        ],
+        "mean_rt": 0.9232138058338716,
+        "survival": 1.7096849790349754e-06,
+        "lower_loss": 1.6727171124754304e-119,
+        "mass_error": 6.661338147750939e-16,
+        "quadrature_defect": 1.2850656844475216e-06,
+        "monte_carlo_joint_cdf_max_error": 0.0020660157793755108,
+        "previous_grid_joint_cdf_max_difference": 0.0005242794797224596
+      },
+      {
+        "points": 129,
+        "forward_seconds": 1.0047747250646353,
+        "choice_probability": [
+          0.0011767998389651674,
+          0.9988214904782321
+        ],
+        "mean_rt": 0.92321378555871,
+        "survival": 1.7096828030349044e-06,
+        "lower_loss": 2.022989577319024e-119,
+        "mass_error": 8.881784197001252e-16,
+        "quadrature_defect": 3.381162017035422e-11,
+        "monte_carlo_joint_cdf_max_error": 0.002065984518086133,
+        "previous_grid_joint_cdf_max_difference": 4.757898499949387e-08
+      }
+    ]
+  },
+  "gradient": {
+    "parameters": {
+      "threshold": 0.31,
+      "non_decision_time": 0.195,
+      "bias": -0.43,
+      "control_gain": 11.0,
+      "lc_mode": 0.75,
+      "lc_scaling": 1.3,
+      "lc_base_gain": 5.2
+    },
+    "log_likelihood": -12.874920124226502,
+    "autograd": [
+      36.30931255399838,
+      10.89375270498093,
+      -40.88500089371108,
+      -0.28390306672668936,
+      0.0893157027026652,
+      -0.04242701792318381,
+      -0.3709871059712497
+    ],
+    "finite_difference": [
+      36.30931305078632,
+      10.893752704355107,
+      -40.88500081680379,
+      -0.2839030666072646,
+      0.08931570292247669,
+      -0.042427018069719664,
+      -0.37098710585599276
+    ],
+    "max_scaled_error": 1.3682107944806403e-08,
+    "value_and_gradient_seconds": 6.621294801007025,
+    "trials": 2,
+    "points": 97,
+    "checkpoint_gradient_max_error": 0.0,
+    "checkpoint_comparison_points": 97
+  },
+  "gradient_refinement": {
+    "evaluations": [
+      {
+        "points": 97,
+        "winner_points": 24,
+        "value": -12.874920124226502,
+        "gradient": [
+          36.30931255399838,
+          10.89375270498093,
+          -40.88500089371108,
+          -0.28390306672668936,
+          0.0893157027026652,
+          -0.04242701792318381,
+          -0.3709871059712497
+        ],
+        "seconds": 7.74266650096979
+      },
+      {
+        "points": 129,
+        "winner_points": 24,
+        "value": -12.87492028779721,
+        "gradient": [
+          36.30927600132536,
+          10.89375389197326,
+          -40.88496722805315,
+          -0.28390305620859296,
+          0.0893157422968628,
+          -0.0424270334243826,
+          -0.3709883055741351
+        ],
+        "seconds": 7.535464791930281
+      },
+      {
+        "points": 129,
+        "winner_points": 48,
+        "value": -12.87492028779721,
+        "gradient": [
+          36.30927600132533,
+          10.893753891973244,
+          -40.884967228053085,
+          -0.28390305620859296,
+          0.0893157422968632,
+          -0.04242703342438285,
+          -0.37098830557413676
+        ],
+        "seconds": 7.8731989450752735
+      }
+    ],
+    "max_scaled_gradient_difference": 1.199602887080875e-06
+  },
+  "fit_smoke": {
+    "retained_trials": 12,
+    "included_trials": 3,
+    "points": 97,
+    "max_steps": 120,
+    "history_mode": "fixed plug-in history; not a marginalized sequential RT likelihood",
+    "history_reference_ndt": 0.2,
+    "measurement_sd": 0.01,
+    "rt_resolution": 0.001,
+    "result": {
+      "success": false,
+      "message": "Iteration limit reached",
+      "iterations": 3,
+      "log_likelihood": -18.59339533152746,
+      "parameters": {
+        "threshold": 0.27799663526698154,
+        "non_decision_time": 0.19877414367086726,
+        "bias": -0.4209895964184068,
+        "control_gain": 10.206012812442749,
+        "lc_mode": 0.8998654344207692,
+        "lc_scaling": 1.0014332024366446,
+        "lc_base_gain": 5.038477400477993
+      },
+      "accepted_log_likelihoods": [
+        -22.641849091087913,
+        -18.688129735293504,
+        -18.608386378816654,
+        -18.59339533152746
+      ],
+      "rejected_proposals": 7,
+      "optimizer": "projected gradient ascent with Armijo backtracking in unit coordinates"
+    },
+    "maximum_evaluated_quadrature_defect": 1.9366662085129605e-06
+  },
+  "date": "2026-09-23",
+  "base_git_head": "5571a66bd906964461597ade91d69a3ed6ee306f",
+  "native_source_sha256": "adede55666e18ba369d64fe93999f61086db48e8eedd4baa5f36338cf2ecee14",
+  "tests": {
+    "command": ".venv/bin/pytest -o addopts= -q tests/composition/pec/test_dawa_direct_likelihood.py",
+    "result": "9 passed in 10.19s"
+  }
+}

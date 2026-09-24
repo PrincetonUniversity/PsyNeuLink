@@ -1,0 +1,1381 @@
+{
+  "configuration": {
+    "estimates": 100000,
+    "horizon": 2.0,
+    "seed": 431,
+    "continuous_step": 0.00025
+  },
+  "lc_clock_ratio": 20.0,
+  "lc_updates_per_pass": 10,
+  "parameter_sets": [
+    {
+      "threshold": 0.3,
+      "non_decision_time": 0.2,
+      "bias": -0.45,
+      "control_gain": 10.0,
+      "lc_mode": 0.9,
+      "lc_scaling": 1.0,
+      "lc_base_gain": 5.0
+    },
+    {
+      "threshold": 0.28,
+      "non_decision_time": 0.17,
+      "bias": -0.43,
+      "control_gain": 12.0,
+      "lc_mode": 0.6,
+      "lc_scaling": 1.5,
+      "lc_base_gain": 5.4
+    }
+  ],
+  "conditions": [
+    {
+      "name": "color_congruent",
+      "task": [
+        1.0,
+        0.0
+      ],
+      "stimulus": [
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "color_incongruent",
+      "task": [
+        1.0,
+        0.0
+      ],
+      "stimulus": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "location_congruent",
+      "task": [
+        0.0,
+        1.0
+      ],
+      "stimulus": [
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "location_incongruent",
+      "task": [
+        0.0,
+        1.0
+      ],
+      "stimulus": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "trajectory": {
+    "native_parity": [
+      {
+        "time_step": 0.01,
+        "maximum_native_error": 2.220446049250313e-16
+      },
+      {
+        "time_step": 0.0025,
+        "maximum_native_error": 2.7755575615628914e-17
+      },
+      {
+        "time_step": 0.0003125,
+        "maximum_native_error": 2.7755575615628914e-17
+      }
+    ],
+    "trial_duration": 0.4,
+    "trial_conditions": [
+      0,
+      3
+    ],
+    "sampling_interval": 0.01,
+    "records": [
+      {
+        "parameter_set": 0,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "maximum_state_error": 0.8470680383122324,
+        "state_rms_error": 0.06514478385661082,
+        "maximum_gain_error": 0.12920219829911161,
+        "maximum_drive_error": 0.03647835909453834
+      },
+      {
+        "parameter_set": 0,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "maximum_state_error": 0.7369105258567926,
+        "state_rms_error": 0.05838035536201165,
+        "maximum_gain_error": 0.12554626529676938,
+        "maximum_drive_error": 0.017678395482893627
+      },
+      {
+        "parameter_set": 0,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "maximum_state_error": 0.1417472884353273,
+        "state_rms_error": 0.009455459660756253,
+        "maximum_gain_error": 0.00978851103853895,
+        "maximum_drive_error": 0.008731621494081576
+      },
+      {
+        "parameter_set": 0,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "maximum_state_error": 0.0858543796428522,
+        "state_rms_error": 0.005364832954194321,
+        "maximum_gain_error": 0.007344537237566229,
+        "maximum_drive_error": 0.004336491617362714
+      },
+      {
+        "parameter_set": 0,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "maximum_state_error": 0.05034633314305548,
+        "state_rms_error": 0.0030028130119566844,
+        "maximum_gain_error": 0.004559180011592723,
+        "maximum_drive_error": 0.0021608382446358654
+      },
+      {
+        "parameter_set": 0,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "maximum_state_error": 0.027573591160794386,
+        "state_rms_error": 0.0016173230517072422,
+        "maximum_gain_error": 0.0025500299228289336,
+        "maximum_drive_error": 0.001078572590885063
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "maximum_state_error": 0.8877140291091303,
+        "state_rms_error": 0.07759067131978507,
+        "maximum_gain_error": 0.1747569059720071,
+        "maximum_drive_error": 0.0434833720937462
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "maximum_state_error": 0.839141094322708,
+        "state_rms_error": 0.07317182307873558,
+        "maximum_gain_error": 0.17367654293681856,
+        "maximum_drive_error": 0.020952525951392076
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "maximum_state_error": 0.10410571371769275,
+        "state_rms_error": 0.004824075453125223,
+        "maximum_gain_error": 0.00822622030991571,
+        "maximum_drive_error": 0.010334612093997109
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "maximum_state_error": 0.03544678585047428,
+        "state_rms_error": 0.001619557680108732,
+        "maximum_gain_error": 0.0028266709407054336,
+        "maximum_drive_error": 0.005129958351412611
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "maximum_state_error": 0.014518852421366107,
+        "state_rms_error": 0.0006872987643577345,
+        "maximum_gain_error": 0.0012154376976756254,
+        "maximum_drive_error": 0.0025557069257957643
+      },
+      {
+        "parameter_set": 1,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "maximum_state_error": 0.006573105386604147,
+        "state_rms_error": 0.00031908839593166986,
+        "maximum_gain_error": 0.0005662879234611395,
+        "maximum_drive_error": 0.0012755491846512257
+      }
+    ]
+  },
+  "simulation": {
+    "scheduled": [
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.00124,
+          0.99876
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7230025792723894,
+        "joint_cdf_max_error": 0.040110000000000035,
+        "joint_cdf_integrated_absolute_error": 0.012589799999999983
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.97284,
+          0.02493
+        ],
+        "censored_fraction": 0.00223,
+        "mean_decision_time_among_completed": 1.1236892328000967,
+        "joint_cdf_max_error": 0.02908999999999995,
+        "joint_cdf_integrated_absolute_error": 0.03002213
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.00098,
+          0.99902
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6961462777590751,
+        "joint_cdf_max_error": 0.03952,
+        "joint_cdf_integrated_absolute_error": 0.011057270000000015
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.00576,
+          0.99424
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8724701909276843,
+        "joint_cdf_max_error": 0.031689999999999996,
+        "joint_cdf_integrated_absolute_error": 0.01612343
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.01681,
+          0.98319
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5179180972981453,
+        "joint_cdf_max_error": 0.041590000000000016,
+        "joint_cdf_integrated_absolute_error": 0.02523888999999999
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.8806,
+          0.1194
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6720950903734565,
+        "joint_cdf_max_error": 0.03413999999999999,
+        "joint_cdf_integrated_absolute_error": 0.09666132000000002
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.01369,
+          0.98631
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5039393969792128,
+        "joint_cdf_max_error": 0.04363,
+        "joint_cdf_integrated_absolute_error": 0.024015549999999983
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.01,
+        "lc_internal_step": 0.02,
+        "choice_probability": [
+          0.0463,
+          0.9537
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5829770974680781,
+        "joint_cdf_max_error": 0.02910999999999997,
+        "joint_cdf_integrated_absolute_error": 0.05222052000000005
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.00133,
+          0.99867
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7225328800666332,
+        "joint_cdf_max_error": 0.034440000000000026,
+        "joint_cdf_integrated_absolute_error": 0.011962019999999962
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.97033,
+          0.02738
+        ],
+        "censored_fraction": 0.00229,
+        "mean_decision_time_among_completed": 1.1217210471205936,
+        "joint_cdf_max_error": 0.025009999999999977,
+        "joint_cdf_integrated_absolute_error": 0.02579461
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.00117,
+          0.99883
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6947857786291838,
+        "joint_cdf_max_error": 0.03023999999999999,
+        "joint_cdf_integrated_absolute_error": 0.00933531
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.00665,
+          0.99335
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8721290416932106,
+        "joint_cdf_max_error": 0.02894000000000002,
+        "joint_cdf_integrated_absolute_error": 0.014544059999999984
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.01787,
+          0.98213
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.516599547265172,
+        "joint_cdf_max_error": 0.029859999999999998,
+        "joint_cdf_integrated_absolute_error": 0.02113027999999992
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.87057,
+          0.12943
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6675284404018521,
+        "joint_cdf_max_error": 0.024129999999999985,
+        "joint_cdf_integrated_absolute_error": 0.06934458999999998
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.01481,
+          0.98519
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5023587968960405,
+        "joint_cdf_max_error": 0.03003,
+        "joint_cdf_integrated_absolute_error": 0.019356449999999987
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.005,
+        "lc_internal_step": 0.01,
+        "choice_probability": [
+          0.05073,
+          0.94927
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5813278475767374,
+        "joint_cdf_max_error": 0.024530000000000052,
+        "joint_cdf_integrated_absolute_error": 0.03919100999999999
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.00148,
+          0.99852
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7204943577903509,
+        "joint_cdf_max_error": 0.025989999999999958,
+        "joint_cdf_integrated_absolute_error": 0.009971459999999974
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.96832,
+          0.02934
+        ],
+        "censored_fraction": 0.00234,
+        "mean_decision_time_among_completed": 1.1189466933259615,
+        "joint_cdf_max_error": 0.02305999999999997,
+        "joint_cdf_integrated_absolute_error": 0.022121319999999996
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.00113,
+          0.99887
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6940456308558584,
+        "joint_cdf_max_error": 0.026029999999999998,
+        "joint_cdf_integrated_absolute_error": 0.008970950000000024
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.00673,
+          0.99327
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8716463452896476,
+        "joint_cdf_max_error": 0.02304000000000006,
+        "joint_cdf_integrated_absolute_error": 0.014151489999999996
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.0187,
+          0.9813
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5159033223524689,
+        "joint_cdf_max_error": 0.02795000000000003,
+        "joint_cdf_integrated_absolute_error": 0.018664829999999927
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.86394,
+          0.13606
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.664921664969027,
+        "joint_cdf_max_error": 0.021670000000000023,
+        "joint_cdf_integrated_absolute_error": 0.05221859000000003
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.01615,
+          0.98385
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5021159969612956,
+        "joint_cdf_max_error": 0.029079999999999995,
+        "joint_cdf_integrated_absolute_error": 0.015914959999999978
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.0025,
+        "lc_internal_step": 0.005,
+        "choice_probability": [
+          0.05329,
+          0.94671
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.581284947257936,
+        "joint_cdf_max_error": 0.023989999999999956,
+        "joint_cdf_integrated_absolute_error": 0.03268122000000009
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.00153,
+          0.99847
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7189816079816223,
+        "joint_cdf_max_error": 0.02045000000000008,
+        "joint_cdf_integrated_absolute_error": 0.008473299999999974
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.96653,
+          0.0312
+        ],
+        "censored_fraction": 0.00227,
+        "mean_decision_time_among_completed": 1.115309635869566,
+        "joint_cdf_max_error": 0.019159999999999955,
+        "joint_cdf_integrated_absolute_error": 0.017585510000000002
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.00118,
+          0.99882
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6930416310209035,
+        "joint_cdf_max_error": 0.02363000000000004,
+        "joint_cdf_integrated_absolute_error": 0.007968280000000025
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.00741,
+          0.99259
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8696218454945087,
+        "joint_cdf_max_error": 0.021109999999999962,
+        "joint_cdf_integrated_absolute_error": 0.011434629999999993
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.01979,
+          0.98021
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5138039479386807,
+        "joint_cdf_max_error": 0.02199000000000001,
+        "joint_cdf_integrated_absolute_error": 0.013936740000000001
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.86014,
+          0.13986
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6622075905007124,
+        "joint_cdf_max_error": 0.019089999999999996,
+        "joint_cdf_integrated_absolute_error": 0.04123123999999998
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.01688,
+          0.98312
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5006004352560639,
+        "joint_cdf_max_error": 0.022189999999999988,
+        "joint_cdf_integrated_absolute_error": 0.012619409999999973
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00125,
+        "lc_internal_step": 0.0025,
+        "choice_probability": [
+          0.05579,
+          0.94421
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5791210978507996,
+        "joint_cdf_max_error": 0.018359999999999987,
+        "joint_cdf_integrated_absolute_error": 0.02469730000000004
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.00155,
+          0.99845
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7167550265601277,
+        "joint_cdf_max_error": 0.016270000000000007,
+        "joint_cdf_integrated_absolute_error": 0.006309919999999972
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.96453,
+          0.03345
+        ],
+        "censored_fraction": 0.00202,
+        "mean_decision_time_among_completed": 1.1106362057630685,
+        "joint_cdf_max_error": 0.016089999999999938,
+        "joint_cdf_integrated_absolute_error": 0.011426120000000001
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.00126,
+          0.99874
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6910611184442044,
+        "joint_cdf_max_error": 0.016210000000000002,
+        "joint_cdf_integrated_absolute_error": 0.005870769999999983
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.00742,
+          0.99258
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8668951266402006,
+        "joint_cdf_max_error": 0.016220000000000012,
+        "joint_cdf_integrated_absolute_error": 0.00866426999999999
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.0207,
+          0.9793
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5119660543748736,
+        "joint_cdf_max_error": 0.01436000000000004,
+        "joint_cdf_integrated_absolute_error": 0.010150379999999924
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.85501,
+          0.14499
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6583937973114848,
+        "joint_cdf_max_error": 0.014519999999999977,
+        "joint_cdf_integrated_absolute_error": 0.027201090000000004
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.0173,
+          0.9827
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.4991486104863882,
+        "joint_cdf_max_error": 0.016979999999999995,
+        "joint_cdf_integrated_absolute_error": 0.010233329999999997
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.000625,
+        "lc_internal_step": 0.00125,
+        "choice_probability": [
+          0.05691,
+          0.94309
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5772302730628848,
+        "joint_cdf_max_error": 0.014400000000000024,
+        "joint_cdf_integrated_absolute_error": 0.020386410000000035
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.00182,
+          0.99818
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7153360235875845,
+        "joint_cdf_max_error": 0.011880000000000057,
+        "joint_cdf_integrated_absolute_error": 0.004471699999999975
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.96443,
+          0.03345
+        ],
+        "censored_fraction": 0.00212,
+        "mean_decision_time_among_completed": 1.1091186802611328,
+        "joint_cdf_max_error": 0.013569999999999971,
+        "joint_cdf_integrated_absolute_error": 0.010159530000000003
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.00147,
+          0.99853
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6901819871357083,
+        "joint_cdf_max_error": 0.013969999999999982,
+        "joint_cdf_integrated_absolute_error": 0.0047069700000000195
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.00791,
+          0.99209
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8649134578242897,
+        "joint_cdf_max_error": 0.01094000000000006,
+        "joint_cdf_integrated_absolute_error": 0.006338509999999994
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.02154,
+          0.97846
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5106174763837457,
+        "joint_cdf_max_error": 0.011050000000000004,
+        "joint_cdf_integrated_absolute_error": 0.0067043999999999715
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.85251,
+          0.14749
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6553969287276268,
+        "joint_cdf_max_error": 0.012520000000000031,
+        "joint_cdf_integrated_absolute_error": 0.019139769999999976
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.01921,
+          0.98079
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.4973992666184902,
+        "joint_cdf_max_error": 0.01428999999999997,
+        "joint_cdf_integrated_absolute_error": 0.0037488100000000264
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.0003125,
+        "lc_internal_step": 0.000625,
+        "choice_probability": [
+          0.05969,
+          0.94031
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5748522888019681,
+        "joint_cdf_max_error": 0.012050000000000005,
+        "joint_cdf_integrated_absolute_error": 0.011734470000000023
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.00177,
+          0.99823
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7147368986320496,
+        "joint_cdf_max_error": 0.010340000000000016,
+        "joint_cdf_integrated_absolute_error": 0.003954069999999968
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.96423,
+          0.03383
+        ],
+        "censored_fraction": 0.00194,
+        "mean_decision_time_among_completed": 1.1070082664630092,
+        "joint_cdf_max_error": 0.012840000000000018,
+        "joint_cdf_integrated_absolute_error": 0.007864910000000004
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.00155,
+          0.99845
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6887891949945688,
+        "joint_cdf_max_error": 0.009559999999999957,
+        "joint_cdf_integrated_absolute_error": 0.003205589999999974
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.00851,
+          0.99149
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8642628858214617,
+        "joint_cdf_max_error": 0.01094000000000006,
+        "joint_cdf_integrated_absolute_error": 0.004767299999999991
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.02189,
+          0.97811
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5099184355947375,
+        "joint_cdf_max_error": 0.009640000000000037,
+        "joint_cdf_integrated_absolute_error": 0.005227010000000009
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.84998,
+          0.15002
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6543675520381331,
+        "joint_cdf_max_error": 0.011660000000000004,
+        "joint_cdf_integrated_absolute_error": 0.013089329999999979
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.0188,
+          0.9812
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.4969306400746107,
+        "joint_cdf_max_error": 0.00941000000000003,
+        "joint_cdf_integrated_absolute_error": 0.004394129999999942
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00015625,
+        "lc_internal_step": 0.0003125,
+        "choice_probability": [
+          0.06077,
+          0.93923
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5736992433956265,
+        "joint_cdf_max_error": 0.00782000000000005,
+        "joint_cdf_integrated_absolute_error": 0.007981340000000054
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.00166,
+          0.99834
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7141447657012939,
+        "joint_cdf_max_error": 0.007469999999999977,
+        "joint_cdf_integrated_absolute_error": 0.003536849999999995
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.96417,
+          0.0339
+        ],
+        "censored_fraction": 0.00193,
+        "mean_decision_time_among_completed": 1.1044244102037148,
+        "joint_cdf_max_error": 0.008079999999999976,
+        "joint_cdf_integrated_absolute_error": 0.005539800000000002
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.00153,
+          0.99847
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6878022991761565,
+        "joint_cdf_max_error": 0.006779999999999953,
+        "joint_cdf_integrated_absolute_error": 0.0022932299999999847
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.00841,
+          0.99159
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8621845926132798,
+        "joint_cdf_max_error": 0.007550000000000001,
+        "joint_cdf_integrated_absolute_error": 0.002835289999999996
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.02232,
+          0.97768
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5094502058881522,
+        "joint_cdf_max_error": 0.008080000000000032,
+        "joint_cdf_integrated_absolute_error": 0.0037035499999999734
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.8487,
+          0.1513
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6525539085894823,
+        "joint_cdf_max_error": 0.009919999999999984,
+        "joint_cdf_integrated_absolute_error": 0.008977610000000007
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.01891,
+          0.98109
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.49654323222368957,
+        "joint_cdf_max_error": 0.008900000000000019,
+        "joint_cdf_integrated_absolute_error": 0.003652159999999995
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 7.8125e-05,
+        "lc_internal_step": 0.00015625,
+        "choice_probability": [
+          0.06109,
+          0.93891
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.573533050417006,
+        "joint_cdf_max_error": 0.006990000000000052,
+        "joint_cdf_integrated_absolute_error": 0.0069253800000000625
+      }
+    ],
+    "continuous": [
+      {
+        "parameter_set": 0,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.00203,
+          0.99797
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.7112287282943726
+      },
+      {
+        "parameter_set": 0,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.96353,
+          0.03447
+        ],
+        "censored_fraction": 0.002,
+        "mean_decision_time_among_completed": 1.0993521213531494
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.00171,
+          0.99829
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6858712434768677
+      },
+      {
+        "parameter_set": 0,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.00866,
+          0.99134
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.8596404194831848
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_congruent",
+        "condition_index": 0,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.02306,
+          0.97694
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5074214339256287
+      },
+      {
+        "parameter_set": 1,
+        "condition": "color_incongruent",
+        "condition_index": 1,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.84648,
+          0.15352
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.6477980613708496
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_congruent",
+        "condition_index": 2,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.01957,
+          0.98043
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.49445515871047974
+      },
+      {
+        "parameter_set": 1,
+        "condition": "location_incongruent",
+        "condition_index": 3,
+        "time_step": 0.00025,
+        "choice_probability": [
+          0.06288,
+          0.93712
+        ],
+        "censored_fraction": 0.0,
+        "mean_decision_time_among_completed": 0.5705530643463135
+      }
+    ],
+    "sampling_note": "Independent source/reference streams; differences below roughly 0.006 at 100k draws can be sampling noise."
+  },
+  "density": [
+    {
+      "parameter_set": 0,
+      "condition_index": 0,
+      "points": 129,
+      "time_step": 0.001,
+      "seconds": 21.589216802967712,
+      "mass_error": 5.551115123125783e-16,
+      "lower_loss": 1.8548697041785595e-43,
+      "survival": 4.85045466948857e-10,
+      "minimum_mass": 0.0,
+      "substeps": 4,
+      "joint_cdf_max_error": 0.004854718008494019
+    },
+    {
+      "parameter_set": 0,
+      "condition_index": 0,
+      "points": 257,
+      "time_step": 0.001,
+      "seconds": 164.4664996380452,
+      "mass_error": 2.220446049250313e-16,
+      "lower_loss": 1.2444883003575842e-43,
+      "survival": 4.213060737786376e-10,
+      "minimum_mass": 0.0,
+      "substeps": 11,
+      "joint_cdf_max_error": 0.002322261261300529
+    },
+    {
+      "parameter_set": 1,
+      "condition_index": 1,
+      "points": 129,
+      "time_step": 0.001,
+      "seconds": 22.198812042013742,
+      "mass_error": 2.220446049250313e-16,
+      "lower_loss": 4.56399971791849e-49,
+      "survival": 1.5840005676375683e-11,
+      "minimum_mass": 0.0,
+      "substeps": 5,
+      "joint_cdf_max_error": 0.004194642211177602
+    },
+    {
+      "parameter_set": 1,
+      "condition_index": 1,
+      "points": 257,
+      "time_step": 0.001,
+      "seconds": 185.85043213400058,
+      "mass_error": 4.440892098500626e-16,
+      "lower_loss": 1.8242550221795003e-49,
+      "survival": 1.3701675227076935e-11,
+      "minimum_mass": 0.0,
+      "substeps": 12,
+      "joint_cdf_max_error": 0.0038797045185221535
+    }
+  ],
+  "startup": {
+    "records": [
+      {
+        "outer_step": 0.01,
+        "lc_substeps": 10,
+        "lc_internal_step": 0.02,
+        "initial_held_gain": 1.0,
+        "peak_lc_v": 1.0355242417241564,
+        "peak_gain": 5.198315039579303
+      },
+      {
+        "outer_step": 0.01,
+        "lc_substeps": 100,
+        "lc_internal_step": 0.002,
+        "initial_held_gain": 1.0,
+        "peak_lc_v": 1.0285373725484444,
+        "peak_gain": 5.195168416753919
+      },
+      {
+        "outer_step": 0.01,
+        "lc_substeps": 10,
+        "lc_internal_step": 0.02,
+        "initial_held_gain": 5.0,
+        "peak_lc_v": 0.9422583666542202,
+        "peak_gain": 5.213774338340054
+      },
+      {
+        "outer_step": 0.0025,
+        "lc_substeps": 10,
+        "lc_internal_step": 0.005,
+        "initial_held_gain": 1.0,
+        "peak_lc_v": 0.30021699197920604,
+        "peak_gain": 5.098476961405714
+      },
+      {
+        "outer_step": 0.0003125,
+        "lc_substeps": 10,
+        "lc_internal_step": 0.000625,
+        "initial_held_gain": 1.0,
+        "peak_lc_v": 0.30901672362581833,
+        "peak_gain": 5.098437659231016
+      }
+    ],
+    "continuous_peak_lc_v": 0.3229403802710736,
+    "continuous_peak_gain": 5.098449467805457,
+    "note": "Controlled replay ablations; the source schedule and default initial gain remain unchanged."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "scope": "Short warmed timing check of the current native direct solver and continuous SDE sampler, not a full-fit or equal-accuracy benchmark.",
+  "conditions": [
+    {
+      "name": "color_incongruent",
+      "task": [
+        1.0,
+        0.0
+      ],
+      "stimulus": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "location_incongruent",
+      "task": [
+        0.0,
+        1.0
+      ],
+      "stimulus": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "parameters": {
+    "threshold": 0.2879657211820791,
+    "non_decision_time": 0.17650170847169946,
+    "bias": -0.42202839162343536,
+    "control_gain": 12.339782551339166,
+    "lc_mode": 0.8795587632626213,
+    "lc_scaling": 4.0,
+    "lc_base_gain": 5.119875177906493
+  },
+  "decision_horizon_seconds": 1.401,
+  "training_observations": 4000,
+  "direct": {
+    "device": "cpu",
+    "threads": 1,
+    "dtype": "float64",
+    "solver_config": {
+      "points": 129,
+      "time_step": 0.001,
+      "ode_step": 0.0005,
+      "lower_bound": -0.25,
+      "noise": 0.1,
+      "leak": 8.0,
+      "competition": 8.0,
+      "lc_clock_ratio": 20.0,
+      "cfl": 0.8,
+      "checkpoint_steps": 16,
+      "recompute_rates": false,
+      "ode_backend": "generated",
+      "flux_backend": "native"
+    },
+    "includes": "Deterministic trajectory generation, two density solves, and binned training likelihood; backward pass through all seven parameters when requested.",
+    "warmup_calls_per_case": 1,
+    "forward_seconds": [
+      12.584382105036639,
+      12.605010792962275
+    ],
+    "forward_median_seconds": 12.594696448999457,
+    "value_and_gradient_seconds": [
+      30.680392174050212,
+      30.599200799013488
+    ],
+    "value_and_gradient_median_seconds": 30.63979648653185,
+    "mean_negative_log_likelihood": 3.5723857413308067
+  },
+  "continuous_sampling": {
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "response_dtype": "float32",
+    "deterministic_dtype": "float64",
+    "estimates_per_condition": 100000,
+    "seed": 43,
+    "time_step": 0.00025,
+    "ode_step": 0.00025,
+    "lc_clock_ratio": 20.0,
+    "warmup_calls": 1,
+    "seconds": [
+      0.07314019603654742,
+      0.0726005929755047,
+      0.06654995994176716
+    ],
+    "median_seconds": 0.0726005929755047,
+    "includes": "Generated deterministic trajectories, host-device transfers, response SDE sampling, host output; synchronized timing.",
+    "excludes": "Density estimation, likelihood scoring, and parameter gradients."
+  },
+  "limitations": "One parameter vector and two fresh-trial conditions. Compilation is excluded. Direct and sampling use different numerical approximations and precision. These are not timings of the original scheduled PEC simulator."
+}

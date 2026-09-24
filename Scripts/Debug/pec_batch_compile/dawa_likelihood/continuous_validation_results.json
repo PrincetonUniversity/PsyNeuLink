@@ -1,0 +1,353 @@
+{
+  "process": "continuous",
+  "device": "cpu",
+  "dtype": "float64",
+  "torch": "2.13.0+cu130",
+  "history": "candidate-dependent RT - nondecision time; RT-bin-center reconstruction",
+  "observation": "recorded RT interval; no added Gaussian measurement noise",
+  "ode": [
+    {
+      "ode_step": 0.001,
+      "maximum_state_error": 7.406295776668514e-07
+    },
+    {
+      "ode_step": 0.0005,
+      "maximum_state_error": 4.275500425920953e-08
+    },
+    {
+      "ode_step": 0.00025,
+      "maximum_state_error": 2.5626722410798664e-09
+    }
+  ],
+  "analytic_race": [
+    {
+      "points": 33,
+      "maximum_joint_cdf_error": 0.004398561825416574,
+      "mass_error": 2.220446049250313e-16,
+      "lower_loss": 2.469574895264708e-07,
+      "minimum_mass": 0.0,
+      "substeps": 1,
+      "seconds": 0.7465457869693637
+    },
+    {
+      "points": 65,
+      "maximum_joint_cdf_error": 0.001681840392590013,
+      "mass_error": 3.3306690738754696e-16,
+      "lower_loss": 2.1612025413726434e-07,
+      "minimum_mass": 0.0,
+      "substeps": 2,
+      "seconds": 1.8145095789805055
+    },
+    {
+      "points": 129,
+      "maximum_joint_cdf_error": 0.0003984691837481853,
+      "mass_error": 2.220446049250313e-16,
+      "lower_loss": 2.057693445914198e-07,
+      "minimum_mass": 0.0,
+      "substeps": 5,
+      "seconds": 8.17542223003693
+    }
+  ],
+  "pde_refinement": {
+    "evaluations": [
+      {
+        "points": 33,
+        "time_step": 0.001,
+        "choice_probability": [
+          0.004196278564512153,
+          0.991297741246231
+        ],
+        "survival": 0.004505980189257264,
+        "mass_error": 0.0,
+        "lower_loss": 5.48786081953556e-41,
+        "minimum_mass": 0.0,
+        "substeps": 1,
+        "maximum_cfl": 0.7001199345341346,
+        "forward_seconds": 3.137162480968982
+      },
+      {
+        "points": 65,
+        "time_step": 0.001,
+        "choice_probability": [
+          0.0025286253929429443,
+          0.9950709413026955
+        ],
+        "survival": 0.0024004333043615117,
+        "mass_error": 8.881784197001252e-16,
+        "lower_loss": 7.39300638619133e-43,
+        "minimum_mass": 0.0,
+        "substeps": 2,
+        "maximum_cfl": 0.7043110723428214,
+        "forward_seconds": 5.096830417052843
+      },
+      {
+        "points": 129,
+        "time_step": 0.001,
+        "choice_probability": [
+          0.0020866236638465633,
+          0.9959118043171029
+        ],
+        "survival": 0.0020015720190497007,
+        "mass_error": 5.551115123125783e-16,
+        "lower_loss": 1.8049769892934243e-43,
+        "minimum_mass": 0.0,
+        "substeps": 4,
+        "maximum_cfl": 0.7751863974496602,
+        "forward_seconds": 14.748422040021978
+      },
+      {
+        "points": 257,
+        "time_step": 0.001,
+        "choice_probability": [
+          0.0019695304110092216,
+          0.9961224577022173
+        ],
+        "survival": 0.001908011886774268,
+        "mass_error": 2.220446049250313e-16,
+        "lower_loss": 1.21521242653274e-43,
+        "minimum_mass": 0.0,
+        "substeps": 11,
+        "maximum_cfl": 0.7802543802062174,
+        "forward_seconds": 128.19491225795355
+      },
+      {
+        "points": 65,
+        "time_step": 0.002,
+        "choice_probability": [
+          0.0025287177137179443,
+          0.9950708370038608
+        ],
+        "survival": 0.0024004452824218816,
+        "mass_error": 8.881784197001252e-16,
+        "lower_loss": 7.39281616083264e-43,
+        "minimum_mass": 0.0,
+        "substeps": 4,
+        "maximum_cfl": 0.7043110723428214,
+        "forward_seconds": 6.054213652038015
+      },
+      {
+        "points": 65,
+        "time_step": 0.0005,
+        "choice_probability": [
+          0.002528602313103638,
+          0.9950709673770709
+        ],
+        "survival": 0.0024004303098261754,
+        "mass_error": 6.661338147750939e-16,
+        "lower_loss": 7.393053949685837e-43,
+        "minimum_mass": 0.0,
+        "substeps": 1,
+        "maximum_cfl": 0.7043110723428214,
+        "forward_seconds": 8.361835503019392
+      }
+    ],
+    "spatial_cdf_errors_to_257": [
+      0.05304151312079397,
+      0.01362456662438094,
+      0.002811502896980622
+    ],
+    "temporal_cdf_errors_to_0_5ms": [
+      1.110624769692925e-06,
+      2.2212945954835916e-07
+    ]
+  },
+  "gradient": {
+    "parameters": {
+      "threshold": 0.18,
+      "non_decision_time": 0.193,
+      "bias": -0.43,
+      "control_gain": 11.0,
+      "lc_mode": 0.75,
+      "lc_scaling": 1.3,
+      "lc_base_gain": 5.2
+    },
+    "log_likelihood": -17.663092981225553,
+    "autograd": [
+      363.5798721354296,
+      116.45186303428329,
+      -193.1604313404136,
+      -0.09001712655416858,
+      -1.2144299449463156,
+      0.9491673335652406,
+      9.52318667225569
+    ],
+    "finite_difference": [
+      363.57987218593735,
+      116.45186314979128,
+      -193.1604313405444,
+      -0.09001712652046866,
+      -1.2144299450511653,
+      0.9491673334484683,
+      9.52318667274837
+    ],
+    "max_scaled_error": 9.918947112636696e-10,
+    "checkpoint_gradient_max_error": 5.684341886080802e-14,
+    "value_gradient_seconds": 14.82444450398907
+  },
+  "monte_carlo": [
+    {
+      "time_step": 0.0005,
+      "estimates": 100000,
+      "seed": 43,
+      "pde_points": 257,
+      "pde_time_step": 0.001,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "joint_cdf_max_error": 0.0023239181513775575,
+      "choice_probability": [
+        0.00197,
+        0.99607
+      ],
+      "survival": 0.00196,
+      "sample_seconds": 1.5170212209923193
+    },
+    {
+      "time_step": 0.00025,
+      "estimates": 100000,
+      "seed": 43,
+      "pde_points": 257,
+      "pde_time_step": 0.001,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "joint_cdf_max_error": 0.002317670934199656,
+      "choice_probability": [
+        0.00204,
+        0.99606
+      ],
+      "survival": 0.0019,
+      "sample_seconds": 0.03655626508407295
+    }
+  ],
+  "gradient_refinement": {
+    "evaluations": [
+      {
+        "points": 33,
+        "time_step": 0.001,
+        "log_likelihood": -18.6499195576861,
+        "gradient": [
+          439.6159821814715,
+          136.59499359994072,
+          -230.46650468818785,
+          -0.12030360997022757,
+          -1.4906824822549878,
+          1.1506014238262927,
+          11.36089158209223
+        ],
+        "value_gradient_seconds": 8.57774151302874
+      },
+      {
+        "points": 65,
+        "time_step": 0.001,
+        "log_likelihood": -20.085868202577483,
+        "gradient": [
+          551.5336199902159,
+          159.699356957551,
+          -283.2609739207809,
+          -0.14801668223698472,
+          -1.8905313193605011,
+          1.4518854285363023,
+          13.9626874002298
+        ],
+        "value_gradient_seconds": 17.33564458298497
+      },
+      {
+        "points": 129,
+        "time_step": 0.001,
+        "log_likelihood": -20.569489491521438,
+        "gradient": [
+          589.559436808953,
+          166.35078465593165,
+          -300.60259002272,
+          -0.1485791747868687,
+          -2.0209490766569647,
+          1.557098857299695,
+          14.816274931818432
+        ],
+        "value_gradient_seconds": 60.441225838963874
+      },
+      {
+        "points": 129,
+        "time_step": 0.0005,
+        "log_likelihood": -20.56937894983041,
+        "gradient": [
+          589.5549821486187,
+          166.35747695281998,
+          -300.6001716974117,
+          -0.14857972070984019,
+          -2.020919644716156,
+          1.5571029289899787,
+          14.816141499225491
+        ],
+        "value_gradient_seconds": 57.9715600470081
+      }
+    ],
+    "scaled_errors_to_129_1ms": [
+      0.2623849361306713,
+      0.0675701663193388,
+      0.0,
+      4.023002898467668e-05
+    ]
+  },
+  "device_gradient": {
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "evaluations": [
+      {
+        "device": "cpu",
+        "log_likelihood": -7.919744432790406,
+        "gradient": [
+          161.7761527911199,
+          47.48669927793969,
+          -87.7532107608838,
+          0.31747268212788515,
+          -0.3204980765648327,
+          0.4143328346520959,
+          4.3606141281279465
+        ]
+      },
+      {
+        "device": "cuda",
+        "log_likelihood": -7.919744432790404,
+        "gradient": [
+          161.77615279111984,
+          47.48669927793935,
+          -87.75321076088393,
+          0.3174726821278852,
+          -0.3204980765648324,
+          0.41433283465209586,
+          4.360614128127946
+        ]
+      }
+    ]
+  },
+  "audit_scope": "Fixed oracle and refinement cases; numerical settings are recorded per case.",
+  "model": {
+    "lc_clock_ratio": 20.0,
+    "response_noise": 0.1,
+    "lower_bound": -0.25,
+    "ode_step": 0.0005,
+    "default_parameters": {
+      "threshold": 0.3,
+      "non_decision_time": 0.2,
+      "bias": -0.45,
+      "control_gain": 10.0,
+      "lc_mode": 0.9,
+      "lc_scaling": 1.0,
+      "lc_base_gain": 5.0
+    },
+    "refinement_and_monte_carlo_task": [
+      1,
+      0
+    ],
+    "refinement_and_monte_carlo_stimulus": [
+      0,
+      1,
+      0,
+      1
+    ]
+  },
+  "audit_note": "Cases completed in separate invocations. Timings include concurrent audits and are not controlled throughput benchmarks.",
+  "regression_tests": {
+    "continuous_numerical_tests": 8,
+    "existing_discrete_tests": 9,
+    "all_numerical_tests_passed": true,
+    "command": ".venv/bin/python -m pytest tests/composition/pec/test_dawa_continuous_likelihood.py tests/composition/pec/test_dawa_direct_likelihood.py -q"
+  }
+}
