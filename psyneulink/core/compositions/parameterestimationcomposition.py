@@ -784,10 +784,19 @@ class ParameterEstimationComposition(Composition):
         if num_trials_per_estimate is None and data is not None:
             num_trials_per_estimate = len(data)
 
+        # Held as the enum, which ignores case, so every comparison below reads it the same way.
+        if fit_method is not None:
+            if fit_method not in FitMethod:
+                raise ParameterEstimationCompositionError(
+                    f"fit_method must be None or one of {[m.value for m in FitMethod]}; "
+                    f"got {fit_method!r}"
+                )
+            fit_method = FitMethod(fit_method)
+
         # A hierarchical fit describes its model once, in the factory that builds one per
         # participant. This composition holds the data and splits it; it has no model of its own,
         # so the arguments that describe one belong to the factory rather than here.
-        hierarchical = fit_method == "hierarchical"
+        hierarchical = fit_method == FitMethod.HIERARCHICAL
         if hierarchical:
             declared = [
                 name for name, value in (
