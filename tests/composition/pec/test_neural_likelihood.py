@@ -1,4 +1,6 @@
 """Tests for neural likelihood estimation."""
+import sys
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -402,6 +404,20 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
     _, _, thirty = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
                              ("rate", "threshold"), 2)
     assert (ten, thirty) == (10, 30)
+
+
+def test_a_missing_sbi_is_reported_before_anything_is_simulated(monkeypatch):
+    built = []
+
+    def factory(data):
+        built.append(True)
+        return _ddm_training_pec(data)
+
+    monkeypatch.setitem(sys.modules, "sbi", None)
+    with pytest.raises(ImportError, match="requires the sbi package"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=factory,
+                                    n_parameter_samples=8)
+    assert not built
 
 
 @pytest.mark.composition

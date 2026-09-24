@@ -571,6 +571,9 @@ def train_neural_likelihood(
         raise NeuralLikelihoodError("n_parameter_samples must be at least 2.")
     if n_trials_per_sample is not None and n_trials_per_sample < 1:
         raise NeuralLikelihoodError("n_trials_per_sample must be at least 1.")
+    # Needed only to build the estimator at the end, but checked before the simulations,
+    # which are most of the cost.
+    _require_sbi()
 
     # Sobol draws cover the box more evenly than independent uniforms at the same count.
     engine = qmc.Sobol(d=len(names), scramble=True, seed=seed)
