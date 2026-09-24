@@ -160,6 +160,9 @@ def test_invalid_histogram_configuration_and_forged_readouts(scoring_case):
     with pytest.raises(StochasticSamplingError):
         observation.compile_histogram_score(categorical_dims=[0, 1])
     plan = observation.compile_histogram_score(categorical_dims=[0])
+    with pytest.raises(ValueError, match="complete dynamic sequences"):
+        plan.score(inputs, data, rows, num_estimates=1,
+                   triton_launch_options={"trial_schedule": "independent"})
     forged = replace(observation, witness=replace(observation.witness, readouts=tuple(reversed(observation.witness.readouts))))
     with pytest.raises(StochasticSamplingError):
         replace(plan, observation_plan=forged).score(inputs, data, rows, num_estimates=1)

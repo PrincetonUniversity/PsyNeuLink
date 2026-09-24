@@ -20,8 +20,9 @@ from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_input
 
 
 class HistogramEmitter(TritonGraphEmitter):
-    def __init__(self, kernel, indices, categorical, radius=0, *, normal_rng=DEFAULT_NORMAL_RNG):
-        super().__init__(kernel, normal_rng=normal_rng)
+    def __init__(self, kernel, indices, categorical, radius=0, *, normal_rng=DEFAULT_NORMAL_RNG,
+                 trial_schedule="synchronized"):
+        super().__init__(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule)
         self.indices = tuple(indices)
         self.categorical = tuple(categorical)
         self.radius = radius
@@ -35,7 +36,7 @@ class HistogramEmitter(TritonGraphEmitter):
         self.builder.line("param_idx = hist_group // num_subjects + tl.zeros((BLOCK,), tl.int32)")
         self.builder.line("offsets = hist_group * num_estimates + estimate_idx")
 
-    def _emit_trial_start_inspection(self):
+    def _emit_trial_output_begin(self):
         self.histogram_outputs = {}
         self.builder.line("hist_row = hist_group * num_trials + trial_idx")
         self.builder.line("hist_nonfinite = tl.zeros((BLOCK,), tl.int32)")
@@ -54,24 +55,34 @@ class HistogramEmitter(TritonGraphEmitter):
 
     def _emit_store_flag(self, op):
         value = self._get_value(op.inputs[0].name)[0]
-        self.builder.line(
-            f"tl.atomic_add(diag + hist_row * {self.diag_slot_count + 1} + {op.attrs['slot']}, "
-            f"tl.sum(tl.where(mask, {value}, 0).to(tl.int32), 0))"
-        )
+        self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {op.attrs['slot']}", value)
+
+    def _emit_histogram_add(self, pointer, value):
+        if self.trial_schedule == "independent":
+            # Different completed lanes can publish to different trial rows.
+            # Integer atomics preserve exact counts regardless of arrival order.
+            self.builder.line(f"tl.atomic_add({pointer}, ({value}).to(tl.int32), mask=mask & (({value}) != 0), sem='relaxed')")
+        else:
+            self.builder.line(f"tl.atomic_add({pointer}, tl.sum(tl.where(mask, {value}, 0).to(tl.int32), 0))")
+
+    def _histogram_load(self, pointer):
+        if self.trial_schedule == "independent":
+            return f"tl.load({pointer}, mask=mask, other=0)"
+        return f"tl.load({pointer})"
 
     def _emit_trial_end_inspection(self):
         width = len(self.indices)
         count_width = 2 * self.radius + 1
-        self.builder.line("hist_match = mask & (tl.load(observed_valid + trial_idx) != 0)")
+        self.builder.line(f"hist_match = mask & ({self._histogram_load('observed_valid + trial_idx')} != 0)")
         for column, index in enumerate(self.indices):
             value = self.histogram_outputs[index]
             address = f"trial_idx * {width} + {column}"
             if self.categorical[column]:
-                self.builder.line(f"hist_match = hist_match & (tl.abs({value} - tl.load(observed + {address})) <= 1.0e-6)")
+                self.builder.line(f"hist_match = hist_match & (tl.abs({value} - {self._histogram_load(f'observed + {address}')}) <= 1.0e-6)")
             elif not self.radius:
-                self.builder.line(f"hist_lower = tl.load(lower + {address})")
-                self.builder.line(f"hist_upper = tl.load(upper + {address})")
-                self.builder.line(f"hist_inclusive = tl.load(lower_inclusive + {address})")
+                self.builder.line(f"hist_lower = {self._histogram_load(f'lower + {address}')}")
+                self.builder.line(f"hist_upper = {self._histogram_load(f'upper + {address}')}")
+                self.builder.line(f"hist_inclusive = {self._histogram_load(f'lower_inclusive + {address}')}")
                 self.builder.line(f"hist_match = hist_match & tl.where(hist_inclusive != 0, {value} >= hist_lower, {value} > hist_lower) & ({value} <= hist_upper)")
         if self.radius:
             column = self.categorical.index(False)
@@ -80,17 +91,14 @@ class HistogramEmitter(TritonGraphEmitter):
             # Every offset is reduced as integers, independently of block order.
             with self.builder.block(f"for hist_slot in range({count_width})"):
                 address = f"(trial_idx * {width} + {column}) * {count_width} + hist_slot"
-                self.builder.line(f"hist_lower = tl.load(lower + {address})")
-                self.builder.line(f"hist_upper = tl.load(upper + {address})")
-                self.builder.line(f"hist_inclusive = tl.load(lower_inclusive + {address})")
+                self.builder.line(f"hist_lower = {self._histogram_load(f'lower + {address}')}")
+                self.builder.line(f"hist_upper = {self._histogram_load(f'upper + {address}')}")
+                self.builder.line(f"hist_inclusive = {self._histogram_load(f'lower_inclusive + {address}')}")
                 self.builder.line(f"hist_hit = hist_match & (hist_inclusive >= 0) & tl.where(hist_inclusive == 1, {value} >= hist_lower, {value} > hist_lower) & ({value} <= hist_upper)")
-                self.builder.line(f"tl.atomic_add(out + hist_row * {count_width} + hist_slot, tl.sum(hist_hit.to(tl.int32), 0))")
+                self._emit_histogram_add(f"out + hist_row * {count_width} + hist_slot", "hist_hit")
         else:
-            self.builder.line("tl.atomic_add(out + hist_row, tl.sum(hist_match.to(tl.int32), 0))")
-        self.builder.line(
-            f"tl.atomic_add(diag + hist_row * {self.diag_slot_count + 1} + {self.diag_slot_count}, "
-            "tl.sum(tl.where(mask, hist_nonfinite, 0), 0))"
-        )
+            self._emit_histogram_add("out + hist_row", "hist_match")
+        self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {self.diag_slot_count}", "hist_nonfinite")
 
     def _signature_args(self):
         args = list(super()._signature_args())
@@ -189,7 +197,8 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
                                    num_trials=trials, subject_slices=subject_slices)
     lca_steps = lca_max_steps(ir, prepared, rows)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
-    emitter = HistogramEmitter(kernel, indices, categorical, radius, normal_rng=launch["normal_rng"])
+    emitter = HistogramEmitter(kernel, indices, categorical, radius, normal_rng=launch["normal_rng"],
+                               trial_schedule=launch["trial_schedule"])
     source = emitter.emit()
     dummy = torch.empty(1, device=device)
     with interpret_scope(interpret):

@@ -106,6 +106,9 @@ class OpEmitMixin:
             cursor += output.width
 
     def _emit_trial_loop(self, body: tuple[KernelOp, ...]) -> None:
+        if self.trial_schedule == "independent":
+            self._emit_independent_trial_loop(body)
+            return
         self.builder.line("trial_idx = 0")
         with self.builder.block("while trial_idx < num_trials"):
             # Scalar parameters remain lane-persistent.  The strides are
@@ -116,6 +119,7 @@ class OpEmitMixin:
             self.output_cursor = 0
             self.lane_out_emitted = False
             self._emit_trial_start_inspection()
+            self._emit_trial_output_begin()
             self._emit_ops(body)
             self._emit_trial_end_inspection()
             self.builder.line("trial_idx += 1")
@@ -126,6 +130,9 @@ class OpEmitMixin:
 
     def _emit_trial_end_inspection(self) -> None:
         """Optional instrumentation; ordinary simulation emits nothing."""
+
+    def _emit_trial_output_begin(self) -> None:
+        """Initialize output consumption; independent lanes use completion masks."""
 
     def _emit_ops(self, ops: tuple[KernelOp, ...]) -> None:
         self.output_cursor = 0
@@ -519,28 +526,7 @@ class OpEmitMixin:
                 )
             self.builder.line(f"{round_var} += 1")
 
-        # Exhaustion is a region-level safety result, not a fabricated
-        # scheduler `finished` value.  Exactly-at-cap lanes have already
-        # visited every set in the final round and therefore reach `done` when
-        # their later WhenFinished member executes.
-        for carry in program.loop_carries:
-            if carry.kind != "diagnostic":
-                continue
-            values = carry_vars[self._dynamic_carry_key(carry)]
-            if carry.value.width != 1 or len(values) != 1:
-                raise ValueError(
-                    "Triton dynamic exhaustion diagnostics must be scalar."
-                )
-            finished_var = self._dynamic_slot_var(
-                slot_vars,
-                "finished",
-                owner=carry.owner_component_id,
-                finished=carry.value_id,
-            )
-            self.builder.line(
-                f"{values[0]} = tl.where(mask & ({finished_var} == 0), "
-                "1.0, 0.0)"
-            )
+        self._emit_dynamic_exit_diagnostics(program, carry_vars, slot_vars)
 
         self.value_vars.clear()
         self.value_vars.update(outer_values)
@@ -562,6 +548,19 @@ class OpEmitMixin:
         self.dynamic_normal_cache_vars = {}
         self.builder.line()
 
+    def _emit_dynamic_exit_diagnostics(self, program, carry_vars, slot_vars):
+        # Exhaustion does not fabricate scheduler completion. Exactly-at-cap
+        # lanes have already visited all consideration sets in the last round.
+        for carry in program.loop_carries:
+            if carry.kind != "diagnostic":
+                continue
+            values = carry_vars[self._dynamic_carry_key(carry)]
+            if carry.value.width != 1 or len(values) != 1:
+                raise ValueError("Triton dynamic exhaustion diagnostics must be scalar.")
+            finished = self._dynamic_slot_var(slot_vars, "finished", owner=carry.owner_component_id,
+                                              finished=carry.value_id)
+            self.builder.line(f"{values[0]} = tl.where(mask & ({finished} == 0), 1.0, 0.0)")
+
     def _emit_dynamic_normal_cache_initializers(self, program) -> None:
         """Allocate one spare normal for each scalar scheduled RNG stream."""
 
@@ -576,9 +575,7 @@ class OpEmitMixin:
             if stream is None or stream.width != 1:
                 continue
             value = f"dynamic_rng_spare_{stream.stream_id}"
-            self.builder.line(
-                f"{value} = tl.zeros((BLOCK,), dtype=tl.float32)"
-            )
+            self._emit_trial_initializer(value, "tl.zeros((BLOCK,), dtype=tl.float32)")
             cache_vars[stream.node] = value
         self.dynamic_normal_cache_vars = cache_vars
         if cache_vars:
@@ -625,13 +622,10 @@ class OpEmitMixin:
                             "wrong typed parameter owner."
                         )
                     for value in values:
-                        self.builder.line(f"{value} = {initial_var}")
+                        self._emit_trial_initializer(value, initial_var)
                 else:
                     for value, initial in zip(values, carry.initial_value):
-                        self.builder.line(
-                            f"{value} = tl.full((BLOCK,), "
-                            f"{float_literal(initial)}, tl.float32)"
-                        )
+                        self._emit_trial_initializer(value, f"tl.full((BLOCK,), {float_literal(initial)}, tl.float32)")
             elif carry.kind in {"effective_parameter", "sampled_parameter"}:
                 try:
                     storage = self.effective_parameter_vars if carry.kind == "effective_parameter" else self.sampled_parameter_vars
@@ -645,9 +639,7 @@ class OpEmitMixin:
                 base = f"{safe_ident(carry.value.name)}_dynamic_current"
                 values = [f"{base}_{index}" for index in range(carry.value.width)]
                 for value in values:
-                    self.builder.line(
-                        f"{value} = tl.zeros((BLOCK,), dtype=tl.float32)"
-                    )
+                    self._emit_trial_initializer(value, "tl.zeros((BLOCK,), dtype=tl.float32)")
             carry_vars[key] = values
             self._set_value(carry.value.name, values)
         self.builder.line()
@@ -659,11 +651,10 @@ class OpEmitMixin:
             value.value_id: value for value in self.kernel.finished_values
         }
         for slot in program.scheduler_state_slots:
-            # Every non-done lane advances exactly once per outer iteration,
-            # and done is monotonic.  Consequently, any lane that can execute
-            # observes the scalar outer round as its pass index.  Keep the
-            # typed KernelIR slot but avoid a redundant lane vector and masked
-            # increment in the backend representation.
+            # Every active lane advances once per outer iteration. Reuse the
+            # outer round as its pass index: scalar for synchronized trials,
+            # or a vector reset on each lane's independent trial completion.
+            # The typed slot needs no additional counter or masked increment.
             if slot.kind == "pass_index":
                 key = self._dynamic_slot_key(slot)
                 slot_vars[key] = "dynamic_round"
@@ -692,9 +683,7 @@ class OpEmitMixin:
             key = self._dynamic_slot_key(slot)
             value = self._component_vars(slot.value.name, 1)[0]
             if slot.initialization == "zero":
-                self.builder.line(
-                    f"{value} = tl.zeros((BLOCK,), dtype=tl.int32)"
-                )
+                self._emit_trial_initializer(value, "tl.zeros((BLOCK,), dtype=tl.int32)")
             elif slot.initialization == "count_zero_vs_effective_parameter":
                 try:
                     finished = finished_by_id[slot.finished_value_id]
@@ -723,10 +712,7 @@ class OpEmitMixin:
                 # PNL evaluates WhenFinished before the first owner execution
                 # against count zero and the lane-persistent effective value.
                 # Its minimum-one rule applies only after the owner executes.
-                self.builder.line(
-                    f"{value} = tl.where(mask & (0.0 >= {effective}), "
-                    "1, 0)"
-                )
+                self._emit_trial_initializer(value, f"tl.where(mask & (0.0 >= {effective}), 1, 0)")
             else:
                 raise ValueError(
                     "Triton dynamic scheduler has an unsupported slot "
@@ -836,9 +822,7 @@ class OpEmitMixin:
             if word is None:
                 word = f"dynamic_has_run_word_{word_index}"
                 words[word_index] = word
-                self.builder.line(
-                    f"{word} = tl.zeros((BLOCK,), dtype=tl.int32)"
-                )
+                self._emit_trial_initializer(word, "tl.zeros((BLOCK,), dtype=tl.int32)")
             layout[component_id] = (word, 1 << bit_index)
         if not layout:
             raise ValueError(

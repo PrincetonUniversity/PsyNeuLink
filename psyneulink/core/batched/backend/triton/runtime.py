@@ -33,6 +33,7 @@ from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kerne
 from psyneulink.core.batched.backend.triton.emit.lanes import (
     DEFAULT_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
 )
+from psyneulink.core.batched.backend.triton.emit.trials import validate_trial_schedule
 
 
 _DEFAULT_LAUNCH_OPTIONS = {
@@ -40,6 +41,7 @@ _DEFAULT_LAUNCH_OPTIONS = {
     "num_warps": 4,
     "maxnreg": None,
     "normal_rng": DEFAULT_NORMAL_RNG,
+    "trial_schedule": "synchronized",
 }
 _SUPPORTED_LAUNCH_OPTIONS = frozenset(_DEFAULT_LAUNCH_OPTIONS)
 
@@ -56,7 +58,7 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
         raise ValueError(
             "Unknown Triton launch option(s): " + ", ".join(sorted(unknown))
         )
-    if interpret and set(options) - {"normal_rng"}:
+    if interpret and set(options) - {"normal_rng", "trial_schedule"}:
         raise ValueError(
             "Custom Triton launch_options require the compiled GPU backend "
             "(device='cuda'), not the CPU interpreter."
@@ -64,6 +66,7 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
 
     result = {**_DEFAULT_LAUNCH_OPTIONS, **options}
     validate_normal_rng(result["normal_rng"])
+    validate_trial_schedule(result["trial_schedule"])
     block_size = result["block_size"]
     if (
         isinstance(block_size, bool)
@@ -166,6 +169,14 @@ def run_triton(
     draws. This RNG selection also works in the interpreter and leaves scalar
     normal_draw() pairing unchanged. Seeded vector samples differ between modes.
 
+    ``trial_schedule='independent'`` lets each estimate advance to its next
+    trial as soon as its dynamic schedule completes. It preserves ordered
+    trial history, retained state, and seeded draws. The default,
+    ``'synchronized'``, advances trials together within each block. Independent
+    scheduling requires a typed dynamic trial sequence; static schedules and
+    observed-history sampling use other execution paths. Both scheduling modes
+    also work in the interpreter.
+
     Stateful and co-evolving kernels may be resumed from ``initial_states``
     shaped ``[parameter_set, subject, estimate, state]``. When
     ``return_final_states`` is true, the retained state after the final trial is
@@ -217,7 +228,7 @@ def run_triton(
 
     with interpret_scope(interpret):
         module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret,
-                                     normal_rng=launch["normal_rng"])
+                                     normal_rng=launch["normal_rng"], trial_schedule=launch["trial_schedule"])
 
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
@@ -621,11 +632,13 @@ def _load_kernel_module(
     kernel_ir: KernelIR | None = None,
     interpret: bool = False,
     normal_rng=DEFAULT_NORMAL_RNG,
+    trial_schedule="synchronized",
 ):
     if ir.graph is None or ir.graph.fusion_kind is None:
         raise ValueError(
             "The Triton batched backend requires a lowered graph with a "
             "supported fusion kind."
         )
-    source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir), normal_rng=normal_rng)
+    source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir), normal_rng=normal_rng,
+                                        trial_schedule=trial_schedule)
     return load_triton_kernel_module(source, ir.graph.fusion_kind, ir.model_kind, interpret=interpret)

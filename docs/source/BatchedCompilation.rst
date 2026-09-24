@@ -77,6 +77,47 @@ direct normal draw. Adapters must use their component-local RNG clock, and
 must not combine this request with other draws from the same stream/clock.
 The separate ``ctx.normal_draw`` API retains its scalar temporal cache.
 
+Independent trial advancement
+-----------------------------
+
+For complete stateful simulations with a typed dynamic schedule, the Triton
+backend can let each estimate start its next trial as soon as its current
+trial finishes:
+
+.. code-block:: python
+
+   result = plan.run(
+       inputs, parameter_sets, num_estimates=100_000, seed=29,
+       triton_launch_options={"trial_schedule": "independent"},
+   )
+
+The same option applies to ``plan.log_likelihood`` and PEC's
+``batched_triton_launch_options``. It supports materialized outputs and fused
+histogram scoring, including Gaussian smoothing and pseudocounts. Both the
+GPU and interpreter implement it. The default remains ``"synchronized"``,
+which advances trials together within a block; performance depends on the
+model and variation in trial lengths.
+
+Each lane keeps its estimate/subject identity and processes that subject's
+trials in order. Completion resets only that lane's trial state, scheduler
+counters and scalar normal cache, loads its next trial's inputs and conditional
+parameters, and preserves its retained state and held control values. Random
+draws still use the original estimate, subject, trial and component execution
+indices. Switching trial schedules therefore preserves seeded trajectories
+within a fixed RNG mode; it introduces no approximation or time-step change.
+The existing ordered consideration sets and simultaneous publications within
+a set remain the authority for execution inside each trial.
+
+This option requires one typed dynamic ``ForPasses`` region with trial resets
+and output stores. Unsupported static or atomic schedules are rejected.
+Observed-history sampling already samples trials independently from replayed
+history and rejects this option. CSI's full dynamic simulation can use it;
+CSI's optimized observed-history fitting path does not use this trial loop.
+Final states, split-sequence resume, truncation and nonfinite-output checks
+retain the same contracts as synchronized execution. Fused scoring scatters
+integer counts to completed lanes' trial rows, preserving exact counts without
+allocating an outcome array for every estimate.
+
 IR layers
 ---------
 

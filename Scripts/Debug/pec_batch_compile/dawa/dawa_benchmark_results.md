@@ -608,3 +608,175 @@ to collect a separate warmed first-proposal profile instead of timing the pool.
 The compact results are under `grouped_gaussian_generation` in
 [dawa_benchmark_results.json](dawa_benchmark_results.json). Large traces and raw
 simulation arrays are not tracked.
+
+## Independent trial advancement
+
+The general Triton dynamic scheduler now supports
+`trial_schedule="independent"`. Each estimate advances through its own ordered
+trial sequence as soon as it finishes a trial. It retains its LC/LCA state,
+held control values and RNG identity, while resetting only its own per-trial
+state and counters. The compiler uses that lane's trial index for inputs,
+conditional parameters and output placement. Mechanism equations, dt, within-trial
+execution order and random draws are unchanged. Fused scoring scatters integer
+counts into the completed estimates' trial rows; Gaussian smoothing and
+pseudocounts use the existing reductions.
+
+This is an optional compiler setting for typed dynamic sequences. The global
+default remains `"synchronized"`, which is also the reference implementation.
+Static/atomic schedules and observed-history sampling reject the new setting.
+CSI's full dynamic model supports it; CSI's optimized observed-history fitting
+path already samples trials independently from replayed history and does not
+use this loop. Performance should be measured for each model.
+
+### Full-subject throughput
+
+Fresh serial measurements on the WSL RTX 2080 Ti, September 24, 2026, using
+the same four proposals and subject 1's 760 trials (720 scored), **100,000
+estimates per trial per proposal**, noise SD 0.1 in all four LCAs, LCA dt 0.01 s,
+100 RT bins on [0, 3], smoothing sigma 0.5 and pseudocount 1. Both modes use
+`normal_rng="philox4x_v1"`, 32 lanes and one warp. Entries are medians of three
+warmed full-pool evaluations divided by four, excluding a separate cold run.
+They include PEC preparation and scoring, with strict truncation checking.
+
+| Candidate batch size | Synchronized seconds/candidate | Independent seconds/candidate | Speedup | Runtime reduction |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 1.6911 | 1.3991 | 1.209× | 17.3% |
+| 4 | 1.6448 | 1.3193 | 1.247× | 19.8% |
+
+Live Torch buffer peaks remain 0.3218 MiB for one candidate and 0.4961 MiB
+for four. These exclude CUDA context/code and allocator reservations. At the
+batch-four rate, 5,000 candidate evaluations extrapolate to **1.83 hours**,
+versus 2.28 hours for the fresh synchronized baseline, before optimizer overhead.
+This is a throughput estimate, not a measured fit or convergence guarantee.
+
+A separate instrumented first-proposal pilot measured the simulation kernel
+at 1.4928 s, versus 2.0861 s in the earlier grouped-Gaussian profile. Registers
+per thread decreased from 230 to 213, with eight reported spills in both.
+These profiles are excluded from the throughput table. The net gain includes
+the cost of per-lane trial indexing, masked resets and scattered counts; it
+does not recover every previously idle step slot.
+
+### Validation and reproduction
+
+All **3,040 trial densities match exactly** between trial schedules at 100,000
+estimates, including excluded trials. Replay and changing candidate batch size
+from one to four preserve them exactly. The independent fused scorer also
+matches materialized sampling within the existing FP32 weighting tolerance:
+maximum relative density difference `3.7463e-7`, below `2e-6`. No benchmark
+trial truncated. The density hash remains
+`565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df`.
+
+Focused tests compare exact outputs and final states for persistent Gaussian
+LCAs, the full noisy DAWA network, CSI's dynamic model, scalar DDM noise, delayed
+execution and parallel controlled chains. They cover both Gaussian generators,
+conditional parameters, multiple subjects, common and independent candidate
+randomness, launch geometry, split-sequence resume, smoothed scores, truncation
+and nonfinite unscored outcomes. Existing vector-RNG, histogram, dynamic-scheduler
+and observed-history scoring suites also pass: 72 checks in the GPU regression
+run and 40 in the interpreter run, in addition to 38 independent-trial/launch
+checks in the GPU run and 16 independent-trial checks in the interpreter run.
+These counts include the device-independent checks selected in each run.
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 4 --repeats 3 \
+  --block-size 32 --num-warps 1 --smoothing-sigma 0.5 --pseudocount 1 \
+  --trial-schedule independent --verify-synchronized --verify-materialized \
+  --output /tmp/dawa_trial_sync_independent.json
+```
+
+Use `--trial-schedule synchronized` for the baseline. PEC accepts the setting
+in `batched_triton_launch_options`; direct simulation and likelihood plans use
+`triton_launch_options`. Compact results are recorded under
+`independent_trial_advancement` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json). Raw traces and
+materialized sample arrays remain outside the repository.
+
+## H100 and A100 subject benchmark
+
+Measured September 24, 2026, using the same current compiler snapshot and
+full-subject workload on three machines. Each proposal simulates subject 1's
+760 ordered trials (720 scored), with **100,000 estimates per trial**, noise
+SD 0.1 in all four LCAs, LCA dt 0.01 s, 100 RT bins on [0, 3], smoothing sigma
+0.5 and pseudocount 1. The four fitting proposals and seed 29 are unchanged.
+All use `trial_schedule="independent"`, `normal_rng="philox4x_v1"`, 32 lanes,
+one warp and no register cap, on **one GPU** with eight host threads. No
+architecture-specific tuning was performed.
+
+Each entry is the median of **five warmed complete four-proposal evaluations**,
+divided by four. A separate cold run is excluded. These end-to-end objective
+times include PEC preparation, simulation and scoring. The 2080 Ti baseline
+was rerun for this comparison.
+
+| GPU | Serial proposals, s/proposal | Four proposals together, s/proposal | Speedup vs 2080 Ti, batch four | 5,000 evaluations, serial | 5,000 evaluations, batch four |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| RTX 2080 Ti, local WSL | 1.3888 | 1.3578 | 1.00× | 115.7 min | 113.2 min |
+| H100 NVL, della-rse | 0.4501 | 0.4339 | 3.13× | 37.5 min | 36.2 min |
+| A100 SXM4 80 GB, Della Slurm | 0.7988 | 0.7087 | 1.92× | 66.6 min | 59.1 min |
+
+At batch four, the H100 is **1.63× faster than the A100** for this workload.
+Ten thousand evaluations extrapolate to 72.3 minutes on H100, 118.1 minutes
+on A100 and 226.3 minutes on the 2080 Ti. The original source fit scripts use
+5,000 Optuna trials, so the 5,000-evaluation column is a useful budget estimate,
+but those scripts default to only 10,000 estimates. This benchmark uses 100,000.
+Evaluation counts are **parameter proposals, not optimizer generations**.
+The serial column applies when the optimizer submits one proposal at a time;
+the batch-four column requires submitting four together.
+
+These are throughput extrapolations, not measured optimizer convergence.
+Actual fit time depends on the number and values of proposals, particularly
+parameters that change trial lengths. Queueing, environment setup, JIT and
+optimizer overhead are additional. Software versions and launch geometry were
+held constant where relevant, but these are whole-system timings and include
+the different hosts' CPU preparation costs.
+
+### Execution and validation
+
+- The H100 run used idle GPU 0 on `della-rse.princeton.edu`, an H100 NVL with
+  132 SMs and a configured 400 W power limit. Only one of the two H100s was used.
+- Slurm job **14387819** ran on `della-l08g6` with one full A100 SXM4 80 GB,
+  eight CPUs and 24 GiB host RAM. It completed successfully (`COMPLETED`, exit
+  `0:0`) in 2 minutes 13 seconds, including startup, cold compilation and
+  validation. The final request was `--constraint=a100 --gres=gpu:a100:1`
+  with a five-minute limit; Slurm used `gputest`/`gpu-test`. This excludes MIG
+  slices while allowing either PCIe or SXM A100 nodes.
+- All three used PyTorch `2.13.0+cu130`, Triton `3.7.1`, CUDA runtime `13.0`,
+  NumPy `2.3.5`, SciPy `1.18.0`, pandas `3.0.5`, llvmlite `0.48.0` and
+  graph-scheduler `1.2.2`. Python was `3.13.3` locally and `3.13.13` remotely;
+  both remote GPUs used driver `610.57.04` and the same isolated environment.
+- All **3,040 saved trial densities match exactly across all three GPUs**,
+  across candidate batch sizes and across repeats. Their common SHA-256 is
+  `565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df`.
+  On each remote GPU, independent and synchronized trial execution match
+  exactly. The materialized reference comparison passed with maximum relative
+  density difference `3.7463e-7`, within the established FP32 weighting
+  tolerance. Strict truncation checks passed.
+- Peak live Torch buffers remain 0.3218 MiB for one proposal and 0.4961 MiB for
+  four on every GPU. CUDA context/code and allocator reservations are additional.
+
+Both remote runs used an isolated scratch snapshot, including the uncommitted
+independent-trial implementation, based on commit `5036399651`. File hashes
+were verified before execution. Existing remote checkouts and environments
+were not modified. Source, resolved dependencies, launch scripts, logs and raw
+results are retained under:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/trial-sync-20260924T212200Z
+```
+
+The benchmark now records GPU/software details and supports `--save-densities`
+for cross-device comparisons. Reproduce the measured workload on an allocated
+GPU with the prepared environment and source snapshot:
+
+```bash
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 4 --repeats 5 \
+  --block-size 32 --num-warps 1 --smoothing-sigma 0.5 --pseudocount 1 \
+  --trial-schedule independent --verify-synchronized --verify-materialized \
+  --save-densities /scratch/path/device-densities.npz \
+  --output /scratch/path/device.json
+```
+
+Compact measurements, raw warmed durations, source checksums, validation and
+fit-time projections are recorded under `cross_gpu_subject_benchmark` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).

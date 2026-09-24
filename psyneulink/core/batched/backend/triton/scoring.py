@@ -185,6 +185,8 @@ def run_reduced_observations(observation_plan, inputs, data, parameter_sets, est
 
         observed, edges, observed_bin, valid, weights, joint_bins = prepare_histogram(histogram, data, device)
     launch = _normalize_launch_options(triton_launch_options, interpret=interpret)
+    if launch["trial_schedule"] != "synchronized":
+        raise ValueError("Independent trial scheduling applies to complete dynamic sequences, not observed-history sampling.")
     source = ReducedObservationEmitter(simulation.kernel_ir, observation_plan.witness, histogram,
                                        execution=execution, normal_rng=launch["normal_rng"]).emit()
     input_tensors = _input_tensors(torch, simulation.ir.graph, prepared, device)

@@ -37,6 +37,7 @@ from psyneulink.core.batched.backend.triton.emit.lanes import (
     DEFAULT_NORMAL_RNG, LaneEmitMixin, validate_normal_rng,
 )
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
+from psyneulink.core.batched.backend.triton.emit.trials import IndependentTrialEmitMixin, validate_trial_schedule
 from psyneulink.core.batched.specs import ElementwiseFunctionSpec
 
 
@@ -48,9 +49,11 @@ _KERNEL_NAMES = {
 }
 
 
-class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
-    def __init__(self, kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG):
+class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
+    def __init__(self, kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized"):
         self.normal_rng = validate_normal_rng(normal_rng)
+        self.trial_schedule = validate_trial_schedule(trial_schedule)
+        self.trial_reset_mask = None
         self.kernel = kernel
         self.graph = kernel.graph
         self.builder = SourceBuilder()
@@ -98,6 +101,9 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         # Revalidate cross-op identity/effect invariants at the backend boundary
         # so post-construction mapping mutation cannot redirect retained state.
         validate_kernel_ir(self.kernel)
+        if (self.trial_schedule == "independent"
+                and self.kernel.fusion_kind not in (STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION)):
+            raise ValueError("Independent trial scheduling requires a stateful dynamic trial sequence.")
         if not self.kernel.executable:
             raise ValueError(
                 "Cannot emit Triton source for declaration-only, non-executable "
@@ -238,17 +244,17 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             var = f"param_{idx}_value"
             self.param_vars[param_spec.name] = var
             default = float_literal(param_spec.default)
-            line = (
-                f"{var} = tl.load(param_{idx} + "
+            expression = (
+                f"tl.load(param_{idx} + "
                 f"param_idx * param_{idx}_set_stride + "
                 f"(subject_idx * num_trials + trial_idx) * "
                 f"param_{idx}_trial_stride, mask=mask, other={default})"
             )
             if trial_varying_only:
                 with self.builder.block(f"if param_{idx}_trial_stride"):
-                    self.builder.line(line)
+                    self._emit_trial_initializer(var, expression)
             else:
-                self.builder.line(line)
+                self._emit_trial_initializer(var, expression)
         if self.kernel.params:
             self.builder.line()
 
@@ -352,7 +358,12 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
             state_vars = []
             for idx, value in enumerate(state.initial_value):
                 var = self.state_vars[(state.name, idx)]
-                self._emit_state_initializer_value(state, idx, value, var)
+                if self.trial_reset_mask is None:
+                    self._emit_state_initializer_value(state, idx, value, var)
+                else:
+                    temporary = f"{var}_trial_initial"
+                    self._emit_state_initializer_value(state, idx, value, temporary)
+                    self._emit_trial_initializer(var, temporary)
                 state_vars.append(var)
             self._set_value(output.name, state_vars)
         self.param_vars = saved_params
@@ -441,7 +452,7 @@ class TritonGraphEmitter(LaneEmitMixin, OpEmitMixin):
         return value
 
 
-def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG) -> str:
+def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized") -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel, normal_rng=normal_rng).emit()
+    return TritonGraphEmitter(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule).emit()

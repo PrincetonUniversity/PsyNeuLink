@@ -843,6 +843,8 @@ def run_csi_deterministic_history_likelihood(
     if not torch.cuda.is_available():
         raise RuntimeError("CSI deterministic-history likelihood requires CUDA.")
     launch = _normalize_launch_options(launch_options, interpret=False)
+    if launch["trial_schedule"] != "synchronized":
+        raise ValueError("Independent trial scheduling applies to complete dynamic sequences, not observed-history sampling.")
     _check_step_caps(max_steps=ir.max_steps)
     device = "cuda"
 

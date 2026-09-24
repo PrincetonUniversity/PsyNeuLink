@@ -208,9 +208,31 @@ The default mode is `normal_rng="philox4x_v1"`. It preserves the noise
 distribution but changes seeded trajectories. To reproduce previous simulations,
 add `"normal_rng": "legacy"` to `batched_triton_launch_options`, or pass
 `--normal-rng legacy` to `dawa_pec_fit_benchmark.py`. Record the mode along with
-the seed. Trial synchronization and model dynamics are unchanged. See the
+the seed. This RNG change leaves trial synchronization and model dynamics unchanged. See the
 [Gaussian benchmark](dawa_benchmark_results.md#grouped-gaussian-generation)
 for timing and distribution checks.
+
+Independent trial advancement is also available through the general compiler:
+add `"trial_schedule": "independent"` to `batched_triton_launch_options`, or use
+`--trial-schedule independent` in `dawa_pec_fit_benchmark.py`. Each estimate
+starts its next trial when ready, preserving its own ordered history, retained
+LC/LCA state, controller values, and seeded draws. Conditional parameters and
+histogram writes use that estimate's trial index. Smoothing, pseudocounts,
+strict truncation, and nonfinite-output checks remain supported. This setting
+requires a full dynamic sequence; it also supports CSI's full model, while
+CSI's observed-history fitting path uses a different execution scheme.
+The global default remains `"synchronized"`, since performance is model-dependent.
+See the [trial advancement benchmark](dawa_benchmark_results.md#independent-trial-advancement)
+for the full-subject comparison and reproduction commands.
+
+The same 100,000-estimate subject benchmark has also run on a single H100 NVL
+on `della-rse` and a full A100 SXM4 80 GB allocated through Della Slurm. With
+four proposals batched, the H100 takes 0.434 s per proposal and the A100
+0.709 s, versus a refreshed local 2080 Ti baseline of 1.358 s. That projects
+to about 36, 59, and 113 minutes respectively for 5,000 proposal evaluations,
+before optimizer overhead. All trial densities match exactly across devices.
+See the [cross-GPU benchmark](dawa_benchmark_results.md#h100-and-a100-subject-benchmark)
+for serial-proposal timings, validation, software versions, and fit-time limits.
 
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports

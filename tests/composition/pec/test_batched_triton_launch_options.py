@@ -17,6 +17,7 @@ def test_triton_launch_option_defaults_are_stable():
         "num_warps": 4,
         "maxnreg": None,
         "normal_rng": "philox4x_v1",
+        "trial_schedule": "synchronized",
     }
 
 
@@ -27,6 +28,7 @@ def test_triton_launch_option_defaults_are_stable():
         {"num_warps": 2},
         {"maxnreg": 128},
         {"normal_rng": "legacy"},
+        {"trial_schedule": "independent"},
         {"block_size": 256, "num_warps": 8, "maxnreg": 96},
     ],
 )
@@ -37,6 +39,7 @@ def test_triton_launch_options_accept_benchmark_configurations(options):
         "num_warps": 4,
         "maxnreg": None,
         "normal_rng": "philox4x_v1",
+        "trial_schedule": "synchronized",
         **options,
     }
 
@@ -49,6 +52,8 @@ def test_triton_launch_options_accept_benchmark_configurations(options):
         ({"block_size": True}, "block_size"),
         ({"normal_rng": "fast"}, "normal_rng"),
         ({"normal_rng": None}, "normal_rng"),
+        ({"trial_schedule": "fast"}, "trial_schedule"),
+        ({"trial_schedule": True}, "trial_schedule"),
         ({"num_warps": 3}, "num_warps"),
         ({"num_warps": 4.0}, "num_warps"),
         ({"maxnreg": 256}, "maxnreg"),
@@ -67,6 +72,7 @@ def test_custom_triton_launch_options_reject_cpu_interpreter():
 
 def test_rng_selection_is_available_in_interpreter():
     assert _normalize_launch_options({"normal_rng": "legacy"}, interpret=True)["normal_rng"] == "legacy"
+    assert _normalize_launch_options({"trial_schedule": "independent"}, interpret=True)["trial_schedule"] == "independent"
 
 
 @pytest.mark.triton_gpu
@@ -109,4 +115,5 @@ def test_custom_triton_launch_options_match_default_gpu_result():
         "num_warps": 2,
         "maxnreg": 96,
         "normal_rng": "philox4x_v1",
+        "trial_schedule": "synchronized",
     }

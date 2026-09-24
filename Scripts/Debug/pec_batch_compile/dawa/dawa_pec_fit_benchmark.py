@@ -100,10 +100,13 @@ def main():
     parser.add_argument("--maxnreg", type=int)
     parser.add_argument("--normal-rng", choices=["legacy", "philox4x_v1"], default="philox4x_v1",
                         help="Vector Gaussian generator; legacy reproduces earlier seeded samples")
+    parser.add_argument("--trial-schedule", choices=["synchronized", "independent"], default="synchronized")
     parser.add_argument("--smoothing-sigma", type=float, default=0., help="Gaussian width in histogram-bin units")
     parser.add_argument("--pseudocount", type=float, default=1., help="Symmetric prior count per joint choice/RT bin")
     parser.add_argument("--materialized", action="store_true", help="Use the original materialized scoring path")
     parser.add_argument("--verify-materialized", action="store_true", help="Compare all trial probabilities to the original scorer after timing")
+    parser.add_argument("--verify-synchronized", action="store_true", help="Compare all trial probabilities to synchronized trial execution after timing")
+    parser.add_argument("--save-densities", type=Path, help="Save the candidate/trial densities after timing for cross-device comparisons")
     parser.add_argument("--validate-normal-rngs", action="store_true", help="Compare full-sequence choice/RT distributions under both generators after timing")
     parser.add_argument("--validation-estimates", type=int, default=16384)
     parser.add_argument("--output", type=Path, required=True)
@@ -144,7 +147,8 @@ def main():
             batched_bin_range=[(0., 3.)], batched_pseudocount=args.pseudocount,
             batched_smoothing_sigma=args.smoothing_sigma,
             batched_triton_launch_options={"block_size": args.block_size, "num_warps": args.num_warps,
-                                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng},
+                                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng,
+                                           "trial_schedule": args.trial_schedule},
         ),
         num_estimates=args.estimates, initial_seed=args.seed,
         same_seed_for_all_parameter_combinations=True,
@@ -168,6 +172,9 @@ def main():
         raise AssertionError(f"Expected eight subject-specific fitting coordinates: {expected_order}")
     candidates = np.asarray(proposals)
     plan = function._compile_batched_plan()
+    import triton
+
+    device_properties = torch.cuda.get_device_properties(torch.cuda.current_device())
     report = {
         "subject": args.subject, "trials": len(data),
         "scored_trials": int(data.likelihood_include_mask.sum()),
@@ -177,9 +184,16 @@ def main():
         "max_steps": args.max_steps, "strict_truncation": True,
         "fused_likelihood": not args.materialized,
         "launch_options": {"block_size": args.block_size, "num_warps": args.num_warps,
-                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng},
+                           "maxnreg": args.maxnreg, "normal_rng": args.normal_rng,
+                           "trial_schedule": args.trial_schedule},
         "gpu": torch.cuda.get_device_name(), "platform": platform.platform(),
-        "torch_version": torch.__version__, "plan_outputs": list(plan.ir.output_names),
+        "torch_version": torch.__version__, "triton_version": triton.__version__,
+        "python_version": platform.python_version(), "cuda_version": torch.version.cuda,
+        "hostname": platform.node(), "cpu_threads": torch.get_num_threads(),
+        "gpu_properties": {"compute_capability": [device_properties.major, device_properties.minor],
+                           "multiprocessors": device_properties.multi_processor_count,
+                           "total_memory_bytes": device_properties.total_memory},
+        "plan_outputs": list(plan.ir.output_names),
         "data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
         "model_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
         "estimator": {"kind": "trial_marginal_histogram", "bins": 100, "rt_range": [0., 3.],
@@ -280,6 +294,12 @@ def main():
                 case["seconds_per_candidate"] = case["median_seconds"] / len(candidates)
             save()
             print(json.dumps({"batch_size": batch_size, "repeat": repeat, **run}), flush=True)
+    if args.save_densities:
+        args.save_densities.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(args.save_densities, densities=reference_likelihoods, scores=reference_scores,
+                            candidates=candidates, include_mask=data.likelihood_include_mask.to_numpy(dtype=bool))
+        report["saved_densities"] = str(args.save_densities)
+        save()
     if args.verify_materialized:
         captured_likelihoods = []
         original_fused = function.batched_fused_likelihood
@@ -309,6 +329,21 @@ def main():
     if args.validate_normal_rngs:
         report["normal_rng_distribution_validation"] = validate_normal_rngs(
             function, candidates, args.validation_estimates, args.seed, args.max_steps)
+        save()
+    if args.verify_synchronized:
+        captured_likelihoods = []
+        original_launch = function.batched_triton_launch_options
+        try:
+            function.batched_triton_launch_options = {**original_launch, "trial_schedule": "synchronized"}
+            with patch("psyneulink.core.batched.likelihood._sum_histogram_log_likelihood", capture_likelihood):
+                for row in candidates:
+                    objective([row])
+        finally:
+            function.batched_triton_launch_options = original_launch
+        synchronized = np.concatenate(captured_likelihoods)
+        np.testing.assert_array_equal(synchronized, reference_likelihoods)
+        report["synchronized_validation"] = {"all_trial_densities_match_exactly": True,
+                                              "trial_density_sha256": hashlib.sha256(synchronized.tobytes(order="C")).hexdigest()}
         save()
     print(json.dumps(report, indent=2), flush=True)
 
