@@ -822,6 +822,16 @@ class PECOptimizationFunction(OptimizationFunction):
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
 
+        # Workers score the models pec_factory builds, so an estimator attached here would never
+        # be consulted. Scoring with one is a single network call, with nothing to distribute.
+        if self._neural_likelihood is not None:
+            raise OptimizationFunctionError(
+                'Distributed fitting (distributed=True) cannot be combined with '
+                'likelihood_estimator="neural": each worker scores the model pec_factory builds, '
+                "not this one's estimator. Fit without distributed=True, since scoring with an "
+                "estimator is a single network call."
+            )
+
         # Distributed evaluation only scores log-likelihoods; reject objective-function
         # mode here rather than failing later inside a worker.
         if not self.data_fitting_mode:

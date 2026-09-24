@@ -453,6 +453,18 @@ def test_excluded_trials_do_not_reach_the_estimator(ddm_data):
 
 
 @pytest.mark.composition
+def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
+    """Workers score the models the factory builds, so the estimator would go unused."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood},
+                   optimization_function="differential_evolution",
+                   distributed=True, distributed_options={"pec_factory": _ddm_training_pec})
+    with pytest.raises(Exception, match="cannot be combined"):
+        pec.run(inputs={pec.nodes[0]: np.ones((len(ddm_data), 1))})
+
+
+@pytest.mark.composition
 def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
     """A later call with different inputs must not be scored against the first call's."""
     likelihood, _ = _toy_likelihood(epochs=1)
