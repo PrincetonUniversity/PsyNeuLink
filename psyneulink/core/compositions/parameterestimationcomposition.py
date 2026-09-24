@@ -543,11 +543,11 @@ class ParameterEstimationComposition(Composition):
         are taken from it rather than given here. See :ref:`Hierarchical Fitting <HierarchicalFitting>`.
 
     hierarchical_options : Mapping : default None
-        specifies options for hierarchical fitting (used only when **fit_method** is ``"hierarchical"``). Must include
-        a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"`` chooses
-        whether each participant's uncertainty is measured in all directions at once (``"full"``, the default) or
-        one parameter at a time (``"diagonal"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>` for the
-        full set of keys.
+        specifies options for hierarchical fitting, and may be given only when **fit_method** is ``"hierarchical"``.
+        Must include a ``"subject_id"`` naming the column of **data** that identifies participants. ``"curvature"``
+        chooses whether each participant's uncertainty is measured in all directions at once (``"full"``, the
+        default) or one parameter at a time (``"diagonal"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>`
+        for the full set of keys.
 
 
     Attributes
@@ -829,6 +829,11 @@ class ParameterEstimationComposition(Composition):
             # nothing to score, so a search is all it can do.
             if optimization_function is None and data is None:
                 missing.append("optimization_function")
+            if hierarchical_options is not None:
+                raise ParameterEstimationCompositionError(
+                    'hierarchical_options applies only when fit_method="hierarchical"; without it '
+                    "the data are fitted as one participant."
+                )
             if missing:
                 # A TypeError, as for any argument a call is missing: these are the first
                 # three parameters and carry defaults only so that a hierarchical fit, which
