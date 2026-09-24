@@ -4,9 +4,6 @@ import pandas as pd
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-    PECOptimizationFunction,
-)
 from psyneulink.core.components.functions.nonstateful import (
     neurallikelihoodfunctions as nlf,
 )
@@ -217,9 +214,6 @@ def _ddm_pec(data, **kwargs):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         **kwargs,
     )
 
@@ -289,9 +283,6 @@ def _ddm_training_pec(data):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         num_estimates=5,
         initial_seed=0,
         same_seed_for_all_parameter_combinations=True,
@@ -418,9 +409,6 @@ def _reversed_ddm_pec(data):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         num_estimates=2, initial_seed=0, same_seed_for_all_parameter_combinations=True,
     )
     pec.controller.parameters.comp_execution_mode.set("LLVM")
@@ -517,9 +505,6 @@ def _neural_participant_pec(artifact, data, subject_index=None):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         likelihood_estimator="neural",
         likelihood_estimator_kwargs={"artifact": artifact},
     )

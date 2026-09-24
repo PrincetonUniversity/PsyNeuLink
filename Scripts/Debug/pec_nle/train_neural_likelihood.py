@@ -78,9 +78,6 @@ def build_pec(data, num_estimates=25):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
-        optimization_function=PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1
-        ),
         num_estimates=num_estimates,
         initial_seed=0,
         same_seed_for_all_parameter_combinations=True,
