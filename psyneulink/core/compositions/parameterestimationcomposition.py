@@ -1150,16 +1150,18 @@ class ParameterEstimationComposition(Composition):
         )
         if self._pec_distributed:
             client, close_client = _dask_client(self._pec_distributed_options)
-            runner = make_distributed_estep_runner(
-                client,
-                self._resolve_pec_factory(),
-                self._subject_split.frames,
-                schema,
-                config=config,
-                worker_cores=_resolve_worker_cores(self._pec_distributed_options),
-                fit_id=self._pec_distributed_options.get("fit_id"),
-            )
+            runner = None
             try:
+                # Setting up the runner already places each participant's trials on the cluster.
+                runner = make_distributed_estep_runner(
+                    client,
+                    self._resolve_pec_factory(),
+                    self._subject_split.frames,
+                    schema,
+                    config=config,
+                    worker_cores=_resolve_worker_cores(self._pec_distributed_options),
+                    fit_id=self._pec_distributed_options.get("fit_id"),
+                )
                 em = fit_laplace_em(
                     runner, provider.n_subjects, provider.n_params, **fit_kwargs
                 )
@@ -1167,7 +1169,7 @@ class ParameterEstimationComposition(Composition):
                 # A cluster this fit created takes its models with it; a caller's does not.
                 if close_client is not None:
                     close_client()
-                else:
+                elif runner is not None:
                     runner.release()
         else:
             provider.warn_if_costly_in_process()
