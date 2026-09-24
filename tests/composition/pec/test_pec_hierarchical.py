@@ -27,6 +27,7 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
 )
 from psyneulink.core.components.functions.nonstateful import fitfunctions
 from psyneulink.core.compositions.parameterestimationcomposition import (
+    FitMethod,
     ParameterEstimationCompositionError,
 )
 from psyneulink.core.compositions.hierarchical import distributedestep
@@ -1061,6 +1062,20 @@ def test_pec_splits_participants_and_hides_the_column():
 def test_pec_rejects_unknown_hierarchical_options():
     with pytest.raises(Exception, match="unknown hierarchical_options"):
         _build_group_pec(hierarchical_options={"subject_id": "subject", "max_iters": 5})
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize("given", ["Hierarchical", "HIERARCHICAL", FitMethod.HIERARCHICAL])
+def test_fit_method_is_read_however_it_is_written(given):
+    pec = _build_group_pec(fit_method=given)
+    assert pec._fit_method == FitMethod.HIERARCHICAL
+    assert pec.hierarchical_data is not None
+
+
+@pytest.mark.composition
+def test_an_unknown_fit_method_is_refused():
+    with pytest.raises(ParameterEstimationCompositionError, match="fit_method must be"):
+        _build_group_pec(fit_method="hierachical")
 
 
 @pytest.mark.composition
