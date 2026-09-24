@@ -251,11 +251,11 @@ Primary acceptance suites:
 
 ## Current Tools and Examples
 
-- `csi_model_surrogate.py`: canonical CSI construction used by tests and
+- `csi/csi_model_surrogate.py`: canonical CSI construction used by tests and
   benchmarks.
 - `csi_batched_parameter_recovery.py`: end-to-end historical five-parameter
   recovery example.
-- `csi_triton_vs_llvm.py`: apples-to-apples CSI Triton/LLVM benchmark.
+- `csi/csi_triton_vs_llvm.py`: apples-to-apples CSI Triton/LLVM benchmark.
 - `gpu_batch_compile_benchmark.py`: broader cross-backend exploratory benchmark.
 - `benchmarks/batched.py`: ASV performance cases.
 

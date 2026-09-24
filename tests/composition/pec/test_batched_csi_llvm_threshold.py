@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.batched, pytest.mark.composition, pytest.mark.llvm]
 
 
 def _original_model():
-    path = (Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile"
+    path = (Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/csi"
             / "csi_fit/data fitting/expectation_model_study2_study3.py")
     spec = importlib.util.spec_from_file_location("_original_csi_threshold_regression", path)
     model = importlib.util.module_from_spec(spec)

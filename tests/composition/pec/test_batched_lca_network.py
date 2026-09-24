@@ -184,7 +184,7 @@ def test_fitzhugh_nagumo_rejects_unrepresented_semantics(change):
     assert not BatchedCompositionCompiler.diagnose(pnl.Composition(pathways=fhn)).model_supported
 
 
-_DRIVER = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa_batched_simulation.py"
+_DRIVER = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py"
 
 
 @pytest.mark.triton

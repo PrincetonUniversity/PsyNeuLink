@@ -137,7 +137,7 @@ def _make_case():
         name="nested_logistic_three_source_fan_in",
         build=build,
         provenance=(
-            "Scripts/Debug/pec_batch_compile/csi_model_surrogate.py:162-169,228-248"
+            "Scripts/Debug/pec_batch_compile/csi/csi_model_surrogate.py:162-169,228-248"
         ),
         atol=1e-6,
         rtol=1e-5,

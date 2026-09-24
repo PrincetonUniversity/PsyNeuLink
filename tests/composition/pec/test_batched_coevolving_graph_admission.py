@@ -23,7 +23,7 @@ from psyneulink.core.batched.kernel_ir import iter_kernel_ops, lower_to_kernel_i
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
-_CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
+_CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile" / "csi"
 
 
 @pytest.fixture

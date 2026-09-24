@@ -40,7 +40,7 @@ def main():
         choice=(torch.arange(lanes) % 2).to(dtype),
     )
     if options.route == "csi_compat":
-        sys.path.insert(0, str(Path(__file__).resolve().parent / "csi_fit"))
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "csi" / "csi_fit"))
         from direct_likelihood.solver import MovingBoundaryDDMSolver
 
         solver = MovingBoundaryDDMSolver(time_step=.001, spatial_points=65, noise=.1,

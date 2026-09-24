@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 
-path = (Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/csi_fit"
+path = (Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/csi/csi_fit"
         / "data fitting/csi_warm_start.py")
 spec = importlib.util.spec_from_file_location("csi_warm_start", path)
 warm_start = importlib.util.module_from_spec(spec)

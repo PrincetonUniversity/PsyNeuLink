@@ -248,7 +248,7 @@ def test_stability_flexibility_explicit_at_pass_zero_origins_matches_pnl_python(
     _assert_matches_pnl_python(comp, inputs, max_steps=256, seed=3)
 
 
-_CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
+_CSI_DIR = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile" / "csi"
 
 
 def _make_csi_surrogate(**kwargs):

@@ -16,6 +16,7 @@ CSI_FIT_DIRECTORY = (
     / "Scripts"
     / "Debug"
     / "pec_batch_compile"
+    / "csi"
     / "csi_fit"
 )
 sys.path.insert(0, str(CSI_FIT_DIRECTORY))

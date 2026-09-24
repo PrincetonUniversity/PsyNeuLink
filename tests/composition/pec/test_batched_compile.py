@@ -674,7 +674,7 @@ def test_csi_surrogate_with_iti_compiles_after_drift_udf_registration():
     # The typed co-evolving region now models that schedule, affine CSI count,
     # and controlled LCA-finished edge. CSI remains a structurally admitted
     # composition, not a name-based model kind or special compiler path.
-    csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile"
+    csi_dir = Path(__file__).resolve().parents[3] / "Scripts" / "Debug" / "pec_batch_compile" / "csi"
     sys.path.insert(0, str(csi_dir))
     from csi_model_surrogate import make_stab_flex
 

@@ -10,6 +10,7 @@ canonical observed-history starts, not unconditional random trial histories.
 
 import argparse
 import json
+from pathlib import Path
 import sys
 import time
 
@@ -19,8 +20,9 @@ from psyneulink.core.batched import (
     BatchedCompositionCompiler, LikelihoodEffectContract, ObservationField, ObservationSpec,
     batched_node_op, unregister_batched_instance_op,
 )
-from csi_model_surrogate import make_stab_flex
-from csi_triton_vs_llvm import _csi_inputs, _drift_rate, _node
+sys.path.insert(0, str(Path(__file__).resolve().parent / "csi"))
+from csi_model_surrogate import make_stab_flex  # noqa: E402
+from csi_triton_vs_llvm import _csi_inputs, _drift_rate, _node  # noqa: E402
 
 
 def validate_case(args, dt):

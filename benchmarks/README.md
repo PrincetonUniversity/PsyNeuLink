@@ -97,4 +97,4 @@ Check `nvidia-smi` before a run. These benchmarks are sensitive to competing GPU
 work. Report cold compilation and warm execution separately, state every lane
 dimension, exclude correctness-only repeats from timed work, and compare
 semantically equivalent workloads. The CSI Triton/LLVM comparison in
-`Scripts/Debug/pec_batch_compile/csi_triton_vs_llvm.py` follows that convention.
+`Scripts/Debug/pec_batch_compile/csi/csi_triton_vs_llvm.py` follows that convention.

@@ -1,6 +1,6 @@
 """Acceptance boundary for LCA-controlled generic dynamic schedules.
 
-The CSI surrogate in ``Scripts/Debug/pec_batch_compile/csi_model_surrogate.py``
+The CSI surrogate in ``Scripts/Debug/pec_batch_compile/csi/csi_model_surrogate.py``
 motivates these cases.  This module isolates its first control chain:
 
 ``AtPass(n) input -> Always LCA -> WhenFinished(LCA) DDM``

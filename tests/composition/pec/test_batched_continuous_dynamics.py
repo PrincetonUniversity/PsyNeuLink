@@ -434,7 +434,7 @@ def csi_equations():
 
 @native
 def test_generated_csi_equations_match_existing_handwritten_drift_and_gradients():
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/csi_fit"))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/csi/csi_fit"))
     from direct_likelihood.native import native_lca_drift_path
 
     plan = compile_continuous_phase(csi_equations())

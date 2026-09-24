@@ -12,7 +12,7 @@ from scipy.special import ndtr
 import torch
 
 
-DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile"
+DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
 from dawa_likelihood import ResponseSolver, SolverConfig, sequence_likelihood, step_sequence_likelihood  # noqa: E402
 from dawa_likelihood.fit import fit_projected_gradient  # noqa: E402

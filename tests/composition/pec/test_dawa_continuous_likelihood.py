@@ -8,7 +8,7 @@ import pytest
 import torch
 
 
-DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile"
+DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
 from dawa_likelihood import ContinuousConfig, ContinuousResponseSolver, continuous_sequence_likelihood  # noqa: E402
 from dawa_likelihood.continuous_model import advance_control, continuous_path  # noqa: E402

@@ -45,6 +45,7 @@ _CSI_PATH = (
     / "Scripts"
     / "Debug"
     / "pec_batch_compile"
+    / "csi"
     / "csi_model_surrogate.py"
 )
 _EXPECTED = np.asarray(

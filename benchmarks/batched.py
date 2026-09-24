@@ -29,7 +29,7 @@ import numpy as np
 
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "tests" / "composition" / "pec"))
-sys.path.insert(0, str(_REPO / "Scripts" / "Debug" / "pec_batch_compile"))
+sys.path.insert(0, str(_REPO / "Scripts" / "Debug" / "pec_batch_compile" / "csi"))
 
 import psyneulink as pnl  # noqa: E402
 from psyneulink.core.batched import BatchedCompositionCompiler, batched_node_op  # noqa: E402

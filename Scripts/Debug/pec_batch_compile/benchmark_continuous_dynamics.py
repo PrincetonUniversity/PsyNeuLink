@@ -88,7 +88,7 @@ def main():
         parser.error("All counts must be positive.")
     torch.set_num_threads(args.threads)
     torch.set_num_interop_threads(1)
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "csi_fit"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "csi" / "csi_fit"))
     from direct_likelihood.native import native_lca_drift_path
 
     plan = compile_continuous_phase(csi_equations())

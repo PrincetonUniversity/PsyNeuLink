@@ -29,8 +29,9 @@ from psyneulink.core.batched import (
 )
 from psyneulink.core.batched.kernel_ir import diag_slots
 from psyneulink.core.batched.likelihood import histogram_log_likelihood
-from csi_model_surrogate import make_stab_flex
-from csi_triton_vs_llvm import _drift_rate, _node
+sys.path.insert(0, str(Path(__file__).resolve().parent / "csi"))
+from csi_model_surrogate import make_stab_flex  # noqa: E402
+from csi_triton_vs_llvm import _drift_rate, _node  # noqa: E402
 
 
 def emit(record):
@@ -264,7 +265,7 @@ def run(args, dt):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", type=Path, default=Path(__file__).parent / "csi_fit/data fitting/data_to_fit_study3.csv")
+    parser.add_argument("--data", type=Path, default=Path(__file__).parent / "csi/csi_fit/data fitting/data_to_fit_study3.csv")
     parser.add_argument("--subject", type=int, default=1)
     parser.add_argument("--recorded", action="store_true", help="Use actual recorded choice/RT data with ceiling history timing")
     parser.add_argument("--trials", type=int, default=0, help="0 means the full fitting sequence; nonzero is only a smoke test")

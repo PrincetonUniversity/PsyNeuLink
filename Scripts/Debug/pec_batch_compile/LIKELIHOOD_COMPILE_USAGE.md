@@ -570,7 +570,7 @@ states and all drift paths, and separately verify source-state preservation.
 
 ### Recorded-data retirement audit (RTX 2080 Ti, 2026-09-09)
 
-Run `audit_generated_csi_compatibility.py` in this directory. It performs no fit,
+Run `csi/audit_generated_csi_compatibility.py` from this directory. It performs no fit,
 submits no job, and writes only stdout results. Defaults use subject 1's actual
 561 trials (485 scored), six random interior candidates plus two high-NDT
 boundary candidates, and both 10 ms and 1 ms dynamics. Gain, threshold, collapse,

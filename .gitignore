@@ -215,13 +215,13 @@ pnl-show_graph-output/
 tests/composition/thesis_code/
 
 # Local PEC GPU workload inputs and outputs
-/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/data_to_fit_study3.csv
-/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/fits/
-/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/logs/
-/Scripts/Debug/pec_batch_compile/csi_fit/data fitting/audit/
-/Scripts/Debug/pec_batch_compile/csi_fit/direct_likelihood/fits/
-/Scripts/Debug/pec_batch_compile/csi_fit/direct_likelihood/recovery_truth_*.json
-/Scripts/Debug/pec_batch_compile/dawa_lca_model/*
-!/Scripts/Debug/pec_batch_compile/dawa_lca_model/*.py
-!/Scripts/Debug/pec_batch_compile/dawa_lca_model/*.slurm
-!/Scripts/Debug/pec_batch_compile/dawa_lca_model/README.md
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/data fitting/data_to_fit_study3.csv
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/data fitting/fits/
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/data fitting/logs/
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/data fitting/audit/
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/direct_likelihood/fits/
+/Scripts/Debug/pec_batch_compile/csi/csi_fit/direct_likelihood/recovery_truth_*.json
+/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/*
+!/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/*.py
+!/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/*.slurm
+!/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/README.md

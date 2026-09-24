@@ -11,11 +11,11 @@ and estimator-aware execution.
 ## Workload and comparison contract
 
 - Subject 1's complete chronological task/stimulus sequence from
-  `csi_fit/data fitting/data_to_fit_study3.csv`: 561 trials across NoInstruction,
+  `csi/csi_fit/data fitting/data_to_fit_study3.csv`: 561 trials across NoInstruction,
   RealRare, and RealFrequent. All trials condition history; 485 contribute scores.
 - **11 parameter candidates, 100,000 simulations per trial**, matching the
   population batch and simulation budget in
-  `csi_fit/data fitting/csi_gpu1ms_comprehensive_recovery_gb300.slurm`.
+  `csi/csi_fit/data fitting/csi_gpu1ms_comprehensive_recovery_gb300.slurm`.
 - Both LCA and DDM use the indicated timestep; maximum duration is 12 seconds.
   LCA leak 12, competition 3, noise 0; DDM noise 0.1; ITI 1 second and switch
   cue interval 80 ms. Eleven nearby interior candidates vary condition-specific
