@@ -146,21 +146,37 @@ def test_large_initial_seed_replays_without_collapsing_streams():
     assert len(np.unique(first[0])) == 24
 
 
-def test_policy_validation_and_legacy_ocm_default():
+def test_policy_validation():
     with pytest.raises(ParameterError, match="must be 'independent' or 'shared_seed'"):
         _make_pec(policy='invalid')
     pec, _, _ = _make_pec()
     with pytest.raises(ParameterError, match='read.only'):
         pec.controller.parameters.noise_stream_policy.set('shared_seed')
 
-    source = pnl.ProcessingMechanism(function=pnl.NormalDist())
-    model = pnl.Composition(nodes=source)
+
+@pytest.mark.parametrize('policy', [None, 'shared_seed'])
+def test_ocm_default_and_legacy_noise_streams(policy):
+    source = pnl.ProcessingMechanism()
+    nodes = [pnl.ProcessingMechanism(function=pnl.NormalDist(seed=10)) for _ in range(2)]
+    model = pnl.Composition(pathways=[[source, node] for node in nodes], retain_old_simulation_data=True)
+    options = {} if policy is None else {'noise_stream_policy': policy}
     controller = pnl.OptimizationControlMechanism(
-        agent_rep=model, monitor_for_control=source, num_estimates=2, initial_seed=29,
-        control_signals=[pnl.ControlSignal(modulates=('mean', source), allocation_samples=[0., 1.])],
+        agent_rep=model, num_estimates=8, initial_seed=29,
+        objective_mechanism=pnl.ObjectiveMechanism(monitor=nodes, function=pnl.LinearCombination(operation=pnl.SUM)),
+        same_seed_for_all_allocations=True,
+        control_signals=[pnl.ControlSignal(modulates=('slope', source), allocation_samples=[0., 1.])],
+        **options,
     )
-    assert controller.noise_stream_policy == 'shared_seed'
-    assert controller.gen_new_seed_sequence(Context(execution_id=None)) == [31, 32]
+    model.add_controller(controller)
+    model.run(inputs={source: [[0.]]})
+    assert controller.noise_stream_policy == (policy or 'independent')
+    samples = np.asarray(model.simulation_results).reshape(2, 8, 2)
+    np.testing.assert_array_equal(samples[0], samples[1])
+    expected = np.array([
+        [np.random.RandomState([29 + j if policy == 'shared_seed' else 2 * (29 + j) + i]).normal()
+         for i in range(2)] for j in range(8)
+    ])
+    np.testing.assert_allclose(samples[0], expected, atol=1e-14)
 
 
 @pytest.mark.llvm

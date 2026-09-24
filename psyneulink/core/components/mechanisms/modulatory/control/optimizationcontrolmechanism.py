@@ -1324,13 +1324,13 @@ class OptimizationControlMechanism(ControlMechanism):
         If it is not specified then then the seed is set to a random value (see `initial_seed
         <OptimizationControlMechanism.initial_seed>` for additional information).
 
-    noise_stream_policy : 'shared_seed' or 'independent' : default 'shared_seed'
+    noise_stream_policy : 'independent' or 'shared_seed' : default 'independent'
         specifies how seeds are assigned to different `random_variables <OptimizationControlMechanism.random_variables>`
-        within an estimate. 'shared_seed' preserves the legacy behavior of broadcasting the same seed to every
-        Component, which can correlate their random draws. 'independent' assigns a distinct seed to each Component
-        and estimate. This is a constructor-only setting; it is separate from `same_seed_for_all_allocations
-        <OptimizationControlMechanism.same_seed_for_all_allocations>`, which controls reuse across candidate allocations.
-        `ParameterEstimationComposition` defaults to 'independent'.
+        within an estimate. The default, 'independent', assigns a distinct seed to each Component and estimate.
+        Use 'shared_seed' to reproduce the legacy behavior of broadcasting the same seed to every Component,
+        which can correlate their random draws. This is a constructor-only setting, separate from
+        `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`, which controls
+        reuse across candidate allocations.
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
@@ -1504,7 +1504,7 @@ class OptimizationControlMechanism(ControlMechanism):
         substantial differences indicate instability, which may be helped by increasing `num_estimates
         <OptimizationControlMechanism.num_estimates>`.
 
-    noise_stream_policy : 'shared_seed' or 'independent'
+    noise_stream_policy : 'independent' or 'shared_seed'
         determines how the randomization ControlSignal seeds different Components. With 'independent', each estimate
         is assigned a block of consecutive seeds, with one slot per entry in `random_variables
         <OptimizationControlMechanism.random_variables>` (in that list's order). The sequence is deterministic for a
@@ -1786,7 +1786,7 @@ class OptimizationControlMechanism(ControlMechanism):
         random_variables = ALL
         initial_seed = None
         same_seed_for_all_allocations = False
-        noise_stream_policy = Parameter('shared_seed', stateful=False, loggable=False, read_only=True, structural=True)
+        noise_stream_policy = Parameter('independent', stateful=False, loggable=False, read_only=True, structural=True)
         num_estimates = None
         num_trials_per_estimate = None
 
