@@ -4,8 +4,9 @@ This directory groups DAWA's source model, simulation drivers, direct
 likelihoods, and recovery studies. Shared compiler benchmarks and design notes
 are in the [parent directory](../README.md).
 
-The DAWA LC/LCA network can now use the ordinary batched compiler and PEC
-simulation objective on Triton. `dawa_batched_simulation.py` loads the local
+The DAWA LC/LCA network, including Gaussian noise in all four LCAs, can use the
+ordinary batched compiler and PEC simulation objective on Triton.
+`dawa_batched_simulation.py` loads the local
 `dawa_lca_model/full_lca_model_lc.py`. The
 [source model, original fitting scripts, and Slurm examples](dawa_lca_model/README.md)
 are tracked; subject data and generated outputs remain ignored.
@@ -83,20 +84,91 @@ The shared builder supports repeated integration at positive fitting thresholds
 by default. Keep strict truncation checks enabled during simulation audits.
 
 The new LCA configurations require `execute_until_finished=False`; the existing
-CSI run-to-completion path is retained. Gaussian LCA noise requires
-`AtTrialStart` resets, and the new FHN adapter supports scalar Euler integration
-with zero initializers and fixed per-pass internal execution counts. Custom LCA
+CSI run-to-completion path is retained. Gaussian scheduled LCAs support
+`AtTrialStart` and `Never` resets, and the FHN adapter supports scalar Euler
+integration with zero initializers and fixed per-pass internal execution counts. Custom LCA
 matrices are frozen; scalar competition/self-excitation overrides on those
 matrices are rejected. GPU random streams reproduce seeded GPU runs, not
 NumPy/LLVM draws. Networks with scalar OVERRIDE controls must run each subject's
 complete sequence in one call: `initial_states` does not yet restore held and
 sampled control values, so resuming these networks is rejected explicitly.
 
+## Noise in all four LCAs
+
+The source builder and run helper expose `c_noise`, `s_noise`, `d_noise`, and
+`r_noise` as zero-mean Gaussian standard deviations. The batch driver accepts
+the corresponding `--c-noise`, `--s-noise`, `--d-noise`, and `--r-noise` flags;
+`--deterministic` disables all four. Existing defaults are preserved (the batch
+driver enables only response noise). An audit used standard deviation 0.1 in
+each layer and the original 0.01-second integration step. Each integration
+adds a draw scaled by `sqrt(dt)`, so these are diffusion amplitudes, not constant
+additive inputs. Native Python PNL completed four trials with noise in all four
+LCAs, producing finite choices and response times; each trial took multiple
+integration passes (49–165 response steps in the audit).
+
+To run the full-noise composition and evaluate the conditional PEC objective:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py \
+  --c-noise .1 --s-noise .1 --d-noise .1 --r-noise .1 \
+  --trials 4 --estimates 256 --max-steps 2000 --pec-smoke
+```
+
+Control uses `Never` and carries its state across trials; the other three LCAs
+use `AtTrialStart`. Noise settings preserve those reset policies. The previous
+compiler restriction on persistent Gaussian LCAs has been removed with explicit
+support for their initial state.
+
+PNL samples the initial recurrent **RESULT port** during construction; its value
+can differ from the mechanism's separately initialized value. Native PEC copies
+this constructed activity into each estimate. The compiler freezes that same
+RESULT default in the plan and uses it before any processing executes, while
+the integrated state starts at zero. Runtime gain/noise changes affect subsequent
+steps, without resampling or transforming the constructed activity. This uses
+the general `StateDecl.initial_attribute` facility for frozen vector initializers.
+`AtTrialStart` LCAs retain their original reset behavior.
+
+The existing random-stream allocation then supplies independent integration
+draws by accumulator, estimate and trial, with common random numbers across
+parameter candidates by default. Each estimate retains its own control state.
+The original nonlinear Logistic dynamics and scheduler are unchanged. The
+compiler starts a fresh sequence from the model's construction defaults; it
+does not implicitly import a live composition's current state.
+
+The all-four-noise configuration passed a GPU audit on the RTX 2080 Ti: two
+candidates, four trials, 256 estimates, no truncation, exact seeded replay, and
+finite conditional PEC scores. Component tests cover constructed activity,
+runtime parameter changes, analytic noise moments and cross-trial covariance,
+stream independence, and replay on both GPU and the Triton CPU interpreter.
+
+The [benchmark results](dawa_benchmark_results.md) distinguish the original
+response-only measurements from the full-noise configuration.
+For a comparison with independent noise in all four LCAs, pass
+`--independent-noise-streams` to `dawa_llvm_benchmark.py`. Native PEC normally
+broadcasts the same seed to all random variables in an estimate, which can
+correlate the LCAs' draws. The option applies distinct seed offsets to LLVM's
+randomization projections; Triton already separates component streams. This is
+an explicit benchmark configuration, not a change to the original fitting scripts.
+
+## Benchmarks and direct likelihoods
+
 For fitting-scale performance against PEC's threaded LLVM simulation path,
 see [the benchmark results](dawa_benchmark_results.md) and
 [reusable benchmark driver](dawa_llvm_benchmark.py). Measurements include
 1,000 and 10,000 estimates over both 64-trial slices and a full 760-trial subject,
-with setup and likelihood scoring separated from simulation timing.
+plus 100,000 estimates over 64 trials with noise in all LCAs. Setup and likelihood
+scoring are separated from simulation timing.
+
+The [full-subject objective benchmark](dawa_benchmark_results.md#full-subject-pec-objective-at-100000-estimates)
+also evaluates four distinct candidates at 100,000 estimates over all 760 trials,
+including conditional parameters and GPU histogram scoring. The
+[profiling follow-up](dawa_benchmark_results.md#gpu-profiling-and-count-only-scoring)
+adds general count-only scoring and measures about 2.5 seconds per candidate
+with 32-lane/one-warp launches on the 2080 Ti. This implies approximately 3.5
+hours for 5,000 evaluations before optimizer overhead. Live Torch fitting
+buffers fall from 3.1 GiB per candidate to 0.23 MiB for four candidates together;
+CUDA context/code and allocator reservations are additional. These are
+throughput extrapolations; a complete optimizer run has not been measured.
 
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports

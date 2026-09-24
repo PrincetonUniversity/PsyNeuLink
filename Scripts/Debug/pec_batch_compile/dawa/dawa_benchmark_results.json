@@ -485,5 +485,1347 @@
   },
   "code_git_head": "525d76a1282cd32548ac51d947a0b2daa2a62f70",
   "code_working_tree": "Includes uncommitted DAWA PEC compiler support",
-  "model_source_sha256": "fddee3c92e76da1bf64f0cf08b58d4c24df40974efa6bd79c8bd894b49cea7aa"
+  "model_source_sha256": "fddee3c92e76da1bf64f0cf08b58d4c24df40974efa6bd79c8bd894b49cea7aa",
+  "all_lca_noise": {
+    "date": "2026-09-24",
+    "noise_standard_deviation": {
+      "control": 0.1,
+      "stimulus": 0.1,
+      "decision": 0.1,
+      "response": 0.1
+    },
+    "time_step_size": 0.01,
+    "noise_stream_policy": "independent",
+    "llvm_configuration": "Native threaded PEC evaluator with distinct per-component seed offsets (--independent-noise-streams).",
+    "measurements": [
+      {
+        "backend": "triton",
+        "subject": 1,
+        "trials": 64,
+        "estimates": 10000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {},
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 5.841990635963157,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          0.08910561201628298,
+          0.08746179100126028,
+          0.08860310493037105
+        ],
+        "requested_warm_repeats": 3,
+        "same_seed_for_all_parameter_combinations": true,
+        "gpu": "NVIDIA GeForce RTX 2080 Ti",
+        "first_seconds": 1.6246595929842442,
+        "shape": [
+          64,
+          10000,
+          2
+        ],
+        "dtype": "float32",
+        "mean_rt": 0.9882586002349854,
+        "mean_decision": 0.5302749872207642,
+        "rt_quantiles": [
+          0.6299999952316284,
+          0.9399999976158142,
+          1.4200000762939453,
+          1.9500000476837158,
+          3.569999933242798
+        ],
+        "mean_rt_estimate_standard_error": 0.00036391928791999816,
+        "mean_decision_estimate_standard_error": 0.00020516278222203253,
+        "median_seconds": 0.08860310493037105
+      },
+      {
+        "backend": "llvm",
+        "subject": 1,
+        "trials": 64,
+        "estimates": 10000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {
+          "Control Units\n[Color, Location][seed]": 0,
+          "Stimulus Units\n[Red, Blue, Left, Right][seed]": 1048576,
+          "Decision Units\n[Left, Right][seed]": 2097152,
+          "Response Units\n[Left, Right][seed]": 3145728
+        },
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 4.718798951944336,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          16.87932196003385,
+          17.59915952105075,
+          17.443445813958533
+        ],
+        "requested_warm_repeats": 3,
+        "same_seed_for_all_parameter_combinations": true,
+        "first_seconds": 23.956067187013105,
+        "shape": [
+          64,
+          10000,
+          2
+        ],
+        "dtype": "float64",
+        "mean_rt": 0.9884369687500001,
+        "mean_decision": 0.5303796875,
+        "rt_quantiles": [
+          0.63,
+          0.94,
+          1.42,
+          1.95,
+          3.7600000000000002
+        ],
+        "mean_rt_estimate_standard_error": 0.00036495869391644527,
+        "mean_decision_estimate_standard_error": 0.0002072992679862501,
+        "median_seconds": 17.443445813958533
+      },
+      {
+        "backend": "triton",
+        "subject": 1,
+        "trials": 64,
+        "estimates": 100000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {},
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 6.443850444979034,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          0.3359985069837421,
+          0.3209553320193663,
+          0.34402600897010416
+        ],
+        "requested_warm_repeats": 3,
+        "same_seed_for_all_parameter_combinations": true,
+        "gpu": "NVIDIA GeForce RTX 2080 Ti",
+        "first_seconds": 13.327577635995112,
+        "shape": [
+          64,
+          100000,
+          2
+        ],
+        "dtype": "float32",
+        "mean_rt": 0.9884701371192932,
+        "mean_decision": 0.5301547050476074,
+        "rt_quantiles": [
+          0.6299999952316284,
+          0.9399999976158142,
+          1.4200000762939453,
+          1.9500000476837158,
+          4.139999866485596
+        ],
+        "mean_rt_estimate_standard_error": 0.00011498492549544147,
+        "mean_decision_estimate_standard_error": 6.51883403939266e-05,
+        "median_seconds": 0.3359985069837421
+      },
+      {
+        "backend": "llvm",
+        "subject": 1,
+        "trials": 64,
+        "estimates": 100000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {
+          "Control Units\n[Color, Location][seed]": 0,
+          "Stimulus Units\n[Red, Blue, Left, Right][seed]": 1048576,
+          "Decision Units\n[Left, Right][seed]": 2097152,
+          "Response Units\n[Left, Right][seed]": 3145728
+        },
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 5.185843443032354,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          188.85204530705232
+        ],
+        "requested_warm_repeats": 1,
+        "same_seed_for_all_parameter_combinations": true,
+        "first_seconds": 189.32958897191565,
+        "shape": [
+          64,
+          100000,
+          2
+        ],
+        "dtype": "float64",
+        "mean_rt": 0.9887255546875001,
+        "mean_decision": 0.530218125,
+        "rt_quantiles": [
+          0.63,
+          0.94,
+          1.42,
+          1.95,
+          4.09
+        ],
+        "mean_rt_estimate_standard_error": 0.00011519594170192869,
+        "mean_decision_estimate_standard_error": 6.56055839574286e-05,
+        "median_seconds": 188.85204530705232
+      },
+      {
+        "backend": "triton",
+        "subject": 1,
+        "trials": 760,
+        "estimates": 10000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {},
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 5.837003811029717,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          0.5741861630231142,
+          0.5860702230129391,
+          0.5649553440744057
+        ],
+        "requested_warm_repeats": 3,
+        "same_seed_for_all_parameter_combinations": true,
+        "gpu": "NVIDIA GeForce RTX 2080 Ti",
+        "first_seconds": 2.4064418410416692,
+        "shape": [
+          760,
+          10000,
+          2
+        ],
+        "dtype": "float32",
+        "mean_rt": 0.9826014637947083,
+        "mean_decision": 0.4987918436527252,
+        "rt_quantiles": [
+          0.6200000047683716,
+          0.9299999475479126,
+          1.4200000762939453,
+          1.940000057220459,
+          3.990000009536743
+        ],
+        "mean_rt_estimate_standard_error": 0.00010446852073073387,
+        "mean_decision_estimate_standard_error": 5.902474280446768e-05,
+        "median_seconds": 0.5741861630231142
+      },
+      {
+        "backend": "llvm",
+        "subject": 1,
+        "trials": 760,
+        "estimates": 10000,
+        "candidates": 1,
+        "threads": 8,
+        "seed": 29,
+        "deterministic": false,
+        "schedule": "recurrent",
+        "noise_overrides": {
+          "c_noise": 0.1,
+          "s_noise": 0.1,
+          "d_noise": 0.1,
+          "r_noise": 0.1
+        },
+        "time_step_size": 0.01,
+        "noise_stream_policy": "independent",
+        "llvm_seed_offsets": {
+          "Control Units\n[Color, Location][seed]": 0,
+          "Stimulus Units\n[Red, Blue, Left, Right][seed]": 1048576,
+          "Decision Units\n[Left, Right][seed]": 2097152,
+          "Response Units\n[Left, Right][seed]": 3145728
+        },
+        "control_initial_activity": [
+          0.5095998395869012,
+          0.49828779949983987
+        ],
+        "max_steps": 2000,
+        "parameter_values": {
+          "Response Units\n[Left, Right].termination_threshold": 0.3,
+          "RT_GATE.intercept": 0.2,
+          "Bias Mechanism.intercept": -0.45,
+          "Control Units\n[Color, Location].gain": 10.0,
+          "LC.mode": 0.9,
+          "LC.slope": 1.0,
+          "LC.intercept": 5.0
+        },
+        "data_file": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+        "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+        "model_source": "/home/david/princeton/PsyNeuLink/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py",
+        "model_source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+        "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "setup_seconds": 5.188323767040856,
+        "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+        "versions": {
+          "psyneulink": "0.19.1.0+143.ge826488923",
+          "llvmlite": "0.48.0",
+          "triton": "3.7.1",
+          "torch": "2.13.0"
+        },
+        "scope": "simulation including preparation and host output; no likelihood or optimizer",
+        "warm_seconds": [
+          214.1437400119612
+        ],
+        "requested_warm_repeats": 1,
+        "same_seed_for_all_parameter_combinations": true,
+        "first_seconds": 226.01135709800292,
+        "shape": [
+          760,
+          10000,
+          2
+        ],
+        "dtype": "float64",
+        "mean_rt": 0.9827152763157895,
+        "mean_decision": 0.49891315789473684,
+        "rt_quantiles": [
+          0.62,
+          0.9299999999999999,
+          1.42,
+          1.94,
+          4.42
+        ],
+        "mean_rt_estimate_standard_error": 0.00010617722785803654,
+        "mean_decision_estimate_standard_error": 5.9621638882311594e-05,
+        "median_seconds": 214.1437400119612
+      }
+    ],
+    "comparisons": [
+      {
+        "trials": 64,
+        "estimates": 10000,
+        "speedup": 196.8717216813847,
+        "rt": {
+          "difference_gpu_minus_llvm": -0.00017836851501473738,
+          "combined_estimate_standard_error": 0.000515395087661297,
+          "z": -0.34608113132028157,
+          "first_trial_difference": -0.014454997695920957,
+          "first_trial_z": -5.5638811345190256,
+          "max_abs_trial_z_excluding_first": 3.3539910502588475
+        },
+        "decision": {
+          "difference_gpu_minus_llvm": -0.00010470027923581426,
+          "combined_estimate_standard_error": 0.00029165862530828793,
+          "z": -0.3589822832263039,
+          "first_trial_difference": -0.00029998168945311043,
+          "first_trial_z": -0.3339742417623517,
+          "max_abs_trial_z_excluding_first": 3.0794170730613573
+        }
+      },
+      {
+        "trials": 64,
+        "estimates": 100000,
+        "speedup": 562.0621561755638,
+        "rt": {
+          "difference_gpu_minus_llvm": -0.000255417568206906,
+          "combined_estimate_standard_error": 0.0001627625204885522,
+          "z": -1.5692652549262445,
+          "first_trial_difference": -0.007648858646398193,
+          "first_trial_z": -9.272926444375184,
+          "max_abs_trial_z_excluding_first": 2.309187478415632
+        },
+        "decision": {
+          "difference_gpu_minus_llvm": -6.34199523925627e-05,
+          "combined_estimate_standard_error": 9.248574144001688e-05,
+          "z": -0.6857268093989898,
+          "first_trial_difference": -0.00014999530792236815,
+          "first_trial_z": -0.5808853240637756,
+          "max_abs_trial_z_excluding_first": 2.6509652430305812
+        }
+      },
+      {
+        "trials": 760,
+        "estimates": 10000,
+        "speedup": 372.9517599039403,
+        "rt": {
+          "difference_gpu_minus_llvm": -0.00011381252108122464,
+          "combined_estimate_standard_error": 0.00014895393764276655,
+          "z": -0.764078633182421,
+          "first_trial_difference": -0.012404061473844541,
+          "first_trial_z": -4.761173229966169,
+          "max_abs_trial_z_excluding_first": 3.0407962129301382
+        },
+        "decision": {
+          "difference_gpu_minus_llvm": -0.00012131424201161645,
+          "combined_estimate_standard_error": 8.389672273781812e-05,
+          "z": -1.4459950049625911,
+          "first_trial_difference": 0.00040001525878907707,
+          "first_trial_z": 0.4658501667517109,
+          "max_abs_trial_z_excluding_first": 3.7813646653819393
+        }
+      }
+    ],
+    "shared_seed_audit": {
+      "trials": 64,
+      "estimates": 10000,
+      "llvm_mean_rt": 0.948652046875,
+      "llvm_mean_decision": 0.5004546875,
+      "gpu_mean_rt": 0.9882586002349854,
+      "gpu_mean_decision": 0.5302749872207642,
+      "explanation": "Default PEC broadcasts the same seed to every random variable, correlating the noisy LCAs. This is not the independent-noise benchmark."
+    },
+    "initialization_validation": {
+      "description": "Construct all four LCAs with sd=0.1, then disable subsequent noise; compare four real-data trials with native Python.",
+      "python_gpu_max_absolute_error_bound": 4e-07
+    },
+    "validation_caveat": "First-trial RT discrepancy with native LLVM remains; per-trial discrepancies are reported, not hidden by the sequence mean.",
+    "code_git_head": "0b7f62d33c6cd7a7f12dc47f8cd9f4e3ccbfd4e9",
+    "code_working_tree": "Includes uncommitted persistent Gaussian LCA support and full-noise benchmark configuration.",
+    "source_sha256": {
+      "psyneulink/core/batched/components/lca_general.py": "973bb767b86260256125451e5cd3f0872aeeddd5954a2b4dd51ed8a6e1970094",
+      "psyneulink/core/batched/specs.py": "e999398e50c8591c0148f7e525221cf7b921482179b5a7bc146490afeaf912c4",
+      "psyneulink/core/batched/graph.py": "a2ebfbe8f9865856d3040d74e5835731fe96b1b209fae31dae410367d97604a9",
+      "psyneulink/core/batched/kernel_ir.py": "a03b9ede2fa3860fd96805cc39188bb89c99e7870ca23c785be4b279d0db5a51",
+      "Scripts/Debug/pec_batch_compile/dawa/dawa_llvm_benchmark.py": "57bfc7ac2bfe37dadc90a02291c67343c2946bb55f91c1d70e084d6d2fa5952b"
+    }
+  },
+  "full_subject_100k_pec_objective": {
+    "subject": 1,
+    "trials": 760,
+    "scored_trials": 720,
+    "estimates_per_trial_per_candidate": 100000,
+    "candidate_coordinates": [
+      [
+        "termination_threshold",
+        "Response Units\n[Left, Right]",
+        "1"
+      ],
+      [
+        "intercept",
+        "RT_GATE",
+        "1"
+      ],
+      [
+        "intercept",
+        "Bias Mechanism",
+        "None"
+      ],
+      [
+        "gain",
+        "Control Units\n[Color, Location]",
+        "1"
+      ],
+      [
+        "mode",
+        "LC",
+        "0.0"
+      ],
+      [
+        "mode",
+        "LC",
+        "1.0"
+      ],
+      [
+        "slope",
+        "LC",
+        "1"
+      ],
+      [
+        "intercept",
+        "LC",
+        "None"
+      ]
+    ],
+    "candidates": [
+      [
+        0.3,
+        0.2,
+        -0.45,
+        10.0,
+        0.9,
+        0.9,
+        1.0,
+        5.0
+      ],
+      [
+        0.4,
+        0.22,
+        -0.4,
+        12.0,
+        0.7,
+        0.8,
+        1.5,
+        5.5
+      ],
+      [
+        0.5,
+        0.18,
+        -0.35,
+        8.0,
+        0.5,
+        0.7,
+        2.0,
+        6.0
+      ],
+      [
+        0.6,
+        0.25,
+        -0.3,
+        15.0,
+        0.3,
+        0.6,
+        2.5,
+        7.0
+      ]
+    ],
+    "noise": {
+      "c_noise": 0.1,
+      "s_noise": 0.1,
+      "d_noise": 0.1,
+      "r_noise": 0.1
+    },
+    "lca_dt": 0.01,
+    "seed": 29,
+    "max_steps": 2000,
+    "strict_truncation": true,
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "torch_version": "2.13.0+cu130",
+    "plan_outputs": [
+      "DECISION_GATE.OutputPort-0",
+      "RT_GATE.OutputPort-0"
+    ],
+    "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+    "model_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+    "estimator": {
+      "kind": "trial_marginal_histogram",
+      "bins": 100,
+      "rt_range": [
+        0.0,
+        3.0
+      ],
+      "pseudocount": 1.0,
+      "smoothing_sigma": 0.0
+    },
+    "setup_seconds": 10.977073432062753,
+    "cases": [
+      {
+        "candidate_batch_size": 1,
+        "candidate_count": 4,
+        "runs": [
+          {
+            "seconds": 13.403104122029617,
+            "scores": [
+              -415.6920166015625,
+              -1036.1519775390625,
+              -1310.3798828125,
+              242.09323120117188
+            ],
+            "chunk_seconds": [
+              5.230698294006288,
+              2.7970904879039153,
+              3.1165636100340635,
+              2.257730519049801
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0,
+            "peak_allocated_gib": 3.115260124206543,
+            "peak_reserved_gib": 3.259765625
+          },
+          {
+            "seconds": 12.238735666964203,
+            "scores": [
+              -415.6920166015625,
+              -1036.1519775390625,
+              -1310.3798828125,
+              242.09323120117188
+            ],
+            "chunk_seconds": [
+              3.87450503394939,
+              2.8874070619931445,
+              3.178851202945225,
+              2.297512063058093
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0,
+            "peak_allocated_gib": 3.115260124206543,
+            "peak_reserved_gib": 3.259765625
+          },
+          {
+            "seconds": 12.411477630026639,
+            "scores": [
+              -415.6920166015625,
+              -1036.1519775390625,
+              -1310.3798828125,
+              242.09323120117188
+            ],
+            "chunk_seconds": [
+              3.941590031958185,
+              2.903711030026898,
+              3.274663576972671,
+              2.2912712880643085
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0,
+            "peak_allocated_gib": 3.115260124206543,
+            "peak_reserved_gib": 3.259765625
+          },
+          {
+            "seconds": 12.11865946103353,
+            "scores": [
+              -415.6920166015625,
+              -1036.1519775390625,
+              -1310.3798828125,
+              242.09323120117188
+            ],
+            "chunk_seconds": [
+              3.8376131540862843,
+              2.838196321972646,
+              3.164933320018463,
+              2.277694961987436
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0,
+            "peak_allocated_gib": 3.115260124206543,
+            "peak_reserved_gib": 3.259765625
+          }
+        ],
+        "median_seconds": 12.238735666964203,
+        "seconds_per_candidate": 3.059683916741051
+      },
+      {
+        "candidate_batch_size": 2,
+        "candidate_count": 4,
+        "runs": [
+          {
+            "seconds": 12.055503704003058,
+            "scores": [
+              -415.69232177734375,
+              -1036.1524658203125,
+              -1310.3787841796875,
+              242.0931396484375
+            ],
+            "chunk_seconds": [
+              6.706984874093905,
+              5.348311927053146
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0010986328125,
+            "peak_allocated_gib": 6.230581283569336,
+            "peak_reserved_gib": 6.515625
+          },
+          {
+            "seconds": 11.92814878304489,
+            "scores": [
+              -415.69232177734375,
+              -1036.1524658203125,
+              -1310.3787841796875,
+              242.0931396484375
+            ],
+            "chunk_seconds": [
+              6.6549148100893945,
+              5.27300046896562
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0010986328125,
+            "peak_allocated_gib": 6.230581283569336,
+            "peak_reserved_gib": 6.515625
+          },
+          {
+            "seconds": 12.081081354990602,
+            "scores": [
+              -415.69232177734375,
+              -1036.1524658203125,
+              -1310.3787841796875,
+              242.0931396484375
+            ],
+            "chunk_seconds": [
+              6.6895343500655144,
+              5.391289901919663
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0010986328125,
+            "peak_allocated_gib": 6.230581283569336,
+            "peak_reserved_gib": 6.515625
+          },
+          {
+            "seconds": 11.998938804958016,
+            "scores": [
+              -415.69232177734375,
+              -1036.1524658203125,
+              -1310.3787841796875,
+              242.0931396484375
+            ],
+            "chunk_seconds": [
+              6.76126365410164,
+              5.237333046970889
+            ],
+            "max_score_roundoff_vs_first_batch": 0.0010986328125,
+            "peak_allocated_gib": 6.230581283569336,
+            "peak_reserved_gib": 6.515625
+          }
+        ],
+        "median_seconds": 11.998938804958016,
+        "seconds_per_candidate": 2.999734701239504
+      }
+    ],
+    "date": "2026-09-24",
+    "validation": {
+      "per_trial_likelihoods_exact_across_batches": true,
+      "same_batch_score_replay_exact": true,
+      "all_trajectories_completed": true
+    },
+    "timing_scope": "PEC parameter preparation, GPU simulation and histogram scoring; no optimizer; existing local Triton cache"
+  },
+  "gpu_profile_and_optimization": {
+    "date": "2026-09-24",
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "versions": {
+      "numpy": "2.3.5",
+      "torch": "2.13.0",
+      "triton": "3.7.1"
+    },
+    "scope": "Same four candidates and full 760-trial sequence as full_subject_100k_pec_objective; 100000 estimates, ordinary trial-marginal histogram; no optimizer",
+    "profile": [
+      {
+        "configuration": "before",
+        "gpu_kernel_seconds": 3.462063926,
+        "simulator_seconds": 3.4151273709999996,
+        "simulator_fraction": 0.9864426088012102,
+        "peak_torch_allocated_gib": 3.115260124206543,
+        "compiled_kernels": [
+          {
+            "registers": 255,
+            "spills": 8
+          }
+        ]
+      },
+      {
+        "configuration": "block32",
+        "gpu_kernel_seconds": 3.067565379,
+        "simulator_seconds": 3.0195909079999996,
+        "simulator_fraction": 0.9843607339786709,
+        "peak_torch_allocated_gib": 3.115260124206543,
+        "compiled_kernels": [
+          {
+            "registers": 255,
+            "spills": 10
+          }
+        ]
+      },
+      {
+        "configuration": "fused",
+        "gpu_kernel_seconds": 3.566479932,
+        "simulator_seconds": 3.566422716,
+        "simulator_fraction": 0.9999839572909168,
+        "peak_torch_allocated_gib": 0.00014066696166992188,
+        "compiled_kernels": [
+          {
+            "registers": 250,
+            "spills": 8
+          }
+        ]
+      },
+      {
+        "configuration": "cap128",
+        "gpu_kernel_seconds": 13.56176724,
+        "simulator_seconds": 13.561709286000001,
+        "simulator_fraction": 0.9999957266631277,
+        "peak_torch_allocated_gib": 0.00014066696166992188,
+        "compiled_kernels": [
+          {
+            "registers": 128,
+            "spills": 124
+          }
+        ]
+      }
+    ],
+    "nsight_compute": [
+      {
+        "section": "GPU Speed Of Light Throughput",
+        "metric": "Memory Throughput",
+        "value": "3.99",
+        "unit": "%"
+      },
+      {
+        "section": "GPU Speed Of Light Throughput",
+        "metric": "DRAM Throughput",
+        "value": "1.23",
+        "unit": "%"
+      },
+      {
+        "section": "GPU Speed Of Light Throughput",
+        "metric": "Compute (SM) Throughput",
+        "value": "51.83",
+        "unit": "%"
+      },
+      {
+        "section": "Launch Statistics",
+        "metric": "Registers Per Thread",
+        "value": "250",
+        "unit": "register/thread"
+      },
+      {
+        "section": "Launch Statistics",
+        "metric": "Waves Per SM",
+        "value": "5.75",
+        "unit": ""
+      },
+      {
+        "section": "Occupancy",
+        "metric": "Block Limit Registers",
+        "value": "2",
+        "unit": "block"
+      },
+      {
+        "section": "Occupancy",
+        "metric": "Theoretical Occupancy",
+        "value": "25",
+        "unit": "%"
+      },
+      {
+        "section": "Occupancy",
+        "metric": "Achieved Occupancy",
+        "value": "24.78",
+        "unit": "%"
+      }
+    ],
+    "timings": [
+      {
+        "configuration": "materialized",
+        "launch_options": {
+          "block_size": 128,
+          "num_warps": 4,
+          "maxnreg": null
+        },
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "candidate_count": 4,
+            "runs": [
+              {
+                "seconds": 12.604965767939575,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  4.949202405055985,
+                  2.630535752978176,
+                  2.9112942500505596,
+                  2.1133837540401146
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 3.115260124206543,
+                "peak_reserved_gib": 3.259765625
+              },
+              {
+                "seconds": 11.450391232967377,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.6207720109960064,
+                  2.6913882499793544,
+                  2.9795076249865815,
+                  2.1584954439895228
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 3.115260124206543,
+                "peak_reserved_gib": 3.259765625
+              },
+              {
+                "seconds": 11.624539404991083,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.6829974479041994,
+                  2.7354560380335897,
+                  3.0277623400324956,
+                  2.178093275986612
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 3.115260124206543,
+                "peak_reserved_gib": 3.259765625
+              },
+              {
+                "seconds": 11.802489959052764,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.7252692440524697,
+                  2.7776052160188556,
+                  3.077824914944358,
+                  2.221577482065186
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 3.115260124206543,
+                "peak_reserved_gib": 3.259765625
+              }
+            ],
+            "median_seconds": 11.624539404991083,
+            "seconds_per_candidate": 2.9061348512477707
+          }
+        ]
+      },
+      {
+        "configuration": "fused",
+        "launch_options": {
+          "block_size": 128,
+          "num_warps": 4,
+          "maxnreg": null
+        },
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "candidate_count": 4,
+            "runs": [
+              {
+                "seconds": 12.506919485982507,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  4.801668841973878,
+                  2.645455128978938,
+                  2.938667176058516,
+                  2.1206784339156
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 11.693462920957245,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.5725671800319105,
+                  2.714004060951993,
+                  3.0720167310209945,
+                  2.3346193459583446
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 12.262853345950134,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.88098565407563,
+                  2.9235009009717032,
+                  3.1983385829953477,
+                  2.2598830059869215
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 12.16533921402879,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.7885344970272854,
+                  2.8935469649732113,
+                  3.1803274339763448,
+                  2.302787116030231
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              }
+            ],
+            "median_seconds": 12.16533921402879,
+            "seconds_per_candidate": 3.0413348035071976
+          }
+        ]
+      },
+      {
+        "configuration": "fused32",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": null
+        },
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "candidate_count": 4,
+            "runs": [
+              {
+                "seconds": 22.19946226105094,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  15.533815014990978,
+                  2.324108261964284,
+                  2.566484294948168,
+                  1.774553484050557
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 9.962182014016435,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.1128891629632562,
+                  2.423947648028843,
+                  2.5931419279659167,
+                  1.8319392720004544
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 10.095906025962904,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.1532870290102437,
+                  2.43942816904746,
+                  2.6007002929691225,
+                  1.9023288330063224
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 10.562038284959272,
+                "scores": [
+                  -415.6920166015625,
+                  -1036.1519775390625,
+                  -1310.3798828125,
+                  242.09323120117188
+                ],
+                "chunk_seconds": [
+                  3.2506355160148814,
+                  2.578668051981367,
+                  2.7812900489661843,
+                  1.9512731650611386
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0,
+                "peak_allocated_gib": 0.00014066696166992188,
+                "peak_reserved_gib": 0.001953125
+              }
+            ],
+            "median_seconds": 10.095906025962904,
+            "seconds_per_candidate": 2.523976506490726
+          },
+          {
+            "candidate_batch_size": 4,
+            "candidate_count": 4,
+            "runs": [
+              {
+                "seconds": 21.223424068070017,
+                "scores": [
+                  -415.69232177734375,
+                  -1036.1524658203125,
+                  -1310.3787841796875,
+                  242.0931396484375
+                ],
+                "chunk_seconds": [
+                  21.223214966012165
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0010986328125,
+                "peak_allocated_gib": 0.00022602081298828125,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 9.724684140994214,
+                "scores": [
+                  -415.69232177734375,
+                  -1036.1524658203125,
+                  -1310.3787841796875,
+                  242.0931396484375
+                ],
+                "chunk_seconds": [
+                  9.7243724380387
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0010986328125,
+                "peak_allocated_gib": 0.00022602081298828125,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 9.935618079034612,
+                "scores": [
+                  -415.69232177734375,
+                  -1036.1524658203125,
+                  -1310.3787841796875,
+                  242.0931396484375
+                ],
+                "chunk_seconds": [
+                  9.935440276982263
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0010986328125,
+                "peak_allocated_gib": 0.00022602081298828125,
+                "peak_reserved_gib": 0.001953125
+              },
+              {
+                "seconds": 9.980884347925894,
+                "scores": [
+                  -415.69232177734375,
+                  -1036.1524658203125,
+                  -1310.3787841796875,
+                  242.0931396484375
+                ],
+                "chunk_seconds": [
+                  9.980735045974143
+                ],
+                "max_score_roundoff_vs_first_batch": 0.0010986328125,
+                "peak_allocated_gib": 0.00022602081298828125,
+                "peak_reserved_gib": 0.001953125
+              }
+            ],
+            "median_seconds": 9.935618079034612,
+            "seconds_per_candidate": 2.483904519758653
+          }
+        ]
+      }
+    ],
+    "validation": {
+      "materialized_trial_probabilities_match_exactly": true,
+      "trials_per_candidate": 760,
+      "candidates": 4,
+      "trial_density_sha256": "11d9789f1af1bbf6e7fbc557f164f9ce467d9b6d29f1e1d70d5a9750cfcee7d8",
+      "strict_truncation": true,
+      "tests": {
+        "gpu_fused_and_pec": {
+          "passed": 15,
+          "skipped": 11
+        },
+        "cpu_fused_and_histogram": {
+          "passed": 23,
+          "skipped": 1,
+          "deselected": 5
+        },
+        "exact_interior_edge": {
+          "gpu_passed": 1,
+          "cpu_passed": 1
+        },
+        "atomic_stateful_and_smoothed_fallback": {
+          "gpu_passed": 2,
+          "cpu_passed": 2
+        }
+      }
+    },
+    "code_sha256": {
+      "psyneulink/core/batched/backend/triton/free_running_score.py": "8e3882462205b34a917ca63de860a2324cc4785f07a4a7c5410635fe53559424",
+      "psyneulink/core/batched/backend/triton/runtime.py": "bb9931cc0f2e48edafb8d2e3e6d8f1841316e3fce7e6a04ae00b43fc8ff53bd7",
+      "psyneulink/core/batched/backend/triton/emit/emitter.py": "5f36037e69d7eabb56cb09e70460128541eb48591fbdef7f6f29755df116c95e",
+      "psyneulink/core/batched/backend/triton/emit/ops.py": "3df31d4225de1de6bf969ca1e9c16ab8171f17d5190103b1402c79fa2e82f762",
+      "psyneulink/core/batched/backend/triton/emit/lanes.py": "c7e76421714688da19ecfada204fda0b8810cca1b457ecebe8391776fd057264",
+      "psyneulink/core/batched/components/lca_general.py": "973bb767b86260256125451e5cd3f0872aeeddd5954a2b4dd51ed8a6e1970094",
+      "psyneulink/core/batched/components/fitzhugh_nagumo.py": "1c71f49ee9756247505887fc3fb0184285acbd01a02faeb5f23804bde960f160",
+      "psyneulink/core/batched/kernel_ir.py": "a03b9ede2fa3860fd96805cc39188bb89c99e7870ca23c785be4b279d0db5a51",
+      "psyneulink/core/batched/graph.py": "a2ebfbe8f9865856d3040d74e5835731fe96b1b209fae31dae410367d97604a9",
+      "psyneulink/core/batched/compiler.py": "23548645a904f80679563a0efaae53aa1e6b543bf48205318c29d21c16f29665",
+      "psyneulink/core/batched/likelihood.py": "4f6166176ea883b1390d18506b727c4b7f5aeb71ba21bc7b0d2abb2e873184b8",
+      "psyneulink/core/components/functions/nonstateful/fitfunctions.py": "21b6213b46dfb87fb5f9c381f8600b12b43445eadbfb4217fc97de9ac1f1faba",
+      "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py": "f0e1f2276389f05c38583068ef2e372340d28f7aebce2e0899a425b3c62d9995"
+    },
+    "notes": [
+      "PyTorch live allocations exclude CUDA context/code, compiler-managed local memory, allocator reservations, and desktop usage.",
+      "Timings are unprofiled medians of three warm calls, in separate serial processes; setup and first calls are separate.",
+      "Register-cap profiling is an unsuccessful experiment, not a recommended configuration.",
+      "CSI comparison uses the existing recorded 561-trial deterministic-history/window-score workload."
+    ]
+  }
 }

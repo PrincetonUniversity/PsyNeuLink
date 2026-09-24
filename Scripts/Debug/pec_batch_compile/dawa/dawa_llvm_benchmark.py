@@ -3,6 +3,10 @@
 Run each backend/case in a fresh process. Timings include input preparation and
 host results, but exclude likelihood estimation and optimization. Both backends
 use the default recurrent schedule from dawa_batched_simulation.py.
+
+For multiple noisy components, --independent-noise-streams gives each LLVM PEC
+random variable a distinct seed range. PEC otherwise broadcasts one seed to all
+components, correlating their draws; Triton always uses separate streams.
 """
 
 import argparse
@@ -18,6 +22,7 @@ import numpy as np
 import pandas as pd
 import psyneulink as pnl
 from psyneulink.core.batched import BatchedCompositionCompiler
+from psyneulink.core.globals.utilities import set_global_seed
 
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 
@@ -35,16 +40,27 @@ def main():
     parser.add_argument("--seed", type=int, default=29)
     parser.add_argument("--threshold", type=float, default=.3)
     parser.add_argument("--deterministic", action="store_true")
+    parser.add_argument("--independent-noise-streams", action="store_true",
+                        help="Give LLVM PEC's random variables distinct seed offsets; Triton already separates streams")
+    for prefix in ("c", "s", "d", "r"):
+        parser.add_argument(f"--{prefix}-noise", type=float,
+                            help="Override this LCA's Gaussian noise standard deviation")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if min(args.trials, args.estimates, args.repeats, args.threads) < 1:
         parser.error("Trials, estimates, repeats and threads must be positive")
+    noise = {f"{prefix}_noise": getattr(args, f"{prefix}_noise") for prefix in ("c", "s", "d", "r")}
+    if any(value is not None and (not np.isfinite(value) or value < 0.) for value in noise.values()):
+        parser.error("Noise standard deviations must be finite and nonnegative")
+    # Persistent Gaussian control retains construction-time RESULT activity.
+    # Reproduce that same initial condition in the separate backend processes.
+    set_global_seed(args.seed)
     pnl.set_num_threads(args.threads)
     data = pd.read_csv(args.data)
     data = data[(data.subject_nr == args.subject) & data.PrevCongruency.notna()].iloc[:args.trials].copy()
     if len(data) != args.trials:
         parser.error(f"Only {len(data)} eligible trials available for subject {args.subject}")
-    composition, inputs, outputs = build_model(trials=args.trials, deterministic=args.deterministic)
+    composition, inputs, outputs = build_model(trials=args.trials, deterministic=args.deterministic, **noise)
     inputs[node(composition, "Task Input")] = data[["T1", "T2"]].to_numpy()
     inputs[node(composition, "Stimulus Input")] = data[["S1", "S2", "S3", "S4"]].to_numpy()
     surface = fit_surface(composition)
@@ -62,6 +78,21 @@ def main():
         optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=1),
         num_estimates=args.estimates, initial_seed=args.seed, same_seed_for_all_parameter_combinations=True,
     )
+    seed_offsets = {}
+    if args.independent_noise_streams and args.backend == "llvm":
+        # OCM normally broadcasts the SAME seed to every random variable. With
+        # several noisy LCAs this correlates their draws. Keep the native PEC
+        # threaded evaluator, but separate its per-component seed ranges for
+        # comparison with the batch compiler's independent component streams.
+        stride = 1 << max(20, (args.seed + args.estimates).bit_length())
+        for index, variable in enumerate(pec.controller.random_variables):
+            port = variable.parameters.seed.port
+            if len(port.mod_afferents) != 1:
+                raise AssertionError(f"Expected one randomization control projection for {port.full_name}")
+            projection = port.mod_afferents[0]
+            offset = index * stride
+            projection.function.parameters.intercept.set(float(offset))
+            seed_offsets[port.full_name] = offset
     if args.backend == "llvm":
         pec.controller.parameters.comp_execution_mode.set("LLVM")
         pec.controller.function.set_pec_objective_function(lambda samples: 0.)
@@ -83,6 +114,10 @@ def main():
         "backend": args.backend, "subject": args.subject, "trials": args.trials,
         "estimates": args.estimates, "candidates": 1, "threads": pnl.get_num_threads(),
         "seed": args.seed, "deterministic": args.deterministic, "schedule": "recurrent",
+        "noise_overrides": noise, "time_step_size": .01,
+        "noise_stream_policy": "independent" if args.backend == "triton" or args.independent_noise_streams else "shared_seed",
+        "llvm_seed_offsets": seed_offsets,
+        "control_initial_activity": node(composition, "Control Units\n[Color, Location]").output_port.defaults.value.tolist(),
         "max_steps": args.max_steps, "parameter_values": parameter_set,
         "data_file": str(args.data), "data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
         "model_source": str(SOURCE), "model_source_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
@@ -123,6 +158,10 @@ def main():
             first_trial_samples=samples[0, :min(8, args.estimates)].tolist(),
             mean_rt_by_trial=samples[..., 1].mean(axis=1).tolist(),
             mean_decision_by_trial=samples[..., 0].mean(axis=1).tolist(),
+            rt_standard_error_by_trial=(samples[..., 1].std(axis=1, ddof=1)
+                                       / np.sqrt(args.estimates)).tolist() if args.estimates > 1 else None,
+            decision_standard_error_by_trial=(samples[..., 0].std(axis=1, ddof=1)
+                                             / np.sqrt(args.estimates)).tolist() if args.estimates > 1 else None,
             mean_rt_estimate_standard_error=(float(samples[..., 1].mean(axis=0).std(ddof=1)
                                                    / np.sqrt(args.estimates)) if args.estimates > 1 else None),
             mean_decision_estimate_standard_error=(float(samples[..., 0].mean(axis=0).std(ddof=1)

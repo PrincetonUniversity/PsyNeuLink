@@ -15,7 +15,7 @@ from psyneulink.core.batched.specs import (
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Energy
 from psyneulink.core.globals.keywords import RESULT, ENERGY, OWNER_VALUE
-from psyneulink.core.scheduling.condition import AtTrialStart
+from psyneulink.core.scheduling.condition import AtTrialStart, Never
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
     LCAMechanism, DECISION_INDEX, DECISION_TIME, DECISION_STEPS,
@@ -25,6 +25,13 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
 def _noise(node):
     value = lca._raw_parameter(node, "noise")
     return getattr(value, "__self__", value)
+
+
+def _constructed_activity(node):
+    # PNL initializes the RESULT port separately from the mechanism value.
+    # Recurrent projections (and PEC's simulation copies) use that port value.
+    # Read its construction default, never the mutable, last-executed activity.
+    return np.asarray(node.output_port.defaults.value).reshape(-1)
 
 
 def _supports(node):
@@ -54,8 +61,12 @@ def _supports(node):
             value = lca._finite_broadcast_scalar_parameter(noise, name)
             if value is None or (name == "standard_deviation" and value < 0):
                 return reject("requires finite scalar NormalDist mean and nonnegative standard deviation")
-        if type(node.reset_stateful_function_when) is not AtTrialStart:
-            return reject("NormalDist noise requires AtTrialStart reset")
+        if type(node.reset_stateful_function_when) is Never:
+            initial = _constructed_activity(node)
+            if (initial.shape != (width,) or initial.dtype.kind not in "biuf"
+                    or not np.all(np.isfinite(initial))
+                    or np.any(np.abs(initial) > np.finfo(np.float32).max)):
+                return reject("requires finite float32 construction-time RESULT activity")
         integrator_noise = _noise(node.integrator_function)
         if type(integrator_noise) is not NormalDist or any(
             lca._finite_broadcast_scalar_parameter(integrator_noise, name)
@@ -108,7 +119,7 @@ def _attrs(node, composition):
     excitation = lca._finite_broadcast_scalar_parameter(node, "self_excitation")
     canonical = np.full((width, width), -competition)
     np.fill_diagonal(canonical, excitation)
-    return {
+    attrs = {
         "scheduled_lca": True,
         "recurrent_matrix": tuple(tuple(float(v) for v in row) for row in matrix),
         "canonical_recurrence": np.array_equal(matrix, canonical),
@@ -117,6 +128,9 @@ def _attrs(node, composition):
         "initialize_noise_sender": type(node.reset_stateful_function_when) is not AtTrialStart,
         "max_executions_before_finished": int(lca._raw_parameter(node, "max_executions_before_finished")),
     }
+    if attrs["gaussian_noise"] and attrs["initialize_noise_sender"]:
+        attrs["constructed_activity"] = tuple(float(value) for value in _constructed_activity(node))
+    return attrs
 
 
 def _parameter(ctx, node, name):
@@ -166,7 +180,10 @@ def _step(ctx, node, inputs, outputs, step_var, finished_var):
         return (f"({params['scale']} / (1.0 + tl.exp(-{params['gain']} * "
                 f"({x} + {params['bias']} - {params['x_0']}))) + {params['offset']})")
 
-    if node.attrs["initialize_noise_sender"]:
+    # Persistent Gaussian LCAs start from the frozen construction-time RESULT
+    # port, already loaded by InitializeState. Do not redraw it per estimate
+    # or trial, or transform it again when runtime parameters change.
+    if node.attrs["initialize_noise_sender"] and not node.attrs["gaussian_noise"]:
         initial = logistic(f"{params['noise']} * tl.sqrt({dt})")
         for value in act:
             ctx.line(f"{value} = tl.where({initialized} == 0.0, {initial}, {value})")
@@ -214,7 +231,7 @@ def _atomic(ctx, node, inputs, outputs):
 
 
 @lru_cache(None)
-def _specialized(base, width, ports, gaussian, activity):
+def _specialized(base, width, ports, gaussian, activity, persistent_gaussian):
     params = base.params
     if gaussian:
         params = tuple(p for p in params if p.arg != "noise") + tuple(
@@ -223,9 +240,15 @@ def _specialized(base, width, ports, gaussian, activity):
             for name in ("mean", "standard_deviation")
         )
     params += (ParamBinding("termination_threshold", scope="mechanism", minimum=0.0),)
+    states = tuple(
+        replace(state, initialize_with_function=False, initial_attribute="constructed_activity")
+        if persistent_gaussian and state.name == "act" else state
+        for state in base.states
+    )
     return replace(
-        base, key=f"{base.key}:scheduled:{width}:{ports!r}:{gaussian}:{activity}",
+        base, key=f"{base.key}:scheduled:{width}:{ports!r}:{gaussian}:{activity}:{persistent_gaussian}",
         params=params,
+        states=states,
         outputs=tuple(OutputDecl(port, width if port == RESULT else 1) for port in ports),
         trial_states=(StateDecl("count", width=1), StateDecl("finished", width=1)),
         rng=(RngDecl("rng", width=width),) if gaussian else (),
@@ -248,7 +271,8 @@ def _resolve(node):
     # Keep the established CSI implementation and its authenticated contract.
     if width == 2 and ports == (RESULT,) and not gaussian and not activity:
         return None
-    return _specialized(lookup_spec(spec_key(LCAMechanism)), width, ports, gaussian, activity)
+    persistent_gaussian = gaussian and type(node.reset_stateful_function_when) is Never
+    return _specialized(lookup_spec(spec_key(LCAMechanism)), width, ports, gaussian, activity, persistent_gaussian)
 
 
 register_batched_specializer(LCAMechanism, _resolve)

@@ -611,6 +611,12 @@ class PECOptimizationFunction(OptimizationFunction):
         for fitting and validation workflows where silently censored response
         times would bias the objective. Defaults to False for compatibility.
 
+    batched_fused_likelihood :
+        Reduce ordinary unsmoothed stateful histogram scores during simulation
+        instead of retaining all estimate outcomes. Defaults to True. False
+        selects the materialized reference path. This does not change the
+        estimator, trial history, or observation-conditioned likelihood paths.
+
     conditioned_likelihood :
         If True, score the CSI model one trial at a time and resample its
         retained state using the current observed choice/RT before continuing.
@@ -710,6 +716,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batched_likelihood_buffer_bytes: int = 1024**3,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
+        batched_fused_likelihood: bool = True,
         **kwargs,
     ):
         self.method = method
@@ -730,6 +737,7 @@ class PECOptimizationFunction(OptimizationFunction):
         self.batched_categorical_cardinalities = batched_categorical_cardinalities
         self.batched_seed = batched_seed
         self.batched_strict_truncation = batched_strict_truncation
+        self.batched_fused_likelihood = batched_fused_likelihood
         self.conditioned_likelihood = conditioned_likelihood
         self.deterministic_history_likelihood = deterministic_history_likelihood
         self.batched_observations = batched_observations
@@ -1161,6 +1169,8 @@ class PECOptimizationFunction(OptimizationFunction):
                 seed=seed,
                 strict_truncation=self.batched_strict_truncation,
                 triton_launch_options=self.batched_triton_launch_options,
+                **({"fused": self.batched_fused_likelihood}
+                   if not self.conditioned_likelihood and not self.deterministic_history_likelihood else {}),
                 **({"implementation": self.batched_history_implementation, "max_buffer_bytes": self.batched_likelihood_buffer_bytes}
                    if self.deterministic_history_likelihood else {}),
             )

@@ -161,6 +161,8 @@ class StateDecl:
     function is applied to ``initial`` using the lane's effective parameters;
     this represents initialized recurrent sender values without embedding that
     function's formula in a backend.
+    ``initial_attribute`` instead reads a frozen, width-matched vector from
+    the node's attributes (for example construction-time recurrent activity).
     """
 
     name: str
@@ -168,6 +170,17 @@ class StateDecl:
     initial: float = 0.0
     initial_parameter: str = ""
     initialize_with_function: bool = False
+    initial_attribute: str = ""
+
+    def initial_values(self, width: int, attributes: Mapping[str, Any]) -> tuple[float, ...]:
+        values = (attributes[self.initial_attribute] if self.initial_attribute
+                  else (self.initial,) * width)
+        array = np.asarray(values)
+        if (array.shape != (width,) or array.dtype.kind not in "biuf"
+                or not np.all(np.isfinite(array))
+                or np.any(np.abs(array) > np.finfo(np.float32).max)):
+            raise BatchedOpSpecError(f"State '{self.name}' requires {width} finite float32 initial values.")
+        return tuple(float(value) for value in array)
 
 
 @dataclass(frozen=True)
@@ -558,7 +571,7 @@ def _validate_likelihood_contract(spec):
             raise BatchedOpSpecError("Event count and finished flag must be distinct states.")
         for name in (readout.counter_state, spec.finished_output):
             state = declarations.get(name)
-            if (state is None or state.width != 1 or state.initial_parameter
+            if (state is None or state.width != 1 or state.initial_parameter or state.initial_attribute
                     or state.initialize_with_function or state.initial != 0.0):
                 raise BatchedOpSpecError("Event execution requires zero-initialized scalar count and finished states.")
         if readout.minimum_count != 1:

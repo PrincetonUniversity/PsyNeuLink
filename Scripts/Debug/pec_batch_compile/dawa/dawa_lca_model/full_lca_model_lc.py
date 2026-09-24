@@ -68,7 +68,14 @@ def make_lca_model(
     lc_input=0.25,
     lc_threshold=0.5,
     rng_seed=None,
+    c_noise=0.0,
+    s_noise=0.0,
 ):
+    """Build the LC/LCA network; each ``*_noise`` is a Gaussian standard deviation.
+
+    Control state carries across trials; stimulus, decision and response state
+    reset at trial start. Noise does not change these reset conditions.
+    """
 
     taskInput = pnl.ProcessingMechanism(
         name="Task Input",
@@ -100,7 +107,9 @@ def make_lca_model(
         leak=c_leak,
         competition=c_competition,
         self_excitation=0,
-        noise=0,
+        # Keep the original numeric zero when disabled: a NormalDist, even
+        # with zero variance, opts into the compiler's stochastic LCA adapter.
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=c_noise) if c_noise else 0,
         time_step_size=time_step_size,
         termination_measure=pnl.TimeScale.TRIAL,
         execute_until_finished=False,
@@ -119,7 +128,7 @@ def make_lca_model(
         leak=s_leak,
         competition=s_competition,
         self_excitation=0,
-        noise=pnl.NormalDist(mean=0.0, standard_deviation=0.0),
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=s_noise),
         time_step_size=time_step_size,
         termination_measure=pnl.TimeScale.TRIAL,
         execute_until_finished=False,
@@ -499,6 +508,8 @@ def run_lca_model(
         lc_input=0.3,
         lc_threshold=0.5,
         rng_seed=None,
+        c_noise=0.0,
+        s_noise=0.0,
 ):
 
     comp = make_lca_model(
@@ -507,10 +518,12 @@ def run_lca_model(
         c_leak=c_leak,
         c_competition=c_competition,
         c_w=c_w,
+        c_noise=c_noise,
         s_bias=s_bias,
         s_gain=s_gain,
         s_leak=s_leak,
         s_competition=s_competition,
+        s_noise=s_noise,
         d_bias=d_bias,
         d_gain=d_gain,
         d_leak=d_leak,

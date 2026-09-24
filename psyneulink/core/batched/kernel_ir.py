@@ -2557,9 +2557,9 @@ def _validate_kernel_states(kernel: KernelIR) -> None:
             "non-bool integers in declaration order."
         )
 
-    # Numeric-noise LCA construction has one semantic bit that is not implied
-    # by its numeric state initializer: a Never-reset LCA exposes
-    # Logistic(noise * sqrt(dt)) as its initial recurrent sender, whereas an
+    # LCA construction has one semantic bit that is not implied by its state
+    # initializer: a Never-reset LCA retains the constructed recurrent sender
+    # (reconstructed for numeric noise, frozen for Gaussian noise), whereas an
     # AtTrialStart reset replaces that sender with Logistic(initializer).
     # Authenticate the bit for every executable LCA fusion, including ordinary
     # stateful graphs that do not use the dynamic-pass validator below.
@@ -2590,13 +2590,13 @@ def _validate_kernel_states(kernel: KernelIR) -> None:
             or resets[0].condition_type not in {"Never", "AtTrialStart"}
         ):
             raise ValueError(
-                f"KernelIR numeric-noise LCA '{node.name}' requires one exact "
+                f"KernelIR LCA '{node.name}' requires one exact "
                 "Never or AtTrialStart reset declaration."
             )
         expected = resets[0].condition_type == "Never"
         if node.attrs.get("initialize_noise_sender") is not expected:
             raise ValueError(
-                f"KernelIR numeric-noise LCA '{node.name}' initialization "
+                f"KernelIR LCA '{node.name}' initialization "
                 "policy must exactly match its reset declaration."
             )
 
@@ -2627,7 +2627,7 @@ def _validate_kernel_states(kernel: KernelIR) -> None:
 
     for state, (node, declaration) in zip(kernel.states, expected):
         width = declaration.width or node.output_width
-        initial_value = tuple(declaration.initial for _ in range(width))
+        initial_value = declaration.initial_values(width, node.attrs)
         if (
             type(state.component_id) is not int
             or state.component_id != node.component_id
@@ -4372,9 +4372,7 @@ def _dynamic_trial_state_carries(
                     )
                 initial_parameter_id = parameter.parameter_id
             else:
-                initial_value = tuple(
-                    float(declaration.initial) for _ in range(width)
-                )
+                initial_value = declaration.initial_values(width, node.attrs)
             carries.append(
                 KernelLoopCarry(
                     "trial_state",

@@ -300,6 +300,7 @@ def lower_composition(
         if mechanism_spec is not None:
             for state_decl in mechanism_spec.states:
                 width = state_decl.width if state_decl.width is not None else node_spec.output_width
+                initial_values = state_decl.initial_values(width, node_spec.attrs)
                 function_initializer = None
                 if state_decl.initialize_with_function:
                     function_spec = specs.function_spec_for(getattr(node, "function", None))
@@ -328,7 +329,7 @@ def lower_composition(
                         continue
                     function_initializer = BatchedStateFunctionInitializer(
                         spec_key=function_spec.key,
-                        input_value=tuple([state_decl.initial] * width),
+                        input_value=initial_values,
                         params={
                             binding.arg: node_spec.params[binding.arg]
                             for binding in function_spec.params
@@ -339,7 +340,7 @@ def lower_composition(
                         name=f"{node_name}.{state_decl.name}",
                         node=node_name,
                         width=width,
-                        initial_value=tuple([state_decl.initial] * width),
+                        initial_value=initial_values,
                         component_id=node_spec.component_id,
                         state_id=len(state_specs),
                         function_initializer=function_initializer,

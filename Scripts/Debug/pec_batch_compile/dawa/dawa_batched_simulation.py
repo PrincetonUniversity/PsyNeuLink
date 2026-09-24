@@ -1,7 +1,7 @@
 """Batch the local DAWA LC/LCA model using the ordinary PEC compiler.
 
 The shared model builder and this driver both default to recurrent scheduling.
-See dawa_batched_README.md for the corrected one-pass control dependency issue.
+See README.md for the corrected one-pass control dependency issue.
 """
 
 import argparse
@@ -14,6 +14,7 @@ import time
 import numpy as np
 import psyneulink as pnl
 from psyneulink.core.batched import BatchedCompositionCompiler
+from psyneulink.core.globals.utilities import set_global_seed
 
 
 SOURCE = Path(__file__).with_name("dawa_lca_model") / "full_lca_model_lc.py"
@@ -42,11 +43,17 @@ def node(composition, name):
     return matches[0]
 
 
-def build_model(*, trials=4, schedule="recurrent", deterministic=False, seed=3, source=SOURCE):
+def build_model(*, trials=4, schedule="recurrent", deterministic=False, seed=3, source=SOURCE,
+                c_noise=None, s_noise=None, d_noise=None, r_noise=None):
     module = source_module(source)
     parameters = dict(DEFAULTS)
+    parameters.update({name: value for name, value in (
+        ("c_noise", c_noise), ("s_noise", s_noise), ("d_noise", d_noise), ("r_noise", r_noise),
+    ) if value is not None})
     if deterministic:
-        parameters["r_noise"] = 0.
+        for name in ("c_noise", "s_noise", "d_noise", "r_noise"):
+            if name in parameters:
+                parameters[name] = 0.
     composition = module.make_lca_model(**parameters)
     if schedule == "recurrent":
         # Also apply the default to older/custom source builders. The bundled
@@ -153,6 +160,9 @@ def main():
     parser.add_argument("--max-steps", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=29)
     parser.add_argument("--deterministic", action="store_true")
+    for prefix, layer in (("c", "control"), ("s", "stimulus"), ("d", "decision"), ("r", "response")):
+        parser.add_argument(f"--{prefix}-noise", type=float,
+                            help=f"Gaussian noise standard deviation for the {layer} LCA")
     parser.add_argument("--reference", choices=("none", "python", "llvm"), default="none")
     parser.add_argument("--pec-smoke", action="store_true")
     parser.add_argument("--output", type=Path, help="Optional NPZ samples; a neighboring JSON stores the report")
@@ -161,8 +171,12 @@ def main():
         parser.error("--reference requires --deterministic; GPU and LLVM use different RNG streams")
     if args.trials < 2 or args.estimates < 1:
         parser.error("Use at least two trials and one estimate")
+    noise = {f"{prefix}_noise": getattr(args, f"{prefix}_noise") for prefix in ("c", "s", "d", "r")}
+    if any(value is not None and (not np.isfinite(value) or value < 0.) for value in noise.values()):
+        parser.error("Noise standard deviations must be finite and nonnegative")
+    set_global_seed(args.seed)
     composition, inputs, outputs = build_model(trials=args.trials, schedule=args.schedule,
-                                                deterministic=args.deterministic, source=args.source)
+                                                deterministic=args.deterministic, source=args.source, **noise)
     plan = BatchedCompositionCompiler.compile(composition, backend=args.backend, outputs=outputs, max_steps=args.max_steps)
     candidates = [{f"{node.name}.{parameter}": values[2] for (parameter, node), values in fit_surface(composition).items()}]
     candidates.append({**candidates[0], f"{node(composition, 'LC').name}.mode": .7})
@@ -175,6 +189,7 @@ def main():
     np.testing.assert_array_equal(result.values, replay.values)
     report = {
         "schedule": args.schedule, "backend": args.backend, "shape": list(result.values.shape),
+        "noise_overrides": noise, "deterministic": args.deterministic,
         "first_run_seconds": first_seconds, "warm_run_seconds": warm_seconds,
         "trial_estimates_per_second": 2 * args.trials * args.estimates / warm_seconds,
         "mean_rt_by_candidate": result.values[..., 1].mean(axis=(1, 2, 3)).tolist(),
@@ -188,8 +203,9 @@ def main():
         report["max_reference_error"] = float(np.max(np.abs(actual - reference)))
     if args.pec_smoke:
         # Use a fresh graph: a native reference run leaves live scheduler state.
+        set_global_seed(args.seed)
         composition, inputs, outputs = build_model(trials=args.trials, schedule=args.schedule,
-                                                    deterministic=args.deterministic, source=args.source)
+                                                    deterministic=args.deterministic, source=args.source, **noise)
         report["pec"] = pec_smoke(composition, inputs, outputs, result.values[0, 0, :, 0],
                                   backend=args.backend, max_steps=args.max_steps, estimates=args.estimates, seed=args.seed)
     if args.output:

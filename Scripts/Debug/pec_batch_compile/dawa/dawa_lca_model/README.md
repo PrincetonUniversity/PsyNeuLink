@@ -7,6 +7,13 @@ schedule described in the [batch compiler notes](../README.md).
 Bias and weight controllers execute once per trial; the processing layers keep
 integrating until the response reaches threshold.
 
+Both `make_lca_model` and `run_lca_model` accept `c_noise`, `s_noise`, `d_noise`,
+and `r_noise` (zero-mean Gaussian standard deviations). Setting all four to 0.1
+enables noise throughout the LCA network without changing reset policies:
+control carries state across trials, while the other three LCAs reset. Existing
+defaults are unchanged. The batch compiler supports noisy persistent control;
+see the [noise support audit](../README.md#noise-in-all-four-lcas).
+
 `flanker_fit_lc_part1.py`, `flanker_fit_lc_part2.py`, and
 `flanker_fit_lc_part3.py` preserve the original PEC fitting setup for the three
 data partitions. They use 10,000 estimates, up to 5,000 optimization iterations,

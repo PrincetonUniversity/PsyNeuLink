@@ -322,6 +322,7 @@ class BatchedSimulationPlan:
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
         triton_launch_options: Mapping | None = None,
+        fused: bool = True,
     ):
         """Simulate and score experimental ``data`` with a histogram likelihood.
 
@@ -337,10 +338,28 @@ class BatchedSimulationPlan:
         :func:`psyneulink.core.batched.likelihood.histogram_log_likelihood` for
         ``categorical_dims`` / ``bins`` / ``bin_range`` / smoothing semantics.
 
+        By default, unsmoothed stateful histograms reduce counts during
+        simulation, without allocating per-estimate outcome arrays. Every
+        trial still executes and carries state normally. ``fused=False``
+        retains the materialized simulation/scoring path as a reference.
+
         Returns a scalar for a single parameter set, else one log-likelihood per
         parameter set.
         """
         from psyneulink.core.batched.likelihood import histogram_log_likelihood
+        from psyneulink.core.batched.backend.triton.free_running_score import (
+            fused_histogram_log_likelihood, supports_fused_histogram,
+        )
+
+        if fused and supports_fused_histogram(self, smoothing_sigma):
+            return fused_histogram_log_likelihood(
+                self, inputs, parameter_sets, num_estimates, data, categorical_dims,
+                outcome_indices=outcome_indices, bins=bins, bin_range=bin_range,
+                pseudocount=pseudocount, categorical_cardinalities=categorical_cardinalities,
+                include_mask=include_mask, subject_slices=subject_slices, seed=seed,
+                common_random_numbers=common_random_numbers, strict_truncation=strict_truncation,
+                triton_launch_options=triton_launch_options,
+            )
 
         device = _BACKEND_DEVICES.get(self.backend)
         keep_device = device == "cuda"

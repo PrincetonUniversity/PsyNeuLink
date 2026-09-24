@@ -308,6 +308,11 @@ def histogram_log_likelihood(
         categorical_cardinalities=categorical_cardinalities,
         device=device,
     )
+    return _sum_histogram_log_likelihood(like, include_mask)
+
+
+def _sum_histogram_log_likelihood(like, include_mask=None):
+    """Shared host reduction for materialized and fused histogram counts."""
     log_like = np.log(like)
     if include_mask is not None:
         mask = np.asarray(include_mask, dtype=bool).reshape(-1)
