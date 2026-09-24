@@ -16,11 +16,12 @@
 #SBATCH --output=%x_%j.out
 
 # --- edit paths ---
-REPO=/scratch/gpfs/JDC/ap9344/PsyNeuLink
+# REPO is a PsyNeuLink checkout; PY is a Python with psyneulink[dask] installed.
+REPO=/path/to/PsyNeuLink
 EXAMPLES=$REPO/Scripts/Examples/ParameterEstimation/hierarchical
 DATA=$EXAMPLES/group_data.csv
 
-PY=$REPO/.venv/bin/python3
+PY=python3
 
 cd $REPO
 
