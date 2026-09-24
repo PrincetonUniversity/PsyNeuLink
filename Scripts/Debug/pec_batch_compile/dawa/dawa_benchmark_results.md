@@ -373,3 +373,150 @@ Use `--smoothing-sigma 0` for the unsmoothed baseline, or
 `--materialized --batch-sizes 1` for the original smoothed scorer. Compact
 measurements, source hashes, and validation errors are recorded under
 `smoothed_count_only_scoring` in [dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+## Post-smoothing profile and optimization plan
+
+The smoothing extension is committed as `c7084025ad`. The following profile
+uses that implementation, subject 1's full 760-trial sequence (720 scored),
+100,000 estimates per trial, Gaussian SD 0.1 in every LCA, sigma 0.5 smoothing,
+pseudocount 1, and 32-lane/one-warp launches on the 2080 Ti. The detailed
+profilers measure the first of the four established proposals after warming.
+The four-proposal throughput measurements above remain the fitting benchmark;
+Nsight replay durations are excluded from those timings.
+
+Torch/CUPTI measures 2.75048 seconds in the simulation kernel, out of 2.75058
+seconds of GPU kernel work: **99.9966%**. The entire profiled objective range
+takes 2.79527 seconds. All GPU copies together take approximately 57 microseconds.
+The large CPU `copy_`/`cudaMemcpyAsync` entry mostly waits for simulation to
+finish. It does not indicate that transferring the small count buffers is the
+main cost. Peak live Torch allocations remain 0.322 MiB for this candidate.
+
+Hardware counters make the remaining bottleneck clearer:
+
+| Measurement | Result | Implication |
+| --- | ---: | --- |
+| Registers per thread | 238 | High demand for registers; Triton also reports eight spills |
+| Theoretical / achieved occupancy | 25% / 24.23% | Register allocation limits resident warps |
+| Scheduler cycles with no eligible warp | 46.94% | Frequently no resident warp is ready to issue |
+| Eligible warps per scheduler | 0.72 | Limited ability to hide dependent-instruction latency |
+| Compute throughput | 58.25% of peak | Arithmetic units still have unused capacity |
+| DRAM throughput | 1.29% of peak | External-memory bandwidth has substantial headroom |
+
+A separate hardware program-counter sampling pass attributes the sampled
+instruction locations as follows. These are **sampling shares, not exact
+exclusive wall-clock percentages**; inlining and dependency stalls affect the
+attribution.
+
+| Source region | Share of samples |
+| --- | ---: |
+| Gaussian RNG, total | 63.82% |
+| LC Euler integration | 11.91% |
+| Other generated model/scheduler code | 19.97% |
+| Triton standard reductions | 2.59% |
+| Histogram and diagnostic epilogue | 0.56% |
+| Unattributed | 1.15% |
+
+Within RNG, the normal transform accounts for 30.95% of all samples, Philox
+rounds for 25.94%, and other RNG operations for 6.92%. The current LCA adapter
+calls `tl.randn` separately for each accumulator: ten calls per scheduler pass
+across widths 2, 4, 2, and 2. Triton's scalar call runs Philox and a normal-pair
+transform while returning only one normal. The scalar DDM path already has a
+normal-pair reuse facility; vector LCAs do not use it. LC also performs ten
+Euler updates per scheduler pass, so its integration is another meaningful
+arithmetic cost.
+
+The sampling profiler auto-expanded its buffer to 512 MiB and aggregated two
+passes; its overflow flag was set, with zero final reported dropped bytes.
+That instrument memory is separate from ordinary fitting memory. The earlier
+all-instruction instrumented attempt was stopped because of its overhead and
+contributes no measurements to this report.
+
+There is also wasted work from waiting for the slowest estimate within a block.
+A separate diagnostic ran the unchanged sampler for all four proposals with
+4,096 estimates across all 760 trials. It recovered response execution counts
+from `(RT - nondecision_time) / 0.01`, checking that these were integer counts.
+For each trial and group, useful step slots are the sum of individual counts;
+issued block step slots are `group_size * max(counts)`. Grouping the same paths
+after simulation gives:
+
+| Proposal | Mean response steps | Useful slots, group 32 | Useful slots, group 128 |
+| --- | ---: | ---: | ---: |
+| 1 | 78.25 | 55.33% | 48.47% |
+| 2 | 71.62 | 65.22% | 59.13% |
+| 3 | 76.19 | 63.87% | 56.88% |
+| 4 | 47.04 | 57.50% | 49.17% |
+
+These are a model-work utilization proxy, not measured hardware utilization or
+a prediction of achievable speedup. They explain part of the benefit of smaller
+blocks and identify a possible larger scheduling improvement.
+
+Recommended implementation order:
+
+1. **Generate independent Gaussian values in groups for vector LCAs.** Extend
+   the shared RNG interface to reuse the multiple Philox outputs and both
+   members of normal pairs within an LCA execution. For DAWA, four Philox
+   invocations could provide the ten required values instead of ten separate
+   invocations. This targets the largest sampled cost without retaining large
+   noise arrays or adding persistent spare draws for every coordinate. It
+   changes the seed-to-draw mapping, so preserve the current RNG mode for
+   reproducing older runs and record the selected mode in benchmarks. Validate
+   noise moments, independence between accumulators/components, replay,
+   common-random-number alignment, and full-sequence distribution comparisons.
+   Fused and materialized scoring must still agree under the same RNG mode.
+
+2. **Reduce live parameters and scheduler state.** The generated interface
+   exposes 115 parameters, with 46 zero defaults and 30 unit defaults, while the
+   fitting surface changes seven named parameters. Add general specialization
+   for proven fixed values, preserving trial-dependent parameters and controller
+   effects. Then simplify clocks and counters when the typed schedule proves
+   that a component executes once every pass: this kernel currently emits five
+   execution-count vectors and four RNG-clock vectors. These changes should
+   preserve the RNG mapping. Measure registers, spills, and runtime after each
+   change, and retune launch geometry once register use falls. The prior forced
+   register cap caused severe spilling, so reducing required live values is the
+   useful experiment.
+
+3. **Prototype independent trial progression for each estimate.** Let an
+   estimate start its next trial as soon as it finishes, carrying its own
+   control state and RNG identity. This could recover some of the 35–45% idle
+   step slots seen with groups of 32. It is a larger change: trial indices,
+   conditional parameters, input loads, and histogram writes would differ
+   across lanes. Preserve each estimate's ordered trial history and all
+   diagnostics, then measure whether useful-work gains outweigh the additional
+   indexing and scattered writes. Keep the existing scheduler as the reference.
+
+Each stage should be a general compiler feature, with the full-subject
+100,000-estimate workload as a regression benchmark. The next experiment I
+recommend is grouped Gaussian generation; potential runtime gains remain
+unmeasured. No additional compiler optimization was implemented in this profile.
+
+Reproduce the Torch profile:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --block-size 32 --num-warps 1 \
+  --smoothing-sigma 0.5 --pseudocount 1 \
+  --profile /tmp/dawa_smoothed_profile.json \
+  --output /tmp/dawa_smoothed_profile_summary.json
+```
+
+Reproduce the hardware counters, skipping the first four candidate launches
+and collecting the first warmed candidate:
+
+```bash
+ncu --target-processes all --kernel-name pnl_batched_coevolving_graph_kernel \
+  --launch-skip 4 --launch-count 1 --kill yes \
+  --section SpeedOfLight --section LaunchStats --section Occupancy \
+  --section SchedulerStats --section WarpStateStats --section ComputeWorkloadAnalysis \
+  --force-overwrite --export /tmp/dawa_smoothed_hw \
+  .venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 --repeats 1 --block-size 32 --num-warps 1 \
+  --smoothing-sigma 0.5 --pseudocount 1 --output /tmp/dawa_smoothed_hw_run.json
+```
+
+For source sampling, replace the section options with
+`--section LaunchStats --metrics smsp__pcsamp_sample_count` and use another
+export filename. Compact measurements, sampling metadata, and the plan are
+recorded under `post_smoothing_profile_and_plan` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json). Large traces and
+Nsight reports remain outside the repository.

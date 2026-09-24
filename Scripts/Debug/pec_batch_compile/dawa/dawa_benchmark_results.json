@@ -2116,5 +2116,294 @@
       "Live Torch memory excludes CUDA context/code, allocator reservations, and register-spill storage.",
       "Smoothing one continuous outcome with optional categorical outcomes is fused; multidimensional smoothing falls back."
     ]
+  },
+  "post_smoothing_profile_and_plan": {
+    "date": "2026-09-24",
+    "commit": "c7084025ad",
+    "workload": {
+      "subject": 1,
+      "trials": 760,
+      "scored_trials": 720,
+      "estimates_per_trial_per_candidate": 100000,
+      "profiled_candidate_index": 0,
+      "candidate_values": [
+        0.3,
+        0.2,
+        -0.45,
+        10.0,
+        0.9,
+        0.9,
+        1.0,
+        5.0
+      ],
+      "seed": 29,
+      "smoothing_sigma": 0.5,
+      "pseudocount": 1.0,
+      "bins": 100,
+      "rt_range": [
+        0.0,
+        3.0
+      ],
+      "launch": {
+        "block_size": 32,
+        "num_warps": 1
+      },
+      "lca_dt": 0.01,
+      "lc_dt": 0.02,
+      "lc_euler_steps_per_pass": 10,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti"
+    },
+    "torch_profile": {
+      "simulation_kernel_seconds": 2.750483331,
+      "all_gpu_kernel_seconds": 2.7505763239999994,
+      "simulation_fraction_of_gpu_kernel_time": 0.9999661914489744,
+      "other_gpu_kernel_seconds": 9.299299999978393e-05,
+      "objective_range_seconds": 2.7952689160000004,
+      "memcpy_gpu_seconds": 5.6829999999999996e-05,
+      "peak_live_torch_mib": 0.32177734375,
+      "registers": 238,
+      "triton_reported_spills": 8
+    },
+    "nsight_hardware_metrics": {
+      "GPU Speed Of Light Throughput: Compute (SM) Throughput": {
+        "value": "58.25",
+        "unit": "%"
+      },
+      "GPU Speed Of Light Throughput: DRAM Throughput": {
+        "value": "1.29",
+        "unit": "%"
+      },
+      "GPU Speed Of Light Throughput: Memory Throughput": {
+        "value": "3.17",
+        "unit": "%"
+      },
+      "Launch Statistics: Registers Per Thread": {
+        "value": "238",
+        "unit": "register/thread"
+      },
+      "Occupancy: Theoretical Occupancy": {
+        "value": "25",
+        "unit": "%"
+      },
+      "Occupancy: Achieved Occupancy": {
+        "value": "24.23",
+        "unit": "%"
+      },
+      "Scheduler Statistics: No Eligible": {
+        "value": "46.94",
+        "unit": "%"
+      },
+      "Scheduler Statistics: Active Warps Per Scheduler": {
+        "value": "1.95",
+        "unit": "warp"
+      },
+      "Scheduler Statistics: Eligible Warps Per Scheduler": {
+        "value": "0.72",
+        "unit": "warp"
+      },
+      "Warp State Statistics: Avg. Active Threads Per Warp": {
+        "value": "32.00",
+        "unit": ""
+      },
+      "Warp State Statistics: Avg. Not Predicated Off Threads Per Warp": {
+        "value": "29.73",
+        "unit": ""
+      },
+      "Warp State Statistics: Stall Wait": {
+        "value": "1.07",
+        "unit": "inst"
+      },
+      "Warp State Statistics: Stall No Instruction": {
+        "value": "0.41",
+        "unit": "inst"
+      },
+      "Warp State Statistics: Stall Math Pipe Throttle": {
+        "value": "0.39",
+        "unit": "inst"
+      },
+      "Warp State Statistics: Stall Long Scoreboard": {
+        "value": "0.02",
+        "unit": "inst"
+      },
+      "Warp State Statistics: Stall Short Scoreboard": {
+        "value": "0.15",
+        "unit": "inst"
+      }
+    },
+    "pc_sampling": {
+      "total_samples": 58720236,
+      "attribution": {
+        "unknown": {
+          "samples": 676922,
+          "fraction": 0.011527916883712797
+        },
+        "other_generated_code": {
+          "samples": 11726560,
+          "fraction": 0.19970219465739206
+        },
+        "lc_euler": {
+          "samples": 6994024,
+          "fraction": 0.11910755944509488
+        },
+        "triton_standard_reductions": {
+          "samples": 1523232,
+          "fraction": 0.025940495198282242
+        },
+        "random_philox": {
+          "samples": 15231802,
+          "fraction": 0.2593961304923911
+        },
+        "random_other": {
+          "samples": 4063972,
+          "fraction": 0.06920905426878735
+        },
+        "random_normal_transform": {
+          "samples": 18176309,
+          "fraction": 0.30954080293546504
+        },
+        "histogram_epilogue": {
+          "samples": 327415,
+          "fraction": 0.0055758461188745905
+        }
+      },
+      "sampling_metadata": {
+        "smsp__pcsamp_aggregated_passes": 2,
+        "smsp__pcsamp_buffer_overflow": 1,
+        "smsp__pcsamp_buffer_size_bytes": 536870912,
+        "smsp__pcsamp_dropped_bytes": 0,
+        "smsp__pcsamp_interval": 7.0,
+        "smsp__pcsamp_interval_cycles": 4096.0
+      },
+      "notes": [
+        "Sampled instruction addresses are an approximate attribution of kernel activity, not exact exclusive wall-clock times.",
+        "Profiler auto-adjusted the sampling buffer to 512 MiB; overflow flag was set and final dropped-bytes metric was zero. Two passes were aggregated.",
+        "Profiler sampling buffers are additional instrument memory, excluded from ordinary fitting-memory measurements."
+      ]
+    },
+    "source_inspection": {
+      "parameters": 115,
+      "fitted_parameter_names": [
+        "Bias Mechanism.intercept",
+        "Control Units\n[Color, Location].gain",
+        "LC.intercept",
+        "LC.mode",
+        "LC.slope",
+        "RT_GATE.intercept",
+        "Response Units\n[Left, Right].termination_threshold"
+      ],
+      "parameter_defaults_zero": 46,
+      "parameter_defaults_one": 30,
+      "gaussian_draw_calls_per_pass": 10,
+      "rng_component_widths": [
+        2,
+        4,
+        2,
+        2
+      ],
+      "emitted_execution_count_vectors": 5,
+      "emitted_rng_clock_vectors": 4,
+      "generated_source_sha256": "0316a08bc7526105f5b40ce5bc9e8d7a4e7036e9fed66534fa1b835c75effaa8",
+      "kernel_hash": "c4162b87d5bc786f2876cda77970b0acbe172aeb09b7b1c627ec579446ec489a"
+    },
+    "step_utilization_diagnostic": {
+      "estimates": 4096,
+      "trials": 760,
+      "seed": 29,
+      "lca_dt": 0.01,
+      "note": "Diagnostic response-step utilization, not a speedup measurement. Includes all trials.",
+      "candidates": [
+        {
+          "candidate": 0,
+          "mean_response_steps": 78.24910920795641,
+          "step_quantiles": {
+            "min": 11.0,
+            "p50": 73.0,
+            "p90": 122.0,
+            "p99": 174.0,
+            "max": 379.0
+          },
+          "step_utilization": {
+            "32": 0.5532641210184556,
+            "64": 0.51615199402471,
+            "128": 0.4846714481190065
+          }
+        },
+        {
+          "candidate": 1,
+          "mean_response_steps": 71.62298005756578,
+          "step_quantiles": {
+            "min": 15.0,
+            "p50": 69.0,
+            "p90": 99.0,
+            "p99": 129.0,
+            "max": 209.0
+          },
+          "step_utilization": {
+            "32": 0.6522107680603838,
+            "64": 0.6193896763697945,
+            "128": 0.5912993374376577
+          }
+        },
+        {
+          "candidate": 2,
+          "mean_response_steps": 76.18757902446546,
+          "step_quantiles": {
+            "min": 20.0,
+            "p50": 71.0,
+            "p90": 108.0,
+            "p99": 150.0,
+            "max": 267.0
+          },
+          "step_utilization": {
+            "32": 0.6386792394906786,
+            "64": 0.6009520887334898,
+            "128": 0.5687954587629246
+          }
+        },
+        {
+          "candidate": 3,
+          "mean_response_steps": 47.044449013157895,
+          "step_quantiles": {
+            "min": 16.0,
+            "p50": 44.0,
+            "p90": 64.0,
+            "p99": 98.0,
+            "max": 198.0
+          },
+          "step_utilization": {
+            "32": 0.574990435638601,
+            "64": 0.5288783740743874,
+            "128": 0.4917475521599145
+          }
+        }
+      ]
+    },
+    "optimization_order": [
+      {
+        "priority": 1,
+        "change": "Vectorize independent Gaussian generation across LCA coordinates.",
+        "rationale": "About 64% of sampled locations map to RNG. Four width-2/4 LCA draws could share four Philox invocations instead of ten.",
+        "validation": "Version or expose RNG policy: seed-to-draw mapping changes. Test Gaussian moments, cross-coordinate/component independence, replay, common random numbers, strict truncation, and full-sequence distribution parity. Compare fused and materialized scoring under the same policy."
+      },
+      {
+        "priority": 2,
+        "change": "Specialize fixed parameters and simplify redundant scheduler state.",
+        "rationale": "238 registers/thread limits occupancy to 25%. Classify fitted, trial-varying, controlled, and invariant values, fold safe constants, and share clocks only when typed schedule rules prove equivalence.",
+        "validation": "Preserve RNG mapping; compare outputs and trial densities, including resets and conditional controls. Measure registers, spills, and warm runtime; retune launch geometry after reducing live state."
+      },
+      {
+        "priority": 3,
+        "change": "Prototype per-estimate trial progression after the simpler improvements.",
+        "rationale": "Only 55-65% of 32-lane block step slots are useful in a 4096-estimate diagnostic. Let completed estimates start their next trial while carrying their own state.",
+        "validation": "Preserve within-estimate trial order, state, trial-conditional parameters, RNG counters, masks, histogram bins and diagnostics. Account for scattered input loads and histogram writes. This is a larger scheduling change."
+      }
+    ],
+    "notes": [
+      "Hardware and PC-sampling profiles use separate warmed first-candidate launches at 100000 estimates. Nsight replay timings are not fitting-throughput measurements.",
+      "An all-instruction instrumented profile was stopped for excessive overhead and contributes no measurements.",
+      "Step utilization uses unchanged materialized trajectories at 4096 estimates for all four proposals; block sizes 32/64/128 are post-hoc groupings, not new timing measurements.",
+      "The CPU copy event mostly waits for the simulation kernel; measured GPU copies total about 57 microseconds.",
+      "Optimization suggestions are a plan; no additional compiler optimization was implemented during this profile."
+    ]
   }
 }

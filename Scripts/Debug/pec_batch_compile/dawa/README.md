@@ -196,6 +196,11 @@ still uses the materialized reference. See the
 [smoothing benchmark](dawa_benchmark_results.md#smoothing-and-pseudocounts-with-count-only-scoring)
 for timings, memory, and numerical validation.
 
+The [post-smoothing profile and optimization plan](dawa_benchmark_results.md#post-smoothing-profile-and-optimization-plan)
+identifies Gaussian generation, register use, and waiting for slower estimates
+as the next targets. It recommends grouped Gaussian generation first, followed
+by parameter/scheduler simplification and a larger trial-scheduling prototype.
+
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports
 gradients through all seven fitting parameters in its RT observation model.
