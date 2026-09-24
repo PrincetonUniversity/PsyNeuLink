@@ -204,11 +204,6 @@ jobs:
       shell: bash
       run: pip install "${{ steps.install.outputs.wheel }}[${{ matrix.extras }}]" -c broken_trans_deps.txt
 
-    - name: Install optional dependencies
-      if: matrix.extras
-      shell: bash
-      run: pip install "${{ steps.install.outputs.wheel }}[${{ matrix.extras }}]" -c broken_trans_deps.txt
-
     - name: Save wheels cache
       uses: actions/cache/save@v6
       if: always()
