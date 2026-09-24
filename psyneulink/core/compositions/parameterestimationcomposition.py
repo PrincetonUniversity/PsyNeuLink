@@ -406,6 +406,14 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition's `controller <Composition.controller>` to set its
         `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
+    noise_stream_policy : 'independent' or 'shared_seed' : default 'independent'
+        specifies whether different random Components receive distinct seeds within each estimate. The default
+        avoids accidentally correlated noise when fitting models with multiple stochastic Components. Use
+        'shared_seed' to reproduce the legacy behavior of broadcasting one seed to all Components. This is a
+        constructor-only setting, passed to the controller's `noise_stream_policy
+        <OptimizationControlMechanism.noise_stream_policy>`. With **same_seed_for_all_parameter_combinations=True**,
+        each Component reuses its own stream across parameter candidates under either policy.
+
     distributed : bool : default False
         specifies whether to evaluate candidate parameterizations in parallel across a Dask cluster during fitting;
         forwarded to the ``PECOptimizationFunction`` (a ``PECOptimizationFunction`` passed explicitly as
@@ -512,6 +520,11 @@ class ParameterEstimationComposition(Composition):
         of that Parameter (see `same_seed_for_all_allocations
         <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional details).
 
+    noise_stream_policy : 'independent' or 'shared_seed'
+        contains the controller's seed assignment policy (see `noise_stream_policy
+        <OptimizationControlMechanism.noise_stream_policy>`). Independent streams are the PEC default; this changes
+        seeded results for models with multiple random Components compared with the legacy 'shared_seed' policy.
+
     optimized_parameter_values : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the `model
         <ParameterEstimationComposition.model>` that best fit the `data <ParameterEstimationComposition.data>` when
@@ -570,6 +583,7 @@ class ParameterEstimationComposition(Composition):
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
         initial_seed = SharedParameter(attribute_name='controller')
         same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
+        noise_stream_policy = SharedParameter(attribute_name='controller')
 
     @handle_external_context()
     @check_user_specified
@@ -599,6 +613,7 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
+        noise_stream_policy: str = 'independent',
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC
@@ -758,6 +773,7 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            noise_stream_policy=noise_stream_policy,
             distributed=distributed,
             distributed_options=distributed_options,
             context=context,
@@ -931,6 +947,7 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
+        noise_stream_policy,
         distributed=False,
         distributed_options=None,
         context=None,
@@ -1015,6 +1032,7 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
+            noise_stream_policy=noise_stream_policy,
             context=context,
             return_results=True,
         )

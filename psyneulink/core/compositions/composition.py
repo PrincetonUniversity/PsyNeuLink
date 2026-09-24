@@ -5767,7 +5767,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         modulation=modulation,
                         variable=(OWNER_VALUE, functools.partial(self.parameter_CIM.get_input_port_position, interface_input_port)),
                         transfer_function=Identity,
-                        modulates=receiver,
+                        # Preserve the transformation when rerouting a projection
+                        # from an enclosing Composition (e.g., a seed stream offset).
+                        modulates=ControlProjection(receiver=receiver, function=comp_projection.function),
                         name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
                 self.parameter_CIM.add_ports([control_signal], context=context)
@@ -9848,7 +9850,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position,
                                                      interface_input_port)),
             transfer_function=Identity,
-            modulates=receiver,
+            modulates=ControlProjection(receiver=receiver, function=projection.function),
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
         )
         if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
