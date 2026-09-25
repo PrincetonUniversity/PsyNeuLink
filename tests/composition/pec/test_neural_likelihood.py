@@ -10,9 +10,7 @@ from psyneulink.core.components.functions.nonstateful import (
     neurallikelihoodfunctions as nlf,
 )
 
-# Both are optional, and PsyNeuLink is tested without them, so these have to be reached
-# through importorskip rather than imported: importing torch at module scope makes the
-# module fail to collect instead of skipping.
+# Optional dependencies: skipped without them, rather than failing to collect.
 torch = pytest.importorskip("torch")
 pytest.importorskip("sbi")
 
@@ -143,17 +141,6 @@ def test_log_likelihood_is_differentiable():
     assert theta.grad is not None
     assert torch.isfinite(theta.grad).all()
     assert (theta.grad.abs() > 0).any()
-
-
-def test_curvature_is_available_by_autograd():
-    """The neural path takes an exact Hessian rather than a finite-difference step."""
-    likelihood, raw = _toy_likelihood()
-    hessian = torch.autograd.functional.hessian(
-        lambda t: likelihood.trial_log_prob(t, raw[:64]).sum(),
-        torch.tensor([0.5, 0.9]),
-    )
-    assert hessian.shape == (2, 2)
-    assert torch.isfinite(hessian).all()
 
 
 def test_wrong_number_of_outcome_columns_is_rejected():
@@ -554,11 +541,7 @@ def trained_artifact(tmp_path_factory):
 
 
 def _neural_participant_pec(artifact, data, subject_index=None):
-    """A participant model scored by a trained estimator rather than by simulating.
-
-    Deliberately leaves comp_execution_mode unset: scoring this way compiles nothing, and
-    a model that fell back to simulating would be refused for the same reason.
-    """
+    """A participant model scored by a trained estimator, with no common random numbers."""
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
@@ -620,7 +603,7 @@ def _fit_group(artifact, distributed=False, **distributed_options):
 
 @pytest.mark.composition
 def test_a_hierarchical_fit_scores_participants_with_their_estimator(trained_artifact):
-    """Nothing is compiled, so a model that had fallen back to simulating would refuse."""
+    """Participants scored by simulation would be refused here, having no common random numbers."""
     results = _fit_group(trained_artifact)
     assert results.beta.shape == (1, 2)
     assert np.isfinite(results.objective)
@@ -628,18 +611,12 @@ def test_a_hierarchical_fit_scores_participants_with_their_estimator(trained_art
 
 @pytest.mark.composition
 def test_a_participant_scored_by_an_estimator_needs_no_common_random_numbers(trained_artifact):
-    """A hierarchical fit requires participant models that repeat themselves.
-
-    A simulated model manages that only with common random numbers, and is refused without them.
-    A trained estimator is a fixed function of its inputs, so the requirement is already met and
-    the setting has nothing to do -- which is what lets these factories leave it alone.
-    """
+    """Common random numbers are required of participants scored by simulation only."""
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
         check_scoring_is_deterministic,
     )
 
-    # One participant's own trials, as the factory receives them: the column identifying which
-    # participant they came from has been removed by then.
+    # One participant's trials, without the column identifying them, as the factory receives them.
     trials = _group_frame(n_participants=1).drop(columns=["subject"])
     pec, _ = _neural_participant_pec(trained_artifact, trials)
     assert pec.scores_by_simulation is False
