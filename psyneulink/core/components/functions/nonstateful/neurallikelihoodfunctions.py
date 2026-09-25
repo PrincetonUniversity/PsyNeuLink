@@ -25,7 +25,6 @@ trial it is scoring rather than on the parameters alone.
 from __future__ import annotations
 
 import copy
-import hashlib
 import json
 import warnings
 from collections.abc import Callable, Mapping, Sequence
@@ -89,7 +88,6 @@ class NeuralLikelihoodProvenance:
     epochs: int
     val_nll: float
     seed: int
-    simulator_hash: str
     psyneulink_version: str
     sbi_version: str
 
@@ -113,7 +111,6 @@ class NeuralLikelihoodProvenance:
             epochs=raw["epochs"],
             val_nll=raw["val_nll"],
             seed=raw["seed"],
-            simulator_hash=raw["simulator_hash"],
             psyneulink_version=raw["psyneulink_version"],
             sbi_version=raw["sbi_version"],
         )
@@ -316,21 +313,6 @@ def _trial_features(inputs, n_trials: int) -> np.ndarray | None:
     features = np.concatenate(columns, axis=1)
     varying = features.std(axis=0) > 0
     return features[:, varying] if varying.any() else None
-
-
-def _simulator_hash(pec, n_trial_features: int) -> str:
-    """Identify the simulator a network was trained on.
-
-    Changing the model's structure while keeping the parameter names invalidates a
-    trained estimator without changing anything else recorded here.
-    """
-    parts = [type(pec).__name__, str(n_trial_features)]
-    try:
-        composition = pec.nodes[0]
-        parts += sorted(node.name for node in composition.nodes)
-    except Exception:
-        pass
-    return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
 
 def _split(thetas, n):
@@ -649,8 +631,6 @@ def train_neural_likelihood(
         epochs=int(epochs),
         val_nll=float(val_nll),
         seed=int(seed),
-        simulator_hash=_simulator_hash(pec if pec is not None else pec_factory,
-                                       int(cond.shape[1] - len(names))),
         psyneulink_version=str(pnl_version),
         sbi_version=str(_require_sbi().__version__),
     )

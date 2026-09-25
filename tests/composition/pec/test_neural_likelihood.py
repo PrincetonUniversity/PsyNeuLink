@@ -53,7 +53,7 @@ def _toy_likelihood(epochs=3, seed=0):
         outcome_names=OUTCOMES, categorical=categorical, categories=categories,
         log_transform=True, n_trial_features=0, n_parameter_samples=len(theta),
         n_trials_per_sample=1, epochs=epochs, val_nll=val_nll, seed=seed,
-        simulator_hash="toy", psyneulink_version="test", sbi_version="test",
+        psyneulink_version="test", sbi_version="test",
     )
     return nlf.NeuralLikelihood(
         estimator, provenance, (x[:256].clone(), cond[:256].clone())
