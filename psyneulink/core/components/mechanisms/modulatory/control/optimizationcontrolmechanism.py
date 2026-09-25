@@ -1506,9 +1506,11 @@ class OptimizationControlMechanism(ControlMechanism):
         determines how the randomization ControlSignal seeds different Components. With 'independent', each estimate
         is assigned a block of consecutive seeds, with one slot per entry in `random_variables
         <OptimizationControlMechanism.random_variables>` (in that list's order). The sequence is deterministic for a
-        fixed initial seed and model ordering, and does not depend on worker or thread count. Seeds wrap within
-        the uint32 range for float64 execution or the exactly representable integer range for float32 execution.
-        A single evaluation cannot request more estimates than there are distinct blocks. Reusing the same seeds
+        fixed initial seed and model ordering, and does not depend on worker or thread count or execution precision.
+        Seeds use the range [0, 2**24), which is exactly representable in both float32 and float64. With S random
+        Components, there are floor(2**24 / S) distinct blocks; the sequence wraps after that many estimates.
+        This limits distinct seed assignments, not the number of random draws from each seed. A single evaluation
+        cannot request more estimates than there are distinct blocks. Reusing the same seeds
         across candidate allocations preserves each Component's own stream; it does not couple different Components.
 
     num_trials_per_estimate : int or None
@@ -3329,6 +3331,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                   len(self.parameters.control_allocation_search_space.get()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
+        # Defer this lookup to avoid resolving transferfunctions during cyclic module initialization.
         from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 
         assert "net_outcome" in tags
@@ -3841,14 +3844,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if self.parameters.noise_stream_policy._get(context) == 'independent':
             # Seeds pass through floating-point ControlSignals before reaching the
-            # RNG's uint32 seed. Keep every base AND component seed exactly representable.
-            seed_limit = 2**24 if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType() else 2**32
+            # RNG's uint32 seed. Use the same range for all backends/precisions so
+            # every base AND component seed is exact even on a float32 control path.
+            seed_limit = 2**24
             num_streams = len(self.random_variables)
             num_blocks = seed_limit // num_streams
             if num_estimates > num_blocks:
                 raise OptimizationControlMechanismError(
                     f"'{self.name}' requests {num_estimates} estimates with {num_streams} independent noise streams; "
-                    f"at most {num_blocks} estimates have distinct seeds at the current execution precision."
+                    f"at most {num_blocks} estimates have distinct seeds in the common float32-safe seed range."
                 )
             start = int(self._seed_counter) % num_blocks
             seeds = [((start + i) % num_blocks) * num_streams for i in range(num_estimates)]

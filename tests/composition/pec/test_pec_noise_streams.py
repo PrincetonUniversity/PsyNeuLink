@@ -10,7 +10,6 @@ from psyneulink.core.globals.parameters import ParameterError
 
 
 pytestmark = pytest.mark.usefixtures('set_threads_to_one')
-MODES = ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)]
 
 
 def _make_pec(*, policy=None, estimates=8, seed=29, same_seed=True, nested=False, lca=False, streams=2):
@@ -57,13 +56,12 @@ def _make_pec(*, policy=None, estimates=8, seed=29, same_seed=True, nested=False
     return pec, {source: np.zeros((2, 1))}, captured
 
 
-@pytest.mark.parametrize('mode', MODES)
 @pytest.mark.parametrize('policy', [None, 'shared_seed'])
 @pytest.mark.parametrize('nested', [False, True])
-def test_component_noise_streams_and_candidate_replay(mode, policy, nested):
+def test_component_noise_streams_and_candidate_replay(func_mode, policy, nested):
     """Check actual simulated draws, including routing through nested compositions."""
     pec, inputs, captured = _make_pec(policy=policy, nested=nested)
-    pec.controller.parameters.comp_execution_mode.set(mode)
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.run(inputs=inputs)
     assert len(captured) == 2
     np.testing.assert_array_equal(captured[0], captured[1])
@@ -77,7 +75,7 @@ def test_component_noise_streams_and_candidate_replay(mode, policy, nested):
 
     # PNL's MT19937 initialization uses a one-element seed array. Comparing to
     # NumPy also catches offsets being applied twice at nested boundaries.
-    if mode == 'Python' or pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.DoubleType():
+    if func_mode == 'Python' or pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.DoubleType():
         expected = np.array([
             [np.random.RandomState([29 + j if policy == 'shared_seed' else 2 * (29 + j) + i]).normal(size=2)
              for i in range(2)] for j in range(8)
@@ -85,10 +83,9 @@ def test_component_noise_streams_and_candidate_replay(mode, policy, nested):
         np.testing.assert_allclose(captured[0], expected, atol=1e-14)
 
 
-@pytest.mark.parametrize('mode', MODES)
-def test_fresh_streams_across_candidates(mode):
+def test_fresh_streams_across_candidates(func_mode):
     pec, inputs, captured = _make_pec(same_seed=False)
-    pec.controller.parameters.comp_execution_mode.set(mode)
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.run(inputs=inputs)
     assert len(captured) == 2
     assert not np.array_equal(captured[0], captured[1])
@@ -99,6 +96,8 @@ def test_fresh_streams_across_candidates(mode):
 @pytest.mark.llvm
 @pytest.mark.parametrize('lca', [False, True])
 def test_independent_noise_statistics_and_thread_replay(lca):
+    # log_likelihood currently supports only LLVM; CPU thread replay is specific
+    # to that API. The run-based test below exercises the same models on PTX.
     pec, inputs, _ = _make_pec(estimates=1024, lca=lca)
     _, first = pec.log_likelihood(0., inputs=inputs, return_sim_data=True)
     try:
@@ -113,8 +112,26 @@ def test_independent_noise_statistics_and_thread_replay(lca):
     np.testing.assert_allclose(draws.var(axis=0), 1., atol=.15)
 
 
-@pytest.mark.parametrize('float_type, seed_limit', [(pnlvm.ir.FloatType, 2**24), (pnlvm.ir.DoubleType, 2**32)])
-def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type, seed_limit):
+@pytest.mark.parametrize('lca', [False, True])
+@pytest.mark.parametrize('ocm_mode', [pytest.param('LLVM', marks=pytest.mark.llvm),
+                                    pytest.helpers.cuda_param('PTX')])
+def test_independent_noise_statistics(ocm_mode, lca):
+    # Keep large-sample statistics on compiled backends; the smaller replay tests
+    # above cover Python without thousands of interpreted simulations.
+    pec, inputs, captured = _make_pec(estimates=1024, lca=lca)
+    pec.controller.parameters.comp_execution_mode.set(ocm_mode)
+    pec.run(inputs=inputs)
+    first, second = captured
+    np.testing.assert_array_equal(first, second)
+    draws = first.reshape(-1, 2)
+    assert abs(np.corrcoef(draws.T)[0, 1]) < .1
+    np.testing.assert_allclose(draws.mean(axis=0), 0., atol=.1)
+    np.testing.assert_allclose(draws.var(axis=0), 1., atol=.15)
+
+
+@pytest.mark.parametrize('float_type', [pnlvm.ir.FloatType, pnlvm.ir.DoubleType])
+def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type):
+    seed_limit = 2**24
     monkeypatch.setattr(pnlvm.LLVMBuilderContext, 'default_float_ty', float_type())
     pec, _, _ = _make_pec(streams=3, seed=2**32 - 1)
     controller = pec.controller
@@ -122,6 +139,9 @@ def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type
     context = Context(execution_id=None)
     bases = controller.gen_new_seed_sequence(context)
     seeds = np.array(bases)[:, None] + np.arange(3)
+    np.testing.assert_array_equal(
+        bases, [(seed_limit // 3 - 2) * 3, (seed_limit // 3 - 1) * 3, 0, 3, 6, 9, 12, 15]
+    )
     assert seeds.min() >= 0
     assert seeds.max() < seed_limit
     assert len(np.unique(seeds)) == seeds.size
@@ -135,11 +155,11 @@ def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type
         controller.gen_new_seed_sequence(context)
 
 
-@pytest.mark.llvm
-def test_large_initial_seed_replays_without_collapsing_streams():
-    pec, inputs, _ = _make_pec(seed=2**32 - 1, streams=3)
-    _, first = pec.log_likelihood(0., inputs=inputs, return_sim_data=True)
-    _, second = pec.log_likelihood(0., inputs=inputs, return_sim_data=True)
+def test_large_initial_seed_replays_without_collapsing_streams(func_mode):
+    pec, inputs, captured = _make_pec(seed=2**32 - 1, streams=3)
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.run(inputs=inputs)
+    first, second = captured
     np.testing.assert_array_equal(first, second)
     assert first.shape == (2, 8, 3)
     # These would coincide if a seed were rounded on the float32 control path.
@@ -155,35 +175,50 @@ def test_policy_validation():
 
 
 @pytest.mark.parametrize('policy', [None, 'shared_seed'])
-def test_ocm_default_and_legacy_noise_streams(policy):
+def test_ocm_default_and_legacy_noise_streams(func_mode, policy):
     source = pnl.ProcessingMechanism()
     nodes = [pnl.ProcessingMechanism(function=pnl.NormalDist(seed=10)) for _ in range(2)]
     model = pnl.Composition(pathways=[[source, node] for node in nodes], retain_old_simulation_data=True)
     options = {} if policy is None else {'noise_stream_policy': policy}
     controller = pnl.OptimizationControlMechanism(
         agent_rep=model, num_estimates=8, initial_seed=29,
-        objective_mechanism=pnl.ObjectiveMechanism(monitor=nodes, function=pnl.LinearCombination(operation=pnl.SUM)),
+        objective_mechanism=pnl.ObjectiveMechanism(monitor=[*nodes, source],
+                                                  function=pnl.LinearCombination(operation=pnl.SUM)),
         same_seed_for_all_allocations=True,
-        control_signals=[pnl.ControlSignal(modulates=('slope', source), allocation_samples=[0., 1.])],
+        control_signals=[pnl.ControlSignal(modulates=('slope', source), allocation_samples=[0., 1.],
+                                           cost_options=pnl.CostFunctions.NONE)],
         **options,
     )
     model.add_controller(controller)
-    model.run(inputs={source: [[0.]]})
+    controller.parameters.comp_execution_mode.set(func_mode)
+    controller.function.save_values = True
+    model.run(inputs={source: [[1.]]})
     assert controller.noise_stream_policy == (policy or 'independent')
-    samples = np.asarray(model.simulation_results).reshape(2, 8, 2)
-    np.testing.assert_array_equal(samples[0], samples[1])
     expected = np.array([
         [np.random.RandomState([29 + j if policy == 'shared_seed' else 2 * (29 + j) + i]).normal()
          for i in range(2)] for j in range(8)
     ])
-    np.testing.assert_allclose(samples[0], expected, atol=1e-14)
+    # Compiled OCM exposes objective values, rather than Python simulation_results.
+    # The objective sums the noise components and source, then averages estimates.
+    # Distinct candidate values also catch selection using the unaggregated grid.
+    atol = 1e-6 if func_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32' else 1e-14
+    np.testing.assert_allclose(np.asarray(controller.function.saved_values).ravel(),
+                               expected.sum(axis=1).mean() + np.array([0., 1.]), atol=atol)
+    np.testing.assert_array_equal(controller.optimal_control_allocation[0], [1.])
+    if func_mode == 'Python':
+        samples = np.asarray(model.simulation_results).reshape(2, 8, 2)
+        np.testing.assert_array_equal(samples[0], samples[1])
+        np.testing.assert_allclose(samples[0], expected, atol=1e-14)
 
 
-@pytest.mark.llvm
-def test_single_stream_preserves_existing_sequence():
-    # Changing PEC's default must not change seeded results for one random component.
-    independent, inputs, _ = _make_pec(streams=1)
-    _, actual = independent.log_likelihood(0., inputs=inputs, return_sim_data=True)
-    shared, inputs, _ = _make_pec(streams=1, policy='shared_seed')
-    _, expected = shared.log_likelihood(0., inputs=inputs, return_sim_data=True)
+@pytest.mark.parametrize('ocm_mode', [pytest.param('LLVM', marks=pytest.mark.llvm),
+                                    pytest.helpers.cuda_param('PTX')])
+def test_single_stream_preserves_existing_sequence(ocm_mode):
+    # Preserve the legacy sequence for seeds below the common seed limit.
+    independent, inputs, actual = _make_pec(streams=1)
+    independent.controller.parameters.comp_execution_mode.set(ocm_mode)
+    independent.run(inputs=inputs)
+    shared, inputs, expected = _make_pec(streams=1, policy='shared_seed')
+    shared.controller.parameters.comp_execution_mode.set(ocm_mode)
+    shared.run(inputs=inputs)
     np.testing.assert_array_equal(actual, expected)
