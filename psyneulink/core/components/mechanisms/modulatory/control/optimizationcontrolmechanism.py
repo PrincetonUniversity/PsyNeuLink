@@ -1093,7 +1093,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component, ComponentError
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
-from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions, Linear
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -1102,7 +1101,6 @@ from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port, Port
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
@@ -2973,6 +2971,8 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         """
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         super()._instantiate_output_ports(context)
 
         for control_signal in self.control_signals:
@@ -2998,6 +2998,9 @@ class OptimizationControlMechanism(ControlMechanism):
         return control_allocation
 
     def _create_randomization_control_signal(self, context):
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions, Linear
+        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
@@ -3326,6 +3329,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                   len(self.parameters.control_allocation_search_space.get()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         assert "net_outcome" in tags
         args = [ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_state_struct_type(self).as_pointer(),
