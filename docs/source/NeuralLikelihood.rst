@@ -33,8 +33,9 @@ the inputs used to run it::
     likelihood.save("ddm_nle.pt")
 
 The keys of **bounds** must name the fitted parameters in the order in which the model lists them, and
-**outcome_names** must name the outcome variables in the order of its ``outcome_variables``. The number of
-trials simulated for each set of parameter values is the number of trials in **inputs**.
+**outcome_names** must be the column names of the **data** that the estimator will be used to fit, which
+are in the order of the model's ``outcome_variables``. The number of trials simulated for each set of
+parameter values is the number of trials in **inputs**.
 
 To distribute the simulations over a `Dask <https://www.dask.org>`_ cluster, specify a **pec_factory**
 in place of **pec**, together with **distributed_options** (see :ref:`Distributed Fitting

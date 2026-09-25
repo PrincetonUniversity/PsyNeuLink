@@ -458,7 +458,8 @@ def train_neural_likelihood(
         lists them.  The estimator is valid only within these ranges.
 
     outcome_names : Sequence[str]
-        specifies the names of the outcome variables, in the order of the model's ``outcome_variables``.
+        specifies the names of the outcome variables, which must be the column names of the **data** the
+        estimator will be used to fit, in the order of the model's ``outcome_variables``.
 
     pec : ParameterEstimationComposition : default None
         specifies a model to simulate in this process.  Requires **inputs**.
