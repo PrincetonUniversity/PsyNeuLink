@@ -72,7 +72,7 @@ jobs:
 
           # fp32 run on windows x64 python 3.11
           - python-version: '3.11'
-            os: ubuntu
+            os: windows
             arch: 'x64'
             extra-args: '--fp-precision=fp32'
 
