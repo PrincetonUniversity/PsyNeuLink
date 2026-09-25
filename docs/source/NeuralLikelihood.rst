@@ -3,21 +3,15 @@
 Neural Likelihoods
 ==================
 
-`ParameterEstimationComposition` scores a candidate parameter setting by simulating the
-model and turning the simulated outcomes into a density by kernel density estimation.
-Every evaluation therefore costs ``num_estimates`` simulations, and the density it
-produces carries the Monte Carlo noise of those simulations.
+In `data fitting <ParameterEstimationComposition_Data_Fitting>`, a `ParameterEstimationComposition`
+computes the likelihood of its **data** under each set of parameter values it considers by simulating
+the model ``num_estimates`` times and estimating a density from the simulated outcomes. A neural
+likelihood is a density estimator that is trained beforehand, on data simulated from the model, and then
+used in place of those simulations. Each evaluation of the likelihood then requires a single evaluation
+of the estimator, and the likelihood varies smoothly with the parameter values.
 
-A neural likelihood replaces that pipeline with a conditional density model
-``p(outcomes | parameters)``, trained once on simulated data. Fitting afterwards costs a
-network forward pass rather than a batch of simulations, and the surface is smooth and
-differentiable rather than noisy.
-
-The simulation cost is paid once instead of on every evaluation, and the trained estimator
-can be reused across fits of the same model. How much cheaper an evaluation becomes depends
-on how many simulations the density would otherwise need: scoring 400 trials of a
-drift-diffusion model takes roughly 820 ms with ``num_estimates=300`` and roughly 4 ms with
-a trained estimator.
+An estimator is trained once for a given model and range of parameter values, and can be reused for
+any fit of that model within that range, including a :ref:`hierarchical fit <HierarchicalFitting>`.
 
 
 .. _Neural_Likelihood_Training:
@@ -25,132 +19,116 @@ a trained estimator.
 Training an Estimator
 ---------------------
 
-Training is explicit and offline: it takes minutes to hours, and reusing a saved estimator
-is the point.  Give it a model to simulate, either one already built::
+`train_neural_likelihood` simulates the model at parameter values drawn from within the ranges specified
+in **bounds**, and trains an estimator on the results. The model can be specified directly, together with
+the inputs used to run it::
 
-    from psyneulink import train_neural_likelihood
-
-    likelihood = train_neural_likelihood(
+    likelihood = pnl.train_neural_likelihood(
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
         outcome_names=("decision", "response_time"),
         pec=pec,
-        inputs=inputs,
+        inputs={comp: trial_inputs},
         n_parameter_samples=20000,
     )
     likelihood.save("ddm_nle.pt")
 
-or a callable that builds one::
+The keys of **bounds** must name the fitted parameters in the order in which the model lists them, and
+**outcome_names** must name the outcome variables in the order of its ``outcome_variables``. The number of
+trials simulated for each set of parameter values is the number of trials in **inputs**.
 
-    likelihood = train_neural_likelihood(
+To distribute the simulations over a `Dask <https://www.dask.org>`_ cluster, specify a **pec_factory**
+in place of **pec**, together with **distributed_options** (see :ref:`Distributed Fitting
+<DistributedFitting>`)::
+
+    likelihood = pnl.train_neural_likelihood(
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
         outcome_names=("decision", "response_time"),
         pec_factory=build_pec,
         n_parameter_samples=20000,
         n_trials_per_sample=100,
+        distributed_options={"n_workers": 8},
     )
 
-``build_pec`` is a ``pec_factory(data) -> (pec, inputs)``, the same contract distributed
-and hierarchical fitting use (see :ref:`DistributedFitting`). It is called with a
-placeholder table, since training simulates rather than fits, and **n_trials_per_sample**
-sets how many trials that table holds.
+``build_pec(data) -> (pec, inputs)`` is a top-level function that builds the model, as for distributed
+fitting. Each worker calls it with a table of **n_trials_per_sample** rows to build its own copy of the
+model.
 
-Passing a **pec** instead requires **inputs**, and their length is how many trials each
-draw simulates -- independently of how much data the model was built around. Training on
-longer runs than the data being fitted is a matter of passing longer inputs.
-
-Parameter draws are taken across the box given by **bounds**, which is also the region the
-estimator is valid over.
-
-Generation is embarrassingly parallel, so ``distributed_options`` spreads it over a Dask
-cluster, resolved exactly as for distributed fitting. This requires **pec_factory**: a
-composition cannot be sent to another process, so each worker builds its own. Building a
-model costs far more than simulating from it, which is why the draws are divided no
-further than one share per worker, and why distributing is worth it only above roughly a
-few hundred parameter draws -- below that the builds cost more than the simulations they
-replace.
 
 .. _Neural_Likelihood_Fitting:
 
 Fitting with an Estimator
 -------------------------
 
-``likelihood_estimator="neural"`` replaces the likelihood a model is scored with::
+To use a trained estimator, specify ``likelihood_estimator="neural"``, and the estimator, or the path to
+one saved with its `save <NeuralLikelihood.save>` method, as the ``"artifact"`` of
+**likelihood_estimator_kwargs**::
 
-    pec = ParameterEstimationComposition(
-        nodes=[model],
-        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000)},
-        outcome_variables=[decision.output_ports[DECISION_OUTCOME],
-                           decision.output_ports[RESPONSE_TIME]],
+    pec = pnl.ParameterEstimationComposition(
+        nodes=[comp],
+        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000),
+                    ("threshold", decision): np.linspace(0.3, 1.5, 1000)},
+        outcome_variables=[decision.output_ports[pnl.DECISION_OUTCOME],
+                           decision.output_ports[pnl.RESPONSE_TIME]],
         data=data,
-        optimization_function=PECOptimizationFunction(method="differential_evolution"),
+        optimization_function="differential_evolution",
         likelihood_estimator="neural",
         likelihood_estimator_kwargs={"artifact": "ddm_nle.pt"},
     )
+    pec.run(inputs={comp: trial_inputs})
 
-**artifact** is either a trained `NeuralLikelihood` or the path to one. Nothing is
-simulated during the fit, so the model is never compiled and ``comp_execution_mode`` does
-not apply.
+The model is not simulated in the fit, so it is not compiled. `log_likelihood
+<ParameterEstimationComposition.log_likelihood>` also uses the estimator, but cannot return simulated data
+(``return_sim_data``).
 
-In a hierarchical fit it is set on the participant models the factory builds, since that
-is where the model itself is declared; setting it on the group raises, rather than being
-accepted and then not used.
-
-A single-participant fit benefits as much as a group one: the estimator is a property of
-the model, not of how many participants are being fitted.
+In a :ref:`hierarchical fit <HierarchicalFitting>`, ``likelihood_estimator`` is specified for the
+participant models built by the ``pec_factory``, and not for the group.
 
 
-.. _Neural_Likelihood_Conditioning:
+.. _Neural_Likelihood_Trial_Features:
 
-Conditioning
-------------
+Trial Features
+--------------
 
-The conditioning vector is the fitted parameters followed by the per-trial features, which
-are the values entering the composition's input nodes on that trial. A model whose trials
-differ -- congruent against incongruent, switch against repeat -- is therefore conditioned
-on which trial it is scoring rather than on the parameters alone.
+Where trials differ from one another (for example, congruent and incongruent trials), an estimator
+represents the distribution of outcomes on each kind of trial, which it distinguishes by the values of the
+model's inputs on each trial. Those inputs that vary across the trials simulated in training are recorded
+with the estimator.
 
-Features that do not vary across trials carry no information and are dropped, so a model
-driven by a constant input is conditioned on its parameters alone.
-
-The features are read from the ``inputs`` the factory returns during training, and from
-the ``inputs`` passed to `run <Composition.run>` when fitting. They have to describe trials
-the same way in both, and a fit that cannot supply them raises rather than scoring against
-a different conditioning.
+When fitting, the same inputs are taken from those specified for `run <Composition.run>` or
+`log_likelihood <ParameterEstimationComposition.log_likelihood>`, including any that do not vary in the
+data being fit. These must therefore be the same inputs, in the same order, as those used for training;
+otherwise an error is generated.
 
 
-.. _Neural_Likelihood_Provenance:
+.. _Neural_Likelihood_Matching:
 
-What an Estimator Is Valid For
-------------------------------
+Matching an Estimator to a Model
+--------------------------------
 
-An estimator trained for one model will score a different one without complaint, returning
-plausible numbers that mean nothing. Each `NeuralLikelihood` therefore records what it was
-trained for, and refuses to be used against anything else:
+An estimator records the model for which it was trained, and generates an error if it is used to fit one
+that differs in any of the following:
 
-* the fitted parameters **and their order**, since the conditioning vector is positional;
-* the range of each parameter;
-* the outcome variables, their order, and which of them are categorical;
-* the categories a categorical outcome took while training;
-* the model it was trained on, and the versions of PsyNeuLink and ``sbi`` that produced it.
+* the fitted parameters, or their order;
+* the range of any parameter, which must lie within the range used for training;
+* the outcome variables, their order, or which of them are categorical;
+* the values of a categorical outcome, which must be among those simulated in training.
 
-Ranges are checked for containment rather than equality. Fitting inside the trained box is
-supported; fitting outside it is extrapolation, whose error is unbounded and silent, so it
-raises.
+Other properties of the model, such as the values of parameters that are not fit, are not recorded; an
+estimator should be retrained if any of these are changed.
 
 
-.. _Neural_Likelihood_Gates:
+.. _Neural_Likelihood_Validation:
 
 Validation
 ----------
 
-`train_neural_likelihood` refuses to return an estimator that did not train: the held-out
-negative log-likelihood must be finite, and the estimator must assign a finite density to
-essentially all held-out data. ``strict=False`` downgrades these to a
-`NeuralLikelihoodWarning`.
+`train_neural_likelihood` generates an error if the estimator's negative log-likelihood on the data held
+out from training is not finite, or if it assigns a finite density to fewer than 99.9% of a sample of the
+simulated data. Specifying ``strict=False`` issues a `NeuralLikelihoodWarning` instead.
 
-These gates catch an estimator that failed, not one that is merely mediocre. Whether a
-trained estimator is good enough for a given model is a question about that model, and is
-answered by comparing recovered parameters against known values on simulated data.
+These checks identify an estimator that failed to train, but not one that is inaccurate. The accuracy of
+an estimator for a given model can be assessed by fitting data simulated at known parameter values, and
+comparing the estimates with those values.
 
 
 .. _Neural_Likelihood_Limitations:
@@ -158,16 +136,13 @@ answered by comparing recovered parameters against known values on simulated dat
 Limitations
 -----------
 
-* An estimator is only valid inside the box it was trained on, and only for the model that
-  produced its training data.
-* Interval width tracks the quality of the likelihood. An estimator trained on too few
-  simulations gives intervals that are too narrow, and no amount of fitting corrects that.
-* Training draws parameters uniformly across the box. A model whose behaviour changes
-  sharply in a small region of that box is represented no more finely there than anywhere
-  else.
-* A parameter the data barely constrain stays barely constrained: a better likelihood
-  estimates a flat surface more faithfully, it does not make it informative.
-* ``return_sim_data`` is not available, since nothing is simulated.
+* An estimator is valid only for the model, and the ranges of parameter values, for which it was trained
+  (see `Neural_Likelihood_Matching`).
+* The accuracy of a fit is limited by that of the estimator, which depends on the amount of simulated
+  data and training.
+* Parameter values are drawn evenly from within **bounds** for training, so regions of the parameter space
+  in which the model's behavior changes rapidly are not represented in more detail than others.
+* A fit that uses a neural likelihood cannot be distributed (``distributed=True``).
 
 
 .. _Neural_Likelihood_Requirements:
@@ -175,9 +150,24 @@ Limitations
 Requirements
 ------------
 
-Neural likelihoods require an extra, installed with ``pip install "psyneulink[nle]"``.
-Nothing is imported from it unless ``likelihood_estimator="neural"`` is requested, or an
-estimator is trained.
+Neural likelihoods require the ``nle`` extra, installed with ``pip install "psyneulink[nle]"``, which
+includes `sbi <https://sbi-dev.github.io/sbi/>`_ and PyTorch.
 
-:download:`train_neural_likelihood.py <../../Scripts/Debug/pec_nle/train_neural_likelihood.py>`
-trains an estimator for a drift-diffusion model and fits with it.
+:download:`train_neural_likelihood.py
+<../../Scripts/Examples/ParameterEstimation/neural_likelihood/train_neural_likelihood.py>` trains an
+estimator for a drift-diffusion model, and uses it to fit simulated data.
+
+
+.. _Neural_Likelihood_Class_Reference:
+
+Class Reference
+---------------
+
+.. autofunction:: psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood
+
+.. autoclass:: psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood
+   :members: log_likelihood, trial_log_prob, save, load
+
+.. autoexception:: psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodError
+
+.. autoexception:: psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodWarning
