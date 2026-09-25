@@ -314,11 +314,16 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
     features = None
     layout = None
 
-    # Only the simulated outcomes are needed, so scoring is switched off, and restored after
-    # for a caller still using the model.
+    # Only the simulated outcomes are needed, so scoring is switched off; and each draw needs
+    # noise of its own, which a model built for fitting may be set to share. Both are restored
+    # after, for a caller still using the model.
     function = pec.controller.function
     scoring = function._pec_objective_function
     function.set_pec_objective_function(lambda sim_data: 0.0)
+    shared_noise = pec.controller.parameters.same_seed_for_all_allocations
+    sharing = dict(shared_noise.values)
+    for execution_id in sharing:
+        shared_noise.set(False, execution_id)
 
     cond_rows, x_rows = [], []
     try:
@@ -344,6 +349,8 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
             cond_rows.append(block)
     finally:
         function.set_pec_objective_function(scoring)
+        for execution_id, value in sharing.items():
+            shared_noise.set(value, execution_id)
     return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
 
 

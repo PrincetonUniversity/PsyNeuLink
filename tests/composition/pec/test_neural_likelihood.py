@@ -376,6 +376,22 @@ def test_training_leaves_the_model_it_was_given_intact():
 
 
 @pytest.mark.composition
+def test_each_training_draw_gets_noise_of_its_own():
+    """Even from a model built to share noise across evaluations, as one for fitting may be."""
+    frame = pd.DataFrame({"decision": [0.0, 1.0] * 5, "response_time": [0.5] * 10})
+    frame["decision"] = frame["decision"].astype("category")
+    pec, inputs = _ddm_training_pec(frame)
+    shared_noise = pec.controller.parameters.same_seed_for_all_allocations
+    shared_noise.set(True)
+    pec.log_likelihood(0.3, 0.6, inputs=inputs)
+
+    same_draw_twice = np.array([[0.3, 0.6], [0.3, 0.6]])
+    _, x, n_trials, _ = nlf._simulate(pec, inputs, same_draw_twice, ("rate", "threshold"), 2)
+    first, second = np.split(x, 2)
+    assert not np.array_equal(first, second)
+    assert all(shared_noise.values.values())
+
+
 def test_inputs_set_how_many_trials_each_draw_simulates():
     """Trials come from the inputs, not from the data the model was built around."""
     frame = pd.DataFrame({"decision": [0.0, 1.0] * 5, "response_time": [0.5] * 10})
