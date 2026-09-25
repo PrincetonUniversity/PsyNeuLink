@@ -1,319 +1,274 @@
-# DAWA model experiments
+# Fitting Dawa's LC/LCA model
 
-This directory groups DAWA's source model, simulation drivers, direct
-likelihoods, and recovery studies. Shared compiler benchmarks and design notes
-are in the [parent directory](../README.md).
+This directory contains the model and tools for fitting choices and response
+times, and for checking whether a fit can recover known parameters. The model
+has control, stimulus, decision, and response LCA layers. An LC mechanism
+modulates gain in the three downstream layers. Control state carries over
+between trials, so trial order matters.
 
-The DAWA LC/LCA network, including Gaussian noise in all four LCAs, can use the
-ordinary batched compiler and PEC simulation objective on Triton.
-`dawa_batched_simulation.py` loads the local
-`dawa_lca_model/full_lca_model_lc.py`. The
-[source model, original fitting scripts, and Slurm examples](dawa_lca_model/README.md)
-are tracked; subject data and generated outputs remain ignored.
-All three `flanker_fit_lc_part*.py` scripts use this same model builder.
+There are currently two fitting workflows:
 
-Future work on gradients through the full-noise sampler is recorded in the
-shared [sampling gradient notes](../SAMPLING_GRADIENT_NOTES.md), including
-continuous RT kernels, threshold handling, compiler interfaces, and a staged
-validation plan. These ideas are deferred and are not implemented sampler features.
+| Task | Script | Runs on |
+| --- | --- | --- |
+| Fit one subject's recorded choices and RTs | [dawa_pec_fit.py](dawa_pec_fit.py) | NVIDIA GPU |
+| Generate a synthetic subject and recover its parameters | [dawa_pec_recovery.py](dawa_pec_recovery.py) | NVIDIA GPU |
 
-The compiler additions cover scheduled Logistic LCAs of width 1–32, finite dense
-recurrent matrices, scalar numeric or `NormalDist` noise, maximum-activity
-termination, standard decision index/time/step and energy outputs, scalar Euler
-FitzHugh–Nagumo integration in a Linear TransferMechanism, and elementwise
-ObjectiveMechanisms. Scalar OVERRIDE controllers can fan out to multiple
-registered parameters in a dynamic schedule. Both held control values and the
-values last sampled by each target are represented explicitly; trial resets use
-the latter. These are component and scheduler features, with no DAWA-specific
-kernel or compiler graph recognizer.
+Both commands use the same model, parameter bounds, and CMA-ES fitting pipeline.
+Use the fit command for empirical data: recovery replaces the CSV's recorded
+responses with simulated ones. The similarly named `dawa_pec_fit_benchmark.py`
+only times fixed parameter proposals.
 
-Recurrent scheduling is now the default in both the shared model builder and
-the driver. All four LCAs and the four weighted processing mechanisms use
-`Always()`, so they keep advancing through the graph's existing execution order
-until the response reaches threshold. Bias/weight controllers still use
-`AtPass(0)` and hold their values throughout the trial; output gates still use
-`WhenFinished(responseLayer)`. Native Python, LLVM, and the fitting scripts
-inherit the fix directly from the shared builder.
+## Environment and data
 
-Previously, the processing nodes inherited `EveryNCalls` dependencies on the
-once-per-trial controllers. The stimulus, decision, and response LCAs could
-therefore execute only once, stalling trials that needed further integration.
-The driver also applies the fix to older/custom builders by default. Its
-optional `--schedule source` setting uses the loaded builder's own conditions;
-the bundled builder already contains the fix, so this option also runs
-recurrently with the bundled model.
-
-Run a stochastic simulation and evaluate two candidates through PEC:
+These instructions apply to the `feat/likelihood_compile` working branch.
+Use Python 3.10 or newer on Linux or WSL with an NVIDIA GPU. From the repository root,
+activate your existing PsyNeuLink environment, or create one:
 
 ```bash
-.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py \
-  --trials 4 --estimates 64 --max-steps 500 \
-  --pec-smoke --output /tmp/dawa_samples.npz
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[triton]'
+
+# Check that this environment can see a CUDA GPU.
+python -c 'import torch, triton; assert torch.cuda.is_available(); print(torch.cuda.get_device_name())'
 ```
 
-The sample array has axes `[candidate, subject, trial, estimate, outcome]`, with
-decision and response time as its final two columns. PEC smoke testing includes
-all seven original fitting parameters and conditional parameters for subject
-and previous congruency, matching the supplied fit scripts (12 coordinates for
-the example's two subjects). It evaluates the existing histogram simulation
-objective; it does not run an optimizer or infer an analytic likelihood.
+The GPU check must succeed before running fits. On a cluster, run it and
+the fits inside a GPU allocation. Use a CUDA-enabled PyTorch installation
+compatible with the node's NVIDIA driver. On Della, keep the checkout,
+environment, and results in your scratch allocation.
 
-Check deterministic results against native LLVM (or use `--reference python`):
+Obtain the behavioral CSV separately; it is not tracked in Git. Choose a data
+file and a writable results directory:
 
 ```bash
-.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py \
-  --deterministic --reference llvm \
-  --trials 4 --estimates 3 --max-steps 500
+export DAWA_DATA="$PWD/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv"
+export DAWA_RESULTS=/absolute/path/to/your/dawa-results
 ```
 
-The local RTX 2080 Ti audit matched LLVM choices and response times, with maximum
-absolute error below `3e-8`. A separate Python comparison of all four LCA layers
-and LC activity across four trials also passed. A warm
-stochastic run of two candidates × four trials × 64 estimates took about 30 ms
-on this machine; this small workload measurement includes host preparation and
-result transfer and is not a fitting-scale throughput claim.
+The runners use these columns:
 
-To use these features directly:
+| Columns | Meaning |
+| --- | --- |
+| `subject_nr` | Subject ID selected by `--subject` |
+| `T1, T2, S1, S2, S3, S4` | Task and stimulus inputs in their original order |
+| `PrevCongruency` | Previous condition, coded 0 or 1; rows with missing values are excluded |
+| `likelihood_include_mask` | 1 to score the observation, 0 to retain the trial only for state history |
+| `decision`, `response_time` | Recorded choice (0/1) and RT in **seconds**; required only for empirical fitting |
 
-```python
-from psyneulink.core.batched import BatchedCompositionCompiler
+Both previous-congruency levels must have scored trials. Keep masked trials
+and preserve row order. Inputs and empirical outcomes must be finite on all
+retained rows, including masked trials. RTs must be positive; scored RTs must
+lie within the configured 0–3 s histogram range. The runners check these
+requirements before creating a run directory.
 
-plan = BatchedCompositionCompiler.compile(model, backend="triton", max_steps=2000)
-samples = plan.run(inputs, parameter_sets, num_estimates=1000,
-                   seed=29, strict_truncation=True)
-```
+## Fit a subject's recorded responses
 
-Existing PEC workflows select
-`PECOptimizationFunction(..., batched_backend="triton", batched_max_steps=2000)`.
-The shared builder supports repeated integration at positive fitting thresholds
-by default. Keep strict truncation checks enabled during simulation audits.
-
-The new LCA configurations require `execute_until_finished=False`; the existing
-CSI run-to-completion path is retained. Gaussian scheduled LCAs support
-`AtTrialStart` and `Never` resets, and the FHN adapter supports scalar Euler
-integration with zero initializers and fixed per-pass internal execution counts. Custom LCA
-matrices are frozen; scalar competition/self-excitation overrides on those
-matrices are rejected. GPU random streams reproduce seeded GPU runs, not
-NumPy/LLVM draws. Networks with scalar OVERRIDE controls must run each subject's
-complete sequence in one call: `initial_states` does not yet restore held and
-sampled control values, so resuming these networks is rejected explicitly.
-
-## Noise in all four LCAs
-
-The source builder and run helper expose `c_noise`, `s_noise`, `d_noise`, and
-`r_noise` as zero-mean Gaussian standard deviations. The batch driver accepts
-the corresponding `--c-noise`, `--s-noise`, `--d-noise`, and `--r-noise` flags;
-`--deterministic` disables all four. Existing defaults are preserved (the batch
-driver enables only response noise). An audit used standard deviation 0.1 in
-each layer and the original 0.01-second integration step. Each integration
-adds a draw scaled by `sqrt(dt)`, so these are diffusion amplitudes, not constant
-additive inputs. Native Python PNL completed four trials with noise in all four
-LCAs, producing finite choices and response times; each trial took multiple
-integration passes (49–165 response steps in the audit).
-
-To run the full-noise composition and evaluate the conditional PEC objective:
+Start with a short execution check, from the repository root:
 
 ```bash
-.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py \
-  --c-noise .1 --s-noise .1 --d-noise .1 --r-noise .1 \
-  --trials 4 --estimates 256 --max-steps 2000 --pec-smoke
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
+  --data "$DAWA_DATA" --subject 1 \
+  --trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64 \
+  --output "$DAWA_RESULTS/fit-smoke"
 ```
 
-Control uses `Never` and carries its state across trials; the other three LCAs
-use `AtTrialStart`. Noise settings preserve those reset policies. The previous
-compiler restriction on persistent Gaussian LCAs has been removed with explicit
-support for their initial state.
-
-PNL samples the initial recurrent **RESULT port** during construction; its value
-can differ from the mechanism's separately initialized value. Native PEC copies
-this constructed activity into each estimate. The compiler freezes that same
-RESULT default in the plan and uses it before any processing executes, while
-the integrated state starts at zero. Runtime gain/noise changes affect subsequent
-steps, without resampling or transforming the constructed activity. This uses
-the general `StateDecl.initial_attribute` facility for frozen vector initializers.
-`AtTrialStart` LCAs retain their original reset behavior.
-
-The existing random-stream allocation then supplies independent integration
-draws by accumulator, estimate and trial, with common random numbers across
-parameter candidates by default. Each estimate retains its own control state.
-The original nonlinear Logistic dynamics and scheduler are unchanged. The
-compiler starts a fresh sequence from the model's construction defaults; it
-does not implicitly import a live composition's current state.
-
-The all-four-noise configuration passed a GPU audit on the RTX 2080 Ti: two
-candidates, four trials, 256 estimates, no truncation, exact seeded replay, and
-finite conditional PEC scores. Component tests cover constructed activity,
-runtime parameter changes, analytic noise moments and cross-trial covariance,
-stream independence, and replay on both GPU and the Triton CPU interpreter.
-
-The [benchmark results](dawa_benchmark_results.md) distinguish the original
-response-only measurements from the full-noise configuration.
-For a comparison with independent noise in all four LCAs, pass
-`--independent-noise-streams` to `dawa_llvm_benchmark.py`. Native PEC normally
-broadcasts the same seed to all random variables in an estimate, which can
-correlate the LCAs' draws. The option applies distinct seed offsets to LLVM's
-randomization projections; Triton already separates component streams. This is
-an explicit benchmark configuration, not a change to the original fitting scripts.
-
-## Benchmarks and direct likelihoods
-
-For fitting-scale performance against PEC's threaded LLVM simulation path,
-see [the benchmark results](dawa_benchmark_results.md) and
-[reusable benchmark driver](dawa_llvm_benchmark.py). Measurements include
-1,000 and 10,000 estimates over both 64-trial slices and a full 760-trial subject,
-plus 100,000 estimates over 64 trials with noise in all LCAs. Setup and likelihood
-scoring are separated from simulation timing.
-
-The [full-subject objective benchmark](dawa_benchmark_results.md#full-subject-pec-objective-at-100000-estimates)
-also evaluates four distinct candidates at 100,000 estimates over all 760 trials,
-including conditional parameters and GPU histogram scoring. The
-[profiling follow-up](dawa_benchmark_results.md#gpu-profiling-and-count-only-scoring)
-adds general count-only scoring and measures about 2.5 seconds per candidate
-with 32-lane/one-warp launches on the 2080 Ti. This implies approximately 3.5
-hours for 5,000 evaluations before optimizer overhead. Live Torch fitting
-buffers fall from 3.1 GiB per candidate to 0.23 MiB for four candidates together;
-CUDA context/code and allocator reservations are additional. These are
-throughput extrapolations; a complete optimizer run has not been measured.
-
-The count-only scorer also supports Gaussian RT smoothing and symmetric
-pseudocounts without retaining individual simulated outcomes. For example,
-configure the PEC optimization function with:
-
-```python
-batched_backend="triton",
-batched_bins=100,
-batched_bin_range=[(0., 3.)],
-batched_smoothing_sigma=0.5,
-batched_pseudocount=1.,
-batched_categorical_cardinalities=[2],
-batched_triton_launch_options={"block_size": 32, "num_warps": 1},
-```
-
-These are example estimator settings, not calibrated fitting defaults. Sigma is
-measured in bins (approximately 15 ms here), and the pseudocount is per joint
-choice/RT bin. The cardinality specifies both possible choices even if an
-observed subset contains only one. Smoothing keeps integer counts for neighboring
-RT bins, then applies Gaussian weights with boundary renormalization. It never mixes choices
-or changes the dynamics, random streams, or latent trial history. Both settings
-can be varied independently, including zero. The extension covers one continuous
-outcome plus any categorical outcomes; smoothing multiple continuous outcomes
-still uses the materialized reference. See the
-[smoothing benchmark](dawa_benchmark_results.md#smoothing-and-pseudocounts-with-count-only-scoring)
-for timings, memory, and numerical validation.
-
-The [post-smoothing profile and optimization plan](dawa_benchmark_results.md#post-smoothing-profile-and-optimization-plan)
-identifies Gaussian generation, register use, and waiting for slower estimates
-as performance targets. Grouped Gaussian generation is now implemented in the
-shared Triton backend. All scheduled Gaussian LCAs use it, regardless of model;
-other component adapters can request a vector through `ctx.normal_draws`.
-DAWA now obtains its ten independent Gaussian values from four Philox
-invocations per pass, without caching spare values across executions.
-
-The compiler default mode is `normal_rng="philox4x_v1"`. It preserves the noise
-distribution but changes seeded trajectories. To reproduce previous simulations,
-add `"normal_rng": "legacy"` to `batched_triton_launch_options`, or pass
-`--normal-rng legacy` to `dawa_pec_fit_benchmark.py`. Record the mode along with
-the seed. This RNG change leaves trial synchronization and model dynamics unchanged. See the
-[Gaussian benchmark](dawa_benchmark_results.md#grouped-gaussian-generation)
-for timing and distribution checks.
-
-Independent trial advancement is also available through the general compiler:
-add `"trial_schedule": "independent"` to `batched_triton_launch_options`, or use
-`--trial-schedule independent` in `dawa_pec_fit_benchmark.py`. Each estimate
-starts its next trial when ready, preserving its own ordered history, retained
-LC/LCA state, controller values, and seeded draws. Conditional parameters and
-histogram writes use that estimate's trial index. Smoothing, pseudocounts,
-strict truncation, and nonfinite-output checks remain supported. This setting
-requires a full dynamic sequence; it also supports CSI's full model, while
-CSI's observed-history fitting path uses a different execution scheme.
-The global default remains `"synchronized"`, since performance is model-dependent.
-See the [trial advancement benchmark](dawa_benchmark_results.md#independent-trial-advancement)
-for the full-subject comparison and reproduction commands.
-
-The same 100,000-estimate subject benchmark has also run on a single H100 NVL
-on `della-rse` and a full A100 SXM4 80 GB allocated through Della Slurm. With
-four proposals batched, the H100 takes 0.434 s per proposal and the A100
-0.709 s, versus a refreshed local 2080 Ti baseline of 1.358 s. That projects
-to about 36, 59, and 113 minutes respectively for 5,000 proposal evaluations,
-before optimizer overhead. All trial densities match exactly across devices.
-See the [cross-GPU benchmark](dawa_benchmark_results.md#h100-and-a100-subject-benchmark)
-for serial-proposal timings, validation, software versions, and fit-time limits.
-
-### Fixed parameters and faster Gaussian conversion
-
-PEC can now specialize parameters that are not being fitted, using the general
-compiler's explicit parameter-constant support:
-
-```python
-optimization_function = pnl.PECOptimizationFunction(
-    method="differential_evolution",
-    batched_backend="triton",
-    batched_max_steps=2000,
-    batched_strict_truncation=True,
-    batched_specialize_fixed_parameters=True,
-    batched_bins=100,
-    batched_bin_range=[(0., 3.)],
-    batched_smoothing_sigma=.5,
-    batched_pseudocount=1.,
-    batched_triton_launch_options={
-        "block_size": 32, "num_warps": 1,
-        "trial_schedule": "independent",
-        "normal_rng": "philox4x_fast_v1",
-    },
-)
-```
-
-Specialization keeps all fitted parameters dynamic, including conditional LC
-mode. The other parameter inputs become FP32 constants, allowing redundant
-arithmetic to disappear. Controller outputs, nonlinear LCA/LC dynamics, noise,
-time steps and trial history retain their existing semantics. Conflicting
-runtime overrides raise an error; compile a new plan to change a fixed value.
-Specialization is opt-in for general PEC use.
-
-`philox4x_fast_v1` is a separate, GPU-only RNG mode. It retains the grouped
-Philox uniform streams but uses bounded-angle CUDA sine/cosine for Box–Muller
-conversion, including scalar draws and odd vector widths. Small rounding
-differences can change stopping steps. Record the mode along with the seed;
-select `philox4x_v1` or `legacy` to reproduce their existing seeded runs.
-
-The DAWA subject benchmark enables specialization and the fast transform by
-default. Run the optimized workload with:
+Then fit the complete subject:
 
 ```bash
-.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
-  --estimates 100000 --batch-sizes 1 4 --repeats 5 \
-  --block-size 32 --num-warps 1 --trial-schedule independent \
-  --smoothing-sigma .5 --pseudocount 1 \
-  --verify-synchronized --verify-materialized \
-  --output /tmp/dawa_optimized.json
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
+  --data "$DAWA_DATA" --subject 1 \
+  --estimates 100000 --evaluations 5000 --population 10 \
+  --start 0 --optimizer-seed 101 --simulation-seed 29 \
+  --output "$DAWA_RESULTS/subject1-start0"
 ```
 
-For the earlier baseline, add `--no-specialize-fixed-parameters --normal-rng
-philox4x_v1`. To compare full-sequence choice/RT distributions under independent
-seeds, add `--validate-normal-rngs --validation-normal-rngs philox4x_v1
-philox4x_fast_v1 --validation-estimates 16384`. This runs after timing.
+`--subject` is the actual `subject_nr` value in the CSV. Each command fits one
+subject. Use a new process and output directory for each additional subject.
+For a second start, use `--start 1 --optimizer-seed 202 --simulation-seed 37`
+and another output directory, such as `subject1-start1`.
 
-A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
-available. It propagates the joint response-state distribution and supports
-gradients through all seven fitting parameters in its RT observation model.
-The documentation distinguishes direct stopping-step scoring from the
-empirical-RT mode's fixed history approximation and records validation results.
+The short check verifies execution, not fit quality. Omit `--trials` for real
+fits. First use compiles GPU kernels. Every run needs a **new output directory**;
+the runner refuses to overwrite one and does not automatically resume an
+interrupted fit.
 
-The separate [continuous-time DAWA likelihood](dawa_likelihood/CONTINUOUS_README.md)
-uses coupled ODE dynamics and a two-dimensional absorbing Fokker–Planck solver.
-It scores RT intervals without added measurement noise, differentiates all seven
-parameters, and updates history using candidate-dependent decision durations.
-Its instantaneous gain modulation defines a continuous extension of the source
-model; validation uses an independent continuous SDE sampler rather than expecting
-parity with the original 10 ms scheduler.
+`--estimates` counts simulated trajectories per parameter proposal, with one
+response per trial in each trajectory. `--evaluations` counts parameter
+proposals, not generations. `--population` controls the CMA-ES population and
+candidate batch size. These meanings are the same for recovery.
 
-A [source-convergence and synthetic-recovery study](dawa_likelihood/STUDY_README.md)
-now checks that connection explicitly, using 100,000 estimates per case and
-joint refinement of the original LCA and LC time steps at a fixed clock ratio.
+## Run a short recovery check
 
-The [CPU and GPU performance audit](dawa_likelihood/PERFORMANCE_README.md) compares
-threaded CPU and fused GPU direct likelihoods, including all parameter gradients,
-against continuous GPU sampling. Both backends preserve sequential control-state
-history. Run
-[dawa_continuous_benchmark.py](dawa_continuous_benchmark.py) to reproduce the
-two-condition workload, including 100,000 GPU estimates per condition.
+From the repository root, with the environment activated:
+
+```bash
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
+  --data "$DAWA_DATA" --subject 1 \
+  --trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64 \
+  --output "$DAWA_RESULTS/recovery-smoke"
+```
+
+This generates responses, runs a small optimization, and checks the resulting
+parameters with fresh simulation seeds. As with the empirical smoke test,
+these settings verify execution rather than scientific recovery.
+
+## Run a full parameter recovery fit
+
+```bash
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
+  --data "$DAWA_DATA" --subject 1 \
+  --estimates 100000 --evaluations 5000 --population 10 \
+  --start 0 --optimizer-seed 101 --simulation-seed 29 \
+  --output "$DAWA_RESULTS/recovery-start0"
+```
+
+This creates one synthetic subject using the selected subject's complete input
+sequence, then fits it with CMA-ES. Omit `--trials` for a full subject.
+
+For a second start on the **same synthetic observations**:
+
+```bash
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
+  --data "$DAWA_DATA" --subject 1 \
+  --estimates 100000 --evaluations 5000 --population 10 \
+  --start 1 --optimizer-seed 202 --simulation-seed 37 \
+  --output "$DAWA_RESULTS/recovery-start1"
+```
+
+Keep `--data-seed` and `--model-seed` unchanged to reuse the synthetic dataset.
+To generate a new synthetic subject on the same design, change `--data-seed`
+(default `20260925`) and use another output directory. Keep generation, fitting,
+and validation seeds distinct. Changing only the optimizer seed tests search
+variability, not recovery across different synthetic datasets.
+
+The completed H100 pilot took about **28 minutes per start** for 760 trials,
+720 scored observations, 100,000 estimates, and 5,000 proposals. Runtime depends
+on the device, input sequence, and parameters. LC modes and scaling were weakly
+recovered in that pilot; compare multiple starts and synthetic datasets before
+interpreting parameter estimates. See the [pilot results](pec_recovery/README.md).
+
+## Submit a GPU job on Della
+
+[dawa_gpu.slurm](dawa_gpu.slurm) runs either workflow on one full A100, with
+eight CPU cores, 24 GB of host RAM, and a two-hour limit. It uses an existing
+Python environment; jobs do not install packages. Log into `della-gpu` and
+set these paths to your own scratch checkout and results directory:
+
+```bash
+export DAWA_REPO_ROOT=/absolute/path/to/your/scratch/PsyNeuLink
+export DAWA_PYTHON="$DAWA_REPO_ROOT/.venv/bin/python"
+export DAWA_DATA="$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv"
+export DAWA_RESULTS=/absolute/path/to/your/scratch/dawa-results
+mkdir -p "$DAWA_RESULTS/logs"
+```
+
+The commands use your default Slurm account. Submit an empirical fit or recovery
+run with the same driver options used locally:
+
+```bash
+sbatch --chdir="$DAWA_RESULTS" \
+  --output="$DAWA_RESULTS/logs/fit-%j.log" \
+  "$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_gpu.slurm" \
+  fit --subject 1 --estimates 100000 --evaluations 5000
+
+sbatch --chdir="$DAWA_RESULTS" \
+  --output="$DAWA_RESULTS/logs/recovery-%j.log" \
+  "$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_gpu.slurm" \
+  recovery --subject 1 --estimates 100000 --evaluations 5000
+```
+
+Results go to `fit-JOB_ID` or `recovery-JOB_ID` under `DAWA_RESULTS`. Use
+`--output /absolute/path/to/new/run` after `fit` or `recovery` to choose another
+directory. Slurm options belong **before** the script path; Python options
+belong **after** the mode. Create the log directory before submitting.
+
+For a short Slurm test, add `--time=00:05:00` before the script path and use
+`--trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64` after
+the mode. Check `squeue -u "$USER"`, then inspect the log and final `fit.json`
+or `recovery.json`. A successful run also sets `manifest.json` status to
+`complete`.
+
+For subject arrays, add e.g. `--array=1,2,3` before the script path and omit
+`--subject`: array IDs are used as actual `subject_nr` values. Each task gets
+its own GPU and output directory. To limit concurrent tasks, use
+`--array=1,2,3%2`. For multiple starts on one subject, submit separate jobs with
+explicit `--subject`, `--start`, and seeds.
+
+The launcher keeps caches and temporary files under `DAWA_RESULTS/.work`;
+override this with `DAWA_WORK_ROOT`. If the Python environment needs a CUDA
+module, export `DAWA_CUDA_MODULE` before submission (the tested environment
+uses `cudatoolkit/13.0`). Leave `CUDA_VISIBLE_DEVICES` to Slurm. Della selects
+the partition from the resource request, so no explicit partition is needed.
+
+Both modes passed a [Slurm A100 test](dawa_benchmark_results.md#slurm-fitting-and-recovery-handoff-test-2026-09-25)
+on the full 760-trial subject at 100,000 estimates and 21 proposals. These short
+runs validate execution; use the full budget and multiple starts for fitting.
+
+## Parameters and current settings
+
+Both runners fit eight coordinates: seven parameter types, with a
+separate LC mode for each previous-congruency level.
+
+| Parameter | Search bounds | Value used to generate synthetic data |
+| --- | --- | --- |
+| Response threshold | 0.25–0.70 | 0.40 |
+| Nondecision time | 0.10–0.30 s | 0.22 s |
+| Stimulus/decision/response bias | −0.50–0 | −0.40 |
+| Control gain | 5–20 | 12 |
+| LC mode, previous congruency 0 / 1 | 0.10–0.90 each | 0.65 / 0.80 |
+| LC scaling | 1–4 | 1.5 |
+| LC base gain | 3–10 | 5.5 |
+
+Both runners use the tested recovery configuration:
+
+- **10 ms LCA timesteps**; the LC performs ten internal 20 ms steps per model pass.
+- **Noise SD 0.1 in each of the four LCAs**, fixed throughout fitting.
+- A simulated choice/RT histogram with **100 RT bins over 0–3 seconds**,
+  Gaussian smoothing of **0.5 bins (15 ms)**, and **pseudocount 1** per choice/RT cell.
+- A separate simulated control-state history for every estimate. Masked
+  observations still advance that history.
+
+These are the pilot's settings, not established best choices for every dataset.
+The objective scores each trial's simulated choice/RT distribution; it does
+not condition latent control state on the observed responses.
+
+Budget and seed options are exposed by `--help` on either command. Generating parameters
+(`TRUTH`), starting points (`STARTS`), noise, timestep checks, and histogram
+settings are currently specified in [the shared fitting script](dawa_pec_fit.py).
+Bounds come from `fit_surface()` in [dawa_batched_simulation.py](dawa_batched_simulation.py).
+Changing those model/estimator settings currently requires editing the code;
+there are no CLI flags for them yet.
+
+## Read the results
+
+| File in the output directory | What to look for |
+| --- | --- |
+| `progress.json` | Completed proposals, current best parameters/score, elapsed time, invalid-candidate count |
+| `fit.json` (empirical fit) | Final fitted values, scores at fresh seeds, observed/predicted summaries, fitting time |
+| `recovery.json` | Final fitted values, errors from truth, fitting time, fresh-seed scores, predictive summaries |
+| `manifest.json` | Settings, parameter order/bounds, seeds, data/source hashes, device, completion status |
+| `observed_subject.csv` or `synthetic_subject.csv` | The selected empirical or generated observations actually fitted, including masked rows |
+| `evaluations.jsonl`, `optimizer_trials.csv`, `optimizer.journal` | Search history and optimizer records |
+
+Compare agreement between starts and observed/predicted choice/RT summaries;
+for recovery, also compare parameter errors. Higher log likelihood is better,
+but a recovery fit can score better than the generating parameters on a finite
+synthetic dataset. Fresh-seed rescoring
+checks simulation variability on the same observations; it is not held-out
+validation. Reaching the evaluation budget does not establish convergence.
+
+Proposals that exceed `--max-steps` are recorded and penalized. If many proposals
+fail, inspect their parameters and the model's response durations before
+increasing the cap. Final scoring and prediction checks must finish normally.
+
+## Further reading
+
+- [Recovery pilot](pec_recovery/README.md): completed fits, parameter errors, and interpretation.
+- [Compiler notes](COMPILER_NOTES.md): simulation checks, scheduling, noise, and GPU configuration.
+- [Benchmark results](dawa_benchmark_results.md): measured performance and reproduction commands.
+- [Original fitting scripts](dawa_lca_model/README.md): the earlier partition-wide LLVM workflow and Slurm examples.
+
+The older direct-likelihood experiments are indexed in the compiler notes.
+For the model with noise in all four LCAs, use the simulation-based workflow
+above.

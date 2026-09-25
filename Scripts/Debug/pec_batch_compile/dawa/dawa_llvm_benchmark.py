@@ -16,6 +16,7 @@ import json
 import platform
 from pathlib import Path
 import statistics
+import subprocess
 import time
 
 import numpy as np
@@ -42,6 +43,14 @@ def main():
     parser.add_argument("--deterministic", action="store_true")
     parser.add_argument("--independent-noise-streams", action="store_true",
                         help="Give LLVM PEC's random variables distinct seed offsets; Triton already separates streams")
+    parser.add_argument("--specialize-fixed-parameters", action="store_true",
+                        help="Triton: compile non-fitted parameter defaults as constants")
+    parser.add_argument("--normal-rng", choices=("legacy", "philox4x_v1", "philox4x_fast_v1"),
+                        default="philox4x_v1", help="Triton Gaussian generator")
+    parser.add_argument("--trial-schedule", choices=("synchronized", "independent"), default="synchronized")
+    parser.add_argument("--block-size", type=int, default=128)
+    parser.add_argument("--num-warps", type=int, default=4)
+    parser.add_argument("--source-revision", help="Base commit when running a source snapshot without .git")
     for prefix in ("c", "s", "d", "r"):
         parser.add_argument(f"--{prefix}-noise", type=float,
                             help="Override this LCA's Gaussian noise standard deviation")
@@ -68,6 +77,9 @@ def main():
               for (parameter, _), bounds in surface.items()]
     parameter_set = {f"{owner.name}.{parameter}": value
                      for (parameter, owner), value in zip(surface, values)}
+    launch = dict(block_size=args.block_size, num_warps=args.num_warps,
+                  normal_rng=args.normal_rng, trial_schedule=args.trial_schedule)
+    fixed_parameters = {}
     setup_start = time.perf_counter()
     observed = data[["decision", "response_time"]].copy()
     observed["decision"] = pd.Categorical(observed.decision, categories=[0., 1.])
@@ -104,10 +116,14 @@ def main():
         plan = BatchedCompositionCompiler.compile(composition, backend="triton", outputs=outputs,
                                                  max_steps=args.max_steps,
                                                  ignored_control_nodes=tuple(pec.pec_control_mechs.values()))
+        if args.specialize_fixed_parameters:
+            plan = plan.specialize_parameters({p.name: p.default for p in plan.ir.params
+                                               if p.name not in parameter_set})
+            fixed_parameters = plan.fixed_parameters
 
         def run():
             return plan.run(inputs, [parameter_set], args.estimates, seed=args.seed,
-                            strict_truncation=True).values[0, 0]
+                            strict_truncation=True, triton_launch_options=launch).values[0, 0]
 
     setup_seconds = time.perf_counter() - setup_start
     report = {
@@ -115,6 +131,12 @@ def main():
         "estimates": args.estimates, "candidates": 1, "threads": pnl.get_num_threads(),
         "seed": args.seed, "deterministic": args.deterministic, "schedule": "recurrent",
         "noise_overrides": noise, "time_step_size": .01,
+        "lc_time_step_size": .02, "lc_internal_steps_per_pass": 10,
+        "source_revision": args.source_revision or subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=SOURCE.parent, text=True).strip(),
+        "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "triton_launch_options": launch if args.backend == "triton" else None,
+        "fixed_parameters": fixed_parameters,
         "noise_stream_policy": "independent" if args.backend == "triton" or args.independent_noise_streams else "shared_seed",
         "llvm_seed_offsets": seed_offsets,
         "control_initial_activity": node(composition, "Control Units\n[Color, Location]").output_port.defaults.value.tolist(),
@@ -124,7 +146,8 @@ def main():
         "platform": platform.platform(), "setup_seconds": setup_seconds,
         "cpu": next(line.split(":", 1)[1].strip() for line in Path("/proc/cpuinfo").read_text().splitlines()
                     if line.startswith("model name")),
-        "versions": {package: version(package) for package in ("psyneulink", "llvmlite", "triton", "torch")},
+        "versions": {"psyneulink": getattr(pnl, "__version__", "source snapshot; see source_revision"),
+                     **{package: version(package) for package in ("llvmlite", "triton", "torch")}},
         "scope": "simulation including preparation and host output; no likelihood or optimizer",
         "warm_seconds": [], "requested_warm_repeats": args.repeats,
         "same_seed_for_all_parameter_combinations": True,
@@ -133,6 +156,7 @@ def main():
         import torch
         report["gpu"] = torch.cuda.get_device_name()
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps({**report, "status": "running"}, indent=2) + "\n")
     previous = None
     for index in range(args.repeats + 1):
         print(f"Starting {args.backend}: trials={args.trials}, estimates={args.estimates}, run={index}", flush=True)
@@ -152,6 +176,7 @@ def main():
             report["warm_seconds"].append(elapsed)
             report["median_seconds"] = statistics.median(report["warm_seconds"])
         report.update(
+            status="complete" if index == args.repeats else "running",
             shape=list(samples.shape), dtype=str(samples.dtype), mean_rt=float(samples[..., 1].mean()),
             mean_decision=float(samples[..., 0].mean()),
             rt_quantiles=np.quantile(samples[..., 1], [.1, .5, .9, .99, 1.]).tolist(),

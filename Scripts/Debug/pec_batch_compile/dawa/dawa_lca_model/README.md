@@ -1,9 +1,13 @@
 # DAWA LC/LCA source model
 
+For the current single-subject GPU fitting and recovery commands, use the
+[fitting guide](../README.md). The scripts described below preserve the
+original partition-wide LLVM workflow.
+
 `full_lca_model_lc.py` builds the original scheduled PsyNeuLink network: control,
 stimulus, decision, and response LCAs, with a FitzHugh–Nagumo LC mechanism
 modulating stimulus, decision, and response gain. The builder uses the recurrent
-schedule described in the [batch compiler notes](../README.md).
+schedule described in the [batch compiler notes](../COMPILER_NOTES.md#recurrent-scheduling).
 Bias and weight controllers execute once per trial; the processing layers keep
 integrating until the response reaches threshold.
 
@@ -12,7 +16,7 @@ and `r_noise` (zero-mean Gaussian standard deviations). Setting all four to 0.1
 enables noise throughout the LCA network without changing reset policies:
 control carries state across trials, while the other three LCAs reset. Existing
 defaults are unchanged. The batch compiler supports noisy persistent control;
-see the [noise support audit](../README.md#noise-in-all-four-lcas).
+see the [noise support notes](../COMPILER_NOTES.md#noise-in-all-four-lcas).
 
 `flanker_fit_lc_part1.py`, `flanker_fit_lc_part2.py`, and
 `flanker_fit_lc_part3.py` preserve the original PEC fitting setup for the three

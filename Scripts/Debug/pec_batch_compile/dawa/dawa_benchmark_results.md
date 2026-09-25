@@ -940,7 +940,7 @@ validation gave consistent results; this table uses the final pass.
 General defaults remain unspecialized with `philox4x_v1`. The DAWA subject
 benchmark now defaults to specialization and `philox4x_fast_v1`; the previous
 baseline is available with `--no-specialize-fixed-parameters --normal-rng
-philox4x_v1`. The [DAWA README](README.md#fixed-parameters-and-faster-gaussian-conversion)
+philox4x_v1`. The [DAWA compiler notes](COMPILER_NOTES.md#fixed-parameters-and-faster-gaussian-conversion)
 shows the PEC configuration and benchmark command.
 
 ### H100 measurements
@@ -1062,4 +1062,276 @@ reproduction script, raw reports, saved densities and logs are retained under:
 ```
 
 The compact measurements are recorded as `h100_timestep_refinement` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+## Matched H100 versus LLVM CPU sampling on della-rse (2026-09-25)
+
+Fresh measured comparison on the same node, using compiler commit `6dd18b4202`.
+Each call evaluates one parameter vector for subject 1's complete 760-trial
+ordered sequence, retaining control state, with either 10,000 or 100,000
+estimates per trial. All four LCA noise SDs are 0.1; LCA dt is 0.01 s, LC
+internal dt is 0.02 s, and LC performs ten internal steps per scheduler pass.
+
+| Estimates per trial | LLVM CPU, 32 threads | H100 NVL | Measured speedup |
+| ---: | ---: | ---: | ---: |
+| 10,000 | 28.011 s | 0.1165 s | 240.4× |
+| 100,000 | 276.385 s | 0.4360 s | 633.9× |
+
+These timings cover simulation, input preparation, and returning all choice/RT
+samples to host memory on both backends. They exclude likelihood estimation,
+optimizer work, and setup/JIT. The 10,000-estimate CPU cases use two warmed
+calls each; the 100,000-estimate CPU case uses one warmed call. GPU cases use
+five warmed calls each. Every case first completed a separate cold call.
+The 100,000-estimate CPU timing was executed in full, not extrapolated.
+
+### CPU capacity and thread scaling
+
+The node has two Xeon Gold 6548Y+ processors with 32 physical cores each
+(64 total, no SMT), but the account cgroup is limited to 32 cores of aggregate
+CPU time: `cpu.max = 3200000 100000`. All 64 CPUs are in the allowed cpuset.
+The 32-thread configuration was fastest in the pilot and was selected for
+the 100,000-estimate measurement. This is a shared-node comparison under the
+existing account limit, not unrestricted use of all 64 physical cores.
+
+| LLVM threads | 10,000 estimates, warmed median |
+| ---: | ---: |
+| 8 | 109.986 s |
+| 32 | 28.011 s |
+| 64 | 30.521 s |
+
+The saved initial state, per-trial means, sample quantiles and first-trial
+sample excerpt agree exactly across CPU thread counts. Every case also
+checks complete sample-array replay against its previous call.
+
+### Model configuration and validation
+
+The fixed benchmark vector is threshold 0.30, NDT 0.20 s, SDR bias -0.45,
+control gain 10, LC mode 0.90, LC scaling 1, and LC base gain 5. It is the
+first proposal from the existing four-proposal benchmark, not the recovery
+generating vector. Runtime depends on these parameters and the input sequence.
+
+GPU options are `block_size=32`, `num_warps=1`,
+`trial_schedule="independent"`, `normal_rng="philox4x_fast_v1"`, and
+specialization of 108 non-fitted parameter defaults. All seven named fitting
+parameters remain dynamic. GPU simulations passed strict 2,000-step caps.
+Native LLVM uses its normal scheduler and the existing benchmark option
+`--independent-noise-streams` for distinct per-component seed offsets.
+No LLVM or batched compiler source code was modified for this comparison.
+
+LLVM uses float64 and its native random generator; GPU uses float32 and
+Philox. Independent component noise is used on both, but their random draws
+are not matched. Sampling summaries are therefore compared statistically.
+Standard errors use independent complete trajectories, preserving dependence
+between trials. These summaries do not establish exact backend equivalence.
+
+| Estimates | Overall GPU minus CPU mean RT | Combined SE | RT difference / SE | Choice-1 difference / SE | First-trial RT difference / SE |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10,000 | 0.0589 ms | 0.1489 ms | 0.40 | -0.63 | -5.26 |
+| 100,000 | 0.0338 ms | 0.0469 ms | 0.72 | 0.02 | -8.89 |
+
+The previously documented first-trial discrepancy is tracked separately
+above; close aggregate agreement must not be interpreted as resolving it.
+
+### Separate current GPU fitting-objective measurement
+
+The ordinary fused PEC histogram objective was also rerun on this H100 at
+100,000 estimates, using the existing four proposals, 760 retained / 720
+scored trials, 100 bins on [0, 3] s, smoothing sigma 0.5 and pseudocount 1.
+These are medians of five warmed complete four-proposal pools, divided by
+four. This path returns scores rather than materializing all host samples.
+
+| Candidate batch size | GPU seconds per candidate |
+| ---: | ---: |
+| 1 | 0.3009 s |
+| 4 | 0.2705 s |
+
+These objective timings are supplementary: the CPU benchmark does not
+include density estimation, so they are not used for the matched speedup
+table. Fused and materialized GPU trial probabilities passed the existing
+FP32 tolerance check. Repeated scores and candidate batching checks passed.
+
+### Setup and artifacts
+
+| Estimates | CPU PEC setup | CPU first call | GPU PEC/plan setup | GPU first call |
+| ---: | ---: | ---: | ---: | ---: |
+| 10,000 | 3.008 s | 32.477 s | 9.498 s | 4.508 s |
+| 100,000 | 3.129 s | 277.225 s | 4.886 s | 3.751 s |
+
+Setup starts after model construction and excludes imports; first calls
+include any lazy compilation plus their simulation. The benchmark driver
+now exposes current GPU launch/specialization options and records source
+revision, driver hash, and completion status. Existing defaults are preserved.
+Ruff, Python compilation, and `git diff --check` passed. The isolated snapshot
+was verified against 515 local source/configuration/input hashes.
+
+Reproduce a matched sampler case with:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_llvm_benchmark.py \
+  --backend llvm --threads 32 --trials 760 --estimates 100000 --repeats 1 \
+  --c-noise .1 --s-noise .1 --d-noise .1 --r-noise .1 \
+  --independent-noise-streams --output /tmp/dawa_llvm_100000.json
+```
+
+For GPU use `--backend triton --threads 8 --repeats 5` plus
+`--specialize-fixed-parameters --normal-rng philox4x_fast_v1
+--trial-schedule independent --block-size 32 --num-warps 1`, and a separate
+output filename. Raw reports, logs, hardware/cgroup records, environment,
+source hashes, and launch scripts are retained at:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/llvm-h100-20260925
+```
+
+Compact results are stored under `della_rse_llvm_h100_20260925` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+## First-trial LLVM RT discrepancy: reset diagnosis (2026-09-25)
+
+The first-trial discrepancy above is an LLVM reset/modulation mismatch with
+native Python. It is reproducible without noise and without the DAWA LC
+mechanism. The batched GPU follows Python in the deterministic checks.
+This investigation made no production compiler or model changes.
+
+### Cause
+
+At the first trial start, the stimulus, decision, and response LCAs reset their
+integrator values to zero and recompute their logistic activity. Python's
+`Mechanism_Base.reset()` uses the function's already sampled parameters, which
+are initially gain 5 and bias -0.45. Its reset activity is therefore
+`sigmoid(5 * -0.45) = 0.0953494648991095`.
+
+LLVM's `_gen_llvm_function_reset()` instead calls
+`_gen_llvm_param_ports_for_obj()` and executes the ParameterPorts again. The
+bias and LC controllers have not executed yet: their initial control outputs
+are both 1. Under OVERRIDE modulation, LLVM therefore resets with gain 1 and
+bias 1, producing `sigmoid(1) = 0.7310585786300049`. Runtime instrumentation
+confirmed both parameter values and the resulting reset outputs for all three
+LCAs. The persistent control LCA agrees across backends on the first step.
+
+Those reset activities feed recurrent inhibition on the first actual
+integration step. With competition 8 and dt 0.01, the excess activity adds
+`-8 * (0.7310585786300049 - 0.0953494648991095) * 0.01 =
+-0.0508567290984716` to a unit's integrated input from one competitor. Thus a
+higher starting activity can delay the response by increasing inhibition.
+
+Relevant implementation locations:
+
+- [Python reset](../../../../psyneulink/core/components/mechanisms/mechanism.py):
+  `Mechanism_Base.reset()` runs the primary function after integrator reset
+  without executing ParameterPorts.
+- [LLVM reset](../../../../psyneulink/core/components/mechanisms/mechanism.py):
+  `_gen_llvm_function_reset()` recomputes modulation via
+  `_gen_llvm_param_ports_for_obj()`.
+- [Recurrent output handling](../../../../psyneulink/library/components/mechanisms/processing/transfer/recurrenttransfermechanism.py):
+  `_gen_llvm_output_ports()` copies reset activity into `old_val`, which is
+  used by the next recurrent projection.
+
+### Causal checks
+
+For subject 1's first retained input, with all noise disabled:
+
+| Backend | First-trial RT | Response executions |
+| --- | ---: | ---: |
+| Python | 0.96 s | 76 |
+| Batched Triton | 0.96 s | 76 |
+| Native LLVM | 0.97 s | 77 |
+| LLVM with diagnostic reset override | 0.96 s | 76 |
+
+The temporary override uses the base logistic parameters for the three LCA
+resets in a **one-trial** run. This restores all final mechanism values to
+Python within 1.2e-16, including LC state and RT. Python and per-node LLVM also
+agree on the first integration step, isolating the difference to the fully
+compiled composition's reset path. Across four unmodified deterministic
+trials, Python/GPU RTs are `[0.96, 1.26, 0.89, 1.25]` and native LLVM RTs are
+`[0.97, 1.26, 0.89, 1.25]` seconds; matching RTs do not establish identical
+internal states.
+
+A separate local noisy check used 100,000 estimates of the first trial, all
+four noise SDs 0.1, the same benchmark vector, independent component streams,
+and a fixed construction seed. Each case passed complete sample-array replay.
+
+| Backend | Mean RT | RT standard error |
+| --- | ---: | ---: |
+| Native LLVM | 939.679 ms | 0.583 ms |
+| LLVM with diagnostic reset override | 932.527 ms | 0.584 ms |
+| Batched Triton, RTX 2080 Ti | 932.163 ms | 0.583 ms |
+
+The LLVM minus GPU gap falls from 7.516 ms (9.12 combined standard errors) to
+0.364 ms (0.44 combined standard errors). The GPU mean differs slightly from
+the earlier H100 full-sequence run because this run batches only one trial;
+random draws are not matched across backends or workload layouts. These are
+correctness measurements, not an update to the H100 performance timings.
+
+### Minimal reproduction and fix direction
+
+A single two-unit LCA suffices: Logistic(gain=5, bias=-0.45), competition=8,
+leak=8, self_excitation=0, noise=0, dt=0.01, `AtTrialStart()` reset, and
+`execute_until_finished=False`. Add two OVERRIDE ControlMechanisms that
+monitor constant gain=5 and bias=-0.45 ProcessingMechanisms. Run one trial
+with zero external LCA input, marking the LCA as an INPUT node. After one
+execution:
+
+- Python integrator value: `[-0.00762795719192876, -0.00762795719192876]`.
+- LLVM integrator value: `[-0.05848468629040039, -0.05848468629040039]`.
+
+The clean fix belongs in general LLVM reset semantics: preserve and reuse
+the parameters most recently sampled by the receiving mechanism, with the
+correct initial values before its first execution. Always using base
+parameters is only a diagnostic intervention, not a valid multi-trial fix:
+later resets must retain sampled modulation, and DAWA's LC can publish a new
+gain after a target last executed. Regression coverage should include the
+minimal case, later resets with changing modulation, and full DAWA parity.
+
+“First-trial discrepancy” describes where the largest measured RT difference
+appears; it does not guarantee that later states are unaffected. Differences
+in stopping time can also propagate through the persistent control LCA.
+
+Raw diagnostic scripts, reset traces, deterministic states, and noisy reports
+are retained locally in `/tmp/dawa-first-trial-20260925/`. Compact measurements
+are under `first_trial_reset_diagnosis_20260925` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+## Slurm fitting and recovery handoff test (2026-09-25)
+
+The reusable [dawa_gpu.slurm](dawa_gpu.slurm) launcher was tested through Della
+Slurm in both `fit` and `recovery` modes. Each job requested one full A100,
+eight CPUs, and 24 GB of host RAM. Della assigned `gputest`/`gpu-test` and
+an NVIDIA A100 SXM4 80 GB on `della-l07g2`.
+
+Both runs used subject 1's complete 760-trial sequence (720 scored), 100,000
+estimates per proposal, 10 ms LCA updates, noise SD 0.1 in all four LCAs,
+and the documented smoothing/pseudocount settings. To bound this execution
+test, each used 21 proposals, population 10, and 128 predictive trajectories.
+The jobs had a five-minute limit instead of the launcher's two-hour default.
+
+| Mode | Slurm job | Slurm elapsed | Optimizer time | Result |
+| --- | --- | ---: | ---: | --- |
+| Empirical fit | 14433250 | 65 s | 15.14 s | COMPLETED, exit 0:0 |
+| Recovery | 14433251 | 53 s | 8.21 s | COMPLETED, exit 0:0 |
+
+Both finished all 21 proposals, three fresh-seed rescores, and predictive
+checks, with no invalid proposals. The empirical fit preserved all selected
+recorded responses, row order, and masked trials. Recovery passed exact
+generation/PEC replay and produced synthetic observations. Both manifests and
+final reports have `status="complete"`. These short runs establish that the
+handoff executes; they are not converged fits or warmed throughput benchmarks.
+
+The launcher also passed shell syntax checks and local checks of both modes,
+array subject selection, argument forwarding, paths containing spaces, and
+preservation of Slurm's GPU visibility. Source hashes for all 265 files in the
+isolated snapshot were verified before submission and after completion.
+The environment used Python 3.13.13, PyTorch 2.13.0+cu130, Triton 3.7.1,
+and `cudatoolkit/13.0`, with compiler base commit `6dd18b4202` and the new
+handoff scripts included in the hashed snapshot.
+
+See the [submission instructions](README.md#submit-a-gpu-job-on-della).
+Raw source, submission/verification scripts, Slurm logs and accounting,
+observations, optimizer journals, and result reports are retained under:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/slurm-handoff-20260925
+```
+
+Compact results are stored as `slurm_handoff_a100_20260925` in
 [dawa_benchmark_results.json](dawa_benchmark_results.json).

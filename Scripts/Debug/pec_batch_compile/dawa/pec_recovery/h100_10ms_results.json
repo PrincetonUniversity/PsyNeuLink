@@ -1,0 +1,381 @@
+{
+  "base_commit": "6dd18b4202",
+  "driver_sha256": "a0500ecd97e2a4774bb8fa5f9128a151d01f276aa45442c9aaf4de94c4af7d25",
+  "design": {
+    "trials": 760,
+    "scored_trials": 720,
+    "synthetic_sha256": "bde7af4085b16e59ef1a5dd939cec765fb115a4dc5f1a1960cd341481f528f2b",
+    "truth": {
+      "Response Units\n[Left, Right].termination_threshold[1]": 0.4,
+      "RT_GATE.intercept[1]": 0.22,
+      "Bias Mechanism.intercept": -0.4,
+      "Control Units\n[Color, Location].gain[1]": 12.0,
+      "LC.mode[0.0]": 0.65,
+      "LC.mode[1.0]": 0.8,
+      "LC.slope[1]": 1.5,
+      "LC.intercept": 5.5
+    },
+    "bounds": {
+      "Response Units\n[Left, Right].termination_threshold[1]": [
+        0.25,
+        0.7,
+        0.001
+      ],
+      "RT_GATE.intercept[1]": [
+        0.1,
+        0.3,
+        0.0001
+      ],
+      "Bias Mechanism.intercept": [
+        -0.5,
+        0.0,
+        0.001
+      ],
+      "Control Units\n[Color, Location].gain[1]": [
+        5.0,
+        20.0,
+        0.01
+      ],
+      "LC.mode[0.0]": [
+        0.1,
+        0.9,
+        0.001
+      ],
+      "LC.mode[1.0]": [
+        0.1,
+        0.9,
+        0.001
+      ],
+      "LC.slope[1]": [
+        1.0,
+        4.0,
+        0.001
+      ],
+      "LC.intercept": [
+        3.0,
+        10.0,
+        0.001
+      ]
+    },
+    "noise": {
+      "c_noise": 0.1,
+      "s_noise": 0.1,
+      "d_noise": 0.1,
+      "r_noise": 0.1
+    },
+    "time_steps": {
+      "Control Units\n[Color, Location].time_step_size": 0.01,
+      "Stimulus Units\n[Red, Blue, Left, Right].time_step_size": 0.01,
+      "Decision Units\n[Left, Right].time_step_size": 0.01,
+      "LC.time_step_size": 0.02,
+      "Response Units\n[Left, Right].time_step_size": 0.01
+    },
+    "observed_summary": {
+      "0": {
+        "count": 358,
+        "choice_one_probability": 0.5083798766136169,
+        "mean_rt": 0.9364525079727173,
+        "rt_quantiles": [
+          0.7099999785423279,
+          0.9049999713897705,
+          1.172999954223633
+        ]
+      },
+      "1": {
+        "count": 362,
+        "choice_one_probability": 0.4806629717350006,
+        "mean_rt": 0.9429557919502258,
+        "rt_quantiles": [
+          0.7009999871253968,
+          0.8999999761581421,
+          1.25
+        ]
+      }
+    },
+    "data_seed": 20260925,
+    "model_seed": 29
+  },
+  "estimates": 100000,
+  "estimator": {
+    "kind": "trial_marginal_histogram",
+    "bins": 100,
+    "rt_range": [
+      0.0,
+      3.0
+    ],
+    "smoothing_sigma": 0.5,
+    "pseudocount": 1.0
+  },
+  "gpu": "NVIDIA H100 NVL",
+  "fits": [
+    {
+      "start": 0,
+      "optimizer_seed": 101,
+      "simulation_seed": 29,
+      "initial": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.475,
+        "RT_GATE.intercept[1]": 0.2,
+        "Bias Mechanism.intercept": -0.25,
+        "Control Units\n[Color, Location].gain[1]": 12.5,
+        "LC.mode[0.0]": 0.5,
+        "LC.mode[1.0]": 0.5,
+        "LC.slope[1]": 2.5,
+        "LC.intercept": 6.5
+      },
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.382,
+        "RT_GATE.intercept[1]": 0.2116,
+        "Bias Mechanism.intercept": -0.41000000000000003,
+        "Control Units\n[Color, Location].gain[1]": 12.52,
+        "LC.mode[0.0]": 0.379,
+        "LC.mode[1.0]": 0.693,
+        "LC.slope[1]": 2.489,
+        "LC.intercept": 5.099
+      },
+      "errors": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.018000000000000016,
+        "RT_GATE.intercept[1]": -0.00839999999999999,
+        "Bias Mechanism.intercept": -0.010000000000000009,
+        "Control Units\n[Color, Location].gain[1]": 0.5199999999999996,
+        "LC.mode[0.0]": -0.271,
+        "LC.mode[1.0]": -0.1070000000000001,
+        "LC.slope[1]": 0.9889999999999999,
+        "LC.intercept": -0.4009999999999998
+      },
+      "errors_as_fraction_of_bounds": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.04000000000000004,
+        "RT_GATE.intercept[1]": -0.04199999999999996,
+        "Bias Mechanism.intercept": -0.020000000000000018,
+        "Control Units\n[Color, Location].gain[1]": 0.03466666666666664,
+        "LC.mode[0.0]": -0.33875,
+        "LC.mode[1.0]": -0.13375000000000012,
+        "LC.slope[1]": 0.3296666666666666,
+        "LC.intercept": -0.05728571428571426
+      },
+      "normalized_rmse": 0.17662395327011615,
+      "evaluations": 5000,
+      "fit_minutes": 27.84550456053112,
+      "best_evaluation": 4932,
+      "improvement_in_final_1000_evaluations": 0.1108856201171875,
+      "evaluations_to_within_one_log_unit_of_final": 2573,
+      "total_minutes": 28.47015304096664,
+      "invalid_proposals": 24,
+      "training_log_likelihood": 255.31297302246094,
+      "initial_training_log_likelihood": -2092.662109375,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -2091.03271484375,
+          "fitted": 255.34268188476562,
+          "fitted_minus_truth": 3.2175445556640625
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -2085.115966796875,
+          "fitted": 255.00355529785156,
+          "fitted_minus_truth": 2.446441650390625
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -2090.09375,
+          "fitted": 254.83251953125,
+          "fitted_minus_truth": 2.985107421875
+        }
+      ],
+      "mean_fitted_minus_truth": 2.883031209309896,
+      "sd_fitted_minus_truth_across_seeds": 0.39555604850515336,
+      "mean_validation_log_likelihood": {
+        "truth": 252.17655436197916,
+        "initial": -2088.7474772135415,
+        "fitted": 255.05958557128906
+      },
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.508456289768219,
+            "mean_rt": 0.9275751113891602,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.2015999555587769
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.48069265484809875,
+            "mean_rt": 0.9356200695037842,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.231600046157837
+            ]
+          }
+        }
+      }
+    },
+    {
+      "start": 1,
+      "optimizer_seed": 202,
+      "simulation_seed": 37,
+      "initial": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.35,
+        "RT_GATE.intercept[1]": 0.18,
+        "Bias Mechanism.intercept": -0.35,
+        "Control Units\n[Color, Location].gain[1]": 9.0,
+        "LC.mode[0.0]": 0.35,
+        "LC.mode[1.0]": 0.65,
+        "LC.slope[1]": 2.0,
+        "LC.intercept": 6.0
+      },
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.383,
+        "RT_GATE.intercept[1]": 0.196,
+        "Bias Mechanism.intercept": -0.423,
+        "Control Units\n[Color, Location].gain[1]": 14.700000000000001,
+        "LC.mode[0.0]": 0.309,
+        "LC.mode[1.0]": 0.533,
+        "LC.slope[1]": 2.4210000000000003,
+        "LC.intercept": 4.864
+      },
+      "errors": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.017000000000000015,
+        "RT_GATE.intercept[1]": -0.023999999999999994,
+        "Bias Mechanism.intercept": -0.022999999999999965,
+        "Control Units\n[Color, Location].gain[1]": 2.700000000000001,
+        "LC.mode[0.0]": -0.341,
+        "LC.mode[1.0]": -0.267,
+        "LC.slope[1]": 0.9210000000000003,
+        "LC.intercept": -0.6360000000000001
+      },
+      "errors_as_fraction_of_bounds": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.03777777777777781,
+        "RT_GATE.intercept[1]": -0.11999999999999998,
+        "Bias Mechanism.intercept": -0.04599999999999993,
+        "Control Units\n[Color, Location].gain[1]": 0.18000000000000008,
+        "LC.mode[0.0]": -0.42625,
+        "LC.mode[1.0]": -0.33375,
+        "LC.slope[1]": 0.3070000000000001,
+        "LC.intercept": -0.09085714285714287
+      },
+      "normalized_rmse": 0.23609460654099834,
+      "evaluations": 5000,
+      "fit_minutes": 28.027210570165575,
+      "best_evaluation": 4225,
+      "improvement_in_final_1000_evaluations": 0.0905914306640625,
+      "evaluations_to_within_one_log_unit_of_final": 1403,
+      "total_minutes": 28.547768389550036,
+      "invalid_proposals": 32,
+      "training_log_likelihood": 255.09217834472656,
+      "initial_training_log_likelihood": -855.484130859375,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -857.5192260742188,
+          "fitted": 254.9730224609375,
+          "fitted_minus_truth": 2.8478851318359375
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -854.9105224609375,
+          "fitted": 254.69981384277344,
+          "fitted_minus_truth": 2.1427001953125
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -861.390869140625,
+          "fitted": 254.97781372070312,
+          "fitted_minus_truth": 3.130401611328125
+        }
+      ],
+      "mean_fitted_minus_truth": 2.706995646158854,
+      "sd_fitted_minus_truth_across_seeds": 0.5087002134662246,
+      "mean_validation_log_likelihood": {
+        "truth": 252.17655436197916,
+        "initial": -857.9402058919271,
+        "fitted": 254.88355000813803
+      },
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084685683250427,
+            "mean_rt": 0.9313727617263794,
+            "rt_quantiles": [
+              0.6959999799728394,
+              0.9059999585151672,
+              1.2059999704360962
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.480712890625,
+            "mean_rt": 0.93971848487854,
+            "rt_quantiles": [
+              0.6959999799728394,
+              0.9059999585151672,
+              1.2259999513626099
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "artifact_root": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/recovery-20260925",
+  "limitations": [
+    "One generating vector and one synthetic subject; two optimizer starts.",
+    "Trial-marginal histogram objective with latent state propagated, not an observation-conditioned joint likelihood.",
+    "Fresh simulation-seed rescoring uses the same observed synthetic data, not held-out subjects.",
+    "Budget completion does not prove global or local convergence."
+  ]
+}

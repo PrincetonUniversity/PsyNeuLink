@@ -15,6 +15,8 @@ pec_batch_compile/
       direct_likelihood/
       handoff/
   dawa/
+    dawa_pec_fit.py           # single-subject GPU fits
+    dawa_pec_recovery.py      # synthetic data and parameter recovery
     dawa_batched_simulation.py
     dawa_llvm_benchmark.py
     dawa_continuous_*.py
@@ -72,4 +74,4 @@ streams as `philox4x_v1` with a faster bounded-angle Gaussian transform; roundin
 and stopping steps can differ. It requires CUDA compilation. The interpreter
 and handwritten CSI oracle reject this mode explicitly. General defaults remain
 unspecialized with `philox4x_v1`; the DAWA subject benchmark opts into both
-optimizations. See [DAWA usage](dawa/README.md#fixed-parameters-and-faster-gaussian-conversion).
+optimizations. See [DAWA compiler notes](dawa/COMPILER_NOTES.md#fixed-parameters-and-faster-gaussian-conversion).

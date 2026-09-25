@@ -4144,5 +4144,515 @@
     "fit_time_note": "Throughput extrapolation only; excludes setup/JIT and optimizer overhead. Four proposals, five warm repeats each.",
     "artifact_root": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/timestep",
     "wrapper_sha256": "c0f871b6116326b22cf1dd29f366918d95229be0637efd4955d6c947cc3ebf57"
+  },
+  "della_rse_llvm_h100_20260925": {
+    "date_utc": "2026-09-25",
+    "source_revision": "6dd18b42029829066445118b792979b5fe853664",
+    "driver_sha256": "c44f8257ad4ffe215411e46e559190a0f8a9d816936b403a76df507e92586d73",
+    "model_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+    "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+    "hardware": {
+      "date": "Fri Sep 25 04:33:07 AM UTC 2026\n",
+      "hostname": "della-rse.princeton.edu\n",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  64\nOn-line CPU(s) list:                     0-63\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) GOLD 6548Y+\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      1\nCore(s) per socket:                      32\nSocket(s):                               2\nStepping:                                2\nCPU(s) scaling MHz:                      92%\nCPU max MHz:                             4100.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5000.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cat_l2 cdp_l3 cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect user_shstk avx_vnni avx512_bf16 wbnoinvd dtherm ida arat pln pts hfi vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b enqcmd fsrm md_clear serialize tsxldtrk pconfig arch_lbr ibt amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities\nVirtualization:                          VT-x\nL1d cache:                               3 MiB (64 instances)\nL1i cache:                               2 MiB (64 instances)\nL2 cache:                                128 MiB (64 instances)\nL3 cache:                                120 MiB (2 instances)\nNUMA node(s):                            2\nNUMA node0 CPU(s):                       0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62\nNUMA node1 CPU(s):                       1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace\n",
+      "gpu": "Fri Sep 25 00:33:07 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA H100 NVL                On  |   00000000:0D:00.0 Off |                    0 |\n| N/A   39C    P0             62W /  350W |       0MiB /  95830MiB |      0%      Default |\n|                                         |                        |             Disabled |\n+-----------------------------------------+------------------------+----------------------+\n|   1  NVIDIA H100 NVL                On  |   00000000:B4:00.0 Off |                    0 |\n| N/A   39C    P0             61W /  350W |       0MiB /  95830MiB |      0%      Default |\n|                                         |                        |             Disabled |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+\n",
+      "load": " 00:33:08 up 16 days, 18:07,  1 user,  load average: 2.48, 2.24, 2.21\n",
+      "memory": "               total        used        free      shared  buff/cache   available\nMem:           1.0Ti        39Gi       906Gi       481Mi        72Gi       967Gi\nSwap:          7.8Gi          0B       7.8Gi\n",
+      "cgroup_limits": {
+        "/sys/fs/cgroup/user.slice/cpu.max": "max 100000",
+        "/sys/fs/cgroup/user.slice/user-121609.slice/cpu.max": "3200000 100000",
+        "/sys/fs/cgroup/cpuset.cpus.effective": "0-63"
+      }
+    },
+    "scope": "simulation including preparation and host output; no likelihood or optimizer",
+    "parameter_values": {
+      "Response Units\n[Left, Right].termination_threshold": 0.3,
+      "RT_GATE.intercept": 0.2,
+      "Bias Mechanism.intercept": -0.45,
+      "Control Units\n[Color, Location].gain": 10.0,
+      "LC.mode": 0.9,
+      "LC.slope": 1.0,
+      "LC.intercept": 5.0
+    },
+    "noise": {
+      "c_noise": 0.1,
+      "s_noise": 0.1,
+      "d_noise": 0.1,
+      "r_noise": 0.1
+    },
+    "lca_dt": 0.01,
+    "lc_dt": 0.02,
+    "lc_internal_steps_per_pass": 10,
+    "cpu_dtype": "float64",
+    "gpu_dtype": "float32",
+    "versions": {
+      "psyneulink": "0+unknown",
+      "llvmlite": "0.48.0",
+      "triton": "3.7.1",
+      "torch": "2.13.0"
+    },
+    "gpu": "NVIDIA H100 NVL",
+    "gpu_launch": {
+      "block_size": 32,
+      "num_warps": 1,
+      "normal_rng": "philox4x_fast_v1",
+      "trial_schedule": "independent"
+    },
+    "specialized_parameter_count": 108,
+    "cpu_thread_scaling": [
+      {
+        "threads": 8,
+        "median_seconds": 109.98614736797754,
+        "first_call_seconds": 114.7319002870936,
+        "warm_seconds": [
+          111.27008336805739,
+          108.70221136789769
+        ]
+      },
+      {
+        "threads": 32,
+        "median_seconds": 28.010852270992473,
+        "first_call_seconds": 32.4768747841008,
+        "warm_seconds": [
+          28.044203229015693,
+          27.977501312969252
+        ]
+      },
+      {
+        "threads": 64,
+        "median_seconds": 30.52065097191371,
+        "first_call_seconds": 34.447143697878346,
+        "warm_seconds": [
+          31.126098912907764,
+          29.915203030919656
+        ]
+      }
+    ],
+    "matched_cases": [
+      {
+        "estimates_per_trial": 10000,
+        "trials": 760,
+        "cpu_threads": 32,
+        "cpu_seconds": 28.010852270992473,
+        "gpu_seconds": 0.11649498785845935,
+        "speedup": 240.44684484645362,
+        "cpu_warm_seconds": [
+          28.044203229015693,
+          27.977501312969252
+        ],
+        "gpu_warm_seconds": [
+          0.11776297981850803,
+          0.11713768192566931,
+          0.11645827116444707,
+          0.11649498785845935,
+          0.11647123913280666
+        ],
+        "cpu_first_call_seconds": 32.4768747841008,
+        "gpu_first_call_seconds": 4.507758353836834,
+        "cpu_pec_setup_seconds": 3.0081636081449687,
+        "gpu_pec_setup_seconds": 9.49798303307034
+      },
+      {
+        "estimates_per_trial": 100000,
+        "trials": 760,
+        "cpu_threads": 32,
+        "cpu_seconds": 276.3845377850812,
+        "gpu_seconds": 0.43603828293271363,
+        "speedup": 633.8538348655293,
+        "cpu_warm_seconds": [
+          276.3845377850812
+        ],
+        "gpu_warm_seconds": [
+          0.4360835859552026,
+          0.43603828293271363,
+          0.4375944519415498,
+          0.43551196809858084,
+          0.4358908839058131
+        ],
+        "cpu_first_call_seconds": 277.2250145310536,
+        "gpu_first_call_seconds": 3.751203389139846,
+        "cpu_pec_setup_seconds": 3.1288549101445824,
+        "gpu_pec_setup_seconds": 4.885652303230017
+      }
+    ],
+    "distribution_comparisons": [
+      {
+        "estimates_per_trial": 10000,
+        "mean_rt": {
+          "cpu": 0.9827152763157895,
+          "gpu": 0.9827741980552673,
+          "gpu_minus_cpu": 5.892173947785739e-05,
+          "combined_sequence_standard_error": 0.00014890625025178108,
+          "standardized_difference": 0.39569688564602495,
+          "first_trial_cpu": 0.9417389999999981,
+          "first_trial_gpu": 0.9280589818954468,
+          "first_trial_standardized_difference": -5.256550960875562,
+          "max_abs_standardized_difference_after_first_trial": 3.8815451034466513,
+          "max_abs_trial_difference_after_first_trial": 0.01794411798858242
+        },
+        "mean_decision": {
+          "cpu": 0.49891315789473684,
+          "gpu": 0.4988603889942169,
+          "gpu_minus_cpu": -5.276890051991723e-05,
+          "combined_sequence_standard_error": 8.414263645925364e-05,
+          "standardized_difference": -0.6271362859597435,
+          "first_trial_cpu": 0.9961,
+          "first_trial_gpu": 0.9976000189781189,
+          "first_trial_standardized_difference": 1.892904714052579,
+          "max_abs_standardized_difference_after_first_trial": 3.2844882230275685,
+          "max_abs_trial_difference_after_first_trial": 0.008500001090765
+        }
+      },
+      {
+        "estimates_per_trial": 100000,
+        "mean_rt": {
+          "cpu": 0.9826202773684211,
+          "gpu": 0.9826540946960449,
+          "gpu_minus_cpu": 3.3817327623864024e-05,
+          "combined_sequence_standard_error": 4.693252211208062e-05,
+          "standardized_difference": 0.7205521054910303,
+          "first_trial_cpu": 0.9396790000000054,
+          "first_trial_gpu": 0.9323486685752869,
+          "first_trial_standardized_difference": -8.887296717763991,
+          "max_abs_standardized_difference_after_first_trial": 3.362359020690439,
+          "max_abs_trial_difference_after_first_trial": 0.005391751773073272
+        },
+        "mean_decision": {
+          "cpu": 0.4988241052631579,
+          "gpu": 0.4988246262073517,
+          "gpu_minus_cpu": 5.209441937825687e-07,
+          "combined_sequence_standard_error": 2.6668195129898706e-05,
+          "standardized_difference": 0.019534287612832067,
+          "first_trial_cpu": 0.99673,
+          "first_trial_gpu": 0.9966999888420105,
+          "first_trial_standardized_difference": -0.11727687975724224,
+          "max_abs_standardized_difference_after_first_trial": 2.8875691802467647,
+          "max_abs_trial_difference_after_first_trial": 0.0026400045204162392
+        }
+      }
+    ],
+    "fused_gpu_objective": {
+      "scope": "Separate four-proposal PEC histogram-scoring benchmark; not a CPU likelihood comparison",
+      "candidates": [
+        [
+          0.3,
+          0.2,
+          -0.45,
+          10.0,
+          0.9,
+          0.9,
+          1.0,
+          5.0
+        ],
+        [
+          0.4,
+          0.22,
+          -0.4,
+          12.0,
+          0.7,
+          0.8,
+          1.5,
+          5.5
+        ],
+        [
+          0.5,
+          0.18,
+          -0.35,
+          8.0,
+          0.5,
+          0.7,
+          2.0,
+          6.0
+        ],
+        [
+          0.6,
+          0.25,
+          -0.3,
+          15.0,
+          0.3,
+          0.6,
+          2.5,
+          7.0
+        ]
+      ],
+      "scored_trials": 720,
+      "estimates": 100000,
+      "estimator": {
+        "kind": "trial_marginal_histogram",
+        "bins": 100,
+        "rt_range": [
+          0.0,
+          3.0
+        ],
+        "pseudocount": 1.0,
+        "smoothing_sigma": 0.5
+      },
+      "materialized_validation": {
+        "passed": true,
+        "rtol": 2e-06,
+        "atol": 1e-08,
+        "max_absolute_density_error": 1.430511474609375e-06,
+        "max_relative_density_error": 3.432901962696633e-07
+      },
+      "cases": [
+        {
+          "batch_size": 1,
+          "seconds_per_candidate": 0.3008925439789891,
+          "warm_pool_seconds": [
+            1.2044370148796588,
+            1.2027426259592175,
+            1.2036480030510575,
+            1.2030232830438763,
+            1.2035701759159565
+          ]
+        },
+        {
+          "batch_size": 4,
+          "seconds_per_candidate": 0.27054912177845836,
+          "warm_pool_seconds": [
+            1.0795852488372475,
+            1.0791949359700084,
+            1.0829121491406113,
+            1.0821964871138334,
+            1.0837065419182181
+          ]
+        }
+      ]
+    },
+    "remote_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/llvm-h100-20260925",
+    "notes": [
+      "Native LLVM and Triton use different independent RNG streams and FP64/FP32 arithmetic.",
+      "LLVM uses the existing benchmark option for separate seed offsets; no LLVM/compiler source changes.",
+      "Every backend repeats exactly at fixed seed; GPU uses strict truncation checks.",
+      "CPU thread-scaling saved sample summaries agree exactly across 8/32/64 threads.",
+      "The account has a 32-core-equivalent cgroup CPU quota on this 64-physical-core shared node.",
+      "CPU 100000-estimate case has one measured warmed call; no timing extrapolation.",
+      "Setup excludes initial imports and model construction; first calls include any lazy compilation."
+    ]
+  },
+  "first_trial_reset_diagnosis_20260925": {
+    "date": "2026-09-25",
+    "source_revision": "6dd18b42029829066445118b792979b5fe853664",
+    "conclusion": "LLVM composition reset resamples modulation; Python reset reuses previously sampled function parameters.",
+    "production_code_changed": false,
+    "diagnostic_override_scope": "Temporary in-process LLVM override of primary-function reset params for three downstream LCAs. Only one-trial runs: base parameters are not a correct general multi-trial fix.",
+    "raw_artifacts": "/tmp/dawa-first-trial-20260925",
+    "source_sha256": {
+      "psyneulink/core/components/mechanisms/mechanism.py": "f0bf21fd392d43da0cf427483e798c0d79d3c0abd90eca625b39f3ecf7d13405",
+      "psyneulink/core/components/ports/port.py": "d33dfaa27f7fd45e534f4d39cc90d5a96ff593f3406df1d43478711c0264b008",
+      "psyneulink/library/components/mechanisms/processing/transfer/recurrenttransfermechanism.py": "0713cd2b0ee89273ab5132dbc3c51ce7b22e4c7438961dff4bbf9262e6ab3882",
+      "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a"
+    },
+    "initial_reset": {
+      "layers": [
+        "stimulus",
+        "decision",
+        "response"
+      ],
+      "python": {
+        "gain": 5.0,
+        "bias": -0.45,
+        "activity": 0.0953494648991095
+      },
+      "llvm": {
+        "gain": 1.0,
+        "bias": 1.0,
+        "activity": 0.7310585786300049
+      },
+      "extra_recurrent_first_step_increment_per_competitor": -0.0508567290984716
+    },
+    "deterministic": {
+      "python_rt_seconds": [
+        0.96,
+        1.26,
+        0.89,
+        1.25
+      ],
+      "triton_rt_seconds": [
+        0.96,
+        1.26,
+        0.89,
+        1.25
+      ],
+      "llvm_rt_seconds": [
+        0.97,
+        1.26,
+        0.89,
+        1.25
+      ],
+      "diagnostic_override_first_trial_rt_seconds": 0.96,
+      "override_vs_python_max_absolute_final_mechanism_value_error": 1.1102230246251565e-16,
+      "python_vs_per_node_llvm_first_step_agree": true
+    },
+    "minimal_one_step_reproduction": {
+      "description": "One two-unit LCA and two OVERRIDE controllers; gain=5, bias=-.45, competition=8, leak=8, self_excitation=0, noise=0, dt=.01, AtTrialStart reset, zero external input.",
+      "python_pre": [
+        -0.0076279571919287605,
+        -0.0076279571919287605
+      ],
+      "llvm_pre": [
+        -0.05848468629040039,
+        -0.05848468629040039
+      ],
+      "python_activity": [
+        0.09210999372207837,
+        0.09210999372207837
+      ],
+      "llvm_activity": [
+        0.07293713781279228,
+        0.07293713781279228
+      ]
+    },
+    "noisy_first_trial": {
+      "trials": 1,
+      "estimates": 100000,
+      "lca_dt_seconds": 0.01,
+      "noise_sd_each_lca": 0.1,
+      "seed": 29,
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "cpu": "Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+      "all_cases_passed_complete_sample_replay": true,
+      "parameter_values": {
+        "Response Units\n[Left, Right].termination_threshold": 0.3,
+        "RT_GATE.intercept": 0.2,
+        "Bias Mechanism.intercept": -0.45,
+        "Control Units\n[Color, Location].gain": 10.0,
+        "LC.mode": 0.9,
+        "LC.slope": 1.0,
+        "LC.intercept": 5.0
+      },
+      "control_initial_activity": [
+        0.5095998395869012,
+        0.49828779949983987
+      ],
+      "cases": {
+        "original": {
+          "backend": "llvm",
+          "mean_rt": 0.9396789999999999,
+          "mean_decision": 0.99673,
+          "rt_standard_error_by_trial": [
+            0.0005829635220617842
+          ],
+          "decision_standard_error_by_trial": [
+            0.0001805364144264789
+          ],
+          "rt_quantiles": [
+            0.71,
+            0.9299999999999999,
+            1.18,
+            1.41,
+            2.08
+          ],
+          "dtype": "float64",
+          "rt_minus_gpu_seconds": 0.007516119102477958,
+          "combined_rt_standard_error_seconds": 0.0008243910747072554,
+          "rt_minus_gpu_z": 9.117176705420983
+        },
+        "base": {
+          "backend": "llvm",
+          "mean_rt": 0.9325268000000001,
+          "mean_decision": 0.9968,
+          "rt_standard_error_by_trial": [
+            0.0005840098145512923
+          ],
+          "decision_standard_error_by_trial": [
+            0.00017859988516006887
+          ],
+          "rt_quantiles": [
+            0.7,
+            0.9199999999999999,
+            1.17,
+            1.4,
+            2.0500000000000003
+          ],
+          "dtype": "float64",
+          "rt_minus_gpu_seconds": 0.0003639191024781274,
+          "combined_rt_standard_error_seconds": 0.0008251312862172528,
+          "rt_minus_gpu_z": 0.4410438781766292
+        },
+        "triton": {
+          "backend": "triton",
+          "mean_rt": 0.932162880897522,
+          "mean_decision": 0.9965000152587891,
+          "rt_standard_error_by_trial": [
+            0.0005829015148396023
+          ],
+          "decision_standard_error_by_trial": [
+            0.00018675614290776177
+          ],
+          "rt_quantiles": [
+            0.699999988079071,
+            0.9199999570846558,
+            1.1699999570846558,
+            1.399999976158142,
+            1.840000033378601
+          ],
+          "dtype": "float32"
+        }
+      },
+      "note": "GPU uses a one-trial layout; random draws are not matched to the earlier 760-trial H100 run or to LLVM. These runs diagnose semantics, not performance."
+    },
+    "limitations": [
+      "No production fix applied; diagnostic override only establishes the first-trial cause.",
+      "Correct general reset implementation must cache sampled modulation, including later trial resets.",
+      "Matching RTs on later deterministic trials does not imply matching internal states.",
+      "Stopping-time differences can propagate via persistent control state."
+    ]
+  },
+  "slurm_handoff_a100_20260925": {
+    "date": "2026-09-25",
+    "base_revision": "6dd18b42029829066445118b792979b5fe853664",
+    "source_files_verified": 265,
+    "raw_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/slurm-handoff-20260925",
+    "source_manifest_sha256": "923cdc0aea5e1f966bfcdd57938614532982b025b30fc88fc8dad087eccb21f8",
+    "lca_time_step_seconds": 0.01,
+    "noise_sd_all_four_lcas": 0.1,
+    "cases": {
+      "fit": {
+        "job_id": "14433250",
+        "slurm_state": "COMPLETED",
+        "slurm_exit_code": "0:0",
+        "slurm_elapsed": "00:01:05",
+        "node": "della-l07g2",
+        "allocated_resources": "billing=64,cpu=8,gres/gpu=1,mem=24G,node=1",
+        "gpu": "NVIDIA A100-SXM4-80GB",
+        "trials": 760,
+        "scored_trials": 720,
+        "estimates": 100000,
+        "evaluations": 21,
+        "fit_seconds": 15.139620522037148,
+        "driver_total_seconds": 36.12980248895474,
+        "invalid_proposals": 0,
+        "fresh_seed_rescores": 3,
+        "best_training_log_likelihood": 653.6187133789062,
+        "python": "3.13.13",
+        "torch": "2.13.0+cu130",
+        "observations_verified": true,
+        "source_hashes_verified": true
+      },
+      "recovery": {
+        "job_id": "14433251",
+        "slurm_state": "COMPLETED",
+        "slurm_exit_code": "0:0",
+        "slurm_elapsed": "00:00:53",
+        "node": "della-l07g2",
+        "allocated_resources": "billing=64,cpu=8,gres/gpu=1,mem=24G,node=1",
+        "gpu": "NVIDIA A100-SXM4-80GB",
+        "trials": 760,
+        "scored_trials": 720,
+        "estimates": 100000,
+        "evaluations": 21,
+        "fit_seconds": 8.210654980968684,
+        "driver_total_seconds": 38.197782788891345,
+        "invalid_proposals": 0,
+        "fresh_seed_rescores": 3,
+        "best_training_log_likelihood": 142.84402465820312,
+        "python": "3.13.13",
+        "torch": "2.13.0+cu130",
+        "observations_verified": true,
+        "source_hashes_verified": true
+      }
+    },
+    "scope": "Full-sequence execution smoke tests at 100000 estimates with 21 proposals; not converged scientific fits or a warmed performance benchmark."
   }
 }
