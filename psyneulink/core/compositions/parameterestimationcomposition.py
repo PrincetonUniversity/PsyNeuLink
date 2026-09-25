@@ -477,15 +477,14 @@ class ParameterEstimationComposition(Composition):
         for the full set of keys.
 
     likelihood_estimator : "kde" or "neural" : default "kde"
-        specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model and estimates a density
-        from the simulated outcomes. ``"neural"`` scores the data with a density estimator trained beforehand on
-        simulated data, which costs a network evaluation rather than a batch of simulations and is differentiable;
-        it requires **likelihood_estimator_kwargs** and applies to any fit, hierarchical or not. See
+        specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model **num_estimates** times
+        and estimates a density from the simulated outcomes. ``"neural"`` uses a density estimator trained
+        beforehand on data simulated from the model, and requires **likelihood_estimator_kwargs**. See
         :ref:`Neural Likelihoods <NeuralLikelihood>`.
 
     likelihood_estimator_kwargs : Mapping : default None
         specifies options for the likelihood estimator (used only when **likelihood_estimator** is ``"neural"``).
-        Must include an ``"artifact"``, either a trained `NeuralLikelihood` or the path to one saved with its
+        Must include an ``"artifact"``, either a trained :class:`NeuralLikelihood` or the path to one saved with its
         ``save()`` method; see :ref:`Neural Likelihoods <NeuralLikelihood>`.
 
 
@@ -1016,12 +1015,7 @@ class ParameterEstimationComposition(Composition):
 
     @property
     def scores_by_simulation(self):
-        """Whether scoring runs the model, or evaluates a trained estimator of its likelihood.
-
-        A simulated score carries the noise of the simulations behind it, and only repeats itself
-        if the model was built to draw the same noise every time.  A trained estimator is a fixed
-        function of its inputs, so it repeats itself either way.
-        """
+        """Whether the likelihood is computed by simulating the model, rather than by a trained estimator."""
         return self._likelihood_estimator != "neural"
 
     def _validate_likelihood_estimator(self):
@@ -1451,12 +1445,8 @@ class ParameterEstimationComposition(Composition):
         return ocm
 
     def _setup_neural_likelihood(self, inputs=None):
-        """Point the optimization function at the estimator, for the trials of this call.
-
-        The estimator is loaded and held to this model once.  Which trials it scores, and
-        what distinguishes one from another, are prepared on every call, since the inputs
-        and the rows to include can differ between them.
-        """
+        """Load the estimator and check it against this model, once; then give the optimization function the
+        trials of this call to score."""
         if self._likelihood_estimator != "neural":
             return
 
@@ -1478,9 +1468,7 @@ class ParameterEstimationComposition(Composition):
 
             bounds = self.controller.function.fit_param_bounds
             categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
-            # A model reports its parameters as ``<mechanism>.<parameter>``, and the mechanism
-            # part carries a number assigned in construction order, so it cannot be matched
-            # against the names an estimator was trained under.
+            # Names are compared without the mechanism, whose name depends on construction order.
             likelihood.provenance.check_matches(
                 _reported_names(self.controller.function.fit_param_names),
                 [bounds[name][0] for name in bounds],
@@ -1508,8 +1496,7 @@ class ParameterEstimationComposition(Composition):
                 )
             features = columns[included][:, list(provenance.trial_feature_columns)]
 
-        # Excluded trials are dropped rather than scored, as they are for a simulated
-        # likelihood, which sums the density over the included rows alone.
+        # Excluded trials are dropped, as they are from a simulated likelihood.
         self.controller.function.set_neural_likelihood(
             likelihood, self._data_numpy[included], features
         )
@@ -1658,8 +1645,7 @@ class ParameterEstimationComposition(Composition):
                 f"have a log_likelihood function."
             )
 
-        # A neural likelihood scores the data directly, so there is nothing to compile
-        # and no inputs to prepare for simulation.
+        # Nothing is simulated with a neural likelihood, so nothing is compiled.
         self._setup_neural_likelihood(inputs)
         if self._neural_likelihood is not None:
             return self.controller.function.log_likelihood(

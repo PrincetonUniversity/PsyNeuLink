@@ -88,8 +88,7 @@ def check_scoring_is_deterministic(pec, source):
     was missing: the fit runs, converges, and reports intervals that are noise.
     """
     if not getattr(pec, "scores_by_simulation", True):
-        # A trained estimator is a fixed function of its inputs: there is no simulation noise to
-        # hold still, so the setting this checks for has nothing to do.
+        # A trained estimator has no simulation noise to hold still.
         return
 
     controller = getattr(pec, "controller", None)
