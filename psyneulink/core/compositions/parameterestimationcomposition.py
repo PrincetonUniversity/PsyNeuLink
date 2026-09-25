@@ -1462,7 +1462,7 @@ class ParameterEstimationComposition(Composition):
 
         from psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions import (
             NeuralLikelihood,
-            _trial_features,
+            _input_columns,
         )
         from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
             _reported_names,
@@ -1494,16 +1494,19 @@ class ParameterEstimationComposition(Composition):
         included = self.likelihood_include_mask
 
         features = None
-        if likelihood.provenance.n_trial_features:
-            features = _trial_features(inputs, len(self.data))
-            if features is None or features.shape[1] != likelihood.provenance.n_trial_features:
+        provenance = likelihood.provenance
+        if provenance.n_trial_features:
+            # The columns training used, even where one does not vary in these data: a
+            # participant who saw one condition still has to be scored as being in it.
+            columns = _input_columns(inputs, len(self.data))
+            if columns.shape[1] != provenance.n_input_columns:
                 raise ParameterEstimationCompositionError(
-                    f"This neural likelihood was trained with "
-                    f"{likelihood.provenance.n_trial_features} per-trial feature(s) taken "
-                    f"from the composition's inputs, so fitting requires inputs that vary "
-                    f"across trials in the same way. Pass the same inputs used for training."
+                    f"This neural likelihood was trained on inputs with "
+                    f"{provenance.n_input_columns} value(s) per trial, and tells trials apart "
+                    f"by some of them; these inputs have {columns.shape[1]}. Pass inputs laid "
+                    f"out as they were for training."
                 )
-            features = features[included]
+            features = columns[included][:, list(provenance.trial_feature_columns)]
 
         # Excluded trials are dropped rather than scored, as they are for a simulated
         # likelihood, which sums the density over the included rows alone.

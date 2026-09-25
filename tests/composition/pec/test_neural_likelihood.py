@@ -51,7 +51,8 @@ def _toy_likelihood(epochs=3, seed=0):
         lower=(RATE_BOUNDS[0], THRESHOLD_BOUNDS[0]),
         upper=(RATE_BOUNDS[1], THRESHOLD_BOUNDS[1]),
         outcome_names=OUTCOMES, categorical=categorical, categories=categories,
-        log_transform=True, n_trial_features=0, n_parameter_samples=len(theta),
+        log_transform=True, n_input_columns=0, trial_feature_columns=(),
+        n_parameter_samples=len(theta),
         n_trials_per_sample=1, epochs=epochs, val_nll=val_nll, seed=seed,
         psyneulink_version="test", sbi_version="test",
     )
@@ -163,7 +164,7 @@ def test_wrong_number_of_outcome_columns_is_rejected():
 
 def test_missing_trial_features_are_reported(tmp_path):
     likelihood, raw = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "n_trial_features", 2)
+    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0, 1))
     with pytest.raises(nlf.NeuralLikelihoodError, match="requires trial_features"):
         likelihood.log_likelihood([0.5, 0.9], raw[:8])
 
@@ -203,16 +204,11 @@ def test_gates_warn_rather_than_raise_when_not_strict():
 # ------------------------------------------------------------- trial features
 
 
-def test_constant_inputs_contribute_no_trial_features():
-    """A model whose trials are identical is conditioned on parameters alone."""
-    assert nlf._trial_features({"node": np.ones((10, 1))}, 10) is None
-
-
-def test_varying_inputs_become_trial_features():
-    inputs = {"node": np.column_stack([np.arange(10.0), np.ones(10)])}
-    features = nlf._trial_features(inputs, 10)
-    assert features.shape == (10, 1)
-    np.testing.assert_allclose(features[:, 0], np.arange(10.0))
+def test_input_columns_line_up_every_input_trial_by_trial():
+    inputs = {"a": np.arange(10.0), "b": np.column_stack([np.ones(10), np.zeros(10)])}
+    columns = nlf._input_columns(inputs, 10)
+    assert columns.shape == (10, 3)
+    np.testing.assert_allclose(columns[:, 0], np.arange(10.0))
 
 
 # --------------------------------------------------------------- PEC wiring
@@ -328,7 +324,8 @@ def test_training_data_is_generated_from_the_composition():
     assert provenance.fit_param_names == ("rate", "threshold")
     assert provenance.categorical == (True, False)
     # The model is driven by a constant input, so nothing distinguishes one trial from another.
-    assert provenance.n_trial_features == 0
+    assert provenance.n_input_columns == 1
+    assert provenance.trial_feature_columns == ()
     assert np.isfinite(provenance.val_nll)
 
 
@@ -399,10 +396,10 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
     pec, _ = _ddm_training_pec(frame)
     node = pec.nodes[0]
 
-    _, _, ten = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]),
-                          ("rate", "threshold"), 2)
-    _, _, thirty = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
-                             ("rate", "threshold"), 2)
+    _, _, ten, _ = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]),
+                                 ("rate", "threshold"), 2)
+    _, _, thirty, _ = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
+                                    ("rate", "threshold"), 2)
     assert (ten, thirty) == (10, 30)
 
 
@@ -507,7 +504,8 @@ def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
 def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
     """A later call with different inputs must not be scored against the first call's."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "n_trial_features", 1)
+    object.__setattr__(likelihood.provenance, "n_input_columns", 1)
+    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     node = pec.nodes[0]
@@ -519,6 +517,31 @@ def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
 
     assert not np.allclose(first, second)
     np.testing.assert_allclose(second.ravel(), [10.0, 11.0, 12.0, 13.0])
+
+
+@pytest.mark.composition
+def test_trial_features_are_the_columns_training_used(ddm_data):
+    """Taken by position, even where the column training used does not vary in these data."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    object.__setattr__(likelihood.provenance, "n_input_columns", 2)
+    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+
+    one_condition = np.column_stack([np.full(4, 3.0), np.arange(4.0)])
+    pec._setup_neural_likelihood({pec.nodes[0]: one_condition})
+    np.testing.assert_allclose(pec.controller.function._neural_trial_features.ravel(), 3.0)
+
+
+@pytest.mark.composition
+def test_inputs_laid_out_differently_from_training_are_refused(ddm_data):
+    likelihood, _ = _toy_likelihood(epochs=1)
+    object.__setattr__(likelihood.provenance, "n_input_columns", 2)
+    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    with pytest.raises(pnl.ParameterEstimationCompositionError, match="laid out as they were"):
+        pec._setup_neural_likelihood({pec.nodes[0]: np.arange(4.0).reshape(-1, 1)})
 
 
 @pytest.fixture(scope="module")

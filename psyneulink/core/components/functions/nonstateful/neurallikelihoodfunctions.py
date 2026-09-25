@@ -82,7 +82,8 @@ class NeuralLikelihoodProvenance:
     categorical: tuple[bool, ...]
     categories: tuple[tuple[float, ...], ...]
     log_transform: bool
-    n_trial_features: int
+    n_input_columns: int
+    trial_feature_columns: tuple[int, ...]
     n_parameter_samples: int
     n_trials_per_sample: int
     epochs: int
@@ -90,6 +91,10 @@ class NeuralLikelihoodProvenance:
     seed: int
     psyneulink_version: str
     sbi_version: str
+
+    @property
+    def n_trial_features(self) -> int:
+        return len(self.trial_feature_columns)
 
     def to_json(self) -> str:
         return json.dumps(asdict(self))
@@ -105,7 +110,8 @@ class NeuralLikelihoodProvenance:
             categorical=tuple(raw["categorical"]),
             categories=tuple(tuple(c) for c in raw["categories"]),
             log_transform=raw["log_transform"],
-            n_trial_features=raw["n_trial_features"],
+            n_input_columns=raw["n_input_columns"],
+            trial_feature_columns=tuple(raw["trial_feature_columns"]),
             n_parameter_samples=raw["n_parameter_samples"],
             n_trials_per_sample=raw["n_trials_per_sample"],
             epochs=raw["epochs"],
@@ -290,29 +296,15 @@ def _infer_categorical(outcomes: np.ndarray) -> tuple[bool, ...]:
     return tuple(flags)
 
 
-def _trial_features(inputs, n_trials: int) -> np.ndarray | None:
-    """Per-trial conditioning drawn from the composition's inputs.
-
-    The values entering the input nodes on a trial are what distinguishes one trial from
-    another, so they condition the density alongside the parameters.  Columns that do not
-    vary across trials carry no information and are dropped.
-    """
-    if not inputs:
-        return None
-    columns = []
-    for value in inputs.values():
+def _input_columns(inputs, n_trials: int) -> np.ndarray:
+    """The values entering the composition's input nodes, one row per trial."""
+    columns = [np.zeros((n_trials, 0))]
+    for value in (inputs or {}).values():
         array = np.asarray(value, dtype=float)
-        if array.ndim == 1:
-            array = array.reshape(-1, 1)
-        array = array.reshape(array.shape[0], -1)
-        if array.shape[0] != n_trials:
-            continue
-        columns.append(array)
-    if not columns:
-        return None
-    features = np.concatenate(columns, axis=1)
-    varying = features.std(axis=0) > 0
-    return features[:, varying] if varying.any() else None
+        array = array.reshape(array.shape[0], -1) if array.ndim > 1 else array.reshape(-1, 1)
+        if array.shape[0] == n_trials:
+            columns.append(array)
+    return np.concatenate(columns, axis=1)
 
 
 def _split(thetas, n):
@@ -339,7 +331,10 @@ def _check_parameters(pec, names):
 
 
 def _simulate(pec, inputs, thetas, names, n_outcomes):
-    """Simulate every draw through ``pec``; returns (conditioning, outcomes, trials).
+    """Simulate every draw through ``pec``.
+
+    Returns the conditioning rows, the simulated outcomes, the number of trials per draw, and
+    the layout of the inputs: how many columns they have, and which of them were used.
 
     How many trials each draw produces is set by ``inputs``, not by the data the model
     was built around, so it is read back from the simulation rather than assumed.
@@ -347,6 +342,7 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
     _check_parameters(pec, names)
     n_trials = None
     features = None
+    layout = None
 
     # Training needs the simulated outcomes, not a score for them. Scoring here would pay
     # the per-evaluation density cost a neural likelihood exists to remove, so the
@@ -364,7 +360,12 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
             n_estimates = sim.shape[1]
             if n_trials is None:
                 n_trials = sim.shape[0]
-                features = _trial_features(inputs, n_trials)
+                # Inputs that vary from trial to trial are what tell trials apart; the
+                # rest say nothing, and are left out.
+                columns = _input_columns(inputs, n_trials)
+                used = tuple(int(j) for j in np.flatnonzero(columns.std(axis=0) > 0))
+                layout = (columns.shape[1], used)
+                features = columns[:, list(used)] if used else None
             x_rows.append(sim.reshape(-1, sim.shape[-1]))
             block = np.repeat(np.asarray(theta, dtype=float).reshape(1, -1),
                               n_trials * n_estimates, axis=0)
@@ -375,7 +376,7 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
             cond_rows.append(block)
     finally:
         function.set_pec_objective_function(scoring)
-    return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials
+    return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
 
 
 def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
@@ -586,9 +587,14 @@ def train_neural_likelihood(
             if close_fn is not None:
                 close_fn()
 
+    n_trials, layout = results[0][2], results[0][3]
+    if any(r[3] != layout for r in results):
+        raise NeuralLikelihoodError(
+            "pec_factory returned inputs laid out differently on different workers; each "
+            "call has to return the same inputs for the same number of trials."
+        )
     cond = torch.as_tensor(np.concatenate([r[0] for r in results]), dtype=torch.float32)
     raw = np.concatenate([r[1] for r in results])
-    n_trials = results[0][2]
     if raw.shape[1] != n_outcomes:
         raise NeuralLikelihoodError(
             f"The composition reported {raw.shape[1]} outcome columns but "
@@ -625,7 +631,8 @@ def train_neural_likelihood(
         categorical=flags,
         categories=categories,
         log_transform=log_transform,
-        n_trial_features=int(cond.shape[1] - len(names)),
+        n_input_columns=int(layout[0]),
+        trial_feature_columns=layout[1],
         n_parameter_samples=int(n_parameter_samples),
         n_trials_per_sample=int(n_trials),
         epochs=int(epochs),
