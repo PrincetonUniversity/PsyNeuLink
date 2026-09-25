@@ -492,6 +492,21 @@ def test_excluded_trials_do_not_reach_the_estimator(ddm_data):
 
 
 @pytest.mark.composition
+def test_a_fit_scores_with_the_estimator(ddm_data):
+    likelihood, _ = _toy_likelihood(epochs=1)
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood},
+                   optimization_function=pnl.PECOptimizationFunction(
+                       method="differential_evolution", max_iterations=2))
+    pec.run(inputs={pec.nodes[0]: np.ones((len(ddm_data), 1))})
+
+    rate, threshold = pec.optimized_parameter_values.values()
+    assert RATE_BOUNDS[0] <= rate <= RATE_BOUNDS[1]
+    assert THRESHOLD_BOUNDS[0] <= threshold <= THRESHOLD_BOUNDS[1]
+    np.testing.assert_allclose(pec.optimal_value, pec.log_likelihood(rate, threshold))
+
+
+@pytest.mark.composition
 def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
     """Workers score the models the factory builds, so the estimator would go unused."""
     likelihood, _ = _toy_likelihood(epochs=1)
