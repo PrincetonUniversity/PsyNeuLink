@@ -129,28 +129,33 @@ def test_independent_noise_statistics(ocm_mode, lca):
     np.testing.assert_allclose(draws.var(axis=0), 1., atol=.15)
 
 
-@pytest.mark.parametrize('float_type', [pnlvm.ir.FloatType, pnlvm.ir.DoubleType])
-def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type):
-    seed_limit = 2**24
+@pytest.mark.parametrize('float_type, seed_limit', [(pnlvm.ir.FloatType, 2**24), (pnlvm.ir.DoubleType, 2**32)])
+@pytest.mark.parametrize('streams', [3, 4, 5])
+def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type, seed_limit, streams):
     monkeypatch.setattr(pnlvm.LLVMBuilderContext, 'default_float_ty', float_type())
-    pec, _, _ = _make_pec(streams=3, seed=2**32 - 1)
+    pec, _, _ = _make_pec(streams=streams, seed=2**32 - 1)
     controller = pec.controller
-    controller._seed_counter = seed_limit // 3 - 2
+    num_blocks = seed_limit // streams
+    controller._seed_counter = num_blocks - 2
     context = Context(execution_id=None)
     bases = controller.gen_new_seed_sequence(context)
-    seeds = np.array(bases)[:, None] + np.arange(3)
+    seeds = np.array(bases)[:, None] + np.arange(streams)
     np.testing.assert_array_equal(
-        bases, [(seed_limit // 3 - 2) * 3, (seed_limit // 3 - 1) * 3, 0, 3, 6, 9, 12, 15]
+        bases, [(num_blocks - 2) * streams, (num_blocks - 1) * streams,
+                0, streams, 2 * streams, 3 * streams, 4 * streams, 5 * streams]
     )
     assert seeds.min() >= 0
     assert seeds.max() < seed_limit
     assert len(np.unique(seeds)) == seeds.size
     dtype = np.float32 if float_type is pnlvm.ir.FloatType else np.float64
     np.testing.assert_array_equal(seeds.astype(dtype), seeds)
-    following = np.array(controller.gen_new_seed_sequence(context))[:, None] + np.arange(3)
+    if float_type is pnlvm.ir.DoubleType:
+        # Float64 must retain seeds above the float32 ceiling for large models.
+        assert seeds[:2].min() > 2**24
+    following = np.array(controller.gen_new_seed_sequence(context))[:, None] + np.arange(streams)
     assert not np.intersect1d(seeds, following).size
 
-    controller.parameters.num_estimates.set(seed_limit // 3 + 1)
+    controller.parameters.num_estimates.set(num_blocks + 1)
     with pytest.raises(pnl.OptimizationControlMechanismError, match='at most .* estimates have distinct seeds'):
         controller.gen_new_seed_sequence(context)
 
@@ -214,7 +219,7 @@ def test_ocm_default_and_legacy_noise_streams(func_mode, policy):
 @pytest.mark.parametrize('ocm_mode', [pytest.param('LLVM', marks=pytest.mark.llvm),
                                     pytest.helpers.cuda_param('PTX')])
 def test_single_stream_preserves_existing_sequence(ocm_mode):
-    # Preserve the legacy sequence for seeds below the common seed limit.
+    # Preserve the legacy sequence for seeds below the precision's seed limit.
     independent, inputs, actual = _make_pec(streams=1)
     independent.controller.parameters.comp_execution_mode.set(ocm_mode)
     independent.run(inputs=inputs)
