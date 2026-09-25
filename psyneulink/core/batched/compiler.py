@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import cached_property
 
 from psyneulink.core.batched.bindings import (
@@ -182,7 +182,13 @@ class BatchedCompositionCompiler:
         max_steps: int | None = None,
         *,
         ignored_control_nodes=(),
+        fixed_parameters: Mapping | None = None,
     ) -> BatchedSimulationPlan:
+        """Compile a simulation, optionally specializing explicit scalar inputs.
+
+        ``fixed_parameters`` follows :meth:`BatchedSimulationPlan.specialize_parameters`;
+        it never infers constants from candidate values or freezes control outputs.
+        """
         _validate_backend(backend)
         report, ir, bindings, kernel_ir = analyze_composition(
             composition,
@@ -201,13 +207,14 @@ class BatchedCompositionCompiler:
                 capability_report=report,
             )
 
-        return BatchedSimulationPlan(
+        plan = BatchedSimulationPlan(
             ir=ir,
             backend=backend,
             capability_report=report,
             kernel_ir=kernel_ir,
             component_bindings=bindings,
         )
+        return plan if fixed_parameters is None else plan.specialize_parameters(fixed_parameters)
 
 
 @dataclass(frozen=True)
@@ -215,10 +222,50 @@ class BatchedSimulationPlan:
     ir: BatchedCompositionIR
     backend: str
     capability_report: BatchedCapabilityReport
-    # This is the exact frozen snapshot that capability analysis successfully
-    # emitted; recompiling it here would reopen the registry-mutation race.
+    # Preserve capability analysis's implementation snapshot. Specialization
+    # annotates its parameter inputs without reopening the live op registry.
     kernel_ir: KernelIR = field(repr=False)
     component_bindings: BatchedComponentBindings = EMPTY_COMPONENT_BINDINGS
+
+    @property
+    def fixed_parameters(self):
+        """A copy of the canonical parameter-row constants owned by this plan."""
+        return {p.name: p.constant_value for p in self.ir.params if p.constant_value is not None}
+
+    def specialize_parameters(self, fixed_parameters: Mapping) -> BatchedSimulationPlan:
+        """Return a new plan with explicitly fixed scalar parameter inputs.
+
+        Omitted runtime values use these constants. Conflicting scalar, batched
+        or trial-varying overrides are rejected at FP32 execution precision.
+        Controlled effective values still vary normally. The original plan and
+        composition are unchanged; different constants produce distinct kernel
+        source/cache entries. No values are inferred from a candidate batch.
+        """
+        from psyneulink.core.batched.ir import BatchedTrialParameter
+        from psyneulink.core.batched.prep import (
+            _as_parameter_value, _validate_parameter_constraints, resolve_parameter_spec,
+        )
+
+        if not isinstance(fixed_parameters, Mapping):
+            raise TypeError("fixed_parameters must be a mapping of parameter names to scalar values.")
+        constants = {}
+        for name, value in fixed_parameters.items():
+            if not isinstance(name, str):
+                raise TypeError("Fixed parameter names must be strings.")
+            spec = resolve_parameter_spec(name, self.ir)
+            if spec is None:
+                raise ValueError(f"Unknown batched parameter '{name}' in fixed_parameters.")
+            if spec.name in constants:
+                raise ValueError(f"Multiple fixed parameter entries resolve to '{spec.name}'.")
+            value = _as_parameter_value(value)
+            if isinstance(value, BatchedTrialParameter):
+                raise ValueError("Fixed parameters must be scalar, not trial-varying.")
+            _validate_parameter_constraints(spec, value)
+            constants[spec.name] = value
+        params = tuple(replace(p, constant_value=constants[p.name]) if p.name in constants else p
+                       for p in self.ir.params)
+        return replace(self, ir=replace(self.ir, params=params),
+                       kernel_ir=replace(self.kernel_ir, params=params))
 
     def derive_symbolic_values(self, *, scope="graph"):
         """Derive a whole value graph or conditional readout from this snapshot.

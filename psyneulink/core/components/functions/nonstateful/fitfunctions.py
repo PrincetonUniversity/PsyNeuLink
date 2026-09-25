@@ -616,6 +616,18 @@ class PECOptimizationFunction(OptimizationFunction):
         schedules or observed-history sampling. The default is
         ``trial_schedule='synchronized'``; performance depends on the model.
 
+        ``normal_rng='philox4x_fast_v1'`` uses bounded-angle CUDA sine/cosine
+        intrinsics for scalar and vector Box–Muller draws. It retains the
+        ``philox4x_v1`` uniform streams but changes floating-point rounding and
+        possibly stopping steps. This opt-in mode requires the compiled GPU.
+
+    batched_specialize_fixed_parameters :
+        If True, specialize non-fitted parameter inputs at their compiled model
+        defaults. Fitted parameters (including condition-dependent values) and
+        controller modulation remain dynamic. Conflicting runtime overrides
+        are rejected. Defaults to False; specialization can change floating-point
+        optimization and should be validated for the fitted model.
+
     batched_strict_truncation :
         If True, raise an error when any batched likelihood simulation reaches
         ``batched_max_steps`` before its termination condition. This is useful
@@ -730,6 +742,7 @@ class PECOptimizationFunction(OptimizationFunction):
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
         batched_fused_likelihood: bool = True,
+        batched_specialize_fixed_parameters: bool = False,
         **kwargs,
     ):
         self.method = method
@@ -812,6 +825,9 @@ class PECOptimizationFunction(OptimizationFunction):
                 "combined; population batching currently runs on one local device."
             )
         self.batched_parameter_batch_size = batched_parameter_batch_size
+        if batched_specialize_fixed_parameters and batched_backend is None:
+            raise ValueError("batched_specialize_fixed_parameters requires a batched_backend.")
+        self.batched_specialize_fixed_parameters = batched_specialize_fixed_parameters
         if (
             batched_triton_launch_options is not None
             and batched_backend != "triton"
@@ -1014,17 +1030,31 @@ class PECOptimizationFunction(OptimizationFunction):
             self.owner.composition.pec_control_mechs.values()
         )
         try:
-            self._batched_plan = BatchedCompositionCompiler.compile(
+            plan = BatchedCompositionCompiler.compile(
                 model,
                 backend=self.batched_backend,
                 max_steps=self.batched_max_steps,
                 ignored_control_nodes=ignored_control_nodes,
             )
+            if self.batched_specialize_fixed_parameters:
+                from psyneulink.core.batched.prep import resolve_parameter_spec
+
+                fitted = set()
+                for parameter, mechanism in self.owner.composition.fit_parameters:
+                    name = f"{mechanism.name}.{parameter}"
+                    spec = resolve_parameter_spec(name, plan.ir)
+                    if spec is None:
+                        raise OptimizationFunctionError(f"Unknown batched fitting parameter '{name}'.")
+                    fitted.add(spec.name)
+                plan = plan.specialize_parameters({
+                    p.name: p.default for p in plan.ir.params if p.name not in fitted
+                })
         except BatchedCompileError as error:
             raise OptimizationFunctionError(
                 f"batched_backend={self.batched_backend!r} was requested but the model "
                 f"'{model.name}' cannot be compiled for batched simulation: {error}"
             ) from error
+        self._batched_plan = plan
         return self._batched_plan
 
     def _batched_stimulus_inputs(self):

@@ -38,6 +38,9 @@ class BatchedParamSpec:
     runtime_constraint: str = ""
     owner_component_id: int = -1
     owner_scope: str = ""
+    # Explicit specialization of the parameter-row input. This does not freeze
+    # a controller's effective value or change source-model mutability/defaults.
+    constant_value: float | None = None
 
 
 @dataclass(frozen=True)
@@ -770,7 +773,7 @@ class BatchedCompositionIR:
 
     @property
     def param_defaults(self) -> Mapping[str, float]:
-        return {p.name: p.default for p in self.params}
+        return {p.name: p.default if p.constant_value is None else p.constant_value for p in self.params}
 
 
 @dataclass(frozen=True)

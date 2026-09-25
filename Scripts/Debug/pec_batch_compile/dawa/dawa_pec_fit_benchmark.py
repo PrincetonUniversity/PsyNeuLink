@@ -25,7 +25,8 @@ from psyneulink.core.batched.likelihood import _sum_histogram_log_likelihood
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 
 
-def validate_normal_rngs(function, candidates, estimates, seed, max_steps):
+def validate_normal_rngs(function, candidates, estimates, seed, max_steps,
+                         modes=("legacy", "philox4x_v1")):
     """Compare complete noisy histories using independent seeds in each mode.
 
     Check the joint choice/RT sub-CDF for every trial, including unscored ones.
@@ -36,7 +37,6 @@ def validate_normal_rngs(function, candidates, estimates, seed, max_steps):
     plan = function._compile_batched_plan()
     inputs = function._batched_stimulus_inputs()
     indices = function._batched_outcome_indices(plan)
-    modes = ("legacy", "philox4x_v1")
     seeds = (seed, seed + 1000000)
     report = {"estimates_per_mode": estimates, "modes": list(modes), "seeds": list(seeds),
               "familywise_alpha": .01, "candidates": []}
@@ -98,8 +98,10 @@ def main():
     parser.add_argument("--block-size", type=int, default=128)
     parser.add_argument("--num-warps", type=int, default=4)
     parser.add_argument("--maxnreg", type=int)
-    parser.add_argument("--normal-rng", choices=["legacy", "philox4x_v1"], default="philox4x_v1",
+    parser.add_argument("--normal-rng", choices=["legacy", "philox4x_v1", "philox4x_fast_v1"], default="philox4x_fast_v1",
                         help="Vector Gaussian generator; legacy reproduces earlier seeded samples")
+    parser.add_argument("--specialize-fixed-parameters", action=argparse.BooleanOptionalAction, default=True,
+                        help="Compile non-fitted parameters as constants (disable for baseline comparisons)")
     parser.add_argument("--trial-schedule", choices=["synchronized", "independent"], default="synchronized")
     parser.add_argument("--smoothing-sigma", type=float, default=0., help="Gaussian width in histogram-bin units")
     parser.add_argument("--pseudocount", type=float, default=1., help="Symmetric prior count per joint choice/RT bin")
@@ -109,6 +111,9 @@ def main():
     parser.add_argument("--save-densities", type=Path, help="Save the candidate/trial densities after timing for cross-device comparisons")
     parser.add_argument("--validate-normal-rngs", action="store_true", help="Compare full-sequence choice/RT distributions under both generators after timing")
     parser.add_argument("--validation-estimates", type=int, default=16384)
+    parser.add_argument("--validation-normal-rngs", nargs=2,
+                        choices=["legacy", "philox4x_v1", "philox4x_fast_v1"],
+                        default=["legacy", "philox4x_v1"], help="Generators compared by --validate-normal-rngs")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if min(args.estimates, args.repeats, args.max_steps, args.validation_estimates, *args.batch_sizes) < 1:
@@ -144,6 +149,7 @@ def main():
             batched_max_steps=args.max_steps, batched_seed=args.seed,
             batched_strict_truncation=True, batched_bins=100,
             batched_fused_likelihood=not args.materialized,
+            batched_specialize_fixed_parameters=args.specialize_fixed_parameters,
             batched_bin_range=[(0., 3.)], batched_pseudocount=args.pseudocount,
             batched_smoothing_sigma=args.smoothing_sigma,
             batched_triton_launch_options={"block_size": args.block_size, "num_warps": args.num_warps,
@@ -183,6 +189,8 @@ def main():
         "noise": noise, "lca_dt": .01, "seed": args.seed,
         "max_steps": args.max_steps, "strict_truncation": True,
         "fused_likelihood": not args.materialized,
+        "specialize_fixed_parameters": args.specialize_fixed_parameters,
+        "fixed_parameters": plan.fixed_parameters,
         "launch_options": {"block_size": args.block_size, "num_warps": args.num_warps,
                            "maxnreg": args.maxnreg, "normal_rng": args.normal_rng,
                            "trial_schedule": args.trial_schedule},
@@ -328,7 +336,8 @@ def main():
         save()
     if args.validate_normal_rngs:
         report["normal_rng_distribution_validation"] = validate_normal_rngs(
-            function, candidates, args.validation_estimates, args.seed, args.max_steps)
+            function, candidates, args.validation_estimates, args.seed, args.max_steps,
+            modes=tuple(args.validation_normal_rngs))
         save()
     if args.verify_synchronized:
         captured_likelihoods = []

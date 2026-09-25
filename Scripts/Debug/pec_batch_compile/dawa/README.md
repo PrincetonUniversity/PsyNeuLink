@@ -12,6 +12,11 @@ ordinary batched compiler and PEC simulation objective on Triton.
 are tracked; subject data and generated outputs remain ignored.
 All three `flanker_fit_lc_part*.py` scripts use this same model builder.
 
+Future work on gradients through the full-noise sampler is recorded in the
+shared [sampling gradient notes](../SAMPLING_GRADIENT_NOTES.md), including
+continuous RT kernels, threshold handling, compiler interfaces, and a staged
+validation plan. These ideas are deferred and are not implemented sampler features.
+
 The compiler additions cover scheduled Logistic LCAs of width 1–32, finite dense
 recurrent matrices, scalar numeric or `NormalDist` noise, maximum-activity
 termination, standard decision index/time/step and energy outputs, scalar Euler
@@ -204,7 +209,7 @@ other component adapters can request a vector through `ctx.normal_draws`.
 DAWA now obtains its ten independent Gaussian values from four Philox
 invocations per pass, without caching spare values across executions.
 
-The default mode is `normal_rng="philox4x_v1"`. It preserves the noise
+The compiler default mode is `normal_rng="philox4x_v1"`. It preserves the noise
 distribution but changes seeded trajectories. To reproduce previous simulations,
 add `"normal_rng": "legacy"` to `batched_triton_launch_options`, or pass
 `--normal-rng legacy` to `dawa_pec_fit_benchmark.py`. Record the mode along with
@@ -233,6 +238,60 @@ to about 36, 59, and 113 minutes respectively for 5,000 proposal evaluations,
 before optimizer overhead. All trial densities match exactly across devices.
 See the [cross-GPU benchmark](dawa_benchmark_results.md#h100-and-a100-subject-benchmark)
 for serial-proposal timings, validation, software versions, and fit-time limits.
+
+### Fixed parameters and faster Gaussian conversion
+
+PEC can now specialize parameters that are not being fitted, using the general
+compiler's explicit parameter-constant support:
+
+```python
+optimization_function = pnl.PECOptimizationFunction(
+    method="differential_evolution",
+    batched_backend="triton",
+    batched_max_steps=2000,
+    batched_strict_truncation=True,
+    batched_specialize_fixed_parameters=True,
+    batched_bins=100,
+    batched_bin_range=[(0., 3.)],
+    batched_smoothing_sigma=.5,
+    batched_pseudocount=1.,
+    batched_triton_launch_options={
+        "block_size": 32, "num_warps": 1,
+        "trial_schedule": "independent",
+        "normal_rng": "philox4x_fast_v1",
+    },
+)
+```
+
+Specialization keeps all fitted parameters dynamic, including conditional LC
+mode. The other parameter inputs become FP32 constants, allowing redundant
+arithmetic to disappear. Controller outputs, nonlinear LCA/LC dynamics, noise,
+time steps and trial history retain their existing semantics. Conflicting
+runtime overrides raise an error; compile a new plan to change a fixed value.
+Specialization is opt-in for general PEC use.
+
+`philox4x_fast_v1` is a separate, GPU-only RNG mode. It retains the grouped
+Philox uniform streams but uses bounded-angle CUDA sine/cosine for Box–Muller
+conversion, including scalar draws and odd vector widths. Small rounding
+differences can change stopping steps. Record the mode along with the seed;
+select `philox4x_v1` or `legacy` to reproduce their existing seeded runs.
+
+The DAWA subject benchmark enables specialization and the fast transform by
+default. Run the optimized workload with:
+
+```bash
+.venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
+  --estimates 100000 --batch-sizes 1 4 --repeats 5 \
+  --block-size 32 --num-warps 1 --trial-schedule independent \
+  --smoothing-sigma .5 --pseudocount 1 \
+  --verify-synchronized --verify-materialized \
+  --output /tmp/dawa_optimized.json
+```
+
+For the earlier baseline, add `--no-specialize-fixed-parameters --normal-rng
+philox4x_v1`. To compare full-sequence choice/RT distributions under independent
+seeds, add `--validate-normal-rngs --validation-normal-rngs philox4x_v1
+philox4x_fast_v1 --validation-estimates 16384`. This runs after timing.
 
 A [differentiable direct-likelihood prototype](dawa_likelihood/README.md) is also
 available. It propagates the joint response-state distribution and supports

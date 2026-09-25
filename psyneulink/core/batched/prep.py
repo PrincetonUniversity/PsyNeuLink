@@ -617,26 +617,13 @@ def _canonicalize_param_set(
     canonical = dict(ir.param_defaults)
     matched = set()
     for name, value in row.items():
-        matching_specs = [spec for spec in ir.params if name == spec.name]
-        if not matching_specs:
-            matching_specs = [spec for spec in ir.params if name in spec.aliases]
-        if not matching_specs and isinstance(name, str):
-            matching_specs = [
-                spec
-                for spec in ir.params
-                if any(
-                    name.endswith(f".{candidate}")
-                    for candidate in (spec.name,) + spec.aliases
-                )
-            ]
-        if len(matching_specs) > 1:
-            targets = ", ".join(spec.name for spec in matching_specs)
-            raise ValueError(
-                f"Ambiguous batched parameter '{name}' matches: {targets}. "
-                "Use a component-qualified parameter name."
-            )
-        if matching_specs:
-            canonical[matching_specs[0].name] = _as_parameter_value(value)
+        spec = resolve_parameter_spec(name, ir)
+        if spec is not None:
+            value = _as_parameter_value(value)
+            if spec.constant_value is not None:
+                # A later alias must not hide a conflicting fixed input.
+                _validate_parameter_constraints(spec, value)
+            canonical[spec.name] = value
             matched.add(name)
     unknown = sorted(
         str(name)
@@ -657,6 +644,22 @@ def _canonicalize_param_set(
     return canonical
 
 
+def resolve_parameter_spec(name, ir):
+    """Resolve the same exact-name/alias rules for execution and specialization."""
+    matches = [spec for spec in ir.params if name == spec.name]
+    if not matches:
+        matches = [spec for spec in ir.params if name in spec.aliases]
+    if not matches and isinstance(name, str):
+        matches = [spec for spec in ir.params if any(
+            name.endswith(f".{candidate}") for candidate in (spec.name,) + spec.aliases
+        )]
+    if len(matches) > 1:
+        targets = ", ".join(spec.name for spec in matches)
+        raise ValueError(f"Ambiguous batched parameter '{name}' matches: {targets}. "
+                         "Use a component-qualified parameter name.")
+    return matches[0] if matches else None
+
+
 def _validate_parameter_constraints(
     spec,
     value: float | BatchedTrialParameter,
@@ -665,6 +668,15 @@ def _validate_parameter_constraints(
         value.values if isinstance(value, BatchedTrialParameter) else value,
         dtype=float,
     )
+    if spec.constant_value is not None:
+        # Compare at the actual execution precision, including signed zero.
+        # In particular, a trial vector must match at *every* trial.
+        if not np.all(values.astype(np.float32).view(np.uint32)
+                      == np.float32(spec.constant_value).view(np.uint32)):
+            raise ValueError(
+                f"Batched parameter '{spec.name}' is specialized at {spec.constant_value}; "
+                "compile a new plan to change its value."
+            )
     if not spec.runtime_mutable and not np.all(values == spec.default):
         detail = f" ({spec.runtime_constraint})" if spec.runtime_constraint else ""
         raise ValueError(

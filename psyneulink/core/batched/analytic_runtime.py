@@ -29,6 +29,10 @@ def validate_parameter_tensor(ir, parameters):
         raise ValueError("parameters must be finite with shape [candidate, parameter].")
     for i, spec in enumerate(ir.params):
         value = p[:, i]
+        if spec.constant_value is not None:
+            constant = torch.tensor(spec.constant_value, dtype=torch.float32)
+            if torch.any(value.to(torch.float32).view(torch.int32) != constant.view(torch.int32)):
+                raise ValueError(f"Parameter {spec.name} is specialized; compile a new plan to change its value.")
         if not spec.runtime_mutable and torch.any(value != spec.default):
             raise ValueError(f"Parameter {spec.name} is fixed by the source graph.")
         if spec.minimum is not None and torch.any(value < spec.minimum if spec.minimum_inclusive else value <= spec.minimum):

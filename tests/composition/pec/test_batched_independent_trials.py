@@ -138,7 +138,9 @@ def test_independent_scalar_rng_delays_and_controlled_resets(
 
 
 @pytest.mark.triton_gpu
-def test_independent_full_dawa_network():
+@pytest.mark.parametrize("mode", ["philox4x_v1", "philox4x_fast_v1"])
+@pytest.mark.parametrize("seed", [17, 29])
+def test_independent_full_dawa_network(mode, seed):
     path = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py"
     spec = importlib.util.spec_from_file_location("dawa_independent_trials_test", path)
     module = importlib.util.module_from_spec(spec)
@@ -147,11 +149,17 @@ def test_independent_full_dawa_network():
     plan = BatchedCompositionCompiler.compile(comp, backend="triton", outputs=outputs, max_steps=500)
     candidates = [{}, {"LC.mode": BatchedTrialParameter(np.resize([.3, .7], 12)),
                        "RT_GATE.intercept": BatchedTrialParameter(np.linspace(.1, .3, 12))}]
-    options = dict(seed=29, strict_truncation=True, return_final_states=True)
-    expected = plan.run(inputs, candidates, 37, **options, triton_launch_options=_options("triton", "synchronized"))
-    actual = plan.run(inputs, candidates, 37, **options, triton_launch_options=_options("triton", "independent"))
+    options = dict(seed=seed, strict_truncation=True, return_final_states=True)
+    expected = plan.run(inputs, candidates, 37, **options, triton_launch_options=_options("triton", "synchronized", normal_rng=mode))
+    actual = plan.run(inputs, candidates, 37, **options, triton_launch_options=_options("triton", "independent", normal_rng=mode))
     np.testing.assert_array_equal(actual.values, expected.values)
     np.testing.assert_array_equal(actual.metadata["final_states"], expected.metadata["final_states"])
+    fixed = plan.specialize_parameters({p.name: p.default for p in plan.ir.params
+                                       if p.name not in {"LC.mode", "RT_GATE.intercept"}})
+    specialized = fixed.run(inputs, candidates, 37, **options,
+                            triton_launch_options=_options("triton", "independent", normal_rng=mode))
+    np.testing.assert_allclose(specialized.values, actual.values, rtol=2e-6, atol=1e-7)
+    np.testing.assert_allclose(specialized.metadata["final_states"], actual.metadata["final_states"], rtol=2e-6, atol=1e-7)
 
 
 def test_independent_trials_reject_unsupported_programs():

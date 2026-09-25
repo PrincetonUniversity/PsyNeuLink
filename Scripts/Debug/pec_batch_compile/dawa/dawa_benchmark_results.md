@@ -780,3 +780,286 @@ python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py \
 Compact measurements, raw warmed durations, source checksums, validation and
 fit-time projections are recorded under `cross_gpu_subject_benchmark` in
 [dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+## H100 profiling and further optimization experiments (2026-09-24)
+
+Profiled the implementation committed as `ab0e681c75` on one idle H100 NVL
+on `della-rse`. The existing isolated snapshot was reused; all 269 Python
+files under `psyneulink/` and the DAWA benchmark directory matched the current
+checkout. Nsight Compute **2026.2.1** was available through
+`module load cudatoolkit/13.0`. These measurements used scratch implementations;
+the compiler implementation and its retest are recorded in the next section.
+
+The workload is unchanged: subject 1, 760 trials / 720 scored, **100,000
+estimates per trial per proposal**, noise SD 0.1 in all four LCAs, dt 0.01,
+100 RT bins, smoothing sigma 0.5, pseudocount 1, independent trial advancement
+and grouped Philox normals. Timings below are end-to-end medians of five
+unprofiled warmed evaluations of the same four-proposal batch, divided by four.
+Startup/JIT is excluded. Except for the explicit launch experiments, all use
+32 lanes, one warp and no register cap.
+
+### Where the current kernel spends its work
+
+For the first proposal, the Torch profile measured 0.49581 s in the simulation
+kernel and 0.49589 s across all GPU kernels: **99.985% of GPU kernel time is
+simulation**. Copies took 0.116 ms. The instrumented CPU objective range was
+0.52554 s, so the GPU-only fraction should not be mistaken for a fraction of
+end-to-end time.
+
+Nsight measured **219 registers per thread**, 12.5% theoretical occupancy and
+12.12% achieved occupancy. Instruction issue slots were busy 61.93% of the time;
+36.75% of scheduler cycles had no eligible warp. DRAM bandwidth was only
+19.2 MB/s. This points toward reducing arithmetic and live registers, rather
+than bulk memory or transfer optimization. Triton reports eight static spills,
+but Nsight measured zero dynamic local-memory spilling requests in this kernel.
+
+Instruction-position sampling collected 56,350,066 samples with no dropped
+bytes or buffer overflow:
+
+| Source category | Share of samples |
+| --- | ---: |
+| Gaussian conversion / Box–Muller | 36.20% |
+| Philox integer generator | 13.51% |
+| Uniform conversion and other RNG helpers | 3.05% |
+| LC Euler integration | 15.77% |
+| Other model arithmetic and scheduler | 24.32% |
+| Histogram and diagnostics | 4.94% |
+| Block reductions | 2.21% |
+
+These are shares of sampled warp instruction positions, **not exclusive
+wall-time percentages**. They identify candidates for experiments; they do
+not predict additive speedups. The sine/cosine source line includes general
+range handling and branches in the generated machine code.
+
+### Measured experiments
+
+| Variant | Seconds/proposal | Speedup | Registers/thread | Estimated 5,000 evaluations |
+| --- | ---: | ---: | ---: | ---: |
+| Current compiler | 0.4343 | 1.00× | 219 | 36.2 min |
+| Specialize fixed parameters | 0.3316 | **1.31×** | 128 | 27.6 min |
+| Bounded-angle Gaussian transform | 0.3266 | **1.33×** | 219 | 27.2 min |
+| Both experiments | 0.2707 | **1.60×** | 124 | 22.6 min |
+| 64 lanes / 2 warps | 0.5134 | 0.85× | 240 | 42.8 min |
+| 128 lanes / 4 warps | 0.5540 | 0.78× | 240 | 46.2 min |
+| Register cap 168, 32 lanes / 1 warp | 0.4304 | 1.01× | 168 | 35.9 min |
+| Register cap 128, 32 lanes / 1 warp | 0.4556 | 0.95× | 128 | 38.0 min |
+
+The fit estimates count **parameter evaluations, not generations**. These
+are throughput extrapolations for the fixed proposal pool, not measured
+optimizer convergence; other parameter values can change simulation length.
+The current-compiler median agrees with the earlier H100 measurement. One of
+its five repetitions was slower (0.5140 s/proposal); the other four were
+0.4336–0.4344 s/proposal. Raw durations are retained in the JSON summary.
+
+**Fixed-parameter specialization is the first implementation recommendation.**
+The model exposes 115 scalar parameters, but this fit changes only seven names
+(eight fitting coordinates because LC mode depends on previous congruency).
+The experiment emits explicit FP32 constants for the other 108, while asserting
+that their supplied values equal their defaults. There are 46 zero and 30 unit
+defaults in the full interface. Specialization lets Triton remove redundant
+arithmetic and reduce live values. It does not linearize the LCAs, change time
+steps, freeze controller outputs, or remove retained state. All **3,040 trial
+densities and all four scores matched the baseline exactly** in this experiment.
+
+A general implementation should explicitly declare which parameters are fixed,
+include their values in the compilation cache key, and reject overrides or
+recompile when they change. Fitted parameters, trial-dependent values and
+controller modulation must retain their existing semantics. Equality within
+one candidate batch is not sufficient evidence that a parameter stays fixed
+throughout fitting. Broader model and seed coverage is still needed before
+treating the prototype as a supported compiler feature.
+
+**A bounded-angle Gaussian transform is the second recommendation.** The
+experiment changes only sine and cosine in the five Box–Muller pairs to CUDA
+`libdevice.fast_cosf` and `fast_sinf`. Their angles come from uniform draws
+multiplied by 2π. Philox, its counter mapping, uniform conversion, clamp,
+logarithm and square root are unchanged. A distinct emitted helper and compiled
+kernel hash verify that the alternative was actually compiled.
+
+This changes floating-point rounding. Across 4,194,304 paired draws, maximum
+normal-value difference from the current transform was `3.10e-6`, with RMS
+difference `2.63e-7`. In the complete subject benchmark, 121 of 3,040 densities
+changed; maximum absolute density difference was `4.53e-4`, maximum relative
+difference `8.58e-4` (0.086%), and maximum absolute log-likelihood difference
+was **0.00055**. Adding fixed-parameter specialization produced exactly the
+same densities as the fast-transform experiment alone. All runs completed
+with strict truncation checks and repeatable results within each variant.
+
+Those checks establish a promising performance experiment, not full numerical
+or statistical validation. Before adoption, use a versioned or opt-in transform
+and test multiple seeds, tails, component widths, retained-state trajectories
+and GPUs. Preserve the existing mode for seeded replay.
+
+Larger blocks and forced register caps offer little benefit here. After the
+two substantive changes, reprofile before further scheduler simplification or
+Gaussian stream packing: the relative costs will have changed. Histogram
+smoothing and transfers are lower priorities on the current profile.
+
+### Artifacts and reproduction
+
+Raw reports, traces, benchmark JSON, saved densities and scratch experiment
+scripts are retained remotely under:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/trial-sync-20260924T212200Z/profile-h100-20260924
+```
+
+`env.sh` selects the isolated environment and GPU. `sweep.sh` runs the baseline,
+launch experiments and fixed-parameter experiment; `fast-sweep.sh` runs the
+alternative transform and combined experiment. `normal_validation.py` performs
+the paired transform check. `hardware.ncu-rep`, `pc.ncu-rep` and their summaries
+contain the profiling evidence. `summary.json` is the compact result copied to
+`h100_optimization_profile` in [dawa_benchmark_results.json](dawa_benchmark_results.json).
+The scratch scripts are experimental tools, not a public compiler API.
+
+## Implemented specialization and fast Gaussian transform (2026-09-24)
+
+Both optimizations now use the compiler's ordinary APIs. The H100 retest below
+ran the working-tree implementation based on `ab0e681c75`, without monkeypatches
+or experimental wrappers. The final source snapshot was verified by file hash
+before execution. An initial pass and a repeat after tightening alias-override
+validation gave consistent results; this table uses the final pass.
+
+### Compiler interfaces
+
+- `BatchedCompositionCompiler.compile(..., fixed_parameters={...})` and
+  `plan.specialize_parameters({...})` produce a plan with explicit scalar input
+  constants. The source defaults and controller semantics remain intact.
+  Constants enter the generated source/cache key. Omitted values use the
+  specialization; conflicting scalar, candidate-vector and trial-varying
+  overrides are rejected, including overrides supplied through aliases.
+- `PECOptimizationFunction(..., batched_specialize_fixed_parameters=True)`
+  specializes all non-fitted defaults. The seven DAWA fitting parameters remain
+  dynamic, including condition-dependent LC mode; the other 108 become constants.
+- `normal_rng="philox4x_fast_v1"` selects the bounded-angle Box–Muller transform.
+  It covers grouped vector draws, scalar/odd-width tails, cached scalar pairs,
+  and direct `tl.randn` calls in registered scalar templates such as standalone
+  DDM and NormalDist. Uniform streams and counter addressing are preserved.
+  The CPU interpreter and handwritten CSI oracle explicitly reject this mode.
+
+General defaults remain unspecialized with `philox4x_v1`. The DAWA subject
+benchmark now defaults to specialization and `philox4x_fast_v1`; the previous
+baseline is available with `--no-specialize-fixed-parameters --normal-rng
+philox4x_v1`. The [DAWA README](README.md#fixed-parameters-and-faster-gaussian-conversion)
+shows the PEC configuration and benchmark command.
+
+### H100 measurements
+
+One H100 NVL on `della-rse`, the same subject and four proposals, **100,000
+estimates per trial per proposal**, 760 trials / 720 scored, noise SD 0.1 in all
+LCAs, dt 0.01, smoothing sigma 0.5 and pseudocount 1. All use independent trial
+advancement, 32 lanes, one warp and no register cap. Each entry is the median of
+five warmed complete four-proposal evaluations, divided by four, with startup
+excluded. Serial proposals are separate objective calls; batch four submits
+the four proposals together. Times include PEC preparation and scoring.
+
+| Implementation | Serial, s/proposal | Batch four, s/proposal | Batch-four speedup | 5,000 evaluations, batch four |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline | 0.4502 | 0.4336 | 1.00× | 36.1 min |
+| Fixed parameters | 0.3589 | 0.3321 | 1.31× | 27.7 min |
+| Fast Gaussian conversion | 0.3443 | 0.3273 | 1.32× | 27.3 min |
+| Both | **0.3007** | **0.2718** | **1.60×** | **22.6 min** |
+
+For a serial optimizer, the combined implementation gives a **1.50× speedup**
+and projects to **25.1 minutes for 5,000 evaluations**, versus 37.5 minutes for
+the baseline. These are throughput extrapolations, not convergence measurements;
+candidate values affect trial lengths, and setup/JIT, optimizer overhead and
+queueing are additional. Evaluations count proposals, not optimizer generations.
+
+The optimized first-proposal kernel uses **124 registers/thread and no reported
+spills**, versus 219 registers/thread in the earlier baseline profile. Peak
+live Torch fitting buffers remain 0.3218 MiB for serial proposals and 0.4961 MiB
+for batch four; context, compiled code and allocator reservations are additional.
+PyTorch `2.13.0+cu130`, Triton `3.7.1`, CUDA `13.0` and Python `3.13.13` match
+the earlier H100 environment. GPU tests ran separately from timing.
+
+### Validation
+
+- Specialization alone matches all **3,040 baseline trial densities exactly**.
+  The fast-transform and combined variants also match each other exactly.
+  Each variant reproduces its own densities across repeats and candidate batch
+  sizes, and all strict truncation checks passed.
+- The fast transform changes 121 densities relative to the baseline. Maximum
+  absolute difference is `4.53e-4`; maximum relative difference is `8.58e-4`
+  (0.086%). Maximum absolute log-likelihood difference is `0.00061` using the
+  serial FP32 objective, or `0.000624` when summing logs of the saved densities
+  in FP64. The earlier scratch table used batch-four FP32 reductions, whose
+  summation order gives slightly different score differences.
+- The combined variant matches synchronized trial execution exactly. Its fused
+  smoothed densities match the materialized reference within `3.44e-7` relative
+  error (tolerance `2e-6`).
+- A full-sequence distribution comparison used **16,384 estimates per generator**
+  with independent seeds 29 and 1,000,029. For each of four candidates, all
+  760 trials and both choices were compared through joint choice/RT sub-CDFs.
+  Maximum differences ranged from 0.01984 to 0.02204, below the conservative
+  simultaneous bound 0.04237 at familywise alpha 0.01. This includes unscored
+  trials and their retained-state histories.
+- GPU unit checks cover normal moments, fourth moments, correlations and tails;
+  two additional seeds each exercise 1,048,576 four-normal groups. Paired
+  same-uniform comparisons stay within `5e-6`. Other checks cover widths 1–32,
+  odd widths, high seed bits, multiple streams, replay, common randomness,
+  resume, launch geometry, scalar templates, controller resets and full DAWA
+  trajectories under both modes and two seeds.
+
+The H100 regression suite passed **129 tests**; a targeted final implementation
+follow-up passed 45, and the final specialization/override suite passed 16.
+CPU/interpreter and IR checks passed 120 tests, the final parameter/guard suite
+passed 28, and compilation/registry snapshot checks passed 29. These suites
+overlap; counts are not additive. Opposite-backend cases and GPU-only transforms
+were intentionally skipped. Ruff and `git diff --check` passed.
+
+The fast mode is a numerical alternative, not bitwise replay of the old mode.
+Neither optimization linearizes the model or changes its time discretization.
+
+The source snapshot, manifest, launch scripts, raw timing/validation JSON,
+densities, profile and test logs are retained at:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924
+```
+
+`env.sh` selects the isolated snapshot/environment and one H100;
+`benchmark.sh` runs the four implementations and validation. Compact final
+measurements are stored under `h100_implemented_optimizations` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).
+
+
+## H100 timestep refinement: 10 ms versus 1 ms (2026-09-24)
+
+A fresh matched comparison used both compiler optimizations, the same four
+parameter proposals and full 760-trial subject (720 scored), 100,000 estimates
+per trial per proposal, all four LCA noise SDs 0.1, smoothing sigma 0.5 and
+pseudocount 1. Medians of five warmed four-proposal pools, divided by four,
+include PEC preparation, simulation and likelihood scoring; setup/JIT is excluded.
+
+| Candidate batch size | 10 ms, s/evaluation | 1 ms, s/evaluation | Slowdown | 5,000 evaluations at 1 ms |
+| --- | ---: | ---: | ---: | ---: |
+| 1 (serial) | 0.3008 | 2.6284 | **8.74×** | 219.0 min / 3.65 h |
+| 4 | 0.2697 | 2.4834 | **9.21×** | 207.0 min / 3.45 h |
+
+All LCA timesteps changed from 0.01 to 0.001. The LC integrator timestep also
+changed proportionally, from 0.02 to 0.002, retaining ten internal LC updates
+per scheduler pass. This preserves the relative LC/LCA clock rate. Leaving
+the LC timestep fixed would accelerate it tenfold relative to the LCAs and
+would be a different comparison. The trial step cap increased from 2,000 to
+20,000, retaining a 20-second decision-time cap. Noise amplitudes were unchanged;
+the integrators apply their ordinary square-root-of-dt scaling.
+
+The configuration wrapper verified the constructed mechanism/integrator clocks;
+the reports' five specialized timestep constants were checked independently.
+Strict truncation checks passed, repeated runs and candidate batch sizes gave
+identical trial densities within each timestep, and the new 10 ms densities
+exactly reproduce the preceding optimized H100 run. Different timesteps are
+not expected to produce identical likelihoods; this is a runtime comparison,
+not a demonstration that the model's predictions have converged in timestep.
+Fit times are throughput extrapolations, not optimizer convergence measurements.
+
+Compiler and timed objective code were unchanged. A configuration-only wrapper,
+reproduction script, raw reports, saved densities and logs are retained under:
+
+```text
+/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/timestep
+```
+
+The compact measurements are recorded as `h100_timestep_refinement` in
+[dawa_benchmark_results.json](dawa_benchmark_results.json).

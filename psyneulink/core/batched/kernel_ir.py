@@ -2217,6 +2217,12 @@ def _validate_kernel_parameters(kernel: KernelIR) -> None:
         )
 
     for parameter in kernel.params:
+        if parameter.constant_value is not None:
+            from psyneulink.core.batched.prep import _as_parameter_value, _validate_parameter_constraints
+
+            if type(parameter.constant_value) is not float:
+                raise ValueError("KernelIR parameter constants must be finite scalar floats.")
+            _validate_parameter_constraints(parameter, _as_parameter_value(parameter.constant_value))
         if type(parameter.owner_component_id) is not int:
             raise ValueError(
                 "KernelIR parameter owner component IDs must be exact non-bool "

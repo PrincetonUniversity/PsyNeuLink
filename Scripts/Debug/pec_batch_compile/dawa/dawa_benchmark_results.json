@@ -3236,5 +3236,913 @@
     "remote_root": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/trial-sync-20260924T212200Z",
     "local_raw_results": "/tmp/dawa-della-20260924T212200Z",
     "remote_artifacts": "source_manifest.json, requirements-resolved.txt, run-benchmark.sh, a100.slurm, results/*.json, results/*-densities.npz and logs/ under remote_root. Same original subject data were included in the isolated snapshot."
+  },
+  "h100_optimization_profile": {
+    "date": "2026-09-24",
+    "commit": "ab0e681c75",
+    "status": "Profiling and scratch experiments only; no production compiler changes.",
+    "source_snapshot_python_files_verified_against_commit": 269,
+    "gpu": "NVIDIA H100 NVL",
+    "host": "della-rse.princeton.edu",
+    "gpu_uuid": "GPU-372ffaa5-87b1-a620-d84f-4a2d0427a8c4",
+    "tools": {
+      "module": "cudatoolkit/13.0",
+      "nsight_compute": "2026.2.1",
+      "torch": "2.13.0+cu130",
+      "triton": "3.7.1"
+    },
+    "workload": {
+      "subject": 1,
+      "trials": 760,
+      "scored_trials": 720,
+      "estimates_per_trial_per_candidate": 100000,
+      "candidate_batch_size": 4,
+      "candidate_pool": "same four proposals as cross_gpu_subject_benchmark",
+      "seed": 29,
+      "lca_dt": 0.01,
+      "noise_sd_all_four_lcas": 0.1,
+      "bins": 100,
+      "rt_range": [
+        0,
+        3
+      ],
+      "smoothing_sigma": 0.5,
+      "pseudocount": 1.0,
+      "trial_schedule": "independent",
+      "normal_rng": "philox4x_v1",
+      "strict_truncation": true,
+      "max_steps": 2000,
+      "warm_repeats": 5
+    },
+    "baseline_torch_profile": {
+      "candidate": 0,
+      "simulation_kernel_seconds": 0.495812918,
+      "all_gpu_kernel_seconds": 0.49588875800000004,
+      "simulation_fraction_of_gpu_kernel_time": 0.9998470624736364,
+      "memcpy_seconds": 0.00011606100000000001,
+      "instrumented_objective_cpu_range_seconds": 0.525538158,
+      "note": "Profile timings are diagnostic; throughput table uses separate unprofiled runs."
+    },
+    "baseline_nsight": {
+      "registers_per_thread": 219,
+      "theoretical_occupancy_percent": 12.5,
+      "achieved_occupancy_percent": 12.12,
+      "issue_slots_busy_percent": 61.93,
+      "no_eligible_warp_percent": 36.75,
+      "memory_bandwidth_mb_per_second": 19.2,
+      "dram_throughput_displayed_percent": 0.0,
+      "local_memory_spilling_requests": 0,
+      "note": "Triton reports eight static spills; Nsight measured zero dynamic local spilling requests in this kernel. DRAM percent is rounded by the report."
+    },
+    "pc_sampling": {
+      "samples": 56350066,
+      "diagnostics": {
+        "smsp__pcsamp_buffer_overflow": 0,
+        "smsp__pcsamp_dropped_bytes": 0
+      },
+      "category_percent": {
+        "box_muller": 36.19871359156882,
+        "lc_euler": 15.773887469803496,
+        "philox": 13.506294739743517,
+        "other_model_and_scheduler": 24.32123327060522,
+        "block_reductions": 2.2098820611851635,
+        "histogram_and_diagnostics": 4.940503530199947,
+        "uniform_conversion_and_rng_helpers": 3.049485336893838
+      },
+      "note": "Shares of sampled warp instruction positions, not exclusive wall-time attribution or an additive speedup prediction."
+    },
+    "fixed_parameter_experiment": {
+      "parameter_count": 115,
+      "frozen_count": 108,
+      "fitted_parameter_count": 7,
+      "fitted_coordinate_count": 8,
+      "zero_defaults": 46,
+      "unit_defaults": 30,
+      "method": "Emit explicit FP32 constants for non-fitted parameters; keep all seven fitted names dynamic, including condition-dependent LC.mode. Assert at runtime that every frozen input equals its FP32 default. Preserve controller modulation, scheduler, nonlinearities and retained state."
+    },
+    "fast_normal_experiment": {
+      "method": "Replace only the sine and cosine in the five grouped Box-Muller pairs with CUDA libdevice.fast_cosf/fast_sinf; keep uniform generator, clamp, log, sqrt and counter mapping unchanged. Use a distinct emitted helper and verify compiled kernel hash changes.",
+      "normal_smoke_check": {
+        "pairs": 4194304,
+        "seed": 913,
+        "max_abs_difference": 3.0994415283203125e-06,
+        "rms_difference": 2.6265475410052664e-07,
+        "reference_mean": [
+          0.0001542921582372627,
+          -0.0012684013378141624
+        ],
+        "fast_mean": [
+          0.00015420813858686732,
+          -0.0012683986660866494
+        ],
+        "reference_variance": [
+          0.9988513867204742,
+          1.0002832756593087
+        ],
+        "fast_variance": [
+          0.9988511898739508,
+          1.0002831429164492
+        ],
+        "reference_cross_moment": -9.110007893649877e-05,
+        "fast_cross_moment": -9.110444553376098e-05,
+        "note": "Paired numerical smoke check of the transform, not full statistical validation of a new RNG contract."
+      },
+      "not_yet_validated": "No broad multi-seed trajectory, tail, cross-GPU or general compiler regression suite. This changes last-bit normal values and can change stopped trajectories."
+    },
+    "experiments": [
+      {
+        "name": "baseline",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.43433109478792176,
+        "speedup_vs_baseline": 1.0,
+        "estimated_5000_evaluation_minutes": 36.19425789899348,
+        "warm_pool_seconds": [
+          1.7355613999534398,
+          1.7345743710175157,
+          1.737324379151687,
+          2.0559474888723344,
+          1.7373260620515794
+        ],
+        "registers": 219,
+        "triton_reported_spills": 8,
+        "kernel_hash": "3ab2bb85b0b84174b12b2def8b6d76a8a286854be855770d5b3e088dddaa4295",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "block64",
+        "launch_options": {
+          "block_size": 64,
+          "num_warps": 2,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.5134046457242221,
+        "speedup_vs_baseline": 0.8459820112754198,
+        "estimated_5000_evaluation_minutes": 42.783720477018505,
+        "warm_pool_seconds": [
+          2.0536185828968883,
+          2.052563037024811,
+          2.053510791156441,
+          2.054293475812301,
+          2.054430168122053
+        ],
+        "registers": 240,
+        "triton_reported_spills": 8,
+        "kernel_hash": "cced4d0cdc8d5a8c50689bd1361a93c81b7e77e72930015944a7612a4b4b99b5",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "block128",
+        "launch_options": {
+          "block_size": 128,
+          "num_warps": 4,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.5539800325059332,
+        "speedup_vs_baseline": 0.7840194037738536,
+        "estimated_5000_evaluation_minutes": 46.165002708827764,
+        "warm_pool_seconds": [
+          2.2162490251939744,
+          2.215920130023733,
+          2.2162986889015883,
+          2.214170167921111,
+          2.2148004709742963
+        ],
+        "registers": 240,
+        "triton_reported_spills": 8,
+        "kernel_hash": "137f1bc58b2f4e7c533aa6f76faacfe4256f9cd0e1acd6a97ba0cfba95d83eb8",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "cap168",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": 168,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.43042506399797276,
+        "speedup_vs_baseline": 1.009074821883438,
+        "estimated_5000_evaluation_minutes": 35.868755333164394,
+        "warm_pool_seconds": [
+          1.723677049158141,
+          1.7213578659575433,
+          1.7230415819212794,
+          1.721700255991891,
+          1.7216731819789857
+        ],
+        "registers": 168,
+        "triton_reported_spills": 32,
+        "kernel_hash": "b5171e45b08f69a10d24a1725c5ff4b7f1ec545169d4696f998d4eb86f428e8c",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "cap128",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": 128,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.45557860675035045,
+        "speedup_vs_baseline": 0.9533614800001529,
+        "estimated_5000_evaluation_minutes": 37.964883895862535,
+        "warm_pool_seconds": [
+          1.8223144270014018,
+          1.818958997959271,
+          1.821696202037856,
+          1.8249503669794649,
+          1.8229000689461827
+        ],
+        "registers": 128,
+        "triton_reported_spills": 72,
+        "kernel_hash": "ef7c4671434b6749ad5a1ddb00f5b52c4f65021b8e93344a3433c30d514b8ff5",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "frozen",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.33161652425769717,
+        "speedup_vs_baseline": 1.309738999768316,
+        "estimated_5000_evaluation_minutes": 27.634710354808096,
+        "warm_pool_seconds": [
+          1.325361168012023,
+          1.3264660970307887,
+          1.3268662521149963,
+          1.3264163250569254,
+          1.3280196979176253
+        ],
+        "registers": 128,
+        "triton_reported_spills": 8,
+        "kernel_hash": "b6007bcd56f140c61e87dd1a14f1f791e029edbc3a0f67a6603f544ffef068fd",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": true,
+          "differing_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "score_difference_by_candidate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "name": "fastnorm",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.3266465107444674,
+        "speedup_vs_baseline": 1.3296670268971433,
+        "estimated_5000_evaluation_minutes": 27.220542562038947,
+        "warm_pool_seconds": [
+          1.3092569869477302,
+          1.3065860429778695,
+          1.3068434519227594,
+          1.3061734039802104,
+          1.3063468970358372
+        ],
+        "registers": 219,
+        "triton_reported_spills": 0,
+        "kernel_hash": "4d6cf30a31bab42684a30102c28b7f2734c126abf1a38e62288853b861ebae55",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": false,
+          "differing_trial_densities": 121,
+          "max_abs_density_difference": 0.0004525184631347656,
+          "max_relative_density_difference": 0.0008580083376727998,
+          "score_difference_by_candidate": [
+            -0.00054931640625,
+            0.0,
+            -0.00048828125,
+            0.000335693359375
+          ],
+          "trial_density_sha256": "affd0ad910459632f15fefa51606cd8c66bdfbe009bf3b0e3d75da162e92b4b5"
+        }
+      },
+      {
+        "name": "frozen-fastnorm",
+        "launch_options": {
+          "block_size": 32,
+          "num_warps": 1,
+          "maxnreg": null,
+          "normal_rng": "philox4x_v1",
+          "trial_schedule": "independent"
+        },
+        "seconds_per_candidate": 0.27069492102600634,
+        "speedup_vs_baseline": 1.6045040414563023,
+        "estimated_5000_evaluation_minutes": 22.557910085500527,
+        "warm_pool_seconds": [
+          1.0810761891771108,
+          1.0835415609180927,
+          1.0841524659190327,
+          1.0827796841040254,
+          1.0823651398532093
+        ],
+        "registers": 124,
+        "triton_reported_spills": 0,
+        "kernel_hash": "79817ef0a188cf7dd591852412b52ccce306c9c3498ba8725ddcd45c200219ac",
+        "peak_live_torch_mib": 0.49609375,
+        "validation": {
+          "identical_to_baseline": false,
+          "differing_trial_densities": 121,
+          "max_abs_density_difference": 0.0004525184631347656,
+          "max_relative_density_difference": 0.0008580083376727998,
+          "score_difference_by_candidate": [
+            -0.00054931640625,
+            0.0,
+            -0.00048828125,
+            0.000335693359375
+          ],
+          "trial_density_sha256": "affd0ad910459632f15fefa51606cd8c66bdfbe009bf3b0e3d75da162e92b4b5"
+        }
+      }
+    ],
+    "recommendation_order": [
+      "General explicit fixed-parameter specialization with cache keys and runtime override validation; preserve fitted and controlled values.",
+      "A versioned or opt-in bounded-angle Box-Muller transform after numerical/distribution and model regression validation.",
+      "Reprofile after these changes before investing in further scheduler liveness or Gaussian stream packing."
+    ],
+    "fit_time_note": "Extrapolations from four fixed candidate evaluations, not optimizer generations or measured fitting convergence. Excludes setup/JIT/optimizer overhead; candidate values affect runtime.",
+    "remote_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/trial-sync-20260924T212200Z/profile-h100-20260924",
+    "local_artifacts": "/tmp/dawa-h100-profile-20260924"
+  },
+  "h100_implemented_optimizations": {
+    "date": "2026-09-24",
+    "base_commit": "ab0e681c756e5b76d740009d27812db0946e9c43",
+    "implementation": "Working-tree compiler implementation, no monkeypatches or experimental wrappers.",
+    "api": {
+      "specialization": "BatchedCompositionCompiler.compile(..., fixed_parameters=...) or plan.specialize_parameters({...})",
+      "pec": "batched_specialize_fixed_parameters=True",
+      "fast_normal_rng": "philox4x_fast_v1",
+      "general_defaults": "Specialization off; normal_rng=philox4x_v1.",
+      "dawa_benchmark_defaults": "Specialization on; normal_rng=philox4x_fast_v1."
+    },
+    "workload": {
+      "subject": 1,
+      "trials": 760,
+      "scored_trials": 720,
+      "estimates_per_trial_per_candidate": 100000,
+      "noise": {
+        "c_noise": 0.1,
+        "s_noise": 0.1,
+        "d_noise": 0.1,
+        "r_noise": 0.1
+      },
+      "lca_dt": 0.01,
+      "seed": 29,
+      "max_steps": 2000,
+      "strict_truncation": true,
+      "estimator": {
+        "kind": "trial_marginal_histogram",
+        "bins": 100,
+        "rt_range": [
+          0.0,
+          3.0
+        ],
+        "pseudocount": 1.0,
+        "smoothing_sigma": 0.5
+      }
+    },
+    "gpu": "NVIDIA H100 NVL",
+    "hostname": "della-rse.princeton.edu",
+    "software": {
+      "python_version": "3.13.13",
+      "torch_version": "2.13.0+cu130",
+      "triton_version": "3.7.1",
+      "cuda_version": "13.0"
+    },
+    "common_launch_options": {
+      "block_size": 32,
+      "num_warps": 1,
+      "maxnreg": null,
+      "trial_schedule": "independent"
+    },
+    "measurement": "Median of five warmed four-candidate pools; serial (batch one) and batch four. Includes PEC preparation, simulation and histogram scoring. Cold run excluded.",
+    "variants": [
+      {
+        "variant": "baseline",
+        "specialize_fixed_parameters": false,
+        "fixed_parameter_count": 0,
+        "normal_rng": "philox4x_v1",
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "seconds_per_candidate": 0.4502137149684131,
+            "speedup_vs_baseline": 1.0,
+            "estimated_5000_evaluation_minutes": 37.51780958070109,
+            "warm_pool_seconds": [
+              1.8011474921368062,
+              1.7990693610627204,
+              1.7996644380036741,
+              1.8008548598736525,
+              1.8041318550240248
+            ],
+            "peak_live_torch_mib": 0.32177734375
+          },
+          {
+            "candidate_batch_size": 4,
+            "seconds_per_candidate": 0.4336397360311821,
+            "speedup_vs_baseline": 1.0,
+            "estimated_5000_evaluation_minutes": 36.13664466926517,
+            "warm_pool_seconds": [
+              1.7345484821125865,
+              1.7345589441247284,
+              1.73514046613127,
+              1.735697231022641,
+              1.7339340769685805
+            ],
+            "peak_live_torch_mib": 0.49609375
+          }
+        ],
+        "validation": {
+          "all_trial_densities_equal_to_baseline": true,
+          "changed_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "serial_fp32_score_difference": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fp64_sum_log_density_difference": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "variant": "specialized",
+        "specialize_fixed_parameters": true,
+        "fixed_parameter_count": 108,
+        "normal_rng": "philox4x_v1",
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "seconds_per_candidate": 0.3589315965073183,
+            "speedup_vs_baseline": 1.2543161965938365,
+            "estimated_5000_evaluation_minutes": 29.91096637560986,
+            "warm_pool_seconds": [
+              1.433935962850228,
+              1.436781289987266,
+              1.4356324500404298,
+              1.4357263860292733,
+              1.4385754188988358
+            ],
+            "peak_live_torch_mib": 0.32177734375
+          },
+          {
+            "candidate_batch_size": 4,
+            "seconds_per_candidate": 0.33211179851787165,
+            "speedup_vs_baseline": 1.3057040971335652,
+            "estimated_5000_evaluation_minutes": 27.675983209822636,
+            "warm_pool_seconds": [
+              1.3284471940714866,
+              1.327123163966462,
+              1.32829460198991,
+              1.3303994049783796,
+              1.3298723429907113
+            ],
+            "peak_live_torch_mib": 0.49609375
+          }
+        ],
+        "validation": {
+          "all_trial_densities_equal_to_baseline": true,
+          "changed_trial_densities": 0,
+          "max_abs_density_difference": 0.0,
+          "max_relative_density_difference": 0.0,
+          "serial_fp32_score_difference": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fp64_sum_log_density_difference": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "trial_density_sha256": "565a2aa803797d23f50dc41547a27c9b8e2e9b464915032f00e6694b299c04df"
+        }
+      },
+      {
+        "variant": "fast",
+        "specialize_fixed_parameters": false,
+        "fixed_parameter_count": 0,
+        "normal_rng": "philox4x_fast_v1",
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "seconds_per_candidate": 0.3442911259480752,
+            "speedup_vs_baseline": 1.3076541363901224,
+            "estimated_5000_evaluation_minutes": 28.6909271623396,
+            "warm_pool_seconds": [
+              1.379190273117274,
+              1.3768875289242715,
+              1.3771645037923008,
+              1.3775773749221116,
+              1.3768534110859036
+            ],
+            "peak_live_torch_mib": 0.32177734375
+          },
+          {
+            "candidate_batch_size": 4,
+            "seconds_per_candidate": 0.32734818250173703,
+            "speedup_vs_baseline": 1.324704883702481,
+            "estimated_5000_evaluation_minutes": 27.279015208478086,
+            "warm_pool_seconds": [
+              1.3093927300069481,
+              1.3084506981540471,
+              1.30775275407359,
+              1.30947087216191,
+              1.3136337609030306
+            ],
+            "peak_live_torch_mib": 0.49609375
+          }
+        ],
+        "validation": {
+          "all_trial_densities_equal_to_baseline": false,
+          "changed_trial_densities": 121,
+          "max_abs_density_difference": 0.0004525184631347656,
+          "max_relative_density_difference": 0.0008580083376727998,
+          "serial_fp32_score_difference": [
+            -0.00054931640625,
+            -0.0001220703125,
+            -0.0006103515625,
+            0.000335693359375
+          ],
+          "fp64_sum_log_density_difference": [
+            -0.0005610360319678875,
+            -0.00012941236013830348,
+            -0.0006234454976947745,
+            0.00034237201538189765
+          ],
+          "trial_density_sha256": "affd0ad910459632f15fefa51606cd8c66bdfbe009bf3b0e3d75da162e92b4b5"
+        }
+      },
+      {
+        "variant": "optimized",
+        "specialize_fixed_parameters": true,
+        "fixed_parameter_count": 108,
+        "normal_rng": "philox4x_fast_v1",
+        "cases": [
+          {
+            "candidate_batch_size": 1,
+            "seconds_per_candidate": 0.3006754770176485,
+            "speedup_vs_baseline": 1.497340985151201,
+            "estimated_5000_evaluation_minutes": 25.05628975147071,
+            "warm_pool_seconds": [
+              1.2049341939855367,
+              1.2024376140907407,
+              1.202701908070594,
+              1.2033833179157227,
+              1.201823160983622
+            ],
+            "peak_live_torch_mib": 0.32177734375
+          },
+          {
+            "candidate_batch_size": 4,
+            "seconds_per_candidate": 0.27176165278069675,
+            "speedup_vs_baseline": 1.5956619765670765,
+            "estimated_5000_evaluation_minutes": 22.646804398391396,
+            "warm_pool_seconds": [
+              1.081297209020704,
+              1.0825169761665165,
+              1.087046611122787,
+              1.088988282950595,
+              1.0886072148568928
+            ],
+            "peak_live_torch_mib": 0.49609375
+          }
+        ],
+        "validation": {
+          "all_trial_densities_equal_to_baseline": false,
+          "changed_trial_densities": 121,
+          "max_abs_density_difference": 0.0004525184631347656,
+          "max_relative_density_difference": 0.0008580083376727998,
+          "serial_fp32_score_difference": [
+            -0.00054931640625,
+            -0.0001220703125,
+            -0.0006103515625,
+            0.000335693359375
+          ],
+          "fp64_sum_log_density_difference": [
+            -0.0005610360319678875,
+            -0.00012941236013830348,
+            -0.0006234454976947745,
+            0.00034237201538189765
+          ],
+          "trial_density_sha256": "affd0ad910459632f15fefa51606cd8c66bdfbe009bf3b0e3d75da162e92b4b5"
+        }
+      }
+    ],
+    "optimized_materialized_validation": {
+      "passed": true,
+      "rtol": 2e-06,
+      "atol": 1e-08,
+      "max_absolute_density_error": 1.430511474609375e-06,
+      "max_relative_density_error": 3.432901962696633e-07
+    },
+    "optimized_synchronized_validation": {
+      "all_trial_densities_match_exactly": true,
+      "trial_density_sha256": "affd0ad910459632f15fefa51606cd8c66bdfbe009bf3b0e3d75da162e92b4b5"
+    },
+    "normal_rng_distribution_validation": {
+      "estimates_per_mode": 16384,
+      "modes": [
+        "philox4x_v1",
+        "philox4x_fast_v1"
+      ],
+      "seeds": [
+        29,
+        1000029
+      ],
+      "familywise_alpha": 0.01,
+      "candidates": [
+        {
+          "candidate": 0,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "philox4x_v1": 0.9827750352747348,
+            "philox4x_fast_v1": 0.9827247969219355
+          },
+          "max_abs_trial_mean_rt_difference": 0.01325866718798352,
+          "max_standardized_trial_mean_rt_difference": 3.34935639225424,
+          "max_abs_choice_probability_difference": 0.0084228515625,
+          "max_abs_choice_rt_subcdf_difference": 0.02105712890625,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 1,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "philox4x_v1": 0.9363211437082076,
+            "philox4x_fast_v1": 0.9362762940992022
+          },
+          "max_abs_trial_mean_rt_difference": 0.006088867905418738,
+          "max_standardized_trial_mean_rt_difference": 4.17624296200574,
+          "max_abs_choice_probability_difference": 0.00213623046875,
+          "max_abs_choice_rt_subcdf_difference": 0.02203369140625,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 2,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "philox4x_v1": 0.9418697671623536,
+            "philox4x_fast_v1": 0.9418677345251533
+          },
+          "max_abs_trial_mean_rt_difference": 0.007761230019241339,
+          "max_standardized_trial_mean_rt_difference": 3.8001277964315414,
+          "max_abs_choice_probability_difference": 0.001708984375,
+          "max_abs_choice_rt_subcdf_difference": 0.0218505859375,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        },
+        {
+          "candidate": 3,
+          "trials": 760,
+          "mean_rt_by_mode": {
+            "philox4x_v1": 0.7203466087204058,
+            "philox4x_fast_v1": 0.7203421507391484
+          },
+          "max_abs_trial_mean_rt_difference": 0.004725342063466087,
+          "max_standardized_trial_mean_rt_difference": 3.1034926895283292,
+          "max_abs_choice_probability_difference": 0.0037841796875,
+          "max_abs_choice_rt_subcdf_difference": 0.01983642578125,
+          "simultaneous_subcdf_bound": 0.042366841780796305,
+          "passed": true
+        }
+      ]
+    },
+    "optimized_kernel": {
+      "registers": 124,
+      "triton_reported_spills": 0
+    },
+    "tests": [
+      {
+        "suite": "H100 main compiler/specialization/RNG/PEC/independent-trial/fused-scoring regression",
+        "passed": 129,
+        "skipped": 74
+      },
+      {
+        "suite": "H100 final scalar-template, specialization, conditional PEC and full DAWA follow-up",
+        "passed": 45,
+        "skipped": 26
+      },
+      {
+        "suite": "H100 final override-guard and specialization suite",
+        "passed": 16,
+        "skipped": 6
+      },
+      {
+        "suite": "CPU/interpreter specialization, PEC, precomputed IR and identity validation",
+        "passed": 120,
+        "skipped": 9
+      },
+      {
+        "suite": "CPU/interpreter final specialization and parameter validation",
+        "passed": 28,
+        "skipped": 7
+      },
+      {
+        "suite": "Backend-independent compilation and registry snapshot regression",
+        "passed": 29,
+        "deselected": 15
+      }
+    ],
+    "test_note": "Suites overlap; counts must not be added as distinct tests. Opposite-backend cases and CUDA-only transforms are intentionally skipped. Ruff and git diff --check passed.",
+    "fit_time_note": "Throughput extrapolation, not measured optimizer convergence. Counts parameter evaluations, not generations. Candidate values can change runtime. Excludes setup/JIT, optimizer overhead and queueing.",
+    "source_manifest_sha256": "41105c65f1ccccb83a8c3402171f91719e0ef4706195bff2cfa821a78a238edf",
+    "python_files_verified_against_working_tree": 668,
+    "remote_root": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924",
+    "artifacts": "source/, source_manifest.json, env.sh, benchmark.sh, results/*.json, results/*-densities.npz and logs/. first-run/ holds the initial pass before the final alias-override guard; reported timings use the final source pass."
+  },
+  "h100_timestep_refinement": {
+    "date": "2026-09-24",
+    "gpu": "NVIDIA H100 NVL",
+    "workload": {
+      "trials": 760,
+      "scored_trials": 720,
+      "estimates_per_trial_per_candidate": 100000,
+      "noise": {
+        "c_noise": 0.1,
+        "s_noise": 0.1,
+        "d_noise": 0.1,
+        "r_noise": 0.1
+      },
+      "estimator": {
+        "kind": "trial_marginal_histogram",
+        "bins": 100,
+        "rt_range": [
+          0.0,
+          3.0
+        ],
+        "pseudocount": 1.0,
+        "smoothing_sigma": 0.5
+      },
+      "launch_options": {
+        "block_size": 32,
+        "num_warps": 1,
+        "maxnreg": null,
+        "normal_rng": "philox4x_fast_v1",
+        "trial_schedule": "independent"
+      }
+    },
+    "physical_trial_cap_seconds": 20.0,
+    "lca_timesteps": [
+      0.01,
+      0.001
+    ],
+    "lc_timesteps": [
+      0.02,
+      0.002
+    ],
+    "lc_substeps_per_pass": 10,
+    "baseline_densities_exactly_match_previous_optimized_run": true,
+    "measurements": [
+      {
+        "candidate_batch_size": 1,
+        "seconds_per_evaluation_10ms": 0.3008125320193358,
+        "seconds_per_evaluation_1ms": 2.6283911872305907,
+        "slowdown": 8.737638587017518,
+        "minutes_for_5000_evaluations_1ms": 219.03259893588256,
+        "warm_pool_seconds_10ms": [
+          1.204156463034451,
+          1.2029308511409909,
+          1.203250128077343,
+          1.203436688054353,
+          1.202983366092667
+        ],
+        "warm_pool_seconds_1ms": [
+          10.440121460938826,
+          10.458828239003196,
+          10.513564748922363,
+          10.550694199977443,
+          10.557195402914658
+        ]
+      },
+      {
+        "candidate_batch_size": 4,
+        "seconds_per_evaluation_10ms": 0.2696627409895882,
+        "seconds_per_evaluation_1ms": 2.483447018021252,
+        "slowdown": 9.209455518058162,
+        "minutes_for_5000_evaluations_1ms": 206.95391816843767,
+        "warm_pool_seconds_10ms": [
+          1.0779393941629678,
+          1.0781557629816234,
+          1.0786509639583528,
+          1.0810878279153258,
+          1.081267983885482
+        ],
+        "warm_pool_seconds_1ms": [
+          9.927906390978023,
+          9.937807684997097,
+          9.939609329914674,
+          9.93302361201495,
+          9.933788072085008
+        ]
+      }
+    ],
+    "configuration_note": "Scale all LCA and LC integrator time steps proportionally; preserve LC substep count.",
+    "fit_time_note": "Throughput extrapolation only; excludes setup/JIT and optimizer overhead. Four proposals, five warm repeats each.",
+    "artifact_root": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/timestep",
+    "wrapper_sha256": "c0f871b6116326b22cf1dd29f366918d95229be0637efd4955d6c947cc3ebf57"
   }
 }

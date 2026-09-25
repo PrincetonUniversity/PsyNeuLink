@@ -258,7 +258,8 @@ def test_batched_unsupported_model_raises_no_silent_fallback(monkeypatch):
         objfunc(0.2)
 
 
-def test_batched_conditional_parameter_is_selected_per_trial(batched_backend):
+@pytest.mark.parametrize("specialize", [False, True])
+def test_batched_conditional_parameter_is_selected_per_trial(batched_backend, specialize):
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             rate=1.0,
@@ -303,12 +304,20 @@ def test_batched_conditional_parameter_is_selected_per_trial(batched_backend):
             batched_bins=10,
             batched_seed=1,
             batched_parameter_batch_size=2,
+            batched_specialize_fixed_parameters=specialize,
         ),
         num_estimates=2,
     )
     pec.controller._pec_input_values_by_node = {decision: np.ones((4, 1))}
 
     opt_func = pec.controller.function
+    plan = opt_func._compile_batched_plan()
+    if specialize:
+        assert plan.fixed_parameters
+        assert f"{decision.name}.threshold" not in plan.fixed_parameters
+        assert f"{decision.name}.rate" not in plan.fixed_parameters
+    else:
+        assert not plan.fixed_parameters
     parameter_set = opt_func._batched_parameter_set((0.1, 0.4, 1.0))
     threshold = parameter_set[f"{decision.name}.threshold"]
     assert isinstance(threshold, BatchedTrialParameter)

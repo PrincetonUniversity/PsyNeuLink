@@ -31,7 +31,7 @@ from psyneulink.core.batched.backend.triton.cache import (
 )
 from psyneulink.core.batched.backend.triton.graph_emit import triton_graph_kernel_source
 from psyneulink.core.batched.backend.triton.emit.lanes import (
-    DEFAULT_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
+    DEFAULT_NORMAL_RNG, FAST_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
 )
 from psyneulink.core.batched.backend.triton.emit.trials import validate_trial_schedule
 
@@ -66,6 +66,8 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
 
     result = {**_DEFAULT_LAUNCH_OPTIONS, **options}
     validate_normal_rng(result["normal_rng"])
+    if interpret and result["normal_rng"] == FAST_NORMAL_RNG:
+        raise ValueError("philox4x_fast_v1 requires the compiled GPU backend (CUDA math intrinsics).")
     validate_trial_schedule(result["trial_schedule"])
     block_size = result["block_size"]
     if (
@@ -168,6 +170,11 @@ def run_triton(
     each component execution. ``'legacy'`` reproduces the earlier per-coordinate
     draws. This RNG selection also works in the interpreter and leaves scalar
     normal_draw() pairing unchanged. Seeded vector samples differ between modes.
+
+    ``'philox4x_fast_v1'`` preserves the grouped uniform streams but uses CUDA
+    bounded-angle sine/cosine for all scalar and vector Gaussian transforms.
+    It is GPU-only and changes last-bit values, potentially including stopping
+    steps. Select the earlier mode when reproducing existing seeded samples.
 
     ``trial_schedule='independent'`` lets each estimate advance to its next
     trial as soon as its dynamic schedule completes. It preserves ordered

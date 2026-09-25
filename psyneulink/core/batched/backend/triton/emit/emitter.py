@@ -10,6 +10,8 @@ implementations are resolved from the immutable per-plan spec snapshot via the
 
 from __future__ import annotations
 
+import numpy as np
+
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
@@ -144,6 +146,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
         # emitted ahead of this template (which calls them by name).
         for dependency in template.dependencies:
             self.register_template(dependency)
+        template = self._lower_normal_template(template)
         existing = self.templates.get(template.name)
         if existing is not None and existing.source != template.source:
             raise ValueError(f"Conflicting Triton helper template '{template.name}'.")
@@ -243,6 +246,12 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
         for idx, param_spec in enumerate(self.kernel.params):
             var = f"param_{idx}_value"
             self.param_vars[param_spec.name] = var
+            if param_spec.constant_value is not None:
+                if not trial_varying_only:
+                    # Match the FP32 parameter-buffer ABI before constant folding.
+                    value = float_literal(np.float32(param_spec.constant_value))
+                    self._emit_trial_initializer(var, f"tl.full((BLOCK,), {value}, tl.float32)")
+                continue
             default = float_literal(param_spec.default)
             expression = (
                 f"tl.load(param_{idx} + "

@@ -28,6 +28,7 @@ def test_triton_launch_option_defaults_are_stable():
         {"num_warps": 2},
         {"maxnreg": 128},
         {"normal_rng": "legacy"},
+        {"normal_rng": "philox4x_fast_v1"},
         {"trial_schedule": "independent"},
         {"block_size": 256, "num_warps": 8, "maxnreg": 96},
     ],
@@ -73,6 +74,8 @@ def test_custom_triton_launch_options_reject_cpu_interpreter():
 def test_rng_selection_is_available_in_interpreter():
     assert _normalize_launch_options({"normal_rng": "legacy"}, interpret=True)["normal_rng"] == "legacy"
     assert _normalize_launch_options({"trial_schedule": "independent"}, interpret=True)["trial_schedule"] == "independent"
+    with pytest.raises(ValueError, match="compiled GPU backend"):
+        _normalize_launch_options({"normal_rng": "philox4x_fast_v1"}, interpret=True)
 
 
 @pytest.mark.triton_gpu

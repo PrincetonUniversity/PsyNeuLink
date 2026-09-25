@@ -45,3 +45,31 @@ and [batch compiler development notes](BATCH_COMPILE_WIP.md). The
 [continuous equation compilation notes](CONTINUOUS_EQUATION_COMPILATION.md)
 and [numerical backend notes](NUMERICAL_LIKELIHOOD_BACKEND.md) describe the
 shared integration and first-passage machinery.
+
+Deferred ideas for parameter gradients through Monte Carlo simulations,
+continuous RT kernels, and reusable compiler support are recorded in
+[sampling gradient notes](SAMPLING_GRADIENT_NOTES.md).
+
+The simulation compiler supports explicit fixed parameter inputs:
+
+```python
+plan = BatchedCompositionCompiler.compile(model, backend="triton")
+specialized = plan.specialize_parameters({"accumulator.leak": 0.3})
+# Equivalent: compile(model, backend="triton", fixed_parameters={...})
+```
+
+Use canonical component-qualified names or registered aliases. The new plan
+uses those scalar values when they are omitted from a parameter row and rejects
+conflicting scalar, candidate-vector or trial-varying overrides. Comparisons
+use FP32 execution precision. The source model and original plan remain usable;
+constants are part of the generated source/cache key. Base parameter constants
+do not freeze controller modulation. PEC offers
+`batched_specialize_fixed_parameters=True` to specialize non-fitted defaults.
+
+The generated Triton backend also accepts
+`normal_rng="philox4x_fast_v1"` in its launch options. It uses the same uniform
+streams as `philox4x_v1` with a faster bounded-angle Gaussian transform; rounding
+and stopping steps can differ. It requires CUDA compilation. The interpreter
+and handwritten CSI oracle reject this mode explicitly. General defaults remain
+unspecialized with `philox4x_v1`; the DAWA subject benchmark opts into both
+optimizations. See [DAWA usage](dawa/README.md#fixed-parameters-and-faster-gaussian-conversion).
