@@ -1,25 +1,15 @@
-"""Neural likelihood estimation for `ParameterEstimationComposition`.
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
 
-`ParameterEstimationComposition` normally scores a candidate parameter setting by
-simulating the composition and turning the simulated outcomes into a density by kernel
-density estimation.  Every evaluation therefore costs ``num_estimates`` simulations, and
-the surface it produces carries the Monte Carlo noise of those simulations.
 
-A neural likelihood replaces that pipeline with a conditional density model
-``p(outcomes | parameters)``, trained once on simulated data.  Fitting afterwards costs a
-network forward pass instead of a simulation batch, and the surface is smooth and
-differentiable rather than noisy.
+# ***************************************  Neural Likelihoods  *********************************************************
 
-The trade is a training step, and a network that is only valid over the parameter region
-it was trained on.  A `NeuralLikelihood` therefore records what it was trained for and
-refuses to score a model it does not match.
-
-.. _NeuralLikelihood_Conditioning:
-
-The conditioning vector is ``[parameters, trial features]``.  Trial features are the
-values entering the composition's input nodes on that trial, so a model whose trials
-differ -- congruent against incongruent, switch against repeat -- is conditioned on which
-trial it is scoring rather than on the parameters alone.
+"""Density estimators trained on simulated data, used by `ParameterEstimationComposition` to compute
+the likelihood of its data.  See :ref:`Neural Likelihoods <NeuralLikelihood>`.
 """
 
 from __future__ import annotations
@@ -68,11 +58,10 @@ def _require_sbi():
 
 @dataclass(frozen=True)
 class NeuralLikelihoodProvenance:
-    """What a trained estimator is valid for.
+    """What an estimator was trained for, and how.
 
-    Loading an estimator trained for one model against a different one produces
-    plausible-looking numbers rather than an error, so every field here is checked
-    before an estimator is used.
+    The parameters, their ranges and the outcomes are checked against a model before the
+    estimator is used with it (`check_matches`); the rest is a record of the training.
     """
 
     fit_param_names: tuple[str, ...]
@@ -157,26 +146,18 @@ class NeuralLikelihood:
     """A trained conditional density ``p(outcomes | parameters, trial features)``.
 
     Built by `train_neural_likelihood`, saved with `save`, and reloaded with `load`.
-    Scoring is differentiable, so the same object serves gradient-free optimization, an
-    exact-curvature E-step, and gradient-based sampling.
+    `trial_log_prob` is differentiable with respect to the parameters.
     """
 
     def __init__(self, estimator, provenance: NeuralLikelihoodProvenance, shape_probe):
         self._estimator = estimator
         self.provenance = provenance
-        # A small batch of (outcomes, conditioning) rows, kept so `load` can rebuild the
-        # architecture before restoring weights: sbi infers shapes from example data.
+        # Example rows, from which `load` rebuilds the network before restoring its weights.
         self._shape_probe = shape_probe
 
     @property
     def fit_param_names(self) -> tuple[str, ...]:
         return self.provenance.fit_param_names
-
-    # -- column order ---------------------------------------------------------------
-    #
-    # sbi's mixed estimator requires continuous columns first and categorical columns
-    # last.  PEC's `outcome_variables` order is the user's, and commonly puts the
-    # categorical column first, so outcomes are permuted on the way in.
 
     def _encode_outcomes(self, outcomes: np.ndarray) -> torch.Tensor:
         """Reorder to sbi's layout and map categorical values onto codes 0..K-1."""
@@ -222,8 +203,6 @@ class NeuralLikelihood:
         """Total log-likelihood of ``outcomes`` under ``theta``."""
         with torch.no_grad():
             return float(self.trial_log_prob(theta, outcomes, trial_features).sum())
-
-    # -- persistence ----------------------------------------------------------------
 
     def save(self, path):
         """Write weights and provenance to ``path``."""
@@ -278,10 +257,8 @@ def _build_estimator(x, cond, categorical, categories, log_transform):
             )
     from sbi.neural_nets import likelihood_nn
 
-    # sbi's plain flows take no log-transform option, and applying one here would need
-    # its Jacobian carried through scoring; all-continuous outcomes are modelled in
-    # their natural units instead. `train_neural_likelihood` sets log_transform
-    # accordingly, so this branch never receives it set.
+    # Continuous outcomes alone are modelled in their own units: sbi's plain flows take no
+    # log transform, and `train_neural_likelihood` requests none for them.
     return likelihood_nn(model="nsf")(batch_x=x, batch_y=cond)
 
 
@@ -313,12 +290,7 @@ def _split(thetas, n):
 
 
 def _check_parameters(pec, names):
-    """Raise unless `pec` fits exactly `names`, in that order.
-
-    Draws are made in the order `bounds` gives and handed to the model by position, so a
-    model that lists its parameters differently would be simulated at the wrong values --
-    and, where the ranges differ, outside the box the estimator records.
-    """
+    """Raise unless `pec` fits exactly `names`, in that order: draws are passed to it by position."""
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
 
     declared = _reported_names(pec.controller.function.fit_param_names)
@@ -333,21 +305,17 @@ def _check_parameters(pec, names):
 def _simulate(pec, inputs, thetas, names, n_outcomes):
     """Simulate every draw through ``pec``.
 
-    Returns the conditioning rows, the simulated outcomes, the number of trials per draw, and
-    the layout of the inputs: how many columns they have, and which of them were used.
-
-    How many trials each draw produces is set by ``inputs``, not by the data the model
-    was built around, so it is read back from the simulation rather than assumed.
+    Returns the conditioning rows, the simulated outcomes, the number of trials per draw (set
+    by ``inputs``, not by the model's data), and the layout of the inputs: how many columns
+    they have, and which of them were used.
     """
     _check_parameters(pec, names)
     n_trials = None
     features = None
     layout = None
 
-    # Training needs the simulated outcomes, not a score for them. Scoring here would pay
-    # the per-evaluation density cost a neural likelihood exists to remove, so the
-    # objective is stubbed out for the duration. The model may be one the caller is still
-    # using, so it is put back afterwards.
+    # Only the simulated outcomes are needed, so scoring is switched off, and restored after
+    # for a caller still using the model.
     function = pec.controller.function
     scoring = function._pec_objective_function
     function.set_pec_objective_function(lambda sim_data: 0.0)
@@ -380,11 +348,8 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
 
 
 def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
-    """Build a model and simulate ``thetas`` through it.
-
-    This is the unit of work sent to a worker: a composition cannot be sent to another
-    process, so each worker builds its own and then simulates its share of the draws.
-    """
+    """Build a model and simulate ``thetas`` through it; what a worker is sent, since a
+    composition cannot be sent to another process."""
     import pandas as pd
 
     pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))
@@ -434,6 +399,7 @@ def _encode_outcomes(outcomes, categorical, categories, outcome_names) -> torch.
             f"{list(outcome_names)}, got shape {outcomes.shape}."
         )
     encoded = outcomes.copy()
+    # Categorical values become codes 0..K-1.
     for j, (is_cat, cats) in enumerate(zip(categorical, categories)):
         if not is_cat:
             continue
@@ -447,6 +413,7 @@ def _encode_outcomes(outcomes, categorical, categories, outcome_names) -> torch.
                 f"simulated during training (trained categories: {list(cats)})."
             )
         encoded[:, j] = codes
+    # sbi's mixed estimator takes continuous columns first and categorical ones last.
     flags = np.asarray(categorical, dtype=bool)
     order = np.concatenate([np.flatnonzero(~flags), np.flatnonzero(flags)])
     return torch.as_tensor(encoded[:, order], dtype=torch.float32)
@@ -470,54 +437,70 @@ def train_neural_likelihood(
     distributed_options: Mapping | None = None,
     strict: bool = True,
 ) -> NeuralLikelihood:
-    """Train a `NeuralLikelihood` on data simulated from a composition.
+    """Train a :class:`NeuralLikelihood` on data simulated from a composition.
+
+    See :ref:`Neural Likelihoods <NeuralLikelihood>`.
 
     Arguments
     ---------
 
-    pec : ParameterEstimationComposition : default None
-        a model to simulate in this process, together with its **inputs**.  Simplest when
-        one is already built; it cannot be distributed, since a composition cannot be sent
-        to another process.
-
-    pec_factory : callable : default None
-        ``pec_factory(data) -> (pec, inputs)``, the same contract distributed and
-        hierarchical fitting use.  It is called with a placeholder table of
-        **n_trials_per_sample** rows, since training simulates rather than fits.  Required
-        to distribute, because each worker builds its own model.
-
-        Exactly one of **pec** or **pec_factory** is required.
-
     bounds : Mapping
-        Parameter name to ``(lower, upper)``.  Iteration order fixes the order of the
-        conditioning vector, and the trained estimator is valid only inside this box.
+        specifies the range ``(lower, upper)`` of each fitted parameter, by name, in the order the model
+        lists them.  The estimator is valid only within these ranges.
 
     outcome_names : Sequence[str]
-        Names of the outcome variables, in the order the composition reports them.
+        specifies the names of the outcome variables, in the order of the model's ``outcome_variables``.
 
-    categorical : Sequence[bool] : default None
-        Which outcomes are categorical.  Inferred from the simulated data when omitted,
-        and recorded either way, so a disagreement with the data being fit is caught
-        before the estimator is used.
+    pec : ParameterEstimationComposition : default None
+        specifies a model to simulate in this process.  Requires **inputs**.
+
+    inputs : Mapping : default None
+        specifies the inputs with which **pec** is run; the number of trials simulated for each parameter
+        draw is the number of trials in **inputs**.
+
+    pec_factory : callable : default None
+        specifies a function ``pec_factory(data) -> (pec, inputs)`` that builds the model, as used for
+        :ref:`distributed fitting <DistributedFitting>`; it is called with a table of **n_trials_per_sample**
+        rows.  Required by **distributed_options**.  Exactly one of **pec** and **pec_factory** must be
+        specified.
 
     n_parameter_samples : int : default 20000
-        Parameter draws across the box.
+        specifies the number of parameter values drawn from within **bounds** and simulated.
 
     n_trials_per_sample : int : default 100
-        Trials simulated per draw, with **pec_factory**.  With **pec** the trial count is
-        the model's own and this does not apply.
+        specifies the number of trials simulated for each parameter draw, when **pec_factory** is used.
+
+    categorical : Sequence[bool] : default None
+        specifies which outcome variables are categorical; if not specified, this is inferred from the
+        simulated data.
+
+    epochs : int : default 30
+        specifies the number of passes over the simulated data made in training.
+
+    batch_size : int : default 512
+        specifies the number of rows in each training step.
+
+    learning_rate : float : default 5e-4
+        specifies the learning rate of the Adam optimizer used for training.
+
+    validation_fraction : float : default 0.1
+        specifies the fraction of the simulated data held out to evaluate the estimator.
+
+    seed : int : default 0
+        specifies the seed for the parameter draws and for training.
 
     distributed_options : Mapping : default None
-        Resolved exactly as for distributed fitting, and requires **pec_factory**.
-        Generation is embarrassingly parallel, but each worker first builds a model, so
-        distributing pays above roughly a few hundred parameter draws and not below.
+        specifies a Dask cluster over which to distribute the simulations, as for :ref:`distributed fitting
+        <DistributedFitting>`.  Requires **pec_factory**.  Each worker builds its own model before simulating,
+        so this is worthwhile only for more than a few hundred parameter draws.
 
     strict : bool : default True
-        Raise rather than warn when a validation gate fails.
+        specifies whether an estimator that fails validation raises a `NeuralLikelihoodError` (True) or
+        issues a `NeuralLikelihoodWarning` (False).
 
     Returns
     -------
-    A trained `NeuralLikelihood`.
+    A trained :class:`NeuralLikelihood`.
     """
     from scipy.stats import qmc
 
@@ -554,8 +537,7 @@ def train_neural_likelihood(
         raise NeuralLikelihoodError("n_parameter_samples must be at least 2.")
     if n_trials_per_sample is not None and n_trials_per_sample < 1:
         raise NeuralLikelihoodError("n_trials_per_sample must be at least 1.")
-    # Needed only to build the estimator at the end, but checked before the simulations,
-    # which are most of the cost.
+    # Checked before simulating, which is most of the cost.
     _require_sbi()
 
     # Sobol draws cover the box more evenly than independent uniforms at the same count.
@@ -565,9 +547,7 @@ def train_neural_likelihood(
     n_outcomes = len(outcome_names)
     n_trials = n_trials_per_sample or 100
 
-    # Building a model costs far more than simulating from it, so the draws are split
-    # only as far as there are workers to build one each. In this process there is one
-    # model and no split at all.
+    # One share of the draws per worker: building a model costs far more than simulating it.
     if pec is not None:
         results = [_simulate(pec, inputs, thetas, names, n_outcomes)]
     elif distributed_options is None:
@@ -648,7 +628,7 @@ def train_neural_likelihood(
 
 
 def _check_gates(likelihood, x, cond, val_nll, strict):
-    """Refuse an estimator that did not train, or that cannot score its own training data."""
+    """Refuse an estimator whose held-out loss is not finite, or that cannot score the data it was trained on."""
     failures = []
     if not np.isfinite(val_nll):
         failures.append(f"held-out negative log-likelihood is {val_nll}")
@@ -658,7 +638,7 @@ def _check_gates(likelihood, x, cond, val_nll, strict):
     finite = float(torch.isfinite(scored).float().mean())
     if finite < 0.999:
         failures.append(
-            f"only {100 * finite:.2f}% of held-out rows received a finite log-density"
+            f"only {100 * finite:.2f}% of the simulated rows received a finite log-density"
         )
     if not failures:
         return

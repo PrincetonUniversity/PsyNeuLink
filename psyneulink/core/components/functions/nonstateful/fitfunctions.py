@@ -578,9 +578,7 @@ class PECOptimizationFunction(OptimizationFunction):
         # _pec_objective_function. Very confusing!
         self._pec_objective_function = objective_function
 
-        # Set when the PEC is configured with likelihood_estimator="neural". A trained
-        # estimator scores parameters directly, so the simulate-then-score path is
-        # bypassed rather than fed different numbers.
+        # Set by the PEC when likelihood_estimator="neural"; the likelihood is then computed without simulating.
         self._neural_likelihood = None
         self._neural_outcomes = None
         self._neural_trial_features = None
@@ -822,8 +820,7 @@ class PECOptimizationFunction(OptimizationFunction):
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
 
-        # Workers score the models pec_factory builds, so an estimator attached here would never
-        # be consulted. Scoring with one is a single network call, with nothing to distribute.
+        # Workers score the models pec_factory builds, not the estimator attached here.
         if self._neural_likelihood is not None:
             raise OptimizationFunctionError(
                 'Distributed fitting (distributed=True) cannot be combined with '
