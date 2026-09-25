@@ -348,8 +348,10 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
 
 
 def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
-    """Build a model and simulate ``thetas`` through it; what a worker is sent, since a
-    composition cannot be sent to another process."""
+    """Build a model and simulate ``thetas`` through it.
+
+    This is what a worker is sent, since a composition cannot be sent to another process.
+    """
     import pandas as pd
 
     pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))

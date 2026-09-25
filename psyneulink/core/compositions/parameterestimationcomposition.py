@@ -1445,8 +1445,10 @@ class ParameterEstimationComposition(Composition):
         return ocm
 
     def _setup_neural_likelihood(self, inputs=None):
-        """Load the estimator and check it against this model, once; then give the optimization function the
-        trials of this call to score."""
+        """Give the optimization function the estimator, and the trials of this call to score.
+
+        The estimator is loaded and checked against this model on the first call only.
+        """
         if self._likelihood_estimator != "neural":
             return
 
