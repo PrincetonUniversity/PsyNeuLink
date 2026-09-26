@@ -79,11 +79,18 @@ def check_scoring_is_deterministic(pec, source):
     model scored from 60 simulations, repeated calls at one parameter setting vary by tens of
     log-likelihood units, against curvature of order one.
 
+    A model scored by a trained estimator is exempt: see `scores_by_simulation
+    <ParameterEstimationComposition.scores_by_simulation>`.
+
     What makes a simulated model deterministic is `same_seed_for_all_parameter_combinations`:
     every evaluation then draws the same noise, so scores differ only where the parameters do.
     It is checked here rather than assumed because nothing about the result would reveal that it
     was missing: the fit runs, converges, and reports intervals that are noise.
     """
+    if not getattr(pec, "scores_by_simulation", True):
+        # A trained estimator has no simulation noise to hold still.
+        return
+
     controller = getattr(pec, "controller", None)
     parameters = getattr(controller, "parameters", None)
     setting = getattr(parameters, "same_seed_for_all_allocations", None)

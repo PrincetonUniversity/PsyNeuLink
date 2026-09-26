@@ -126,6 +126,15 @@ jobs:
             extras: 'dask'
             extra-args: '-m dask'
 
+          # neural likelihood tests, which need an extra too heavy to install everywhere:
+          # sbi pulls in torch, which one build exists to do without. With dask as well, so
+          # that training and fitting across a cluster are tested too.
+          - python-version: '3.10'
+            os: ubuntu
+            arch: 'default'
+            extras: 'nle,dask'
+            extra-args: 'tests/composition/pec'
+
         exclude:
           # Replaced with the min version run above
           - python-version: '3.10'

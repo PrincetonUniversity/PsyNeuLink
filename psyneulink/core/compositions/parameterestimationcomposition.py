@@ -166,6 +166,9 @@ For Dask/SLURM execution of data-fitting runs, pass ``distributed=True`` to eith
 To fit several participants jointly rather than one at a time, stack their trials into a single **data** table and pass
 ``fit_method="hierarchical"``; see :ref:`Hierarchical Fitting <HierarchicalFitting>`.
 
+To score the data with a density estimator trained beforehand on simulated data, rather than by simulating the model
+on every evaluation, pass ``likelihood_estimator="neural"``; see :ref:`Neural Likelihoods <NeuralLikelihood>`.
+
 .. _ParameterEstimationComposition_Examples:
 
 Usage Examples
@@ -473,6 +476,17 @@ class ParameterEstimationComposition(Composition):
         default) or one parameter at a time (``"diagonal"``); see :ref:`Hierarchical Fitting <HierarchicalFitting>`
         for the full set of keys.
 
+    likelihood_estimator : "kde" or "neural" : default "kde"
+        specifies how the likelihood of **data** is computed. ``"kde"`` simulates the model **num_estimates** times
+        and estimates a density from the simulated outcomes. ``"neural"`` uses a density estimator trained
+        beforehand on data simulated from the model, and requires **likelihood_estimator_kwargs**. See
+        :ref:`Neural Likelihoods <NeuralLikelihood>`.
+
+    likelihood_estimator_kwargs : Mapping : default None
+        specifies options for the likelihood estimator (used only when **likelihood_estimator** is ``"neural"``).
+        Must include an ``"artifact"``, either a trained :class:`NeuralLikelihood` or the path to one saved with its
+        ``save()`` method; see :ref:`Neural Likelihoods <NeuralLikelihood>`.
+
 
     Attributes
     ----------
@@ -710,6 +724,8 @@ class ParameterEstimationComposition(Composition):
         distributed_options: Optional[Mapping] = None,
         fit_method: Optional[Union[FitMethod, str]] = None,
         hierarchical_options: Optional[Mapping] = None,
+        likelihood_estimator: Optional[Literal["kde", "neural"]] = None,
+        likelihood_estimator_kwargs: Optional[Mapping] = None,
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC
@@ -861,6 +877,11 @@ class ParameterEstimationComposition(Composition):
         # it: the remaining columns are the outcome variables, which is what _validate_data expects.
         self._fit_method = fit_method
         self._subject_id = subject_id
+        self._likelihood_estimator = likelihood_estimator or "kde"
+        self._likelihood_estimator_kwargs = dict(likelihood_estimator_kwargs or {})
+        # Loaded and checked against this composition on first use, not at construction:
+        # the fitted parameters and their ranges are only known once the controller exists.
+        self._neural_likelihood = None
         # Kept on the composition rather than read back off the optimization function, which only
         # receives them when `distributed` is set; a hierarchical fit needs the factory either way.
         self._pec_distributed_options = dict(distributed_options or {})
@@ -868,6 +889,8 @@ class ParameterEstimationComposition(Composition):
         self._subject_split = None
         self.hierarchical_data = None
         self.fit_results = None
+        self._validate_likelihood_estimator()
+
         if fit_method == FitMethod.HIERARCHICAL:
             self._setup_hierarchical(likelihood_include_mask)
 
@@ -989,6 +1012,48 @@ class ParameterEstimationComposition(Composition):
         "estep_method",
         "estep_options",
     )
+
+    @property
+    def scores_by_simulation(self):
+        """Whether the likelihood is computed by simulating the model, rather than by a trained estimator."""
+        return self._likelihood_estimator != "neural"
+
+    def _validate_likelihood_estimator(self):
+        """Check the likelihood settings before anything is built from them."""
+        if self._fit_method == "hierarchical" and (
+            self._likelihood_estimator != "kde" or self._likelihood_estimator_kwargs
+        ):
+            raise ParameterEstimationCompositionError(
+                "likelihood_estimator describes how a model is scored, which a hierarchical "
+                "fit takes from the pec_factory in distributed_options along with the model "
+                "itself. Set it on the participant models the factory builds, not here."
+            )
+        if self._likelihood_estimator == "kde":
+            if self._likelihood_estimator_kwargs:
+                raise ParameterEstimationCompositionError(
+                    "likelihood_estimator_kwargs applies only to "
+                    'likelihood_estimator="neural".'
+                )
+            return
+
+        unknown = set(self._likelihood_estimator_kwargs) - {"artifact"}
+        if unknown:
+            raise ParameterEstimationCompositionError(
+                f"Unknown likelihood_estimator_kwargs {sorted(unknown)}; the only "
+                f'supported key is "artifact".'
+            )
+        if "artifact" not in self._likelihood_estimator_kwargs:
+            raise ParameterEstimationCompositionError(
+                'likelihood_estimator="neural" requires likelihood_estimator_kwargs='
+                '{"artifact": ...}, either a trained NeuralLikelihood or the path to '
+                "one saved with its save() method. Train one with "
+                "train_neural_likelihood()."
+            )
+        if self.data is None:
+            raise ParameterEstimationCompositionError(
+                'likelihood_estimator="neural" scores observed data, so data must be '
+                "specified."
+            )
 
     @classmethod
     def _split_hierarchical_options(cls, hierarchical_options):
@@ -1379,6 +1444,65 @@ class ParameterEstimationComposition(Composition):
 
         return ocm
 
+    def _setup_neural_likelihood(self, inputs=None):
+        """Give the optimization function the estimator, and the trials of this call to score.
+
+        The estimator is loaded and checked against this model on the first call only.
+        """
+        if self._likelihood_estimator != "neural":
+            return
+
+        from psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions import (
+            NeuralLikelihood,
+            _input_columns,
+        )
+        from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
+            _reported_names,
+        )
+
+        if self._neural_likelihood is None:
+            artifact = self._likelihood_estimator_kwargs["artifact"]
+            likelihood = (
+                artifact
+                if isinstance(artifact, NeuralLikelihood)
+                else NeuralLikelihood.load(artifact)
+            )
+
+            bounds = self.controller.function.fit_param_bounds
+            categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
+            # Names are compared without the mechanism, whose name depends on construction order.
+            likelihood.provenance.check_matches(
+                _reported_names(self.controller.function.fit_param_names),
+                [bounds[name][0] for name in bounds],
+                [bounds[name][1] for name in bounds],
+                tuple(str(c) for c in self.data.columns),
+                categorical,
+            )
+            self._neural_likelihood = likelihood
+
+        likelihood = self._neural_likelihood
+        included = self.likelihood_include_mask
+
+        features = None
+        provenance = likelihood.provenance
+        if provenance.n_trial_features:
+            # The columns training used, even where one does not vary in these data: a
+            # participant who saw one condition still has to be scored as being in it.
+            columns = _input_columns(inputs, len(self.data))
+            if columns.shape[1] != provenance.n_input_columns:
+                raise ParameterEstimationCompositionError(
+                    f"This neural likelihood was trained on inputs with "
+                    f"{provenance.n_input_columns} value(s) per trial, and tells trials apart "
+                    f"by some of them; these inputs have {columns.shape[1]}. Pass inputs laid "
+                    f"out as they were for training."
+                )
+            features = columns[included][:, list(provenance.trial_feature_columns)]
+
+        # Excluded trials are dropped, as they are from a simulated likelihood.
+        self.controller.function.set_neural_likelihood(
+            likelihood, self._data_numpy[included], features
+        )
+
     @handle_external_context()
     def run(self, *args, context=None, **kwargs):
         # A hierarchical fit drives one model per participant, built by the user's factory; this
@@ -1418,6 +1542,8 @@ class ParameterEstimationComposition(Composition):
 
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
+
+        self._setup_neural_likelihood(inputs)
 
         self._prepare_pec_inputs_for_simulation(inputs, context)
 
@@ -1519,6 +1645,13 @@ class ParameterEstimationComposition(Composition):
                 f"The function ({of}) for the controller of "
                 f"ParameterEstimationComposition {self.name} does not appear to "
                 f"have a log_likelihood function."
+            )
+
+        # Nothing is simulated with a neural likelihood, so nothing is compiled.
+        self._setup_neural_likelihood(inputs)
+        if self._neural_likelihood is not None:
+            return self.controller.function.log_likelihood(
+                *args, return_sim_data=return_sim_data, context=context
             )
 
         comp_execution_mode = self.controller.parameters.comp_execution_mode.get(context)
