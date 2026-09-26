@@ -70,6 +70,12 @@ jobs:
             arch: 'arm64'
             extra-args: '--fp-precision=fp32'
 
+          # fp32 run on macos python 3.12
+          - python-version: '3.12'
+            os: macos
+            arch: 'default'
+            extra-args: '--fp-precision=fp32'
+
           # fp32 run on windows x64 python 3.11
           - python-version: '3.11'
             os: windows
@@ -85,8 +91,8 @@ jobs:
 
           # --benchmark-enable run on macos python 3.11
           - python-version: '3.11'
-            os: macos
-            arch: 'default'
+            os: ubuntu
+            arch: 'arm64'
             # pytest needs both '--benchmark-only' and '-m benchmark'
             # The former fails the test if benchmarks cannot be enabled
             # (e.g. due to --dist setting)
