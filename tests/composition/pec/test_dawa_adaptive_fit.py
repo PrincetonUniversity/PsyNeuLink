@@ -82,6 +82,27 @@ def test_checked_final_selection_ignores_biased_low_budget_scores():
     assert not selection_seeds & (racing_seeds | {29, 8101})
 
 
+def test_batched_race_preserves_unequal_block_sizes_and_seed_order():
+    def sample(rows, size, seed):
+        return np.random.default_rng(seed).uniform(.5, 1.5, (len(rows), 2))
+
+    calls = []
+
+    def sample_blocks(rows, sizes, seeds):
+        calls.append((sizes, seeds))
+        return [sample(rows, size, seed) for size, seed in zip(sizes, seeds, strict=True)]
+
+    config = AdaptiveConfig(min_estimates=7, max_estimates=23, rank_tolerance=0.)
+    args = (sample, [True, False], config, 29, [8101])
+    serial = PopulationRacer(*args).evaluate([[0], [1]])
+    batched = PopulationRacer(*args, sample_blocks=sample_blocks).evaluate([[0], [1]])
+    np.testing.assert_array_equal(serial[0], batched[0])
+    assert serial[1] == batched[1]
+    assert calls[0][0] == [2, 2, 2, 1]
+    assert [seed for _, seeds in calls for seed in seeds] == serial[1]["block_seeds"]
+    assert [size for sizes, _ in calls for size in sizes] == serial[1]["block_sizes"]
+
+
 def test_rank_uncertainty_includes_swaps_within_elite():
     scores = np.array([20., 19.9, 10., 0.])
     pair_se = np.zeros((4, 4))
@@ -152,3 +173,42 @@ def test_fresh_selection_can_reject_the_reference_seed_winner():
 def test_invalid_block_never_becomes_a_valid_pooled_candidate():
     scores, _, valid = pooled_scores([np.array([[np.nan], [1.]]), np.ones((2, 1))], [2, 2], [True])
     assert scores[0] == -1e10 and not valid[0] and valid[1]
+
+
+def test_profile_maximizes_after_pooling_and_uses_one_shift_for_all_trials():
+    # Each independent block prefers a different nuisance value. Their pooled
+    # optimum is the third value; per-block maximization would invent evidence.
+    a = np.array([[[25., 1.], [1., 1.], [4., 4.]], [[1., 3.], [2., 2.], [1., 1.]]])
+    b = np.array([[[1., 1.], [1., 25.], [4., 4.]], [[1., 3.], [2., 2.], [1., 1.]]])
+    scores, _, valid, indices = pooled_scores([a, b], [4, 4], [True, True], return_profile=True)
+    np.testing.assert_array_equal(indices, [2, 1])
+    np.testing.assert_allclose(scores, np.log([16., 4.]))
+    assert valid.all()
+    score, _, _, index = pooled_scores([a, b], [4, 4], [True, False], return_profile=True)
+    assert index[0] == 0 and score[0] == pytest.approx(np.log(13.))
+
+
+def test_profiled_fit_returns_joint_parameters_from_fresh_selection():
+    bounds = {"x": (0., 1., .01), "y": (0., 1., .01)}
+    initial = {"x": .4, "y": .4}
+    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.CmaEsSampler(
+        x0=initial, sigma0=.2, lr_adapt=True, popsize=4, seed=10))
+    study.enqueue_trial(initial)
+
+    def sample(rows, estimates, seed):
+        base = -np.square(np.asarray(rows) - .6).sum(-1)
+        offset_scores = np.array([1., 0.]) if seed == 29 else np.array([0., 1.])
+        return np.exp(base[:, None, None] + offset_scores[None, :, None])
+
+    config = AdaptiveConfig(min_estimates=4, max_estimates=32, check_every=4,
+                            min_evaluations=5, refine_evaluations=5, max_search_evaluations=9)
+    fit, detail, _ = fit_adaptive(study, bounds, initial, sample, [True], config,
+                                 evaluations=30, population=4, simulation_seed=29,
+                                 optimizer_seed=10, reserved_seeds=[8101], log_batch=lambda *args: None,
+                                 profile_parameter=("offset", [.1, .2]))
+    assert fit['fitted_params']['offset'] == .2
+    # Returned reference score belongs to the selected pair, not the old max
+    # over the reference seed's nuisance coordinate.
+    expected = -sum((fit['fitted_params'][key] - .6) ** 2 for key in bounds)
+    assert fit['optimal_value'] == pytest.approx(expected)
+    assert detail['profile']['initial_value'] == .1

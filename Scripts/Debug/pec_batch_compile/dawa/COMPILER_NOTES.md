@@ -124,6 +124,31 @@ Conflicting overrides of fixed parameters raise an error; compile a new plan
 to change a fixed value.
 
 Fused histogram scoring retains counts instead of all simulated outcomes.
+`plan.discrete_output_counts(...)` also supports an explicit exact FP32 support
+for one numeric output, retaining per-trial counts matching the observed
+categories. It raises on unsupported numeric values and preserves truncation
+checks. `ShiftedHistogramScorer` reuses these counts for additive readout grids;
+it does not itself establish that a model parameter is independent of dynamics.
+The DAWA `--profile-ndt` runner checks the passive RT readout and uses this path
+to remove NDT from the outer CMA-ES search without materializing trajectories.
+
+`plan.discrete_output_count_blocks(..., num_estimates=N, seeds=[...])` runs
+independent equal-sized sampling blocks in one GPU launch and returns a tuple
+of those same count results in seed order. Each block preserves the separate
+call's candidate/subject/estimate RNG addresses, CRN policy, and complete trial
+history. The extra GPU dimension changes execution placement only. Count views
+share a block allocation, whose size grows with the number of seeds. The
+adaptive fitter groups equal-sized initial/promotion blocks and preserves the
+original block weights and seed order; `--no-batch-sampling-blocks` restores
+separate calls for comparison.
+
+Both histogram and exact-support reductions cache emitted source using a
+snapshot of the complete serializable IR contents and the immutable op-spec
+sidecar's identity. Nested dictionary/array edits trigger validation and
+emission again; nonserializable extension metadata uses the uncached path.
+Estimate count and total lane count are runtime arguments, allowing adaptive
+budgets and tail populations to reuse compiled kernels. Neither change alters
+the nonlinear dynamics, Gaussian conversion, or smoothing rules.
 Smoothing sigma is in RT-bin units: 0.5 bins is 15 ms for 100 bins over 0–3 s.
 Pseudocounts are per joint choice/RT cell. Smoothing uses neighboring RT bins
 with boundary renormalization and does not mix choices or change simulations.

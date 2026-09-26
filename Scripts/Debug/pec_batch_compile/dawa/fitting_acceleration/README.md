@@ -7,6 +7,16 @@ The optional [adaptive fitting workflow](adaptive_h100.md) now implements
 sample accumulation, uncertainty-based budgets, and high-budget refinement.
 The [fit-quality diagnosis](quality_diagnosis.md) investigates its remaining
 quality gap and tests retaining learned covariance during refinement.
+The [NDT profiling implementation and H100 comparison](ndt_h100.md) extend
+that workflow with compiled decision-time counts and seven-parameter search.
+The [subsequent H100 profile](ndt_profile_h100.md) identifies small sampling
+blocks and repeated compiler preparation as the next optimization targets.
+The [sampling-block implementation](sampling_blocks_h100.md) addresses those
+targets and checks exact replay of the complete fit.
+The [updated H100 profile](sampling_blocks_profile_h100.md) finds that GPU
+simulation now takes 91% of fitting time, split almost equally between adaptive
+search and 100k refinement.
+The local prototype results below predate those implementations.
 
 The study uses the complete synthetic subject from the first H100 recovery
 run: 760 trials, 720 scored, all four LCA noise SDs 0.1, LCA steps 10 ms, and
@@ -116,8 +126,8 @@ These results motivated the [adaptive implementation](adaptive_h100.md):
 in-memory optimizer storage, small estimates budgets
 for broad search, and independent accumulated simulation blocks to refine
 close comparisons and verify the incumbent. It should compare final fits at
-100k or more across several starts. Cached NDT profiling is the next compiler
-extension to test inside that search. Bootstrap particle filtering remains a
+100k or more across several starts. Cached NDT profiling is now implemented
+and [tested inside that search](ndt_h100.md). Bootstrap particle filtering remains a
 lower-priority experiment because it changes the objective and does not by
 itself address the low-budget ranking problem observed here.
 
@@ -169,8 +179,8 @@ work: add their weighted counts, or average their densities with weights
 proportional to block sizes when pseudocount/estimates is constant. Take logs
 after pooling. Averaging the blocks' log likelihoods is a different estimator.
 The study reports pooled scores and tests pooling against concatenating the
-actual samples. It does not yet implement automatic promotion or an optimizer
-that chooses its own budget.
+actual samples. This audit script does not implement automatic promotion;
+the subsequent adaptive fitter does.
 
 ## Nondecision time
 
@@ -185,11 +195,10 @@ including shifts that are not multiples of the 10 ms timestep. It also checks
 cached scores against the production fused scorer. Bin-membership maps are
 deduplicated when several shifts produce exactly the same histogram score.
 
-This prototype materializes samples before compressing them. A compiler
-implementation should accumulate the required decision-time counts directly
-to preserve the current small memory footprint. Profiling nondecision time
-inside optimization also needs a fit-quality comparison against the current
-eight-coordinate optimizer.
+This prototype materializes samples before compressing them. The subsequent
+[compiler implementation](ndt_h100.md) accumulates decision-time counts directly
+and profiles NDT inside optimization. Its report compares fit quality against
+the eight-coordinate optimizer.
 
 ## Smaller-budget fit with independent validation
 

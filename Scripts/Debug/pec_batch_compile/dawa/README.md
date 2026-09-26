@@ -147,6 +147,43 @@ fits. The earlier policy was faster but fit less well. This is still experimenta
 two starts on one synthetic subject do not establish recovery across subjects,
 and some LC parameter estimates still differ noticeably.
 
+### Profile nondecision time
+
+Add `--profile-ndt` to an adaptive fit or recovery run to optimize nondecision
+time inside each proposal. CMA-ES then searches seven dynamic parameters.
+The compiler accumulates exact decision-time counts during the same complete
+trial histories; the fitter evaluates the 0.1–0.3 s NDT grid from those counts.
+It retains the existing histogram, smoothing, and pseudocount rules.
+
+This is experimental and currently requires `--fit-strategy adaptive`. Equal
+histogram scores can cover an interval of NDT values; the reported value is the
+lowest grid representative, not evidence of 0.1 ms estimation precision.
+Reference checks, refinement, and final selection also optimize NDT, while
+independent validation scores the chosen full eight-parameter vector.
+
+In the [H100 experiment](fitting_acceleration/ndt_h100.md), profiling NDT with
+smaller search/refinement budgets took **5.8–6.1 minutes overall**, about
+**1.39× faster** than the previous adaptive fits, with similar fresh-seed
+likelihoods in two starts. A smaller-budget control without profiling fit less
+well. LC parameter estimates still varied. To use the
+tested budgets, add these options to a fit or recovery command:
+
+```bash
+  --fit-strategy adaptive --profile-ndt --estimates 100000 \
+  --adaptive-search-evaluations 1000 --adaptive-refine-evaluations 300 \
+  --optimizer-storage memory
+```
+
+`--profile-ndt` alone keeps the existing search/refinement budgets. The measured
+gain includes reducing those budgets; it is not a 1.39× faster simulator.
+
+NDT-profiled adaptive fits now run their independent sampling blocks together
+by default. This keeps the same samples and fitting decisions while reducing
+GPU launches and repeated preparation. Add `--no-batch-sampling-blocks` for
+separate-block execution, which uses less count-buffer memory. See the
+[H100 comparison](fitting_acceleration/sampling_blocks_h100.md) for complete
+fit timings and exact replay checks.
+
 ## Run a short recovery check
 
 From the repository root, with the environment activated:

@@ -124,20 +124,24 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
 @pytest.mark.triton
 @pytest.mark.triton_gpu
 @pytest.mark.batched
-def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, design):
+@pytest.mark.parametrize("profile_ndt,recovery", [(False, True), (True, True), (True, False)])
+def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, design, profile_ndt, recovery):
     path = tmp_path / "data.csv"
     design.to_csv(path, index=False)
     output = tmp_path / "adaptive"
-    command = [sys.executable, str(DIRECTORY / "dawa_pec_recovery.py"), "--data", str(path),
+    entry = "dawa_pec_recovery.py" if recovery else "dawa_pec_fit.py"
+    command = [sys.executable, str(DIRECTORY / entry), "--data", str(path),
                "--subject", "42", "--fit-strategy", "adaptive", "--estimates", "64",
                "--adaptive-min-estimates", "16", "--evaluations", "41", "--adaptive-check-every", "10",
                "--adaptive-min-evaluations", "21", "--adaptive-patience", "1",
                "--adaptive-progress-tolerance", "100000", "--adaptive-refine-evaluations", "10",
                "--validation-estimates", "128", "--validation-seeds", "8101",
                "--predictive-estimates", "16", "--output", str(output)]
+    if profile_ndt:
+        command.append("--profile-ndt")
     result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=DIRECTORY.parents[3])
     assert result.returncode == 0, result.stdout + result.stderr
-    report = json.loads((output / "recovery.json").read_text())
+    report = json.loads((output / ("recovery.json" if recovery else "fit.json")).read_text())
     records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
     assert report["status"] == "complete"
     assert report["evaluations"] == 31 < report["requested_evaluations"]
@@ -154,3 +158,9 @@ def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, d
     seeds = [seed for row in records for seed in row["block_seeds"]]
     assert not {8101, 20260925, 21260925} & set(seeds)
     assert {row["phase"] for row in records} == {"adaptive_search", "refinement"}
+    if profile_ndt:
+        assert len(report["ndt_profile"]["optimizer_parameters"]) == 7
+        assert report["ndt_profile"]["distinct_bin_maps"] < report["ndt_profile"]["grid_values"]
+        assert all(len(row["parameters"]) == 8 for row in records)
+        profile = report["adaptive"]["profile"]
+        assert report["fitted"][profile["parameter"]] == profile["values"][profile["selection_indices"][selection["winner"]]]

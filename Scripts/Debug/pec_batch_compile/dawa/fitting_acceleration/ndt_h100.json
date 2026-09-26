@@ -1,0 +1,4074 @@
+{
+  "date": "2026-09-26",
+  "parent_revision": "2031e35b73",
+  "gpu": "NVIDIA H100 NVL",
+  "host": "della-rse.princeton.edu",
+  "trials": 760,
+  "scored_trials": 720,
+  "time_steps": {
+    "Control Units\n[Color, Location].time_step_size": 0.01,
+    "Stimulus Units\n[Red, Blue, Left, Right].time_step_size": 0.01,
+    "Decision Units\n[Left, Right].time_step_size": 0.01,
+    "LC.time_step_size": 0.02,
+    "Response Units\n[Left, Right].time_step_size": 0.01
+  },
+  "noise": {
+    "c_noise": 0.1,
+    "s_noise": 0.1,
+    "d_noise": 0.1,
+    "r_noise": 0.1
+  },
+  "truth": {
+    "Response Units\n[Left, Right].termination_threshold[1]": 0.4,
+    "RT_GATE.intercept[1]": 0.22,
+    "Bias Mechanism.intercept": -0.4,
+    "Control Units\n[Color, Location].gain[1]": 12.0,
+    "LC.mode[0.0]": 0.65,
+    "LC.mode[1.0]": 0.8,
+    "LC.slope[1]": 1.5,
+    "LC.intercept": 5.5
+  },
+  "estimator": {
+    "kind": "trial_marginal_histogram",
+    "bins": 100,
+    "rt_range": [
+      0.0,
+      3.0
+    ],
+    "smoothing_sigma": 0.5,
+    "pseudocount": 1.0
+  },
+  "launch_options": {
+    "block_size": 32,
+    "num_warps": 1,
+    "trial_schedule": "independent",
+    "normal_rng": "philox4x_fast_v1"
+  },
+  "verification": {
+    "gpu": "NVIDIA H100 NVL",
+    "representatives": [
+      0.1,
+      0.10010000000000001,
+      0.1101,
+      0.12010000000000001,
+      0.1301,
+      0.1401,
+      0.1501,
+      0.1601,
+      0.1701,
+      0.18009999999999998,
+      0.1901,
+      0.2001,
+      0.2101,
+      0.2201,
+      0.2301,
+      0.24009999999999998,
+      0.2501,
+      0.2601,
+      0.2701,
+      0.2801,
+      0.2901
+    ],
+    "reference_run": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0",
+    "trials": 760,
+    "checks": [
+      {
+        "estimates": 5000,
+        "ndt": 0.1,
+        "max_density_error": 7.152557373046875e-07,
+        "score_error": -4.8428633910191365e-05
+      },
+      {
+        "estimates": 5000,
+        "ndt": 0.1234,
+        "max_density_error": 7.152557373046875e-07,
+        "score_error": -4.6087919201909244e-05
+      },
+      {
+        "estimates": 5000,
+        "ndt": 0.2,
+        "max_density_error": 7.152557373046875e-07,
+        "score_error": -4.8463633447681786e-05
+      },
+      {
+        "estimates": 5000,
+        "ndt": 0.2199,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -4.390440773249793e-05
+      },
+      {
+        "estimates": 5000,
+        "ndt": 0.3,
+        "max_density_error": 7.152557373046875e-07,
+        "score_error": -4.6869745148114816e-05
+      },
+      {
+        "estimates": 100000,
+        "ndt": 0.1,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -8.300268170557956e-06
+      },
+      {
+        "estimates": 100000,
+        "ndt": 0.1234,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -6.95903165137679e-06
+      },
+      {
+        "estimates": 100000,
+        "ndt": 0.2,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -9.155101736268989e-06
+      },
+      {
+        "estimates": 100000,
+        "ndt": 0.2199,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -6.804151553296833e-06
+      },
+      {
+        "estimates": 100000,
+        "ndt": 0.3,
+        "max_density_error": 4.76837158203125e-07,
+        "score_error": -8.899076675561446e-06
+      }
+    ],
+    "timing": [
+      {
+        "estimates": 5000,
+        "candidates": 10,
+        "kind": "ordinary",
+        "seconds": [
+          0.18110555899329484,
+          0.17963281902484596,
+          0.179405011003837
+        ]
+      },
+      {
+        "estimates": 5000,
+        "candidates": 10,
+        "kind": "profile",
+        "seconds": [
+          0.18435287498869002,
+          0.18368785199709237,
+          0.18332357797771692
+        ]
+      },
+      {
+        "estimates": 100000,
+        "candidates": 10,
+        "kind": "ordinary",
+        "seconds": [
+          2.7562227551825345,
+          2.7639877770561725,
+          2.770649309968576
+        ]
+      },
+      {
+        "estimates": 100000,
+        "candidates": 10,
+        "kind": "profile",
+        "seconds": [
+          2.7971432299818844,
+          2.7883454791735858,
+          2.7884389320388436
+        ]
+      }
+    ],
+    "materialized_count_check": true
+  },
+  "quality": {
+    "gpu": "NVIDIA H100 NVL",
+    "representatives": [
+      0.1,
+      0.10010000000000001,
+      0.1101,
+      0.12010000000000001,
+      0.1301,
+      0.1401,
+      0.1501,
+      0.1601,
+      0.1701,
+      0.18009999999999998,
+      0.1901,
+      0.2001,
+      0.2101,
+      0.2201,
+      0.2301,
+      0.24009999999999998,
+      0.2501,
+      0.2601,
+      0.2701,
+      0.2801,
+      0.2901
+    ],
+    "reference_run": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0",
+    "trials": 760,
+    "checks": [],
+    "timing": [],
+    "validation": [
+      {
+        "seed": 9401,
+        "fixed0": 254.9336605168324,
+        "fixed1": 254.64039918209605,
+        "adaptive0": 254.78674098968955,
+        "adaptive1": 254.55798961364266,
+        "ndt_full0": 254.3885707264257,
+        "ndt_short0": 254.8494771461492,
+        "ndt_short1": 254.49533167053227,
+        "unprofiled_short0": 253.9643335478287
+      },
+      {
+        "seed": 9402,
+        "fixed0": 255.14621059222932,
+        "fixed1": 254.53210670497612,
+        "adaptive0": 255.12994270243559,
+        "adaptive1": 255.08317494899416,
+        "ndt_full0": 254.48378184709006,
+        "ndt_short0": 254.97406969444768,
+        "ndt_short1": 254.70563515397603,
+        "unprofiled_short0": 254.01834097846128
+      },
+      {
+        "seed": 9403,
+        "fixed0": 255.32471059851264,
+        "fixed1": 255.18700212681014,
+        "adaptive0": 255.16044494450753,
+        "adaptive1": 255.36430595101984,
+        "ndt_full0": 255.4173735462716,
+        "ndt_short0": 255.40373659868655,
+        "ndt_short1": 255.23293813677333,
+        "unprofiled_short0": 254.70149393612414
+      },
+      {
+        "seed": 9404,
+        "fixed0": 254.93714299907518,
+        "fixed1": 254.21453172682934,
+        "adaptive0": 254.98192419738467,
+        "adaptive1": 254.75388648887073,
+        "ndt_full0": 254.40196179266096,
+        "ndt_short0": 254.78754565847007,
+        "ndt_short1": 254.93332222138773,
+        "unprofiled_short0": 253.43039411570405
+      },
+      {
+        "seed": 9405,
+        "fixed0": 254.6542241428883,
+        "fixed1": 254.16358836516198,
+        "adaptive0": 254.4776145047342,
+        "adaptive1": 254.11621454380116,
+        "ndt_full0": 254.09640293272048,
+        "ndt_short0": 254.47454271003105,
+        "ndt_short1": 254.47543405675526,
+        "unprofiled_short0": 253.64807905919747
+      }
+    ],
+    "parameters": {
+      "fixed0": [
+        0.382,
+        0.2116,
+        -0.41000000000000003,
+        12.52,
+        0.379,
+        0.693,
+        2.489,
+        5.099
+      ],
+      "fixed1": [
+        0.383,
+        0.196,
+        -0.423,
+        14.700000000000001,
+        0.309,
+        0.533,
+        2.4210000000000003,
+        4.864
+      ],
+      "adaptive0": [
+        0.383,
+        0.2197,
+        -0.40900000000000003,
+        12.940000000000001,
+        0.367,
+        0.657,
+        2.218,
+        5.058
+      ],
+      "adaptive1": [
+        0.388,
+        0.2056,
+        -0.415,
+        14.58,
+        0.42800000000000005,
+        0.726,
+        2.17,
+        4.958
+      ],
+      "ndt_full0": [
+        0.38,
+        0.1901,
+        -0.42,
+        13.39,
+        0.34099999999999997,
+        0.536,
+        2.733,
+        4.922
+      ],
+      "ndt_short0": [
+        0.384,
+        0.2101,
+        -0.413,
+        14.05,
+        0.374,
+        0.627,
+        2.973,
+        4.7940000000000005
+      ],
+      "ndt_short1": [
+        0.385,
+        0.2001,
+        -0.416,
+        13.91,
+        0.268,
+        0.612,
+        1.921,
+        5.027
+      ],
+      "unprofiled_short0": [
+        0.384,
+        0.19380000000000003,
+        -0.419,
+        12.8,
+        0.41700000000000004,
+        0.551,
+        2.609,
+        5.125
+      ]
+    },
+    "parameter_order": [
+      "Response Units\n[Left, Right].termination_threshold[1]",
+      "RT_GATE.intercept[1]",
+      "Bias Mechanism.intercept",
+      "Control Units\n[Color, Location].gain[1]",
+      "LC.mode[0.0]",
+      "LC.mode[1.0]",
+      "LC.slope[1]",
+      "LC.intercept"
+    ]
+  },
+  "runs": {
+    "fixed0": {
+      "fit_seconds": 1613.0680793749634,
+      "total_seconds": 1652.3963336648885,
+      "setup_seconds": 29.04301631799899,
+      "evaluations": 5000,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.382,
+        "RT_GATE.intercept[1]": 0.2116,
+        "Bias Mechanism.intercept": -0.41000000000000003,
+        "Control Units\n[Color, Location].gain[1]": 12.52,
+        "LC.mode[0.0]": 0.379,
+        "LC.mode[1.0]": 0.693,
+        "LC.slope[1]": 2.489,
+        "LC.intercept": 5.099
+      },
+      "reference_score": 255.31297302246094,
+      "validation_scores": [
+        254.9336605168324,
+        255.14621059222932,
+        255.32471059851264,
+        254.93714299907518,
+        254.6542241428883
+      ],
+      "validation_mean": 254.99918976990756,
+      "validation_mc_se": 0.11285479623303876,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.508456289768219,
+            "mean_rt": 0.9275751113891602,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.2015999555587769
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.48069265484809875,
+            "mean_rt": 0.9356200695037842,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.231600046157837
+            ]
+          }
+        }
+      }
+    },
+    "adaptive0": {
+      "fit_seconds": 471.37687856005505,
+      "total_seconds": 508.2092320548836,
+      "setup_seconds": 26.022223768988624,
+      "evaluations": 2600,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.383,
+        "RT_GATE.intercept[1]": 0.2197,
+        "Bias Mechanism.intercept": -0.40900000000000003,
+        "Control Units\n[Color, Location].gain[1]": 12.940000000000001,
+        "LC.mode[0.0]": 0.367,
+        "LC.mode[1.0]": 0.657,
+        "LC.slope[1]": 2.218,
+        "LC.intercept": 5.058
+      },
+      "reference_score": 254.97722979434292,
+      "validation_scores": [
+        254.78674098968955,
+        255.12994270243559,
+        255.16044494450753,
+        254.98192419738467,
+        254.4776145047342
+      ],
+      "validation_mean": 254.9073334677503,
+      "validation_mc_se": 0.12617151043743108,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084494352340698,
+            "mean_rt": 0.9360216856002808,
+            "rt_quantiles": [
+              0.6996999979019165,
+              0.9096999764442444,
+              1.2096999883651733
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807156026363373,
+            "mean_rt": 0.9407249093055725,
+            "rt_quantiles": [
+              0.6996999979019165,
+              0.9096999764442444,
+              1.229699969291687
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -2092.662297826273,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 242.10765485303455,
+            "improvement": 2334.7699526793076,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 242.10765485303455,
+            "improvement": 0.0,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 251.66810595355705,
+            "improvement": 9.5604511005225,
+            "parameters": [
+              0.358,
+              0.22660000000000002,
+              -0.40800000000000003,
+              9.92,
+              0.259,
+              0.551,
+              2.511,
+              5.284000000000001
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 252.32070118952362,
+            "improvement": 0.6525952359665723,
+            "parameters": [
+              0.40800000000000003,
+              0.18320000000000003,
+              -0.405,
+              12.51,
+              0.37,
+              0.546,
+              2.792,
+              5.058
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 252.32070118952362,
+            "improvement": 0.0,
+            "parameters": [
+              0.40800000000000003,
+              0.18320000000000003,
+              -0.405,
+              12.51,
+              0.37,
+              0.546,
+              2.792,
+              5.058
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1501,
+            "reference_score": 253.41325016251108,
+            "improvement": 1.0925489729874585,
+            "parameters": [
+              0.386,
+              0.2158,
+              -0.413,
+              12.370000000000001,
+              0.393,
+              0.637,
+              3.207,
+              5.135
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1751,
+            "reference_score": 253.41325016251108,
+            "improvement": 0.0,
+            "parameters": [
+              0.386,
+              0.2158,
+              -0.413,
+              12.370000000000001,
+              0.393,
+              0.637,
+              3.207,
+              5.135
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 2000,
+            "reference_score": 253.9132396637133,
+            "improvement": 0.4999895012022364,
+            "parameters": [
+              0.38,
+              0.2277,
+              -0.41200000000000003,
+              13.8,
+              0.256,
+              0.646,
+              2.544,
+              4.856
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          }
+        ],
+        "search_evaluations": 2000,
+        "refinement_evaluations": 600,
+        "screening_evaluations": 401,
+        "reference_evaluations": 624,
+        "search_stop_reason": "Search proposal cap reached",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "RT_GATE.intercept[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.30739402214976763,
+              -0.17260303783285233,
+              -0.13979711327986125,
+              -0.04597371918281025,
+              -0.11489261385409137,
+              -0.10728593623251552,
+              0.3837755838970259,
+              0.28285110687203263
+            ],
+            [
+              -0.17260303783285233,
+              2.0664733506613207,
+              -0.7224072780329268,
+              -0.3448175427406484,
+              -0.22042393101217944,
+              0.015420496250760413,
+              0.48288004730817224,
+              -0.1196273409138716
+            ],
+            [
+              -0.13979711327986125,
+              -0.7224072780329268,
+              0.6724979794252588,
+              0.5619504723801896,
+              0.26707656909208904,
+              -0.12011394331374753,
+              -0.5957986284738482,
+              0.11770565590707147
+            ],
+            [
+              -0.04597371918281025,
+              -0.3448175427406484,
+              0.5619504723801896,
+              4.343602599793659,
+              0.3860432856538761,
+              -0.5813708690517754,
+              -0.9811868423375422,
+              0.2524012557096253
+            ],
+            [
+              -0.11489261385409137,
+              -0.22042393101217944,
+              0.26707656909208904,
+              0.3860432856538761,
+              3.752525322026574,
+              0.9845742388958979,
+              -0.9869847798684968,
+              0.0606538441210563
+            ],
+            [
+              -0.10728593623251552,
+              0.015420496250760413,
+              -0.12011394331374753,
+              -0.5813708690517754,
+              0.9845742388958979,
+              2.2059304684336674,
+              -0.5404177912625207,
+              -0.02855168993476763
+            ],
+            [
+              0.3837755838970259,
+              0.48288004730817224,
+              -0.5957986284738482,
+              -0.9811868423375422,
+              -0.9869847798684968,
+              -0.5404177912625207,
+              4.914535946842594,
+              -0.6371559878339441
+            ],
+            [
+              0.28285110687203263,
+              -0.1196273409138716,
+              0.11770565590707147,
+              0.2524012557096253,
+              0.0606538441210563,
+              -0.02855168993476763,
+              -0.6371559878339441,
+              0.7778200674566826
+            ]
+          ]
+        },
+        "best_reference_score": 255.12308254904448,
+        "final_selection": {
+          "seeds": [
+            525408545,
+            2072900528,
+            576667459
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.39,
+              0.21950000000000003,
+              -0.40700000000000003,
+              13.97,
+              0.339,
+              0.662,
+              2.284,
+              4.905
+            ],
+            [
+              0.38,
+              0.2243,
+              -0.40700000000000003,
+              12.780000000000001,
+              0.278,
+              0.618,
+              2.149,
+              5.0280000000000005
+            ],
+            [
+              0.388,
+              0.2117,
+              -0.40700000000000003,
+              12.79,
+              0.35,
+              0.65,
+              2.542,
+              5.035
+            ],
+            [
+              0.386,
+              0.21230000000000002,
+              -0.41000000000000003,
+              13.13,
+              0.339,
+              0.732,
+              2.467,
+              5.038
+            ],
+            [
+              0.384,
+              0.2127,
+              -0.41000000000000003,
+              12.469999999999999,
+              0.376,
+              0.632,
+              2.3440000000000003,
+              5.159000000000001
+            ],
+            [
+              0.383,
+              0.2197,
+              -0.40900000000000003,
+              12.940000000000001,
+              0.367,
+              0.657,
+              2.218,
+              5.058
+            ],
+            [
+              0.388,
+              0.2134,
+              -0.41000000000000003,
+              13.27,
+              0.318,
+              0.628,
+              2.285,
+              5.043
+            ],
+            [
+              0.38,
+              0.1971,
+              -0.423,
+              14.05,
+              0.44700000000000006,
+              0.692,
+              2.561,
+              4.987
+            ]
+          ],
+          "reference_scores": [
+            255.12308254904448,
+            255.02348893906395,
+            255.0125903396749,
+            254.981652739878,
+            254.97922836701213,
+            254.97722979434292,
+            254.97708961287532,
+            254.951609541652
+          ],
+          "scores": [
+            254.3967176057266,
+            254.73405724211182,
+            254.64083983962834,
+            254.59500228714083,
+            254.4531563811169,
+            254.76909089072277,
+            254.61194525960516,
+            254.32477330090097
+          ],
+          "winner": 5,
+          "selected_reference_score": 254.97722979434292
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "sampling_work": {
+          "calls": 1349,
+          "candidate_trajectories": 97500000
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 600,
+        "initial_blocks": 4,
+        "max_search_evaluations": 2000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 861,
+        "10000": 459,
+        "20000": 420,
+        "40000": 190,
+        "80000": 60,
+        "100000": 10
+      },
+      "mean_search_estimates": 15347.5,
+      "search_sampling_seconds": 252.8454174848739,
+      "refinement_sampling_seconds": 177.5886838217266
+    },
+    "adaptive1": {
+      "fit_seconds": 450.76040424290113,
+      "total_seconds": 484.9014186079148,
+      "setup_seconds": 23.166714071994647,
+      "evaluations": 2600,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.388,
+        "RT_GATE.intercept[1]": 0.2056,
+        "Bias Mechanism.intercept": -0.415,
+        "Control Units\n[Color, Location].gain[1]": 14.58,
+        "LC.mode[0.0]": 0.42800000000000005,
+        "LC.mode[1.0]": 0.726,
+        "LC.slope[1]": 2.17,
+        "LC.intercept": 4.958
+      },
+      "reference_score": 254.77460427094795,
+      "validation_scores": [
+        254.55798961364266,
+        255.08317494899416,
+        255.36430595101984,
+        254.75388648887073,
+        254.11621454380116
+      ],
+      "validation_mean": 254.77511430926572,
+      "validation_mc_se": 0.21491751943480414,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084549188613892,
+            "mean_rt": 0.9345893859863281,
+            "rt_quantiles": [
+              0.6955999732017517,
+              0.9055999517440796,
+              1.2156000137329102
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4806973934173584,
+            "mean_rt": 0.9392316341400146,
+            "rt_quantiles": [
+              0.6955999732017517,
+              0.9055999517440796,
+              1.2355999946594238
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -855.4841652250477,
+        "reference_seed": 37,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 238.1299197593169,
+            "improvement": 1093.6140849843646,
+            "parameters": [
+              0.436,
+              0.22890000000000002,
+              -0.372,
+              10.11,
+              0.62,
+              0.383,
+              1.25,
+              5.742
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 243.26269507910723,
+            "improvement": 5.1327753197903405,
+            "parameters": [
+              0.42300000000000004,
+              0.169,
+              -0.41100000000000003,
+              10.54,
+              0.42000000000000004,
+              0.477,
+              2.098,
+              5.968
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 248.62872535961202,
+            "improvement": 5.366030280504788,
+            "parameters": [
+              0.434,
+              0.10450000000000001,
+              -0.417,
+              10.129999999999999,
+              0.401,
+              0.631,
+              2.193,
+              5.937
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 249.94116691327247,
+            "improvement": 1.3124415536604488,
+            "parameters": [
+              0.355,
+              0.2012,
+              -0.438,
+              11.0,
+              0.42900000000000005,
+              0.672,
+              2.201,
+              5.907
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 253.2088300479643,
+            "improvement": 3.267663134691844,
+            "parameters": [
+              0.376,
+              0.2193,
+              -0.424,
+              14.75,
+              0.54,
+              0.743,
+              2.716,
+              5.01
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1501,
+            "reference_score": 253.28780401721156,
+            "improvement": 0.07897396924724376,
+            "parameters": [
+              0.371,
+              0.20340000000000003,
+              -0.428,
+              13.35,
+              0.44800000000000006,
+              0.657,
+              2.982,
+              5.1419999999999995
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1751,
+            "reference_score": 254.03286136548346,
+            "improvement": 0.7450573482718994,
+            "parameters": [
+              0.38,
+              0.24380000000000002,
+              -0.41200000000000003,
+              14.620000000000001,
+              0.47,
+              0.761,
+              3.07,
+              4.8870000000000005
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 2000,
+            "reference_score": 254.03286136548346,
+            "improvement": 0.0,
+            "parameters": [
+              0.38,
+              0.24380000000000002,
+              -0.41200000000000003,
+              14.620000000000001,
+              0.47,
+              0.761,
+              3.07,
+              4.8870000000000005
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          }
+        ],
+        "search_evaluations": 2000,
+        "refinement_evaluations": 600,
+        "screening_evaluations": 401,
+        "reference_evaluations": 624,
+        "search_stop_reason": "Search proposal cap reached",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "RT_GATE.intercept[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.3427881275296249,
+              -0.2537981490331956,
+              -0.1532923351189141,
+              -0.01937357107492883,
+              0.26516777857580937,
+              0.02884167784831999,
+              0.25920479288915926,
+              0.31202127646431665
+            ],
+            [
+              -0.2537981490331956,
+              3.0879252309742347,
+              -0.543349228923671,
+              0.19255817418944332,
+              0.5523333907871796,
+              -0.448777239389299,
+              1.0871799070401693,
+              -0.05892603305494762
+            ],
+            [
+              -0.1532923351189141,
+              -0.543349228923671,
+              0.4390770102239015,
+              0.09088747522789642,
+              -0.1281730901840778,
+              -0.3767608169095617,
+              -0.4606788103728329,
+              -0.013179539700207776
+            ],
+            [
+              -0.01937357107492883,
+              0.19255817418944332,
+              0.09088747522789642,
+              3.2843320316015387,
+              0.46577632664333307,
+              1.403206215728861,
+              -0.032879528005449604,
+              0.09821661535886188
+            ],
+            [
+              0.26516777857580937,
+              0.5523333907871796,
+              -0.1281730901840778,
+              0.46577632664333307,
+              4.116034442095242,
+              0.16454057495508417,
+              0.5704270884205461,
+              0.35341677357812923
+            ],
+            [
+              0.02884167784831999,
+              -0.448777239389299,
+              -0.3767608169095617,
+              1.403206215728861,
+              0.16454057495508417,
+              5.205288517891495,
+              0.3339213838656475,
+              -0.19296262691104976
+            ],
+            [
+              0.25920479288915926,
+              1.0871799070401693,
+              -0.4606788103728329,
+              -0.032879528005449604,
+              0.5704270884205461,
+              0.3339213838656475,
+              3.5113396550705125,
+              -0.24369386922003142
+            ],
+            [
+              0.31202127646431665,
+              -0.05892603305494762,
+              -0.013179539700207776,
+              0.09821661535886188,
+              0.35341677357812923,
+              -0.19296262691104976,
+              -0.24369386922003142,
+              0.5760720467661239
+            ]
+          ]
+        },
+        "best_reference_score": 254.98996146719517,
+        "final_selection": {
+          "seeds": [
+            1265373510,
+            1584298854,
+            1892117717
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.386,
+              0.2012,
+              -0.415,
+              13.06,
+              0.396,
+              0.854,
+              2.209,
+              5.192
+            ],
+            [
+              0.382,
+              0.23440000000000003,
+              -0.40800000000000003,
+              13.75,
+              0.372,
+              0.725,
+              2.1310000000000002,
+              5.038
+            ],
+            [
+              0.385,
+              0.1956,
+              -0.426,
+              15.57,
+              0.469,
+              0.832,
+              2.37,
+              4.977
+            ],
+            [
+              0.388,
+              0.2056,
+              -0.415,
+              14.58,
+              0.42800000000000005,
+              0.726,
+              2.17,
+              4.958
+            ],
+            [
+              0.38,
+              0.23420000000000002,
+              -0.413,
+              14.200000000000001,
+              0.371,
+              0.736,
+              2.569,
+              4.943
+            ],
+            [
+              0.382,
+              0.22740000000000002,
+              -0.42,
+              15.81,
+              0.40800000000000003,
+              0.789,
+              2.585,
+              4.868
+            ],
+            [
+              0.38,
+              0.2017,
+              -0.425,
+              15.68,
+              0.351,
+              0.658,
+              1.905,
+              4.916
+            ],
+            [
+              0.383,
+              0.22610000000000002,
+              -0.419,
+              15.74,
+              0.375,
+              0.872,
+              1.655,
+              5.043
+            ]
+          ],
+          "reference_scores": [
+            254.98996146719517,
+            254.869621250905,
+            254.84805256951554,
+            254.77460427094795,
+            254.76415910464345,
+            254.74400195659163,
+            254.71112895738443,
+            254.709312244007
+          ],
+          "scores": [
+            254.34988414847984,
+            254.22325339500946,
+            254.1560975829839,
+            254.531987206471,
+            253.8737906529026,
+            254.07357204289275,
+            254.27883381564303,
+            254.15983947243822
+          ],
+          "winner": 3,
+          "selected_reference_score": 254.77460427094795
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "sampling_work": {
+          "calls": 1301,
+          "candidate_trajectories": 93300000
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 600,
+        "initial_blocks": 4,
+        "max_search_evaluations": 2000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 901,
+        "10000": 479,
+        "20000": 460,
+        "40000": 120,
+        "80000": 40
+      },
+      "mean_search_estimates": 13247.5,
+      "search_sampling_seconds": 234.43890793342143,
+      "refinement_sampling_seconds": 175.50439621857367
+    },
+    "ndt_full0": {
+      "fit_seconds": 478.02006359794177,
+      "total_seconds": 515.4383394480683,
+      "setup_seconds": 26.22808285104111,
+      "evaluations": 1851,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.38,
+        "RT_GATE.intercept[1]": 0.1901,
+        "Bias Mechanism.intercept": -0.42,
+        "Control Units\n[Color, Location].gain[1]": 13.39,
+        "LC.mode[0.0]": 0.34099999999999997,
+        "LC.mode[1.0]": 0.536,
+        "LC.slope[1]": 2.733,
+        "LC.intercept": 4.922
+      },
+      "reference_score": 254.77969283157915,
+      "validation_scores": [
+        254.3885707264257,
+        254.48378184709006,
+        255.4173735462716,
+        254.40196179266096,
+        254.09640293272048
+      ],
+      "validation_mean": 254.55761816903376,
+      "validation_mc_se": 0.22473946590361998,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084671974182129,
+            "mean_rt": 0.9257011413574219,
+            "rt_quantiles": [
+              0.6901000142097473,
+              0.9000999927520752,
+              1.2000999450683594
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807101786136627,
+            "mean_rt": 0.9323204159736633,
+            "rt_quantiles": [
+              0.6901000142097473,
+              0.9000999927520752,
+              1.220099925994873
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -1108.3543437926876,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 251.71495283403024,
+            "improvement": 1360.069296626718,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 251.71495283403024,
+            "improvement": 0.0,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 253.87201966349264,
+            "improvement": 2.1570668294623943,
+            "parameters": [
+              0.368,
+              -0.41100000000000003,
+              10.93,
+              0.28,
+              0.469,
+              3.387,
+              5.08
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 253.876375963812,
+            "improvement": 0.004356300319358297,
+            "parameters": [
+              0.374,
+              -0.405,
+              11.86,
+              0.327,
+              0.503,
+              3.063,
+              4.937
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 254.0216874529678,
+            "improvement": 0.1453114891558016,
+            "parameters": [
+              0.376,
+              -0.402,
+              11.48,
+              0.28400000000000003,
+              0.5670000000000001,
+              3.1270000000000002,
+              4.963
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 2
+          }
+        ],
+        "search_evaluations": 1251,
+        "refinement_evaluations": 600,
+        "screening_evaluations": 251,
+        "reference_evaluations": 615,
+        "search_stop_reason": "Coarse-search plateau triggered the precision stage; convergence not asserted",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.24760380623647676,
+              -0.09296863500229063,
+              -0.06736332828252219,
+              0.3156831449046898,
+              0.5264409321847431,
+              -0.21680097103532547,
+              0.09524572595355103
+            ],
+            [
+              -0.09296863500229063,
+              1.8889576802720274,
+              -0.7946641432870313,
+              -0.847433208837175,
+              -0.9689467251342856,
+              0.3498074778092532,
+              0.0747515390314529
+            ],
+            [
+              -0.06736332828252219,
+              -0.7946641432870313,
+              0.5980238489568136,
+              0.8072399183070287,
+              0.9270044709527313,
+              -0.8387755356006048,
+              -0.010552078402210318
+            ],
+            [
+              0.3156831449046898,
+              -0.847433208837175,
+              0.8072399183070287,
+              4.62153231618055,
+              4.660858236667323,
+              -1.6888663663949137,
+              -0.10847491681838868
+            ],
+            [
+              0.5264409321847431,
+              -0.9689467251342856,
+              0.9270044709527313,
+              4.660858236667323,
+              10.259127458482817,
+              -3.001608786257158,
+              -0.6137823784144968
+            ],
+            [
+              -0.21680097103532547,
+              0.3498074778092532,
+              -0.8387755356006048,
+              -1.6888663663949137,
+              -3.001608786257158,
+              7.123066654872332,
+              -0.28141173395274827
+            ],
+            [
+              0.09524572595355103,
+              0.0747515390314529,
+              -0.010552078402210318,
+              -0.10847491681838868,
+              -0.6137823784144968,
+              -0.28141173395274827,
+              0.43075811015457316
+            ]
+          ]
+        },
+        "best_reference_score": 254.99948563097357,
+        "final_selection": {
+          "seeds": [
+            525408545,
+            2072900528,
+            576667459
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.388,
+              -0.414,
+              13.9,
+              0.351,
+              0.6819999999999999,
+              1.8679999999999999,
+              5.074
+            ],
+            [
+              0.384,
+              -0.417,
+              13.53,
+              0.329,
+              0.659,
+              1.955,
+              5.114
+            ],
+            [
+              0.378,
+              -0.414,
+              13.05,
+              0.29000000000000004,
+              0.589,
+              1.863,
+              5.116
+            ],
+            [
+              0.38,
+              -0.42,
+              13.39,
+              0.34099999999999997,
+              0.536,
+              2.733,
+              4.922
+            ],
+            [
+              0.376,
+              -0.415,
+              12.3,
+              0.314,
+              0.727,
+              1.838,
+              5.274
+            ],
+            [
+              0.391,
+              -0.413,
+              15.24,
+              0.30500000000000005,
+              0.499,
+              2.173,
+              4.782
+            ],
+            [
+              0.387,
+              -0.414,
+              13.73,
+              0.323,
+              0.5750000000000001,
+              2.418,
+              4.905
+            ],
+            [
+              0.381,
+              -0.41200000000000003,
+              12.56,
+              0.28300000000000003,
+              0.5760000000000001,
+              1.613,
+              5.263
+            ]
+          ],
+          "reference_scores": [
+            254.99948563097357,
+            254.8580777212171,
+            254.81984083114574,
+            254.77969283157915,
+            254.75357643675244,
+            254.73015096002635,
+            254.7290221585796,
+            254.72305397164848
+          ],
+          "scores": [
+            254.45174110029234,
+            254.42372670306654,
+            254.64498853843222,
+            254.68464741126817,
+            254.54935637293238,
+            254.13526977200908,
+            254.3883970879452,
+            254.3975471303924
+          ],
+          "winner": 3,
+          "selected_reference_score": 254.77969283157915
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "profile": {
+          "parameter": "RT_GATE.intercept[1]",
+          "values": [
+            0.1,
+            0.10010000000000001,
+            0.1101,
+            0.12010000000000001,
+            0.1301,
+            0.1401,
+            0.1501,
+            0.1601,
+            0.1701,
+            0.18009999999999998,
+            0.1901,
+            0.2001,
+            0.2101,
+            0.2201,
+            0.2301,
+            0.24009999999999998,
+            0.2501,
+            0.2601,
+            0.2701,
+            0.2801,
+            0.2901
+          ],
+          "optimizer_parameter_order": [
+            "Response Units\n[Left, Right].termination_threshold[1]",
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "LC.intercept"
+          ],
+          "initial_value": 0.2901,
+          "selection_indices": [
+            11,
+            11,
+            12,
+            10,
+            12,
+            11,
+            10,
+            12
+          ],
+          "note": "Ranking SE is conditional on each candidate's pooled profile maximizer; it is not a calibrated bound after profiling."
+        },
+        "sampling_work": {
+          "calls": 1185,
+          "candidate_trajectories": 113510000,
+          "max_count_buffer_bytes": 60830400
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 600,
+        "initial_blocks": 4,
+        "max_search_evaluations": 2000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 231,
+        "10000": 160,
+        "20000": 250,
+        "40000": 240,
+        "80000": 300,
+        "100000": 70
+      },
+      "mean_search_estimates": 38653.07753796963,
+      "search_sampling_seconds": 260.96622646274045,
+      "refinement_sampling_seconds": 183.56936174281873,
+      "ndt_profile": {
+        "parameter": "RT_GATE.intercept[1]",
+        "grid_values": 2001,
+        "distinct_bin_maps": 21,
+        "representatives": [
+          0.1,
+          0.10010000000000001,
+          0.1101,
+          0.12010000000000001,
+          0.1301,
+          0.1401,
+          0.1501,
+          0.1601,
+          0.1701,
+          0.18009999999999998,
+          0.1901,
+          0.2001,
+          0.2101,
+          0.2201,
+          0.2301,
+          0.24009999999999998,
+          0.2501,
+          0.2601,
+          0.2701,
+          0.2801,
+          0.2901
+        ],
+        "support_values": 2001,
+        "support_kind": "exact FP32 LCA count times fixed dt",
+        "optimizer_parameters": [
+          "Response Units\n[Left, Right].termination_threshold[1]",
+          "Bias Mechanism.intercept",
+          "Control Units\n[Color, Location].gain[1]",
+          "LC.mode[0.0]",
+          "LC.mode[1.0]",
+          "LC.slope[1]",
+          "LC.intercept"
+        ],
+        "note": "Profile after pooling blocks, before taking the population ranking; final selection profiles again on fresh draws."
+      }
+    },
+    "ndt_short0": {
+      "fit_seconds": 329.38415985996835,
+      "total_seconds": 366.1364791649394,
+      "setup_seconds": 26.256101856008172,
+      "evaluations": 1300,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.384,
+        "RT_GATE.intercept[1]": 0.2101,
+        "Bias Mechanism.intercept": -0.413,
+        "Control Units\n[Color, Location].gain[1]": 14.05,
+        "LC.mode[0.0]": 0.374,
+        "LC.mode[1.0]": 0.627,
+        "LC.slope[1]": 2.973,
+        "LC.intercept": 4.7940000000000005
+      },
+      "reference_score": 254.84029481640835,
+      "validation_scores": [
+        254.8494771461492,
+        254.97406969444768,
+        255.40373659868655,
+        254.78754565847007,
+        254.47454271003105
+      ],
+      "validation_mean": 254.89787436155692,
+      "validation_mc_se": 0.15090174486661828,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084487795829773,
+            "mean_rt": 0.924940824508667,
+            "rt_quantiles": [
+              0.6900999546051025,
+              0.9000999927520752,
+              1.2000999450683594
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.48070478439331055,
+            "mean_rt": 0.9365028738975525,
+            "rt_quantiles": [
+              0.6900999546051025,
+              0.9000999927520752,
+              1.2300999164581299
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -1108.3543437926876,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 251.71495283403024,
+            "improvement": 1360.069296626718,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 251.71495283403024,
+            "improvement": 0.0,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 253.87201966349264,
+            "improvement": 2.1570668294623943,
+            "parameters": [
+              0.368,
+              -0.41100000000000003,
+              10.93,
+              0.28,
+              0.469,
+              3.387,
+              5.08
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1000,
+            "reference_score": 253.876375963812,
+            "improvement": 0.004356300319358297,
+            "parameters": [
+              0.374,
+              -0.405,
+              11.86,
+              0.327,
+              0.503,
+              3.063,
+              4.937
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          }
+        ],
+        "search_evaluations": 1000,
+        "refinement_evaluations": 300,
+        "screening_evaluations": 201,
+        "reference_evaluations": 312,
+        "search_stop_reason": "Search proposal cap reached",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.3035419356342893,
+              -0.04455315941992765,
+              -0.20646050135687585,
+              0.09170144819300592,
+              0.14235230012140865,
+              0.04437174514997404,
+              0.07903718195715476
+            ],
+            [
+              -0.04455315941992765,
+              1.6301313581240995,
+              -0.6937086399913975,
+              -0.7752327876241119,
+              -0.6660372347706224,
+              0.28296679665590535,
+              0.06879007600318844
+            ],
+            [
+              -0.20646050135687585,
+              -0.6937086399913975,
+              0.6958941472283047,
+              0.594421008009774,
+              0.5720222024673374,
+              -0.7162048853450568,
+              0.07417202665419657
+            ],
+            [
+              0.09170144819300592,
+              -0.7752327876241119,
+              0.594421008009774,
+              2.974124172477086,
+              1.5370818600513498,
+              -0.7283020522574489,
+              0.13492509107276712
+            ],
+            [
+              0.14235230012140865,
+              -0.6660372347706224,
+              0.5720222024673374,
+              1.5370818600513498,
+              4.636350935603263,
+              -0.7910975010191582,
+              -0.14484782211792016
+            ],
+            [
+              0.04437174514997404,
+              0.28296679665590535,
+              -0.7162048853450568,
+              -0.7283020522574489,
+              -0.7910975010191582,
+              4.602735983944368,
+              -0.2621044578692548
+            ],
+            [
+              0.07903718195715476,
+              0.06879007600318844,
+              0.07417202665419657,
+              0.13492509107276712,
+              -0.14484782211792016,
+              -0.2621044578692548,
+              0.55667084293071
+            ]
+          ]
+        },
+        "best_reference_score": 255.15640372733057,
+        "final_selection": {
+          "seeds": [
+            525408545,
+            2072900528,
+            576667459
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.385,
+              -0.41200000000000003,
+              13.64,
+              0.367,
+              0.5690000000000001,
+              3.027,
+              4.811
+            ],
+            [
+              0.381,
+              -0.40900000000000003,
+              12.219999999999999,
+              0.377,
+              0.589,
+              3.085,
+              4.99
+            ],
+            [
+              0.39,
+              -0.41000000000000003,
+              13.92,
+              0.278,
+              0.482,
+              2.757,
+              4.747
+            ],
+            [
+              0.385,
+              -0.413,
+              13.43,
+              0.369,
+              0.5700000000000001,
+              3.254,
+              4.776
+            ],
+            [
+              0.382,
+              -0.42,
+              14.18,
+              0.40800000000000003,
+              0.632,
+              3.219,
+              4.793
+            ],
+            [
+              0.38,
+              -0.414,
+              13.07,
+              0.374,
+              0.522,
+              3.232,
+              4.841
+            ],
+            [
+              0.384,
+              -0.413,
+              14.05,
+              0.374,
+              0.627,
+              2.973,
+              4.7940000000000005
+            ],
+            [
+              0.377,
+              -0.413,
+              11.99,
+              0.376,
+              0.5660000000000001,
+              3.3810000000000002,
+              5.005
+            ]
+          ],
+          "reference_scores": [
+            255.15640372733057,
+            254.99223242459678,
+            254.93523586706948,
+            254.92802087966058,
+            254.92234800736605,
+            254.88189088602428,
+            254.84029481640835,
+            254.8145222551992
+          ],
+          "scores": [
+            254.7531267543611,
+            254.66238856779836,
+            254.29655081600825,
+            254.6503605619346,
+            254.45195547669024,
+            254.47859344283634,
+            254.78792172890374,
+            254.53752328106958
+          ],
+          "winner": 6,
+          "selected_reference_score": 254.84029481640835
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "profile": {
+          "parameter": "RT_GATE.intercept[1]",
+          "values": [
+            0.1,
+            0.10010000000000001,
+            0.1101,
+            0.12010000000000001,
+            0.1301,
+            0.1401,
+            0.1501,
+            0.1601,
+            0.1701,
+            0.18009999999999998,
+            0.1901,
+            0.2001,
+            0.2101,
+            0.2201,
+            0.2301,
+            0.24009999999999998,
+            0.2501,
+            0.2601,
+            0.2701,
+            0.2801,
+            0.2901
+          ],
+          "optimizer_parameter_order": [
+            "Response Units\n[Left, Right].termination_threshold[1]",
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "LC.intercept"
+          ],
+          "initial_value": 0.2901,
+          "selection_indices": [
+            12,
+            12,
+            11,
+            11,
+            11,
+            12,
+            12,
+            12
+          ],
+          "note": "Ranking SE is conditional on each candidate's pooled profile maximizer; it is not a calibrated bound after profiling."
+        },
+        "sampling_work": {
+          "calls": 859,
+          "candidate_trajectories": 65030000,
+          "max_count_buffer_bytes": 60830400
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 300,
+        "initial_blocks": 4,
+        "max_search_evaluations": 1000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 221,
+        "10000": 160,
+        "20000": 240,
+        "40000": 190,
+        "80000": 179,
+        "100000": 10
+      },
+      "mean_search_estimates": 30425.0,
+      "search_sampling_seconds": 205.98728320584632,
+      "refinement_sampling_seconds": 92.53239469160326,
+      "ndt_profile": {
+        "parameter": "RT_GATE.intercept[1]",
+        "grid_values": 2001,
+        "distinct_bin_maps": 21,
+        "representatives": [
+          0.1,
+          0.10010000000000001,
+          0.1101,
+          0.12010000000000001,
+          0.1301,
+          0.1401,
+          0.1501,
+          0.1601,
+          0.1701,
+          0.18009999999999998,
+          0.1901,
+          0.2001,
+          0.2101,
+          0.2201,
+          0.2301,
+          0.24009999999999998,
+          0.2501,
+          0.2601,
+          0.2701,
+          0.2801,
+          0.2901
+        ],
+        "support_values": 2001,
+        "support_kind": "exact FP32 LCA count times fixed dt",
+        "optimizer_parameters": [
+          "Response Units\n[Left, Right].termination_threshold[1]",
+          "Bias Mechanism.intercept",
+          "Control Units\n[Color, Location].gain[1]",
+          "LC.mode[0.0]",
+          "LC.mode[1.0]",
+          "LC.slope[1]",
+          "LC.intercept"
+        ],
+        "note": "Profile after pooling blocks, before taking the population ranking; final selection profiles again on fresh draws."
+      }
+    },
+    "ndt_short1": {
+      "fit_seconds": 312.09195060515776,
+      "total_seconds": 349.18954225583,
+      "setup_seconds": 26.25604183599353,
+      "evaluations": 1300,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.385,
+        "RT_GATE.intercept[1]": 0.2001,
+        "Bias Mechanism.intercept": -0.416,
+        "Control Units\n[Color, Location].gain[1]": 13.91,
+        "LC.mode[0.0]": 0.268,
+        "LC.mode[1.0]": 0.612,
+        "LC.slope[1]": 1.921,
+        "LC.intercept": 5.027
+      },
+      "reference_score": 254.79489915008435,
+      "validation_scores": [
+        254.49533167053227,
+        254.70563515397603,
+        255.23293813677333,
+        254.93332222138773,
+        254.47543405675526
+      ],
+      "validation_mean": 254.76853224788493,
+      "validation_mc_se": 0.1427111969210496,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084664821624756,
+            "mean_rt": 0.9237819910049438,
+            "rt_quantiles": [
+              0.6900999546051025,
+              0.9000999927520752,
+              1.2000999450683594
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807135760784149,
+            "mean_rt": 0.9364530444145203,
+            "rt_quantiles": [
+              0.6900999546051025,
+              0.9000999927520752,
+              1.2300999164581299
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -106.72325580905795,
+        "reference_seed": 37,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 253.30659744512988,
+            "improvement": 360.02985325418786,
+            "parameters": [
+              0.369,
+              -0.41200000000000003,
+              12.76,
+              0.347,
+              0.548,
+              1.154,
+              5.296
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 253.30659744512988,
+            "improvement": 0.0,
+            "parameters": [
+              0.369,
+              -0.41200000000000003,
+              12.76,
+              0.347,
+              0.548,
+              1.154,
+              5.296
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 254.13454784427825,
+            "improvement": 0.8279503991483637,
+            "parameters": [
+              0.373,
+              -0.413,
+              12.14,
+              0.275,
+              0.597,
+              1.6320000000000001,
+              5.2989999999999995
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1000,
+            "reference_score": 254.79489915008435,
+            "improvement": 0.6603513058061026,
+            "parameters": [
+              0.385,
+              -0.416,
+              13.91,
+              0.268,
+              0.612,
+              1.921,
+              5.027
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          }
+        ],
+        "search_evaluations": 1000,
+        "refinement_evaluations": 300,
+        "screening_evaluations": 201,
+        "reference_evaluations": 312,
+        "search_stop_reason": "Search proposal cap reached",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.25890813756466724,
+              -0.2103196211807626,
+              -0.0840115174518975,
+              0.05982179183685541,
+              0.03257936419258672,
+              -0.05276980655911638,
+              0.1795431427635766
+            ],
+            [
+              -0.2103196211807626,
+              2.8697638869420885,
+              -0.8109879205322958,
+              -0.5286899463297293,
+              -0.43056018999452794,
+              -0.9482260852992768,
+              0.09171346309846813
+            ],
+            [
+              -0.0840115174518975,
+              -0.8109879205322958,
+              0.49383214037702416,
+              0.34104491971247963,
+              0.38306788901216177,
+              -0.04493719950508607,
+              -0.028572490503908525
+            ],
+            [
+              0.05982179183685541,
+              -0.5286899463297293,
+              0.34104491971247963,
+              3.089934282710048,
+              0.21150366837385184,
+              0.5588960277162865,
+              0.19239244091549507
+            ],
+            [
+              0.03257936419258672,
+              -0.43056018999452794,
+              0.38306788901216177,
+              0.21150366837385184,
+              3.313228200411131,
+              -0.5197271120605755,
+              0.05287893629501427
+            ],
+            [
+              -0.05276980655911638,
+              -0.9482260852992768,
+              -0.04493719950508607,
+              0.5588960277162865,
+              -0.5197271120605755,
+              4.507781128771344,
+              -0.16727030828850314
+            ],
+            [
+              0.1795431427635766,
+              0.09171346309846813,
+              -0.028572490503908525,
+              0.19239244091549507,
+              0.05287893629501427,
+              -0.16727030828850314,
+              0.551357471456523
+            ]
+          ]
+        },
+        "best_reference_score": 254.89100758000856,
+        "final_selection": {
+          "seeds": [
+            1265373510,
+            1584298854,
+            1892117717
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.38,
+              -0.421,
+              14.49,
+              0.275,
+              0.5780000000000001,
+              2.135,
+              4.91
+            ],
+            [
+              0.374,
+              -0.416,
+              14.89,
+              0.272,
+              0.58,
+              2.2199999999999998,
+              4.833
+            ],
+            [
+              0.382,
+              -0.416,
+              13.89,
+              0.324,
+              0.491,
+              2.291,
+              4.895
+            ],
+            [
+              0.386,
+              -0.419,
+              14.28,
+              0.323,
+              0.531,
+              1.937,
+              4.978
+            ],
+            [
+              0.387,
+              -0.418,
+              14.26,
+              0.314,
+              0.604,
+              2.14,
+              5.016
+            ],
+            [
+              0.385,
+              -0.416,
+              13.91,
+              0.268,
+              0.612,
+              1.921,
+              5.027
+            ],
+            [
+              0.384,
+              -0.41200000000000003,
+              13.72,
+              0.29300000000000004,
+              0.5710000000000001,
+              1.837,
+              4.978
+            ],
+            [
+              0.389,
+              -0.41000000000000003,
+              14.05,
+              0.28700000000000003,
+              0.538,
+              1.857,
+              4.944
+            ]
+          ],
+          "reference_scores": [
+            254.89100758000856,
+            254.87629811897435,
+            254.8118691002362,
+            254.8042424377832,
+            254.8028485545139,
+            254.79489915008435,
+            254.78856432099224,
+            254.7872999733731
+          ],
+          "scores": [
+            254.32958590090428,
+            253.90935104430912,
+            254.46105208662763,
+            254.2597305535041,
+            254.38087139154294,
+            254.47101575556587,
+            254.32046701267356,
+            254.33843714953326
+          ],
+          "winner": 5,
+          "selected_reference_score": 254.79489915008435
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "profile": {
+          "parameter": "RT_GATE.intercept[1]",
+          "values": [
+            0.1,
+            0.10010000000000001,
+            0.1101,
+            0.12010000000000001,
+            0.1301,
+            0.1401,
+            0.1501,
+            0.1601,
+            0.1701,
+            0.18009999999999998,
+            0.1901,
+            0.2001,
+            0.2101,
+            0.2201,
+            0.2301,
+            0.24009999999999998,
+            0.2501,
+            0.2601,
+            0.2701,
+            0.2801,
+            0.2901
+          ],
+          "optimizer_parameter_order": [
+            "Response Units\n[Left, Right].termination_threshold[1]",
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "LC.intercept"
+          ],
+          "initial_value": 0.2901,
+          "selection_indices": [
+            11,
+            14,
+            11,
+            10,
+            11,
+            11,
+            11,
+            11
+          ],
+          "note": "Ranking SE is conditional on each candidate's pooled profile maximizer; it is not a calibrated bound after profiling."
+        },
+        "sampling_work": {
+          "calls": 839,
+          "candidate_trajectories": 60070000,
+          "max_count_buffer_bytes": 60830400
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 300,
+        "initial_blocks": 4,
+        "max_search_evaluations": 1000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 201,
+        "10000": 150,
+        "20000": 290,
+        "40000": 289,
+        "80000": 70
+      },
+      "mean_search_estimates": 25465.0,
+      "search_sampling_seconds": 188.6048640862573,
+      "refinement_sampling_seconds": 93.02980642602779,
+      "ndt_profile": {
+        "parameter": "RT_GATE.intercept[1]",
+        "grid_values": 2001,
+        "distinct_bin_maps": 21,
+        "representatives": [
+          0.1,
+          0.10010000000000001,
+          0.1101,
+          0.12010000000000001,
+          0.1301,
+          0.1401,
+          0.1501,
+          0.1601,
+          0.1701,
+          0.18009999999999998,
+          0.1901,
+          0.2001,
+          0.2101,
+          0.2201,
+          0.2301,
+          0.24009999999999998,
+          0.2501,
+          0.2601,
+          0.2701,
+          0.2801,
+          0.2901
+        ],
+        "support_values": 2001,
+        "support_kind": "exact FP32 LCA count times fixed dt",
+        "optimizer_parameters": [
+          "Response Units\n[Left, Right].termination_threshold[1]",
+          "Bias Mechanism.intercept",
+          "Control Units\n[Color, Location].gain[1]",
+          "LC.mode[0.0]",
+          "LC.mode[1.0]",
+          "LC.slope[1]",
+          "LC.intercept"
+        ],
+        "note": "Profile after pooling blocks, before taking the population ranking; final selection profiles again on fresh draws."
+      }
+    },
+    "ndt_full0_clean": {
+      "fit_seconds": 472.854387258878,
+      "total_seconds": 509.58044144208543,
+      "setup_seconds": 26.165640036109835,
+      "evaluations": 1851,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.38,
+        "RT_GATE.intercept[1]": 0.1901,
+        "Bias Mechanism.intercept": -0.42,
+        "Control Units\n[Color, Location].gain[1]": 13.39,
+        "LC.mode[0.0]": 0.34099999999999997,
+        "LC.mode[1.0]": 0.536,
+        "LC.slope[1]": 2.733,
+        "LC.intercept": 4.922
+      },
+      "reference_score": 254.77969283157915,
+      "validation_scores": [
+        254.3885707264257,
+        254.48378184709006,
+        255.4173735462716,
+        254.40196179266096,
+        254.09640293272048
+      ],
+      "validation_mean": 254.55761816903376,
+      "validation_mc_se": 0.22473946590361998,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084671974182129,
+            "mean_rt": 0.9257011413574219,
+            "rt_quantiles": [
+              0.6901000142097473,
+              0.9000999927520752,
+              1.2000999450683594
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807101786136627,
+            "mean_rt": 0.9323204159736633,
+            "rt_quantiles": [
+              0.6901000142097473,
+              0.9000999927520752,
+              1.220099925994873
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -1108.3543437926876,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 251.71495283403024,
+            "improvement": 1360.069296626718,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 251.71495283403024,
+            "improvement": 0.0,
+            "parameters": [
+              0.378,
+              -0.40700000000000003,
+              11.93,
+              0.535,
+              0.5750000000000001,
+              3.298,
+              5.138
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 253.87201966349264,
+            "improvement": 2.1570668294623943,
+            "parameters": [
+              0.368,
+              -0.41100000000000003,
+              10.93,
+              0.28,
+              0.469,
+              3.387,
+              5.08
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 253.876375963812,
+            "improvement": 0.004356300319358297,
+            "parameters": [
+              0.374,
+              -0.405,
+              11.86,
+              0.327,
+              0.503,
+              3.063,
+              4.937
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 254.0216874529678,
+            "improvement": 0.1453114891558016,
+            "parameters": [
+              0.376,
+              -0.402,
+              11.48,
+              0.28400000000000003,
+              0.5670000000000001,
+              3.1270000000000002,
+              4.963
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 2
+          }
+        ],
+        "search_evaluations": 1251,
+        "refinement_evaluations": 600,
+        "screening_evaluations": 251,
+        "reference_evaluations": 615,
+        "search_stop_reason": "Coarse-search plateau triggered the precision stage; convergence not asserted",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.24760380623647676,
+              -0.09296863500229063,
+              -0.06736332828252219,
+              0.3156831449046898,
+              0.5264409321847431,
+              -0.21680097103532547,
+              0.09524572595355103
+            ],
+            [
+              -0.09296863500229063,
+              1.8889576802720274,
+              -0.7946641432870313,
+              -0.847433208837175,
+              -0.9689467251342856,
+              0.3498074778092532,
+              0.0747515390314529
+            ],
+            [
+              -0.06736332828252219,
+              -0.7946641432870313,
+              0.5980238489568136,
+              0.8072399183070287,
+              0.9270044709527313,
+              -0.8387755356006048,
+              -0.010552078402210318
+            ],
+            [
+              0.3156831449046898,
+              -0.847433208837175,
+              0.8072399183070287,
+              4.62153231618055,
+              4.660858236667323,
+              -1.6888663663949137,
+              -0.10847491681838868
+            ],
+            [
+              0.5264409321847431,
+              -0.9689467251342856,
+              0.9270044709527313,
+              4.660858236667323,
+              10.259127458482817,
+              -3.001608786257158,
+              -0.6137823784144968
+            ],
+            [
+              -0.21680097103532547,
+              0.3498074778092532,
+              -0.8387755356006048,
+              -1.6888663663949137,
+              -3.001608786257158,
+              7.123066654872332,
+              -0.28141173395274827
+            ],
+            [
+              0.09524572595355103,
+              0.0747515390314529,
+              -0.010552078402210318,
+              -0.10847491681838868,
+              -0.6137823784144968,
+              -0.28141173395274827,
+              0.43075811015457316
+            ]
+          ]
+        },
+        "best_reference_score": 254.99948563097357,
+        "final_selection": {
+          "seeds": [
+            525408545,
+            2072900528,
+            576667459
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.388,
+              -0.414,
+              13.9,
+              0.351,
+              0.6819999999999999,
+              1.8679999999999999,
+              5.074
+            ],
+            [
+              0.384,
+              -0.417,
+              13.53,
+              0.329,
+              0.659,
+              1.955,
+              5.114
+            ],
+            [
+              0.378,
+              -0.414,
+              13.05,
+              0.29000000000000004,
+              0.589,
+              1.863,
+              5.116
+            ],
+            [
+              0.38,
+              -0.42,
+              13.39,
+              0.34099999999999997,
+              0.536,
+              2.733,
+              4.922
+            ],
+            [
+              0.376,
+              -0.415,
+              12.3,
+              0.314,
+              0.727,
+              1.838,
+              5.274
+            ],
+            [
+              0.391,
+              -0.413,
+              15.24,
+              0.30500000000000005,
+              0.499,
+              2.173,
+              4.782
+            ],
+            [
+              0.387,
+              -0.414,
+              13.73,
+              0.323,
+              0.5750000000000001,
+              2.418,
+              4.905
+            ],
+            [
+              0.381,
+              -0.41200000000000003,
+              12.56,
+              0.28300000000000003,
+              0.5760000000000001,
+              1.613,
+              5.263
+            ]
+          ],
+          "reference_scores": [
+            254.99948563097357,
+            254.8580777212171,
+            254.81984083114574,
+            254.77969283157915,
+            254.75357643675244,
+            254.73015096002635,
+            254.7290221585796,
+            254.72305397164848
+          ],
+          "scores": [
+            254.45174110029234,
+            254.42372670306654,
+            254.64498853843222,
+            254.68464741126817,
+            254.54935637293238,
+            254.13526977200908,
+            254.3883970879452,
+            254.3975471303924
+          ],
+          "winner": 3,
+          "selected_reference_score": 254.77969283157915
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "profile": {
+          "parameter": "RT_GATE.intercept[1]",
+          "values": [
+            0.1,
+            0.10010000000000001,
+            0.1101,
+            0.12010000000000001,
+            0.1301,
+            0.1401,
+            0.1501,
+            0.1601,
+            0.1701,
+            0.18009999999999998,
+            0.1901,
+            0.2001,
+            0.2101,
+            0.2201,
+            0.2301,
+            0.24009999999999998,
+            0.2501,
+            0.2601,
+            0.2701,
+            0.2801,
+            0.2901
+          ],
+          "optimizer_parameter_order": [
+            "Response Units\n[Left, Right].termination_threshold[1]",
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "LC.intercept"
+          ],
+          "initial_value": 0.2901,
+          "selection_indices": [
+            11,
+            11,
+            12,
+            10,
+            12,
+            11,
+            10,
+            12
+          ],
+          "note": "Ranking SE is conditional on each candidate's pooled profile maximizer; it is not a calibrated bound after profiling."
+        },
+        "sampling_work": {
+          "calls": 1185,
+          "candidate_trajectories": 113510000,
+          "max_count_buffer_bytes": 60830400
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 600,
+        "initial_blocks": 4,
+        "max_search_evaluations": 2000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 231,
+        "10000": 160,
+        "20000": 250,
+        "40000": 240,
+        "80000": 300,
+        "100000": 70
+      },
+      "mean_search_estimates": 38653.07753796963,
+      "search_sampling_seconds": 260.50528412358835,
+      "refinement_sampling_seconds": 179.4081687820144,
+      "ndt_profile": {
+        "parameter": "RT_GATE.intercept[1]",
+        "grid_values": 2001,
+        "distinct_bin_maps": 21,
+        "representatives": [
+          0.1,
+          0.10010000000000001,
+          0.1101,
+          0.12010000000000001,
+          0.1301,
+          0.1401,
+          0.1501,
+          0.1601,
+          0.1701,
+          0.18009999999999998,
+          0.1901,
+          0.2001,
+          0.2101,
+          0.2201,
+          0.2301,
+          0.24009999999999998,
+          0.2501,
+          0.2601,
+          0.2701,
+          0.2801,
+          0.2901
+        ],
+        "support_values": 2001,
+        "support_kind": "exact FP32 LCA count times fixed dt",
+        "optimizer_parameters": [
+          "Response Units\n[Left, Right].termination_threshold[1]",
+          "Bias Mechanism.intercept",
+          "Control Units\n[Color, Location].gain[1]",
+          "LC.mode[0.0]",
+          "LC.mode[1.0]",
+          "LC.slope[1]",
+          "LC.intercept"
+        ],
+        "note": "Profile after pooling blocks, before taking the population ranking; final selection profiles again on fresh draws."
+      }
+    },
+    "unprofiled_short0": {
+      "fit_seconds": 251.8775084898807,
+      "total_seconds": 288.645492880838,
+      "setup_seconds": 26.120418384904042,
+      "evaluations": 1300,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.384,
+        "RT_GATE.intercept[1]": 0.19380000000000003,
+        "Bias Mechanism.intercept": -0.419,
+        "Control Units\n[Color, Location].gain[1]": 12.8,
+        "LC.mode[0.0]": 0.41700000000000004,
+        "LC.mode[1.0]": 0.551,
+        "LC.slope[1]": 2.609,
+        "LC.intercept": 5.125
+      },
+      "reference_score": 254.34596981879656,
+      "validation_scores": [
+        253.9643335478287,
+        254.01834097846128,
+        254.70149393612414,
+        253.43039411570405,
+        253.64807905919747
+      ],
+      "validation_mean": 253.9525283274631,
+      "validation_mc_se": 0.21572362448895246,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084658265113831,
+            "mean_rt": 0.9353498816490173,
+            "rt_quantiles": [
+              0.7037999629974365,
+              0.9038000106811523,
+              1.2137999534606934
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807074964046478,
+            "mean_rt": 0.934080183506012,
+            "rt_quantiles": [
+              0.6937999725341797,
+              0.9038000106811523,
+              1.2137999534606934
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "policy_version": 2,
+        "initial_reference_score": -2092.662297826273,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 242.10765485303455,
+            "improvement": 2334.7699526793076,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 242.10765485303455,
+            "improvement": 0.0,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 251.66810595355705,
+            "improvement": 9.5604511005225,
+            "parameters": [
+              0.358,
+              0.22660000000000002,
+              -0.40800000000000003,
+              9.92,
+              0.259,
+              0.551,
+              2.511,
+              5.284000000000001
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1000,
+            "reference_score": 252.32070118952362,
+            "improvement": 0.6525952359665723,
+            "parameters": [
+              0.40800000000000003,
+              0.18320000000000003,
+              -0.405,
+              12.51,
+              0.37,
+              0.546,
+              2.792,
+              5.058
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          }
+        ],
+        "search_evaluations": 1000,
+        "refinement_evaluations": 300,
+        "screening_evaluations": 201,
+        "reference_evaluations": 312,
+        "search_stop_reason": "Search proposal cap reached",
+        "refinement_stop_reason": "Precision-stage proposal budget completed; convergence not asserted",
+        "refinement_covariance": {
+          "reused": true,
+          "parameter_order": [
+            "Bias Mechanism.intercept",
+            "Control Units\n[Color, Location].gain[1]",
+            "LC.intercept",
+            "LC.mode[0.0]",
+            "LC.mode[1.0]",
+            "LC.slope[1]",
+            "RT_GATE.intercept[1]",
+            "Response Units\n[Left, Right].termination_threshold[1]"
+          ],
+          "matrix": [
+            [
+              0.5417467021959657,
+              -0.23548268910415002,
+              -0.3129988456083165,
+              0.1938665365229014,
+              -0.0659075012765322,
+              -0.04291747669263398,
+              0.2027417104995544,
+              0.4000754770918173
+            ],
+            [
+              -0.23548268910415002,
+              1.8098604706877732,
+              -0.39796287290040216,
+              0.019949634422704355,
+              -0.014693293385215796,
+              0.13201198139294293,
+              -0.14665994945742933,
+              0.056301359390415105
+            ],
+            [
+              -0.3129988456083165,
+              -0.39796287290040216,
+              0.8024931403870577,
+              -0.03294127430870083,
+              -0.14827254371084722,
+              -0.19015313023704028,
+              0.1324994170233419,
+              0.07619383456621383
+            ],
+            [
+              0.1938665365229014,
+              0.019949634422704355,
+              -0.03294127430870083,
+              2.411683695169893,
+              -0.5548714715126434,
+              -0.48442606330531573,
+              0.22035366025147854,
+              0.12637830942863112
+            ],
+            [
+              -0.0659075012765322,
+              -0.014693293385215796,
+              -0.14827254371084722,
+              -0.5548714715126434,
+              1.976564244907546,
+              0.8601423801213287,
+              -0.4548771845238164,
+              -0.14516340405511555
+            ],
+            [
+              -0.04291747669263398,
+              0.13201198139294293,
+              -0.19015313023704028,
+              -0.48442606330531573,
+              0.8601423801213287,
+              1.929782744857157,
+              -0.5409226373101912,
+              0.14141763780083125
+            ],
+            [
+              0.2027417104995544,
+              -0.14665994945742933,
+              0.1324994170233419,
+              0.22035366025147854,
+              -0.4548771845238164,
+              -0.5409226373101912,
+              2.1015334022975916,
+              -0.14107309825663933
+            ],
+            [
+              0.4000754770918173,
+              0.056301359390415105,
+              0.07619383456621383,
+              0.12637830942863112,
+              -0.14516340405511555,
+              0.14141763780083125,
+              -0.14107309825663933,
+              1.007257775451224
+            ]
+          ]
+        },
+        "best_reference_score": 254.34596981879656,
+        "final_selection": {
+          "seeds": [
+            525408545,
+            2072900528,
+            576667459
+          ],
+          "estimates_per_seed": 100000,
+          "total_estimates": 300000,
+          "candidates": [
+            [
+              0.384,
+              0.19380000000000003,
+              -0.419,
+              12.8,
+              0.41700000000000004,
+              0.551,
+              2.609,
+              5.125
+            ],
+            [
+              0.373,
+              0.20490000000000003,
+              -0.424,
+              14.32,
+              0.345,
+              0.549,
+              2.9210000000000003,
+              4.756
+            ],
+            [
+              0.38,
+              0.18280000000000002,
+              -0.427,
+              12.96,
+              0.347,
+              0.548,
+              2.644,
+              5.131
+            ],
+            [
+              0.392,
+              0.19440000000000002,
+              -0.422,
+              15.01,
+              0.352,
+              0.524,
+              2.669,
+              4.845
+            ],
+            [
+              0.374,
+              0.18280000000000002,
+              -0.431,
+              14.040000000000001,
+              0.36,
+              0.483,
+              2.346,
+              4.989
+            ],
+            [
+              0.386,
+              0.17170000000000002,
+              -0.425,
+              13.25,
+              0.45299999999999996,
+              0.62,
+              2.741,
+              5.1
+            ],
+            [
+              0.387,
+              0.1825,
+              -0.415,
+              13.45,
+              0.37,
+              0.512,
+              2.7590000000000003,
+              4.798
+            ],
+            [
+              0.39,
+              0.1755,
+              -0.422,
+              13.26,
+              0.398,
+              0.495,
+              2.943,
+              4.97
+            ]
+          ],
+          "reference_scores": [
+            254.34596981879656,
+            254.29956620950858,
+            254.15932998250395,
+            254.10436402242044,
+            254.03867170643136,
+            253.769306265735,
+            253.44453997865403,
+            253.4307460620616
+          ],
+          "scores": [
+            254.11507118431402,
+            254.0652476040591,
+            253.98546980241372,
+            253.69644372407927,
+            253.58911798735136,
+            253.99464769193088,
+            253.53461324899513,
+            253.70668022052342
+          ],
+          "winner": 0,
+          "selected_reference_score": 254.34596981879656
+        },
+        "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score.",
+        "sampling_work": {
+          "calls": 551,
+          "candidate_trajectories": 43300000
+        }
+      },
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 300,
+        "initial_blocks": 4,
+        "max_search_evaluations": 1000,
+        "selection_blocks": 3,
+        "selection_candidates": 8
+      },
+      "search_budget_counts": {
+        "5000": 721,
+        "10000": 169,
+        "20000": 80,
+        "40000": 20,
+        "100000": 10
+      },
+      "mean_search_estimates": 8695.0,
+      "search_sampling_seconds": 125.13163636019453,
+      "refinement_sampling_seconds": 95.03265617112629
+    }
+  },
+  "comparisons": {
+    "ndt_short0": {
+      "comparator": "adaptive0",
+      "fit_speedup": 1.4310854497692065,
+      "overall_speedup": 1.3880322256170012,
+      "overall_speedup_vs_fixed0": 4.513061188094582,
+      "paired_score_differences": [
+        0.06273615645966402,
+        -0.15587300798790693,
+        0.24329165417901777,
+        -0.19437853891460577,
+        -0.0030717947031462245
+      ],
+      "mean_score_difference": -0.009459106193395428,
+      "score_difference_mc_se": 0.07898358304200874
+    },
+    "ndt_short1": {
+      "comparator": "adaptive1",
+      "fit_speedup": 1.4443192250516559,
+      "overall_speedup": 1.3886481693448223,
+      "overall_speedup_vs_fixed0": 4.732089978955549,
+      "paired_score_differences": [
+        -0.06265794311039485,
+        -0.37753979501812296,
+        -0.13136781424651645,
+        0.17943573251699263,
+        0.35921951295409826
+      ],
+      "mean_score_difference": -0.006582061380788673,
+      "score_difference_mc_se": 0.127424299136359
+    },
+    "ndt_full0_clean": {
+      "comparator": "adaptive0",
+      "fit_speedup": 0.9968753410380984,
+      "overall_speedup": 0.9973091404699101,
+      "overall_speedup_vs_fixed0": 3.2426604305861804,
+      "paired_score_differences": [
+        -0.398170263263836,
+        -0.6461608553455278,
+        0.2569286017640593,
+        -0.579962404723716,
+        -0.3812115720137115
+      ],
+      "mean_score_difference": -0.3497152987165464,
+      "score_difference_mc_se": 0.16003912313571256
+    },
+    "unprofiled_short0": {
+      "comparator": "adaptive0",
+      "fit_speedup": 1.8714528398592318,
+      "overall_speedup": 1.7606692104653388,
+      "overall_speedup_vs_fixed0": 5.724656626968536,
+      "paired_score_differences": [
+        -0.8224074418608609,
+        -1.111601723974303,
+        -0.4589510083833943,
+        -1.5515300816806246,
+        -0.8295354455367203
+      ],
+      "mean_score_difference": -0.9548051402871807,
+      "score_difference_mc_se": 0.18162582297604044
+    }
+  },
+  "ablation": {
+    "profiled_total_seconds": 366.1364791649394,
+    "unprofiled_total_seconds": 288.645492880838,
+    "profiled_over_unprofiled_time": 1.2684642171637583,
+    "profiled_minus_unprofiled_score": 0.9453460340937851,
+    "score_difference_mc_se": 0.11102886575766283,
+    "paired_differences": [
+      0.8851435983205249,
+      0.9557287159863961,
+      0.7022426625624121,
+      1.3571515427660188,
+      0.8264636508335741
+    ],
+    "scope": "Same start 0, search/refinement caps 1000/300, optimizer seed 101, simulation seed 29.",
+    "monitor_samples": 31,
+    "maximum_processes_on_benchmark_gpu": 1
+  },
+  "control_quality": {
+    "gpu": "NVIDIA H100 NVL",
+    "representatives": [
+      0.1,
+      0.10010000000000001,
+      0.1101,
+      0.12010000000000001,
+      0.1301,
+      0.1401,
+      0.1501,
+      0.1601,
+      0.1701,
+      0.18009999999999998,
+      0.1901,
+      0.2001,
+      0.2101,
+      0.2201,
+      0.2301,
+      0.24009999999999998,
+      0.2501,
+      0.2601,
+      0.2701,
+      0.2801,
+      0.2901
+    ],
+    "reference_run": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0",
+    "trials": 760,
+    "checks": [],
+    "timing": [],
+    "validation": [
+      {
+        "seed": 9401,
+        "adaptive0": 254.78674098968955,
+        "ndt_short0": 254.8494771461492,
+        "unprofiled_short0": 253.9643335478287
+      },
+      {
+        "seed": 9402,
+        "adaptive0": 255.12994270243559,
+        "ndt_short0": 254.97406969444768,
+        "unprofiled_short0": 254.01834097846128
+      },
+      {
+        "seed": 9403,
+        "adaptive0": 255.16044494450753,
+        "ndt_short0": 255.40373659868655,
+        "unprofiled_short0": 254.70149393612414
+      },
+      {
+        "seed": 9404,
+        "adaptive0": 254.98192419738467,
+        "ndt_short0": 254.78754565847007,
+        "unprofiled_short0": 253.43039411570405
+      },
+      {
+        "seed": 9405,
+        "adaptive0": 254.4776145047342,
+        "ndt_short0": 254.47454271003105,
+        "unprofiled_short0": 253.64807905919747
+      }
+    ],
+    "parameters": {
+      "adaptive0": [
+        0.383,
+        0.2197,
+        -0.40900000000000003,
+        12.940000000000001,
+        0.367,
+        0.657,
+        2.218,
+        5.058
+      ],
+      "ndt_short0": [
+        0.384,
+        0.2101,
+        -0.413,
+        14.05,
+        0.374,
+        0.627,
+        2.973,
+        4.7940000000000005
+      ],
+      "unprofiled_short0": [
+        0.384,
+        0.19380000000000003,
+        -0.419,
+        12.8,
+        0.41700000000000004,
+        0.551,
+        2.609,
+        5.125
+      ]
+    },
+    "parameter_order": [
+      "Response Units\n[Left, Right].termination_threshold[1]",
+      "RT_GATE.intercept[1]",
+      "Bias Mechanism.intercept",
+      "Control Units\n[Color, Location].gain[1]",
+      "LC.mode[0.0]",
+      "LC.mode[1.0]",
+      "LC.slope[1]",
+      "LC.intercept"
+    ]
+  },
+  "clean_rerun": {
+    "same_all_proposals_and_scores": true,
+    "same_fitted_and_validation": true,
+    "monitor_samples": 53,
+    "maximum_processes_on_benchmark_gpu": 1
+  },
+  "source_hashes": {
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_adaptive_fit.py": "848ba5e20b39e34fc5159eb0ed6c2119e7ecc44e42b890b9458f8c7ac88eecde",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py": "f60823476e63419256f175af4455f3b48cdf4bc165ba58130be480b4e405aa4a",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_benchmark.py": "4c7991e49a8ff40b50a78ab29265e80da4d1fe064d01818a00db9b8fc1d5924b",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_likelihood.py": "7c32a44e3aab309bdb18b5366f61136741af73c2b6d51f1381637ee348d49490",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_profile.py": "5afd1a145bac5a9752fd440324ec77cdd60d212be1191b3efc632b7faa70a7de",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_recovery.py": "cf92a92b0d4be3b9febfe6a523d2e4a722fc42d7e609abf8b54c9bd44a2d2471",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_recovery_report.py": "3f57f6c6089d4207dde0e40caf03ebefcc7fe673757bd11b0c9ce98108a8a704",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_continuous_study.py": "21b549205cd96840085b20cccc67045a0c988f140b07ee6ee24ac2115ed09501",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_direct_likelihood.py": "2ab4ed017d94ffbdf3fd91a2b8fe318f2db8dd7c77bc2d6da1be96985d98c440",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_fit_lc_part1.py": "31741de6fdaf5b7f2162eb9efe7d065575ad8dc66193e21a04f47b67d7e6cc99",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_fit_lc_part2.py": "f4bf451c78a1c786aba93b83a8ca9691128ec78e130bae61873a845b99d84a63",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_fit_lc_part3.py": "7792b7e86cce9fc6f2413b1c01b0c3bd816e14a0fb1799c119efb33615ad627b",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/full_lca_model_lc.py": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/__init__.py": "a162f6bcd49d93ed5c3687332cced6c2633f88441ea5f25a6cd13efd8af2e7c9",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_flux.py": "9015403b9964a997e4ac7e3cc77ed6cd058bcbd54a24c95f6961b29ba7347d4a",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_flux_gpu.py": "b5022709a36b3cc15ad488e352f008b4eeb37b00f50772bdc8a5b007f28e6bba",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_likelihood.py": "94becc329309a332d4f4758652bd625d5a89c95680f93659fe41fecc212e84d6",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_model.py": "0cdde8c9fc720c1db443b48a0b5de024de6df6ef19e4199a32f5403890dd4a13",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_monte_carlo.py": "5b5141b0717cc9c9175da7095253647e33a2bbdd7767ceb786818cc7e6dbba47",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_native.py": "844b261bd52273e22bdfa919a6ec5bfa58e299a99071b7d81bbf9937113cd482",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_solver.py": "7d1b138c8e92ff63c74f465ff7b436522e6b228c4b8c63f991c417f2651bee70",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/continuous_validation.py": "67faa51889ce9ea6042fd8c647d52ede10effe9afd39938509653c292cc722eb",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/fit.py": "6a84aeb9d69108b23d78821548d3759f88c52bd84d62c43547fa55ba68995561",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/likelihood.py": "062fb881e2c1a64a0ac83f6382efcf0e44d224cc23582964197bf5ff399b0658",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/model.py": "1174ec8730393ac3bb98aa4df37664bd3ab321454a62b173a2e36f245532a102",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/solver.py": "6a1b0c45911647bd9cdc7d48b4a58dc4a21da2e5bbd45864fa638246546e099b",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_likelihood/validation.py": "8daa7c2f5443621f1ba695f983ff8f933a487e98d0eaf66fbf0722aa66738800",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_llvm_benchmark.py": "c44f8257ad4ffe215411e46e559190a0f8a9d816936b403a76df507e92586d73",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py": "eeeb1b867f8aacec3b9ddf0eb45e37a234ae946caa167ee9bf438cf800e035f6",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit_benchmark.py": "628931978f567bd4a6dae6bdeaeb3d3fd9bd8f682992ff5626b0f6da838b9849",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py": "49bffaeebb4b18ea0db78bdb5d5c48c93bc01bc398485e3b0d4593f08473a87d",
+    "psyneulink/__init__.py": "381866e433a85c2f40965493a3d4abd8bf0afe9ff317616fcac8b44e680a2c32",
+    "psyneulink/_debugger.py": "285ac778450e4639cfbee3db10228b39c22cdee13d8e6395f091a5d45c4dba0e",
+    "psyneulink/_typing.py": "637d9fb2c5a3d514b66b33fafc056616b807efe45c8fb625fe1799622e2d5296",
+    "psyneulink/_version.py": "eb528e0d1271cfeb4e746909dc3a6aa52ba7dc3f6164a5f3e5772117018be850",
+    "psyneulink/core/__init__.py": "492ebd81bc9183cbfb9e5ed8d4241728fd54f69d9fa3f535ee2ed5a79f923065",
+    "psyneulink/core/batched/__init__.py": "1f2420835192f63d7ede920f068043135dbf30a7be1435a03a793f3ea7c1d8eb",
+    "psyneulink/core/batched/analytic_runtime.py": "003d5fd7c70c8a85ea860fa364593b93d6b6497e3ca7f9c36aacf7626f7a8cfd",
+    "psyneulink/core/batched/backend/__init__.py": "a5de61557855ae3be02c8b16ba8f6dc1b7ddb61620c2ee6456fa8919651a0f19",
+    "psyneulink/core/batched/backend/triton/__init__.py": "8db03a704bdc6593e307fc69de5c540978684d2f39f4f82b5b4235cd376a8b19",
+    "psyneulink/core/batched/backend/triton/api.py": "55a83967215fad4d6fc9931e252985fe7635cde7c7a2c9d64e5b7a0d343dfa13",
+    "psyneulink/core/batched/backend/triton/cache.py": "d913b09f762eacc8d1443f1a147c2ffb19fe4c5391098ba31de56440eda130ed",
+    "psyneulink/core/batched/backend/triton/csi_deterministic.py": "01b3b3531eceef78dc0f6d602a248c4dca80ef65eeb4565cb1b2d30652ce8dba",
+    "psyneulink/core/batched/backend/triton/emit/__init__.py": "a618c932c39ed5c58cb1ca19aeb9431fb53bd1c81fa159e53c59d5e0bd59c0dd",
+    "psyneulink/core/batched/backend/triton/emit/_helpers.py": "78cb51a13974b1e1b85e793fe118d425bef5de43b983bc88290a2c50d569919c",
+    "psyneulink/core/batched/backend/triton/emit/emitter.py": "e8b3aec56e5c40ab0a653777b3c1bdbb58ad189b4dab8a720dc23e1677a26566",
+    "psyneulink/core/batched/backend/triton/emit/lanes.py": "3c8d07ad3bc964ea4eda763cfdc9b48254892466adb269340419e6c8645c11ab",
+    "psyneulink/core/batched/backend/triton/emit/ops.py": "8e6add0c645cff0725dab4eba46dceccde7a78e2ea50fe87761bc959ed694e8c",
+    "psyneulink/core/batched/backend/triton/emit/trials.py": "f205c9bc1a8d89f7638a93769fc587f5624214e2a7618524a0e03ad226cf58a6",
+    "psyneulink/core/batched/backend/triton/free_running_score.py": "7b90b0212357a725a5034e2c80aead2762c0928257e4515b25bde3ee55b7c5a1",
+    "psyneulink/core/batched/backend/triton/graph_emit.py": "7db99d89dc1f8c948ffd89bbc4f912bd3173c299ac4ffac60b2ccc1d2205e14e",
+    "psyneulink/core/batched/backend/triton/history.py": "76f8ec83d7806713e4b4b03258ac23ace9f30a5e0f5adee8a109890f9bb5094f",
+    "psyneulink/core/batched/backend/triton/runtime.py": "213d0855d83730108bc984a73682de44b45ef9d0089d7a9d993b1c42d853e7ed",
+    "psyneulink/core/batched/backend/triton/sampling.py": "632e8313d923eeb5ea6bfa1d5dc16386c5183b3762bff04d925c920902829514",
+    "psyneulink/core/batched/backend/triton/scoring.py": "376151755e1d5becc0b2b051952980244692628fb97726a3378dadbe50ca7284",
+    "psyneulink/core/batched/backend/triton/source_builder.py": "716a45df4a9e968e9c0f4d47df59eb0df9c043e16a9ca4c9f089e37b025c9c45",
+    "psyneulink/core/batched/backend/triton/trajectories.py": "bc8e48ec6219ddb3aabbcd8121f2881dfe50d713c51e2b146a54e1acd0606e73",
+    "psyneulink/core/batched/bindings.py": "112058d3e5f0479c947d09e1fe43f302aec2332047745b78538553865bf31fac",
+    "psyneulink/core/batched/compiler.py": "92703e83ace02d33725a1e49d4d1cb9293ac6307774e12b60ce2f5050a8f73b3",
+    "psyneulink/core/batched/components/__init__.py": "7ba761e840e6c30bd2e0355c2aa87d849a1144a1f9eb715a5c21dbd088e16664",
+    "psyneulink/core/batched/components/ddm.py": "797c1f9ff88fa200ec687dd04809eb88c5a062e20279a397b640739df79d9e6a",
+    "psyneulink/core/batched/components/fitzhugh_nagumo.py": "1c71f49ee9756247505887fc3fb0184285acbd01a02faeb5f23804bde960f160",
+    "psyneulink/core/batched/components/lca.py": "4392c36bc139af064534c0645620e71975d20cfc75d7fe392fd0db2c54120391",
+    "psyneulink/core/batched/components/lca_general.py": "d5cbd82b671a78a6c7d756c6ea1e0bf1ca382ad245ebc9943bda5f7067a4e284",
+    "psyneulink/core/batched/components/linear.py": "b1b585fa4c4521a0f3a1e87ab318915bf5f3bfc91f96614e74b0adcdf8c57046",
+    "psyneulink/core/batched/components/logistic.py": "aa1c1ab69de9dd533b6f1ebcc65f0ff7ac87ec822617c1ff55fe34d74877c46c",
+    "psyneulink/core/batched/components/mapping_projection.py": "7aa397b23a901e0ae3441a04a8d41514213746196799c3ae7b7daa3eeaee99dc",
+    "psyneulink/core/batched/components/normal.py": "d0feef58b5232c73b10625becd4cb23aa85128848823d660ceb428f65516da34",
+    "psyneulink/core/batched/components/passthrough.py": "3ee8683f46fa4b2d4390c2684e5ed6501b144eee485df6ddc52cb6ac755bb324",
+    "psyneulink/core/batched/condition_validation.py": "6840fdc87b9c6615c0a4ee69a7ab2a81152921bcff4b298d79e98cdd6d96d8a3",
+    "psyneulink/core/batched/continuous_ir.py": "473943cd21c3467646db2c9b55fcfe4ff24f04957d2b159a43801715e60382f6",
+    "psyneulink/core/batched/ddm_likelihood.py": "74f3cec3faf5af11290c55c9f0e57cbbf0f11855bc9fb8215b9fa447af08a3e3",
+    "psyneulink/core/batched/dependency.py": "2a5b1c74341c23001067710be015dfa499514c148f6857c14d555423a32ede8d",
+    "psyneulink/core/batched/diagnostics.py": "22416fa3fc5b9c866d84652b74fb2feed10ef0110fde2be9cfc513bd1dcf381d",
+    "psyneulink/core/batched/empirical_mass.py": "319e6b2a5f737bc902592fd30ed6935a9be12752f359b0a394a095f4ffec661f",
+    "psyneulink/core/batched/endpoints.py": "b7e765715f2fc270c98a54d056cdaef63d226d26507032f0ccaa0404315e5cbf",
+    "psyneulink/core/batched/errors.py": "ec342e45e4c46c95c8e90d1d3d07281cdad6a2ab6114c165c3888b28a9c1f0ab",
+    "psyneulink/core/batched/gaussian_likelihood.py": "748cf7617a76ddefa4f0134b4636de0222fe82eac3c4e62d4ab1d9203f63d040",
+    "psyneulink/core/batched/graph.py": "a2ebfbe8f9865856d3040d74e5835731fe96b1b209fae31dae410367d97604a9",
+    "psyneulink/core/batched/histogram_score.py": "2dec2f8eced4feb6d824216e85ba76b9206ff629386a9dc2b30c40cf33a0b5aa",
+    "psyneulink/core/batched/history.py": "7155eda6b4a4986e7908ad03e08d9f2bd7b8a33e67df3b150c6e54b748c420ab",
+    "psyneulink/core/batched/ir.py": "892359ade7455f34eea7b01dc9e38a72f90cc8c71c08b3027135d50ec83dd5c9",
+    "psyneulink/core/batched/kernel_ir.py": "178968ea86c9dac2314388c1fbded8fc8e4f091803fcb727a9169d53bbe838da",
+    "psyneulink/core/batched/likelihood.py": "4f6166176ea883b1390d18506b727c4b7f5aeb71ba21bc7b0d2abb2e873184b8",
+    "psyneulink/core/batched/likelihood_analysis.py": "c0769b8cd8c8efaa081c6399c3a5238d94c9f714ab818f1e1dfdf0d67dd2e290",
+    "psyneulink/core/batched/likelihood_ir.py": "51f7989f2a36652ce59114d34e84f602f121550a65494c8dc94a1a291c225ebd",
+    "psyneulink/core/batched/likelihood_planning.py": "67c0fde61c092d876d7c18a27ea6eebcaf2fe060257c86ed9a0bafc341fa58f9",
+    "psyneulink/core/batched/numerical/__init__.py": "4bb5974a229539cec72df660a50a8c788fc6e801245177403de018303992f566",
+    "psyneulink/core/batched/numerical/dynamics.py": "e053bff4bc415119144714930e44c02951ad93ce0c4a7c99f3181ce4a27c8b23",
+    "psyneulink/core/batched/numerical/dynamics_codegen.py": "b01473d3e5aad460d1a16def64bec54f7d7b5ac6a9eabae6c81e60dd2d2ec5dc",
+    "psyneulink/core/batched/numerical/first_passage.py": "4da6ca905724403ac54a2ff54f8371fdcd8143734a81027c13e4f9b20e72db89",
+    "psyneulink/core/batched/numerical/native.py": "57576b3d60e69f1cfa3a917eb8589f82e9547780ef1e01360bc204aca0aa8d37",
+    "psyneulink/core/batched/numerical/planning.py": "fe9402d2a7b0a13e994a12285f7d2cf7b04adca826d48a5138f404e5a3472fd9",
+    "psyneulink/core/batched/observation.py": "0d79a51ec135c9dcee95032689512b5f8ac81ac588cd90033e94f00c5e2aeb7c",
+    "psyneulink/core/batched/observed_sampling.py": "34bfa611173a4bbdafffadd92a5377e31a1496f80800dbf412f673b77458d9e6",
+    "psyneulink/core/batched/prep.py": "516d9e96b1a14e6e54b2a7a24f5ca107da98ebd41a4ccad5ec870b25ab5ccaee",
+    "psyneulink/core/batched/registry.py": "efc112971d8e071a5fc9f4edad8fa00925cb2560087631065d7009b6b049697e",
+    "psyneulink/core/batched/sampling.py": "36110e9dd755d62a126faa1003fcfcf73b6d712e71cbd5080655d36ab227fdc9",
+    "psyneulink/core/batched/schedule.py": "34365f82a617ed26d750175a68056c661516c1f64348575f4c38b4244f7e2cd6",
+    "psyneulink/core/batched/scoring_windows.py": "824486ce9242bdab8285438a726adffaca5ed1f6322c089b85d38a8a8711b02c",
+    "psyneulink/core/batched/specs.py": "37cd7ab0e1f1809b99fc8a2a74ba80a202a06fc1c554bf37325eddab64eea3e0",
+    "psyneulink/core/batched/symbolic_values.py": "70b37390385bd1467f12fbec3877025e48d92a3beaacbe9e28ab182bc967096c",
+    "psyneulink/core/batched/trajectories.py": "127ca7ac46f77cd0d5dbad2460c1241f374124a539e0c8632ca2497705d441a0",
+    "psyneulink/core/batched/wiener.py": "cec14de4a06d62471f3ed758b21d5575fcb4b488d82206055cb9454e7ea97343",
+    "psyneulink/core/components/__init__.py": "6d0251f7fdeed03483c4b6e13986ae7e06bba51ef63d2e404ea47c93d91f16ab",
+    "psyneulink/core/components/component.py": "89b6ecbe5692d4bf3b06c7e257c158a84665dff810d24d7189f44d3878a45721",
+    "psyneulink/core/components/functions/__init__.py": "26d7b801170733a16ce24d91024c9175ce1a208be5977dcf2f5a6005da4a4dae",
+    "psyneulink/core/components/functions/function.py": "5db8ffd76169f17d7f6f6b0a0b0b0cc92da6fb0de75cd1abaa22682f491929f7",
+    "psyneulink/core/components/functions/nonstateful/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "psyneulink/core/components/functions/nonstateful/distributionfunctions.py": "ef2fcee37665c87b8e93fd50b45778dfd3ba64ffee49e41fef4fa14b39c4d473",
+    "psyneulink/core/components/functions/nonstateful/fitfunctions.py": "b6a6ca01e8c693c633f18972d530abda04fb2a9fe4853a614576dd28680a1c68",
+    "psyneulink/core/components/functions/nonstateful/learningfunctions.py": "38bfbdb40de8473d81ee03b89f6736aca6693b468ea8a2f0be27653afe58b90a",
+    "psyneulink/core/components/functions/nonstateful/objectivefunctions.py": "a55d0e6a070a5468f8258602c5414a75f8dd47bdec58788d9532f419cc167e5a",
+    "psyneulink/core/components/functions/nonstateful/optimizationfunctions.py": "230651f67c9845a71b55e23469e430493582bb0195d41e6b56d688b528117450",
+    "psyneulink/core/components/functions/nonstateful/selectionfunctions.py": "62ff16464d7ea39dce8b476fc1b1356ac82b0cd9bd689d05a235cde9fd8d905d",
+    "psyneulink/core/components/functions/nonstateful/timerfunctions.py": "69f7bc89ff9d76e1cbf5ae02db042d593f32aa2be95c43d9e60a94d97e726b61",
+    "psyneulink/core/components/functions/nonstateful/transferfunctions.py": "c39347705716b6c68817a57c68b439a009d8231238a251b7020a5186a1876f23",
+    "psyneulink/core/components/functions/nonstateful/transformfunctions.py": "738df4dc8d129ea06ae7b041588796651999b32ec51314b134da198a7b91d671",
+    "psyneulink/core/components/functions/stateful/__init__.py": "0ca286e92e904ac7280a4f45923c9cba8e640b5e28681c1f3bf881caa7bfc39a",
+    "psyneulink/core/components/functions/stateful/integratorfunctions.py": "47b8e27b3519e81f6a3a8325adb8bebca0b3b204bdc0dd4b4cea725c3a29b3b0",
+    "psyneulink/core/components/functions/stateful/memoryfunctions.py": "b0b25229f203ab740010c32ade81f990f1fee8f8dd3d59ece4958153ef414cd9",
+    "psyneulink/core/components/functions/stateful/statefulfunction.py": "3f7f36ef0c0928320a9a8c223363233faf5f3b0a4bc8497b71524c790824cda9",
+    "psyneulink/core/components/functions/userdefinedfunction.py": "b5d042e04be64a23bf74d1973290fa7c5fc27f2ba012972fdc7df8d95c1630eb",
+    "psyneulink/core/components/mechanisms/__init__.py": "088589d0acf963c2e8e3499ffafbe538b09d11f1707bca1a52e6a305955455bd",
+    "psyneulink/core/components/mechanisms/mechanism.py": "f0bf21fd392d43da0cf427483e798c0d79d3c0abd90eca625b39f3ecf7d13405",
+    "psyneulink/core/components/mechanisms/modulatory/__init__.py": "b364046017c22972e4dcb03611a9fc38f93359502b95e9899635e46263d99267",
+    "psyneulink/core/components/mechanisms/modulatory/control/__init__.py": "de116053f8991c66db2b40a39d8d8aaf339cfa0c2d89d2cf7c9ae1d77dc76136",
+    "psyneulink/core/components/mechanisms/modulatory/control/controlmechanism.py": "809b0ca3f0e101e4528dc21e5a928a720095f76acf68fc0ff5d90e9e708edd40",
+    "psyneulink/core/components/mechanisms/modulatory/control/defaultcontrolmechanism.py": "5bb2308b712626743ea553bdd05080a7c8d518879c18fa15e7c6103b55f31a37",
+    "psyneulink/core/components/mechanisms/modulatory/control/gating/__init__.py": "3540ea1bd1d09ef52808ee47663739a38df08e71e810aebd5cbaadd40f409771",
+    "psyneulink/core/components/mechanisms/modulatory/control/gating/gatingmechanism.py": "971d62e560cc3bf4c5c3316449d54158d6b4aa2d4eba619e3c9fd3712741bbab",
+    "psyneulink/core/components/mechanisms/modulatory/control/optimizationcontrolmechanism.py": "31d4bd88207b4ea9ed4135f06abc741b89a6618a457a3f0749a8bea778cc6825",
+    "psyneulink/core/components/mechanisms/modulatory/learning/__init__.py": "068e8cd0bc214a28c65fb698d9350f841b247a8714aafaa988bd91308bc49998",
+    "psyneulink/core/components/mechanisms/modulatory/learning/learningmechanism.py": "f1bb7b7316f2457e42e7c7ff32d0021ed0841b66db23b172fe71260718d8695f",
+    "psyneulink/core/components/mechanisms/modulatory/modulatorymechanism.py": "8567e7ce8a7aca775c04df806ebc5fb2ade44a7e97aba5625dab78a56c26de85",
+    "psyneulink/core/components/mechanisms/processing/__init__.py": "85f3b96e89f53efefbbe2c060fecfb7dbf91868be1caa6353c44b8c06da20dcf",
+    "psyneulink/core/components/mechanisms/processing/compositioninterfacemechanism.py": "7dbab6d8c463e623ccecaa9b4be88715b66e7f6c1c03ac8abe33669595d152c8",
+    "psyneulink/core/components/mechanisms/processing/defaultprocessingmechanism.py": "58599ea0ac1f0892ebba624ee4fc1b4a1e0179253501697bb71ee47c7f60ad29",
+    "psyneulink/core/components/mechanisms/processing/integratormechanism.py": "c8a8bf70e7b549f96d276697bb8e5c54ac2a82b1868c137f3f72091e789c0420",
+    "psyneulink/core/components/mechanisms/processing/objectivemechanism.py": "423f838fae8326b2b9ad961f9390821180bb20f0118494e2a721da68ba7d4b72",
+    "psyneulink/core/components/mechanisms/processing/processingmechanism.py": "aa91212e89776056c5b00f2630e5ea703fdd9aafaa05fae59562c8dd7bbbb380",
+    "psyneulink/core/components/mechanisms/processing/transfermechanism.py": "51c93b28a60653a091b182dfa170c77aca5182bf861dc69ab910951c1eccf495",
+    "psyneulink/core/components/ports/__init__.py": "390ed09749216f5d765233657339505efb2bd8b85ba308bfa99a744180427314",
+    "psyneulink/core/components/ports/inputport.py": "459d41f28f2540f6e0b1a730e3a236549210053c63add7f79cdb28afe92df129",
+    "psyneulink/core/components/ports/modulatorysignals/__init__.py": "80fbe8765606835a911fb10309ee724c105105e869fc90277117d0f248fb9d3b",
+    "psyneulink/core/components/ports/modulatorysignals/controlsignal.py": "120cd146c34f2c88406e8a6740959975a0db8157af72f27138543bbaeb3a2062",
+    "psyneulink/core/components/ports/modulatorysignals/gatingsignal.py": "debb8cf44b37478280776603f7f959886e57a5346df7d99d229b3ca88d3c9850",
+    "psyneulink/core/components/ports/modulatorysignals/learningsignal.py": "6621ad6eac0aa28f7f52c550333ed25b0713f05126de80b8a10731cb9d545787",
+    "psyneulink/core/components/ports/modulatorysignals/modulatorysignal.py": "3b0410e075785f1c1ca86b7adb9417c3f8f3fda66aad6abbc3022d9501fc028d",
+    "psyneulink/core/components/ports/outputport.py": "9a6821d9412ea17543543668ae0605a5f8a255b73140d72a3458bc0c927ddae4",
+    "psyneulink/core/components/ports/parameterport.py": "fe12507daa18e83ce671f4a63d881afbcf22068f5c0e40eaf368f8b88b6b855e",
+    "psyneulink/core/components/ports/port.py": "d33dfaa27f7fd45e534f4d39cc90d5a96ff593f3406df1d43478711c0264b008",
+    "psyneulink/core/components/projections/__init__.py": "2eacc317843b7fb378e09fc42da18e60bb4315ce7904c2f51e424433f717d625",
+    "psyneulink/core/components/projections/modulatory/__init__.py": "66a127eb663f4de59e04fb0c33716d914abd0356d38fa74ac21a393c9ea44d55",
+    "psyneulink/core/components/projections/modulatory/controlprojection.py": "2521340ff8dbe1d12b225fc1b24aa202e95fa6c3772d220058728ca7fc695159",
+    "psyneulink/core/components/projections/modulatory/gatingprojection.py": "5d4e31d2c46a387032bfda0d7a184fd6db05a666d886ca74bf4cfa469f078f0a",
+    "psyneulink/core/components/projections/modulatory/learningprojection.py": "7b2d7f487a69ab49f0f75c9cc5624f997071cea4ca4570f0e76d47c44c966479",
+    "psyneulink/core/components/projections/modulatory/modulatoryprojection.py": "d7e72dd1c4a898a640dcbf643c8e5c967779e6e97f4a0747a5bcce945e21d35c",
+    "psyneulink/core/components/projections/pathway/__init__.py": "563689b82d2dd2faf1ff82c73dd7b2c7aed57350b63f7e9ae64d0a87bc186565",
+    "psyneulink/core/components/projections/pathway/mappingprojection.py": "ee444aedcb03137a10fa7459297e209447a9994da56aff9389367a1e0691d9a4",
+    "psyneulink/core/components/projections/pathway/pathwayprojection.py": "8d50ba19b1d359421a1164a7898ebd8a2c447e3386a3b00cad02f41b90cedd99",
+    "psyneulink/core/components/projections/projection.py": "0eaf66fa59ec6effd9bf15d24b68e9f4b59cdea863240fefa1486f7c9a84989a",
+    "psyneulink/core/components/shellclasses.py": "4a07a35fdd65364c8d408ede1b48524db72162d52eb314fcab1302efd675f126",
+    "psyneulink/core/compositions/__init__.py": "a81fa5eee05a1700cb7cec146b36da768d7d7812fd342b71cccb83881131c8f6",
+    "psyneulink/core/compositions/composition.py": "aded6f640b13141977b5a2be03b3f4ee46834f1e590134387e317eb615ea3ac8",
+    "psyneulink/core/compositions/compositionfunctionapproximator.py": "19487fc74a948fed55971c7b0b3e936385eb15dd0ad8246c14a4ed186876b944",
+    "psyneulink/core/compositions/noderoles.py": "48977a9aa3a8501e2af1abd26b68ffeb5f94e3c9cf83b9349b2fe6926e749d26",
+    "psyneulink/core/compositions/parameterestimationcomposition.py": "11641cd9e9ef7fb027a5e0787f6f1a9df8c90d7bd6b9c3e77bca3e1a6606d131",
+    "psyneulink/core/compositions/pathway.py": "f1e5216b5f6de814f52d2e7cc6c20b7e18d8d5c58c76ae9f78a2ad77cf9368be",
+    "psyneulink/core/compositions/report.py": "c8c258d633adb3ebba52f93c8f4981434c6f7717fe178e7bc3d66ead46a6cbb5",
+    "psyneulink/core/compositions/showgraph.py": "4b9bd5c28efe38d3f075db0eac7ea3e3ea1133c86dd9187d34d2e0f3f5b4e8a5",
+    "psyneulink/core/globals/__init__.py": "86921c87f4f4096cf93e30047709c4dbe95342d2cf1d27a31ff4fc5437b908fc",
+    "psyneulink/core/globals/context.py": "0a597741c05c263c996cb4172480f090e880e3dd5ba1f0cb440eefe822b9e5d6",
+    "psyneulink/core/globals/defaults.py": "54309576189611f84a563ee60886fb55f114c4c9f96bfd50aefa6cbb2a443b50",
+    "psyneulink/core/globals/graph.py": "369ae3600dd4c8625df55856a1059e0ee210bcd57b4992de11c34b23c1ef08ad",
+    "psyneulink/core/globals/keywords.py": "c1de057aed37a6749352ba93fb2e8c5f4de475d5f1a8218993fd1f4f6702a03b",
+    "psyneulink/core/globals/kvo.py": "9595073da24d079489e0bb319e192c76d863a27281255da6957432a14b38fbac",
+    "psyneulink/core/globals/log.py": "b2fdab7e8246a50fe73ca4f737bef5081be7d66b2df2e1a7e134962be5bac7a4",
+    "psyneulink/core/globals/mdf.py": "87a1346f43dd5231d091730c7b5dfe643983329681ec467042d272a17658c677",
+    "psyneulink/core/globals/parameters.py": "cbe20a25819270373bf545c5b1c5d3aebc0ff510a3fd5346cf72d25b3d2239ff",
+    "psyneulink/core/globals/preferences/__init__.py": "8ca5f79505eded2a903a451ddd9bee6bbb40b08e9336545de940d5e904496952",
+    "psyneulink/core/globals/preferences/basepreferenceset.py": "1088355400d500d6fa9f6aeac00801a8ee462202f5c934175285bd0fcf137d1a",
+    "psyneulink/core/globals/preferences/compositionpreferenceset.py": "54085684ca239bc17909c8d4e8aed86b7c7b2b14c65da84061ea5be7cf23d4aa",
+    "psyneulink/core/globals/preferences/mechanismpreferenceset.py": "903198f195355aada4e3afa789e034819aff37d9bf383422850a4b4f79488a3d",
+    "psyneulink/core/globals/preferences/preferenceset.py": "0b56b30d6bbbb60cb3e8c3c1d88669683d42adb4210a20ca3c18c2998a7849a0",
+    "psyneulink/core/globals/registry.py": "c16aba4105eef927e98fe2b274e31ce9023247c7c95c871ab1867e086f5b5312",
+    "psyneulink/core/globals/sampleiterator.py": "0a6a51ef0833478294984305d910823752658d3ddb2a696c97d8824b425534bf",
+    "psyneulink/core/globals/socket.py": "910605f53aecc475d8eee370ef487093afc8ad7f340e7f2c5ae3742897e51172",
+    "psyneulink/core/globals/threads.py": "9ec8e7a5971f66a7df0127f05a7b1bb789805bf7b11de30106d5b28ab28eb962",
+    "psyneulink/core/globals/utilities.py": "5a648c1b87e1fc866b44795eafbd82f81e141baefaab5626d1ca41a5051e5ef3",
+    "psyneulink/core/globals/warnings.py": "2ace69467d2d07ab4a93b90ca4af39896203f73777c05a8c6b234995d87601ce",
+    "psyneulink/core/llvm/__init__.py": "38ab662d6a13dc7d2ae10a36d132221fa8d3a4f8aad30789032491aa904492ec",
+    "psyneulink/core/llvm/builder_context.py": "beefd2d5a2e2ecadc864c5f7ff0372dde654f2b0208e6075160d2c4367375f8d",
+    "psyneulink/core/llvm/builtins.py": "33c344ec8af0c3a41efcc8d42a8e64dc3b5e90b46b820940378ca4ddee8dac90",
+    "psyneulink/core/llvm/codegen.py": "1289f630ebeba5770449c2dba9a49e2cdeab1adc7ffa097dc5fd8b12103a8df4",
+    "psyneulink/core/llvm/debug.py": "1418d8a5545e483916055b34c3affb783c7a7038543638b765754fc70659d710",
+    "psyneulink/core/llvm/execution.py": "82340f9a78f46f1a46f5d5fed5c2d0cbee8cdfaee02a62912757368cccf5b388",
+    "psyneulink/core/llvm/helpers.py": "f492a9f0b4efa9b77f469b174fb9b6ed5bc308428adb68953f36ff922187afd7",
+    "psyneulink/core/llvm/jit_engine.py": "a2585e1b3b114c49abac100658032c6a5c834be4714bd37276946a50dbd6b7db",
+    "psyneulink/core/llvm/scheduler.py": "c2a5cab16b449baa136eec4816738aaf4ec4b5cd85d09f209b2d483249018d9c",
+    "psyneulink/core/llvm/warnings.py": "1d34a50d3edffd3c7375e8805bf0ad9e0efc44f1c68adababeb09a7a73b22bad",
+    "psyneulink/core/rpc/__init__.py": "7a3d301ceb6ce75faf44fee55cd30417e0c1e09d9cbbe0624b0036b1b6612b82",
+    "psyneulink/core/rpc/graph_pb2.py": "51ec97f81e8f9e0dcf278df83f386e47dfe1783c8f2d24e587cfb6edc9aa376a",
+    "psyneulink/core/rpc/graph_pb2_grpc.py": "6284fc1a44c1b2f45b41aad733f1700c7e706c28444b33e18bf4ac63f17a6a89",
+    "psyneulink/core/scheduling/__init__.py": "60ee3d80ca1862c229075de775e93da76bb052d21ab44bd253596adc9a3e8120",
+    "psyneulink/core/scheduling/condition.py": "50df3098eb51d82eac4bac39a510ed3fee78b3f82592037fd726433f09964f1d",
+    "psyneulink/core/scheduling/scheduler.py": "66a830b0872b33d75f7217b2f719a731604aadf1adc6366235931757d65182a4",
+    "psyneulink/core/scheduling/time.py": "14b5fd39d2c9d857b662e87d2a8e9eecd0ea794f79c8a9770fdbe8348e4e4da7",
+    "psyneulink/dask_run.py": "7e9d97db0d8a5c8190bf572bd243022789fd704a5b87fc37e378cef6a0ae70e6",
+    "psyneulink/library/__init__.py": "a0fb1136a35a5d8b33c019a260f0a229d61d35c1217e46b6377d359da3cd20d9",
+    "psyneulink/library/components/__init__.py": "dae50830de378341b6a68a3f018dc6dc06f8d5484035e69153efc418a875f50b",
+    "psyneulink/library/components/mechanisms/__init__.py": "945c83a2f69da17e77f14cb8f5c2720688b6250965fd34cc84123d750326e35d",
+    "psyneulink/library/components/mechanisms/modulatory/__init__.py": "09aa78167e5ec5d1d47c68a4b60986674504f9653310bdc7407f8833f35414b6",
+    "psyneulink/library/components/mechanisms/modulatory/control/__init__.py": "de32525239a26ade4283a1f6ad8aee27de59ecbc3fb320f7803ed92888ecd201",
+    "psyneulink/library/components/mechanisms/modulatory/control/agt/__init__.py": "5525a078d769ca22076836bff752c7bc8648f642361002c956416f5b0a5d7030",
+    "psyneulink/library/components/mechanisms/modulatory/control/agt/agtcontrolmechanism.py": "5313eafbf6f052820326ba16e74a65b935605ace18a98828053714c195047228",
+    "psyneulink/library/components/mechanisms/modulatory/control/agt/lccontrolmechanism.py": "2bbf7fc21f8236ebfe5928464b55f4a7e26dc51d1d9cda2718d1a618203489e0",
+    "psyneulink/library/components/mechanisms/modulatory/learning/EMstoragemechanism.py": "3525189c527a14d709aac3bf010cc53f0dad868d82191ac0fbca645c84082e54",
+    "psyneulink/library/components/mechanisms/modulatory/learning/__init__.py": "eec90ad0265f9ca8f25f773f0f410cda98328e778560a3be63084fcbc3521cbb",
+    "psyneulink/library/components/mechanisms/modulatory/learning/autoassociativelearningmechanism.py": "c7f854d7b01ce9e23dc1d28766d7960c28f49f3352290545f583d56c931142a3",
+    "psyneulink/library/components/mechanisms/modulatory/learning/kohonenlearningmechanism.py": "075bb39bd757aab67d8baa8521fd3675070c15c13cb51172756cb3f1aa2fee11",
+    "psyneulink/library/components/mechanisms/processing/__init__.py": "d214db8bf7c1635b7a59d8d3880222d0bd8e4386b9eb8810c15b749a83b0fbb2",
+    "psyneulink/library/components/mechanisms/processing/integrator/__init__.py": "2f813c85468060ba70138f530323a6ddceae753629546b7c2c458138dbaa7a6d",
+    "psyneulink/library/components/mechanisms/processing/integrator/ddm.py": "3a8c3db20409febbfd56123fd64689fe8d1e034efecc812b3fc9a7bd6598deac",
+    "psyneulink/library/components/mechanisms/processing/integrator/episodicmemorymechanism.py": "7a7820c32472f69f9c720dbd14079d6f645f466e56907a009463b5221c7a0edf",
+    "psyneulink/library/components/mechanisms/processing/integrator/externalmemorymechanism.py": "1da26a657b82bdd55be1f5f7b45d32817886ca0b2929e47a5ddc481e455178fd",
+    "psyneulink/library/components/mechanisms/processing/integrator/timermechanism.py": "0e1a92419ed0ee6b6b03d1bc873e8bfe4d946ba4000b41f9d44471f4246bf41f",
+    "psyneulink/library/components/mechanisms/processing/leabramechanism.py": "948d0843aedce1b9c9546b2be471c9aa3384f540293aa4867e778c518fbd7aa5",
+    "psyneulink/library/components/mechanisms/processing/objective/__init__.py": "afa5f36180925165bc520a494b3fd7cdf2a5e62fef929ef52c20ebc9f249bd9d",
+    "psyneulink/library/components/mechanisms/processing/objective/comparatormechanism.py": "550743c501881337d74082abdeffa7cff6b761f5323ef891cd75feaf48f7ce09",
+    "psyneulink/library/components/mechanisms/processing/objective/lossmechanism.py": "498acb2692d372a558e0dd91d5f67ae1a6861b30f7f00473d75f0b1f7514a719",
+    "psyneulink/library/components/mechanisms/processing/objective/predictionerrormechanism.py": "db78392b9f2d536fe37a2011d6ef1b0ed5a51c5e5616ed50622f93fd12fd054b",
+    "psyneulink/library/components/mechanisms/processing/transfer/__init__.py": "10828ee32f18761789b398f7eb293535a2fafb84397a6de516e83c8233b871b8",
+    "psyneulink/library/components/mechanisms/processing/transfer/contrastivehebbianmechanism.py": "ad5078102e8c1ff1e479c58dec0fb56d4ca59280f56c74244f12d3982b1a029b",
+    "psyneulink/library/components/mechanisms/processing/transfer/kohonenmechanism.py": "d49ab292f62e0ab280b3bc87340a46249c31504cf974a18b280ef65a2bb70825",
+    "psyneulink/library/components/mechanisms/processing/transfer/kwtamechanism.py": "b8f0d249ea242c40805df37935041f021c9fe7970b75267ec3a4d6360a1727a0",
+    "psyneulink/library/components/mechanisms/processing/transfer/lcamechanism.py": "34e83d948c70f4c9e594fdf2067f07e692256d546d274113c55f2ab230482029",
+    "psyneulink/library/components/mechanisms/processing/transfer/recurrenttransfermechanism.py": "0713cd2b0ee89273ab5132dbc3c51ce7b22e4c7438961dff4bbf9262e6ab3882",
+    "psyneulink/library/components/projections/__init__.py": "a45aab685d03ea6599e3996a734e99feacd66b89a7a2a9b6300a8dc3e546c8a6",
+    "psyneulink/library/components/projections/modulatory/__init__.py": "624e886cda87a41dd9622800fb2035cba79f8d747457c551a2b9551d96380620",
+    "psyneulink/library/components/projections/modulatory/lossprojection.py": "18d9b666c6a4fbe60700da5f8f1134656c06a78dba9577727329bf61a6aaa548",
+    "psyneulink/library/components/projections/pathway/__init__.py": "4f4c652bcd13565dd86af2f6e6a1866070bd67ad81d60a2f60ccf67a35a6c0b0",
+    "psyneulink/library/components/projections/pathway/autoassociativeprojection.py": "70248df23779011275d4aabd70068fcc047931350ae8493dff6765ec29f95174",
+    "psyneulink/library/components/projections/pathway/maskedmappingprojection.py": "e0adb63101bc14508a146d200ca180d97d1589db5d3f0fcf816c57c7a3e9fc9a",
+    "psyneulink/library/compositions/__init__.py": "5a6fd6a6a97e3e15401d7ab96ea1d38ff43e489893303c25bab866e4343f7d5b",
+    "psyneulink/library/compositions/autodiffcomposition.py": "b8f3eb8f0f6962b3dc849020d268dbf462fca24ae24d7a279c67646bbce0ee6a",
+    "psyneulink/library/compositions/compiledloss.py": "1dcbff7bb71a91bba5ebab954b3938be6222baee6eff38c6b56dbb4589b15a06",
+    "psyneulink/library/compositions/compiledoptimizer.py": "e2769a1059998810d3e03718f4dcf40944cac99b7ee63b716ab64249a2af414f",
+    "psyneulink/library/compositions/compositionrunner.py": "d2dfa1565e4ac4a10b228be5aca3a19ce3e15fe50a3693a78223a35d2d6d729c",
+    "psyneulink/library/compositions/emcomposition/__init__.py": "4ea80c4f2d6a232a07b4a8c951be6c0faf0ea8544d71e9f15638904bf7f36794",
+    "psyneulink/library/compositions/emcomposition/emcomposition.py": "482e212b9cb0a992b7044717c1c7e685a1cfcd505fc5570486359d053a6b19af",
+    "psyneulink/library/compositions/emcomposition/emcomposition_proj.py": "b52e335ce26decc9f065fc96cafd2e11697f0c525223a58d3fb840e84d60f04e",
+    "psyneulink/library/compositions/emcomposition/emshowgraph.py": "24e5ffe0e66af4fdd7976d8b659fc0bdad8e4bc7dbc38e9cdad3a128d4d90a4f",
+    "psyneulink/library/compositions/emcomposition/pytorchEMwrappers.py": "26834507bb1c894e7c83fb217708ca34bffd3b69cff79995fbf0f651c85702b6",
+    "psyneulink/library/compositions/emcomposition/pytorchEMwrappersProj.py": "81a3103c3415a6732368fc6bbe2efd3f38226b82cc499bfdae4898db5fd10beb",
+    "psyneulink/library/compositions/grucomposition/__init__.py": "a34296afefa3f3ebf320c09a2f19d7e53fc8f944f5ddb181aed6bd230db99c30",
+    "psyneulink/library/compositions/grucomposition/grucomposition.py": "a393a6d9d23068483e073c34d90f6020491c5477728b38712855fc4060d9b029",
+    "psyneulink/library/compositions/grucomposition/pytorchGRUwrappers.py": "f1bbc8bd22a4681e4aa9788b418175b6b56e159f764a78e907b91aa99b4460d5",
+    "psyneulink/library/compositions/gymforagercfa.py": "b23198d19f695731e13e8801f26baccfadabff10ba543fcb34f9ef29db4d2851",
+    "psyneulink/library/compositions/pytorchllvmhelper.py": "88e162167acfcfc0f28ffe32f895e42e3c9d6ad99dc1c0e0f9ea08b63711af8a",
+    "psyneulink/library/compositions/pytorchshowgraph.py": "dd4e165c41ce139f4908bf11bd72b5d84506c842836da17a0a544b5d19616d9b",
+    "psyneulink/library/compositions/pytorchwrappers.py": "6c604cd2c1246b7f0ece666069c47af38d43d3c2e256a8a3b0cae17576f7c590",
+    "psyneulink/library/compositions/regressioncfa.py": "d41d40ce1d9b6acf7cdf7cd1f0d096e0b443e61b2e6a1b2aa0d3a49243975866",
+    "psyneulink/library/models/Botvinick_conflict_monitoring_model.py": "3cb2daa01d8f187219d281067b86c06b0dec85abd720c4355ba5c6de7b61792c",
+    "psyneulink/library/models/Cohen_Huston1994.py": "bc26a500e6d8cb7e9f8ae9bf85d843e3416a5d52dd622a844f442a5327286731",
+    "psyneulink/library/models/Cohen_Huston1994_horse_race.py": "c380550f890cc8d0e0d2e9517def4c1a462ed97fbcb4cce5b9ff7f4bc894a40f",
+    "psyneulink/library/models/Giallanza2024_EGO_Study2.py": "416f388337033073058c11b4d42ba40217d92acb360dac5a629e3a10965237ee",
+    "psyneulink/library/models/GilzenratModel.py": "f7bdd5fd0b71c79cf0743e309a58beeaa091014c0d145a1b021563bc68fbe105",
+    "psyneulink/library/models/Kalanthroff_PCTC_2018.py": "ee445f40b5ec2d7e4cc449135926dd2b79bf832bfd59bad14184a92605e6d466",
+    "psyneulink/library/models/MontagueDayanSejnowski96.py": "68e4382cb06923bd08f83c1364b8e9bf46ee6aa38b736401df6bacf2abe7d47e",
+    "psyneulink/library/models/Nieuwenhuis2005Model.py": "6dc66ade5c42837611119e9537650a67e18bca869d55d2d04d30d90bbc974d51",
+    "psyneulink/library/models/__init__.py": "253f6bc9b412182ec6312cfa0a2ae79f37437d7549cbaff84b01e360917f57b9",
+    "psyneulink/core/batched/backend/triton/discrete_counts.py": "48038558349f80b89691e852e639c76f392e1eaf7e07ff5776b9025cd782ac7a",
+    "psyneulink/core/batched/shifted_histogram.py": "9191ce6bd6b2e64f5600471741c98a3b45bc98685940aa4ad412bc146bd40e90",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_ndt_profile.py": "8833316a506d35c0359dcc5f563fa73b4f29aa8e3f5989b11d63ec373a1db29c",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_fitting_budget_study.py": "e7e2386f51817b22bfe9b4b8882b5fd7f2db26989674d5a6d043932f4065a413"
+  },
+  "benchmark_script_sha256": "5b010b6032173e208a5d15de5cd6682c8cb47006b81f6a5b3967d493a454de32",
+  "remote_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926",
+  "run_script": "#!/usr/bin/env bash\nset -euo pipefail\nmodule load cudatoolkit/13.0\nbench_root=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926\nbench_python=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/bin/python\nbench_case=\"$1\"\nbench_start=0\nbench_opt=101\nbench_sim=29\nbench_search=2000\nbench_refine=600\nexport CUDA_VISIBLE_DEVICES=GPU-372ffaa5-87b1-a620-d84f-4a2d0427a8c4\ncase \"$bench_case\" in\n  short0|short1)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    bench_search=1000\n    bench_refine=300\n    ;;\nesac\nif [ \"$bench_case\" = short1 ]; then\n    bench_start=1\n    bench_opt=202\n    bench_sim=37\nfi\nexport PYTHONPATH=\"$bench_root/source:$bench_root/source/Scripts/Debug/pec_batch_compile/dawa\"\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\nexport OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1\nexport XDG_CACHE_HOME=\"$bench_root/cache-$bench_case\"\nexport TRITON_CACHE_DIR=\"$XDG_CACHE_HOME/triton\"\nexport CUDA_CACHE_PATH=\"$XDG_CACHE_HOME/cuda\"\nexport MPLCONFIGDIR=\"$XDG_CACHE_HOME/matplotlib\"\nexport TMPDIR=\"$bench_root/tmp-$bench_case\"\nmkdir -p \"$TMPDIR\"\ncd \"$bench_root/source\"\nif [ \"$bench_case\" = verify ]; then\n  \"$bench_python\" \"$bench_root/dawa_ndt_benchmark.py\" \\\n    --run /scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n    --output \"$bench_root/verification\"\nelse\n  \"$bench_python\" Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \\\n    --fit-strategy adaptive --profile-ndt --estimates 100000 --evaluations 5000 \\\n    --adaptive-search-evaluations \"$bench_search\" --adaptive-refine-evaluations \"$bench_refine\" \\\n    --optimizer-storage memory --validation-estimates 100000 --validation-seeds 9401 9402 9403 9404 9405 \\\n    --start \"$bench_start\" --optimizer-seed \"$bench_opt\" --simulation-seed \"$bench_sim\" \\\n    --source-revision 2031e35b73 --output \"$bench_root/$bench_case\"\nfi\n",
+  "clean_run_script": "#!/usr/bin/env bash\nset -euo pipefail\nmodule load cudatoolkit/13.0\nbench_root=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926\nbench_python=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/bin/python\nbench_case=\"$1\"\nbench_start=0\nbench_opt=101\nbench_sim=29\nbench_search=2000\nbench_refine=600\nexport CUDA_VISIBLE_DEVICES=GPU-372ffaa5-87b1-a620-d84f-4a2d0427a8c4\ncase \"$bench_case\" in\n  full0-clean)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    ;;\n  short0|short1)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    bench_search=1000\n    bench_refine=300\n    ;;\nesac\nif [ \"$bench_case\" = short1 ]; then\n    bench_start=1\n    bench_opt=202\n    bench_sim=37\nfi\nexport PYTHONPATH=\"$bench_root/source:$bench_root/source/Scripts/Debug/pec_batch_compile/dawa\"\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\nexport OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1\nexport XDG_CACHE_HOME=\"$bench_root/cache-$bench_case\"\nexport TRITON_CACHE_DIR=\"$XDG_CACHE_HOME/triton\"\nexport CUDA_CACHE_PATH=\"$XDG_CACHE_HOME/cuda\"\nexport MPLCONFIGDIR=\"$XDG_CACHE_HOME/matplotlib\"\nexport TMPDIR=\"$bench_root/tmp-$bench_case\"\nmkdir -p \"$TMPDIR\"\ncd \"$bench_root/source\"\nif [ \"$bench_case\" = verify ]; then\n  \"$bench_python\" \"$bench_root/dawa_ndt_benchmark.py\" \\\n    --run /scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n    --output \"$bench_root/verification\"\nelse\n  \"$bench_python\" Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \\\n    --fit-strategy adaptive --profile-ndt --estimates 100000 --evaluations 5000 \\\n    --adaptive-search-evaluations \"$bench_search\" --adaptive-refine-evaluations \"$bench_refine\" \\\n    --optimizer-storage memory --validation-estimates 100000 --validation-seeds 9401 9402 9403 9404 9405 \\\n    --start \"$bench_start\" --optimizer-seed \"$bench_opt\" --simulation-seed \"$bench_sim\" \\\n    --source-revision 2031e35b73 --output \"$bench_root/$bench_case\"\nfi\n",
+  "comparison_script": "#!/usr/bin/env bash\nset -euo pipefail\nmodule load cudatoolkit/13.0\nbench_root=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926\nbench_python=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/bin/python\nbench_case=\"$1\"\nbench_start=0\nbench_opt=101\nbench_sim=29\nbench_search=2000\nbench_refine=600\nexport CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\ncase \"$bench_case\" in\n  short0|short1)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    bench_search=1000\n    bench_refine=300\n    ;;\nesac\nif [ \"$bench_case\" = short1 ]; then\n    bench_start=1\n    bench_opt=202\n    bench_sim=37\nfi\nexport PYTHONPATH=\"$bench_root/source:$bench_root/source/Scripts/Debug/pec_batch_compile/dawa\"\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\nexport OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1\nexport XDG_CACHE_HOME=\"$bench_root/cache-$bench_case\"\nexport TRITON_CACHE_DIR=\"$XDG_CACHE_HOME/triton\"\nexport CUDA_CACHE_PATH=\"$XDG_CACHE_HOME/cuda\"\nexport MPLCONFIGDIR=\"$XDG_CACHE_HOME/matplotlib\"\nexport TMPDIR=\"$bench_root/tmp-$bench_case\"\nmkdir -p \"$TMPDIR\"\ncd \"$bench_root/source\"\n\"$bench_python\" \"$bench_root/dawa_ndt_benchmark.py\" --skip-timing \\\n --run /scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n --output \"$bench_root/quality\" --fits \\\n fixed0=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n fixed1=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/recovery-20260925/run-1 \\\n adaptive0=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/adaptive-v3-start0 \\\n adaptive1=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/adaptive-v3-start1 \\\n ndt_full0=\"$bench_root/full0\" ndt_short0=\"$bench_root/short0\" ndt_short1=\"$bench_root/short1\"\n",
+  "ablation_script": "#!/usr/bin/env bash\nset -euo pipefail\nmodule load cudatoolkit/13.0\nbench_root=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926\nbench_python=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/bin/python\nbench_case=\"$1\"\nbench_start=0\nbench_opt=101\nbench_sim=29\nbench_search=1000\nbench_refine=300\nexport CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\ncase \"$bench_case\" in\n  full0-clean)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    ;;\n  short0|short1)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    bench_search=1000\n    bench_refine=300\n    ;;\nesac\nif [ \"$bench_case\" = short1 ]; then\n    bench_start=1\n    bench_opt=202\n    bench_sim=37\nfi\nexport PYTHONPATH=\"$bench_root/source:$bench_root/source/Scripts/Debug/pec_batch_compile/dawa\"\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\nexport OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1\nexport XDG_CACHE_HOME=\"$bench_root/cache-$bench_case\"\nexport TRITON_CACHE_DIR=\"$XDG_CACHE_HOME/triton\"\nexport CUDA_CACHE_PATH=\"$XDG_CACHE_HOME/cuda\"\nexport MPLCONFIGDIR=\"$XDG_CACHE_HOME/matplotlib\"\nexport TMPDIR=\"$bench_root/tmp-$bench_case\"\nmkdir -p \"$TMPDIR\"\ncd \"$bench_root/source\"\nif [ \"$bench_case\" = verify ]; then\n  \"$bench_python\" \"$bench_root/dawa_ndt_benchmark.py\" \\\n    --run /scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n    --output \"$bench_root/verification\"\nelse\n  \"$bench_python\" Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \\\n    --fit-strategy adaptive --estimates 100000 --evaluations 5000 \\\n    --adaptive-search-evaluations \"$bench_search\" --adaptive-refine-evaluations \"$bench_refine\" \\\n    --optimizer-storage memory --validation-estimates 100000 --validation-seeds 9401 9402 9403 9404 9405 \\\n    --start \"$bench_start\" --optimizer-seed \"$bench_opt\" --simulation-seed \"$bench_sim\" \\\n    --source-revision 2031e35b73 --output \"$bench_root/$bench_case\"\nfi\n",
+  "ablation_comparison_script": "#!/usr/bin/env bash\nset -euo pipefail\nmodule load cudatoolkit/13.0\nbench_root=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/ndt-20260926\nbench_python=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/bin/python\nbench_case=\"$1\"\nbench_start=0\nbench_opt=101\nbench_sim=29\nbench_search=2000\nbench_refine=600\nexport CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\ncase \"$bench_case\" in\n  short0|short1)\n    export CUDA_VISIBLE_DEVICES=GPU-65d9564f-5239-e1ea-0474-891cf375acee\n    bench_search=1000\n    bench_refine=300\n    ;;\nesac\nif [ \"$bench_case\" = short1 ]; then\n    bench_start=1\n    bench_opt=202\n    bench_sim=37\nfi\nexport PYTHONPATH=\"$bench_root/source:$bench_root/source/Scripts/Debug/pec_batch_compile/dawa\"\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\nexport OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1\nexport XDG_CACHE_HOME=\"$bench_root/cache-$bench_case\"\nexport TRITON_CACHE_DIR=\"$XDG_CACHE_HOME/triton\"\nexport CUDA_CACHE_PATH=\"$XDG_CACHE_HOME/cuda\"\nexport MPLCONFIGDIR=\"$XDG_CACHE_HOME/matplotlib\"\nexport TMPDIR=\"$bench_root/tmp-$bench_case\"\nmkdir -p \"$TMPDIR\"\ncd \"$bench_root/source\"\n\"$bench_python\" \"$bench_root/dawa_ndt_benchmark.py\" --skip-timing \\\n --run /scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/baseline-start0 \\\n --output \"$bench_root/quality-control\" --fits \\\n adaptive0=/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925/adaptive-v3-start0 \\\n ndt_short0=\"$bench_root/short0\" unprofiled_short0=\"$bench_root/unprofiled-short0\"\n",
+  "limitations": [
+    "One synthetic subject, two starting points; not a population recovery study.",
+    "Validation seeds 9401-9405 resample the same observations; they are not held-out data.",
+    "The first full0 timing was contaminated by other users on GPU0; use the monitored full0-clean timing.",
+    "Short-run GPUs were free at launch and checked during execution, but did not have continuous process monitoring.",
+    "Fixed0 and adaptive0/1 timings are previous cold-cache in-memory H100 runs; new runs also use fresh separate caches.",
+    "The measured fitting gain includes reducing search/refinement budgets from 2000/600 to 1000/300.",
+    "NDT profiling is a histogram-grid maximum, not a continuous-RT likelihood or an identifiability fix.",
+    "Search uncertainty conditions on the pooled NDT maximizer and remains heuristic."
+  ]
+}

@@ -349,6 +349,50 @@ class BatchedSimulationPlan:
             defer_device_checks=_defer_device_checks,
         )
 
+    def discrete_output_counts(self, inputs, parameter_sets, num_estimates, data, categorical_dims,
+                               *, support, outcome_indices=None, subject_slices=None, seed=None,
+                               common_random_numbers=True, invalid_candidates="raise", triton_launch_options=None):
+        """Accumulate exact finite-support outputs without materializing trajectories.
+
+        One selected numeric output must belong EXACTLY to the supplied sorted
+        FP32 ``support``. Other selected outputs are categorical and are matched
+        against ``data`` per trial. Returns device counts [candidate, subject,
+        trial, support value], including masked trials and complete stateful
+        histories. Unsupported numeric values and nonfinite outputs raise.
+
+        This is an explicit compression contract, not numeric binning or a claim
+        that a model parameter can be removed from its dynamics. Callers applying
+        output transformations must establish that equivalence separately.
+        Truncation policy matches :meth:`histogram_likelihood`.
+        """
+        from psyneulink.core.batched.backend.triton.discrete_counts import discrete_output_counts
+
+        return discrete_output_counts(
+            self, inputs, parameter_sets, num_estimates, data, categorical_dims, support=support,
+            outcome_indices=outcome_indices, subject_slices=subject_slices, seed=seed,
+            common_random_numbers=common_random_numbers, invalid_candidates=invalid_candidates,
+            triton_launch_options=triton_launch_options,
+        )
+
+    def discrete_output_count_blocks(self, inputs, parameter_sets, num_estimates, data, categorical_dims,
+                                     *, support, seeds, outcome_indices=None, subject_slices=None,
+                                     common_random_numbers=True, invalid_candidates="raise", triton_launch_options=None):
+        """Batch independent equal-sized blocks in one simulation launch.
+
+        Returns a tuple of :meth:`discrete_output_counts` results in seed order.
+        Each block has its own seed and the same candidate/subject/estimate RNG
+        addresses as a separate call. Complete trial histories and CRN policy
+        are preserved. Memory grows with block count, not with num_estimates.
+        """
+        from psyneulink.core.batched.backend.triton.discrete_counts import discrete_output_count_blocks
+
+        return discrete_output_count_blocks(
+            self, inputs, parameter_sets, num_estimates, data, categorical_dims, support=support, seeds=seeds,
+            outcome_indices=outcome_indices, subject_slices=subject_slices,
+            common_random_numbers=common_random_numbers, invalid_candidates=invalid_candidates,
+            triton_launch_options=triton_launch_options,
+        )
+
     def histogram_likelihood(self, inputs, parameter_sets, num_estimates, data,
                              categorical_dims=None, *, invalid_candidates="raise", **options):
         """Return histogram densities shaped [candidate, subject, trial].

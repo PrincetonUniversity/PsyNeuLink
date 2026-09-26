@@ -16,12 +16,22 @@ from optuna.distributions import FloatDistribution
 PENALTY = -1.e10
 
 
-def pooled_scores(blocks, sizes, include):
+def pooled_scores(blocks, sizes, include, *, return_profile=False):
     weights = np.asarray(sizes, dtype=float) / sum(sizes)
     densities = np.stack(blocks).astype(np.float64)
-    valid = np.isfinite(densities).all(axis=(0, 2))
+    if densities.ndim not in (3, 4):
+        raise ValueError("Density blocks must be [candidate, trial] or [candidate, profile value, trial]")
+    valid = np.isfinite(densities).all(axis=(0, *range(2, densities.ndim)))
     densities[:, ~valid] = 1.
-    pooled = np.einsum("b,bct->ct", weights, densities)
+    pooled = np.einsum("b,bc...->c...", weights, densities)
+    profile_indices = None
+    if densities.ndim == 4:
+        # One nuisance value per complete subject/candidate, chosen AFTER
+        # pooling probabilities. Never maximize each block or each trial alone.
+        profile_scores = np.log(np.maximum(pooled[..., include], 1.e-10)).sum(-1)
+        profile_indices = np.argmax(profile_scores, axis=1)
+        densities = np.take_along_axis(densities, profile_indices[None, :, None, None], axis=2)[:, :, 0]
+        pooled = pooled[np.arange(len(pooled)), profile_indices]
     scores = np.log(np.maximum(pooled[:, include], 1.e-10)).sum(-1)
     scores[~valid] = PENALTY
     # Delta-method block influence, keeping covariance across trials and across
@@ -30,7 +40,8 @@ def pooled_scores(blocks, sizes, include):
                  np.maximum(pooled[None, :, include], 1.e-10)).sum(-1)
     difference = influence[:, :, None] - influence[:, None, :]
     variance = np.einsum("b,bij->ij", weights, difference ** 2) / max(1, len(blocks) - 1)
-    return scores, np.sqrt(variance), valid
+    result = (scores, np.sqrt(variance), valid)
+    return (*result, profile_indices) if return_profile else result
 
 
 def ranking_uncertainty(scores, pair_se, valid, tolerance):
@@ -126,8 +137,9 @@ class AdaptiveConfig:
 
 
 class PopulationRacer:
-    def __init__(self, sample, include, config, seed, reserved_seeds=()):
+    def __init__(self, sample, include, config, seed, reserved_seeds=(), *, sample_blocks=None):
         self.sample, self.include, self.config = sample, np.asarray(include, dtype=bool), config
+        self.sample_blocks = sample_blocks
         self.rng = np.random.default_rng(np.random.SeedSequence([seed, 39817]))
         self.used_seeds = set(reserved_seeds) | {seed}
 
@@ -143,29 +155,36 @@ class PopulationRacer:
         minimum = self.config.min_estimates
         count = self.config.initial_blocks
         initial_sizes = [minimum // count + (i < minimum % count) for i in range(count)]
-        for size in initial_sizes:
-            seed = self.next_seed()
-            blocks.append(self.sample(candidates, size, seed))
-            sizes.append(size)
-            seeds.append(seed)
+
+        def append_blocks(new_sizes):
+            new_sizes = [size for size in new_sizes if size]
+            new_seeds = [self.next_seed() for _ in new_sizes]
+            results = ([self.sample(candidates, size, seed) for size, seed in zip(new_sizes, new_seeds, strict=True)]
+                       if self.sample_blocks is None else self.sample_blocks(candidates, new_sizes, new_seeds))
+            if len(results) != len(new_sizes):
+                raise ValueError("Block callback must return one density array per sampling block")
+            blocks.extend(results)
+            sizes.extend(new_sizes)
+            seeds.extend(new_seeds)
+
+        append_blocks(initial_sizes)
         while True:
-            scores, se, valid = pooled_scores(blocks, sizes, self.include)
+            scores, se, valid, profile_indices = pooled_scores(blocks, sizes, self.include, return_profile=True)
             uncertainty, promote = ranking_uncertainty(scores, se, valid, self.config.rank_tolerance)
             if not promote or sum(sizes) >= self.config.max_estimates:
                 break
             addition = min(sum(sizes), self.config.max_estimates - sum(sizes))
-            for size in (addition // 2, addition - addition // 2):
-                if size:
-                    seed = self.next_seed()
-                    blocks.append(self.sample(candidates, size, seed))
-                    sizes.append(size)
-                    seeds.append(seed)
-        return scores, {"estimates": sum(sizes), "block_sizes": sizes, "block_seeds": seeds,
-                        "ranking_uncertainty": uncertainty, "budget_cap_reached": bool(promote)}
+            append_blocks((addition // 2, addition - addition // 2))
+        detail = {"estimates": sum(sizes), "block_sizes": sizes, "block_seeds": seeds,
+                  "ranking_uncertainty": uncertainty, "budget_cap_reached": bool(promote)}
+        if profile_indices is not None:
+            detail["profile_indices"] = profile_indices.tolist()
+        return scores, detail
 
 
 def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations,
-                 population, simulation_seed, optimizer_seed, reserved_seeds, log_batch):
+                 population, simulation_seed, optimizer_seed, reserved_seeds, log_batch, profile_parameter=None,
+                 sample_blocks=None):
     """Search adaptively, refine with learned covariance, then rescore finalists.
 
     Population scores at different budgets guide CMA-ES updates within
@@ -173,14 +192,19 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
     directly choose the reported final fit. Fresh selection seeds compare a
     shortlist after optimization; separate validation seeds remain untouched.
     Independent final validation belongs to the caller and is not used here.
+    Optional sample_blocks(candidates, sizes, seeds) batches the independent
+    blocks within a race. It must preserve their order, densities, and seeds;
+    reference checks and precision refinement still use the scalar callback.
     """
     config.validate(evaluations, population)
     names = list(bounds)
     distributions = {name: FloatDistribution(lo, hi, step=step) for name, (lo, hi, step) in bounds.items()}
     include = np.asarray(include, dtype=bool)
-    racer = PopulationRacer(sample, include, config, simulation_seed, reserved_seeds)
+    racer = PopulationRacer(sample, include, config, simulation_seed, reserved_seeds, sample_blocks=sample_blocks)
     final_seeds = [racer.next_seed() for _ in range(config.selection_blocks)]
     reference_cache = {}
+    reference_grids = {}
+    reference_profiles = {}
     selection_evaluations = 0
 
     def reference(candidates):
@@ -188,10 +212,15 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
         unique = list(dict.fromkeys(tuple(row) for row in candidates if tuple(row) not in reference_cache))
         if unique:
             density = sample(unique, config.max_estimates, simulation_seed).astype(np.float64)
-            valid = np.isfinite(density).all(-1)
-            density[~valid] = 1.
-            scores = np.log(np.maximum(density[:, include], 1.e-10)).sum(-1)
-            scores[~valid] = PENALTY
+            scores, _, valid, profiles = pooled_scores([density], [config.max_estimates], include, return_profile=True)
+            if (profiles is None) != (profile_parameter is None):
+                raise ValueError("Profile metadata must match the sampling callback's density shape")
+            if profiles is not None:
+                density[~valid] = 1.
+                grids = np.log(np.maximum(density[..., include], 1.e-10)).sum(-1)
+                grids[~valid] = PENALTY
+                reference_grids.update(zip(unique, grids, strict=True))
+                reference_profiles.update(zip(unique, map(int, profiles), strict=True))
             reference_cache.update(zip(unique, map(float, scores), strict=True))
             selection_evaluations += len(unique)
         return np.array([reference_cache[tuple(row)] for row in candidates])
@@ -199,6 +228,8 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
     incumbent = np.array([initial[name] for name in names])
     incumbent_score = float(reference([incumbent])[0])
     initial_score = incumbent_score
+    initial_profile = (None if profile_parameter is None else
+                       float(profile_parameter[1][reference_profiles[tuple(incumbent)]]))
     recent = []
     checkpoints = []
     completed, stale, next_check = 0, 0, config.check_every
@@ -273,8 +304,11 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
         best = int(np.argmax(scores))
         if scores[best] > incumbent_score:
             incumbent, incumbent_score = candidates[best].copy(), float(scores[best])
-        log_batch(candidates, scores, elapsed, {"phase": "refinement", "estimates": config.max_estimates,
-                                               "block_sizes": [config.max_estimates], "block_seeds": [simulation_seed]})
+        metadata = {"phase": "refinement", "estimates": config.max_estimates,
+                    "block_sizes": [config.max_estimates], "block_seeds": [simulation_seed]}
+        if profile_parameter is not None:
+            metadata["profile_indices"] = [reference_profiles[tuple(row)] for row in candidates]
+        log_batch(candidates, scores, elapsed, metadata)
         refined += count
     if incumbent_score <= PENALTY:
         raise RuntimeError("Adaptive fitting did not find a valid candidate")
@@ -283,13 +317,18 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
     finalists = sorted((row for row, score in reference_cache.items() if score > PENALTY),
                        key=lambda row: -reference_cache[row])[:config.selection_candidates]
     selection_densities = [sample(finalists, config.max_estimates, seed) for seed in final_seeds]
-    selection_scores, _, valid = pooled_scores(selection_densities, [config.max_estimates] * len(final_seeds), include)
+    selection_scores, _, valid, selected_profiles = pooled_scores(
+        selection_densities, [config.max_estimates] * len(final_seeds), include, return_profile=True)
     if not valid.any():
         raise RuntimeError("All final candidates truncated on independent selection seeds")
     winner = int(np.argmax(selection_scores))
     selected = finalists[winner]
     selected_reference = reference_cache[selected]
+    if profile_parameter is not None:
+        selected_reference = float(reference_grids[selected][selected_profiles[winner]])
     result = {"fitted_params": dict(zip(names, selected, strict=True)), "optimal_value": selected_reference}
+    if profile_parameter is not None:
+        result["fitted_params"][profile_parameter[0]] = float(profile_parameter[1][selected_profiles[winner]])
     diagnostic = {"policy_version": 2, "initial_reference_score": initial_score, "reference_seed": simulation_seed,
                   "reference_estimates": config.max_estimates, "checkpoints": checkpoints,
                   "search_evaluations": completed, "refinement_evaluations": refined,
@@ -306,4 +345,9 @@ def fit_adaptive(study, bounds, initial, sample, include, config, *, evaluations
                                       "scores": selection_scores.tolist(), "winner": winner,
                                       "selected_reference_score": selected_reference},
                   "note": "Ranking uncertainty is heuristic. The returned reference score belongs to the independently selected fit; it need not be the largest reference score."}
+    if profile_parameter is not None:
+        diagnostic["profile"] = {"parameter": profile_parameter[0], "values": list(map(float, profile_parameter[1])),
+                                 "optimizer_parameter_order": names, "initial_value": initial_profile,
+                                 "selection_indices": selected_profiles.tolist(),
+                                 "note": "Ranking SE is conditional on each candidate's pooled profile maximizer; it is not a calibrated bound after profiling."}
     return result, diagnostic, refinement

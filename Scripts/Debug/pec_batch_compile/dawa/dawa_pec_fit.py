@@ -27,6 +27,7 @@ from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationErro
 from psyneulink.core.globals.utilities import set_global_seed
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 from dawa_adaptive_fit import AdaptiveConfig, fit_adaptive
+from dawa_ndt_profile import NDTProfile
 
 
 TRUTH = (.40, .22, -.40, 12., .65, .80, 1.5, 5.5)
@@ -131,6 +132,9 @@ def main(argv=None, *, recovery=False):
                         help="Fresh-seed rescoring budget; default matches fitting. Pseudocount scales with this budget to preserve prior weight.")
     parser.add_argument("--evaluations", type=int, default=5000, help="Total parameter proposals, not generations (default: 5000)")
     parser.add_argument("--fit-strategy", choices=("fixed", "adaptive"), default="fixed")
+    parser.add_argument("--profile-ndt", action="store_true", help="Profile nondecision time with exact compiled counts (adaptive strategy only)")
+    parser.add_argument("--batch-sampling-blocks", action=argparse.BooleanOptionalAction, default=True,
+                        help="Run independent adaptive NDT sampling blocks together (disable for timing comparisons)")
     parser.add_argument("--adaptive-min-estimates", type=int, default=5000)
     parser.add_argument("--adaptive-rank-tolerance", type=float, default=1., help="Tolerance for the weighted rank-regret heuristic (not a confidence bound)")
     parser.add_argument("--adaptive-initial-blocks", type=int, default=4)
@@ -159,6 +163,8 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--source-revision", help="Commit of an isolated source snapshot without .git")
     parser.add_argument("--output", type=Path, required=True, help="New output directory; existing directories are never overwritten")
     args = parser.parse_args(argv)
+    if args.profile_ndt and args.fit_strategy != "adaptive":
+        parser.error("--profile-ndt currently requires --fit-strategy adaptive")
     if args.optimizer_storage is None:
         args.optimizer_storage = "memory" if args.fit_strategy == "adaptive" else "journal"
     adaptive_config = AdaptiveConfig(
@@ -260,14 +266,18 @@ def main(argv=None, *, recovery=False):
         lo, hi, step = bounds[name]
         if not lo <= value <= hi or not np.isclose((value - lo) / step, round((value - lo) / step)):
             raise AssertionError(f"Initial value is outside parameter grid: {name}={value}")
+    ndt_profile = NDTProfile(plan, names, bounds, pec._data_numpy) if args.profile_ndt else None
+    optimizer_names = names if ndt_profile is None else ndt_profile.dynamic_names
+    optimizer_initial = {name: initial[name] for name in optimizer_names}
+    optimizer_bounds = {name: bounds[name] for name in optimizer_names}
     storage = (JournalStorage(JournalFileBackend(str(args.output / "optimizer.journal")))
                if args.optimizer_storage == "journal" else None)
     study = optuna.create_study(
         study_name="dawa_recovery" if recovery else "dawa_fit", storage=storage, direction="maximize",
-        sampler=optuna.samplers.CmaEsSampler(x0=initial, sigma0=.2, lr_adapt=True,
+        sampler=optuna.samplers.CmaEsSampler(x0=optimizer_initial, sigma0=.2, lr_adapt=True,
                                             popsize=args.population, seed=args.optimizer_seed),
     )
-    study.enqueue_trial(initial)
+    study.enqueue_trial(optimizer_initial)
     function.method = study
     manifest = {
         "status": "fitting", "mode": "recovery" if recovery else "empirical_fit",
@@ -293,6 +303,8 @@ def main(argv=None, *, recovery=False):
     if args.fit_strategy == "adaptive":
         manifest["adaptive_config"] = asdict(adaptive_config)
         manifest["adaptive_driver_sha256"] = hashlib.sha256(Path(__file__).with_name("dawa_adaptive_fit.py").read_bytes()).hexdigest()
+    if ndt_profile is not None:
+        manifest["ndt_profile"] = ndt_profile.describe()
     if recovery:
         manifest.update(truth=dict(zip(names, TRUTH, strict=True)), generator_matches_pec_exactly=True,
                         synthetic_sha256=manifest["observations_sha256"])
@@ -302,9 +314,12 @@ def main(argv=None, *, recovery=False):
     optimization_started = time.perf_counter()
     records = []
     invalid = []
-    sampling_work = {"calls": 0, "candidate_trajectories": 0}
+    sampling_work = {"calls": 0, "kernel_launches": 0, "candidate_trajectories": 0}
 
     def record_batch(candidates, scores, elapsed, metadata=None):
+        if ndt_profile is not None:
+            values = ndt_profile.values[np.asarray(metadata["profile_indices"])]
+            candidates = ndt_profile.expand(candidates, values)
         with (args.output / "evaluations.jsonl").open("a") as stream:
             for candidate, score in zip(candidates, scores, strict=True):
                 record = {"evaluation": len(records) + 1, "parameters": list(candidate), "log_likelihood": float(score),
@@ -339,17 +354,10 @@ def main(argv=None, *, recovery=False):
         record_batch(candidates, scores, elapsed)
         return np.asarray(scores)
 
-    def sample_densities(candidates, estimates, seed):
-        sampling_work["calls"] += 1
-        sampling_work["candidate_trajectories"] += len(candidates) * estimates
-        result = plan.histogram_likelihood(
-            inputs, [function._batched_parameter_set(row) for row in candidates], estimates,
-            data=pec._data_numpy, categorical_dims=pec.data_categorical_dims, outcome_indices=indices,
-            bins=100, bin_range=[RT_RANGE], smoothing_sigma=.5,
-            pseudocount=args.pseudocount * estimates / args.estimates, categorical_cardinalities=[2],
-            seed=seed, invalid_candidates="nan", triton_launch_options=LAUNCH,
-        )
-        if result.shape != (len(candidates), 1, len(frame)):
+    def check_densities(result, candidates, estimates, seed):
+        expected_shape = ((len(candidates), 1, len(frame)) if ndt_profile is None else
+                          (len(candidates), 1, len(ndt_profile.values), len(frame)))
+        if result.shape != expected_shape:
             raise FloatingPointError("Unexpected adaptive density output shape")
         for index, candidate in enumerate(candidates):
             if np.isnan(result[index]).all():
@@ -358,6 +366,44 @@ def main(argv=None, *, recovery=False):
             elif not np.isfinite(result[index]).all():
                 raise FloatingPointError("Unexpected nonfinite adaptive density")
         return result[:, 0]
+
+    def sample_density_blocks(candidates, sizes, seeds):
+        # Group equal sizes without changing seed order, the RNG addressing, or
+        # the block weights used by the adaptive uncertainty calculation.
+        parameter_sets = [function._batched_parameter_set(row) for row in ndt_profile.expand(candidates)]
+        results = [None] * len(sizes)
+        for size in dict.fromkeys(sizes):
+            positions = [i for i, n in enumerate(sizes) if n == size]
+            counts = plan.discrete_output_count_blocks(
+                inputs, parameter_sets, size, data=pec._data_numpy, categorical_dims=pec.data_categorical_dims,
+                outcome_indices=indices, support=ndt_profile.support, seeds=[seeds[i] for i in positions],
+                invalid_candidates="nan", triton_launch_options=LAUNCH,
+            )
+            sampling_work["calls"] += len(positions)
+            sampling_work["kernel_launches"] += 1
+            sampling_work["candidate_trajectories"] += len(candidates) * size * len(positions)
+            sampling_work["max_count_buffer_bytes"] = max(sampling_work.get("max_count_buffer_bytes", 0),
+                                                         sum(c.counts.numel() * c.counts.element_size() for c in counts))
+            for i, count in zip(positions, counts, strict=True):
+                results[i] = ndt_profile.scorer.densities(count, pseudocount=args.pseudocount * size / args.estimates)
+            del count, counts  # Release all views before allocating another group.
+        return [check_densities(result, candidates, size, seed)
+                for result, size, seed in zip(results, sizes, seeds, strict=True)]
+
+    def sample_densities(candidates, estimates, seed):
+        if ndt_profile is not None:
+            return sample_density_blocks(candidates, [estimates], [seed])[0]
+        sampling_work["calls"] += 1
+        sampling_work["kernel_launches"] += 1
+        sampling_work["candidate_trajectories"] += len(candidates) * estimates
+        result = plan.histogram_likelihood(
+            inputs, [function._batched_parameter_set(row) for row in candidates], estimates,
+            data=pec._data_numpy, categorical_dims=pec.data_categorical_dims, outcome_indices=indices,
+            bins=100, bin_range=[RT_RANGE], smoothing_sigma=.5,
+            pseudocount=args.pseudocount * estimates / args.estimates, categorical_cardinalities=[2],
+            seed=seed, invalid_candidates="nan", triton_launch_options=LAUNCH,
+        )
+        return check_densities(result, candidates, estimates, seed)
 
     def logged_objective(*values):
         return float(logged_batch([values])[0])
@@ -369,10 +415,12 @@ def main(argv=None, *, recovery=False):
             reserved_seeds = set(args.validation_seeds) | independent_seeds
             reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
             fit, adaptive_report, refinement = fit_adaptive(
-                study, bounds, initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
+                study, optimizer_bounds, optimizer_initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
                 adaptive_config, evaluations=args.evaluations, population=args.population,
                 simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
                 reserved_seeds=reserved_seeds, log_batch=record_batch,
+                profile_parameter=None if ndt_profile is None else (ndt_profile.name, ndt_profile.values),
+                sample_blocks=(sample_density_blocks if ndt_profile is not None and args.batch_sampling_blocks else None),
             )
             refinement.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
                 args.output / "optimizer_refinement_trials.csv", index=False)
@@ -386,7 +434,8 @@ def main(argv=None, *, recovery=False):
         fitted = np.asarray([fit["fitted_params"][name] for name in names])
         if float(fit["optimal_value"]) <= -1.e9:
             raise RuntimeError("No valid fit found")
-        np.testing.assert_allclose([study.trials[0].params[name] for name in names], STARTS[args.start], rtol=0, atol=1e-12)
+        np.testing.assert_allclose([study.trials[0].params[name] for name in optimizer_names],
+                                   list(optimizer_initial.values()), rtol=0, atol=1e-12)
         study.trials_dataframe(attrs=("number", "value", "params", "state", "datetime_start", "datetime_complete")).to_csv(
             args.output / "optimizer_trials.csv", index=False)
         comparison = {"initial": STARTS[args.start], "fitted": fitted}
@@ -426,6 +475,9 @@ def main(argv=None, *, recovery=False):
         if adaptive_report is not None:
             report["adaptive"] = {**adaptive_report, "sampling_work": sampling_work}
             report["optimizer_stop_reason"] = adaptive_report["search_stop_reason"] + "; " + adaptive_report["refinement_stop_reason"]
+        if ndt_profile is not None:
+            report["ndt_profile"] = ndt_profile.describe()
+            report["initial_training_score_note"] = "Initial dynamics with optimized NDT; independent-seed 'initial' scores retain the original NDT."
         if recovery:
             widths = np.array([bounds[name][1] - bounds[name][0] for name in names])
             report.update(truth=manifest["truth"], errors=dict(zip(names, (fitted - TRUTH).tolist(), strict=True)),

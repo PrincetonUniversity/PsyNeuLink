@@ -1,0 +1,1732 @@
+{
+  "date": "2026-09-26",
+  "parent_revision": "2031e35b73",
+  "host": "della-rse.princeton.edu",
+  "gpu": "NVIDIA H100 NVL",
+  "source_sha256": {
+    "psyneulink/core/batched/compiler.py": "f02b4cb5f718256c217dae1b7e6ed59137d098f3a3e0e7105ee419d461976f3f",
+    "psyneulink/core/batched/backend/triton/cache.py": "02654a2298a0ad9bf145ab58b4bc0147107613f26a7989a62b4dae9ad5250a13",
+    "psyneulink/core/batched/backend/triton/discrete_counts.py": "720b2dc66c94aa748c84d9ab3db2f9a9f5545532b9ac16a3d17f3e10fa60d1db",
+    "psyneulink/core/batched/backend/triton/free_running_score.py": "a18b11998ea47a6dd1186ae2ddef54264ac8a70f525cb4c123478a4b066d58b9",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py": "916d4e63e8eb997bf21f95191e7a7df19d0fc8c86d02f8d95f4bea6aa4661a14",
+    "Scripts/Debug/pec_batch_compile/dawa/dawa_adaptive_fit.py": "058226e283634b4459a4ebac2694e6ccad7337cd1e152b95f0f01cb32e75e254"
+  },
+  "profiler_sha256": "6a648394c721d5685b3996c89bfd4c96fe34541bf7bdb4bae90eb6c24b111aa1",
+  "configuration": {
+    "arguments": {
+      "data": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv",
+      "subject": 1,
+      "trials": null,
+      "estimates": 100000,
+      "pseudocount": 1.0,
+      "validation_estimates": 100000,
+      "evaluations": 5000,
+      "fit_strategy": "adaptive",
+      "profile_ndt": true,
+      "batch_sampling_blocks": true,
+      "adaptive_min_estimates": 5000,
+      "adaptive_rank_tolerance": 1.0,
+      "adaptive_initial_blocks": 4,
+      "adaptive_search_evaluations": 1000,
+      "adaptive_check_every": 250,
+      "adaptive_min_evaluations": 1000,
+      "adaptive_patience": 2,
+      "adaptive_progress_tolerance": 0.25,
+      "adaptive_refine_evaluations": 300,
+      "adaptive_selection_blocks": 3,
+      "adaptive_selection_candidates": 8,
+      "population": 10,
+      "start": 1,
+      "optimizer_seed": 202,
+      "optimizer_storage": "memory",
+      "simulation_seed": 37,
+      "data_seed": 20260925,
+      "model_seed": 29,
+      "validation_seeds": [
+        9401,
+        9402,
+        9403,
+        9404,
+        9405
+      ],
+      "predictive_estimates": 4096,
+      "max_steps": 2000,
+      "source_revision": "2031e35b73+sampling-blocks",
+      "output": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/fit"
+    },
+    "trials": 760,
+    "scored_trials": 720,
+    "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+    "noise": {
+      "c_noise": 0.1,
+      "s_noise": 0.1,
+      "d_noise": 0.1,
+      "r_noise": 0.1
+    },
+    "time_steps": {
+      "Control Units\n[Color, Location].time_step_size": 0.01,
+      "Stimulus Units\n[Red, Blue, Left, Right].time_step_size": 0.01,
+      "Decision Units\n[Left, Right].time_step_size": 0.01,
+      "LC.time_step_size": 0.02,
+      "Response Units\n[Left, Right].time_step_size": 0.01
+    },
+    "lc_internal_steps_per_pass": 10,
+    "launch_options": {
+      "block_size": 32,
+      "num_warps": 1,
+      "trial_schedule": "independent",
+      "normal_rng": "philox4x_fast_v1"
+    },
+    "estimator": {
+      "kind": "trial_marginal_histogram",
+      "bins": 100,
+      "rt_range": [
+        0.0,
+        3.0
+      ],
+      "smoothing_sigma": 0.5,
+      "pseudocount": 1.0
+    },
+    "adaptive_config": {
+      "min_estimates": 5000,
+      "max_estimates": 100000,
+      "rank_tolerance": 1.0,
+      "check_every": 250,
+      "min_evaluations": 1000,
+      "patience": 2,
+      "progress_tolerance": 0.25,
+      "refine_evaluations": 300,
+      "initial_blocks": 4,
+      "max_search_evaluations": 1000,
+      "selection_blocks": 3,
+      "selection_candidates": 8
+    },
+    "torch": "2.13.0+cu130",
+    "python": "3.13.13"
+  },
+  "tools": {
+    "nsight_systems": "2025.3.1",
+    "nsight_compute": "2026.2.1",
+    "cuda_module": "13.0"
+  },
+  "full_run": {
+    "uninstrumented_fit_seconds": 200.79744433285668,
+    "uninstrumented_total_seconds": 238.12619490805082,
+    "profiled_fit_seconds": 209.20023974007927,
+    "profiled_total_seconds": 261.1895693629049,
+    "profiled_setup_seconds": 39.58204092690721,
+    "profiled_post_fit_seconds": 12.407288695918396
+  },
+  "verification": {
+    "evaluations_exact_excluding_timing": 1300,
+    "excluded_record_fields": [
+      "batch_seconds",
+      "elapsed_fit_seconds"
+    ],
+    "exact_result_fields": [
+      "fitted",
+      "independent_seed_rescoring",
+      "invalid_proposals",
+      "predictive_summaries"
+    ],
+    "source_matches_previous_benchmark": true
+  },
+  "fit_trace": {
+    "fit_seconds": 209.187354008,
+    "fit_gpu_active_union_seconds": 191.224126876,
+    "fit_without_gpu_activity_seconds": 17.963227132,
+    "simulation_kernel_seconds": 191.111220498,
+    "other_kernel_seconds": 0.056824775,
+    "phases": {
+      "reference": {
+        "calls": 5,
+        "blocks": 5,
+        "histories": 1300000,
+        "kernel_seconds": 3.718597403,
+        "wall_seconds": 7.692881387
+      },
+      "search": {
+        "calls": 289,
+        "blocks": 780,
+        "histories": 25465000,
+        "kernel_seconds": 90.36611267399996,
+        "wall_seconds": 95.549138781
+      },
+      "screening_optimizer": {
+        "calls": 21,
+        "blocks": 21,
+        "histories": 1005000,
+        "kernel_seconds": 3.5018365429999996,
+        "wall_seconds": 3.8401350800000005
+      },
+      "refinement": {
+        "calls": 30,
+        "blocks": 30,
+        "histories": 29900000,
+        "kernel_seconds": 86.51837225999999,
+        "wall_seconds": 87.029846899
+      },
+      "selection": {
+        "calls": 3,
+        "blocks": 3,
+        "histories": 2400000,
+        "kernel_seconds": 7.006301618,
+        "wall_seconds": 7.050133465
+      }
+    },
+    "shapes": [
+      {
+        "phase": "reference",
+        "candidates": 1,
+        "estimates": 100000,
+        "blocks_per_call": 1,
+        "calls": 1,
+        "blocks": 1,
+        "histories": 100000,
+        "kernel_seconds": 0.213944534,
+        "wall_seconds": 4.155422614
+      },
+      {
+        "phase": "reference",
+        "candidates": 3,
+        "estimates": 100000,
+        "blocks_per_call": 1,
+        "calls": 4,
+        "blocks": 4,
+        "histories": 1200000,
+        "kernel_seconds": 3.5046528689999996,
+        "wall_seconds": 3.537458773
+      },
+      {
+        "phase": "refinement",
+        "candidates": 9,
+        "estimates": 100000,
+        "blocks_per_call": 1,
+        "calls": 1,
+        "blocks": 1,
+        "histories": 900000,
+        "kernel_seconds": 2.582507682,
+        "wall_seconds": 2.598461122
+      },
+      {
+        "phase": "refinement",
+        "candidates": 10,
+        "estimates": 100000,
+        "blocks_per_call": 1,
+        "calls": 29,
+        "blocks": 29,
+        "histories": 29000000,
+        "kernel_seconds": 83.935864578,
+        "wall_seconds": 84.431385777
+      },
+      {
+        "phase": "screening_optimizer",
+        "candidates": 1,
+        "estimates": 5000,
+        "blocks_per_call": 1,
+        "calls": 1,
+        "blocks": 1,
+        "histories": 5000,
+        "kernel_seconds": 0.118883384,
+        "wall_seconds": 0.124558317
+      },
+      {
+        "phase": "screening_optimizer",
+        "candidates": 10,
+        "estimates": 5000,
+        "blocks_per_call": 1,
+        "calls": 20,
+        "blocks": 20,
+        "histories": 1000000,
+        "kernel_seconds": 3.3829531589999995,
+        "wall_seconds": 3.7155767630000005
+      },
+      {
+        "phase": "search",
+        "candidates": 1,
+        "estimates": 1250,
+        "blocks_per_call": 4,
+        "calls": 1,
+        "blocks": 4,
+        "histories": 5000,
+        "kernel_seconds": 0.073952326,
+        "wall_seconds": 0.080957677
+      },
+      {
+        "phase": "search",
+        "candidates": 9,
+        "estimates": 1250,
+        "blocks_per_call": 4,
+        "calls": 1,
+        "blocks": 4,
+        "histories": 45000,
+        "kernel_seconds": 0.167225753,
+        "wall_seconds": 0.18296916
+      },
+      {
+        "phase": "search",
+        "candidates": 9,
+        "estimates": 2500,
+        "blocks_per_call": 2,
+        "calls": 1,
+        "blocks": 2,
+        "histories": 45000,
+        "kernel_seconds": 0.165099075,
+        "wall_seconds": 0.18079311
+      },
+      {
+        "phase": "search",
+        "candidates": 9,
+        "estimates": 5000,
+        "blocks_per_call": 2,
+        "calls": 1,
+        "blocks": 2,
+        "histories": 90000,
+        "kernel_seconds": 0.304529758,
+        "wall_seconds": 0.320230058
+      },
+      {
+        "phase": "search",
+        "candidates": 9,
+        "estimates": 10000,
+        "blocks_per_call": 2,
+        "calls": 1,
+        "blocks": 2,
+        "histories": 180000,
+        "kernel_seconds": 0.539296847,
+        "wall_seconds": 0.554991251
+      },
+      {
+        "phase": "search",
+        "candidates": 10,
+        "estimates": 1250,
+        "blocks_per_call": 4,
+        "calls": 99,
+        "blocks": 396,
+        "histories": 4950000,
+        "kernel_seconds": 23.519369237000006,
+        "wall_seconds": 25.197521621999986
+      },
+      {
+        "phase": "search",
+        "candidates": 10,
+        "estimates": 2500,
+        "blocks_per_call": 2,
+        "calls": 79,
+        "blocks": 158,
+        "histories": 3950000,
+        "kernel_seconds": 14.811741837000005,
+        "wall_seconds": 16.133376917000007
+      },
+      {
+        "phase": "search",
+        "candidates": 10,
+        "estimates": 5000,
+        "blocks_per_call": 2,
+        "calls": 64,
+        "blocks": 128,
+        "histories": 6400000,
+        "kernel_seconds": 21.404568917,
+        "wall_seconds": 22.47662404299999
+      },
+      {
+        "phase": "search",
+        "candidates": 10,
+        "estimates": 10000,
+        "blocks_per_call": 2,
+        "calls": 35,
+        "blocks": 70,
+        "histories": 7000000,
+        "kernel_seconds": 21.116438481999996,
+        "wall_seconds": 22.039966886
+      },
+      {
+        "phase": "search",
+        "candidates": 10,
+        "estimates": 20000,
+        "blocks_per_call": 2,
+        "calls": 7,
+        "blocks": 14,
+        "histories": 2800000,
+        "kernel_seconds": 8.263890442000001,
+        "wall_seconds": 8.381708056999999
+      },
+      {
+        "phase": "selection",
+        "candidates": 8,
+        "estimates": 100000,
+        "blocks_per_call": 1,
+        "calls": 3,
+        "blocks": 3,
+        "histories": 2400000,
+        "kernel_seconds": 7.006301618,
+        "wall_seconds": 7.050133465
+      }
+    ],
+    "transfers": {
+      "CUPTI_ACTIVITY_KIND_MEMCPY": {
+        "calls": 44830,
+        "seconds": 0.056081603,
+        "bytes": 748350303
+      },
+      "CUPTI_ACTIVITY_KIND_MEMSET": {
+        "calls": 0,
+        "seconds": 0.0,
+        "bytes": 0
+      }
+    },
+    "cuda_api_inclusive": {
+      "cudaMemcpyAsync_v3020": {
+        "calls": 44830,
+        "seconds": 191.2852031489977
+      },
+      "cudaStreamSynchronize_v3020": {
+        "calls": 44830,
+        "seconds": 0.22521948899999852
+      },
+      "cudaLaunchKernel_v7000": {
+        "calls": 8943,
+        "seconds": 0.056415079999999986
+      },
+      "cuLibraryLoadData": {
+        "calls": 5,
+        "seconds": 0.045213138
+      },
+      "cudaStreamIsCapturing_v10000": {
+        "calls": 43994,
+        "seconds": 0.010063575000000328
+      },
+      "cuLaunchKernelEx": {
+        "calls": 348,
+        "seconds": 0.005605159999999997
+      },
+      "cuKernelGetName": {
+        "calls": 8943,
+        "seconds": 0.0010315390000000019
+      },
+      "cudaMalloc_v3020": {
+        "calls": 3,
+        "seconds": 0.000590684
+      },
+      "cuLibraryGetKernel": {
+        "calls": 12,
+        "seconds": 0.00025323
+      },
+      "cuModuleLoadData": {
+        "calls": 1,
+        "seconds": 0.000230226
+      },
+      "cudaHostAlloc_v3020": {
+        "calls": 1,
+        "seconds": 1.7052e-05
+      }
+    },
+    "inclusive_regions": {
+      "dawa/whole_fit/fit": {
+        "calls": 1,
+        "seconds": 209.187354008
+      },
+      "dawa/reference/count_blocks": {
+        "calls": 5,
+        "seconds": 7.692881387
+      },
+      "dawa/reference/shifted_score": {
+        "calls": 5,
+        "seconds": 0.064120604
+      },
+      "dawa/reference/pool": {
+        "calls": 5,
+        "seconds": 0.0025786739999999995
+      },
+      "dawa/screening_optimizer/ask": {
+        "calls": 1000,
+        "seconds": 3.4405919960000033
+      },
+      "dawa/search/race": {
+        "calls": 101,
+        "seconds": 98.236290685
+      },
+      "dawa/search/count_blocks": {
+        "calls": 289,
+        "seconds": 95.549138781
+      },
+      "dawa/search/shifted_score": {
+        "calls": 780,
+        "seconds": 0.23730401900000003
+      },
+      "dawa/search/pool": {
+        "calls": 289,
+        "seconds": 0.8554679990000001
+      },
+      "dawa/search/ranking": {
+        "calls": 289,
+        "seconds": 0.03652154600000002
+      },
+      "dawa/screening_optimizer/tell": {
+        "calls": 1000,
+        "seconds": 0.32121639300000016
+      },
+      "dawa/screening_optimizer/count_blocks": {
+        "calls": 21,
+        "seconds": 3.8401350800000005
+      },
+      "dawa/screening_optimizer/shifted_score": {
+        "calls": 21,
+        "seconds": 0.007411172
+      },
+      "dawa/screening_optimizer/pool": {
+        "calls": 21,
+        "seconds": 0.020315772
+      },
+      "dawa/refinement/ask": {
+        "calls": 300,
+        "seconds": 0.6278006480000003
+      },
+      "dawa/refinement/tell": {
+        "calls": 300,
+        "seconds": 0.09730561899999995
+      },
+      "dawa/refinement/count_blocks": {
+        "calls": 30,
+        "seconds": 87.029846899
+      },
+      "dawa/refinement/shifted_score": {
+        "calls": 30,
+        "seconds": 0.013218151999999999
+      },
+      "dawa/refinement/pool": {
+        "calls": 30,
+        "seconds": 0.034789799
+      },
+      "dawa/selection/count_blocks": {
+        "calls": 3,
+        "seconds": 7.050133465
+      },
+      "dawa/selection/shifted_score": {
+        "calls": 3,
+        "seconds": 0.001392477
+      },
+      "dawa/selection/pool": {
+        "calls": 1,
+        "seconds": 0.002035044
+      }
+    },
+    "note": "Call wall times include GPU waits and overlap enclosing regions. CUDA API waits are not extra CPU computation. GPU active time is an interval union."
+  },
+  "outside_fit_cuda": {
+    "before_fit": {
+      "kernel_count": 20,
+      "kernel_seconds": 0.151500537
+    },
+    "after_fit": {
+      "kernel_count": 270,
+      "kernel_seconds": 4.101740526
+    }
+  },
+  "sampling_work": {
+    "kernel_launches": 348,
+    "logical_blocks": 839,
+    "candidate_histories": 60070000
+  },
+  "inclusive_wrapper_timings": [
+    {
+      "phase": "setup",
+      "operation": "simulation",
+      "estimates": 1,
+      "candidates": 1,
+      "blocks": null,
+      "calls": 2,
+      "seconds": 18.24330539512448
+    },
+    {
+      "phase": "reference",
+      "operation": "count_blocks",
+      "estimates": 100000,
+      "candidates": 1,
+      "blocks": 1,
+      "calls": 1,
+      "seconds": 4.15540924994275
+    },
+    {
+      "phase": "reference",
+      "operation": "shifted_score",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 5,
+      "seconds": 0.06408676085993648
+    },
+    {
+      "phase": "reference",
+      "operation": "pool",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 5,
+      "seconds": 0.0025513700675219297
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "ask",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 1000,
+      "seconds": 3.435476827202365
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 1250,
+      "candidates": 1,
+      "blocks": 4,
+      "calls": 1,
+      "seconds": 0.08094811299815774
+    },
+    {
+      "phase": "search",
+      "operation": "shifted_score",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 780,
+      "seconds": 0.233945501036942
+    },
+    {
+      "phase": "search",
+      "operation": "pool",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 289,
+      "seconds": 0.8539547980763018
+    },
+    {
+      "phase": "search",
+      "operation": "ranking",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 289,
+      "seconds": 0.03573078289628029
+    },
+    {
+      "phase": "search",
+      "operation": "race",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 101,
+      "seconds": 98.23599580582231
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "tell",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 1000,
+      "seconds": 0.318973480258137
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 1250,
+      "candidates": 10,
+      "blocks": 4,
+      "calls": 99,
+      "seconds": 25.19660847238265
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 2500,
+      "candidates": 10,
+      "blocks": 2,
+      "calls": 79,
+      "seconds": 16.132834458025172
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 5000,
+      "candidates": 10,
+      "blocks": 2,
+      "calls": 64,
+      "seconds": 22.476161730010062
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "count_blocks",
+      "estimates": 5000,
+      "candidates": 10,
+      "blocks": 1,
+      "calls": 20,
+      "seconds": 3.7154347773175687
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "shifted_score",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 21,
+      "seconds": 0.007303770864382386
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "pool",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 21,
+      "seconds": 0.020211802097037435
+    },
+    {
+      "phase": "screening_optimizer",
+      "operation": "count_blocks",
+      "estimates": 5000,
+      "candidates": 1,
+      "blocks": 1,
+      "calls": 1,
+      "seconds": 0.12455163802951574
+    },
+    {
+      "phase": "reference",
+      "operation": "count_blocks",
+      "estimates": 100000,
+      "candidates": 3,
+      "blocks": 1,
+      "calls": 4,
+      "seconds": 3.537431499687955
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 10000,
+      "candidates": 10,
+      "blocks": 2,
+      "calls": 35,
+      "seconds": 22.039703795686364
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 20000,
+      "candidates": 10,
+      "blocks": 2,
+      "calls": 7,
+      "seconds": 8.381654451834038
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 1250,
+      "candidates": 9,
+      "blocks": 4,
+      "calls": 1,
+      "seconds": 0.1829623579978943
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 2500,
+      "candidates": 9,
+      "blocks": 2,
+      "calls": 1,
+      "seconds": 0.18078622384928167
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 5000,
+      "candidates": 9,
+      "blocks": 2,
+      "calls": 1,
+      "seconds": 0.3202237768564373
+    },
+    {
+      "phase": "search",
+      "operation": "count_blocks",
+      "estimates": 10000,
+      "candidates": 9,
+      "blocks": 2,
+      "calls": 1,
+      "seconds": 0.5549841001629829
+    },
+    {
+      "phase": "refinement",
+      "operation": "ask",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 300,
+      "seconds": 0.6263912473805249
+    },
+    {
+      "phase": "refinement",
+      "operation": "tell",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 300,
+      "seconds": 0.09659778256900609
+    },
+    {
+      "phase": "refinement",
+      "operation": "count_blocks",
+      "estimates": 100000,
+      "candidates": 10,
+      "blocks": 1,
+      "calls": 29,
+      "seconds": 84.43112127226777
+    },
+    {
+      "phase": "refinement",
+      "operation": "shifted_score",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 30,
+      "seconds": 0.013056078692898154
+    },
+    {
+      "phase": "refinement",
+      "operation": "pool",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 30,
+      "seconds": 0.034623116720467806
+    },
+    {
+      "phase": "refinement",
+      "operation": "count_blocks",
+      "estimates": 100000,
+      "candidates": 9,
+      "blocks": 1,
+      "calls": 1,
+      "seconds": 2.598454070976004
+    },
+    {
+      "phase": "selection",
+      "operation": "count_blocks",
+      "estimates": 100000,
+      "candidates": 8,
+      "blocks": 1,
+      "calls": 3,
+      "seconds": 7.050105853239074
+    },
+    {
+      "phase": "selection",
+      "operation": "shifted_score",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 3,
+      "seconds": 0.0013756549451500177
+    },
+    {
+      "phase": "selection",
+      "operation": "pool",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 1,
+      "seconds": 0.0020298329181969166
+    },
+    {
+      "phase": "whole_fit",
+      "operation": "fit",
+      "estimates": null,
+      "candidates": null,
+      "blocks": null,
+      "calls": 1,
+      "seconds": 209.18733976199292
+    },
+    {
+      "phase": "validation_predictions",
+      "operation": "simulation",
+      "estimates": 4096,
+      "candidates": 1,
+      "blocks": null,
+      "calls": 2,
+      "seconds": 3.4388669980689883
+    }
+  ],
+  "completed_python_functions": [
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/components/functions/nonstateful/fitfunctions.py",
+      "line": 1232,
+      "name": "_batched_parameter_set",
+      "primitive_calls": 3432,
+      "calls": 3432,
+      "self_seconds": 0.157000669,
+      "cumulative_seconds": 1.669005652
+    },
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/batched/prep.py",
+      "line": 26,
+      "name": "normalize_parameter_sets",
+      "primitive_calls": 357,
+      "calls": 357,
+      "self_seconds": 0.02297615,
+      "cumulative_seconds": 3.9374234240000003
+    },
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/batched/backend/triton/cache.py",
+      "line": 20,
+      "name": "cached_kernel_source",
+      "primitive_calls": 353,
+      "calls": 353,
+      "self_seconds": 0.347378332,
+      "cumulative_seconds": 0.829094192
+    },
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/batched/backend/triton/emit/emitter.py",
+      "line": 101,
+      "name": "emit",
+      "primitive_calls": 8,
+      "calls": 8,
+      "self_seconds": 0.000359142,
+      "cumulative_seconds": 0.44943502
+    },
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/batched/backend/triton/runtime.py",
+      "line": 404,
+      "name": "_input_tensors",
+      "primitive_calls": 357,
+      "calls": 357,
+      "self_seconds": 0.003895107,
+      "cumulative_seconds": 0.64758205
+    },
+    {
+      "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final/psyneulink/core/batched/backend/triton/runtime.py",
+      "line": 414,
+      "name": "_param_tensors",
+      "primitive_calls": 357,
+      "calls": 357,
+      "self_seconds": 0.009868255000000001,
+      "cumulative_seconds": 0.978771437
+    }
+  ],
+  "torch_memory": {
+    "peak_allocated_bytes": 274940928,
+    "peak_reserved_bytes": 295698432
+  },
+  "previous_profile_comparison": {
+    "fit_seconds": {
+      "previous": 365.426622538,
+      "current": 209.187354008
+    },
+    "simulation_kernel_seconds": {
+      "previous": 231.776084454,
+      "current": 191.111220498
+    },
+    "fit_without_gpu_activity_seconds": {
+      "previous": 133.479969903,
+      "current": 17.963227132
+    },
+    "phases": {
+      "previous": {
+        "reference": {
+          "calls": 5,
+          "blocks": 5,
+          "histories": 1300000,
+          "kernel_seconds": 3.621849459,
+          "wall_seconds": 11.460467914
+        },
+        "search": {
+          "calls": 780,
+          "blocks": 780,
+          "histories": 25465000,
+          "kernel_seconds": 132.38845043499992,
+          "wall_seconds": 228.60125156900006
+        },
+        "screening_optimizer": {
+          "calls": 21,
+          "blocks": 21,
+          "histories": 1005000,
+          "kernel_seconds": 3.4841023840000003,
+          "wall_seconds": 8.649107289
+        },
+        "refinement": {
+          "calls": 30,
+          "blocks": 30,
+          "histories": 29900000,
+          "kernel_seconds": 85.408196495,
+          "wall_seconds": 95.132275176
+        },
+        "selection": {
+          "calls": 3,
+          "blocks": 3,
+          "histories": 2400000,
+          "kernel_seconds": 6.873485681,
+          "wall_seconds": 10.779052261
+        }
+      },
+      "current": {
+        "reference": {
+          "calls": 5,
+          "blocks": 5,
+          "histories": 1300000,
+          "kernel_seconds": 3.718597403,
+          "wall_seconds": 7.692881387
+        },
+        "search": {
+          "calls": 289,
+          "blocks": 780,
+          "histories": 25465000,
+          "kernel_seconds": 90.36611267399996,
+          "wall_seconds": 95.549138781
+        },
+        "screening_optimizer": {
+          "calls": 21,
+          "blocks": 21,
+          "histories": 1005000,
+          "kernel_seconds": 3.5018365429999996,
+          "wall_seconds": 3.8401350800000005
+        },
+        "refinement": {
+          "calls": 30,
+          "blocks": 30,
+          "histories": 29900000,
+          "kernel_seconds": 86.51837225999999,
+          "wall_seconds": 87.029846899
+        },
+        "selection": {
+          "calls": 3,
+          "blocks": 3,
+          "histories": 2400000,
+          "kernel_seconds": 7.006301618,
+          "wall_seconds": 7.050133465
+        }
+      }
+    },
+    "transfers": {
+      "previous": {
+        "CUPTI_ACTIVITY_KIND_MEMCPY": {
+          "calls": 104875,
+          "seconds": 0.111273345,
+          "bytes": 844968875
+        },
+        "CUPTI_ACTIVITY_KIND_MEMSET": {
+          "calls": 0,
+          "seconds": 0.0,
+          "bytes": 0
+        }
+      },
+      "current": {
+        "CUPTI_ACTIVITY_KIND_MEMCPY": {
+          "calls": 44830,
+          "seconds": 0.056081603,
+          "bytes": 748350303
+        },
+        "CUPTI_ACTIVITY_KIND_MEMSET": {
+          "calls": 0,
+          "seconds": 0.0,
+          "bytes": 0
+        }
+      }
+    }
+  },
+  "hardware": [
+    {
+      "estimates_per_block": 1250,
+      "blocks": 4,
+      "candidates": 10,
+      "sample_count": 19035320,
+      "metrics": {
+        "device__attribute_max_registers_per_thread": {
+          "value": 255,
+          "unit": ""
+        },
+        "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 4.283652728208962,
+          "unit": "%"
+        },
+        "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 0.0026594868548421775,
+          "unit": "%"
+        },
+        "gpu__time_duration.sum": {
+          "value": 210300352.0,
+          "unit": "ns"
+        },
+        "l1tex__throughput.avg.pct_of_peak_sustained_active": {
+          "value": 5.437986196990723,
+          "unit": "%"
+        },
+        "launch__occupancy_limit_barriers": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_blocks": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_registers": {
+          "value": 16.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_shared_mem": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_warps": {
+          "value": 64.0,
+          "unit": "block"
+        },
+        "launch__registers_per_thread": {
+          "value": 128,
+          "unit": "register/thread"
+        },
+        "launch__registers_per_thread_allocated": {
+          "value": 128.0,
+          "unit": "register/thread"
+        },
+        "lts__throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 0.18498321909961615,
+          "unit": "%"
+        },
+        "sass__inst_executed_register_spilling_mem_local_op_read": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "sass__inst_executed_register_spilling_mem_local_op_write": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "sm__issue_active.avg.pct_of_peak_sustained_elapsed": {
+          "value": 51.15242616751118,
+          "unit": "%"
+        },
+        "sm__throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 51.15242616751118,
+          "unit": "%"
+        },
+        "sm__warps_active.avg.pct_of_peak_sustained_active": {
+          "value": 16.56355586407988,
+          "unit": "%"
+        },
+        "smsp__issue_active.avg.pct_of_peak_sustained_active": {
+          "value": 67.48643078864431,
+          "unit": "%"
+        },
+        "smsp__pcsamp_buffer_overflow": {
+          "value": 0,
+          "unit": ""
+        },
+        "smsp__pcsamp_dropped_bytes": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "smsp__pcsamp_sample_count": {
+          "value": 19035320,
+          "unit": ""
+        },
+        "smsp__warpidsamp_buffer_overflow": {
+          "value": 0,
+          "unit": "warp"
+        },
+        "smsp__warpidsamp_dropped_bytes": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "smsp__warps_eligible.avg.per_cycle_active": {
+          "value": 1.1065961439660936,
+          "unit": "warp"
+        }
+      },
+      "source_sample_categories": {
+        "Gaussian RNG": {
+          "samples": 7318368,
+          "percent": 38.44625674798217
+        },
+        "LC integration": {
+          "samples": 2427557,
+          "percent": 12.752908803214236
+        },
+        "Counts, support lookup, diagnostics": {
+          "samples": 1692655,
+          "percent": 8.892180430904235
+        },
+        "Logistic transfer": {
+          "samples": 3088766,
+          "percent": 16.226498950372257
+        },
+        "Reductions": {
+          "samples": 368290,
+          "percent": 1.9347717821397277
+        },
+        "Other simulation and control": {
+          "samples": 4139684,
+          "percent": 21.747383285387375
+        }
+      },
+      "top_source_lines": [
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 26,
+          "samples": 1875892,
+          "function": "_pnl_fast_normal_pair_v1",
+          "source": "r = tl.sqrt(-2.0 * tl.log(u1))"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 36,
+          "samples": 1554694,
+          "function": "philox_impl",
+          "source": "c2 = math.umulhi(A, _c0) ^ c3 ^ k1"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 33,
+          "samples": 1541661,
+          "function": "_euler",
+          "source": "dv = (a_v * v * v * v + (1.0 + threshold) * b_v * v * v - threshold * c_v * v + d_v + e_v * w + f_v * x) / time_constant_v"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 35,
+          "samples": 1266685,
+          "function": "philox_impl",
+          "source": "c0 = math.umulhi(B, _c2) ^ c1 ^ k0"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 37,
+          "samples": 646267,
+          "function": "philox_impl",
+          "source": "c1 = tl.mul(B, _c2, sanitize_overflow=False)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 35,
+          "samples": 529137,
+          "function": "_euler",
+          "source": "v = tl.where(active, v + time_step_size * dv, v)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 38,
+          "samples": 518515,
+          "function": "philox_impl",
+          "source": "c3 = tl.mul(A, _c0, sanitize_overflow=False)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1278,
+          "samples": 517471,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_right = support_key < (hist_value_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 142,
+          "samples": 431763,
+          "function": "uint_to_uniform_float",
+          "source": "x = tl.where(x < 0, -x - 1, x)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 27,
+          "samples": 419644,
+          "function": "_pnl_fast_normal_pair_v1",
+          "source": "return r * _pnl_rng_libdevice.fast_cosf(theta), r * _pnl_rng_libdevice.fast_sinf(theta)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 143,
+          "samples": 406268,
+          "function": "uint_to_uniform_float",
+          "source": "return x * scale"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 872,
+          "samples": 404653,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n4_state_1_candidate_c4_s1_1 = tl.where(n4_dynamic_member_finished == 0.0, (param_15_value / (1.0 + tl.exp(-param_12_value * (n_n4_state_0_candidate_c4_s0_1 + param_13_value - param_14_value))) + param_16_value), n_n4_state_1_candidate_c4_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1202,
+          "samples": 401486,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n18_state_1_candidate_c18_s1_0 = tl.where(n18_dynamic_member_finished == 0.0, (param_98_value / (1.0 + tl.exp(-n_effective_9_0 * (n_n18_state_0_candidate_c18_s0_0 + n_effective_2_0 - param_97_value))) + param_99_value), n_n18_state_1_candidate_c18_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 870,
+          "samples": 400030,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n4_state_1_candidate_c4_s1_0 = tl.where(n4_dynamic_member_finished == 0.0, (param_15_value / (1.0 + tl.exp(-param_12_value * (n_n4_state_0_candidate_c4_s0_0 + param_13_value - param_14_value))) + param_16_value), n_n4_state_1_candidate_c4_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1204,
+          "samples": 372587,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n18_state_1_candidate_c18_s1_1 = tl.where(n18_dynamic_member_finished == 0.0, (param_98_value / (1.0 + tl.exp(-n_effective_9_0 * (n_n18_state_0_candidate_c18_s0_1 + n_effective_2_0 - param_97_value))) + param_99_value), n_n18_state_1_candidate_c18_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/standard.py",
+          "line": 191,
+          "samples": 368290,
+          "function": "max",
+          "source": "return core.reduce(input, axis, _elementwise_max, keep_dims=keep_dims)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1277,
+          "samples": 326459,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_key = tl.load(support + support_mid)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1096,
+          "samples": 296017,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n14_state_1_candidate_c14_s1_1 = tl.where(n14_dynamic_member_finished == 0.0, (param_63_value / (1.0 + tl.exp(-n_effective_8_0 * (n_n14_state_0_candidate_c14_s0_1 + n_effective_1_0 - param_62_value))) + param_64_value), n_n14_state_1_candidate_c14_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1094,
+          "samples": 253714,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n14_state_1_candidate_c14_s1_0 = tl.where(n14_dynamic_member_finished == 0.0, (param_63_value / (1.0 + tl.exp(-n_effective_8_0 * (n_n14_state_0_candidate_c14_s0_0 + n_effective_1_0 - param_62_value))) + param_64_value), n_n14_state_1_candidate_c14_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 34,
+          "samples": 247035,
+          "function": "_euler",
+          "source": "dw = (mode * a_w * v + b_w * w + c_w + (1.0 - mode) * uncorrelated_activity) / time_constant_w"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1279,
+          "samples": 244467,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_lo = tl.where((support_lo < support_hi) & support_right, support_mid + 1, support_lo)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 7,
+          "samples": 230495,
+          "function": "_pnl_triton_logistic",
+          "source": "return scale / (1.0 + tl.exp(-gain * (x + bias - x_0))) + offset"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1002,
+          "samples": 208965,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n11_state_1_candidate_c11_s1_3 = tl.where(n11_dynamic_member_finished == 0.0, (param_43_value / (1.0 + tl.exp(-n_effective_7_0 * (n_n11_state_0_candidate_c11_s0_3 + n_effective_0_0 - param_42_value))) + param_44_value), n_n11_state_1_candidate_c11_s1_3)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1276,
+          "samples": 195020,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_mid = (support_lo + support_hi) // 2"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 807,
+          "samples": 186501,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "while tl.max(mask.to(tl.int32), 0) > 0:"
+        }
+      ],
+      "replay": {
+        "estimates": 1250,
+        "blocks": 4,
+        "candidates": 10,
+        "seeds": [
+          37,
+          38,
+          39,
+          40
+        ],
+        "evaluation": 1002,
+        "seconds_including_warmup": [
+          0.43650091998279095,
+          24.056193773867562
+        ],
+        "densities_sha256": [
+          "87c8f67048aa19e5657994651fa07fe77c0e9caf39159034e6cdf8a1923f7078",
+          "1455a7593c9e34390498ac124c0ee7d6e526b443c80e0dff6656a28e1a80faef",
+          "e2732c08a4c2e08512f3a211dfe4b24ea0587f0762504c5284afeb3661e292ae",
+          "a18668a1ff0e820aa060a4fa08392ec00210c315e7d8c291d1f432d5be40c4d7"
+        ],
+        "exact_replay": true,
+        "note": "Actual PEC fitter setup and sampling callback; no optimizer updates."
+      }
+    },
+    {
+      "estimates_per_block": 20000,
+      "blocks": 1,
+      "candidates": 10,
+      "sample_count": 52195724,
+      "metrics": {
+        "device__attribute_max_registers_per_thread": {
+          "value": 255,
+          "unit": ""
+        },
+        "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 6.1030980725810435,
+          "unit": "%"
+        },
+        "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 0.0007050212875180102,
+          "unit": "%"
+        },
+        "gpu__time_duration.sum": {
+          "value": 591165280.0,
+          "unit": "ns"
+        },
+        "l1tex__throughput.avg.pct_of_peak_sustained_active": {
+          "value": 6.142344196438952,
+          "unit": "%"
+        },
+        "launch__occupancy_limit_barriers": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_blocks": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_registers": {
+          "value": 16.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_shared_mem": {
+          "value": 32.0,
+          "unit": "block"
+        },
+        "launch__occupancy_limit_warps": {
+          "value": 64.0,
+          "unit": "block"
+        },
+        "launch__registers_per_thread": {
+          "value": 128,
+          "unit": "register/thread"
+        },
+        "launch__registers_per_thread_allocated": {
+          "value": 128.0,
+          "unit": "register/thread"
+        },
+        "lts__throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 0.26191017153665747,
+          "unit": "%"
+        },
+        "sass__inst_executed_register_spilling_mem_local_op_read": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "sass__inst_executed_register_spilling_mem_local_op_write": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "sm__issue_active.avg.pct_of_peak_sustained_elapsed": {
+          "value": 72.10038297596692,
+          "unit": "%"
+        },
+        "sm__throughput.avg.pct_of_peak_sustained_elapsed": {
+          "value": 72.10038297596692,
+          "unit": "%"
+        },
+        "sm__warps_active.avg.pct_of_peak_sustained_active": {
+          "value": 22.345993457478908,
+          "unit": "%"
+        },
+        "smsp__issue_active.avg.pct_of_peak_sustained_active": {
+          "value": 73.526613449033,
+          "unit": "%"
+        },
+        "smsp__pcsamp_buffer_overflow": {
+          "value": 1,
+          "unit": ""
+        },
+        "smsp__pcsamp_dropped_bytes": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "smsp__pcsamp_sample_count": {
+          "value": 52195724,
+          "unit": ""
+        },
+        "smsp__warpidsamp_buffer_overflow": {
+          "value": 1,
+          "unit": "warp"
+        },
+        "smsp__warpidsamp_dropped_bytes": {
+          "value": 0,
+          "unit": "byte"
+        },
+        "smsp__warps_eligible.avg.per_cycle_active": {
+          "value": 1.5755250898965203,
+          "unit": "warp"
+        }
+      },
+      "source_sample_categories": {
+        "Gaussian RNG": {
+          "samples": 20477908,
+          "percent": 39.2329226049245
+        },
+        "LC integration": {
+          "samples": 6574230,
+          "percent": 12.595342101203538
+        },
+        "Counts, support lookup, diagnostics": {
+          "samples": 4816605,
+          "percent": 9.22796855926359
+        },
+        "Logistic transfer": {
+          "samples": 8105181,
+          "percent": 15.528438689728684
+        },
+        "Reductions": {
+          "samples": 845722,
+          "percent": 1.620289815311308
+        },
+        "Other simulation and control": {
+          "samples": 11376078,
+          "percent": 21.795038229568384
+        }
+      },
+      "top_source_lines": [
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 26,
+          "samples": 5095256,
+          "function": "_pnl_fast_normal_pair_v1",
+          "source": "r = tl.sqrt(-2.0 * tl.log(u1))"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 36,
+          "samples": 4471008,
+          "function": "philox_impl",
+          "source": "c2 = math.umulhi(A, _c0) ^ c3 ^ k1"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 33,
+          "samples": 4046146,
+          "function": "_euler",
+          "source": "dv = (a_v * v * v * v + (1.0 + threshold) * b_v * v * v - threshold * c_v * v + d_v + e_v * w + f_v * x) / time_constant_v"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 35,
+          "samples": 3412684,
+          "function": "philox_impl",
+          "source": "c0 = math.umulhi(B, _c2) ^ c1 ^ k0"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 37,
+          "samples": 1843692,
+          "function": "philox_impl",
+          "source": "c1 = tl.mul(B, _c2, sanitize_overflow=False)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 35,
+          "samples": 1724600,
+          "function": "_euler",
+          "source": "v = tl.where(active, v + time_step_size * dv, v)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 38,
+          "samples": 1439175,
+          "function": "philox_impl",
+          "source": "c3 = tl.mul(A, _c0, sanitize_overflow=False)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 142,
+          "samples": 1379966,
+          "function": "uint_to_uniform_float",
+          "source": "x = tl.where(x < 0, -x - 1, x)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1278,
+          "samples": 1334894,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_right = support_key < (hist_value_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/random.py",
+          "line": 143,
+          "samples": 1172944,
+          "function": "uint_to_uniform_float",
+          "source": "return x * scale"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 870,
+          "samples": 1064825,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n4_state_1_candidate_c4_s1_0 = tl.where(n4_dynamic_member_finished == 0.0, (param_15_value / (1.0 + tl.exp(-param_12_value * (n_n4_state_0_candidate_c4_s0_0 + param_13_value - param_14_value))) + param_16_value), n_n4_state_1_candidate_c4_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 872,
+          "samples": 1047398,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n4_state_1_candidate_c4_s1_1 = tl.where(n4_dynamic_member_finished == 0.0, (param_15_value / (1.0 + tl.exp(-param_12_value * (n_n4_state_0_candidate_c4_s0_1 + param_13_value - param_14_value))) + param_16_value), n_n4_state_1_candidate_c4_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 27,
+          "samples": 1016363,
+          "function": "_pnl_fast_normal_pair_v1",
+          "source": "return r * _pnl_rng_libdevice.fast_cosf(theta), r * _pnl_rng_libdevice.fast_sinf(theta)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1204,
+          "samples": 1013167,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n18_state_1_candidate_c18_s1_1 = tl.where(n18_dynamic_member_finished == 0.0, (param_98_value / (1.0 + tl.exp(-n_effective_9_0 * (n_n18_state_0_candidate_c18_s0_1 + n_effective_2_0 - param_97_value))) + param_99_value), n_n18_state_1_candidate_c18_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1277,
+          "samples": 1006815,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_key = tl.load(support + support_mid)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1202,
+          "samples": 991376,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n18_state_1_candidate_c18_s1_0 = tl.where(n18_dynamic_member_finished == 0.0, (param_98_value / (1.0 + tl.exp(-n_effective_9_0 * (n_n18_state_0_candidate_c18_s0_0 + n_effective_2_0 - param_97_value))) + param_99_value), n_n18_state_1_candidate_c18_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv/lib/python3.13/site-packages/triton/language/standard.py",
+          "line": 191,
+          "samples": 845722,
+          "function": "max",
+          "source": "return core.reduce(input, axis, _elementwise_max, keep_dims=keep_dims)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1096,
+          "samples": 772301,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n14_state_1_candidate_c14_s1_1 = tl.where(n14_dynamic_member_finished == 0.0, (param_63_value / (1.0 + tl.exp(-n_effective_8_0 * (n_n14_state_0_candidate_c14_s0_1 + n_effective_1_0 - param_62_value))) + param_64_value), n_n14_state_1_candidate_c14_s1_1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1279,
+          "samples": 706530,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_lo = tl.where((support_lo < support_hi) & support_right, support_mid + 1, support_lo)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1094,
+          "samples": 674377,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "n_n14_state_1_candidate_c14_s1_0 = tl.where(n14_dynamic_member_finished == 0.0, (param_63_value / (1.0 + tl.exp(-n_effective_8_0 * (n_n14_state_0_candidate_c14_s0_0 + n_effective_1_0 - param_62_value))) + param_64_value), n_n14_state_1_candidate_c14_s1_0)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 1276,
+          "samples": 670787,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "support_mid = (support_lo + support_hi) // 2"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 7,
+          "samples": 604100,
+          "function": "_pnl_triton_logistic",
+          "source": "return scale / (1.0 + tl.exp(-gain * (x + bias - x_0))) + offset"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 34,
+          "samples": 556538,
+          "function": "_euler",
+          "source": "dw = (mode * a_w * v + b_w * w + c_w + (1.0 - mode) * uncorrelated_activity) / time_constant_w"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 24,
+          "samples": 556101,
+          "function": "_pnl_fast_normal_pair_v1",
+          "source": "u1 = tl.maximum(1.0e-7, u1)"
+        },
+        {
+          "file": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926/tmp-fit/psyneulink_triton_batch/pnl_batched_discrete_output_counts_compiled_8a7c4e301c7310d5.py",
+          "line": 837,
+          "samples": 545473,
+          "function": "pnl_batched_coevolving_graph_kernel",
+          "source": "dynamic_has_run_word_0 = dynamic_has_run_word_0 | tl.where(dynamic_s0_n0_active, 1, 0) | tl.where(dynamic_s0_n2_active, 4, 0) | tl.where(dynamic_s0_n3_active, 8, 0) | tl.where(dynamic_s0_n5_active, 32, 0) | tl.where(dynamic_s0_n8_active, 256, 0)"
+        }
+      ],
+      "replay": {
+        "estimates": 20000,
+        "blocks": 1,
+        "candidates": 10,
+        "seeds": [
+          37
+        ],
+        "evaluation": 1002,
+        "seconds_including_warmup": [
+          0.800025719916448,
+          73.33618942089379
+        ],
+        "densities_sha256": [
+          "43465fee84ac578c5e890dfe5d52d2b1a2359534a5dd03c761c17adeb124ab80"
+        ],
+        "exact_replay": true,
+        "note": "Actual PEC fitter setup and sampling callback; no optimizer updates."
+      }
+    }
+  ],
+  "gpu_monitoring": [
+    {
+      "file": "gpu.jsonl",
+      "samples": 29,
+      "max_concurrent_processes": 1,
+      "process_sample_counts": {
+        "897441": 25
+      }
+    },
+    {
+      "file": "hardware-gpu.jsonl",
+      "samples": 27,
+      "max_concurrent_processes": 1,
+      "process_sample_counts": {
+        "897441": 11,
+        "899188": 3,
+        "899981": 8
+      }
+    }
+  ],
+  "no_competing_gpu_processes_recorded": true,
+  "artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/profile-blocks-20260926",
+  "frozen_source": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/blocks-20260926/source-final",
+  "limitations": [
+    "One complete synthetic subject/start; exact replay is against the latest adaptive NDT fit, not an assertion of identical parameters to the original fixed-100k optimizer.",
+    "Full-run instrumented times include Nsight and cProfile overhead. Use the uninstrumented reference for fitting throughput.",
+    "Nested Python/NVTX wall times are inclusive and overlap; CUDA API/.cpu waits include simulation, not extra CPU or copy work.",
+    "Some enclosing cProfile counters have zero primitive calls/cumulative time. Phase totals use explicit NVTX ranges and CUDA timestamps, not those counters.",
+    "Source PC samples locate hot instructions and stalls, not exclusive wall-time costs or predicted speedups. Categories use source attribution and may include inlined instructions.",
+    "The 20k hardware replay flagged PC and warp-ID sample-buffer overflow, with zero reported dropped bytes; its sample shares are approximate. The 4x1250 replay has neither overflow flag.",
+    "Hardware counters cover actual-fitter populations at 4x1250 and 1x20000. Full-fit CUDA timestamps include all 100k refinement calls, but no new 100k hardware-counter replay was taken.",
+    "GPU monitoring is sampled every 10 seconds and records no competing process; it cannot rule out activity between samples."
+  ]
+}

@@ -29,9 +29,16 @@ class HistogramEmitter(TritonGraphEmitter):
         self.histogram_outputs = {}
         self.stop_truncated = stop_truncated and trial_schedule == "independent"
 
+    @property
+    def histogram_diag_width(self):
+        return self.diag_slot_count + 1
+
     def _emit_lane_decode(self):
-        self.builder.line("hist_group = tl.program_id(0) // tl.cdiv(num_estimates, BLOCK)")
-        self.builder.line("estimate_idx = (tl.program_id(0) % tl.cdiv(num_estimates, BLOCK)) * BLOCK + tl.arange(0, BLOCK)")
+        # Positive counts can reach int32's maximum. Avoid the overflowing
+        # (num_estimates + BLOCK - 1) numerator in a runtime ceiling division.
+        self.builder.line("hist_estimate_blocks = (num_estimates - 1) // BLOCK + 1")
+        self.builder.line("hist_group = tl.program_id(0) // hist_estimate_blocks")
+        self.builder.line("estimate_idx = (tl.program_id(0) % hist_estimate_blocks) * BLOCK + tl.arange(0, BLOCK)")
         self.builder.line("mask = estimate_idx < num_estimates")
         self.builder.line("subject_idx = hist_group % num_subjects + tl.zeros((BLOCK,), tl.int32)")
         self.builder.line("param_idx = hist_group // num_subjects + tl.zeros((BLOCK,), tl.int32)")
@@ -58,7 +65,7 @@ class HistogramEmitter(TritonGraphEmitter):
 
     def _emit_store_flag(self, op):
         value = self._get_value(op.inputs[0].name)[0]
-        self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {op.attrs['slot']}", value)
+        self._emit_histogram_add(f"diag + hist_row * {self.histogram_diag_width} + {op.attrs['slot']}", value)
         if self.stop_truncated:
             self.builder.line(f"hist_truncated = hist_truncated | (({value}) != 0)")
 
@@ -103,7 +110,7 @@ class HistogramEmitter(TritonGraphEmitter):
                 self._emit_histogram_add(f"out + hist_row * {count_width} + hist_slot", "hist_hit")
         else:
             self._emit_histogram_add("out + hist_row", "hist_match")
-        self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {self.diag_slot_count}", "hist_nonfinite")
+        self._emit_histogram_add(f"diag + hist_row * {self.histogram_diag_width} + {self.diag_slot_count}", "hist_nonfinite")
         if self.stop_truncated:
             # Publish this trial's diagnostics before the independent scheduler
             # increments trial_idx. No partial histogram from this candidate
@@ -112,10 +119,24 @@ class HistogramEmitter(TritonGraphEmitter):
 
     def _signature_args(self):
         args = list(super()._signature_args())
+        # Launch sizes do not change the model. Decode them at runtime so
+        # adaptive estimate budgets and tail populations can reuse the binary.
+        for name in ("total_lanes", "num_estimates"):
+            args[args.index(f"{name}: tl.constexpr")] = name
         # Nonfinite checks need a status pointer even when there are no flags.
         if not self.diag_slot_count:
             args.insert(args.index("out") + 1, "diag")
         return (*args, "observed", "lower", "upper", "lower_inclusive", "observed_valid")
+
+    def _do_not_specialize_args(self):
+        return (*super()._do_not_specialize_args(), "total_lanes", "num_estimates")
+
+    def cached_source(self, *extra_variant):
+        from psyneulink.core.batched.backend.triton.cache import cached_kernel_source
+
+        variant = (type(self), self.indices, self.categorical, self.radius, self.normal_rng,
+                   self.trial_schedule, self.stop_truncated, *extra_variant)
+        return cached_kernel_source(self.kernel, variant, self.emit)
 
 
 def supports_fused_histogram(plan, smoothing_sigma, categorical_dims=None, outcome_indices=None):
@@ -210,7 +231,7 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
     emitter = HistogramEmitter(kernel, indices, categorical, radius, normal_rng=launch["normal_rng"],
                                trial_schedule=launch["trial_schedule"], stop_truncated=nan_on_truncation)
-    source = emitter.emit()
+    source = emitter.cached_source()
     dummy = torch.empty(1, device=device)
     with interpret_scope(interpret):
         module = load_triton_kernel_module(source, "free_running_histogram", ir.model_kind, interpret=interpret)
