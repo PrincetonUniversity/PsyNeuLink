@@ -13,7 +13,7 @@ execution, and a single scalar objective.
 
 .. _Distributed_Fitting_Enabling:
 
-Enabling distributed fitting
+Enabling Distributed Fitting
 ----------------------------
 
 Pass ``distributed=True`` and a ``pec_factory`` to the `PECOptimizationFunction`, or
@@ -95,7 +95,7 @@ one-node cluster automatically, with no launcher; ``n_workers`` in
     python study.py
 
 
-Using an existing cluster
+Using an Existing Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you already run your own Dask cluster -- for example in a notebook or outside
