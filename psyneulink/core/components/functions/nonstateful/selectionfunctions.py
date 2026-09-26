@@ -430,9 +430,7 @@ class OneHot(SelectionFunction):
 
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
-            random_draw_ptr = builder.alloca(rng_f.args[-1].type.pointee)
-            builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
-            random_draw = builder.load(random_draw_ptr)
+            random_draw = builder.call(rng_f, [rand_state_ptr])
 
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -533,12 +531,9 @@ class OneHot(SelectionFunction):
         elif tie == RANDOM:
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rand_f = ctx.get_rand_int_function_by_state(rand_state_ptr)
-            random_draw_ptr = builder.alloca(rand_f.args[-1].type.pointee)
             num_extremes = builder.load(num_extremes_ptr)
 
-            builder.call(rand_f, [rand_state_ptr, ctx.int32_ty(0), num_extremes, random_draw_ptr])
-
-            extreme_start = builder.load(random_draw_ptr)
+            extreme_start = builder.call(rand_f, [rand_state_ptr, ctx.int32_ty(0), num_extremes])
             extreme_start = builder.trunc(extreme_start, ctx.int32_ty)
             extreme_stop = builder.add(extreme_start, extreme_start.type(1))
 

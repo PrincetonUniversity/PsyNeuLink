@@ -391,10 +391,9 @@ def setup_is_close(ctx):
     # Make sure we always have fp64 variant
     for float_ty in {ctx.float_ty, ir.DoubleType()}:
         name = "is_close_{}".format(float_ty)
-        builder = _setup_builtin_func_builder(ctx, name, [float_ty,
-                                                          float_ty,
-                                                          float_ty,
-                                                          float_ty],
+        builder = _setup_builtin_func_builder(ctx,
+                                              name,
+                                              [float_ty, float_ty, float_ty, float_ty],
                                               return_type=ctx.bool_ty)
         val1, val2, rtol, atol = builder.function.args
 
@@ -412,8 +411,7 @@ def setup_is_close(ctx):
 
 
 def setup_csch(ctx):
-    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (2e**x)/(e**2x - 1)
@@ -430,8 +428,7 @@ def setup_csch(ctx):
 
 
 def setup_tanh(ctx):
-    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (e**2x - 1)/(e**2x + 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
@@ -445,8 +442,7 @@ def setup_tanh(ctx):
 
 
 def setup_coth(ctx):
-    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,),
-                                          return_type=ctx.float_ty)
+    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,), return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (e**2x + 1)/(e**2x - 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
@@ -663,8 +659,8 @@ def _setup_mt_rand_int32(ctx, state_ty):
 
     # Generate random number generator function.
     # It produces random 32bit number in a 64bit word
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_int32", (state_ty.as_pointer(), int64_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_int32", (state_ty.as_pointer(),), return_type=int64_ty)
+    state, = builder.function.args
 
     array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -754,21 +750,22 @@ def _setup_mt_rand_int32(ctx, state_ty):
     val = builder.xor(val, tmp)
 
     # val is now random 32bit integer
-    val = builder.zext(val, out.type.pointee)
-    builder.store(val, out)
-    builder.ret_void()
+    val = builder.zext(val, builder.function.return_value.type)
+    builder.ret(val)
 
     return builder.function
 
 
 def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
 
-    out_ty = gen_int32.args[1].type.pointee
-    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty, out_ty.as_pointer()))
-    state, lower, upper, out_ptr = builder.function.args
+    builder = _setup_builtin_func_builder(ctx,
+                                          gen_int32.name + "_bounded",
+                                          (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty),
+                                          return_type=gen_int32.return_value.type)
+    state, lower, upper = builder.function.args
 
     rand_range_excl = builder.sub(upper, lower)
-    rand_range_excl = builder.zext(rand_range_excl, out_ty)
+    rand_range_excl = builder.zext(rand_range_excl, gen_int32.return_value.type)
 
     range_leading_zeros = builder.ctlz(rand_range_excl, ctx.bool_ty(1))
     mask = builder.lshr(range_leading_zeros.type(-1), range_leading_zeros)
@@ -784,8 +781,7 @@ def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
     # while r >= limit
     builder.position_at_end(loop_block)
 
-    builder.call(gen_int32, [state, out_ptr])
-    val = builder.load(out_ptr)
+    val = builder.call(gen_int32, [state])
     val = builder.and_(val, mask)
 
     is_above_limit = builder.icmp_unsigned(">=", val, rand_range_excl)
@@ -794,8 +790,8 @@ def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
     builder.position_at_end(out_block)
     offset = builder.zext(lower, val.type)
     result = builder.add(val, offset)
-    builder.store(result, out_ptr)
-    builder.ret_void()
+
+    builder.ret(result)
 
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
     """
@@ -807,17 +803,11 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     [0] http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/CODES/mt19937ar.c
     """
     # Generate random float number generator function
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_double", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_double", [state_ty.as_pointer()], return_type=ctx.float_ty)
+    state, = builder.function.args
 
-    al = builder.alloca(gen_int.args[1].type.pointee, name="al_gen_int")
-    builder.call(gen_int, [state, al])
-
-    bl = builder.alloca(gen_int.args[1].type.pointee, name="bl_gen_int")
-    builder.call(gen_int, [state, bl])
-
-    a = builder.load(al)
-    b = builder.load(bl)
+    a = builder.call(gen_int, [state])
+    b = builder.call(gen_int, [state])
 
     a = builder.lshr(a, a.type(5))  # 27bit random value
     b = builder.lshr(b, b.type(6))  # 26bit random value
@@ -828,8 +818,8 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # NOTE: The combination below could be implemented using bit ops,
     # but due to floating point rounding it'd give slightly different
     # random numbers
-    val = builder.fmul(af, af.type(67108864.0))           # Shift left 26
-    val = builder.fadd(val, bf)                                # Combine
+    val = builder.fmul(af, af.type(67108864.0))            # Shift left 26
+    val = builder.fadd(val, bf)                            # Combine
     val = builder.fdiv(val, val.type(9007199254740992.0))  # Scale
 
     # The value is in interval [0, 1)
@@ -838,8 +828,7 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     upper_bound = builder.fcmp_ordered("<", val, val.type(1.0))
     builder.assume(upper_bound)
 
-    builder.store(val, out)
-    builder.ret_void()
+    builder.ret(val)
 
     return builder.function
 
@@ -852,36 +841,34 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     The range is -Inf to Inf.
     [0] https://en.wikipedia.org/wiki/Marsaglia_polar_method
     """
-    builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", [state_ty.as_pointer()], return_type=ctx.float_ty)
+    state, = builder.function.args
 
     last_g_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     last_g_avail_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     last_g_avail = builder.load(last_g_avail_ptr)
 
+    # There's a precomputed value. use it.
     cond = builder.icmp_signed("==", last_g_avail, last_g_avail.type(1))
     with builder.if_then(cond, likely=False):
-        builder.store(builder.load(last_g_ptr), out)
+        val = builder.load(last_g_ptr)
         builder.store(last_g_ptr.type.pointee(0), last_g_ptr)
         builder.store(last_g_avail_ptr.type.pointee(0), last_g_avail_ptr)
-        builder.ret_void()
+        builder.ret(val)
 
     loop_block = builder.append_basic_block("gen_loop_gauss")
     out_block = builder.append_basic_block("gen_gauss_out")
 
     builder.branch(loop_block)
     builder.position_at_end(loop_block)
-    tmp = builder.alloca(out.type.pointee, name="mt_rand_normal_tmp")
 
     # X1 is in (-1, 1)
-    builder.call(gen_float, [state, tmp])
-    x1 = builder.load(tmp)
+    x1 = builder.call(gen_float, [state])
     x1 = builder.fmul(x1, x1.type(2.0))
     x1 = builder.fsub(x1, x1.type(1.0))
 
     # x2 is in (-1, 1)
-    builder.call(gen_float, [state, tmp])
-    x2 = builder.load(tmp)
+    x2 = builder.call(gen_float, [state])
     x2 = builder.fmul(x2, x2.type(2.0))
     x2 = builder.fsub(x2, x2.type(1.0))
 
@@ -903,13 +890,12 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     f = builder.call(sqrt_f, [f])
 
     val = builder.fmul(f, x2)
-    builder.store(val, out)
 
     next_val = builder.fmul(f, x1)
     builder.store(next_val, last_g_ptr)
     builder.store(last_g_avail_ptr.type.pointee(1), last_g_avail_ptr)
 
-    builder.ret_void()
+    builder.ret(val)
 
 
 def get_mersenne_twister_state_struct(ctx):
@@ -1086,9 +1072,10 @@ def _philox_encode(builder, rounds, value, key):
 
 def _setup_philox_rand_int64(ctx, state_ty):
     int64_ty = ir.IntType(64)
+
     # Generate random number generator function.
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_int64", (state_ty.as_pointer(), int64_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_int64", [state_ty.as_pointer()], return_type=int64_ty)
+    state, = builder.function.args
 
     counter_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     key_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -1103,12 +1090,12 @@ def _setup_philox_rand_int64(ctx, state_ty):
     with builder.if_then(already_generated, likely=True):
         # Get value from pre-generated buffer
         val_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), buffer_pos])
-        builder.store(builder.load(val_ptr), out)
+        val = builder.load(val_ptr)
 
         # Update buffer position
         buffer_pos = builder.add(buffer_pos, buffer_pos.type(1))
         builder.store(buffer_pos, buffer_pos_ptr)
-        builder.ret_void()
+        builder.ret(val)
 
 
     # Generate 4 new numbers
@@ -1138,42 +1125,38 @@ def _setup_philox_rand_int64(ctx, state_ty):
     # Return the first one and set the counter
     builder.store(buffer_pos.type(1), buffer_pos_ptr)
     val = builder.extract_value(new_buffer, 0)
-    builder.store(val, out)
 
-    builder.ret_void()
+    builder.ret(val)
 
     return builder.function
 
 
 def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     # Generate random number generator function.
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_int32", (state_ty.as_pointer(), ctx.int32_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_int32", [state_ty.as_pointer()], return_type=ctx.int32_ty)
+    state, = builder.function.args
 
     buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     has_buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(5)])
+
     has_buffered = builder.load(has_buffered_ptr)
     has_buffered_cond = builder.icmp_unsigned("!=", has_buffered, has_buffered.type(0))
+
     with builder.if_then(has_buffered_cond):
         buffered = builder.load(buffered_ptr)
-        builder.store(buffered, out)
         builder.store(has_buffered.type(0), has_buffered_ptr)
-        builder.ret_void()
+        builder.ret(buffered)
 
+    val = builder.call(gen_int64, [state])
 
-    val_ptr = builder.alloca(gen_int64.args[1].type.pointee, name="rand_i64")
-    builder.call(gen_int64, [state, val_ptr])
-    val = builder.load(val_ptr)
-
-    val_lo = builder.trunc(val, out.type.pointee)
-    builder.store(val_lo, out)
 
     val_hi = builder.lshr(val, val.type(val.type.width // 2))
     val_hi = builder.trunc(val_hi, buffered_ptr.type.pointee)
     builder.store(val_hi, buffered_ptr)
     builder.store(has_buffered.type(1), has_buffered_ptr)
 
-    builder.ret_void()
+    val_lo = builder.trunc(val, builder.function.return_value.type)
+    builder.ret(val_lo)
 
     return builder.function
 
@@ -1184,38 +1167,37 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
     As implemented in Numpy to match Numpy results.
     """
 
-    out_ty = gen_int32.args[1].type.pointee
-    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), out_ty, out_ty, out_ty.as_pointer()))
-    state, lower, upper, out_ptr = builder.function.args
+    out_ty = gen_int32.return_value.type
+    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", [state_ty.as_pointer(), out_ty, out_ty], return_type=out_ty)
+    state, lower, upper = builder.function.args
 
     rand_range_excl = builder.sub(upper, lower)
     rand_range_excl_64 = builder.zext(rand_range_excl, ir.IntType(64))
     rand_range = builder.sub(rand_range_excl, rand_range_excl.type(1))
 
-
-    builder.call(gen_int32, [state, out_ptr])
-    val = builder.load(out_ptr)
+    val = builder.call(gen_int32, [state])
 
     is_full_range = builder.icmp_unsigned("==", rand_range, rand_range.type(0xffffffff))
     with builder.if_then(is_full_range):
-        builder.ret_void()
+        builder.ret(val)
 
     val64 = builder.zext(val, rand_range_excl_64.type)
     m = builder.mul(val64, rand_range_excl_64)
 
     # Store current result as output. It will be overwritten below if needed.
     out_val = builder.lshr(m, m.type(32))
-    out_val = builder.trunc(out_val, out_ptr.type.pointee)
+    out_val = builder.trunc(out_val, out_ty)
     out_val = builder.add(out_val, lower)
-    builder.store(out_val, out_ptr)
 
     leftover = builder.and_(m, m.type(0xffffffff))
 
     is_good = builder.icmp_unsigned(">=", leftover, rand_range_excl_64)
     with builder.if_then(is_good):
-        builder.ret_void()
+        builder.ret(out_val)
 
     # Apply rejection sampling
+    out_ptr = builder.alloca(out_ty)
+    builder.store(out_val, out_ptr)
     leftover_ptr = builder.alloca(leftover.type)
     builder.store(leftover, leftover_ptr)
 
@@ -1240,9 +1222,8 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
     # leftover = m & 0xffffffff
     # result = m >> 32
     builder.position_at_end(loop_block)
-    builder.call(gen_int32, [state, out_ptr])
+    val = builder.call(gen_int32, [state])
 
-    val = builder.load(out_ptr)
     val64 = builder.zext(val, rand_range_excl_64.type)
     m = builder.mul(val64, rand_range_excl_64)
 
@@ -1257,31 +1238,29 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
 
 
     builder.position_at_end(out_block)
-    builder.ret_void()
+    out_val = builder.load(out_ptr)
+    builder.ret(out_val)
 
 
 def _setup_philox_rand_double(ctx, state_ty, gen_int64):
     # Generate random float number generator function
     double_ty = ir.DoubleType()
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_double", (state_ty.as_pointer(), double_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_double", [state_ty.as_pointer()], return_type=double_ty)
+    state, = builder.function.args
 
     # (rnd >> 11) * (1.0 / 9007199254740992.0)
     rhs = double_ty(1.0 / 9007199254740992.0)
 
     # Generate random integer
-    lhs_ptr = builder.alloca(gen_int64.args[1].type.pointee, name="rand_int64")
-    builder.call(gen_int64, [state, lhs_ptr])
+    lhs_int = builder.call(gen_int64, [state])
 
     # convert to float
-    lhs_int = builder.load(lhs_ptr)
     lhs_shift = builder.lshr(lhs_int, lhs_int.type(11))
     lhs = builder.uitofp(lhs_shift, double_ty)
 
     res = builder.fmul(lhs, rhs)
-    builder.store(res, out)
 
-    builder.ret_void()
+    builder.ret(res)
 
     return builder.function
 
@@ -1289,25 +1268,22 @@ def _setup_philox_rand_double(ctx, state_ty, gen_int64):
 def _setup_philox_rand_float(ctx, state_ty, gen_int32):
     # Generate random float number generator function
     float_ty = ir.FloatType()
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_float", (state_ty.as_pointer(), float_ty.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_float", [state_ty.as_pointer()], return_type=float_ty)
+    state, = builder.function.args
 
     # (next_uint32(bitgen_state) >> 9) * (1.0f / 8388608.0f);
     rhs = float_ty(1.0 / 8388608.0)
 
     # Generate random integer
-    lhs_ptr = builder.alloca(gen_int32.args[1].type.pointee, name="rand_int32")
-    builder.call(gen_int32, [state, lhs_ptr])
+    lhs_int = builder.call(gen_int32, [state])
 
     # convert to float
-    lhs_int = builder.load(lhs_ptr)
     lhs_shift = builder.lshr(lhs_int, lhs_int.type(9))
     lhs = builder.uitofp(lhs_shift, float_ty)
 
     res = builder.fmul(lhs, rhs)
-    builder.store(res, out)
 
-    builder.ret_void()
+    builder.ret(res)
 
     return builder.function
 
@@ -2025,30 +2001,22 @@ def _load_fi(builder, idx, fptype, data):
 
 
 def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_data, fi_data):
-    fptype = gen_float.args[1].type.pointee
-    itype = gen_int.args[1].type.pointee
+    fptype = gen_float.return_value.type
+    itype = gen_int.return_value.type
     if fptype != ctx.float_ty:
         # We don't have numeric helpers available for the desired type
         return
 
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal",
-                                         (state_ty.as_pointer(), fptype.as_pointer()))
-    state, out = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal", [state_ty.as_pointer()], return_type=fptype)
+    state, = builder.function.args
 
     loop_block = builder.append_basic_block("gen_loop_ziggurat")
-
-    # Allocate storage for calling int/float PRNG
-    # outside of the loop
-    tmp_fptype = builder.alloca(fptype, name="tmp_fp")
-    tmp_itype = builder.alloca(itype, name="tmp_int")
 
     # Enter the main generation loop
     builder.branch(loop_block)
     builder.position_at_end(loop_block)
 
-    r_ptr = tmp_itype
-    builder.call(gen_int, [state, r_ptr])
-    r = builder.load(r_ptr)
+    r = builder.call(gen_int, [state])
 
     # This is only for 64 bit
     # Extract index to the global table
@@ -2074,8 +2042,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     ki = _load_ki(builder, idx, itype, ki_data)
     is_lt_ki = builder.icmp_unsigned("<", rabs, ki)
     with builder.if_then(is_lt_ki, likely=True):
-        builder.store(x, out)
-        builder.ret_void()
+        builder.ret(x)
 
     is_idx0 = builder.icmp_unsigned("==", idx.type(0), idx)
     with builder.if_then(is_idx0):
@@ -2085,15 +2052,13 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
         ZIGGURAT_NOR_INV_R = 0.27366123732975827203338247596
 
         # xx = -ziggurat_nor_inv_r * npy_log1p(-next_double(bitgen_state));
-        builder.call(gen_float, [state, tmp_fptype])
-        xx = builder.load(tmp_fptype)
+        xx = builder.call(gen_float, [state])
         xx = helpers.fneg(builder, xx)
         xx = helpers.log1p(ctx, builder, xx)
         xx = builder.fmul(xx.type(-ZIGGURAT_NOR_INV_R), xx)
 
         # yy = -npy_log1p(-next_double(bitgen_state));
-        builder.call(gen_float, [state, tmp_fptype])
-        yy = builder.load(tmp_fptype)
+        yy = builder.call(gen_float, [state])
         yy = helpers.fneg(builder, yy)
         yy = helpers.log1p(ctx, builder, yy)
         yy = helpers.fneg(builder, yy)
@@ -2109,8 +2074,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
             sign_cond = builder.lshr(rabs, rabs.type(8))
             sign_cond = builder.trunc(sign_cond, ctx.bool_ty)
             val = builder.select(sign_cond, neg_val, val)
-            builder.store(val, out)
-            builder.ret_void()
+            builder.ret(val)
 
         builder.branch(inner_loop_block)
 
@@ -2123,9 +2087,7 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     exp_x_sqnh = helpers.exp(ctx, builder, x_sq_nh)
 
     # next uniform random number
-    r_ptr = tmp_fptype
-    builder.call(gen_float, [state, r_ptr])
-    r = builder.load(r_ptr)
+    r = builder.call(gen_float, [state])
 
     # if (((fi_double[idx - 1] - fi_double[idx]) * next_double(bitgen_state) +
     #       fi_double[idx]) < exp(-0.5 * x * x))
@@ -2135,46 +2097,38 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
 
     should_ret = builder.fcmp_ordered("<", lhs, exp_x_sqnh)
     with builder.if_then(should_ret):
-        builder.store(x, out)
-        builder.ret_void()
+        builder.ret(x)
 
     builder.branch(loop_block)
 
 def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
-    fptype = gen_float.args[1].type.pointee
+    fptype = gen_float.return_value.type
     if fptype != ctx.float_ty:
         # We don't have numeric helpers available for the desired type
         return
 
     args = [state_ty.as_pointer(), # state
-            ctx.int32_ty.as_pointer(), # N - total number of draws
-            fptype.as_pointer(),  # p - prob of success
-            ctx.int32_ty.as_pointer()] # output
+            ctx.int32_ty,          # N - total number of draws
+            fptype]                # p - prob of success
 
-    builder = _setup_builtin_func_builder(ctx, prefix + "_rand_binomial", args)
-    state, n_ptr, p_ptr, out_ptr = builder.function.args
+    builder = _setup_builtin_func_builder(ctx, prefix + "_rand_binomial", args, return_type=ctx.int32_ty)
+    state, n, p = builder.function.args
 
-    n = builder.load(n_ptr)
-    p = builder.load(p_ptr)
     q = builder.fsub(p.type(1), p)
 
-    success = out_ptr.type.pointee(1)
-    failure = out_ptr.type.pointee(0)
+    success = ctx.int32_ty(1)
+    failure = ctx.int32_ty(0)
 
     # N > 1 (!=1) is not supported
     is_large_n = builder.icmp_unsigned("!=", n, n.type(1))
     with builder.if_then(is_large_n):
-        builder.store(out_ptr.type.pointee(0), out_ptr)
-        builder.ret_void()
+        builder.ret(ctx.int32_ty(-1))
 
-    uniform_draw_ptr = builder.alloca(fptype, name="tmp_fp")
-    builder.call(gen_float, [state, uniform_draw_ptr])
-    draw = builder.load(uniform_draw_ptr)
+    draw = builder.call(gen_float, [state])
 
     # If 'p' is large enough, success == draw < p
     is_less_than_p = builder.fcmp_ordered("<", draw, p)
     large_p_result = builder.select(is_less_than_p, success, failure)
-
 
     # The draw check is reverted for small p
     is_less_than_q = builder.fcmp_ordered("<", draw, q)
@@ -2182,8 +2136,8 @@ def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
 
     is_small_p = builder.fcmp_ordered("<=", p, p.type(0.5))
     result = builder.select(is_small_p, small_p_result, large_p_result)
-    builder.store(result, out_ptr)
-    builder.ret_void()
+
+    builder.ret(result)
 
 def get_philox_state_struct(ctx):
     int64_ty = ir.IntType(64)
