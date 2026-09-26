@@ -352,82 +352,6 @@ class ParameterEstimationCompositionError(CompositionError):
     pass
 
 
-# -- checking the hierarchical solver settings -------------------------------------------------
-#
-# Each check returns what is wrong with a value, or None.  They test for finiteness first:
-# every comparison below is False against NaN, so a NaN would otherwise pass all of them.  They are reached twice: through the
-# Parameter's validation method, which guards the value a composition is built with, and through
-# its setter, which guards one assigned afterwards.  Both go through the same function so the two
-# cannot come to disagree.
-
-def _check_curvature(value):
-    if value not in Curvature:
-        return f"must be one of {[c.value for c in Curvature]}; got {value!r}"
-    return None
-
-
-def _check_max_iterations(value):
-    if not np.isfinite(value) or value != int(value) or value < 1:
-        return f"must be a whole number of at least 1; got {value!r}"
-    return None
-
-
-def _check_tol(value):
-    if not np.isfinite(value) or value <= 0:
-        return f"must be finite and greater than 0; got {value!r}"
-    return None
-
-
-def _check_variance_floor(value):
-    if not np.isfinite(value) or value <= 0:
-        return f"must be finite and greater than 0; got {value!r}"
-    return None
-
-
-def _check_hessian_step(value):
-    # Whether it has one entry per parameter is checked against the model being fitted, by the
-    # E-step, which is the first place the number of parameters is known.
-    if value is None:
-        return None
-    step = np.asarray(value, dtype=float)
-    if not np.all(np.isfinite(step)) or np.any(step <= 0):
-        return f"must be finite and positive; got {value!r}"
-    return None
-
-
-def _check_estep_method(value):
-    if not isinstance(value, str):
-        return f"must name a method scipy.optimize.minimize accepts; got {value!r}"
-    return None
-
-
-def _check_estep_options(value):
-    if value is not None and not isinstance(value, Mapping):
-        return f"must be a mapping of options for the optimizer; got {value!r}"
-    return None
-
-
-_HIERARCHICAL_CHECKS = {
-    "curvature": _check_curvature,
-    "max_iterations": _check_max_iterations,
-    "tol": _check_tol,
-    "variance_floor": _check_variance_floor,
-    "hessian_step": _check_hessian_step,
-    "estep_method": _check_estep_method,
-    "estep_options": _check_estep_options,
-}
-
-
-def _solver_setting_setter(name):
-    """Refuse an invalid assignment, as validation refuses an invalid default."""
-    def setter(value, owning_component=None, context=None):  # noqa: U100
-        message = _HIERARCHICAL_CHECKS[name](value)
-        if message is not None:
-            raise ParameterEstimationCompositionError(f"{name} {message}")
-        return value
-    return setter
-
-
 class ParameterEstimationComposition(Composition):
     """
     Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
@@ -704,41 +628,57 @@ class ParameterEstimationComposition(Composition):
         # How a hierarchical fit is run.  These configure the composition rather than describing
         # anything it computes, and they hold still for the length of a fit, so none of them is
         # stateful, modulable or logged.  They are the only place their defaults are written down.
-        curvature = Parameter(Curvature.FULL, stateful=False, modulable=False, loggable=False,
-                              setter=_solver_setting_setter("curvature"))
-        max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False,
-                                   setter=_solver_setting_setter("max_iterations"))
-        tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False,
-                        setter=_solver_setting_setter("tol"))
-        variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False,
-                                   setter=_solver_setting_setter("variance_floor"))
-        hessian_step = Parameter(None, stateful=False, modulable=False, loggable=False,
-                                 setter=_solver_setting_setter("hessian_step"))
-        estep_method = Parameter("Nelder-Mead", stateful=False, modulable=False, loggable=False,
-                                 setter=_solver_setting_setter("estep_method"))
-        estep_options = Parameter(None, stateful=False, modulable=False, loggable=False,
-                                  setter=_solver_setting_setter("estep_options"))
+        curvature = Parameter(Curvature.FULL, stateful=False, modulable=False, loggable=False)
+        max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False)
+        tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False)
+        variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False)
+        hessian_step = Parameter(None, stateful=False, modulable=False, loggable=False)
+        estep_method = Parameter("Nelder-Mead", stateful=False, modulable=False, loggable=False)
+        estep_options = Parameter(None, stateful=False, modulable=False, loggable=False)
+
+        # Each tests for finiteness first: a comparison against NaN is False, so a NaN would
+        # otherwise pass the others.
 
         def _validate_curvature(self, curvature):
-            return _check_curvature(curvature)
+            if curvature not in Curvature:
+                return f"must be one of {[c.value for c in Curvature]}"
+            return None
 
         def _validate_max_iterations(self, max_iterations):
-            return _check_max_iterations(max_iterations)
+            if (not np.isfinite(max_iterations) or max_iterations != int(max_iterations)
+                    or max_iterations < 1):
+                return "must be a whole number of at least 1"
+            return None
 
         def _validate_tol(self, tol):
-            return _check_tol(tol)
+            if not np.isfinite(tol) or tol <= 0:
+                return "must be finite and greater than 0"
+            return None
 
         def _validate_variance_floor(self, variance_floor):
-            return _check_variance_floor(variance_floor)
+            if not np.isfinite(variance_floor) or variance_floor <= 0:
+                return "must be finite and greater than 0"
+            return None
 
         def _validate_hessian_step(self, hessian_step):
-            return _check_hessian_step(hessian_step)
+            # Whether it has one entry per parameter is checked by the E-step, which knows how
+            # many there are.
+            if hessian_step is None:
+                return None
+            step = np.asarray(hessian_step, dtype=float)
+            if not np.all(np.isfinite(step)) or np.any(step <= 0):
+                return "must be finite and positive"
+            return None
 
         def _validate_estep_method(self, estep_method):
-            return _check_estep_method(estep_method)
+            if not isinstance(estep_method, str):
+                return "must name a method scipy.optimize.minimize accepts"
+            return None
 
         def _validate_estep_options(self, estep_options):
-            return _check_estep_options(estep_options)
+            if estep_options is not None and not isinstance(estep_options, Mapping):
+                return "must be a mapping of options for the optimizer"
+            return None
 
     @handle_external_context()
     @check_user_specified

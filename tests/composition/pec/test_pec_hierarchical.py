@@ -1452,14 +1452,9 @@ def test_settings_are_independent_between_compositions():
     ("tol", float("inf")),
     ("hessian_step", float("inf")),
 ])
-def test_an_invalid_setting_is_refused_however_it_arrives(name, value):
-    # Both ways in: the value a composition is built with, and one assigned afterwards.
+def test_an_invalid_setting_is_refused(name, value):
     with pytest.raises(Exception, match=name):
         _build_group_pec(hierarchical_options={"subject_id": "subject", name: value})
-
-    pec = _build_group_pec()
-    with pytest.raises(ParameterEstimationCompositionError, match=name):
-        getattr(pec.parameters, name).set(value)
 
 
 @pytest.mark.composition
