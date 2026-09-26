@@ -1028,7 +1028,9 @@ this includes all Components in the `agent_rep <OptimizationControlMechanism.age
 are specified in the **random_variables** argument of the OptimizationControlMechanism's constructor, then
 randomization is restricted to their values. Randomization over estimates can be further configured using the
 `initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a
+<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The `noise_stream_policy
+<OptimizationControlMechanism.noise_stream_policy>` constructor argument determines whether different random
+Components receive distinct seeds within each estimate. The results of all the estimates for a
 given `control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
 <OptimizationFunction.aggregation_function>` of the `OptimizationFunction` assigned to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism>`, and used to compute the `net_outcome
@@ -1091,7 +1093,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component, ComponentError
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
-from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -1321,6 +1322,14 @@ class OptimizationControlMechanism(ControlMechanism):
         If it is not specified then then the seed is set to a random value (see `initial_seed
         <OptimizationControlMechanism.initial_seed>` for additional information).
 
+    noise_stream_policy : 'independent' or 'shared_seed' : default 'independent'
+        specifies how seeds are assigned to different `random_variables <OptimizationControlMechanism.random_variables>`
+        within an estimate. The default, 'independent', assigns a distinct seed to each Component and estimate.
+        Use 'shared_seed' to reproduce the legacy behavior of broadcasting the same seed to every Component,
+        which can correlate their random draws. This is a constructor-only setting, separate from
+        `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`, which controls
+        reuse across candidate allocations.
+
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
         `control_allocation <ControlMechanism.control_allocation>` (see `same_seed_for_all_parameter_combinations
@@ -1492,6 +1501,19 @@ class OptimizationControlMechanism(ControlMechanism):
         stability of the estimation process across `control_allocations <ControlMechanism.control_allocation>`, while
         substantial differences indicate instability, which may be helped by increasing `num_estimates
         <OptimizationControlMechanism.num_estimates>`.
+
+    noise_stream_policy : 'independent' or 'shared_seed'
+        determines how the randomization ControlSignal seeds different Components. With 'independent', each estimate
+        is assigned a block of consecutive seeds, with one slot per entry in `random_variables
+        <OptimizationControlMechanism.random_variables>` (in that list's order). The sequence is deterministic for a
+        fixed initial seed, model ordering and configured execution precision, and does not depend on worker or
+        thread count. Seeds use the range [0, 2**32) with float64 precision and [0, 2**24) with float32 precision,
+        keeping every seed exactly representable. With S random Components, there are floor(seed_limit / S)
+        distinct blocks; the sequence wraps after that many estimates. The larger float64 range supports models
+        with several random Components and millions of estimates without imposing the float32 seed limit.
+        This limits distinct seed assignments, not the number of random draws from each seed. A single evaluation
+        cannot request more estimates than there are distinct blocks. Reusing the same seeds
+        across candidate allocations preserves each Component's own stream; it does not couple different Components.
 
     num_trials_per_estimate : int or None
         imposes an exact number of trials to execute in each run of `agent_rep <OptimizationControlMechanism.agent_rep>`
@@ -1766,6 +1788,7 @@ class OptimizationControlMechanism(ControlMechanism):
         random_variables = ALL
         initial_seed = None
         same_seed_for_all_allocations = False
+        noise_stream_policy = Parameter('independent', stateful=False, loggable=False, read_only=True, structural=True)
         num_estimates = None
         num_trials_per_estimate = None
 
@@ -1779,6 +1802,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         saved_samples = None
         saved_values = None
+
+        def _validate_noise_stream_policy(self, value):
+            if value not in ('independent', 'shared_seed'):
+                return "must be 'independent' or 'shared_seed'"
+            return None
 
         def _validate_state_feature_default_spec(self, state_feature_default):
             if not (isinstance(state_feature_default, (InputPort, OutputPort, Mechanism))
@@ -1809,6 +1837,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  return_results: bool = False,
                  data=None,
                  context=None,
+                 noise_stream_policy=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
@@ -1894,6 +1923,7 @@ class OptimizationControlMechanism(ControlMechanism):
             random_variables=random_variables,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_allocations,
+            noise_stream_policy=noise_stream_policy,
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,
@@ -2945,6 +2975,8 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         """
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         super()._instantiate_output_ports(context)
 
         for control_signal in self.control_signals:
@@ -2970,15 +3002,14 @@ class OptimizationControlMechanism(ControlMechanism):
         return control_allocation
 
     def _create_randomization_control_signal(self, context):
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions, Linear
+        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
         if num_estimates:
             # must be SampleSpec in allocation_samples arg
-
-            # Now we need a sequence of random numbers (less than 2*32), each simulation gets a random 32 bit seed for
-            # mersenne twister.
-            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -2997,9 +3028,18 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.parameters.num_estimates._set(None, context)
                 return
 
+            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
+            seed_ports = [variable.parameters.seed.port for variable in self.random_variables]
+            if self.parameters.noise_stream_policy._get(context) == 'independent':
+                # Each estimate receives a block of seeds. Assign a fixed slot in
+                # that block to each random variable, without adding search dimensions.
+                seed_projections = [ControlProjection(receiver=port, function=Linear(intercept=index))
+                                    for index, port in enumerate(seed_ports)]
+            else:
+                seed_projections = seed_ports
+
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
-                                                         modulates=[param.parameters.seed.port
-                                                                    for param in self.random_variables],
+                                                         modulates=seed_projections,
                                                          allocation_samples=randomization_seed_mod_values,
                                                          modulation=OVERRIDE,
                                                          cost_options=CostFunctions.NONE,
@@ -3293,6 +3333,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                   len(self.parameters.control_allocation_search_space.get()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
+        # Defer this lookup to avoid resolving transferfunctions during cyclic module initialization.
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         assert "net_outcome" in tags
         args = [ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_state_struct_type(self).as_pointer(),
@@ -3796,15 +3839,28 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
     def gen_new_seed_sequence(self, context=None):
-        """
-        Generate a new sequence of seeds for use in randomization control signal control allocations
-        """
+        """Generate estimate seeds, or seed-block bases for independent component streams."""
 
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
-
-
+        if self.parameters.noise_stream_policy._get(context) == 'independent':
+            # Seeds pass through floating-point ControlSignals before reaching the
+            # RNG's uint32 seed. Keep every base AND component seed exactly representable.
+            # Float64 can carry the full uint32 range; retaining it matters for
+            # models with multiple random Components and millions of estimates.
+            seed_limit = 2**24 if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType() else 2**32
+            num_streams = len(self.random_variables)
+            num_blocks = seed_limit // num_streams
+            if num_estimates > num_blocks:
+                raise OptimizationControlMechanismError(
+                    f"'{self.name}' requests {num_estimates} estimates with {num_streams} independent noise streams; "
+                    f"at most {num_blocks} estimates have distinct seeds at the current execution precision."
+                )
+            start = int(self._seed_counter) % num_blocks
+            seeds = [((start + i) % num_blocks) * num_streams for i in range(num_estimates)]
+            self._seed_counter = (start + num_estimates) % num_blocks
+            return seeds
         seeds = [self._seed_counter + i for i in range(num_estimates)]
 
         # Increment seed counter for next time
