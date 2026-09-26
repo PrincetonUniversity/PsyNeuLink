@@ -759,12 +759,12 @@ class Log:
 
         try:
             return self.owner.input_ports[item_str].parameters.value
-        except (AttributeError, TypeError):
+        except (AttributeError, KeyError, TypeError):
             pass
 
         try:
             return self.owner.output_ports[item_str].parameters.value
-        except (AttributeError, TypeError):
+        except (AttributeError, KeyError, TypeError):
             pass
 
         if item_str.startswith(FUNCTION_PARAMETER_PREFIX):
