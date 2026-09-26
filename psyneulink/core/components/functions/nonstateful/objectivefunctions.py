@@ -990,6 +990,9 @@ class Distance(ObjectiveFunction):
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
+        v1 = pnlvm.helpers.unwrap_2d_array(builder, v1)
+        v2 = pnlvm.helpers.unwrap_2d_array(builder, v2)
+
         acc_ptr = builder.alloca(ctx.float_ty)
         builder.store(acc_ptr.type.pointee(-0.0), acc_ptr)
 
