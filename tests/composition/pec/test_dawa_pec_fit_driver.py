@@ -89,6 +89,8 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
     command = [sys.executable, str(DIRECTORY / script), "--data", str(path), "--subject", "42",
                "--estimates", "64", "--evaluations", "11", "--predictive-estimates", "16",
                "--validation-seeds", "8101", "--output", str(output)]
+    if not recovery:
+        command.extend(["--pseudocount", ".5", "--validation-estimates", "128", "--optimizer-storage", "memory"])
     result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=DIRECTORY.parents[3])
     assert result.returncode == 0, result.stdout + result.stderr
     manifest = json.loads((output / "manifest.json").read_text())
@@ -96,6 +98,12 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
     observations = pd.read_csv(output / ("synthetic_subject.csv" if recovery else "observed_subject.csv"))
     assert report["status"] == manifest["status"] == "complete"
     assert report["evaluations"] == 11
+    assert report["validation_estimates"] == (64 if recovery else 128)
+    assert report["validation_pseudocount"] == 1.
+    assert manifest["estimator"]["pseudocount"] == (1. if recovery else .5)
+    assert (output / "optimizer.journal").exists() == recovery
+    assert (output / "optimizer_trials.csv").exists()
+    assert (output / "evaluations.jsonl").exists()
     assert manifest["trials"] == 4 and manifest["scored_trials"] == 3
     assert observations.row_id.tolist() == [8, 3, 16, 1]
     assert len(report["fitted"]) == 8
@@ -111,3 +119,38 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
         np.testing.assert_array_equal(observations[["decision", "response_time"]],
                                       design.iloc[2:][["decision", "response_time"]])
         assert "fitted_minus_initial" in report["independent_seed_rescoring"][0]
+
+
+@pytest.mark.triton
+@pytest.mark.triton_gpu
+@pytest.mark.batched
+def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, design):
+    path = tmp_path / "data.csv"
+    design.to_csv(path, index=False)
+    output = tmp_path / "adaptive"
+    command = [sys.executable, str(DIRECTORY / "dawa_pec_recovery.py"), "--data", str(path),
+               "--subject", "42", "--fit-strategy", "adaptive", "--estimates", "64",
+               "--adaptive-min-estimates", "16", "--evaluations", "41", "--adaptive-check-every", "10",
+               "--adaptive-min-evaluations", "21", "--adaptive-patience", "1",
+               "--adaptive-progress-tolerance", "100000", "--adaptive-refine-evaluations", "10",
+               "--validation-estimates", "128", "--validation-seeds", "8101",
+               "--predictive-estimates", "16", "--output", str(output)]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=DIRECTORY.parents[3])
+    assert result.returncode == 0, result.stdout + result.stderr
+    report = json.loads((output / "recovery.json").read_text())
+    records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
+    assert report["status"] == "complete"
+    assert report["evaluations"] == 31 < report["requested_evaluations"]
+    assert report["adaptive"]["search_evaluations"] == 21
+    assert report["adaptive"]["refinement_evaluations"] == 10
+    assert report["adaptive"]["best_reference_score"] >= report["adaptive"]["checkpoints"][-1]["reference_score"]
+    selection = report["adaptive"]["final_selection"]
+    assert report["best_training_log_likelihood"] == selection["selected_reference_score"]
+    assert report["adaptive"]["policy_version"] == 2
+    assert report["adaptive"]["refinement_covariance"]["reused"]
+    assert report["validation_estimates"] == 128 and report["validation_pseudocount"] == 2.
+    assert not (output / "optimizer.journal").exists()
+    assert (output / "optimizer_refinement_trials.csv").exists()
+    seeds = [seed for row in records for seed in row["block_seeds"]]
+    assert not {8101, 20260925, 21260925} & set(seeds)
+    assert {row["phase"] for row in records} == {"adaptive_search", "refinement"}

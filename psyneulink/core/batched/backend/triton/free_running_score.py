@@ -21,12 +21,13 @@ from psyneulink.core.batched.prep import normalize_parameter_sets, prepare_input
 
 class HistogramEmitter(TritonGraphEmitter):
     def __init__(self, kernel, indices, categorical, radius=0, *, normal_rng=DEFAULT_NORMAL_RNG,
-                 trial_schedule="synchronized"):
+                 trial_schedule="synchronized", stop_truncated=False):
         super().__init__(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule)
         self.indices = tuple(indices)
         self.categorical = tuple(categorical)
         self.radius = radius
         self.histogram_outputs = {}
+        self.stop_truncated = stop_truncated and trial_schedule == "independent"
 
     def _emit_lane_decode(self):
         self.builder.line("hist_group = tl.program_id(0) // tl.cdiv(num_estimates, BLOCK)")
@@ -40,6 +41,8 @@ class HistogramEmitter(TritonGraphEmitter):
         self.histogram_outputs = {}
         self.builder.line("hist_row = hist_group * num_trials + trial_idx")
         self.builder.line("hist_nonfinite = tl.zeros((BLOCK,), tl.int32)")
+        if self.stop_truncated:
+            self.builder.line("hist_truncated = tl.full((BLOCK,), False, tl.int1)")
 
     def _emit_store_output(self, op):
         values = self._get_value(op.inputs[0].name)
@@ -56,6 +59,8 @@ class HistogramEmitter(TritonGraphEmitter):
     def _emit_store_flag(self, op):
         value = self._get_value(op.inputs[0].name)[0]
         self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {op.attrs['slot']}", value)
+        if self.stop_truncated:
+            self.builder.line(f"hist_truncated = hist_truncated | (({value}) != 0)")
 
     def _emit_histogram_add(self, pointer, value):
         if self.trial_schedule == "independent":
@@ -99,6 +104,11 @@ class HistogramEmitter(TritonGraphEmitter):
         else:
             self._emit_histogram_add("out + hist_row", "hist_match")
         self._emit_histogram_add(f"diag + hist_row * {self.diag_slot_count + 1} + {self.diag_slot_count}", "hist_nonfinite")
+        if self.stop_truncated:
+            # Publish this trial's diagnostics before the independent scheduler
+            # increments trial_idx. No partial histogram from this candidate
+            # will be returned as a valid density.
+            self.builder.line("trial_idx = tl.where(mask & hist_truncated, num_trials - 1, trial_idx)")
 
     def _signature_args(self):
         args = list(super()._signature_args())
@@ -124,7 +134,8 @@ def supports_fused_histogram(plan, smoothing_sigma, categorical_dims=None, outco
 def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, data, categorical_dims,
                                    *, outcome_indices, bins, bin_range, smoothing_sigma, pseudocount, categorical_cardinalities,
                                    include_mask, subject_slices, seed, common_random_numbers,
-                                   strict_truncation, triton_launch_options):
+                                   strict_truncation, triton_launch_options, return_densities=False,
+                                   nan_on_truncation=False):
     from psyneulink.core.batched.backend.triton.cache import interpret_scope, load_triton_kernel_module
     from psyneulink.core.batched.backend.triton.runtime import (
         _check_step_caps, _compiler_launch_options, _import_torch_triton,
@@ -198,7 +209,7 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     lca_steps = lca_max_steps(ir, prepared, rows)
     _check_step_caps(max_steps=ir.max_steps, lca_max_steps=lca_steps)
     emitter = HistogramEmitter(kernel, indices, categorical, radius, normal_rng=launch["normal_rng"],
-                               trial_schedule=launch["trial_schedule"])
+                               trial_schedule=launch["trial_schedule"], stop_truncated=nan_on_truncation)
     source = emitter.emit()
     dummy = torch.empty(1, device=device)
     with interpret_scope(interpret):
@@ -220,7 +231,8 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     for i, (node, _) in enumerate(slots):
         fraction = float(diagnostics[..., i].sum()) / (len(rows) * subjects * trials * num_estimates)
         truncated[node] = truncated.get(node, 0.) + fraction
-    _report_truncation(truncated, ir.max_steps, strict_truncation)
+    if not nan_on_truncation:
+        _report_truncation(truncated, ir.max_steps, strict_truncation)
     cardinalities = _categorical_cardinalities(data, categorical, categorical_cardinalities) if pseudocount else ()
     joint_bins = float(bins ** len(numeric) * np.prod(cardinalities))
     weighted = counts[..., 0].to(torch.float32) if weights is None else (counts.to(torch.float32) * weights).sum(-1)
@@ -228,5 +240,10 @@ def fused_histogram_log_likelihood(plan, inputs, parameter_sets, num_estimates, 
     # adds exactly one pseudocount here. Its denominator covers every joint bin.
     density = (weighted + pseudocount) / ((num_estimates + pseudocount * joint_bins) * volume)
     density = torch.clamp(density, min=ZERO_PROB).reshape(len(rows) * subjects, trials).cpu().numpy()
+    if nan_on_truncation:
+        failed = np.any(diagnostics[..., :-1] != 0, axis=(1, 2, 3))
+        density.reshape(len(rows), subjects, trials)[failed] = np.nan
+    if return_densities:
+        return density.reshape(len(rows), subjects, trials)
     totals = np.asarray(_sum_histogram_log_likelihood(density, include_mask)).reshape(len(rows), subjects).sum(1)
     return float(totals[0]) if len(rows) == 1 else totals

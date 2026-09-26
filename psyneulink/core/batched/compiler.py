@@ -349,6 +349,31 @@ class BatchedSimulationPlan:
             defer_device_checks=_defer_device_checks,
         )
 
+    def histogram_likelihood(self, inputs, parameter_sets, num_estimates, data,
+                             categorical_dims=None, *, invalid_candidates="raise", **options):
+        """Return histogram densities shaped [candidate, subject, trial].
+
+        Estimator and execution options follow :meth:`log_likelihood`. Every trial's
+        density is returned, including masked trials; masking affects only
+        aggregation. Independent simulation blocks with the same histogram
+        settings and pseudocount/num_estimates ratio can be pooled by averaging
+        these densities in proportion to block sizes, BEFORE taking logs.
+        Each block still simulates the complete retained-state history.
+
+        Truncated histories raise by default. ``invalid_candidates="nan"``
+        instead returns NaNs for ALL subjects and trials of each truncated
+        candidate, permitting optimizers to reject it without rerunning the
+        batch. This requires fused scoring. With independent trial scheduling,
+        a truncated history stops immediately. Other numerical errors raise.
+        This policy takes precedence over ``strict_truncation``.
+        """
+        if invalid_candidates not in ("raise", "nan"):
+            raise ValueError("invalid_candidates must be 'raise' or 'nan'")
+        options["strict_truncation"] = True
+        return self.log_likelihood(inputs, parameter_sets, num_estimates, data,
+                                   categorical_dims, _return_densities=True,
+                                   _nan_on_truncation=invalid_candidates == "nan", **options)
+
     def log_likelihood(
         self,
         inputs,
@@ -370,6 +395,8 @@ class BatchedSimulationPlan:
         strict_truncation: bool = False,
         triton_launch_options: Mapping | None = None,
         fused: bool = True,
+        _return_densities: bool = False,
+        _nan_on_truncation: bool = False,
     ):
         """Simulate and score experimental ``data`` with a histogram likelihood.
 
@@ -395,7 +422,7 @@ class BatchedSimulationPlan:
         Returns a scalar for a single parameter set, else one log-likelihood per
         parameter set.
         """
-        from psyneulink.core.batched.likelihood import histogram_log_likelihood
+        from psyneulink.core.batched.likelihood import histogram_log_likelihood, histogram_likelihood
         from psyneulink.core.batched.backend.triton.free_running_score import (
             fused_histogram_log_likelihood, supports_fused_histogram,
         )
@@ -409,7 +436,12 @@ class BatchedSimulationPlan:
                 include_mask=include_mask, subject_slices=subject_slices, seed=seed,
                 common_random_numbers=common_random_numbers, strict_truncation=strict_truncation,
                 triton_launch_options=triton_launch_options,
+                return_densities=_return_densities,
+                nan_on_truncation=_nan_on_truncation,
             )
+
+        if _nan_on_truncation:
+            raise ValueError("invalid_candidates='nan' requires supported fused histogram scoring")
 
         device = _BACKEND_DEVICES.get(self.backend)
         keep_device = device == "cuda"
@@ -437,7 +469,8 @@ class BatchedSimulationPlan:
         n_param, n_subject = values.shape[0], values.shape[1]
         lanes = values.reshape(n_param * n_subject, *values.shape[2:])
 
-        ll = histogram_log_likelihood(
+        scorer = histogram_likelihood if _return_densities else histogram_log_likelihood
+        ll = scorer(
             lanes,
             data,
             categorical_dims,
@@ -446,12 +479,14 @@ class BatchedSimulationPlan:
             smoothing_sigma=smoothing_sigma,
             pseudocount=pseudocount,
             categorical_cardinalities=categorical_cardinalities,
-            include_mask=include_mask,
+            **({} if _return_densities else {"include_mask": include_mask}),
         )
         # ll is [n_param * n_subject] (or scalar for the 1x1 case); sum over
         # subjects to get one log-likelihood per parameter set.
         import numpy as np
 
+        if _return_densities:
+            return np.asarray(ll).reshape(n_param, n_subject, values.shape[2])
         ll = np.asarray(ll).reshape(n_param, n_subject).sum(axis=1)
         if ll.shape[0] == 1:
             return float(ll[0])

@@ -13,6 +13,69 @@ from psyneulink.core.batched import likelihood
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
 
+@pytest.mark.parametrize("schedule", ["synchronized", "independent"])
+@pytest.mark.parametrize("common_random", [True, False])
+def test_density_rejects_only_truncated_candidates(batched_backend, schedule, common_random):
+    plan, lca = _model(batched_backend, max_steps=8)
+    inputs = {lca: [[3., 1.], [1., 3.], [2., 1.], [1., 3.], [3., 1.], [1., 2.]]}
+    # Subject 2 fails on a masked trial; the entire candidate must be rejected.
+    bad = {f"{lca.name}.termination_threshold": BatchedTrialParameter([.2, .2, .2, .2, 1.1, .2])}
+    good = {f"{lca.name}.termination_threshold": .2}
+    options = dict(data=[[.2], [.3], [.2]], outcome_indices=[3], bins=7,
+                   bin_range=[(0., 2.)], smoothing_sigma=.5, pseudocount=.3,
+                   include_mask=[True, False, True], subject_slices=[slice(0, 3), slice(3, 6)],
+                   seed=29, common_random_numbers=common_random,
+                   triton_launch_options={"trial_schedule": schedule})
+    with pytest.raises(BatchedTruncationError):
+        plan.histogram_likelihood(inputs, [good, bad], 37, **options)
+    result = plan.histogram_likelihood(inputs, [good, bad, good], 37, invalid_candidates="nan", **options)
+    expected = plan.histogram_likelihood(inputs, [good, good, good], 37, **options)
+    assert np.isnan(result[1]).all()
+    np.testing.assert_array_equal(result[0], expected[0])
+    np.testing.assert_array_equal(result[2], expected[2])
+    with pytest.raises(ValueError, match="requires supported fused"):
+        plan.histogram_likelihood(inputs, [good], 37, invalid_candidates="nan", fused=False, **options)
+
+
+def test_density_rejection_does_not_hide_numerical_errors(batched_backend):
+    plan, lca = _model(batched_backend, max_steps=1)
+    with pytest.raises(BatchedNumericalError):
+        plan.histogram_likelihood(
+            {lca: [[3., 1.], [3., 1.]]}, [{f"{lca.name}.time_step_size": 3e38}], 5,
+            data=[[0.], [0.]], outcome_indices=[2], bins=2, bin_range=[(0., 1.)],
+            invalid_candidates="nan", triton_launch_options={"trial_schedule": "independent"})
+
+
+@pytest.mark.parametrize("fused", [True, False])
+def test_density_blocks_pool_like_concatenated_histories(batched_backend, fused):
+    plan, lca = _model(batched_backend)
+    inputs = {lca: [[3., 1.], [1., 3.], [2., 1.], [1., 3.], [3., 1.], [1., 2.]]}
+    candidates = [{}, {f"{lca.name}.gain": 1.2}]
+    data = np.array([[.2, 0], [.3, 1], [.2, 0]])
+    options = dict(data=data, categorical_dims=[1], outcome_indices=[3, 2], bins=7,
+                   bin_range=[(0., 2.)], smoothing_sigma=.5, categorical_cardinalities=[2],
+                   include_mask=[True, False, True], subject_slices=[slice(0, 3), slice(3, 6)],
+                   strict_truncation=True)
+    densities, samples = [], []
+    for size, seed in ((17, 31), (29, 37)):
+        density = plan.histogram_likelihood(inputs, candidates, size, seed=seed, pseudocount=size / 100,
+                                            fused=fused, **options)
+        assert density.shape == (2, 2, 3)
+        scores = plan.log_likelihood(inputs, candidates, size, seed=seed, pseudocount=size / 100,
+                                    fused=fused, **options)
+        np.testing.assert_allclose(np.log(density[:, :, [0, 2]]).sum((1, 2)), scores, rtol=2e-6, atol=1e-6)
+        densities.append(density)
+        values = plan.run(inputs, candidates, size, seed=seed, subject_slices=options["subject_slices"],
+                          strict_truncation=True).values[..., [3, 2]]
+        samples.append(values)
+    combined = np.concatenate(samples, axis=3).reshape(4, 3, 46, 2)
+    expected = likelihood.histogram_likelihood(combined, data, [1], bins=7, bin_range=[(0., 2.)],
+                                               smoothing_sigma=.5, pseudocount=.46,
+                                               categorical_cardinalities=[2]).reshape(2, 2, 3)
+    actual = (17 * densities[0] + 29 * densities[1]) / 46
+    np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-7)
+
+
 def _model(backend, max_steps=32):
     lca = pnl.LCAMechanism(
         input_shapes=2, function=pnl.Logistic(gain=1.1),

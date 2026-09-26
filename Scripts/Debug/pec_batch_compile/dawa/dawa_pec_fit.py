@@ -5,6 +5,7 @@ The recovery entry point uses this same pipeline with synthetic observations.
 """
 
 import argparse
+from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
@@ -25,6 +26,7 @@ from psyneulink.core.batched import BatchedCompositionCompiler, BatchedTrialPara
 from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 from psyneulink.core.globals.utilities import set_global_seed
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
+from dawa_adaptive_fit import AdaptiveConfig, fit_adaptive
 
 
 TRUTH = (.40, .22, -.40, 12., .65, .80, 1.5, 5.5)
@@ -124,10 +126,27 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--subject", type=int, default=1, help="Actual subject_nr value in the CSV (default: 1)")
     parser.add_argument("--trials", type=int, help="Prefix for smoke tests; default is the complete subject")
     parser.add_argument("--estimates", type=int, default=100000, help="Simulated trajectories per proposal (default: 100000)")
+    parser.add_argument("--pseudocount", type=float, default=1., help="Pseudocount per joint histogram cell at the fitting budget (default: 1)")
+    parser.add_argument("--validation-estimates", type=int,
+                        help="Fresh-seed rescoring budget; default matches fitting. Pseudocount scales with this budget to preserve prior weight.")
     parser.add_argument("--evaluations", type=int, default=5000, help="Total parameter proposals, not generations (default: 5000)")
+    parser.add_argument("--fit-strategy", choices=("fixed", "adaptive"), default="fixed")
+    parser.add_argument("--adaptive-min-estimates", type=int, default=5000)
+    parser.add_argument("--adaptive-rank-tolerance", type=float, default=1., help="Tolerance for the weighted rank-regret heuristic (not a confidence bound)")
+    parser.add_argument("--adaptive-initial-blocks", type=int, default=4)
+    parser.add_argument("--adaptive-search-evaluations", type=int, default=2000, help="Maximum coarse-search proposals before precision refinement")
+    parser.add_argument("--adaptive-check-every", type=int, default=250)
+    parser.add_argument("--adaptive-min-evaluations", type=int, default=1000)
+    parser.add_argument("--adaptive-patience", type=int, default=2)
+    parser.add_argument("--adaptive-progress-tolerance", type=float, default=.25)
+    parser.add_argument("--adaptive-refine-evaluations", type=int, default=600)
+    parser.add_argument("--adaptive-selection-blocks", type=int, default=3, help="Fresh maximum-budget blocks pooled to select the final fit")
+    parser.add_argument("--adaptive-selection-candidates", type=int, default=8)
     parser.add_argument("--population", type=int, default=10, help="CMA-ES population and candidate batch size (default: 10)")
     parser.add_argument("--start", type=int, choices=(0, 1), default=0, help="Which of the two predefined starting points to use")
     parser.add_argument("--optimizer-seed", type=int, default=101)
+    parser.add_argument("--optimizer-storage", choices=("journal", "memory"),
+                        help="Defaults to journal for fixed fits and memory for adaptive fits; evaluation logs and final CSV are always saved")
     parser.add_argument("--simulation-seed", type=int, default=29)
     if recovery:
         parser.add_argument("--data-seed", type=int, default=20260925)
@@ -140,8 +159,27 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--source-revision", help="Commit of an isolated source snapshot without .git")
     parser.add_argument("--output", type=Path, required=True, help="New output directory; existing directories are never overwritten")
     args = parser.parse_args(argv)
+    if args.optimizer_storage is None:
+        args.optimizer_storage = "memory" if args.fit_strategy == "adaptive" else "journal"
+    adaptive_config = AdaptiveConfig(
+        min_estimates=args.adaptive_min_estimates, max_estimates=args.estimates,
+        rank_tolerance=args.adaptive_rank_tolerance, check_every=args.adaptive_check_every,
+        min_evaluations=args.adaptive_min_evaluations, patience=args.adaptive_patience,
+        progress_tolerance=args.adaptive_progress_tolerance, refine_evaluations=args.adaptive_refine_evaluations,
+        initial_blocks=args.adaptive_initial_blocks, max_search_evaluations=args.adaptive_search_evaluations,
+        selection_blocks=args.adaptive_selection_blocks, selection_candidates=args.adaptive_selection_candidates,
+    )
+    if args.fit_strategy == "adaptive":
+        try:
+            adaptive_config.validate(args.evaluations, args.population)
+        except ValueError as error:
+            parser.error(str(error))
     if min(args.estimates, args.evaluations, args.population, args.predictive_estimates, args.max_steps) < 1:
         parser.error("Counts must be positive")
+    if args.validation_estimates is not None and args.validation_estimates < 1:
+        parser.error("Validation estimates must be positive")
+    if not np.isfinite(args.pseudocount) or args.pseudocount < 0:
+        parser.error("Pseudocount must be finite and nonnegative")
     if args.trials is not None and args.trials < 2:
         parser.error("A prefix must contain at least two trials")
     independent_seeds = {args.simulation_seed}
@@ -195,7 +233,7 @@ def main(argv=None, *, recovery=False):
             method="differential_evolution", max_iterations=args.evaluations,
             batched_backend="triton", batched_max_steps=args.max_steps,
             batched_seed=args.simulation_seed, batched_strict_truncation=True,
-            batched_bins=100, batched_bin_range=[RT_RANGE], batched_pseudocount=1.,
+            batched_bins=100, batched_bin_range=[RT_RANGE], batched_pseudocount=args.pseudocount,
             batched_smoothing_sigma=.5, batched_categorical_cardinalities=[2],
             batched_fused_likelihood=True, batched_specialize_fixed_parameters=True,
             batched_parameter_batch_size=args.population, batched_triton_launch_options=LAUNCH,
@@ -222,7 +260,8 @@ def main(argv=None, *, recovery=False):
         lo, hi, step = bounds[name]
         if not lo <= value <= hi or not np.isclose((value - lo) / step, round((value - lo) / step)):
             raise AssertionError(f"Initial value is outside parameter grid: {name}={value}")
-    storage = JournalStorage(JournalFileBackend(str(args.output / "optimizer.journal")))
+    storage = (JournalStorage(JournalFileBackend(str(args.output / "optimizer.journal")))
+               if args.optimizer_storage == "journal" else None)
     study = optuna.create_study(
         study_name="dawa_recovery" if recovery else "dawa_fit", storage=storage, direction="maximize",
         sampler=optuna.samplers.CmaEsSampler(x0=initial, sigma0=.2, lr_adapt=True,
@@ -243,13 +282,17 @@ def main(argv=None, *, recovery=False):
         "initial": initial, "bounds": bounds,
         "noise": noise, "time_steps": steps, "lc_internal_steps_per_pass": 10,
         "estimator": {"kind": "trial_marginal_histogram", "bins": 100, "rt_range": [0., 3.],
-                      "smoothing_sigma": .5, "pseudocount": 1.},
+                      "smoothing_sigma": .5, "pseudocount": args.pseudocount},
         "launch_options": LAUNCH, "gpu": torch.cuda.get_device_name(), "hostname": platform.node(),
         "torch": torch.__version__, "python": platform.python_version(),
         "data_summary": summarize_samples(frame[["decision", "response_time"]].to_numpy(), frame),
         "setup_seconds": time.perf_counter() - started,
         "note": "One subject; trial-marginal fitting with full simulated latent histories. Budget completion is not convergence.",
+        "fit_strategy": args.fit_strategy,
     }
+    if args.fit_strategy == "adaptive":
+        manifest["adaptive_config"] = asdict(adaptive_config)
+        manifest["adaptive_driver_sha256"] = hashlib.sha256(Path(__file__).with_name("dawa_adaptive_fit.py").read_bytes()).hexdigest()
     if recovery:
         manifest.update(truth=dict(zip(names, TRUTH, strict=True)), generator_matches_pec_exactly=True,
                         synthetic_sha256=manifest["observations_sha256"])
@@ -259,6 +302,22 @@ def main(argv=None, *, recovery=False):
     optimization_started = time.perf_counter()
     records = []
     invalid = []
+    sampling_work = {"calls": 0, "candidate_trajectories": 0}
+
+    def record_batch(candidates, scores, elapsed, metadata=None):
+        with (args.output / "evaluations.jsonl").open("a") as stream:
+            for candidate, score in zip(candidates, scores, strict=True):
+                record = {"evaluation": len(records) + 1, "parameters": list(candidate), "log_likelihood": float(score),
+                          "elapsed_fit_seconds": time.perf_counter() - optimization_started,
+                          "batch_seconds": elapsed, "batch_size": len(candidates), **(metadata or {})}
+                records.append(record)
+                stream.write(json.dumps(record) + "\n")
+        best = max(records, key=lambda row: row["log_likelihood"])
+        best_key = "best" if args.fit_strategy == "fixed" else "best_search_record_not_final_selection"
+        progress = {"completed_evaluations": len(records), best_key: best,
+                    "fit_seconds": time.perf_counter() - optimization_started, "invalid_candidates": len(invalid)}
+        save_json(args.output / "progress.json", progress)
+        print(json.dumps({"progress": progress}), flush=True)
 
     def logged_batch(candidates):
         begin = time.perf_counter()
@@ -277,28 +336,52 @@ def main(argv=None, *, recovery=False):
         if not np.all(np.isfinite(scores)):
             raise FloatingPointError("Nonfinite objective during fitting")
         elapsed = time.perf_counter() - begin
-        with (args.output / "evaluations.jsonl").open("a") as stream:
-            for candidate, score in zip(candidates, scores, strict=True):
-                record = {"evaluation": len(records) + 1, "parameters": list(candidate), "log_likelihood": float(score),
-                          "elapsed_fit_seconds": time.perf_counter() - optimization_started,
-                          "batch_seconds": elapsed, "batch_size": len(candidates)}
-                records.append(record)
-                stream.write(json.dumps(record) + "\n")
-        best = max(records, key=lambda row: row["log_likelihood"])
-        progress = {"completed_evaluations": len(records), "best": best,
-                    "fit_seconds": time.perf_counter() - optimization_started, "invalid_candidates": len(invalid)}
-        save_json(args.output / "progress.json", progress)
-        print(json.dumps({"progress": progress}), flush=True)
+        record_batch(candidates, scores, elapsed)
         return np.asarray(scores)
+
+    def sample_densities(candidates, estimates, seed):
+        sampling_work["calls"] += 1
+        sampling_work["candidate_trajectories"] += len(candidates) * estimates
+        result = plan.histogram_likelihood(
+            inputs, [function._batched_parameter_set(row) for row in candidates], estimates,
+            data=pec._data_numpy, categorical_dims=pec.data_categorical_dims, outcome_indices=indices,
+            bins=100, bin_range=[RT_RANGE], smoothing_sigma=.5,
+            pseudocount=args.pseudocount * estimates / args.estimates, categorical_cardinalities=[2],
+            seed=seed, invalid_candidates="nan", triton_launch_options=LAUNCH,
+        )
+        if result.shape != (len(candidates), 1, len(frame)):
+            raise FloatingPointError("Unexpected adaptive density output shape")
+        for index, candidate in enumerate(candidates):
+            if np.isnan(result[index]).all():
+                invalid.append({"parameters": list(candidate), "reason": "A simulation history exceeded max_steps",
+                                "estimates": estimates, "seed": seed})
+            elif not np.isfinite(result[index]).all():
+                raise FloatingPointError("Unexpected nonfinite adaptive density")
+        return result[:, 0]
 
     def logged_objective(*values):
         return float(logged_batch([values])[0])
 
     logged_objective._batched_parameter_sets = logged_batch
     try:
-        fit = function._fit(logged_objective, display_iter=False)
+        adaptive_report = None
+        if args.fit_strategy == "adaptive":
+            reserved_seeds = set(args.validation_seeds) | independent_seeds
+            reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
+            fit, adaptive_report, refinement = fit_adaptive(
+                study, bounds, initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
+                adaptive_config, evaluations=args.evaluations, population=args.population,
+                simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
+                reserved_seeds=reserved_seeds, log_batch=record_batch,
+            )
+            refinement.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
+                args.output / "optimizer_refinement_trials.csv", index=False)
+        else:
+            fit = function._fit(logged_objective, display_iter=False)
         fit_seconds = time.perf_counter() - optimization_started
-        if len(records) != args.evaluations:
+        expected_evaluations = (args.evaluations if adaptive_report is None else
+                                adaptive_report["search_evaluations"] + adaptive_report["refinement_evaluations"])
+        if len(records) != expected_evaluations:
             raise AssertionError("Optimizer did not evaluate the requested budget")
         fitted = np.asarray([fit["fitted_params"][name] for name in names])
         if float(fit["optimal_value"]) <= -1.e9:
@@ -309,6 +392,10 @@ def main(argv=None, *, recovery=False):
         comparison = {"initial": STARTS[args.start], "fitted": fitted}
         if recovery:
             comparison = {"truth": TRUTH, **comparison}
+        validation_estimates = args.validation_estimates or args.estimates
+        validation_pseudocount = args.pseudocount * validation_estimates / args.estimates
+        pec.controller.num_estimates = validation_estimates
+        function.batched_pseudocount = validation_pseudocount
         validation = []
         for seed in args.validation_seeds:
             function.batched_seed = seed
@@ -328,12 +415,17 @@ def main(argv=None, *, recovery=False):
         report = {"status": "complete", "mode": manifest["mode"], "subject": args.subject, "initial": initial,
                   "fitted": dict(zip(names, fitted.tolist(), strict=True)),
                   "best_training_log_likelihood": float(fit["optimal_value"]),
-                  "initial_training_log_likelihood": records[0]["log_likelihood"],
-                  "evaluations": len(records), "fit_seconds": fit_seconds,
+                  "initial_training_log_likelihood": (records[0]["log_likelihood"] if adaptive_report is None
+                                                       else adaptive_report["initial_reference_score"]),
+                  "evaluations": len(records), "requested_evaluations": args.evaluations, "fit_seconds": fit_seconds,
                   "total_seconds": time.perf_counter() - started, "invalid_proposals": invalid,
+                  "validation_estimates": validation_estimates, "validation_pseudocount": validation_pseudocount,
                   "independent_seed_rescoring": validation, "data_summary": manifest["data_summary"],
                   "predictive_summaries": predictions, "predictive_seed": predictive_seed,
                   "optimizer_stop_reason": "Requested evaluation budget completed; convergence not asserted"}
+        if adaptive_report is not None:
+            report["adaptive"] = {**adaptive_report, "sampling_work": sampling_work}
+            report["optimizer_stop_reason"] = adaptive_report["search_stop_reason"] + "; " + adaptive_report["refinement_stop_reason"]
         if recovery:
             widths = np.array([bounds[name][1] - bounds[name][0] for name in names])
             report.update(truth=manifest["truth"], errors=dict(zip(names, (fitted - TRUTH).tolist(), strict=True)),

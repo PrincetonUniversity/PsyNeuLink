@@ -1,0 +1,1214 @@
+{
+  "date": "2026-09-25",
+  "hostname": "della-rse.princeton.edu",
+  "gpu": "NVIDIA H100 NVL",
+  "torch": "2.13.0+cu130",
+  "python": "3.13.13",
+  "parent_revision": "86151528ed",
+  "remote_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/adaptive-20260925",
+  "source_snapshots": {
+    "baseline": {
+      "manifest_sha256": "68369b8f23cdb86db628e6ddd24de21533b5f4ebe22d4c67e19d5970335991bc",
+      "source_hashes": {
+        "psyneulink/core/batched/compiler.py": "95d9346dc32a7fc88dc34195900d2e1f86f51d3e54856bbf9f6e109c6f0d9d05",
+        "psyneulink/core/batched/backend/triton/free_running_score.py": "6142e9b9c6a8023887029855229dcc8c609101e95f67843d6ae4872023f73c7d",
+        "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py": "4dc2ee40d61915c5e919c2594d0a68b2181bd4132fa4e4fa3cc48ef6bff7783a"
+      }
+    },
+    "adaptive": {
+      "manifest_sha256": "be67eba03b33049c81ce197f115428d82a2a22d1fdab6e583f254c21b3bb0d1a",
+      "source_hashes": {
+        "psyneulink/core/batched/compiler.py": "a90f262042efb338fd66613669f70f9a4a44f1b879a0465c9955b450c47efdb9",
+        "psyneulink/core/batched/backend/triton/free_running_score.py": "f68a3e93207cb44084162e080e8c9b2adcccdf3f2a7259bdcd12e4c7e8fbed75",
+        "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py": "6326023b33fc2f0988d19cdbe7c5140be75b367d6cfe79da4a7406e68befdd23",
+        "Scripts/Debug/pec_batch_compile/dawa/dawa_adaptive_fit.py": "5cd0bfe8d9bc8b7c2216cbf62b6a7ba71faa4c904abe622218d2022c3f933b42"
+      }
+    },
+    "adaptive_v2": {
+      "manifest_sha256": "2f146fd923d954da0d67a28562e6ec5db7cf9987e343e1d7af17e68240af2e57",
+      "source_hashes": {
+        "psyneulink/core/batched/compiler.py": "810cff1c924531fc7f0d1c42d6857fb277ec6e3f38910f36f28b2fa49dcf1da7",
+        "psyneulink/core/batched/backend/triton/free_running_score.py": "ce7c57ee10db87d1b461ee8f7b15fd166690bc142b4d5d5fe25e8f6a93332aaf",
+        "Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py": "9c05c9cc965af5bbb9377d66d35d5b10cdafe45fee2fe25f7177bddb606f92fa",
+        "Scripts/Debug/pec_batch_compile/dawa/dawa_adaptive_fit.py": "5cd0bfe8d9bc8b7c2216cbf62b6a7ba71faa4c904abe622218d2022c3f933b42"
+      }
+    }
+  },
+  "trials": 760,
+  "scored_trials": 720,
+  "noise": {
+    "c_noise": 0.1,
+    "s_noise": 0.1,
+    "d_noise": 0.1,
+    "r_noise": 0.1
+  },
+  "time_steps": {
+    "Control Units\n[Color, Location].time_step_size": 0.01,
+    "Stimulus Units\n[Red, Blue, Left, Right].time_step_size": 0.01,
+    "Decision Units\n[Left, Right].time_step_size": 0.01,
+    "LC.time_step_size": 0.02,
+    "Response Units\n[Left, Right].time_step_size": 0.01
+  },
+  "lc_internal_steps_per_pass": 10,
+  "estimator": {
+    "kind": "trial_marginal_histogram",
+    "bins": 100,
+    "rt_range": [
+      0.0,
+      3.0
+    ],
+    "smoothing_sigma": 0.5,
+    "pseudocount": 1.0
+  },
+  "launch_options": {
+    "block_size": 32,
+    "num_warps": 1,
+    "trial_schedule": "independent",
+    "normal_rng": "philox4x_fast_v1"
+  },
+  "truth": {
+    "Response Units\n[Left, Right].termination_threshold[1]": 0.4,
+    "RT_GATE.intercept[1]": 0.22,
+    "Bias Mechanism.intercept": -0.4,
+    "Control Units\n[Color, Location].gain[1]": 12.0,
+    "LC.mode[0.0]": 0.65,
+    "LC.mode[1.0]": 0.8,
+    "LC.slope[1]": 1.5,
+    "LC.intercept": 5.5
+  },
+  "bounds": {
+    "Response Units\n[Left, Right].termination_threshold[1]": [
+      0.25,
+      0.7,
+      0.001
+    ],
+    "RT_GATE.intercept[1]": [
+      0.1,
+      0.3,
+      0.0001
+    ],
+    "Bias Mechanism.intercept": [
+      -0.5,
+      0.0,
+      0.001
+    ],
+    "Control Units\n[Color, Location].gain[1]": [
+      5.0,
+      20.0,
+      0.01
+    ],
+    "LC.mode[0.0]": [
+      0.1,
+      0.9,
+      0.001
+    ],
+    "LC.mode[1.0]": [
+      0.1,
+      0.9,
+      0.001
+    ],
+    "LC.slope[1]": [
+      1.0,
+      4.0,
+      0.001
+    ],
+    "LC.intercept": [
+      3.0,
+      10.0,
+      0.001
+    ]
+  },
+  "runs": {
+    "baseline-start0": {
+      "label": "Fixed 100k, start 0",
+      "fit_seconds": 1613.0680793749634,
+      "total_seconds": 1652.3963336648885,
+      "setup_seconds": 29.04301631799899,
+      "evaluations": 5000,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.382,
+        "RT_GATE.intercept[1]": 0.2116,
+        "Bias Mechanism.intercept": -0.41000000000000003,
+        "Control Units\n[Color, Location].gain[1]": 12.52,
+        "LC.mode[0.0]": 0.379,
+        "LC.mode[1.0]": 0.693,
+        "LC.slope[1]": 2.489,
+        "LC.intercept": 5.099
+      },
+      "training_log_likelihood": 255.31297302246094,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -2091.03271484375,
+          "fitted": 255.34268188476562,
+          "fitted_minus_initial": 2346.3753967285156,
+          "fitted_minus_truth": 3.2175445556640625
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -2085.115966796875,
+          "fitted": 255.00355529785156,
+          "fitted_minus_initial": 2340.1195220947266,
+          "fitted_minus_truth": 2.446441650390625
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -2090.09375,
+          "fitted": 254.83251953125,
+          "fitted_minus_initial": 2344.92626953125,
+          "fitted_minus_truth": 2.985107421875
+        }
+      ],
+      "mean_validation_log_likelihood": 255.05958557128906,
+      "validation_standard_deviation": 0.25965544552784015,
+      "invalid_sampling_records": 24,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "driver_sha256": "4dc2ee40d61915c5e919c2594d0a68b2181bd4132fa4e4fa3cc48ef6bff7783a",
+      "optimizer_seed": 101,
+      "simulation_seed": 29,
+      "optimizer_storage": "memory",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.508456289768219,
+            "mean_rt": 0.9275751113891602,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.2015999555587769
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.48069265484809875,
+            "mean_rt": 0.9356200695037842,
+            "rt_quantiles": [
+              0.69159996509552,
+              0.9016000032424927,
+              1.231600046157837
+            ]
+          }
+        }
+      }
+    },
+    "adaptive-start0": {
+      "label": "Adaptive before truncation optimization, start 0",
+      "fit_seconds": 419.74253064603545,
+      "total_seconds": 449.7913374460768,
+      "setup_seconds": 23.65212016715668,
+      "evaluations": 2701,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.386,
+        "RT_GATE.intercept[1]": 0.19990000000000002,
+        "Bias Mechanism.intercept": -0.423,
+        "Control Units\n[Color, Location].gain[1]": 14.49,
+        "LC.mode[0.0]": 0.279,
+        "LC.mode[1.0]": 0.42100000000000004,
+        "LC.slope[1]": 2.99,
+        "LC.intercept": 4.765000000000001
+      },
+      "training_log_likelihood": 253.91569001249,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -2091.03271484375,
+          "fitted": 254.25738525390625,
+          "fitted_minus_initial": 2345.2901000976562,
+          "fitted_minus_truth": 2.1322479248046875
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -2085.115966796875,
+          "fitted": 254.076416015625,
+          "fitted_minus_initial": 2339.1923828125,
+          "fitted_minus_truth": 1.5193023681640625
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -2090.09375,
+          "fitted": 254.18435668945312,
+          "fitted_minus_initial": 2344.278106689453,
+          "fitted_minus_truth": 2.336944580078125
+        }
+      ],
+      "mean_validation_log_likelihood": 254.17271931966147,
+      "validation_standard_deviation": 0.09104415183181705,
+      "invalid_sampling_records": 49,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "driver_sha256": "6326023b33fc2f0988d19cdbe7c5140be75b367d6cfe79da4a7406e68befdd23",
+      "optimizer_seed": 101,
+      "simulation_seed": 29,
+      "optimizer_storage": "memory",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084685683250427,
+            "mean_rt": 0.9348105192184448,
+            "rt_quantiles": [
+              0.7099000215530396,
+              0.9098999500274658,
+              1.1999000310897827
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807088375091553,
+            "mean_rt": 0.9409002065658569,
+            "rt_quantiles": [
+              0.7099000215530396,
+              0.9098999500274658,
+              1.2199000120162964
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "initial_reference_score": -2092.662297826273,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 242.10765485303455,
+            "improvement": 2334.7699526793076,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 242.98680739974654,
+            "improvement": 0.8791525467119925,
+            "parameters": [
+              0.4,
+              0.2114,
+              -0.392,
+              11.940000000000001,
+              0.262,
+              0.637,
+              3.198,
+              4.99
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 248.20032864296007,
+            "improvement": 5.213521243213535,
+            "parameters": [
+              0.383,
+              0.2238,
+              -0.387,
+              10.24,
+              0.469,
+              0.529,
+              1.617,
+              5.296
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 251.79370762697448,
+            "improvement": 3.5933789840144073,
+            "parameters": [
+              0.369,
+              0.2467,
+              -0.399,
+              10.0,
+              0.44600000000000006,
+              0.549,
+              3.274,
+              5.301
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 251.79370762697448,
+            "improvement": 0.0,
+            "parameters": [
+              0.369,
+              0.2467,
+              -0.399,
+              10.0,
+              0.44600000000000006,
+              0.549,
+              3.274,
+              5.301
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1501,
+            "reference_score": 253.3118610359085,
+            "improvement": 1.5181534089340118,
+            "parameters": [
+              0.379,
+              0.224,
+              -0.40900000000000003,
+              11.850000000000001,
+              0.481,
+              0.6839999999999999,
+              3.452,
+              5.173
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1751,
+            "reference_score": 253.3118610359085,
+            "improvement": 0.0,
+            "parameters": [
+              0.379,
+              0.224,
+              -0.40900000000000003,
+              11.850000000000001,
+              0.481,
+              0.6839999999999999,
+              3.452,
+              5.173
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 2001,
+            "reference_score": 253.8089824772357,
+            "improvement": 0.49712144132720937,
+            "parameters": [
+              0.369,
+              0.2071,
+              -0.422,
+              12.2,
+              0.33999999999999997,
+              0.69,
+              2.044,
+              5.308
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 2251,
+            "reference_score": 253.81204800226394,
+            "improvement": 0.003065525028233651,
+            "parameters": [
+              0.371,
+              0.1905,
+              -0.429,
+              13.49,
+              0.25,
+              0.46599999999999997,
+              3.057,
+              4.849
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 2501,
+            "reference_score": 253.81204800226394,
+            "improvement": 0.0,
+            "parameters": [
+              0.371,
+              0.1905,
+              -0.429,
+              13.49,
+              0.25,
+              0.46599999999999997,
+              3.057,
+              4.849
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 2
+          }
+        ],
+        "search_evaluations": 2501,
+        "refinement_evaluations": 200,
+        "reference_evaluations": 230,
+        "search_stop_reason": "Reference improvement below tolerance across consecutive checks",
+        "note": "Rank uncertainty is heuristic; final selection uses the reference objective, not mixed-budget scores.",
+        "sampling_work": {
+          "calls": 1154,
+          "candidate_trajectories": 65330000
+        }
+      },
+      "search_budget_counts": {
+        "5000": 1721,
+        "10000": 180,
+        "20000": 160,
+        "40000": 230,
+        "80000": 130,
+        "100000": 80
+      },
+      "mean_search_estimates": 16475.409836065573,
+      "search_sampling_seconds": 333.55884049343877,
+      "refinement_sampling_seconds": 64.68826241907664,
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 200
+      }
+    },
+    "adaptive-v2-start0": {
+      "label": "Adaptive, start 0",
+      "fit_seconds": 287.5709510119632,
+      "total_seconds": 323.79934662603773,
+      "setup_seconds": 26.279623785056174,
+      "evaluations": 2701,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.386,
+        "RT_GATE.intercept[1]": 0.19990000000000002,
+        "Bias Mechanism.intercept": -0.423,
+        "Control Units\n[Color, Location].gain[1]": 14.49,
+        "LC.mode[0.0]": 0.279,
+        "LC.mode[1.0]": 0.42100000000000004,
+        "LC.slope[1]": 2.99,
+        "LC.intercept": 4.765000000000001
+      },
+      "training_log_likelihood": 253.91569001249,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -2091.03271484375,
+          "fitted": 254.25738525390625,
+          "fitted_minus_initial": 2345.2901000976562,
+          "fitted_minus_truth": 2.1322479248046875
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -2085.115966796875,
+          "fitted": 254.076416015625,
+          "fitted_minus_initial": 2339.1923828125,
+          "fitted_minus_truth": 1.5193023681640625
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -2090.09375,
+          "fitted": 254.18435668945312,
+          "fitted_minus_initial": 2344.278106689453,
+          "fitted_minus_truth": 2.336944580078125
+        }
+      ],
+      "mean_validation_log_likelihood": 254.17271931966147,
+      "validation_standard_deviation": 0.09104415183181705,
+      "invalid_sampling_records": 49,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "driver_sha256": "9c05c9cc965af5bbb9377d66d35d5b10cdafe45fee2fe25f7177bddb606f92fa",
+      "optimizer_seed": 101,
+      "simulation_seed": 29,
+      "optimizer_storage": "memory",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084685683250427,
+            "mean_rt": 0.9348105192184448,
+            "rt_quantiles": [
+              0.7099000215530396,
+              0.9098999500274658,
+              1.1999000310897827
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807088375091553,
+            "mean_rt": 0.9409002065658569,
+            "rt_quantiles": [
+              0.7099000215530396,
+              0.9098999500274658,
+              1.2199000120162964
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "initial_reference_score": -2092.662297826273,
+        "reference_seed": 29,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 242.10765485303455,
+            "improvement": 2334.7699526793076,
+            "parameters": [
+              0.443,
+              0.16260000000000002,
+              -0.404,
+              9.74,
+              0.8,
+              0.853,
+              3.0180000000000002,
+              6.048
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 242.98680739974654,
+            "improvement": 0.8791525467119925,
+            "parameters": [
+              0.4,
+              0.2114,
+              -0.392,
+              11.940000000000001,
+              0.262,
+              0.637,
+              3.198,
+              4.99
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 248.20032864296007,
+            "improvement": 5.213521243213535,
+            "parameters": [
+              0.383,
+              0.2238,
+              -0.387,
+              10.24,
+              0.469,
+              0.529,
+              1.617,
+              5.296
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 251.79370762697448,
+            "improvement": 3.5933789840144073,
+            "parameters": [
+              0.369,
+              0.2467,
+              -0.399,
+              10.0,
+              0.44600000000000006,
+              0.549,
+              3.274,
+              5.301
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 251.79370762697448,
+            "improvement": 0.0,
+            "parameters": [
+              0.369,
+              0.2467,
+              -0.399,
+              10.0,
+              0.44600000000000006,
+              0.549,
+              3.274,
+              5.301
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1501,
+            "reference_score": 253.3118610359085,
+            "improvement": 1.5181534089340118,
+            "parameters": [
+              0.379,
+              0.224,
+              -0.40900000000000003,
+              11.850000000000001,
+              0.481,
+              0.6839999999999999,
+              3.452,
+              5.173
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1751,
+            "reference_score": 253.3118610359085,
+            "improvement": 0.0,
+            "parameters": [
+              0.379,
+              0.224,
+              -0.40900000000000003,
+              11.850000000000001,
+              0.481,
+              0.6839999999999999,
+              3.452,
+              5.173
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 2001,
+            "reference_score": 253.8089824772357,
+            "improvement": 0.49712144132720937,
+            "parameters": [
+              0.369,
+              0.2071,
+              -0.422,
+              12.2,
+              0.33999999999999997,
+              0.69,
+              2.044,
+              5.308
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 2251,
+            "reference_score": 253.81204800226394,
+            "improvement": 0.003065525028233651,
+            "parameters": [
+              0.371,
+              0.1905,
+              -0.429,
+              13.49,
+              0.25,
+              0.46599999999999997,
+              3.057,
+              4.849
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 2501,
+            "reference_score": 253.81204800226394,
+            "improvement": 0.0,
+            "parameters": [
+              0.371,
+              0.1905,
+              -0.429,
+              13.49,
+              0.25,
+              0.46599999999999997,
+              3.057,
+              4.849
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 2
+          }
+        ],
+        "search_evaluations": 2501,
+        "refinement_evaluations": 200,
+        "reference_evaluations": 230,
+        "search_stop_reason": "Reference improvement below tolerance across consecutive checks",
+        "note": "Rank uncertainty is heuristic; final selection uses the reference objective, not mixed-budget scores.",
+        "sampling_work": {
+          "calls": 744,
+          "candidate_trajectories": 64205000
+        }
+      },
+      "search_budget_counts": {
+        "5000": 1721,
+        "10000": 180,
+        "20000": 160,
+        "40000": 230,
+        "80000": 130,
+        "100000": 80
+      },
+      "mean_search_estimates": 16475.409836065573,
+      "search_sampling_seconds": 201.62885372061282,
+      "refinement_sampling_seconds": 64.74981890921481,
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 200
+      }
+    },
+    "adaptive-v2-start1": {
+      "label": "Adaptive, start 1",
+      "fit_seconds": 153.70703475899063,
+      "total_seconds": 168.31477026897483,
+      "setup_seconds": 11.47426507389173,
+      "evaluations": 1701,
+      "fitted": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.363,
+        "RT_GATE.intercept[1]": 0.1956,
+        "Bias Mechanism.intercept": -0.417,
+        "Control Units\n[Color, Location].gain[1]": 9.190000000000001,
+        "LC.mode[0.0]": 0.336,
+        "LC.mode[1.0]": 0.45999999999999996,
+        "LC.slope[1]": 2.7830000000000004,
+        "LC.intercept": 5.634
+      },
+      "training_log_likelihood": 252.46822442118025,
+      "validation": [
+        {
+          "seed": 8101,
+          "truth": 252.12513732910156,
+          "initial": -857.5192260742188,
+          "fitted": 252.34188842773438,
+          "fitted_minus_initial": 1109.8611145019531,
+          "fitted_minus_truth": 0.2167510986328125
+        },
+        {
+          "seed": 8102,
+          "truth": 252.55711364746094,
+          "initial": -854.9105224609375,
+          "fitted": 251.9263153076172,
+          "fitted_minus_initial": 1106.8368377685547,
+          "fitted_minus_truth": -0.63079833984375
+        },
+        {
+          "seed": 8103,
+          "truth": 251.847412109375,
+          "initial": -861.390869140625,
+          "fitted": 251.9862518310547,
+          "fitted_minus_initial": 1113.3771209716797,
+          "fitted_minus_truth": 0.1388397216796875
+        }
+      ],
+      "mean_validation_log_likelihood": 252.0848185221354,
+      "validation_standard_deviation": 0.22463703831722967,
+      "invalid_sampling_records": 55,
+      "observations_sha256": "b40d7bf5ade54ea416dda3603835d4c3672415692f8900e53df80a3ca91b9753",
+      "driver_sha256": "9c05c9cc965af5bbb9377d66d35d5b10cdafe45fee2fe25f7177bddb606f92fa",
+      "optimizer_seed": 202,
+      "simulation_seed": 37,
+      "optimizer_storage": "memory",
+      "predictive_summaries": {
+        "truth": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084698796272278,
+            "mean_rt": 0.9412084817886353,
+            "rt_quantiles": [
+              0.7099999785423279,
+              0.9099999666213989,
+              1.2200000286102295
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.4807068109512329,
+            "mean_rt": 0.9283570051193237,
+            "rt_quantiles": [
+              0.699999988079071,
+              0.8999999761581421,
+              1.1999999284744263
+            ]
+          }
+        },
+        "fitted": {
+          "0": {
+            "count": 1466368,
+            "choice_one_probability": 0.5084808468818665,
+            "mean_rt": 0.937510073184967,
+            "rt_quantiles": [
+              0.6956000328063965,
+              0.9055999517440796,
+              1.2355999946594238
+            ]
+          },
+          "1": {
+            "count": 1482752,
+            "choice_one_probability": 0.48073244094848633,
+            "mean_rt": 0.9351992011070251,
+            "rt_quantiles": [
+              0.6855999827384949,
+              0.8955999612808228,
+              1.2355999946594238
+            ]
+          }
+        }
+      },
+      "adaptive": {
+        "initial_reference_score": -855.4841652250477,
+        "reference_seed": 37,
+        "reference_estimates": 100000,
+        "checkpoints": [
+          {
+            "evaluations": 251,
+            "reference_score": 238.1299197593169,
+            "improvement": 1093.6140849843646,
+            "parameters": [
+              0.436,
+              0.22890000000000002,
+              -0.372,
+              10.11,
+              0.62,
+              0.383,
+              1.25,
+              5.742
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 501,
+            "reference_score": 238.1299197593169,
+            "improvement": 0.0,
+            "parameters": [
+              0.436,
+              0.22890000000000002,
+              -0.372,
+              10.11,
+              0.62,
+              0.383,
+              1.25,
+              5.742
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 751,
+            "reference_score": 244.0315384563716,
+            "improvement": 5.901618697054715,
+            "parameters": [
+              0.42500000000000004,
+              0.1825,
+              -0.402,
+              8.18,
+              0.383,
+              0.165,
+              1.415,
+              6.564
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1001,
+            "reference_score": 251.77025497358073,
+            "improvement": 7.738716517209127,
+            "parameters": [
+              0.394,
+              0.1865,
+              -0.41000000000000003,
+              8.92,
+              0.29000000000000004,
+              0.45799999999999996,
+              2.7190000000000003,
+              5.9030000000000005
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 0
+          },
+          {
+            "evaluations": 1251,
+            "reference_score": 251.77025497358073,
+            "improvement": 0.0,
+            "parameters": [
+              0.394,
+              0.1865,
+              -0.41000000000000003,
+              8.92,
+              0.29000000000000004,
+              0.45799999999999996,
+              2.7190000000000003,
+              5.9030000000000005
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 1
+          },
+          {
+            "evaluations": 1501,
+            "reference_score": 251.77025497358073,
+            "improvement": 0.0,
+            "parameters": [
+              0.394,
+              0.1865,
+              -0.41000000000000003,
+              8.92,
+              0.29000000000000004,
+              0.45799999999999996,
+              2.7190000000000003,
+              5.9030000000000005
+            ],
+            "selection_candidates": 4,
+            "stale_checks": 2
+          }
+        ],
+        "search_evaluations": 1501,
+        "refinement_evaluations": 200,
+        "reference_evaluations": 218,
+        "search_stop_reason": "Reference improvement below tolerance across consecutive checks",
+        "note": "Rank uncertainty is heuristic; final selection uses the reference objective, not mixed-budget scores.",
+        "sampling_work": {
+          "calls": 396,
+          "candidate_trajectories": 36555000
+        }
+      },
+      "search_budget_counts": {
+        "5000": 1151,
+        "10000": 180,
+        "20000": 70,
+        "40000": 60,
+        "80000": 30,
+        "100000": 10
+      },
+      "mean_search_estimates": 9830.113257828114,
+      "search_sampling_seconds": 85.79780214442872,
+      "refinement_sampling_seconds": 58.87940430431627,
+      "adaptive_config": {
+        "min_estimates": 5000,
+        "max_estimates": 100000,
+        "rank_tolerance": 1.0,
+        "check_every": 250,
+        "min_evaluations": 1000,
+        "patience": 2,
+        "progress_tolerance": 0.25,
+        "refine_evaluations": 200
+      }
+    }
+  },
+  "comparison": {
+    "adaptive-start0": {
+      "fit_speedup_vs_fixed_start0": 3.842994125213504,
+      "total_speedup_vs_fixed_start0": 3.6736953251417073,
+      "validation_score_difference_vs_fixed_start0": -0.8868662516275947,
+      "paired_validation_differences": [
+        -1.085296630859375,
+        -0.9271392822265625,
+        -0.648162841796875
+      ],
+      "parameter_difference_vs_fixed_start0": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.0040000000000000036,
+        "RT_GATE.intercept[1]": -0.011699999999999988,
+        "Bias Mechanism.intercept": -0.012999999999999956,
+        "Control Units\n[Color, Location].gain[1]": 1.9700000000000006,
+        "LC.mode[0.0]": -0.09999999999999998,
+        "LC.mode[1.0]": -0.2719999999999999,
+        "LC.slope[1]": 0.5010000000000003,
+        "LC.intercept": -0.33399999999999963
+      },
+      "parameter_difference_as_fraction_of_bounds": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.008888888888888898,
+        "RT_GATE.intercept[1]": -0.05849999999999995,
+        "Bias Mechanism.intercept": -0.025999999999999912,
+        "Control Units\n[Color, Location].gain[1]": 0.13133333333333339,
+        "LC.mode[0.0]": -0.12499999999999997,
+        "LC.mode[1.0]": -0.33999999999999986,
+        "LC.slope[1]": 0.16700000000000012,
+        "LC.intercept": -0.04771428571428566
+      }
+    },
+    "adaptive-v2-start0": {
+      "fit_speedup_vs_fixed_start0": 5.609287286141285,
+      "total_speedup_vs_fixed_start0": 5.103149067108136,
+      "validation_score_difference_vs_fixed_start0": -0.8868662516275947,
+      "paired_validation_differences": [
+        -1.085296630859375,
+        -0.9271392822265625,
+        -0.648162841796875
+      ],
+      "parameter_difference_vs_fixed_start0": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.0040000000000000036,
+        "RT_GATE.intercept[1]": -0.011699999999999988,
+        "Bias Mechanism.intercept": -0.012999999999999956,
+        "Control Units\n[Color, Location].gain[1]": 1.9700000000000006,
+        "LC.mode[0.0]": -0.09999999999999998,
+        "LC.mode[1.0]": -0.2719999999999999,
+        "LC.slope[1]": 0.5010000000000003,
+        "LC.intercept": -0.33399999999999963
+      },
+      "parameter_difference_as_fraction_of_bounds": {
+        "Response Units\n[Left, Right].termination_threshold[1]": 0.008888888888888898,
+        "RT_GATE.intercept[1]": -0.05849999999999995,
+        "Bias Mechanism.intercept": -0.025999999999999912,
+        "Control Units\n[Color, Location].gain[1]": 0.13133333333333339,
+        "LC.mode[0.0]": -0.12499999999999997,
+        "LC.mode[1.0]": -0.33999999999999986,
+        "LC.slope[1]": 0.16700000000000012,
+        "LC.intercept": -0.04771428571428566
+      }
+    },
+    "adaptive-v2-start1": {
+      "fit_speedup_vs_fixed_start0": 10.494432358962749,
+      "total_speedup_vs_fixed_start0": 9.817298452324072,
+      "validation_score_difference_vs_fixed_start0": -2.9747670491536553,
+      "paired_validation_differences": [
+        -3.00079345703125,
+        -3.077239990234375,
+        -2.8462677001953125
+      ],
+      "parameter_difference_vs_fixed_start0": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.019000000000000017,
+        "RT_GATE.intercept[1]": -0.016000000000000014,
+        "Bias Mechanism.intercept": -0.006999999999999951,
+        "Control Units\n[Color, Location].gain[1]": -3.3299999999999983,
+        "LC.mode[0.0]": -0.04299999999999998,
+        "LC.mode[1.0]": -0.23299999999999998,
+        "LC.slope[1]": 0.2940000000000005,
+        "LC.intercept": 0.5350000000000001
+      },
+      "parameter_difference_as_fraction_of_bounds": {
+        "Response Units\n[Left, Right].termination_threshold[1]": -0.042222222222222265,
+        "RT_GATE.intercept[1]": -0.08000000000000007,
+        "Bias Mechanism.intercept": -0.013999999999999901,
+        "Control Units\n[Color, Location].gain[1]": -0.2219999999999999,
+        "LC.mode[0.0]": -0.05374999999999998,
+        "LC.mode[1.0]": -0.29124999999999995,
+        "LC.slope[1]": 0.09800000000000016,
+        "LC.intercept": 0.07642857142857144
+      }
+    }
+  },
+  "limitations": [
+    "One synthetic subject; multiple optimizer starts do not establish population recovery.",
+    "Fixed and adaptive start-0 jobs ran on separate H100 NVL GPUs on the same node, with isolated initially empty caches.",
+    "Adaptive start 1, if present, reused the adaptive-v2 cache; its total time is not a matched cold-cache comparison.",
+    "All runs use in-memory storage; journal removal is not credited in these speedups.",
+    "The fixed comparator retains existing serial retry behavior for invalid candidates; the final adaptive strategy includes fused candidate rejection.",
+    "Validation seeds were not used for candidate selection or stopping; no hyperparameters were changed between adaptive versions.",
+    "Block uncertainty is a budget heuristic, not a calibrated confidence interval.",
+    "Candidate trajectory counts include starts that terminate early after truncation."
+  ],
+  "truncation_optimization": {
+    "same_fitted_parameters": true,
+    "same_validation_scores": true,
+    "fit_speedup": 1.459613807197702,
+    "fit_seconds_saved": 132.17157963407226,
+    "identical_proposals_scores_budgets_and_block_seeds": 2701
+  },
+  "fixed_comparator_matches_historical_proposals_and_scores": 5000,
+  "historical_fixed_start1_quality_context": {
+    "fitted": {
+      "Response Units\n[Left, Right].termination_threshold[1]": 0.383,
+      "RT_GATE.intercept[1]": 0.196,
+      "Bias Mechanism.intercept": -0.423,
+      "Control Units\n[Color, Location].gain[1]": 14.700000000000001,
+      "LC.mode[0.0]": 0.309,
+      "LC.mode[1.0]": 0.533,
+      "LC.slope[1]": 2.4210000000000003,
+      "LC.intercept": 4.864
+    },
+    "validation": [
+      {
+        "seed": 8101,
+        "truth": 252.12513732910156,
+        "initial": -857.5192260742188,
+        "fitted": 254.9730224609375,
+        "fitted_minus_truth": 2.8478851318359375
+      },
+      {
+        "seed": 8102,
+        "truth": 252.55711364746094,
+        "initial": -854.9105224609375,
+        "fitted": 254.69981384277344,
+        "fitted_minus_truth": 2.1427001953125
+      },
+      {
+        "seed": 8103,
+        "truth": 251.847412109375,
+        "initial": -861.390869140625,
+        "fitted": 254.97781372070312,
+        "fitted_minus_truth": 3.130401611328125
+      }
+    ],
+    "note": "Historical context only; not a matched timing comparator."
+  }
+}

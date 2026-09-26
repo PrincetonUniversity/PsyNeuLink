@@ -3,6 +3,8 @@
 For running fits and parameter recovery, start with the [fitting guide](README.md).
 This page records implementation details and simulation checks. Timings and
 the history of performance work are in the [benchmark results](dawa_benchmark_results.md).
+Local experiments with simulation budgets and cached nondecision-time scoring
+are documented in the [fitting acceleration study](fitting_acceleration/README.md).
 
 ## Supported model components
 

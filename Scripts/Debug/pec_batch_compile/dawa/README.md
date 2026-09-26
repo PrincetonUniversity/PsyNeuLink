@@ -98,6 +98,55 @@ response per trial in each trajectory. `--evaluations` counts parameter
 proposals, not generations. `--population` controls the CMA-ES population and
 candidate batch size. These meanings are the same for recovery.
 
+## Try adaptive fitting
+
+Both runners support `--fit-strategy adaptive`. This starts with small simulation
+budgets, adds independent samples when candidate rankings are uncertain, and
+checks promising candidates at the maximum budget. A final refinement retains
+the parameter correlations learned during the search:
+
+```bash
+python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
+  --data "$DAWA_DATA" --subject 1 --fit-strategy adaptive \
+  --estimates 100000 --evaluations 5000 \
+  --output "$DAWA_RESULTS/subject1-adaptive"
+```
+
+For recovery, use the same options with `dawa_pec_recovery.py`. In this mode,
+`--estimates` is the maximum/reference budget and `--evaluations` is a cap on
+search plus refinement proposals. The current experimental policy defaults to:
+
+- Up to 2,000 search proposals, starting with four independent blocks totaling
+  5,000 estimates. Uncertainty in ordering within the leading candidates also
+  triggers extra samples. This is a heuristic, not a confidence guarantee.
+- 600 proposals at the maximum budget, retaining the learned covariance.
+  A coarse-search plateau triggers this stage; it does not imply convergence.
+- A comparison of eight finalists on three fresh maximum-budget blocks,
+  pooling densities before taking logs. Separate validation seeds then assess
+  the selected fit.
+
+Use `--adaptive-search-evaluations` and `--adaptive-refine-evaluations` to change
+the stage budgets. Screening, reference checks, and final selection add scoring
+work outside the proposal count; their time is included in reported fit time.
+Smaller simulation blocks scale pseudocounts to keep the prior weight constant.
+`best_training_log_likelihood` is the selected fit's original reference-seed
+score; `adaptive.best_reference_score` can be higher. Final selection details
+are saved under `adaptive.final_selection`.
+
+Adaptive fits default to in-memory optimizer storage and save evaluation logs,
+trial tables, and results. Add `--optimizer-storage journal` to persist the
+broad-search optimizer internals too. `--fit-strategy fixed` remains the default.
+See [the original adaptive experiment](fitting_acceleration/adaptive_h100.md)
+and [its quality diagnosis](fitting_acceleration/quality_diagnosis.md) for the
+motivation behind this revision. Use multiple starts when comparing parameter estimates.
+
+The [revised H100 test](fitting_acceleration/adaptive_v2_h100.md) took **8.1–8.5
+minutes**, versus a **27.5-minute** fixed-budget benchmark (about **3.3× faster**).
+Both revised fits had fresh-seed likelihoods close to their corresponding fixed
+fits. The earlier policy was faster but fit less well. This is still experimental:
+two starts on one synthetic subject do not establish recovery across subjects,
+and some LC parameter estimates still differ noticeably.
+
 ## Run a short recovery check
 
 From the repository root, with the environment activated:
@@ -238,7 +287,7 @@ Budget and seed options are exposed by `--help` on either command. Generating pa
 settings are currently specified in [the shared fitting script](dawa_pec_fit.py).
 Bounds come from `fit_surface()` in [dawa_batched_simulation.py](dawa_batched_simulation.py).
 Changing those model/estimator settings currently requires editing the code;
-there are no CLI flags for them yet.
+the exception is the histogram pseudocount, exposed as `--pseudocount`.
 
 ## Read the results
 
@@ -250,6 +299,13 @@ there are no CLI flags for them yet.
 | `manifest.json` | Settings, parameter order/bounds, seeds, data/source hashes, device, completion status |
 | `observed_subject.csv` or `synthetic_subject.csv` | The selected empirical or generated observations actually fitted, including masked rows |
 | `evaluations.jsonl`, `optimizer_trials.csv`, `optimizer.journal` | Search history and optimizer records |
+| `optimizer_refinement_trials.csv` (adaptive) | The separate local refinement at the reference simulation budget |
+
+`optimizer.journal` is present only with journal storage. Adaptive reports also
+record simulation budgets, independent block seeds, incumbent checks, stopping
+reason, and total sampled trajectories. Low-budget search scores may not be
+comparable across generations; use the final reference score and fresh-seed
+validation to compare fits.
 
 Compare agreement between starts and observed/predicted choice/RT summaries;
 for recovery, also compare parameter errors. Higher log likelihood is better,
