@@ -1636,21 +1636,24 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # autodiff specific types
                      "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
-                     "allocation_samples", "control_allocation_search_space",
+                     "allocation_samples",
+                     # Used at compile time
+                     "enabled_cost_functions", "control_allocation_search_space", "has_recurrent_input_port",
+                     "loss", "metric", "max_entries", "per_item",
                      # not used in computation
                      "auto", "hetero", "cost", "costs",
                      "control_signal", "competition",
-                     "has_recurrent_input_port", "enable_learning",
+                     "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "range", "internal_only",
                      "require_projection_in_composition", "default_input",
                      "shadow_inputs", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",
-                     "enabled_cost_functions", "control_signal_costs",
+                     "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "random_variables", "smoothing_factor", "per_item",
-                     "key_size", "val_size", "max_entries", "random_draw",
+                     "random_variables", "smoothing_factor",
+                     "key_size", "val_size", "random_draw",
                      "randomization_dimension", "save_values", "save_samples",
                      "max_iterations", "duplicate_keys",
                      "search_termination_function", "state_feature_function",
@@ -1673,8 +1676,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
                      "mask",
-                     # LossMechanism
-                     "loss", "metric",
                      # MatrixTransform
                      "axes",
                      }
