@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -11,7 +12,9 @@ import pytest
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
-from dawa_pec_fit import load_subject  # noqa: E402
+from dawa_pec_fit import (  # noqa: E402
+    LAUNCH, STARTS, build_model, histogram_settings, load_subject, main, make_fit_pec, node,
+)
 
 
 @pytest.fixture
@@ -65,7 +68,80 @@ def test_masked_rt_outside_histogram_retains_history(tmp_path, design):
     design.loc[2, "response_time"] = 4.
     path = tmp_path / "data.csv"
     design.to_csv(path, index=False)
-    assert load_subject(path, 42).response_time.iloc[0] == 4.
+    frame = load_subject(path, 42)
+    assert frame.response_time.iloc[0] == 4.
+    bins, rt_range = histogram_settings(frame, "conditioned")
+    assert bins == 134
+    assert rt_range == pytest.approx((0., 4.02))
+    assert (rt_range[1] - rt_range[0]) / bins == pytest.approx(.03)
+    assert histogram_settings(frame, "marginal") == (100, (0., 3.))
+
+
+@pytest.mark.parametrize("extra", [["--fit-strategy", "adaptive"], ["--profile-ndt"]])
+def test_conditioned_rejects_unsupported_shortcuts_before_creating_output(tmp_path, capsys, extra):
+    output = tmp_path / "must_not_exist"
+    with pytest.raises(SystemExit, match="2"):
+        main(["--data", str(tmp_path / "missing.csv"), "--output", str(output), *extra])
+    assert "changes particle history" in capsys.readouterr().err
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("likelihood", ["conditioned", "marginal"])
+def test_pec_objective_routes_training_and_rescoring_with_complete_history(
+    tmp_path, design, monkeypatch, likelihood,
+):
+    """Exercise the real PEC closure without compiling/running a GPU kernel."""
+    path = tmp_path / "data.csv"
+    design.loc[2, "response_time"] = 4.
+    design.to_csv(path, index=False)
+    frame = load_subject(path, 42)
+    model, inputs, outputs = build_model(trials=len(frame), c_noise=.1, s_noise=.1, d_noise=.1, r_noise=.1)
+    inputs[node(model, "Task Input")] = frame[["T1", "T2"]].to_numpy()
+    inputs[node(model, "Stimulus Input")] = frame[["S1", "S2", "S3", "S4"]].to_numpy()
+    args = SimpleNamespace(likelihood=likelihood, evaluations=11, max_steps=2000,
+                           simulation_seed=29, pseudocount=.5, population=2, estimates=64)
+    pec = make_fit_pec(model, inputs, outputs, frame, args)
+    function = pec.controller.function
+    assert function.batched_parameter_batch_size == 2
+    calls = []
+
+    def record(method):
+        def score(received_inputs, parameters, **kwargs):
+            calls.append((method, received_inputs, parameters, kwargs))
+            return np.arange(len(parameters), dtype=float) + 1.
+        return score
+
+    plan = SimpleNamespace(conditioned_log_likelihood=record("conditioned"),
+                           log_likelihood=record("marginal"),
+                           ir=SimpleNamespace(graph=SimpleNamespace(inputs=[
+                               SimpleNamespace(node=mechanism.name) for mechanism in inputs
+                           ])))
+    monkeypatch.setattr(function, "_compile_batched_plan", lambda: plan)
+    monkeypatch.setattr(function, "_batched_outcome_indices", lambda _: [0, 1])
+    training = function._make_objective_func()._batched_parameter_sets(STARTS)
+    np.testing.assert_array_equal(training, [1., 2.])
+    # Rescoring must build the same conditioned closure at the fresh budget and
+    # preserve the contamination fraction by scaling alpha with particle count.
+    pec.controller.num_estimates = 128
+    function.batched_pseudocount = 1.
+    function.batched_seed = 8101
+    validation = function._make_objective_func()._batched_parameter_sets(STARTS)
+    np.testing.assert_array_equal(validation, training)
+    for index, (method, received_inputs, parameters, kwargs) in enumerate(calls):
+        assert method == likelihood
+        assert len(parameters) == 2
+        np.testing.assert_array_equal(received_inputs[node(model, "Task Input").name], frame[["T1", "T2"]])
+        np.testing.assert_array_equal(kwargs["data"], frame[["decision", "response_time"]])
+        np.testing.assert_array_equal(kwargs["include_mask"], [False, True, True, True])
+        assert kwargs["strict_truncation"] is True
+        assert kwargs["triton_launch_options"] == LAUNCH
+        assert kwargs["num_estimates"] == (64, 128)[index]
+        assert kwargs["pseudocount"] == (.5, 1.)[index]
+        assert kwargs["seed"] == (29, 8101)[index]
+        assert kwargs["bins"] == (134 if likelihood == "conditioned" else 100)
+        for row, start in zip(parameters, STARTS, strict=True):
+            mode = next(value for key, value in row.items() if key.endswith(".mode"))
+            np.testing.assert_array_equal(mode.values, [start[4], start[5], start[4], start[5]])
 
 
 def test_missing_subject_and_unscored_condition_are_explicit_errors(tmp_path, design):
@@ -101,6 +177,10 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
     assert report["validation_estimates"] == (64 if recovery else 128)
     assert report["validation_pseudocount"] == 1.
     assert manifest["estimator"]["pseudocount"] == (1. if recovery else .5)
+    assert manifest["arguments"]["likelihood"] == "conditioned"
+    assert manifest["estimator"]["kind"] == "observation_conditioned_particle_histogram"
+    assert manifest["estimator"]["masked_observations_condition_history"] is True
+    assert report["estimator"] == manifest["estimator"]
     assert (output / "optimizer.journal").exists() == recovery
     assert (output / "optimizer_trials.csv").exists()
     assert (output / "evaluations.jsonl").exists()
@@ -131,7 +211,7 @@ def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, d
     output = tmp_path / "adaptive"
     entry = "dawa_pec_recovery.py" if recovery else "dawa_pec_fit.py"
     command = [sys.executable, str(DIRECTORY / entry), "--data", str(path),
-               "--subject", "42", "--fit-strategy", "adaptive", "--estimates", "64",
+               "--subject", "42", "--likelihood", "marginal", "--fit-strategy", "adaptive", "--estimates", "64",
                "--adaptive-min-estimates", "16", "--evaluations", "41", "--adaptive-check-every", "10",
                "--adaptive-min-evaluations", "21", "--adaptive-patience", "1",
                "--adaptive-progress-tolerance", "100000", "--adaptive-refine-evaluations", "10",

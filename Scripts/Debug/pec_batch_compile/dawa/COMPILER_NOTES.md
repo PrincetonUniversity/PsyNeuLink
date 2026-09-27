@@ -61,9 +61,14 @@ random numbers across parameter candidates by default. Seeded GPU runs replay
 on the GPU; they do not reproduce NumPy/LLVM draws.
 
 Both held controller outputs and the values last sampled by each target are
-represented explicitly. Trial resets use the sampled values. Run each
-subject's complete ordered sequence in one call: `initial_states` does not
-yet restore controller values, so resuming these networks is rejected.
+represented explicitly. Trial resets use the sampled values. The returned
+`final_states` buffer includes these controller values after the mechanism
+states; pass the complete buffer as `initial_states` when resuming a sequence.
+Preserve the full-sequence RNG length and trial offset for matched seeded
+execution. This transport also supports the observation-conditioned particle
+filter, which resamples complete state buffers between trials. Noisy DAWA
+split-launch tests check exact agreement with a continuous run, including
+varying controls and both trial schedules.
 Compilation starts from construction defaults, not a live composition's state.
 
 ## Simulation checks

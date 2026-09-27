@@ -643,10 +643,13 @@ class PECOptimizationFunction(OptimizationFunction):
         the estimator, trial history, or observation-conditioned likelihood paths.
 
     conditioned_likelihood :
-        If True, score the CSI model one trial at a time and resample its
+        If True, score one trial at a time and resample its
         retained state using the current observed choice/RT before continuing.
-        The experimental path is implemented for both LLVM PEC and the batched
-        co-evolving compiler and uses the batched histogram observation model.
+        The batched co-evolving compiler supports noisy retained mechanism and
+        controller state with a binned observation kernel. A positive pseudocount
+        specifies a uniform observation-contamination component and contributes
+        to both scoring and ancestry weights. The older LLVM CSI prototype
+        remains available with zero pseudocounts only.
 
     deterministic_history_likelihood :
         If True, use generated CUDA choice/RT likelihood compilation for a deterministic persistent
@@ -1155,9 +1158,9 @@ class PECOptimizationFunction(OptimizationFunction):
     def _batched_objective_func(self, context=None):
         """Objective closure that simulates + scores via the batched plan.
 
-        Returns the total histogram log-likelihood of the data (higher is better) —
-        the same quantity as the default data-fitting objective, so the surrounding
-        optimizer/direction handling is unchanged.
+        Returns a total histogram log score (higher is better). The selected
+        history mode determines whether each trial distribution is marginal or
+        conditioned on earlier observations; the optimizer direction is unchanged.
         """
         pec = self.owner.composition
         exp_data = np.asarray(pec._data_numpy, dtype=float)

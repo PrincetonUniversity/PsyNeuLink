@@ -121,7 +121,9 @@ def test_replay_recovers_coupled_states_controls_and_schedule(noise):
         ordinary = plan.simulation_plan.run(inputs, [{}], num_estimates=1, seed=12,
                                             strict_truncation=True, return_final_states=True)
         np.testing.assert_array_equal(forward.observations, ordinary.values[:, 0, :, 0, :])
-        np.testing.assert_array_equal(forward.end_states[:, -1], ordinary.metadata["final_states"][:, 0, 0])
+        state_width = forward.end_states.shape[-1]
+        np.testing.assert_array_equal(forward.end_states[:, -1],
+                                      ordinary.metadata["final_states"][:, 0, 0, :state_width])
         reconstructed = plan.reconstruct(inputs, forward.observations[0])
         assert reconstructed.observations is None
         for name in (

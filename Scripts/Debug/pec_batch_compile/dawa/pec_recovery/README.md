@@ -4,6 +4,12 @@ For setup, fitting commands, and a short execution check, start with the
 [fitting and recovery guide](../README.md). This page records the completed
 pilot and its interpretation.
 
+**Historical marginal objective:** all timings, scores, and recovered values
+on this page used trial-marginal histograms, without conditioning carried state
+on observed responses. The driver now defaults to observation-conditioned
+particle filtering. Use `--likelihood marginal` to reproduce this pilot;
+its timings and recovery results do not validate the new default objective.
+
 The [recovery driver](../dawa_pec_recovery.py) generates one synthetic subject
 and fits all eight original coordinates with CMA-ES through PEC's compiled
 GPU objective. The input sequence and scoring mask come from the selected
@@ -103,6 +109,7 @@ From the repository root, on a CUDA GPU:
 
 ```bash
 .venv/bin/python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
+  --likelihood marginal \
   --estimates 100000 --evaluations 5000 --population 10 \
   --start 0 --optimizer-seed 101 --simulation-seed 29 \
   --output /tmp/dawa_recovery_start0

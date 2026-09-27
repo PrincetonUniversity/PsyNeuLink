@@ -34,6 +34,7 @@ from psyneulink.core.batched.backend.triton.emit.lanes import (
     DEFAULT_NORMAL_RNG, FAST_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
 )
 from psyneulink.core.batched.backend.triton.emit.trials import validate_trial_schedule
+from psyneulink.core.batched.backend.triton.state import retained_control_layout
 
 
 _DEFAULT_LAUNCH_OPTIONS = {
@@ -185,7 +186,9 @@ def run_triton(
     also work in the interpreter.
 
     Stateful and co-evolving kernels may be resumed from ``initial_states``
-    shaped ``[parameter_set, subject, estimate, state]``. When
+    shaped ``[parameter_set, subject, estimate, state]``. The state axis contains
+    mechanism states followed by held and sampled effective-control values;
+    pass the complete returned buffer back unchanged when resuming. When
     ``return_final_states`` is true, the retained state after the final trial is
     returned in ``result.metadata["final_states"]`` with the same shape.
     ``rng_trial_offset`` selects a disjoint per-trial Philox counter region for
@@ -211,11 +214,6 @@ def run_triton(
     )
     fusion_kind = None if ir.graph is None else ir.graph.fusion_kind
     kernel_ir = kernel_ir or lower_to_kernel_ir(ir)
-    if initial_states is not None and any(node.attrs.get("scalar_override_control") for node in kernel_ir.graph.nodes):
-        raise ValueError(
-            "Resuming scalar OVERRIDE networks requires held and sampled control values; "
-            "initial_states currently restores only mechanism state. Run each subject's complete sequence together."
-        )
     slots = diag_slots(kernel_ir) if ir.graph is not None else ()
     stateful_fusions = {STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION}
     if defer_device_checks and (
@@ -545,7 +543,7 @@ def _run_stateful_graph_kernel(
         if initial_states is not None or return_final_states:
             raise ValueError("Trial-parallel inspection uses its own validated trial-start state buffers.")
         total_lanes *= num_trials
-    state_width = sum(state.width for state in graph.states)
+    _, state_width = retained_control_layout(graph)
     state_shape = (num_params, num_subjects, num_estimates, state_width)
     if initial_states is None:
         initial_state = torch.empty((1,), dtype=torch.float32, device=device)

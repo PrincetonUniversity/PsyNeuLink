@@ -16,7 +16,17 @@ There are currently two fitting workflows:
 Both commands use the same model, parameter bounds, and CMA-ES fitting pipeline.
 Use the fit command for empirical data: recovery replaces the CSV's recorded
 responses with simulated ones. The similarly named `dawa_pec_fit_benchmark.py`
-only times fixed parameter proposals.
+only times fixed parameter proposals under the legacy marginal objective.
+Use [dawa_conditioned_benchmark.py](dawa_conditioned_benchmark.py) to compare
+the current fitting objective with that baseline. Implementation, validation,
+and timing details are in [CONDITIONED_LIKELIHOOD.md](CONDITIONED_LIKELIHOOD.md).
+
+The default fitting objective now conditions each trial's control-state
+distribution on the subject's earlier observed choices and RTs. Previous
+Dawa GPU fits and performance reports used a **trial-marginal objective**:
+they retained simulated state but did not update it using observed responses.
+Those results do not measure the corrected fitting workload. Select
+`--likelihood marginal` only for an explicit comparison with that legacy objective.
 
 ## Environment and data
 
@@ -53,7 +63,7 @@ The runners use these columns:
 | `subject_nr` | Subject ID selected by `--subject` |
 | `T1, T2, S1, S2, S3, S4` | Task and stimulus inputs in their original order |
 | `PrevCongruency` | Previous condition, coded 0 or 1; rows with missing values are excluded |
-| `likelihood_include_mask` | 1 to score the observation, 0 to retain the trial only for state history |
+| `likelihood_include_mask` | 1 to score the observation, 0 to condition state history without adding its log score |
 | `decision`, `response_time` | Recorded choice (0/1) and RT in **seconds**; required only for empirical fitting |
 
 Both previous-congruency levels must have scored trials. Keep masked trials
@@ -61,6 +71,10 @@ and preserve row order. Inputs and empirical outcomes must be finite on all
 retained rows, including masked trials. RTs must be positive; scored RTs must
 lie within the configured 0–3 s histogram range. The runners check these
 requirements before creating a run directory.
+For conditioned fitting, masked RTs outside 0–3 s expand the histogram's upper
+bound in 30 ms increments; the bin width and smoothing width stay unchanged.
+The complete retained observation sequence, including masked rows, updates
+the control-state distribution. A masked row is therefore not a missing observation.
 
 ## Fit a subject's recorded responses
 
@@ -98,21 +112,66 @@ response per trial in each trajectory. `--evaluations` counts parameter
 proposals, not generations. `--population` controls the CMA-ES population and
 candidate batch size. These meanings are the same for recovery.
 
-## Try adaptive fitting
+## Observation-conditioned fitting
 
-Both runners support `--fit-strategy adaptive`. This starts with small simulation
+`--likelihood conditioned` is the default. Each parameter candidate maintains
+its own population of control states. The compiler simulates one coupled
+trial, weights the resulting states by the observed choice/RT, systematically
+resamples them, and advances to the next trial. Candidate populations remain
+batched on the GPU. Masked trials perform the same update but contribute no
+log score. Training and independent-seed rescoring use this same objective.
+With every row scored, multiplying these conditional factors estimates the
+joint sequence likelihood under the observation model below. With a score
+mask, the objective multiplies only the selected conditional factors. It still
+uses every earlier retained observation to predict the next trial; it is not
+the full joint sequence likelihood, nor generally the joint distribution of
+scored observations conditional on all masked observations.
+
+This is a sequential particle approximation under an explicit **binned,
+Gaussian-smoothed observation model**, with optional uniform contamination
+corresponding to the pseudocount. It is not the exact unsmoothed point density
+of the original model. Gaussian mass is normalized from each in-range simulated
+bin over the finite observation support. Out-of-range simulated outcomes
+retain their probability in an unobserved overflow event; they are not
+discarded from the denominator or moved to an edge bin. The legacy marginal histogram normalized
+at the target bin instead; scores can therefore also differ near histogram
+boundaries.
+
+With `N` particles, `K` joint choice/RT cells, and pseudocount `alpha`, the
+uniform contamination fraction is `K*alpha / (N + K*alpha)`. Its contribution
+to each particle's observation weight is `alpha/N`: a contamination-dominated
+observation preserves the prior state distribution instead of inventing an
+unobserved ancestor. Fresh-budget rescoring scales `alpha` with `N`, preserving
+the contamination fraction. The manifest records the actual range, bin count,
+and contamination fraction. Setting `--pseudocount 0` removes contamination;
+observations with no particle support then fail explicitly.
+
+Noisy control state prevents CSI's deterministic-history shortcut. Trials
+must update in sequence, so the old free-running subject benchmarks cannot
+predict conditioned fit times. Finite-particle variation and state-posterior
+coverage need checking with larger budgets and independent seeds before
+interpreting a fit scientifically.
+
+## Legacy marginal adaptive fitting
+
+Both runners support `--likelihood marginal --fit-strategy adaptive`. This starts with small simulation
 budgets, adds independent samples when candidate rankings are uncertain, and
 checks promising candidates at the maximum budget. A final refinement retains
 the parameter correlations learned during the search:
 
 ```bash
 python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
-  --data "$DAWA_DATA" --subject 1 --fit-strategy adaptive \
+  --data "$DAWA_DATA" --subject 1 --likelihood marginal --fit-strategy adaptive \
   --estimates 100000 --evaluations 5000 \
   --output "$DAWA_RESULTS/subject1-adaptive"
 ```
 
-For recovery, use the same options with `dawa_pec_recovery.py`. In this mode,
+For recovery, use the same options with `dawa_pec_recovery.py`. Conditioned
+fitting currently rejects adaptive pooling and NDT profiling: independent
+trial-density blocks cannot be pooled as before, and changing NDT changes
+the observation weights and therefore subsequent state history. These
+shortcuts need separate sequential algorithms before they can be enabled.
+In marginal mode,
 `--estimates` is the maximum/reference budget and `--evaluations` is a cap on
 search plus refinement proposals. The current experimental policy defaults to:
 
@@ -169,7 +228,7 @@ well. LC parameter estimates still varied. To use the
 tested budgets, add these options to a fit or recovery command:
 
 ```bash
-  --fit-strategy adaptive --profile-ndt --estimates 100000 \
+  --likelihood marginal --fit-strategy adaptive --profile-ndt --estimates 100000 \
   --adaptive-search-evaluations 1000 --adaptive-refine-evaluations 300 \
   --optimizer-storage memory
 ```
@@ -228,7 +287,7 @@ To generate a new synthetic subject on the same design, change `--data-seed`
 and validation seeds distinct. Changing only the optimizer seed tests search
 variability, not recovery across different synthetic datasets.
 
-The completed H100 pilot took about **28 minutes per start** for 760 trials,
+The completed **legacy marginal** H100 pilot took about **28 minutes per start** for 760 trials,
 720 scored observations, 100,000 estimates, and 5,000 proposals. Runtime depends
 on the device, input sequence, and parameters. LC modes and scaling were weakly
 recovered in that pilot; compare multiple starts and synthetic datasets before
@@ -287,7 +346,7 @@ module, export `DAWA_CUDA_MODULE` before submission (the tested environment
 uses `cudatoolkit/13.0`). Leave `CUDA_VISIBLE_DEVICES` to Slurm. Della selects
 the partition from the resource request, so no explicit partition is needed.
 
-Both modes passed a [Slurm A100 test](dawa_benchmark_results.md#slurm-fitting-and-recovery-handoff-test-2026-09-25)
+Both modes previously passed a **legacy marginal** [Slurm A100 test](dawa_benchmark_results.md#slurm-fitting-and-recovery-handoff-test-2026-09-25)
 on the full 760-trial subject at 100,000 estimates and 21 proposals. These short
 runs validate execution; use the full budget and multiple starts for fitting.
 
@@ -310,14 +369,16 @@ Both runners use the tested recovery configuration:
 
 - **10 ms LCA timesteps**; the LC performs ten internal 20 ms steps per model pass.
 - **Noise SD 0.1 in each of the four LCAs**, fixed throughout fitting.
-- A simulated choice/RT histogram with **100 RT bins over 0–3 seconds**,
+- A simulated choice/RT histogram with **100 RT bins over 0–3 seconds**
+  (expanded at the same bin width when masked RTs require it),
   Gaussian smoothing of **0.5 bins (15 ms)**, and **pseudocount 1** per choice/RT cell.
-- A separate simulated control-state history for every estimate. Masked
-  observations still advance that history.
+- A population of noisy control states for each candidate. Every retained
+  observation updates that population, including masked observations.
 
-These are the pilot's settings, not established best choices for every dataset.
-The objective scores each trial's simulated choice/RT distribution; it does
-not condition latent control state on the observed responses.
+The physical model settings match the pilot; the default likelihood now
+conditions latent control state on observed responses. These are not
+established best choices for every dataset. `--likelihood marginal` restores
+the previous objective and its fixed 0–3 s histogram.
 
 Budget and seed options are exposed by `--help` on either command. Generating parameters
 (`TRUTH`), starting points (`STARTS`), noise, timestep checks, and histogram

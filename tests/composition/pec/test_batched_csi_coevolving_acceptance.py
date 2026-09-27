@@ -1619,7 +1619,7 @@ def test_csi_deterministic_history_matches_coupled_endpoint_execution(
     )[0, 0, 0]
     np.testing.assert_allclose(
         debug["history_states"].detach().cpu().numpy()[0, -1],
-        coupled_final_state,
+        coupled_final_state[:debug["history_states"].shape[-1]],
         rtol=2e-5,
         atol=2e-6,
     )
@@ -2030,3 +2030,39 @@ def test_csi_affine_timing_gpu_matches_fresh_python(
     actual = _run_compiled_csi("triton", **model_options)
 
     np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
+
+
+@pytest.mark.triton_gpu
+def test_csi_conditioned_prepared_matches_reference_with_trial_count_caps(
+    registered_csi_drift_rate, monkeypatch,
+):
+    """Preparing once preserves CSI's input-driven per-trial LCA loop limits."""
+    from psyneulink.core.batched.backend.triton import conditioned
+
+    composition, inputs, outputs = _model(
+        csi_repeat=3, csi_switch=4, iti=2, cue_values=[[0.], [1.], [0.]],
+        ddm_rate=0., ddm_noise=.1, lca_noise=.05,
+    )
+    plan = _compile_csi(composition, backend="triton", outputs=outputs, max_steps=128)
+    observed = plan.run(inputs, [{}], 1, seed=41, strict_truncation=True).values[0, 0, :, 0]
+    caps = []
+    original = conditioned.prepare_conditioned_runner
+
+    def record_caps(*args, **kwargs):
+        runner = original(*args, **kwargs)
+        caps.extend(runner.caps)
+        return runner
+
+    monkeypatch.setattr(conditioned, "prepare_conditioned_runner", record_caps)
+    options = dict(
+        inputs=inputs, parameter_sets=[{}], num_estimates=64, data=observed,
+        categorical_dims=[0], bins=16, bin_range=[(0., 2.)], smoothing_sigma=.5,
+        pseudocount=.5, categorical_cardinalities=[2], include_mask=[False, True, True],
+        seed=43, strict_truncation=True, return_diagnostics=True,
+    )
+    prepared, prepared_diagnostics = plan.conditioned_log_likelihood(**options)
+    reference, reference_diagnostics = plan.conditioned_log_likelihood(**options, execution="reference")
+    assert len(caps) == 3 and len(set(caps)) > 1
+    assert prepared == reference
+    for key in ["per_trial_densities", "effective_sample_size", "prior_mixture_fraction", "zero_support"]:
+        np.testing.assert_array_equal(prepared_diagnostics[key], reference_diagnostics[key])

@@ -1,8 +1,10 @@
-"""Measure full-subject DAWA candidate evaluation through PEC's GPU objective.
+"""Measure the legacy trial-marginal DAWA GPU objective.
 
 This benchmarks a fixed candidate pool, not optimizer convergence. Each candidate
 simulates the complete ordered subject sequence, preserving control state. The
 objective is the existing GPU histogram score, not native PEC's CPU fastKDE.
+Use dawa_conditioned_benchmark.py to benchmark the current conditioned fitting
+objective and compare its cost with this legacy marginal objective.
 """
 
 import argparse

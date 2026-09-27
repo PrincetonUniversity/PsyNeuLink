@@ -556,6 +556,9 @@ class BatchedSimulationPlan:
         common_random_numbers: bool = True,
         strict_truncation: bool = False,
         triton_launch_options: Mapping | None = None,
+        resampling: str = "systematic",
+        return_diagnostics: bool = False,
+        execution: str = "prepared",
     ):
         """Sequential histogram likelihood with persistent-state conditioning.
 
@@ -566,10 +569,38 @@ class BatchedSimulationPlan:
         ``p(state_t | observed outcomes before t)`` instead of carrying an
         unconditional simulated history through the whole sequence.
 
-        It is currently intended for the CSI co-evolving LCA/DDM model. The
-        state transport itself is general, but a general PEC contract must also
-        specify how latent state, observation kernels, missing observations,
-        and resampling interact for arbitrary models.
+        Every observed row conditions history, including rows excluded from
+        the log score by ``include_mask`` (the score then sums only selected
+        conditional log densities). All observations must be finite and
+        inside the histogram domain. Gaussian smoothing is normalized around
+        each simulated bin, defining a normalized observation kernel (the
+        marginal histogram scorer uses a different boundary convention).
+        Simulated outcomes outside this domain retain implicit overflow mass;
+        in-range particles are not renormalized to discard those outcomes.
+
+        A positive pseudocount is explicit uniform observation contamination:
+        with N particles and K joint cells, its probability is
+        ``K*alpha/(N+K*alpha)``. Each particle receives weight ``alpha/N`` in
+        addition to its histogram contribution, preserving prior predictive
+        ancestry for contamination observations. Specify category cardinalities
+        if some possible responses are absent from the observations.
+
+        Systematic resampling is the default; ``resampling='multinomial'``
+        selects the original algorithm. Both replay deterministically for a
+        fixed seed, but their realizations differ. Systematic resampling shares
+        random offsets across parameter candidates when common random numbers
+        are enabled; legacy multinomial resampling depends on the batch size.
+        Zero particle support with
+        alpha=0 raises rather than returning a floored, invalid filtered score.
+        With ``return_diagnostics=True``, return ``(score, diagnostics)`` with
+        density, ESS, contamination responsibility and zero-support arrays
+        shaped [parameter_set, subject, trial]. Missing observations and
+        multiple disjoint subject sequences are not supported.
+
+        ``execution='prepared'`` prepares the CUDA kernel, inputs and parameters
+        once for the sequence. ``'reference'`` uses independent full runtime
+        preparation for each trial. CPU interpretation always uses the reference
+        path. Both execute the same trial kernel and observation update.
         """
 
         from collections.abc import Mapping as MappingABC
@@ -579,25 +610,21 @@ class BatchedSimulationPlan:
 
         from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION
         from psyneulink.core.batched.ir import BatchedTrialParameter
-        from psyneulink.core.batched.likelihood import histogram_observation_weights
+        from psyneulink.core.batched.likelihood import _HistogramObservationWeights
         from psyneulink.core.batched.prep import normalize_parameter_sets
 
         if self.kernel_ir.fusion_kind != COEVOLVING_GRAPH_FUSION:
             raise BatchedCompileError(
                 "conditioned_log_likelihood is currently enabled only for a "
-                "co-evolving batched graph (the CSI LCA/DDM prototype)."
+                "co-evolving batched graph."
             )
-        if pseudocount != 0.0:
-            raise ValueError(
-                "A histogram pseudocount has no particle ancestry to resample; "
-                "conditioned_log_likelihood currently requires pseudocount=0."
-            )
-        if categorical_cardinalities is not None and pseudocount == 0.0:
-            # It has no effect without pseudocounts, matching histogram_likelihood.
-            categorical_cardinalities = None
+        if resampling not in {"systematic", "multinomial"}:
+            raise ValueError("resampling must be 'systematic' or 'multinomial'.")
+        if execution not in {"prepared", "reference"}:
+            raise ValueError("execution must be 'prepared' or 'reference'.")
         if subject_slices is not None:
             raise NotImplementedError(
-                "The CSI conditioned-likelihood prototype currently accepts one "
+                "The conditioned likelihood currently accepts one "
                 "contiguous subject sequence per call (subject_slices=None)."
             )
         if not isinstance(inputs, MappingABC):
@@ -630,48 +657,64 @@ class BatchedSimulationPlan:
         resampling_generator = None
         deferred_checks = None
         defer_device_checks = self.backend == "triton"
+        observation_weights = None
+        output_indices = None
+        diagnostic_rows = []
+        unsupported_rows = []
+        prepared_runner = None
+        if execution == "prepared" and self.backend == "triton":
+            from psyneulink.core.batched.backend.triton.conditioned import prepare_conditioned_runner
+
+            prepared_runner = prepare_conditioned_runner(
+                self, inputs, parameter_rows, num_estimates, num_trials=num_trials,
+                seed=seed, common_random_numbers=common_random_numbers,
+                triton_launch_options=triton_launch_options,
+            )
 
         for trial_index in range(num_trials):
-            trial_inputs = {
-                key: _slice_conditioned_trial(value, trial_index, num_trials)
-                for key, value in inputs.items()
-            }
-            trial_parameter_rows = []
-            for row in parameter_rows:
-                trial_row = {}
-                for name, value in row.items():
-                    if isinstance(value, BatchedTrialParameter):
-                        values = np.asarray(value.values)
-                        if values.ndim == 1:
-                            trial_row[name] = float(values[trial_index])
-                        elif values.ndim == 2:
-                            trial_row[name] = BatchedTrialParameter(
-                                values[:, trial_index : trial_index + 1]
-                            )
+            if prepared_runner is not None:
+                result = prepared_runner(trial_index, state)
+            else:
+                trial_inputs = {
+                    key: _slice_conditioned_trial(value, trial_index, num_trials)
+                    for key, value in inputs.items()
+                }
+                trial_parameter_rows = []
+                for row in parameter_rows:
+                    trial_row = {}
+                    for name, value in row.items():
+                        if isinstance(value, BatchedTrialParameter):
+                            values = np.asarray(value.values)
+                            if values.ndim == 1:
+                                trial_row[name] = float(values[trial_index])
+                            elif values.ndim == 2:
+                                trial_row[name] = BatchedTrialParameter(
+                                    values[:, trial_index : trial_index + 1]
+                                )
+                            else:
+                                raise ValueError(
+                                    f"Trial-varying parameter '{name}' must be a trial "
+                                    "vector or [subject, trial] array."
+                                )
                         else:
-                            raise ValueError(
-                                f"Trial-varying parameter '{name}' must be a trial "
-                                "vector or [subject, trial] array."
-                            )
-                    else:
-                        trial_row[name] = value
-                trial_parameter_rows.append(trial_row)
+                            trial_row[name] = value
+                    trial_parameter_rows.append(trial_row)
 
-            result = self.run(
-                trial_inputs,
-                trial_parameter_rows,
-                num_estimates,
-                seed=seed,
-                common_random_numbers=common_random_numbers,
-                strict_truncation=strict_truncation,
-                keep_device_values=True,
-                initial_states=state,
-                return_final_states=True,
-                rng_trial_offset=trial_index,
-                rng_sequence_trials=num_trials,
-                triton_launch_options=triton_launch_options,
-                _defer_device_checks=defer_device_checks,
-            )
+                result = self.run(
+                    trial_inputs,
+                    trial_parameter_rows,
+                    num_estimates,
+                    seed=seed,
+                    common_random_numbers=common_random_numbers,
+                    strict_truncation=strict_truncation,
+                    keep_device_values=True,
+                    initial_states=state,
+                    return_final_states=True,
+                    rng_trial_offset=trial_index,
+                    rng_sequence_trials=num_trials,
+                    triton_launch_options=triton_launch_options,
+                    _defer_device_checks=defer_device_checks,
+                )
             if defer_device_checks:
                 trial_checks = result.metadata["_deferred_device_checks"]
                 if deferred_checks is None:
@@ -691,21 +734,20 @@ class BatchedSimulationPlan:
                         ]
             outcomes = result.values[:, :, 0]
             if outcome_indices is not None:
-                outcomes = outcomes.index_select(
-                    -1,
-                    torch.as_tensor(
+                if output_indices is None:
+                    output_indices = torch.as_tensor(
                         list(outcome_indices), dtype=torch.long, device=outcomes.device
-                    ),
+                    )
+                outcomes = outcomes.index_select(-1, output_indices)
+            if observation_weights is None:
+                observation_weights = _HistogramObservationWeights(
+                    exp_data, categorical_dims, bins=bins, bin_range=bin_range,
+                    smoothing_sigma=smoothing_sigma, pseudocount=pseudocount,
+                    categorical_cardinalities=categorical_cardinalities,
+                    dtype=outcomes.dtype, device=outcomes.device,
+                    strict_observations=True, source_normalized=True,
                 )
-            weights, density = histogram_observation_weights(
-                outcomes,
-                exp_data,
-                trial_index,
-                categorical_dims,
-                bins=bins,
-                bin_range=bin_range,
-                smoothing_sigma=smoothing_sigma,
-            )
+            weights, density = observation_weights(outcomes, trial_index)
             if log_likelihood is None:
                 log_likelihood = torch.zeros_like(density)
                 resampling_generator = torch.Generator(device=outcomes.device)
@@ -718,17 +760,32 @@ class BatchedSimulationPlan:
             terminal_state = result.metadata["final_states"]
             flat_weights = weights.reshape(-1, num_estimates)
             totals = flat_weights.sum(dim=-1, keepdim=True)
+            unsupported_rows.append((totals[..., 0] <= 0).reshape_as(density))
             normalized = torch.where(
                 totals > 0,
                 flat_weights / torch.clamp(totals, min=torch.finfo(weights.dtype).tiny),
                 torch.full_like(flat_weights, 1.0 / float(num_estimates)),
             )
-            ancestors = torch.multinomial(
-                normalized,
-                num_samples=num_estimates,
-                replacement=True,
-                generator=resampling_generator,
-            )
+            if return_diagnostics:
+                ess = (1. / normalized.square().sum(dim=-1)).clamp(max=float(num_estimates))
+                prior_fraction = (pseudocount / torch.clamp(
+                    totals[..., 0], min=torch.finfo(weights.dtype).tiny,
+                )).clamp(0., 1.)
+                diagnostic_rows.append(torch.stack((density, ess.reshape_as(density), prior_fraction.reshape_as(density))))
+            if trial_index == num_trials - 1:
+                continue
+            if resampling == "systematic":
+                ancestors = _systematic_resample(
+                    weights, generator=resampling_generator,
+                    shared_first_axis=common_random_numbers,
+                ).reshape(-1, num_estimates)
+            else:
+                ancestors = torch.multinomial(
+                    normalized,
+                    num_samples=num_estimates,
+                    replacement=True,
+                    generator=resampling_generator,
+                )
             flat_state = terminal_state.reshape(
                 -1, num_estimates, terminal_state.shape[-1]
             )
@@ -751,8 +808,32 @@ class BatchedSimulationPlan:
                 strict_truncation=strict_truncation,
             )
         values = log_likelihood.detach().cpu().numpy().sum(axis=1)
+        zero_support = torch.stack(unsupported_rows, dim=-1).cpu().numpy()
+        if zero_support.any():
+            candidate, subject, trial = np.argwhere(zero_support)[0]
+            raise ValueError(
+                "Conditioned likelihood has zero particle observation support "
+                f"at candidate {candidate}, subject {subject}, trial {trial}. "
+                "Increase estimates or smoothing, or explicitly enable a positive "
+                "pseudocount observation-contamination model."
+            )
         if values.shape[0] == 1:
-            return float(values[0])
+            values = float(values[0])
+        if return_diagnostics:
+            rows = torch.stack(diagnostic_rows, dim=-1).detach().cpu().numpy()
+            return values, {
+                "per_trial_densities": rows[0],
+                "effective_sample_size": rows[1],
+                "prior_mixture_fraction": rows[2],
+                "zero_support": zero_support,
+                "resampling": resampling,
+                "smoothing_normalization": "source",
+                "execution": "prepared" if prepared_runner is not None else "reference",
+                "observation_contamination_probability": (
+                    observation_weights.joint_bin_count * pseudocount
+                    / (num_estimates + observation_weights.joint_bin_count * pseudocount)
+                ),
+            }
         return values
 
     @cached_property
@@ -881,6 +962,33 @@ def _as_long(tensor_like, idx):
     import torch
 
     return torch.as_tensor(idx, dtype=torch.long, device=tensor_like.device)
+
+
+def _systematic_resample(weights, *, generator, shared_first_axis=False):
+    """Stable raw-weight CDF and one uniform offset per lane.
+
+    CUDA FP32 reductions can change with the number of candidate rows. Small
+    roundoff differences then change ancestors and all following trial states.
+    Accumulate the *raw* weights in FP64, including normalization and positions;
+    promoting already-normalized FP32 weights cannot remove this dependence.
+    """
+    import torch
+
+    num_estimates = weights.shape[-1]
+    cumulative = weights.cumsum(dim=-1, dtype=torch.float64)
+    cumulative = cumulative / cumulative[..., -1:].clamp_min(torch.finfo(torch.float64).tiny)
+    # Summation can end slightly below one. Force the last CDF endpoint
+    # exactly to one and prevent a rounded systematic position reaching one.
+    cumulative[..., -1] = 1.
+    random_shape = (*weights.shape[:-1], 1)
+    if shared_first_axis:
+        random_shape = (1, *random_shape[1:])
+    offset = torch.rand(random_shape, dtype=torch.float64,
+                        device=weights.device, generator=generator)
+    positions = (torch.arange(num_estimates, dtype=torch.float64,
+                             device=weights.device) + offset) / num_estimates
+    positions = positions.clamp(max=1. - torch.finfo(torch.float64).eps)
+    return torch.searchsorted(cumulative, positions.expand_as(weights).contiguous(), right=True).clamp_max(num_estimates - 1)
 
 
 def _slice_conditioned_trial(value, trial_index: int, num_trials: int):

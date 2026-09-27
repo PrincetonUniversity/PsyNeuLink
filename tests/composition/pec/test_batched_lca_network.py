@@ -126,8 +126,12 @@ def test_scalar_override_fanout_and_elementwise_sampling(batched_backend):
     actual = plan.run(inputs, [{}], num_estimates=1, strict_truncation=True).values[0, 0, :, 0]
     expected = _python_outputs(c, inputs, ports)
     np.testing.assert_allclose(actual, expected, atol=2e-6, rtol=2e-6)
-    with pytest.raises(ValueError, match="held and sampled control values"):
-        plan.run(inputs, [{}], 1, initial_states={})
+    first = plan.run({node: values[:1] for node, values in inputs.items()}, [{}], 1,
+                     return_final_states=True, rng_sequence_trials=2)
+    second = plan.run({node: values[1:] for node, values in inputs.items()}, [{}], 1,
+                      initial_states=first.metadata["final_states"],
+                      rng_sequence_trials=2, rng_trial_offset=1)
+    np.testing.assert_array_equal(second.values[0, 0, 0, 0], actual[1])
 
 
 def test_gaussian_lca_has_the_leaky_integrator_noise_scale(batched_backend):

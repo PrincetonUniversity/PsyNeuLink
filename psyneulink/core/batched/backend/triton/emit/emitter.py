@@ -40,6 +40,7 @@ from psyneulink.core.batched.backend.triton.emit.lanes import (
 )
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
 from psyneulink.core.batched.backend.triton.emit.trials import IndependentTrialEmitMixin, validate_trial_schedule
+from psyneulink.core.batched.backend.triton.state import retained_control_layout
 from psyneulink.core.batched.specs import ElementwiseFunctionSpec
 
 
@@ -97,6 +98,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
         self.diag_slot_count = len(diag_slots(kernel))
         self.diag_lane_emitted = False
         self.state_width = sum(state.width for state in kernel.states)
+        self.retained_control_offsets, self.retained_state_width = retained_control_layout(self.graph)
 
     def emit(self) -> str:
         # KernelIR attrs are mapping-valued for an extensible public schema.
@@ -288,7 +290,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
                 with self.builder.block("if USE_INITIAL_STATE"):
                     self.builder.line(
                         f"{var} = tl.load(initial_state + offsets * "
-                        f"{self.state_width} + {flat_index}, mask=mask, other=0.0)"
+                        f"{self.retained_state_width} + {flat_index}, mask=mask, other=0.0)"
                     )
                 with self.builder.block("else"):
                     self._emit_state_initializer_value(state, idx, value, var)
@@ -299,7 +301,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
     def _emit_store_final_state(self) -> None:
         """Publish every retained lane state after the final trial."""
 
-        if not self.kernel.states:
+        if not self.retained_state_width:
             return
         flat_index = 0
         with self.builder.block("if STORE_FINAL_STATE"):
@@ -307,11 +309,17 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
                 for index in range(state.width):
                     value = self.state_vars[(state.name, index)]
                     self.builder.line(
-                        f"tl.store(final_state + offsets * {self.state_width} + "
+                        f"tl.store(final_state + offsets * {self.retained_state_width} + "
                         f"{flat_index}, {value}, mask=mask)"
                     )
                     flat_index += 1
-        if self.kernel.states:
+            for name, offset in self.retained_control_offsets.items():
+                value = self._get_value(name)[0]
+                self.builder.line(
+                    f"tl.store(final_state + offsets * {self.retained_state_width} + "
+                    f"{offset}, {value}, mask=mask)"
+                )
+        if self.retained_state_width:
             self.builder.line()
 
     def _emit_initialize_effective_parameter(self, op: KernelOp) -> None:
@@ -331,10 +339,17 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
         output = op.outputs[0]
         storage_var = self._component_vars(output.name, output.width)[0]
         initial_value = op.attrs["initial_modulation_value"][0]
-        self.builder.line(
-            f"{storage_var} = tl.full((BLOCK,), "
-            f"{float_literal(initial_value)}, tl.float32)"
-        )
+        with self.builder.block("if USE_INITIAL_STATE"):
+            offset = self.retained_control_offsets[output.name]
+            self.builder.line(
+                f"{storage_var} = tl.load(initial_state + offsets * "
+                f"{self.retained_state_width} + {offset}, mask=mask, other=0.0)"
+            )
+        with self.builder.block("else"):
+            self.builder.line(
+                f"{storage_var} = tl.full((BLOCK,), "
+                f"{float_literal(initial_value)}, tl.float32)"
+            )
         self.effective_parameter_vars[effective_parameter_id] = storage_var
         self._set_value(output.name, [storage_var])
         if "sampled_base_parameter_id" in op.attrs:
@@ -343,7 +358,14 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
                 raise ValueError("Sampled parameter initializer must belong to the target.")
             sampled = op.outputs[1]
             sampled_var = self._component_vars(sampled.name, 1)[0]
-            self.builder.line(f"{sampled_var} = {self.param_vars[parameter.name]}")
+            with self.builder.block("if USE_INITIAL_STATE"):
+                offset = self.retained_control_offsets[sampled.name]
+                self.builder.line(
+                    f"{sampled_var} = tl.load(initial_state + offsets * "
+                    f"{self.retained_state_width} + {offset}, mask=mask, other=0.0)"
+                )
+            with self.builder.block("else"):
+                self.builder.line(f"{sampled_var} = {self.param_vars[parameter.name]}")
             self.sampled_parameter_vars[effective_parameter_id] = sampled_var
             self._set_value(sampled.name, [sampled_var])
         self.builder.line()

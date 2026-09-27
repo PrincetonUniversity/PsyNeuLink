@@ -1,6 +1,7 @@
 """Fit one subject's recorded choices and RTs with the compiled PEC GPU sampler.
 
-CMA-ES fits the trial-marginal histogram objective with retained control state.
+CMA-ES fits an observation-conditioned particle likelihood with retained control state.
+The legacy trial-marginal histogram objective requires --likelihood marginal.
 The recovery entry point uses this same pipeline with synthetic observations.
 """
 
@@ -38,6 +39,48 @@ STARTS = (
 GRID_STEPS = (.001, .0001, .001, .01, .001, .001, .001)
 LAUNCH = dict(block_size=32, num_warps=1, trial_schedule="independent", normal_rng="philox4x_fast_v1")
 RT_RANGE = (0., 3.)
+RT_BIN_WIDTH = .03
+
+
+def histogram_settings(frame, likelihood):
+    """Cover every conditioned observation without changing the RT resolution."""
+    bins = 100
+    if likelihood == "conditioned":
+        # Masked trials still condition the next control-state distribution. Their
+        # RTs therefore need support even though they do not contribute a log score.
+        bins = max(bins, int(np.ceil(frame.response_time.max() / RT_BIN_WIDTH)))
+    return bins, (RT_RANGE[0], bins * RT_BIN_WIDTH)
+
+
+def make_fit_pec(model, inputs, outputs, frame, args):
+    """Use one PEC objective for optimization and independent-seed rescoring."""
+    observed = frame[["decision", "response_time", "subject_nr", "PrevCongruency"]].copy()
+    for name in ("decision", "subject_nr", "PrevCongruency"):
+        observed[name] = pd.Categorical(observed[name], categories=[0., 1.] if name == "decision" else None)
+    surface = fit_surface(model)
+    grids = {key: np.linspace(lo, hi, round((hi - lo) / step) + 1)
+             for (key, (lo, hi, _)), step in zip(surface.items(), GRID_STEPS, strict=True)}
+    depends = {key: "subject_nr" for key in surface if key[0] in ("termination_threshold", "gain", "slope")}
+    depends[("intercept", node(model, "RT_GATE"))] = "subject_nr"
+    depends[("mode", node(model, "LC"))] = "PrevCongruency"
+    bins, rt_range = histogram_settings(frame, args.likelihood)
+    pec = pnl.ParameterEstimationComposition(
+        model=model, parameters=grids, depends_on=depends, outcome_variables=list(outputs), data=observed,
+        likelihood_include_mask=frame.likelihood_include_mask.to_numpy(dtype=bool),
+        optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution", max_iterations=args.evaluations,
+            batched_backend="triton", batched_max_steps=args.max_steps,
+            batched_seed=args.simulation_seed, batched_strict_truncation=True,
+            batched_bins=bins, batched_bin_range=[rt_range], batched_pseudocount=args.pseudocount,
+            batched_smoothing_sigma=.5, batched_categorical_cardinalities=[2],
+            conditioned_likelihood=args.likelihood == "conditioned",
+            batched_fused_likelihood=True, batched_specialize_fixed_parameters=True,
+            batched_parameter_batch_size=args.population, batched_triton_launch_options=LAUNCH,
+        ), num_estimates=args.estimates, initial_seed=args.simulation_seed,
+        same_seed_for_all_parameter_combinations=True,
+    )
+    pec.controller._pec_input_values_by_node = inputs
+    return pec
 
 
 def load_subject(path, subject, *, trials=None, recovery=False):
@@ -127,7 +170,10 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--subject", type=int, default=1, help="Actual subject_nr value in the CSV (default: 1)")
     parser.add_argument("--trials", type=int, help="Prefix for smoke tests; default is the complete subject")
     parser.add_argument("--estimates", type=int, default=100000, help="Simulated trajectories per proposal (default: 100000)")
-    parser.add_argument("--pseudocount", type=float, default=1., help="Pseudocount per joint histogram cell at the fitting budget (default: 1)")
+    parser.add_argument("--likelihood", choices=("conditioned", "marginal"), default="conditioned",
+                        help="Condition retained state on observed choices/RTs (default); marginal selects the legacy objective")
+    parser.add_argument("--pseudocount", type=float, default=1.,
+                        help="Pseudocount per joint cell at the fitting budget; uniform observation contamination in conditioned mode (default: 1)")
     parser.add_argument("--validation-estimates", type=int,
                         help="Fresh-seed rescoring budget; default matches fitting. Pseudocount scales with this budget to preserve prior weight.")
     parser.add_argument("--evaluations", type=int, default=5000, help="Total parameter proposals, not generations (default: 5000)")
@@ -163,6 +209,10 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--source-revision", help="Commit of an isolated source snapshot without .git")
     parser.add_argument("--output", type=Path, required=True, help="New output directory; existing directories are never overwritten")
     args = parser.parse_args(argv)
+    if args.likelihood == "conditioned" and (args.fit_strategy == "adaptive" or args.profile_ndt):
+        parser.error("Observation-conditioned fitting currently requires --fit-strategy fixed without --profile-ndt: "
+                     "pooling independent density blocks or shifting NDT changes particle history. "
+                     "Use --likelihood marginal only to reproduce the legacy objective.")
     if args.profile_ndt and args.fit_strategy != "adaptive":
         parser.error("--profile-ndt currently requires --fit-strategy adaptive")
     if args.optimizer_storage is None:
@@ -223,30 +273,7 @@ def main(argv=None, *, recovery=False):
         frame["response_time"] = generated[:, 0, 1]
     observations_path = args.output / ("synthetic_subject.csv" if recovery else "observed_subject.csv")
     frame.to_csv(observations_path, index=False)
-    observed = frame[["decision", "response_time", "subject_nr", "PrevCongruency"]].copy()
-    for name in ("decision", "subject_nr", "PrevCongruency"):
-        observed[name] = pd.Categorical(observed[name], categories=[0., 1.] if name == "decision" else None)
-    surface = fit_surface(model)
-    grids = {key: np.linspace(lo, hi, round((hi - lo) / step) + 1)
-             for (key, (lo, hi, _)), step in zip(surface.items(), GRID_STEPS, strict=True)}
-    depends = {key: "subject_nr" for key in surface if key[0] in ("termination_threshold", "gain", "slope")}
-    depends[("intercept", node(model, "RT_GATE"))] = "subject_nr"
-    depends[("mode", node(model, "LC"))] = "PrevCongruency"
-    pec = pnl.ParameterEstimationComposition(
-        model=model, parameters=grids, depends_on=depends, outcome_variables=list(outputs), data=observed,
-        likelihood_include_mask=frame.likelihood_include_mask.to_numpy(dtype=bool),
-        optimization_function=pnl.PECOptimizationFunction(
-            method="differential_evolution", max_iterations=args.evaluations,
-            batched_backend="triton", batched_max_steps=args.max_steps,
-            batched_seed=args.simulation_seed, batched_strict_truncation=True,
-            batched_bins=100, batched_bin_range=[RT_RANGE], batched_pseudocount=args.pseudocount,
-            batched_smoothing_sigma=.5, batched_categorical_cardinalities=[2],
-            batched_fused_likelihood=True, batched_specialize_fixed_parameters=True,
-            batched_parameter_batch_size=args.population, batched_triton_launch_options=LAUNCH,
-        ), num_estimates=args.estimates, initial_seed=args.simulation_seed,
-        same_seed_for_all_parameter_combinations=True,
-    )
-    pec.controller._pec_input_values_by_node = inputs
+    pec = make_fit_pec(model, inputs, outputs, frame, args)
     function = pec.controller.function
     names = function.fit_param_names
     if len(names) != len(STARTS[args.start]):
@@ -291,13 +318,27 @@ def main(argv=None, *, recovery=False):
         "trials": len(frame), "scored_trials": int(frame.likelihood_include_mask.sum()),
         "initial": initial, "bounds": bounds,
         "noise": noise, "time_steps": steps, "lc_internal_steps_per_pass": 10,
-        "estimator": {"kind": "trial_marginal_histogram", "bins": 100, "rt_range": [0., 3.],
-                      "smoothing_sigma": .5, "pseudocount": args.pseudocount},
+        "estimator": {
+            "kind": ("observation_conditioned_particle_histogram" if args.likelihood == "conditioned"
+                     else "trial_marginal_histogram"),
+            "bins": function.batched_bins, "rt_range": list(function.batched_bin_range[0]),
+            "smoothing_sigma": .5, "pseudocount": args.pseudocount,
+            "observation_conditioned_history": args.likelihood == "conditioned",
+            "masked_observations_condition_history": args.likelihood == "conditioned",
+            **({"resampling": "systematic", "observation_model": "binned_smoothed_uniform_contamination",
+                "smoothing_normalization": "source_bin",
+                "contamination_fraction": (2 * function.batched_bins * args.pseudocount
+                                           / (args.estimates + 2 * function.batched_bins * args.pseudocount))}
+               if args.likelihood == "conditioned" else {}),
+        },
         "launch_options": LAUNCH, "gpu": torch.cuda.get_device_name(), "hostname": platform.node(),
         "torch": torch.__version__, "python": platform.python_version(),
         "data_summary": summarize_samples(frame[["decision", "response_time"]].to_numpy(), frame),
         "setup_seconds": time.perf_counter() - started,
-        "note": "One subject; trial-marginal fitting with full simulated latent histories. Budget completion is not convergence.",
+        "note": ("One subject; observed-history particle filtering under a binned, smoothed observation model. "
+                 "Masked observations condition history but do not add a log score. Budget completion is not convergence."
+                 if args.likelihood == "conditioned" else
+                 "Legacy trial-marginal fitting with unconditional simulated histories. Budget completion is not convergence."),
         "fit_strategy": args.fit_strategy,
     }
     if args.fit_strategy == "adaptive":
@@ -391,6 +432,8 @@ def main(argv=None, *, recovery=False):
                 for result, size, seed in zip(results, sizes, seeds, strict=True)]
 
     def sample_densities(candidates, estimates, seed):
+        if args.likelihood != "marginal":
+            raise RuntimeError("Independent adaptive density blocks require the explicit marginal objective")
         if ndt_profile is not None:
             return sample_density_blocks(candidates, [estimates], [seed])[0]
         sampling_work["calls"] += 1
@@ -462,6 +505,7 @@ def main(argv=None, *, recovery=False):
                                triton_launch_options=LAUNCH).values[0, 0][..., indices]
             predictions[label] = summarize_samples(samples, frame)
         report = {"status": "complete", "mode": manifest["mode"], "subject": args.subject, "initial": initial,
+                  "estimator": manifest["estimator"],
                   "fitted": dict(zip(names, fitted.tolist(), strict=True)),
                   "best_training_log_likelihood": float(fit["optimal_value"]),
                   "initial_training_log_likelihood": (records[0]["log_likelihood"] if adaptive_report is None

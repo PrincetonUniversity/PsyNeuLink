@@ -1,8 +1,13 @@
 # Local fitting acceleration study
 
-These are experiments with the existing nonlinear, noisy PEC sampler. The
-[ordinary fitting guide](../README.md) remains the handoff entry point. No
-adaptive-budget policy or particle filter is enabled by default.
+These are historical experiments with the nonlinear, noisy PEC sampler's
+**trial-marginal objective**. They did not condition carried state on observed
+responses. The [ordinary fitting guide](../README.md) remains the handoff entry
+point and now defaults to observation-conditioned particle filtering. The
+[conditioned sampler report](../CONDITIONED_LIKELIHOOD.md) measures its current
+2080 Ti performance; recovery accuracy needs separate validation. Reproducing the
+adaptive fits below requires `--likelihood marginal`; adaptive density pooling
+and NDT profiling are not yet valid for the conditioned objective.
 The optional [adaptive fitting workflow](adaptive_h100.md) now implements
 sample accumulation, uncertainty-based budgets, and high-budget refinement.
 The [fit-quality diagnosis](quality_diagnosis.md) investigates its remaining
@@ -127,9 +132,9 @@ in-memory optimizer storage, small estimates budgets
 for broad search, and independent accumulated simulation blocks to refine
 close comparisons and verify the incumbent. It should compare final fits at
 100k or more across several starts. Cached NDT profiling is now implemented
-and [tested inside that search](ndt_h100.md). Bootstrap particle filtering remains a
-lower-priority experiment because it changes the objective and does not by
-itself address the low-budget ranking problem observed here.
+and [tested inside that search](ndt_h100.md). That historical search targeted
+the marginal objective. Correcting observed-history conditioning is now the
+priority, and the acceleration results above do not establish its performance.
 
 ## Reproduce the candidate-budget audit
 

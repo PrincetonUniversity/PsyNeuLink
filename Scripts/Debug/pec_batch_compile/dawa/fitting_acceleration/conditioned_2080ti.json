@@ -1,0 +1,564 @@
+{
+  "status": "complete",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "hostname": "DavePC",
+  "torch": "2.13.0+cu130",
+  "git_commit": "3cf83a57a5bbecbcffd237037c78743d82577b54",
+  "source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+  "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+  "subject": 1,
+  "trials": 760,
+  "scored_trials": 720,
+  "candidates": [
+    [
+      0.3,
+      0.2,
+      -0.45,
+      10.0,
+      0.9,
+      0.9,
+      1.0,
+      5.0
+    ],
+    [
+      0.4,
+      0.22,
+      -0.4,
+      12.0,
+      0.7,
+      0.8,
+      1.5,
+      5.5
+    ],
+    [
+      0.5,
+      0.18,
+      -0.35,
+      8.0,
+      0.5,
+      0.7,
+      2.0,
+      6.0
+    ],
+    [
+      0.6,
+      0.25,
+      -0.3,
+      15.0,
+      0.3,
+      0.6,
+      2.5,
+      7.0
+    ]
+  ],
+  "lca_dt": 0.01,
+  "all_lca_noise": 0.1,
+  "launch": {
+    "block_size": 32,
+    "num_warps": 1,
+    "trial_schedule": "independent",
+    "normal_rng": "philox4x_fast_v1"
+  },
+  "histogram": {
+    "bins": 100,
+    "rt_range": [
+      0.0,
+      3.0
+    ],
+    "smoothing_sigma": 0.5,
+    "pseudocount_at_100000": 1.0,
+    "contamination_fraction": 0.001996007984031936
+  },
+  "note": "Same model and observations; different statistical objectives. Fit-time projections assume 5000 evaluations at the measured batch size and exclude optimizer/validation overhead; they are not convergence estimates. GPU allocated memory excludes other processes.",
+  "conditioned_execution": "prepared",
+  "cases": [
+    {
+      "likelihood": "marginal",
+      "estimates": 10000,
+      "candidate_batch_size": 1,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 0.16906241897959262,
+          "scores": [
+            -420.37823486328125
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        },
+        {
+          "seed": 30,
+          "seconds": 0.16978112794458866,
+          "scores": [
+            -418.34783935546875
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        },
+        {
+          "seed": 31,
+          "seconds": 0.16843000997323543,
+          "scores": [
+            -415.95111083984375
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        }
+      ],
+      "warmup_seconds": 1.5834749860223383,
+      "median_seconds": 0.16906241897959262,
+      "seconds_per_candidate": 0.16906241897959262,
+      "projected_5000_evaluations_hours": 0.2348089152494342
+    },
+    {
+      "likelihood": "conditioned",
+      "estimates": 10000,
+      "candidate_batch_size": 1,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 1.4796799269970506,
+          "scores": [
+            -402.2547912597656
+          ],
+          "peak_allocated_mib": 6.3466796875,
+          "incremental_peak_mib": 6.3466796875
+        },
+        {
+          "seed": 30,
+          "seconds": 1.6945918560959399,
+          "scores": [
+            -400.0206604003906
+          ],
+          "peak_allocated_mib": 6.3466796875,
+          "incremental_peak_mib": 6.3466796875
+        },
+        {
+          "seed": 31,
+          "seconds": 1.6263105670223013,
+          "scores": [
+            -400.0386047363281
+          ],
+          "peak_allocated_mib": 6.3466796875,
+          "incremental_peak_mib": 6.3466796875
+        }
+      ],
+      "warmup_seconds": 1.7366364940535277,
+      "median_seconds": 1.6263105670223013,
+      "seconds_per_candidate": 1.6263105670223013,
+      "projected_5000_evaluations_hours": 2.258764676419863,
+      "ess_summary": {
+        "minimum": 2.6145801544189453,
+        "median": 257.56396484375,
+        "fifth_percentile": 92.5609359741211
+      },
+      "contamination_responsibility_summary": {
+        "minimum": 0.0001541908859508112,
+        "median": 0.0006091066170483828,
+        "maximum": 1.0,
+        "trials_above_half": 2,
+        "candidate_trial_count": 760
+      },
+      "zero_support_count": 0
+    },
+    {
+      "likelihood": "marginal",
+      "estimates": 10000,
+      "candidate_batch_size": 4,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 0.3630169630050659,
+          "scores": [
+            -420.3781433105469,
+            -1015.767578125,
+            -1281.7099609375,
+            270.0413818359375
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        },
+        {
+          "seed": 30,
+          "seconds": 0.35279853001702577,
+          "scores": [
+            -418.3477478027344,
+            -1028.1461181640625,
+            -1285.639892578125,
+            268.7366027832031
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        },
+        {
+          "seed": 31,
+          "seconds": 0.3567227820167318,
+          "scores": [
+            -415.9510498046875,
+            -1024.192626953125,
+            -1288.2467041015625,
+            273.1721496582031
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        }
+      ],
+      "warmup_seconds": 0.36719601904042065,
+      "median_seconds": 0.3567227820167318,
+      "seconds_per_candidate": 0.08918069550418295,
+      "projected_5000_evaluations_hours": 0.12386207708914299
+    },
+    {
+      "likelihood": "conditioned",
+      "estimates": 10000,
+      "candidate_batch_size": 4,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 1.5570908460067585,
+          "scores": [
+            -402.25482177734375,
+            -974.7965698242188,
+            -1222.4791259765625,
+            278.2253723144531
+          ],
+          "peak_allocated_mib": 23.29345703125,
+          "incremental_peak_mib": 23.29345703125
+        },
+        {
+          "seed": 30,
+          "seconds": 1.4690251960419118,
+          "scores": [
+            -400.0206604003906,
+            -984.1386108398438,
+            -1218.595703125,
+            281.3367614746094
+          ],
+          "peak_allocated_mib": 23.29345703125,
+          "incremental_peak_mib": 23.29345703125
+        },
+        {
+          "seed": 31,
+          "seconds": 1.4811532739549875,
+          "scores": [
+            -400.0386047363281,
+            -983.24658203125,
+            -1228.2386474609375,
+            279.7959899902344
+          ],
+          "peak_allocated_mib": 23.29345703125,
+          "incremental_peak_mib": 23.29345703125
+        }
+      ],
+      "warmup_seconds": 1.5116849429905415,
+      "median_seconds": 1.4811532739549875,
+      "seconds_per_candidate": 0.3702883184887469,
+      "projected_5000_evaluations_hours": 0.5142893312343707,
+      "ess_summary": {
+        "minimum": 1.271153211593628,
+        "median": 263.4091491699219,
+        "fifth_percentile": 12.610279083251953
+      },
+      "contamination_responsibility_summary": {
+        "minimum": 6.233906606212258e-05,
+        "median": 0.0006271345191635191,
+        "maximum": 1.0,
+        "trials_above_half": 64,
+        "candidate_trial_count": 3040
+      },
+      "zero_support_count": 0
+    },
+    {
+      "likelihood": "marginal",
+      "estimates": 100000,
+      "candidate_batch_size": 1,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 0.9118728690082207,
+          "scores": [
+            -416.3465881347656
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        },
+        {
+          "seed": 30,
+          "seconds": 0.9130378849804401,
+          "scores": [
+            -415.3121337890625
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        },
+        {
+          "seed": 31,
+          "seconds": 0.9199813739396632,
+          "scores": [
+            -416.64056396484375
+          ],
+          "peak_allocated_mib": 0.31201171875,
+          "incremental_peak_mib": 0.31201171875
+        }
+      ],
+      "warmup_seconds": 0.9076771140098572,
+      "median_seconds": 0.9130378849804401,
+      "seconds_per_candidate": 0.9130378849804401,
+      "projected_5000_evaluations_hours": 1.2681081735839446
+    },
+    {
+      "likelihood": "conditioned",
+      "estimates": 100000,
+      "candidate_batch_size": 1,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 1.9411412280751392,
+          "scores": [
+            -399.3314514160156
+          ],
+          "peak_allocated_mib": 57.22900390625,
+          "incremental_peak_mib": 57.22900390625
+        },
+        {
+          "seed": 30,
+          "seconds": 1.9325048229657114,
+          "scores": [
+            -399.009765625
+          ],
+          "peak_allocated_mib": 57.22900390625,
+          "incremental_peak_mib": 57.22900390625
+        },
+        {
+          "seed": 31,
+          "seconds": 1.9382323080208153,
+          "scores": [
+            -400.12847900390625
+          ],
+          "peak_allocated_mib": 57.22900390625,
+          "incremental_peak_mib": 57.22900390625
+        }
+      ],
+      "warmup_seconds": 1.9519528560340405,
+      "median_seconds": 1.9382323080208153,
+      "seconds_per_candidate": 1.9382323080208153,
+      "projected_5000_evaluations_hours": 2.691989316695577,
+      "ess_summary": {
+        "minimum": 55.542945861816406,
+        "median": 2645.02001953125,
+        "fifth_percentile": 945.0327758789062
+      },
+      "contamination_responsibility_summary": {
+        "minimum": 0.0001583166013006121,
+        "median": 0.0005940643604844809,
+        "maximum": 1.0,
+        "trials_above_half": 2,
+        "candidate_trial_count": 760
+      },
+      "zero_support_count": 0
+    },
+    {
+      "likelihood": "marginal",
+      "estimates": 100000,
+      "candidate_batch_size": 4,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 2.979332351940684,
+          "scores": [
+            -416.3463439941406,
+            -1015.9957275390625,
+            -1274.4947509765625,
+            277.17022705078125
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        },
+        {
+          "seed": 30,
+          "seconds": 3.0140748620033264,
+          "scores": [
+            -415.31207275390625,
+            -1016.794677734375,
+            -1273.0003662109375,
+            276.8760070800781
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        },
+        {
+          "seed": 31,
+          "seconds": 3.011286264983937,
+          "scores": [
+            -416.64031982421875,
+            -1015.4623413085938,
+            -1273.0067138671875,
+            277.3163146972656
+          ],
+          "peak_allocated_mib": 0.451171875,
+          "incremental_peak_mib": 0.451171875
+        }
+      ],
+      "warmup_seconds": 2.9768811999820173,
+      "median_seconds": 3.011286264983937,
+      "seconds_per_candidate": 0.7528215662459843,
+      "projected_5000_evaluations_hours": 1.0455855086749781
+    },
+    {
+      "likelihood": "conditioned",
+      "estimates": 100000,
+      "candidate_batch_size": 4,
+      "runs": [
+        {
+          "seed": 29,
+          "seconds": 5.579765256959945,
+          "scores": [
+            -399.3314514160156,
+            -972.968994140625,
+            -1205.3348388671875,
+            284.69207763671875
+          ],
+          "peak_allocated_mib": 227.39013671875,
+          "incremental_peak_mib": 227.39013671875
+        },
+        {
+          "seed": 30,
+          "seconds": 5.594434293918312,
+          "scores": [
+            -399.009765625,
+            -972.8944091796875,
+            -1205.564697265625,
+            286.141845703125
+          ],
+          "peak_allocated_mib": 227.39013671875,
+          "incremental_peak_mib": 227.39013671875
+        },
+        {
+          "seed": 31,
+          "seconds": 5.605911506107077,
+          "scores": [
+            -400.1285095214844,
+            -971.39453125,
+            -1208.36669921875,
+            285.9420471191406
+          ],
+          "peak_allocated_mib": 227.39013671875,
+          "incremental_peak_mib": 227.39013671875
+        }
+      ],
+      "warmup_seconds": 5.568813319900073,
+      "median_seconds": 5.594434293918312,
+      "seconds_per_candidate": 1.398608573479578,
+      "projected_5000_evaluations_hours": 1.9425119076105248,
+      "ess_summary": {
+        "minimum": 5.1618242263793945,
+        "median": 2603.685546875,
+        "fifth_percentile": 77.80996704101562
+      },
+      "contamination_responsibility_summary": {
+        "minimum": 6.385161395883188e-05,
+        "median": 0.0006308509036898613,
+        "maximum": 1.0,
+        "trials_above_half": 57,
+        "candidate_trial_count": 3040
+      },
+      "zero_support_count": 0
+    }
+  ],
+  "implementation_sha256": {
+    "psyneulink/core/batched/compiler.py": "668d37d74aa2da72b1dd5a00c4430dd1231f092849c3bf0e5fea5f186142cc5e",
+    "psyneulink/core/batched/likelihood.py": "cad6d00cb489b2eb9ae32541555dc00fc46dbedc8749990c1a838b5f185622f9",
+    "psyneulink/core/batched/backend/triton/runtime.py": "7d20f3b241e7b5af13a6f3f2bf619a497a1e6dc4e0d5e4d853716f84bb404bd7",
+    "psyneulink/core/batched/backend/triton/conditioned.py": "f13a0ad44d57a1acce1a78f4cf71da823df39ee6dd1c7bfe9ac0931a47d4a19a",
+    "psyneulink/core/batched/backend/triton/emit/emitter.py": "4cfdcf8678299624fb55873e33390ccef5ce1bb2857d3e6581a081cce5899ed2",
+    "psyneulink/core/batched/backend/triton/state.py": "774677a5ebcaaf1cd74d9a698203d92b83a2bcada69a6666e71fd62528a79763"
+  },
+  "kernels": [
+    {
+      "registers": 127,
+      "spills": 0
+    },
+    {
+      "registers": 128,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 128,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 128,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 128,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    },
+    {
+      "registers": 141,
+      "spills": 0
+    }
+  ],
+  "measured_date": "2026-09-27",
+  "diagnostics_note": "Per-trial arrays omitted from this compact report; the benchmark emits them in its raw output. ESS and posterior contamination summaries include unscored history trials.",
+  "setup_optimization_comparison": {
+    "trials": 64,
+    "estimates": 10000,
+    "candidate_batch_size": 1,
+    "reference_before_seconds": 2.8721805959939957,
+    "prepared_after_seconds": 0.14573311002459377,
+    "note": "Initial reference loop versus final prepared runner, separate warm runs. Final runner also includes the FP64 resampling correction; this is not a pure resampling comparison."
+  }
+}

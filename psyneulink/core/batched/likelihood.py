@@ -337,6 +337,9 @@ def histogram_observation_weights(
     bins: int = 100,
     bin_range: Sequence | None = None,
     smoothing_sigma: float = 0.0,
+    pseudocount: float = 0.0,
+    categorical_cardinalities: Sequence[int] | None = None,
+    source_normalized: bool = False,
 ):
     """Return per-particle observation weights and their histogram density.
 
@@ -345,107 +348,141 @@ def histogram_observation_weights(
     important: when ``bin_range`` is omitted, every sequential trial uses the
     same empirical-data-anchored bin edges as :func:`histogram_likelihood`.
 
-    The unnormalized weights are exactly the categorical/bin-match (or smoothed
-    bin) contributions used by the ordinary batched likelihood.  Their mean,
-    divided by bin volume, is therefore the same per-trial density.  Returning
-    the individual contributions lets a sequential likelihood resample the
-    terminal persistent states before propagating the next trial.
+    With zero pseudocount, the weights are the categorical/bin contributions
+    used by the ordinary likelihood. With positive ``alpha=pseudocount``, each
+    particle receives an additional ``alpha / num_estimates``. With the
+    normalized observation kernel described below, this corresponds to uniform
+    observation contamination over the finite joint cells. A
+    contamination observation retains the prior predictive state distribution;
+    it does not create a latent state for an abstract Dirichlet prior.
+
+    The density is ``(sum(contributions) + alpha) / ((N + K*alpha) * volume)``.
+    By default this matches :func:`histogram_likelihood` for in-support
+    observations. ``source_normalized=True`` instead normalizes each Gaussian
+    around the simulated bin, so it sums to one over possible observed bins.
+    This gives a normalized observation kernel for filtering; it differs from
+    the legacy histogram convention near finite-domain boundaries.
+    Out-of-range simulated outcomes carry implicit overflow probability and
+    contribute no probability to finite observation cells (except contamination).
+    Positive pseudocounts require every observation to be inside that support.
+    Category counts should be specified when observations omit possible values.
     """
 
     import torch
-
-    if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
-        raise ValueError(f"bins must be a positive integer, got {bins!r}.")
-    if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
-        raise ValueError(
-            f"smoothing_sigma must be finite and nonnegative, got {smoothing_sigma!r}."
-        )
 
     sim = sim_outcomes
     if not isinstance(sim, torch.Tensor):
         sim = torch.as_tensor(np.asarray(sim, dtype=float), dtype=torch.float32)
     elif not sim.is_floating_point():
         sim = sim.to(torch.float32)
-    if sim.ndim < 2:
-        raise ValueError(
-            "sim_outcomes must have at least 2 dims [estimate, outcome], "
-            f"got shape {tuple(sim.shape)}."
-        )
-    leading_shape = tuple(sim.shape[:-2])
-    n_sims, n_out = sim.shape[-2:]
-    lanes = sim.reshape(-1, n_sims, n_out)
-
-    exp_array = np.asarray(exp_data, dtype=float)
-    if exp_array.ndim != 2 or exp_array.shape[1] != n_out:
-        raise ValueError(
-            "exp_data must have shape [trial, outcome] matching sim_outcomes; "
-            f"got {exp_array.shape} and outcome width {n_out}."
-        )
-    if not 0 <= trial_index < exp_array.shape[0]:
-        raise IndexError(
-            f"trial_index {trial_index} is outside {exp_array.shape[0]} trials."
-        )
-    exp = torch.as_tensor(exp_array, dtype=sim.dtype, device=sim.device)
-    cat_mask = _as_categorical_mask(categorical_dims, n_out)
-    cat_idx = torch.as_tensor(np.flatnonzero(cat_mask), dtype=torch.long, device=sim.device)
-    con_idx = torch.as_tensor(np.flatnonzero(~cat_mask), dtype=torch.long, device=sim.device)
-
-    if cat_idx.numel():
-        observed_cat = exp[trial_index].index_select(0, cat_idx)
-        weights = torch.isclose(
-            lanes.index_select(-1, cat_idx),
-            observed_cat[None, None, :],
-            atol=1e-6,
-            rtol=0.0,
-        ).all(dim=-1).to(sim.dtype)
-    else:
-        weights = torch.ones(
-            (lanes.shape[0], n_sims), dtype=sim.dtype, device=sim.device
-        )
-
-    bin_volume = torch.tensor(1.0, dtype=sim.dtype, device=sim.device)
-    if con_idx.numel():
-        sim_con = lanes.index_select(-1, con_idx)
-        exp_con = exp.index_select(-1, con_idx)
-        edges = _bin_edges(sim_con, exp_con, bins, bin_range, torch)
-        for dimension, edge in enumerate(edges):
-            interior = edge[1:-1]
-            sim_value = sim_con[..., dimension]
-            exp_value = exp_con[trial_index, dimension]
-            sim_bin = torch.bucketize(sim_value, interior)
-            exp_bin = torch.bucketize(exp_value, interior)
-            delta = sim_bin - exp_bin
-            sim_in_range = (sim_value >= edge[0]) & (sim_value <= edge[-1])
-            exp_in_range = (exp_value >= edge[0]) & (exp_value <= edge[-1])
-            if smoothing_sigma == 0:
-                weights = weights * (
-                    (delta == 0) & sim_in_range & exp_in_range
-                ).to(sim.dtype)
-            else:
-                radius = max(1, int(np.ceil(3.0 * smoothing_sigma)))
-                offsets = torch.arange(-radius, radius + 1, device=sim.device)
-                kernel = torch.exp(
-                    -0.5 * (offsets.to(sim.dtype) / float(smoothing_sigma)) ** 2
-                )
-                valid_offsets = (
-                    (exp_bin + offsets >= 0) & (exp_bin + offsets < bins)
-                )
-                normalizer = (valid_offsets.to(sim.dtype) * kernel).sum()
-                dimension_weights = torch.exp(
-                    -0.5 * (delta.to(sim.dtype) / float(smoothing_sigma)) ** 2
-                ) / normalizer
-                weights = weights * torch.where(
-                    (delta.abs() <= radius) & sim_in_range & exp_in_range,
-                    dimension_weights,
-                    torch.zeros_like(dimension_weights),
-                )
-            bin_volume = bin_volume * (edge[1] - edge[0])
-
-    density = torch.clamp(weights.mean(dim=-1) / bin_volume, min=ZERO_PROB)
-    return (
-        weights.reshape(*leading_shape, n_sims),
-        density.reshape(leading_shape),
+    prepared = _HistogramObservationWeights(
+        exp_data, categorical_dims, bins=bins, bin_range=bin_range,
+        smoothing_sigma=smoothing_sigma, pseudocount=pseudocount,
+        categorical_cardinalities=categorical_cardinalities,
+        source_normalized=source_normalized,
+        dtype=sim.dtype, device=sim.device,
     )
+    return prepared(sim, trial_index)
+
+
+class _HistogramObservationWeights:
+    """Device observation tables prepared once for a sequential likelihood call."""
+
+    def __init__(self, exp_data, categorical_dims=None, *, bins=100, bin_range=None,
+                 smoothing_sigma=0., pseudocount=0., categorical_cardinalities=None,
+                 dtype, device, strict_observations=False, source_normalized=False):
+        import torch
+
+        if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
+            raise ValueError(f"bins must be a positive integer, got {bins!r}.")
+        if not np.isfinite(smoothing_sigma) or smoothing_sigma < 0:
+            raise ValueError(f"smoothing_sigma must be finite and nonnegative, got {smoothing_sigma!r}.")
+        if not np.isfinite(pseudocount) or pseudocount < 0:
+            raise ValueError(f"pseudocount must be finite and nonnegative, got {pseudocount!r}.")
+        exp_array = np.asarray(exp_data, dtype=float)
+        if exp_array.ndim != 2 or not np.isfinite(exp_array).all():
+            raise ValueError("exp_data must be a finite 2D [trial, outcome] array.")
+        self.num_trials, self.num_outcomes = exp_array.shape
+        self.pseudocount = float(pseudocount)
+        self.strict_observations = strict_observations
+        cat_mask = _as_categorical_mask(categorical_dims, self.num_outcomes)
+        self.cat_idx = torch.as_tensor(np.flatnonzero(cat_mask), dtype=torch.long, device=device)
+        self.con_indices = np.flatnonzero(~cat_mask)
+        cardinalities = _categorical_cardinalities(exp_array, cat_mask, categorical_cardinalities)
+        if pseudocount > 0:
+            for d, count in zip(np.flatnonzero(cat_mask), cardinalities):
+                if len(np.unique(exp_array[:, d])) > count:
+                    raise ValueError("categorical_cardinalities cannot be smaller than the observed category counts.")
+        self.joint_bin_count = float(bins ** len(self.con_indices) * np.prod(cardinalities))
+        # Compute data-anchored extrema on the host once. No per-trial .item()
+        # calls or copies of the full observed sequence to the accelerator.
+        exp_cpu = torch.as_tensor(exp_array, dtype=dtype)
+        exp = exp_cpu.to(device)
+        self.observed_cat = exp.index_select(-1, self.cat_idx)
+        self.bin_volume = torch.tensor(1., dtype=dtype, device=device)
+        self.edges = _bin_edges(
+            torch.empty((len(self.con_indices),), dtype=dtype, device=device),
+            exp_cpu[:, self.con_indices], bins, bin_range, torch,
+        )
+        self.bin_weights = []
+        for dimension, edge in zip(self.con_indices, self.edges):
+            observed = exp[:, dimension]
+            observed_bin = torch.bucketize(observed.contiguous(), edge[1:-1])
+            in_range = (observed >= edge[0]) & (observed <= edge[-1])
+            if strict_observations or pseudocount > 0:
+                # Only one initialization-time check; masked rows also condition
+                # history and must lie in the declared observation support.
+                if not bool(in_range.all().item()):
+                    raise ValueError(
+                        "Observed outcomes outside bin_range cannot condition history; "
+                        "widen bin_range to include all observations, including masked rows."
+                    )
+            delta = torch.arange(bins, device=device)[None, :] - observed_bin[:, None]
+            if smoothing_sigma == 0:
+                lookup = (delta == 0).to(dtype)
+            else:
+                radius = max(1, int(np.ceil(3. * smoothing_sigma)))
+                offsets = torch.arange(-radius, radius + 1, device=device)
+                kernel = torch.exp(-.5 * (offsets.to(dtype) / float(smoothing_sigma)) ** 2)
+                centers = torch.arange(bins, device=device) if source_normalized else observed_bin
+                valid = ((centers[:, None] + offsets >= 0)
+                         & (centers[:, None] + offsets < bins))
+                normalizer = (valid.to(dtype) * kernel).sum(dim=-1)
+                normalizer = normalizer[None, :] if source_normalized else normalizer[:, None]
+                lookup = torch.where(
+                    delta.abs() <= radius,
+                    torch.exp(-.5 * (delta.to(dtype) / float(smoothing_sigma)) ** 2)
+                    / normalizer, 0.,
+                )
+            self.bin_weights.append(lookup * in_range[:, None])
+            self.bin_volume = self.bin_volume * (edge[1] - edge[0])
+
+    def __call__(self, sim, trial_index):
+        import torch
+
+        if sim.ndim < 2 or sim.shape[-1] != self.num_outcomes:
+            raise ValueError("sim_outcomes must have shape [*lanes, estimate, outcome] matching exp_data.")
+        if not 0 <= trial_index < self.num_trials:
+            raise IndexError(f"trial_index {trial_index} is outside {self.num_trials} trials.")
+        n_sims = sim.shape[-2]
+        if n_sims < 1:
+            raise ValueError("At least one simulation estimate is required.")
+        if self.cat_idx.numel():
+            weights = torch.isclose(sim.index_select(-1, self.cat_idx),
+                                    self.observed_cat[trial_index], atol=1e-6, rtol=0.).all(dim=-1).to(sim.dtype)
+        else:
+            weights = torch.ones(sim.shape[:-1], dtype=sim.dtype, device=sim.device)
+        for dimension, edge, lookup in zip(self.con_indices, self.edges, self.bin_weights):
+            value = sim[..., dimension].contiguous()
+            sim_bin = torch.bucketize(value, edge[1:-1])
+            weights = weights * lookup[trial_index][sim_bin] * ((value >= edge[0]) & (value <= edge[-1]))
+        counts = weights.sum(dim=-1)
+        density = (counts + self.pseudocount) / (
+            (float(n_sims) + self.pseudocount * self.joint_bin_count) * self.bin_volume
+        )
+        if self.pseudocount > 0:
+            weights = weights + self.pseudocount / float(n_sims)
+        return weights, density if self.strict_observations else torch.clamp(density, min=ZERO_PROB)
 
 
 def _categorical_cardinalities(exp_data, cat_mask, specified):
