@@ -1479,11 +1479,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
-        whitelist = {"previous_time", "previous_value", "previous_v",
-                     "previous_w", "random_state",
+        whitelist = {"previous_time", "previous_value", "previous_v", "previous_w", "random_state",
                      "input_ports", "output_ports",
-                     "adjustment_cost", "intensity_cost", "duration_cost",
-                     "intensity"}
+                     "adjustment_cost", "intensity_cost", "duration_cost", "intensity"}
 
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
@@ -1497,29 +1495,34 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
-            # its DDM with integrator function.
+            # it's DDM with integrator function.
             # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
-            # Drop combination function params from RTM if not needed
-            if getattr(self.parameters, 'has_recurrent_input_port', False):
-                blacklist.add('combination_function')
+            # ?TransferMechanism:
+            # * drop combination function if not used
+            if hasattr(self.parameters, 'combination_function'):
+                if not self.parameters.has_recurrent_input_port.get_value_for_codegen():
+                    blacklist.add('combination_function')
 
-            # Drop integrator function if integrator_mode is not enabled
-            if not getattr(self, 'integrator_mode', False):
-                blacklist.add('integrator_function')
+            # ?TransferMechanism
+            # * drop integrator function if not used
+            if hasattr(self.parameters, 'integrator_function'):
+                if not self.parameters.integrator_mode.get_value_for_codegen():
+                    blacklist.add('integrator_function')
 
-        else:
+        elif self.componentCategory == kw.FUNCTION_COMPONENT_CATEGORY:
             # OneHot:
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                if self.mode != kw.DETERMINISTIC:
-                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                mode = self.parameters.mode.get_value_for_codegen()
+                if mode != kw.DETERMINISTIC:
+                    if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         whitelist.remove('random_state')
 
-                elif self.tie != kw.RANDOM:
+                elif self.parameters.tie.get_value_for_codegen() != kw.RANDOM:
                     whitelist.remove('random_state')
 
             # Dropout:
@@ -1535,22 +1538,24 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                enabled_cost_functions = self.parameters.enabled_cost_functions.get_value_for_codegen()
+                if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 
-                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                if enabled_cost_functions.ADJUSTMENT not in enabled_cost_functions:
                     blacklist.add('adjustment_cost_fct')
 
-                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                if enabled_cost_functions.DURATION not in enabled_cost_functions:
                     blacklist.add('duration_cost_fct')
 
-            # Compositions need to track number of executions
-            if hasattr(self, 'nodes'):
-                whitelist.add("num_executions")
-
-            # Matrices of learnable projections are stateful
+            # Matrices of functions of learnable projections are stateful
             if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
                 whitelist.add('matrix')
+
+        elif hasattr(self, 'nodes'):
+            # Compositions need to track number of executions
+            whitelist.add("num_executions")
+
 
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
@@ -1683,18 +1688,23 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
 
             # If both the mechanism and its function use random_state.
-            # its DDM with integrator function.
-            # The mechanism's random_state or seed are not used
+            # it's DDM with integrator function.
+            # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
-                blacklist.add("seed")
+                blacklist.add('seed')
 
-            # Drop combination function params from RTM if not needed
-            if getattr(self.parameters, 'has_recurrent_input_port', False):
-                blacklist.add('combination_function')
+            # ?TransferMechanism:
+            # * drop combination function if not used
+            if hasattr(self.parameters, 'combination_function'):
+                if not self.parameters.has_recurrent_input_port.get_value_for_codegen():
+                    blacklist.add('combination_function')
 
-            # Drop integrator function if integrator_mode is not enabled
-            if not getattr(self, 'integrator_mode', False):
-                blacklist.add('integrator_function')
+            # ?TransferMechanism
+            # * drop integrator function if not used
+            if hasattr(self.parameters, 'integrator_function'):
+                if not self.parameters.integrator_mode.get_value_for_codegen():
+                    blacklist.add('integrator_function')
+
 
         else:
             # "execute_until_finished is only used by Mechanisms
@@ -1707,12 +1717,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                if self.mode != kw.DETERMINISTIC:
+                mode = self.parameters.mode.get_value_for_codegen()
+                if mode != kw.DETERMINISTIC:
                     blacklist.update(['abs_val', 'indicator'])
-                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         blacklist.add('seed')
 
-                elif self.tie != kw.RANDOM:
+                elif self.parameters.tie.get_value_for_codegen() != kw.RANDOM:
                     blacklist.add('seed')
 
             # Dropout:
@@ -1723,16 +1734,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                enabled_cost_functions = self.parameters.enabled_cost_functions.get_value_for_codegen()
+                if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 
-                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                if enabled_cost_functions.ADJUSTMENT not in enabled_cost_functions:
                     blacklist.add('adjustment_cost_fct')
 
-                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                if enabled_cost_functions.DURATION not in enabled_cost_functions:
                     blacklist.add('duration_cost_fct')
 
-            # Matrices of learnable projections are stateful
+            # Matrices of functions of learnable projections are stateful
             if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
                 blacklist.add('matrix')
 
