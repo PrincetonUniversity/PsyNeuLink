@@ -1923,6 +1923,15 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                         comp._delete_compilation_data(context, self)
                 self._tracking_compiled_struct = False
 
+        if getattr(self, '_used_in_codegen', False):
+            # TODO: Remove OCM value not matching 'search_space' sample shape workaround
+            # 'transfer_fct' in Stability can be disabled by setting it to None,
+            # which makes it tracked as a runtime parameter, but at the same time needs
+            # to be queried at compile time.
+            if self.name not in {'search_space', 'transfer_fct'}:
+                assert not self._tracking_compiled_struct, \
+                    "param is used both at compile-time and run-time: {}".format(self.name)
+
     @handle_external_context()
     def delete(self, context: Optional[Union[Context, Hashable]] = None):
         self._delete(context)

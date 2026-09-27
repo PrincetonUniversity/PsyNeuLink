@@ -1747,13 +1747,18 @@ class GridSearch(OptimizationFunction):
         return ctx.convert_python_struct_to_llvm_ir(variable)
 
     def _get_output_struct_type(self, ctx):
+        # compiled version should never return 'all values' or 'all samples'
+        # They might be enabled in parallel execution, so don't assert here.
         val = self.defaults.value
-        # compiled version should never return 'all values'
         search_space = self.parameters.search_space.get_value_for_codegen()
 
+        # TODO: Shape mismatch workaround
         if len(val[0]) != len(search_space):
             val = list(val)
             val[0] = [0.0] * len(search_space)
+            warnings.warn("Shape mismatch: The first element of 'value' should match sample size: "
+                          "{} vs. got: {}".format(self.defaults.value, len(search_space)),
+                          pnlvm.PNLCompilerWarning)
 
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
