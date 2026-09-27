@@ -2413,8 +2413,8 @@ class Port_Base(Port):
 
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
-                                  afferent.defaults.value,
-                                  getattr(function.parameters, name).get_value_for_codegen()),
+                                      afferent.defaults.value,
+                                      getattr(function.parameters, name).default_value),
                                   category=pnlvm.PNLCompilerWarning)
 
                     # The below steps can convert all the way from 2D single element
