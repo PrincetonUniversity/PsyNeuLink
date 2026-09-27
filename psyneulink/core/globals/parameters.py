@@ -1885,6 +1885,12 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if not skip_delivery:
                 self._deliver_value(value, context)
 
+        # TODO: Remove this workaround. It prevents compile state purge
+        # for parameters that just update the same value from default to
+        # a specific context.
+        if getattr(self, '_used_in_codegen', False):
+            old_value = self.values.get(execution_id, self.default_value)
+
         value_updated = False
         if not compilation_sync:
             value_for_update = value
@@ -1937,6 +1943,19 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if self.name not in {'search_space', 'transfer_fct'}:
                 assert not self._tracking_compiled_struct, \
                     "param is used both at compile-time and run-time: {}".format(self.name)
+
+            self._used_in_codegen = False
+            if not compilation_sync and value != old_value:
+                # delete cached compiled ids (cached_property)
+                # TODO: convert these to "compiled_cached_property" that gets cleared
+                # with the bellow call
+                del self._owner._owner.llvm_state_ids
+                del self._owner._owner.llvm_param_ids
+
+                # TODO: We can optimize number of flushes if multiple compile-time
+                # parameters get changed before the next run.
+                import psyneulink.core.llvm as pnlvm
+                pnlvm.cleanup()
 
     @handle_external_context()
     def delete(self, context: Optional[Union[Context, Hashable]] = None):
