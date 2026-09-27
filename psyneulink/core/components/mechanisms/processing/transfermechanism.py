@@ -1624,6 +1624,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
+            only_check_flag = True
+
+        elif not self.parameters.integrator_mode.get_value_for_codegen():
+            only_check_flag = True
+
+        else:
+            only_check_flag = False
+
+        if only_check_flag:
             is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.is_finished_flag, state_struct_ptr=m_state)
             is_finished_flag = builder.load(is_finished_ptr)
 

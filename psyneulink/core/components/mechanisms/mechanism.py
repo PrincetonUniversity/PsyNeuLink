@@ -3580,13 +3580,6 @@ class Mechanism_Base(Mechanism):
         is_finished = builder.or_(is_finished_cond, max_reached)
         iter_end = builder.or_(is_finished, exec_until_off)
 
-        # Check if in integrator mode (this is TransferMechanism specific)
-        if "integrator_mode" in self.parameters:
-            int_mode_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.integrator_mode, param_struct_ptr=params)
-            int_mode = builder.load(int_mode_ptr)
-            int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
-            iter_end = builder.or_(iter_end, int_mode_off)
-
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)

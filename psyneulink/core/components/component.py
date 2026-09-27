@@ -1639,7 +1639,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "allocation_samples",
                      # Used at compile time
                      "enabled_cost_functions", "control_allocation_search_space", "has_recurrent_input_port",
-                     "loss", "metric", "max_entries", "per_item",
+                     "loss", "metric", "max_entries", "per_item", "integrator_mode",
                      # not used in computation
                      "auto", "hetero", "cost", "costs",
                      "control_signal", "competition",
