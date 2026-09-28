@@ -156,7 +156,10 @@ includes `sbi <https://sbi-dev.github.io/sbi/>`_ and PyTorch.
 
 :download:`train_neural_likelihood.py
 <../../Scripts/Examples/ParameterEstimation/neural_likelihood/train_neural_likelihood.py>` trains an
-estimator for a drift-diffusion model, and uses it to fit simulated data.
+estimator for a drift-diffusion model, and uses it to fit simulated data;
+:download:`train_neural_likelihood_distributed.py
+<../../Scripts/Examples/ParameterEstimation/neural_likelihood/train_neural_likelihood_distributed.py>`
+does the same with the simulations for training distributed over a Dask cluster.
 
 
 .. _Neural_Likelihood_Class_Reference:
