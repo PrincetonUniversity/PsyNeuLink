@@ -389,33 +389,40 @@ def _dask_client(options):
     return client, _close
 
 
+def _worker_pec(pec_factory, data, worker_cores, fit_id):
+    """Return the ``(pec, inputs)`` this worker built for ``fit_id``, building them the first time.
+
+    Call with ``_PEC_EVALUATION_LOCK`` held.
+    """
+    try:
+        from dask.distributed import get_worker
+        worker = get_worker()
+        cache = getattr(worker, "_pec_cache", None)
+    except (ImportError, ValueError):
+        worker = None
+        cache = _PEC_FALLBACK_CACHE.get("pec")
+
+    # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
+    if cache is None or cache[0] != fit_id:
+        from psyneulink.core.globals.threads import set_num_threads
+        if worker_cores is not None:
+            set_num_threads(worker_cores)
+        pec, inputs = pec_factory(data)
+        cache = (fit_id, pec, inputs)
+        if worker is not None:
+            worker._pec_cache = cache
+        else:
+            _PEC_FALLBACK_CACHE["pec"] = cache
+    return cache[1], cache[2]
+
+
 def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
     Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``.
     """
     with _PEC_EVALUATION_LOCK:
-        try:
-            from dask.distributed import get_worker
-            worker = get_worker()
-            cache = getattr(worker, "_pec_cache", None)
-        except (ImportError, ValueError):
-            worker = None
-            cache = _PEC_FALLBACK_CACHE.get("pec")
-
-        # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
-        if cache is None or cache[0] != fit_id:
-            from psyneulink.core.globals.threads import set_num_threads
-            if worker_cores is not None:
-                set_num_threads(worker_cores)
-            pec, inputs = pec_factory(data)
-            cache = (fit_id, pec, inputs)
-            if worker is not None:
-                worker._pec_cache = cache
-            else:
-                _PEC_FALLBACK_CACHE["pec"] = cache
-
-        _, pec, inputs = cache
+        pec, inputs = _worker_pec(pec_factory, data, worker_cores, fit_id)
         return float(pec.log_likelihood(*param_values, inputs=inputs))
 
 

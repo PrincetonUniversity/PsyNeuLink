@@ -16,11 +16,13 @@ from __future__ import annotations
 
 import copy
 import json
+import uuid
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, asdict
 
 import numpy as np
+import pandas as pd
 
 # Optional, as elsewhere in PsyNeuLink: the package is importable without it.
 try:
@@ -329,20 +331,17 @@ def _simulate(pec, inputs, thetas, names):
     return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
 
 
-def _split(thetas, n):
-    """Split parameter draws into at most ``n`` non-empty chunks."""
-    return np.array_split(thetas, max(1, min(int(n), len(thetas))))
+def _simulate_chunk(pec_factory, data, thetas, names, worker_cores, training_id):
+    """Simulate ``thetas`` on a Dask worker, through the model it builds with ``pec_factory``.
 
-
-def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
-    """Build a model and simulate ``thetas`` through it.
-
-    This is what a worker is sent, since a composition cannot be sent to another process.
+    As for a distributed fit, the model is built once per worker, and the lock keeps two models
+    from being compiled or run at once in one process.
     """
-    import pandas as pd
+    from psyneulink.core.components.functions.nonstateful import fitfunctions
 
-    pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))
-    return _simulate(pec, inputs, thetas, names)
+    with fitfunctions._PEC_EVALUATION_LOCK:
+        pec, inputs = fitfunctions._worker_pec(pec_factory, data, worker_cores, training_id)
+        return _simulate(pec, inputs, thetas, names)
 
 
 def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
@@ -536,23 +535,27 @@ def train_neural_likelihood(
     thetas = qmc.scale(engine.random(n_parameter_samples), lower, upper)
 
     n_outcomes = len(outcome_names)
-    n_trials = n_trials_per_sample or 100
+    # What a factory is called with: one row per trial to simulate, in the data's columns.
+    placeholder = pd.DataFrame(np.zeros((n_trials_per_sample or 100, n_outcomes)),
+                               columns=list(outcome_names))
 
-    # One share of the draws per worker: building a model costs far more than simulating it.
     if pec is not None:
         results = [_simulate(pec, inputs, thetas, names)]
     elif distributed_options is None:
-        results = [_simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes)]
+        results = [_simulate(*pec_factory(placeholder), thetas, names)]
     else:
         from psyneulink.core.components.functions.nonstateful import fitfunctions
 
         client, close_fn = fitfunctions._dask_client(distributed_options)
         try:
-            # nthreads() lists every worker; scheduler_info() lists only the first few.
+            # One share of the draws per worker: building a model costs far more than simulating
+            # it. nthreads() lists every worker; scheduler_info() lists only the first few.
             workers = len(client.nthreads()) or 1
-            futures = [client.submit(_simulate_chunk, pec_factory, c,
-                                     n_trials, names, n_outcomes, pure=False)
-                       for c in _split(thetas, workers)]
+            worker_cores = fitfunctions._resolve_worker_cores(distributed_options)
+            training_id = uuid.uuid4().hex
+            futures = [client.submit(_simulate_chunk, pec_factory, placeholder, share, names,
+                                     worker_cores, training_id, pure=False)
+                       for share in np.array_split(thetas, min(workers, len(thetas)))]
             results = client.gather(futures)
         finally:
             if close_fn is not None:

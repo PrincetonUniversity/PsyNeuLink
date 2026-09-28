@@ -392,6 +392,38 @@ def test_each_training_draw_gets_noise_of_its_own():
     assert all(shared_noise.values.values())
 
 
+def test_a_factory_is_given_the_outcome_columns():
+    columns = []
+
+    def factory(data):
+        columns.append(list(data.columns))
+        return _ddm_training_pec(data)
+
+    nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=factory, n_parameter_samples=8,
+                                n_trials_per_sample=10, epochs=1)
+    assert columns == [list(OUTCOMES)]
+
+
+def test_a_worker_builds_its_model_once_per_training(monkeypatch):
+    from psyneulink.core.components.functions.nonstateful import fitfunctions
+    import psyneulink.core.globals.threads as threads_module
+
+    threads, builds = [], []
+    monkeypatch.setattr(threads_module, "set_num_threads", threads.append)
+    monkeypatch.setattr(fitfunctions, "_PEC_FALLBACK_CACHE", {})
+
+    def factory(data):
+        builds.append(len(builds))
+        return _ddm_training_pec(data)
+
+    data = pd.DataFrame(np.zeros((10, 2)), columns=list(OUTCOMES))
+    for training in ("first", "first", "second"):
+        nlf._simulate_chunk(factory, data, np.array([[0.3, 0.6]]), ("rate", "threshold"), 3,
+                            training)
+    assert builds == [0, 1]
+    assert threads == [3, 3]
+
+
 def test_inputs_set_how_many_trials_each_draw_simulates():
     """Trials come from the inputs, not from the data the model was built around."""
     frame = pd.DataFrame({"decision": [0.0, 1.0] * 5, "response_time": [0.5] * 10})
