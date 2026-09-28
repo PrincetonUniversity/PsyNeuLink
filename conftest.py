@@ -30,6 +30,8 @@ try:
 except ModuleNotFoundError:
     dask_available = False
 
+sbi_available = importlib.util.find_spec('sbi') is not None
+
 # def pytest_addoption(parser):
 #     parser.addoption(
 #         '--pnl-seed',
@@ -77,6 +79,9 @@ def pytest_runtest_setup(item):
 
     if 'dask' in item.keywords and not dask_available:
         pytest.skip('dask not available')
+
+    if 'nle' in item.keywords and not sbi_available:
+        pytest.skip('sbi not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 

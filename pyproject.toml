@@ -117,6 +117,7 @@ markers = [
     "model: Tests based on existing models",
     "pytorch: Tests using Torch",
     "dask: Tests using the optional Dask distributed backend",
+    "nle: Tests using the optional neural likelihood (sbi) extra",
     "higher_dims: Tests using arrays with more than two dimensions",
 ]
 

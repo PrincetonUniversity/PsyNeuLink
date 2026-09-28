@@ -10,9 +10,9 @@ from psyneulink.core.components.functions.nonstateful import (
     neurallikelihoodfunctions as nlf,
 )
 
-# Optional dependencies: skipped without them, rather than failing to collect.
 torch = pytest.importorskip("torch")
-pytest.importorskip("sbi")
+
+pytestmark = pytest.mark.nle
 
 RATE_BOUNDS = (-1.5, 1.5)
 THRESHOLD_BOUNDS = (0.3, 1.5)
@@ -317,8 +317,8 @@ def test_training_data_is_generated_from_the_composition():
 
 
 @pytest.mark.composition
+@pytest.mark.dask
 def test_training_data_generation_distributes():
-    pytest.importorskip("dask.distributed")
     likelihood = nlf.train_neural_likelihood(
         {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS},
         OUTCOMES,
@@ -465,9 +465,9 @@ def test_training_rejects_a_model_that_orders_its_parameters_differently():
 
 
 @pytest.mark.composition
+@pytest.mark.dask
 def test_training_rejects_a_reordered_model_when_distributing():
     """The same check has to hold on a worker, which builds its own model."""
-    pytest.importorskip("dask.distributed")
     with pytest.raises(Exception, match="matched by position"):
         nlf.train_neural_likelihood(
             BOUNDS, OUTCOMES, pec_factory=_reversed_ddm_pec,
@@ -656,9 +656,9 @@ def test_a_participant_scored_by_an_estimator_needs_no_common_random_numbers(tra
 
 
 @pytest.mark.composition
+@pytest.mark.dask
 def test_a_distributed_hierarchical_fit_scores_the_same_way(trained_artifact):
     """Each worker builds and loads its own, and has to reach the same answer."""
-    pytest.importorskip("dask.distributed")
     here = _fit_group(trained_artifact)
     there = _fit_group(trained_artifact, distributed=True, n_workers=2)
 
