@@ -626,9 +626,10 @@ def _check_gates(likelihood, x, cond, val_nll, strict):
     failures = []
     if not np.isfinite(val_nll):
         failures.append(f"held-out negative log-likelihood is {val_nll}")
+    # Rows are ordered by parameter draw, so an even spread of them covers every draw.
+    rows = np.unique(np.linspace(0, x.shape[0] - 1, min(4096, x.shape[0])).astype(int))
     with torch.no_grad():
-        sample = slice(0, min(4096, x.shape[0]))
-        scored = likelihood._estimator.log_prob(x[sample], condition=cond[sample])
+        scored = likelihood._estimator.log_prob(x[rows], condition=cond[rows])
     finite = float(torch.isfinite(scored).float().mean())
     if finite < 0.999:
         failures.append(

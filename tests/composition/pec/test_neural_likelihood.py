@@ -181,6 +181,18 @@ def test_gates_reject_an_estimator_that_did_not_train():
         nlf._check_gates(likelihood, x, theta, float("nan"), strict=True)
 
 
+def test_gates_score_rows_from_every_draw():
+    # Rows are ordered by draw; an estimator failing only on later draws must not pass.
+    class _FailsOnLaterDraws:
+        def log_prob(self, x, condition):
+            return torch.where(condition[:, 0] < 5000, 0.0, float("-inf"))
+
+    rows = torch.arange(10000.0).reshape(-1, 1)
+    likelihood = type("Likelihood", (), {"_estimator": _FailsOnLaterDraws()})()
+    with pytest.raises(nlf.NeuralLikelihoodError, match="finite log-density"):
+        nlf._check_gates(likelihood, torch.zeros((10000, 2)), rows, 1.0, strict=True)
+
+
 def test_gates_warn_rather_than_raise_when_not_strict():
     likelihood, _ = _toy_likelihood(epochs=1)
     with pytest.warns(nlf.NeuralLikelihoodWarning, match="did not pass its validation gates"):
