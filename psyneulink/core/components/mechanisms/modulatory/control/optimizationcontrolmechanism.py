@@ -3291,8 +3291,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return ctx.float_ty
 
     def _get_evaluate_alloc_struct_type(self, ctx):
-        control_allocation_search_space = self.parameters.control_allocation_search_space.get_value_for_codegen()
-        return pnlvm.ir.ArrayType(ctx.float_ty, len(control_allocation_search_space))
+        return pnlvm.ir.ArrayType(ctx.float_ty, len(self.parameters.control_signals.get_value_for_codegen()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
@@ -3332,9 +3331,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
             for (flag, param) in costs:
 
-                # The check for enablement is structural and has to be done in Python.
-                # If a cost function is not enabled the cost parameter is None
-                if flag in op.parameters.cost_options.get():
+                # TODO: This should only read the total cost of ports after they
+                # ran their own combination functions
+                op_function = op.parameters.function.get_value_for_codegen()
+                if flag in op_function.parameters.enabled_cost_functions.get_value_for_codegen():
                     cost_ptr = pnlvm.helpers.get_state_ptr(builder, op_func, op_func_state, param.name)
                     cost = pnlvm.helpers.load_extract_scalar_array_one(builder, cost_ptr)
                     port_cost = builder.load(port_cost_ptr)

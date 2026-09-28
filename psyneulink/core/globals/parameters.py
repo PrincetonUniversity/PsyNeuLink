@@ -1604,6 +1604,12 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
     def get_value_for_codegen(self):
         """Get value for latest context and mark as used in code generation."""
+
+        # Don't allow Parameters with getters. Those are not set directly and it
+        # doesn't help to track them to keep the compile-time values updated.
+        assert self.getter is None, \
+            "Codegen should use only source parameters: {}".format(self.name)
+
         self._used_in_codegen = True
         return self.get(self._owner._owner.most_recent_context)
 
