@@ -371,7 +371,7 @@ def test_training_leaves_the_model_it_was_given_intact():
     pec, inputs = _ddm_training_pec(frame)
 
     before = pec.log_likelihood(0.3, 0.6, inputs=inputs)
-    nlf._simulate(pec, inputs, np.array([[0.3, 0.6]]), ("rate", "threshold"), 2)
+    nlf._simulate(pec, inputs, np.array([[0.3, 0.6]]), ("rate", "threshold"))
     assert pec.log_likelihood(0.3, 0.6, inputs=inputs) == before
 
 
@@ -386,7 +386,7 @@ def test_each_training_draw_gets_noise_of_its_own():
     pec.log_likelihood(0.3, 0.6, inputs=inputs)
 
     same_draw_twice = np.array([[0.3, 0.6], [0.3, 0.6]])
-    _, x, n_trials, _ = nlf._simulate(pec, inputs, same_draw_twice, ("rate", "threshold"), 2)
+    _, x, n_trials, _ = nlf._simulate(pec, inputs, same_draw_twice, ("rate", "threshold"))
     first, second = np.split(x, 2)
     assert not np.array_equal(first, second)
     assert all(shared_noise.values.values())
@@ -400,9 +400,9 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
     node = pec.nodes[0]
 
     _, _, ten, _ = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]),
-                                 ("rate", "threshold"), 2)
+                                 ("rate", "threshold"))
     _, _, thirty, _ = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
-                                    ("rate", "threshold"), 2)
+                                    ("rate", "threshold"))
     assert (ten, thirty) == (10, 30)
 
 

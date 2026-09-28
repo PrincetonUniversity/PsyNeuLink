@@ -91,24 +91,8 @@ class NeuralLikelihoodProvenance:
     @classmethod
     def from_json(cls, text: str) -> NeuralLikelihoodProvenance:
         raw = json.loads(text)
-        return cls(
-            fit_param_names=tuple(raw["fit_param_names"]),
-            lower=tuple(raw["lower"]),
-            upper=tuple(raw["upper"]),
-            outcome_names=tuple(raw["outcome_names"]),
-            categorical=tuple(raw["categorical"]),
-            categories=tuple(tuple(c) for c in raw["categories"]),
-            log_transform=raw["log_transform"],
-            n_input_columns=raw["n_input_columns"],
-            trial_feature_columns=tuple(raw["trial_feature_columns"]),
-            n_parameter_samples=raw["n_parameter_samples"],
-            n_trials_per_sample=raw["n_trials_per_sample"],
-            epochs=raw["epochs"],
-            val_nll=raw["val_nll"],
-            seed=raw["seed"],
-            psyneulink_version=raw["psyneulink_version"],
-            sbi_version=raw["sbi_version"],
-        )
+        raw["categories"] = [tuple(c) for c in raw["categories"]]
+        return cls(**{k: tuple(v) if isinstance(v, list) else v for k, v in raw.items()})
 
     def check_matches(self, names, lower, upper, outcome_names, categorical):
         """Raise unless this estimator was trained for the model described.
@@ -154,10 +138,6 @@ class NeuralLikelihood:
         self.provenance = provenance
         # Example rows, from which `load` rebuilds the network before restoring its weights.
         self._shape_probe = shape_probe
-
-    @property
-    def fit_param_names(self) -> tuple[str, ...]:
-        return self.provenance.fit_param_names
 
     def _encode_outcomes(self, outcomes: np.ndarray) -> torch.Tensor:
         """Reorder to sbi's layout and map categorical values onto codes 0..K-1."""
@@ -284,11 +264,6 @@ def _input_columns(inputs, n_trials: int) -> np.ndarray:
     return np.concatenate(columns, axis=1)
 
 
-def _split(thetas, n):
-    """Split parameter draws into at most ``n`` non-empty chunks."""
-    return np.array_split(thetas, max(1, min(int(n), len(thetas))))
-
-
 def _check_parameters(pec, names):
     """Raise unless `pec` fits exactly `names`, in that order: draws are passed to it by position."""
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
@@ -302,7 +277,7 @@ def _check_parameters(pec, names):
         )
 
 
-def _simulate(pec, inputs, thetas, names, n_outcomes):
+def _simulate(pec, inputs, thetas, names):
     """Simulate every draw through ``pec``.
 
     Returns the conditioning rows, the simulated outcomes, the number of trials per draw (set
@@ -354,6 +329,11 @@ def _simulate(pec, inputs, thetas, names, n_outcomes):
     return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
 
 
+def _split(thetas, n):
+    """Split parameter draws into at most ``n`` non-empty chunks."""
+    return np.array_split(thetas, max(1, min(int(n), len(thetas))))
+
+
 def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
     """Build a model and simulate ``thetas`` through it.
 
@@ -362,7 +342,7 @@ def _simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes):
     import pandas as pd
 
     pec, inputs = pec_factory(pd.DataFrame(np.zeros((n_trials, n_outcomes))))
-    return _simulate(pec, inputs, thetas, names, n_outcomes)
+    return _simulate(pec, inputs, thetas, names)
 
 
 def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
@@ -477,8 +457,9 @@ def train_neural_likelihood(
     n_parameter_samples : int : default 20000
         specifies the number of parameter values drawn from within **bounds** and simulated.
 
-    n_trials_per_sample : int : default 100
-        specifies the number of trials simulated for each parameter draw, when **pec_factory** is used.
+    n_trials_per_sample : int : default None
+        specifies the number of trials simulated for each parameter draw when **pec_factory** is used; 100
+        if not specified.
 
     categorical : Sequence[bool] : default None
         specifies which outcome variables are categorical; if not specified, this is inferred from the
@@ -559,7 +540,7 @@ def train_neural_likelihood(
 
     # One share of the draws per worker: building a model costs far more than simulating it.
     if pec is not None:
-        results = [_simulate(pec, inputs, thetas, names, n_outcomes)]
+        results = [_simulate(pec, inputs, thetas, names)]
     elif distributed_options is None:
         results = [_simulate_chunk(pec_factory, thetas, n_trials, names, n_outcomes)]
     else:
