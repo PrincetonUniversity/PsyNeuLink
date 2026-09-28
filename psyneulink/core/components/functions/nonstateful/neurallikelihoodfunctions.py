@@ -344,7 +344,18 @@ def _simulate_chunk(pec_factory, data, thetas, names, worker_cores, training_id)
         return _simulate(pec, inputs, thetas, names)
 
 
-def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
+def _held_out_draws(cond, n_params, validation_fraction, generator):
+    """Split rows into training and held-out ones by parameter draw, so that the held-out rows
+    come from parameter values not trained on.
+    """
+    _, draw = torch.unique(cond[:, :n_params], dim=0, return_inverse=True)
+    n_draws = int(draw.max()) + 1
+    n_val = min(max(1, int(validation_fraction * n_draws)), n_draws - 1)
+    held_out = torch.isin(draw, torch.randperm(n_draws, generator=generator)[:n_val])
+    return torch.nonzero(~held_out).flatten(), torch.nonzero(held_out).flatten()
+
+
+def _fit_estimator(x, cond, categorical, categories, log_transform, *, n_params, epochs,
                    batch_size, learning_rate, validation_fraction, seed):
     """Train a density estimator by maximum likelihood; returns it and its held-out NLL.
 
@@ -352,10 +363,7 @@ def _fit_estimator(x, cond, categorical, categories, log_transform, *, epochs,
     reported.
     """
     generator = torch.Generator().manual_seed(seed)
-    n = x.shape[0]
-    n_val = max(1, int(validation_fraction * n))
-    order = torch.randperm(n, generator=generator)
-    val_idx, train_idx = order[:n_val], order[n_val:]
+    train_idx, val_idx = _held_out_draws(cond, n_params, validation_fraction, generator)
 
     estimator = _build_estimator(x[train_idx], cond[train_idx], categorical, categories,
                                  log_transform)
@@ -590,7 +598,7 @@ def train_neural_likelihood(
 
     x = _encode_outcomes(raw, flags, categories, outcome_names)
     estimator, val_nll = _fit_estimator(
-        x, cond, flags, categories, log_transform,
+        x, cond, flags, categories, log_transform, n_params=len(names),
         epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
         validation_fraction=validation_fraction, seed=seed,
     )

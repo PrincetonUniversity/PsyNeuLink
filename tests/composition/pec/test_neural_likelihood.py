@@ -41,7 +41,7 @@ def _toy_likelihood(epochs=3, seed=0):
     x = nlf._encode_outcomes(raw, categorical, categories, OUTCOMES)
     cond = torch.as_tensor(theta, dtype=torch.float32)
     estimator, val_nll = nlf._fit_estimator(
-        x, cond, categorical, categories, True, epochs=epochs, batch_size=512,
+        x, cond, categorical, categories, True, n_params=2, epochs=epochs, batch_size=512,
         learning_rate=5e-4, validation_fraction=0.1, seed=seed,
     )
     provenance = nlf.NeuralLikelihoodProvenance(
@@ -71,15 +71,23 @@ def test_the_estimator_returned_is_the_one_its_held_out_score_describes():
     cond = torch.as_tensor(theta, dtype=torch.float32)
     seed = 2
     estimator, val_nll = nlf._fit_estimator(
-        x, cond, categorical, categories, True, epochs=6, batch_size=128,
+        x, cond, categorical, categories, True, n_params=2, epochs=6, batch_size=128,
         learning_rate=0.02, validation_fraction=0.1, seed=seed,
     )
     # The same held-out rows the training chose.
-    order = torch.randperm(x.shape[0], generator=torch.Generator().manual_seed(seed))
-    val_idx = order[:max(1, int(0.1 * x.shape[0]))]
+    _, val_idx = nlf._held_out_draws(cond, 2, 0.1, torch.Generator().manual_seed(seed))
     with torch.no_grad():
         rescored = float(estimator.loss(x[val_idx], condition=cond[val_idx]).mean())
     assert rescored == pytest.approx(val_nll, rel=1e-6)
+
+
+def test_held_out_rows_come_from_draws_not_trained_on():
+    # 20 draws of 50 rows each; the second column varies within a draw, as a trial feature does.
+    theta = np.repeat(np.arange(20.0), 50)
+    cond = torch.as_tensor(np.column_stack([theta, np.arange(theta.size)]), dtype=torch.float32)
+    train, held_out = nlf._held_out_draws(cond, 1, 0.1, torch.Generator().manual_seed(0))
+    assert set(theta[held_out.numpy()]).isdisjoint(theta[train.numpy()])
+    assert len(held_out) == 100
 
 
 # ---------------------------------------------------------------- provenance
