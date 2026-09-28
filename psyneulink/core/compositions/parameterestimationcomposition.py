@@ -42,9 +42,10 @@ A `ParameterEstimationComposition` is a subclass of `Composition` that estimates
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition. It can
 fit the `outputs <ParameterEstimationComposition.outcome_variables>` of the `model
 <ParameterEstimationComposition.model>` to empirical data (`ParameterEstimationComposition_Data_Fitting`) by maximizing
-likelihood using kernel density estimation (KDE), or it can optimize a user-provided scalar `objective_function`
-(`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is
-`run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it sets its
+likelihood using kernel density estimation (KDE) or a trained :ref:`neural likelihood <NeuralLikelihood>`, or it can
+optimize a user-provided scalar `objective_function` (`ParameterEstimationComposition_Optimization`). In either case,
+when the ParameterEstimationComposition is `run <Composition.run>` with a given set of `inputs
+<Composition_Execution_Inputs>`, it sets its
 `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>` attribute to the parameter
 values that best satisfy the fitting or optimization objective. The `results <ParameterEstimationComposition.results>`
 attribute is also set to the optimal parameter values. The arguments below configure a ParameterEstimationComposition
@@ -106,8 +107,9 @@ specified:
 
     * **objective_function** - A function that computes the sum of the log likelihood of the data is automatically
       assigned for data fitting purposes and should not need to be specified. This function uses a kernel density
-      estimation of the data to compute the likelihood of the data given the model. If you would like to use your own
-      estimation of the likelihood, see `ParameterEstimationComposition_Optimization` below.
+      estimation of the data to compute the likelihood of the data given the model. To use a density estimator trained
+      beforehand instead, see :ref:`Neural Likelihoods <NeuralLikelihood>`; to use your own estimation of the
+      likelihood, see `ParameterEstimationComposition_Optimization` below.
 
     .. warning::
        The **objective_function** argument should NOT be specified for data fitting; specifying both the
