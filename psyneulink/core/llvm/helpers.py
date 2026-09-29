@@ -140,6 +140,7 @@ def unwrap_2d_array(builder, element):
     if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
         assert element.type.pointee.count == 1
         return builder.gep(element, [ir.IntType(32)(0), ir.IntType(32)(0)])
+
     return element
 
 
