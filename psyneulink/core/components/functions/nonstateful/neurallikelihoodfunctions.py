@@ -171,6 +171,14 @@ class NeuralLikelihood:
 
     Built by `train_neural_likelihood`, saved with `save`, and reloaded with `load`.
     `trial_log_prob` is differentiable with respect to the parameters.
+
+    Attributes
+    ----------
+
+    provenance : NeuralLikelihoodProvenance
+        what the estimator was trained for, which is checked against a model before it is used to fit one
+        (see `Neural_Likelihood_Matching`), and a record of its training, including its negative
+        log-likelihood per trial on the data held out from training (``val_nll``).
     """
 
     def __init__(self, estimator, provenance: NeuralLikelihoodProvenance, shape_probe):
