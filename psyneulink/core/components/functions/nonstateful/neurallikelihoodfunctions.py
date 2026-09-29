@@ -171,8 +171,8 @@ class NeuralLikelihood:
 
     metadata : NeuralLikelihoodMetadata
         what the estimator was trained for, which is checked against a model before it is used to fit one
-        (see `Neural_Likelihood_Matching`), and a record of its training, including its negative
-        log-likelihood per trial on the data held out from training (``val_nll``).
+        (see `Neural_Likelihood_Matching`), and its negative log-likelihood per trial on the data held out
+        from training (``val_nll``).
     """
 
     def __init__(self, estimator, metadata: NeuralLikelihoodMetadata, shape_probe):
@@ -314,9 +314,10 @@ def _input_columns(inputs, n_trials: int, model) -> np.ndarray:
     return np.concatenate(columns, axis=1)
 
 
-def _check_parameters(pec, names):
-    """Raise unless `pec` can be simulated for training, and fits exactly `names` in that order:
-    draws are passed to it by position.
+def _check_model(pec, names):
+    """Raise unless `pec` can be simulated for training and fits exactly `names`, in that order.
+
+    Draws are passed to it by position.
     """
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
 
@@ -346,7 +347,7 @@ def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
     columns they have, which of them were used, and the values of the rest.  Each draw simulates
     as many trials as ``inputs`` has, whatever the model's data.
     """
-    _check_parameters(pec, names)
+    _check_model(pec, names)
     n_trials = None
     features = None
     layout = None
@@ -572,7 +573,7 @@ def train_neural_likelihood(
         )
     if pec is not None and distributed_options is not None:
         raise NeuralLikelihoodError(
-            "Distributing generation requires pec_factory: a composition cannot be sent "
+            "Distributing the simulations requires pec_factory: a composition cannot be sent "
             "to another process, so each worker has to build its own."
         )
     if pec is not None and inputs is None:

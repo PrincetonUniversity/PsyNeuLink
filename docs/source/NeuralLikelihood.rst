@@ -134,7 +134,8 @@ Validation
 
 `train_neural_likelihood` generates an error if the estimator's negative log-likelihood on the data held
 out from training is not finite, or if it assigns a finite density to fewer than 99.9% of a sample of the
-simulated data. Specifying ``strict=False`` issues a `NeuralLikelihoodWarning` instead.
+simulated data. Specifying ``strict=False`` issues a `NeuralLikelihoodWarning` instead. The held-out
+negative log-likelihood per trial is recorded with the estimator, as ``metadata.val_nll``.
 
 These checks identify an estimator that failed to train, but not one that is inaccurate. The accuracy of
 an estimator for a given model can be assessed by fitting data simulated at known parameter values, and
