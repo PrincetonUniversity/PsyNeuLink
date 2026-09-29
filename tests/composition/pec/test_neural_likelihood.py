@@ -503,6 +503,14 @@ def test_a_model_without_inputs_is_rejected(ddm_data):
         nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=object(), n_parameter_samples=8)
 
 
+@pytest.mark.composition
+def test_a_model_whose_outcomes_are_all_categorical_is_refused():
+    with pytest.raises(nlf.NeuralLikelihoodError, match="at least one continuous"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=_ddm_training_pec,
+                                    categorical=(True, True), n_parameter_samples=4,
+                                    n_trials_per_sample=5, epochs=1)
+
+
 def _reversed_ddm_pec(data):
     """Declares the same parameters as _ddm_training_pec, in the opposite order."""
     decision = pnl.DDM(

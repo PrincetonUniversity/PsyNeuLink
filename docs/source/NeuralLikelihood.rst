@@ -152,6 +152,8 @@ Limitations
   data and training.
 * Parameter values are drawn evenly from within **bounds** for training, so regions of the parameter space
   in which the model's behavior changes rapidly are not represented in more detail than others.
+* At least one outcome must be continuous, such as a response time: an estimator cannot be trained for a
+  model whose outcomes are all categorical.
 * A fit that uses a neural likelihood cannot be distributed (``distributed=True``).
 
 

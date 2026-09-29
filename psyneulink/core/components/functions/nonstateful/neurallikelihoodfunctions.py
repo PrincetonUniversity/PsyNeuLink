@@ -645,12 +645,17 @@ def train_neural_likelihood(
         raise NeuralLikelihoodError(
             f"categorical has {len(flags)} entries but there are {n_outcomes} outcomes."
         )
+    if all(flags):
+        raise NeuralLikelihoodError(
+            "Every outcome is categorical, and a neural likelihood needs at least one continuous "
+            "outcome, such as a response time."
+        )
     categories = tuple(
         tuple(float(v) for v in np.unique(raw[:, j])) if is_cat else ()
         for j, is_cat in enumerate(flags)
     )
     continuous = raw[:, ~np.asarray(flags, dtype=bool)]
-    log_transform = bool(any(flags)) and continuous.size > 0 and bool((continuous > 0).all())
+    log_transform = bool(any(flags)) and bool((continuous > 0).all())
 
     x = _encode_outcomes(raw, flags, categories, outcome_names)
     estimator, val_nll = _fit_estimator(
