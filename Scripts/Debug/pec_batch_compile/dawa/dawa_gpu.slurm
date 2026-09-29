@@ -31,6 +31,8 @@ Optional exported variables:
 Driver options such as --subject, --start, --estimates, and --output are passed
 through. For arrays, the default subject is SLURM_ARRAY_TASK_ID; otherwise 1.
 Each job gets a new default output directory named MODE-JOB_ID under DAWA_RESULTS.
+Defaults use conditioned particle filtering and in-memory optimizer storage.
+Every output directory must be new; automatic fit resume is not implemented.
 EOF
 }
 

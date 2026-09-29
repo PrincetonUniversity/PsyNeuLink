@@ -45,6 +45,10 @@ The exact noisy-model likelihood is still approximated by finite particles and
 the declared observation kernel. Effective sample size and posterior
 contamination responsibility are available through
 `conditioned_log_likelihood(..., return_diagnostics=True)`.
+The [accuracy study](CONDITIONED_ACCURACY.md) tests the filtering recursion
+against independent references and measures particle-budget sensitivity.
+The follow-up [H100 recovery and profile study](CONDITIONED_RECOVERY.md) measures
+complete fits with matched synthetic observations and examines LC identification.
 
 ## Execution and validation
 
@@ -109,8 +113,10 @@ or fitting accuracy. At 100,000 particles, the first proposal's median ESS was
 2,645 and minimum ESS was 56; across the four proposals the minimum was about
 5. Low-support observations can therefore still produce noisy filtering and
 scores. Particle-budget and independent-seed checks remain necessary before
-drawing conclusions from a fitted subject. The existing recovery studies used
-the marginal objective and do not validate this conditioned objective.
+drawing conclusions from a fitted subject. The subsequent
+[accuracy study](CONDITIONED_ACCURACY.md) measures this uncertainty, and the
+[conditioned recovery pilot](CONDITIONED_RECOVERY.md) exercises complete fits.
+The earlier marginal recovery studies do not validate this conditioned objective.
 
 The [compact results](fitting_acceleration/conditioned_2080ti.json) include all
 timings and scores, ESS and contamination summaries, model/data/implementation

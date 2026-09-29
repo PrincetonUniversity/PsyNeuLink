@@ -24,6 +24,10 @@ data partitions. They use 10,000 estimates, up to 5,000 optimization iterations,
 and LLVM execution. LC mode depends on previous congruency; several other
 parameters depend on subject. These scripts fit all subjects in their partition;
 their existing `--subject_id` argument does not filter the data.
+These preserved scripts do not enable observation-conditioned particle
+filtering. Use the current GPU fitting guide above for that likelihood. Native
+LLVM also has a documented [reset/modulation mismatch](../dawa_benchmark_results.md#first-trial-llvm-rt-discrepancy-reset-diagnosis-2026-09-25)
+with Python; the compiled GPU path follows Python's reset behavior.
 
 Run each script from this directory with its corresponding
 `flanker_data_partN.csv` available locally. Behavioral data, generated fit CSVs,

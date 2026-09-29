@@ -71,6 +71,15 @@ split-launch tests check exact agreement with a continuous run, including
 varying controls and both trial schedules.
 Compilation starts from construction defaults, not a live composition's state.
 
+The current fit and recovery drivers default to the
+[observation-conditioned particle likelihood](CONDITIONED_LIKELIHOOD.md).
+The [accuracy study](CONDITIONED_ACCURACY.md) checks that filtering loop against
+an exact finite-state reference and short full-history DAWA simulations, then
+measures score variability and particle-budget sensitivity on a complete
+subject. Simulation parity alone does not establish likelihood precision.
+The [conditioned recovery pilot](CONDITIONED_RECOVERY.md) adds matched synthetic
+observations and LC-mode profiles with nuisance-parameter reoptimization.
+
 ## Simulation checks
 
 Run from the repository root in the configured Python environment:
@@ -99,7 +108,9 @@ LLVM/GPU timing comparisons do not establish exact backend equivalence.
 
 ## Fixed parameters and faster Gaussian conversion
 
-The optimized PEC configuration used for recovery is:
+The earlier marginal-likelihood recovery experiments used this optimized PEC
+configuration. It documents the histogram path; use the current fit driver for
+the conditioned particle objective:
 
 ```python
 optimization_function = pnl.PECOptimizationFunction(
@@ -136,6 +147,9 @@ checks. `ShiftedHistogramScorer` reuses these counts for additive readout grids;
 it does not itself establish that a model parameter is independent of dynamics.
 The DAWA `--profile-ndt` runner checks the passive RT readout and uses this path
 to remove NDT from the outer CMA-ES search without materializing trajectories.
+This optimization requires the explicit legacy marginal objective; changing
+NDT changes filtered ancestry and invalidates a reused conditioned history.
+See the [legacy fitting commands](fitting_acceleration/LEGACY_FITTING.md).
 
 `plan.discrete_output_count_blocks(..., num_estimates=N, seeds=[...])` runs
 independent equal-sized sampling blocks in one GPU launch and returns a tuple
@@ -164,6 +178,10 @@ parameters and histogram writes use that estimate's trial index. The general
 compiler default remains `"synchronized"`; relative performance depends on
 the model.
 
+The conditioned likelihood launches one trial at a time and resamples between
+trials. It therefore cannot use independent progress across trial boundaries;
+its performance must be measured separately from the free-running kernel.
+
 `philox4x_fast_v1` uses grouped Philox draws and a faster CUDA Gaussian
 conversion. `philox4x_v1` and `legacy` remain available for reproducing older
 runs. Rounding differences can change stopping steps, so record the RNG mode
@@ -175,6 +193,7 @@ as well as the seed. The fast mode requires CUDA compilation.
 | --- | --- |
 | [dawa_pec_fit.py](dawa_pec_fit.py) / [dawa_pec_recovery.py](dawa_pec_recovery.py) | Shared single-subject GPU optimization, using recorded or synthetic observations |
 | [dawa_pec_fit_benchmark.py](dawa_pec_fit_benchmark.py) | Time four fixed proposals on a subject's data; no optimization |
+| [Particle likelihood accuracy](CONDITIONED_ACCURACY.md) | Exact-reference tests, full-subject particle-budget study, and reproducible reports |
 | [dawa_llvm_benchmark.py](dawa_llvm_benchmark.py) | Compare materialized GPU and native LLVM samples |
 | [Benchmark results](dawa_benchmark_results.md) | Measured workloads, profiling, validation, and reproduction commands |
 | [Direct likelihood](dawa_likelihood/README.md) | Earlier response-noise likelihood prototype |

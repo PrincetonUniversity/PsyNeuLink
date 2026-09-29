@@ -1,428 +1,283 @@
 # Fitting Dawa's LC/LCA model
 
-This directory contains the model and tools for fitting choices and response
-times, and for checking whether a fit can recover known parameters. The model
-has control, stimulus, decision, and response LCA layers. An LC mechanism
-modulates gain in the three downstream layers. Control state carries over
-between trials, so trial order matters.
+Start here to fit recorded choices and response times with the compiled GPU
+model. The supported workflow uses the original nonlinear model, Gaussian
+noise in all four LCA layers, and **observation-conditioned particle filtering**.
+Control state carries across trials, so every retained observation updates the
+state distribution before the next trial.
 
-There are currently two fitting workflows:
+| Task | Entry point |
+| --- | --- |
+| Fit one subject's recorded responses | [dawa_pec_fit.py](dawa_pec_fit.py) |
+| Generate and fit one synthetic subject | [dawa_pec_recovery.py](dawa_pec_recovery.py) |
+| Submit either workflow on Della | [dawa_gpu.slurm](dawa_gpu.slurm) |
+| Inspect or modify the PNL composition | [full_lca_model_lc.py](dawa_lca_model/full_lca_model_lc.py) |
 
-| Task | Script | Runs on |
-| --- | --- | --- |
-| Fit one subject's recorded choices and RTs | [dawa_pec_fit.py](dawa_pec_fit.py) | NVIDIA GPU |
-| Generate a synthetic subject and recover its parameters | [dawa_pec_recovery.py](dawa_pec_recovery.py) | NVIDIA GPU |
+Both fitting commands use the same compiler, bounds, and CMA-ES optimization.
+Recovery replaces the recorded responses with synthetic observations. The
+older adaptive and NDT-profiling commands are documented separately in the
+[legacy fitting guide](fitting_acceleration/LEGACY_FITTING.md); they require a
+different likelihood and are **not supported shortcuts for conditioned fits**.
 
-Both commands use the same model, parameter bounds, and CMA-ES fitting pipeline.
-Use the fit command for empirical data: recovery replaces the CSV's recorded
-responses with simulated ones. The similarly named `dawa_pec_fit_benchmark.py`
-only times fixed parameter proposals under the legacy marginal objective.
-Use [dawa_conditioned_benchmark.py](dawa_conditioned_benchmark.py) to compare
-the current fitting objective with that baseline. Implementation, validation,
-and timing details are in [CONDITIONED_LIKELIHOOD.md](CONDITIONED_LIKELIHOOD.md).
+## Install and check the GPU
 
-The default fitting objective now conditions each trial's control-state
-distribution on the subject's earlier observed choices and RTs. Previous
-Dawa GPU fits and performance reports used a **trial-marginal objective**:
-they retained simulated state but did not update it using observed responses.
-Those results do not measure the corrected fitting workload. Select
-`--likelihood marginal` only for an explicit comparison with that legacy objective.
-
-## Environment and data
-
-These instructions apply to the `feat/likelihood_compile` working branch.
-Use Python 3.10 or newer on Linux or WSL with an NVIDIA GPU. From the repository root,
-activate your existing PsyNeuLink environment, or create one:
+Use this checkout's `feat/likelihood_compile` branch, Python 3.10 or newer, and
+Linux or WSL with an NVIDIA CUDA GPU. From the repository root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[triton]'
-
-# Check that this environment can see a CUDA GPU.
 python -c 'import torch, triton; assert torch.cuda.is_available(); print(torch.cuda.get_device_name())'
-```
 
-The GPU check must succeed before running fits. On a cluster, run it and
-the fits inside a GPU allocation. Use a CUDA-enabled PyTorch installation
-compatible with the node's NVIDIA driver. On Della, keep the checkout,
-environment, and results in your scratch allocation.
-
-Obtain the behavioral CSV separately; it is not tracked in Git. Choose a data
-file and a writable results directory:
-
-```bash
-export DAWA_DATA="$PWD/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv"
+export DAWA_SCRIPTS="$PWD/Scripts/Debug/pec_batch_compile/dawa"
 export DAWA_RESULTS=/absolute/path/to/your/dawa-results
 ```
 
-The runners use these columns:
+An existing compatible environment can be used instead. The GPU check must
+succeed before fitting; use CUDA-enabled PyTorch compatible with the NVIDIA
+driver. On a cluster, run the check and fits inside a GPU allocation. The local
+checks use an RTX 2080 Ti; complete conditioned fits have also run on H100.
 
-| Columns | Meaning |
-| --- | --- |
-| `subject_nr` | Subject ID selected by `--subject` |
-| `T1, T2, S1, S2, S3, S4` | Task and stimulus inputs in their original order |
-| `PrevCongruency` | Previous condition, coded 0 or 1; rows with missing values are excluded |
-| `likelihood_include_mask` | 1 to score the observation, 0 to condition state history without adding its log score |
-| `decision`, `response_time` | Recorded choice (0/1) and RT in **seconds**; required only for empirical fitting |
+## First run: a self-contained execution check
 
-Both previous-congruency levels must have scored trials. Keep masked trials
-and preserve row order. Inputs and empirical outcomes must be finite on all
-retained rows, including masked trials. RTs must be positive; scored RTs must
-lie within the configured 0–3 s histogram range. The runners check these
-requirements before creating a run directory.
-For conditioned fitting, masked RTs outside 0–3 s expand the histogram's upper
-bound in 30 ms increments; the bin width and smoothing width stay unchanged.
-The complete retained observation sequence, including masked rows, updates
-the control-state distribution. A masked row is therefore not a missing observation.
-
-## Fit a subject's recorded responses
-
-Start with a short execution check, from the repository root:
+The tracked [smoke CSV](examples/smoke_subject.csv) contains **fabricated** inputs
+and responses for eight trials. It is only an execution fixture, not behavioral
+data or a recovery benchmark. No private data is needed for this check:
 
 ```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
-  --data "$DAWA_DATA" --subject 1 \
-  --trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64 \
+python "$DAWA_SCRIPTS/dawa_pec_fit.py" \
+  --data "$DAWA_SCRIPTS/examples/smoke_subject.csv" --subject 1 \
+  --estimates 128 --pseudocount 0.00128 --evaluations 21 \
+  --validation-seeds 91001 91002 --predictive-estimates 64 \
   --output "$DAWA_RESULTS/fit-smoke"
 ```
 
-Then fit the complete subject:
+Expect `manifest.json` and `fit.json` with `status: complete`. First use compiles
+GPU kernels. The small particle count tests execution, not fitting accuracy.
+The explicit pseudocount keeps the same contamination fraction as the full
+100k-particle fit below; leaving it at 1 with 128 particles would make
+contamination dominate the observation model.
+
+Every run needs a **new output directory**. Runs do not automatically resume.
+Completed search parameters and each finished validation repetition are saved
+before prediction checks, so a late failure preserves those results.
+
+## Supply the behavioral data
+
+Obtain the behavioral CSV separately; private data are not tracked in Git:
 
 ```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
+export DAWA_DATA=/absolute/path/to/flanker_data_part1.csv
+```
+
+| Required columns | Meaning |
+| --- | --- |
+| `subject_nr` | Subject ID selected by `--subject` |
+| `T1, T2, S1, S2, S3, S4` | Task and stimulus inputs, in original trial order |
+| `PrevCongruency` | Previous condition, coded 0 or 1; rows missing this value are excluded |
+| `likelihood_include_mask` | 1 adds the observation's log score; 0 still conditions state history |
+| `decision`, `response_time` | Observed choice (0/1) and RT in **seconds**; only empirical fitting requires these columns |
+
+Both previous-congruency levels must have scored trials. Keep masked trials and
+preserve row order. All retained inputs and empirical outcomes must be finite;
+masked rows are not missing observations. RTs must be positive, and scored RTs
+must be within 0–3 s. A masked RT above 3 s expands the histogram range in 30 ms
+increments. The runner validates these requirements before creating output.
+One invocation fits one subject. A separate process and directory is needed
+for each additional subject or start.
+
+## Fit a complete subject
+
+```bash
+python "$DAWA_SCRIPTS/dawa_pec_fit.py" \
   --data "$DAWA_DATA" --subject 1 \
-  --estimates 100000 --evaluations 5000 --population 10 \
+  --likelihood conditioned --estimates 100000 --pseudocount 1 \
+  --evaluations 5000 --population 10 --max-steps 4000 \
   --start 0 --optimizer-seed 101 --simulation-seed 29 \
+  --validation-estimates 1000000 --validation-seeds 91001 91002 91003 91004 91005 \
   --output "$DAWA_RESULTS/subject1-start0"
 ```
 
-`--subject` is the actual `subject_nr` value in the CSV. Each command fits one
-subject. Use a new process and output directory for each additional subject.
 For a second start, use `--start 1 --optimizer-seed 202 --simulation-seed 37`
-and another output directory, such as `subject1-start1`.
+and a new directory. Omit `--trials` for full fits; that option selects a prefix
+for execution checks. The particle count is a working search budget, not a
+guarantee of likelihood precision or optimizer convergence.
 
-The short check verifies execution, not fit quality. Omit `--trials` for real
-fits. First use compiles GPU kernels. Every run needs a **new output directory**;
-the runner refuses to overwrite one and does not automatically resume an
-interrupted fit.
+| Option | Interpretation / default |
+| --- | --- |
+| `--estimates` | Particles per candidate and trial; default 100,000 |
+| `--evaluations` | Total parameter proposals, not generations; default 5,000 |
+| `--population` | CMA-ES population and candidate batch size; default 10 |
+| `--optimizer-storage` | `memory` by default; `journal` additionally saves optimizer internals but does not enable automatic resume |
+| `--max-steps` | Strict execution cap per trial; default 4,000, matching the conditioned pilot |
+| `--validation-estimates` | Fresh-seed rescoring budget; defaults to the fitting budget if omitted |
+| `--validation-seeds` | Distinct independent repetitions; defaults 91001, 91002, 91003 |
+| `--pseudocount` | Per-cell contamination weight at the fitting budget; default 1 |
 
-`--estimates` counts simulated trajectories per parameter proposal, with one
-response per trial in each trajectory. `--evaluations` counts parameter
-proposals, not generations. `--population` controls the CMA-ES population and
-candidate batch size. These meanings are the same for recovery.
+Defaults changed during handoff cleanup: fixed fits now use memory storage,
+the execution cap is 4,000, and validation seeds avoid those used in the earlier
+accuracy study. The manifest records resolved options. Explicit old options
+remain available for reproducing previous runs.
 
-## Observation-conditioned fitting
+The [conditioned H100 pilot](CONDITIONED_RECOVERY.md) took **34.5–35.9 minutes
+for 3,000 search proposals**, or 36.8–38.2 minutes including setup and final
+validation. These are measurements for one synthetic subject, not a runtime
+promise for the 5,000-proposal command above. Earlier 6–28 minute marginal-fit
+benchmarks evaluate a different objective.
 
-`--likelihood conditioned` is the default. Each parameter candidate maintains
-its own population of control states. The compiler simulates one coupled
-trial, weights the resulting states by the observed choice/RT, systematically
-resamples them, and advances to the next trial. Candidate populations remain
-batched on the GPU. Masked trials perform the same update but contribute no
-log score. Training and independent-seed rescoring use this same objective.
-With every row scored, multiplying these conditional factors estimates the
-joint sequence likelihood under the observation model below. With a score
-mask, the objective multiplies only the selected conditional factors. It still
-uses every earlier retained observation to predict the next trial; it is not
-the full joint sequence likelihood, nor generally the joint distribution of
-scored observations conditional on all masked observations.
+## Read the results and diagnose failures
 
-This is a sequential particle approximation under an explicit **binned,
-Gaussian-smoothed observation model**, with optional uniform contamination
-corresponding to the pseudocount. It is not the exact unsmoothed point density
-of the original model. Gaussian mass is normalized from each in-range simulated
-bin over the finite observation support. Out-of-range simulated outcomes
-retain their probability in an unobserved overflow event; they are not
-discarded from the denominator or moved to an edge bin. The legacy marginal histogram normalized
-at the target bin instead; scores can therefore also differ near histogram
-boundaries.
+| Output | Purpose |
+| --- | --- |
+| `manifest.json` | Resolved settings, hashes, device, and phase: `preparing`, `fitting`, `validating`, `predicting`, `complete`, or `failed` |
+| `progress.json` | Completed proposals, best training candidate, elapsed fitting time, invalid-candidate count |
+| `fit_checkpoint.json` | Completed search result, saved before validation; not a resumable optimizer checkpoint |
+| `validation.json` | Each completed fresh-seed evaluation, budget, pseudocount, and final summary |
+| `fit.json` / `recovery.json` | Final parameters, timing, independent validation, and predictive summaries |
+| `observed_subject.csv` / `synthetic_subject.csv` | Exact observations fitted, including masked rows |
+| `latent_subject.csv` | Recovery only: simulated responses before measurement noise |
+| `evaluations.jsonl`, `optimizer_trials.csv` | Proposal history and optimizer trial table |
+| `optimizer.journal` | Additional optimizer state when journal storage is requested |
 
-With `N` particles, `K` joint choice/RT cells, and pseudocount `alpha`, the
-uniform contamination fraction is `K*alpha / (N + K*alpha)`. Its contribution
-to each particle's observation weight is `alpha/N`: a contamination-dominated
-observation preserves the prior state distribution instead of inventing an
-unobserved ancestor. Fresh-budget rescoring scales `alpha` with `N`, preserving
-the contamination fraction. The manifest records the actual range, bin count,
-and contamination fraction. Setting `--pseudocount 0` removes contamination;
-observations with no particle support then fail explicitly.
+Higher scores are better. `validation_summary` reports the mean and
+single-evaluation SD of each complete-run log score and paired candidate
+comparison. Its `mc_standard_error` describes uncertainty in the mean over
+seeds. With one seed, SD and standard error are null. These are simulation
+uncertainties on the same observations, not held-out validation or parameter
+confidence intervals. Per-trial factors from different filters are never pooled.
 
-Noisy control state prevents CSI's deterministic-history shortcut. Trials
-must update in sequence, so the old free-running subject benchmarks cannot
-predict conditioned fit times. Finite-particle variation and state-posterior
-coverage need checking with larger budgets and independent seeds before
-interpreting a fit scientifically.
+Predictive summaries describe **unconditional latent choice/RT simulations**
+before the observation kernel. They are not predictions conditioned on each
+observed trial, and matched synthetic observations include additional measurement
+noise. Compare these quantities with that distinction in mind.
 
-## Legacy marginal adaptive fitting
+A failure after output creation records `failed_phase` and the error in the
+manifest when Python can handle the exception. Abrupt termination, node failure,
+or SIGKILL can leave the last recorded phase. Inspect the job log too. Existing
+output is never overwritten. If validation or prediction fails, the completed
+search remains in `fit_checkpoint.json`; an incomplete run is not a validated fit.
 
-Both runners support `--likelihood marginal --fit-strategy adaptive`. This starts with small simulation
-budgets, adds independent samples when candidate rankings are uncertain, and
-checks promising candidates at the maximum budget. A final refinement retains
-the parameter correlations learned during the search:
+Truncated proposals are recorded and penalized during search. Final validation
+and prediction require all simulations to finish normally. Investigate frequent
+truncation before increasing the cap. The cap does not change the model's 10 ms
+LCA timestep. A zero-support error with `--pseudocount 0` means no simulated
+particle supported that observation; it is not silently replaced by a valid score.
 
-```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
-  --data "$DAWA_DATA" --subject 1 --likelihood marginal --fit-strategy adaptive \
-  --estimates 100000 --evaluations 5000 \
-  --output "$DAWA_RESULTS/subject1-adaptive"
-```
+## Check synthetic recovery
 
-For recovery, use the same options with `dawa_pec_recovery.py`. Conditioned
-fitting currently rejects adaptive pooling and NDT profiling: independent
-trial-density blocks cannot be pooled as before, and changing NDT changes
-the observation weights and therefore subsequent state history. These
-shortcuts need separate sequential algorithms before they can be enabled.
-In marginal mode,
-`--estimates` is the maximum/reference budget and `--evaluations` is a cap on
-search plus refinement proposals. The current experimental policy defaults to:
-
-- Up to 2,000 search proposals, starting with four independent blocks totaling
-  5,000 estimates. Uncertainty in ordering within the leading candidates also
-  triggers extra samples. This is a heuristic, not a confidence guarantee.
-- 600 proposals at the maximum budget, retaining the learned covariance.
-  A coarse-search plateau triggers this stage; it does not imply convergence.
-- A comparison of eight finalists on three fresh maximum-budget blocks,
-  pooling densities before taking logs. Separate validation seeds then assess
-  the selected fit.
-
-Use `--adaptive-search-evaluations` and `--adaptive-refine-evaluations` to change
-the stage budgets. Screening, reference checks, and final selection add scoring
-work outside the proposal count; their time is included in reported fit time.
-Smaller simulation blocks scale pseudocounts to keep the prior weight constant.
-`best_training_log_likelihood` is the selected fit's original reference-seed
-score; `adaptive.best_reference_score` can be higher. Final selection details
-are saved under `adaptive.final_selection`.
-
-Adaptive fits default to in-memory optimizer storage and save evaluation logs,
-trial tables, and results. Add `--optimizer-storage journal` to persist the
-broad-search optimizer internals too. `--fit-strategy fixed` remains the default.
-See [the original adaptive experiment](fitting_acceleration/adaptive_h100.md)
-and [its quality diagnosis](fitting_acceleration/quality_diagnosis.md) for the
-motivation behind this revision. Use multiple starts when comparing parameter estimates.
-
-The [revised H100 test](fitting_acceleration/adaptive_v2_h100.md) took **8.1–8.5
-minutes**, versus a **27.5-minute** fixed-budget benchmark (about **3.3× faster**).
-Both revised fits had fresh-seed likelihoods close to their corresponding fixed
-fits. The earlier policy was faster but fit less well. This is still experimental:
-two starts on one synthetic subject do not establish recovery across subjects,
-and some LC parameter estimates still differ noticeably.
-
-### Profile nondecision time
-
-Add `--profile-ndt` to an adaptive fit or recovery run to optimize nondecision
-time inside each proposal. CMA-ES then searches seven dynamic parameters.
-The compiler accumulates exact decision-time counts during the same complete
-trial histories; the fitter evaluates the 0.1–0.3 s NDT grid from those counts.
-It retains the existing histogram, smoothing, and pseudocount rules.
-
-This is experimental and currently requires `--fit-strategy adaptive`. Equal
-histogram scores can cover an interval of NDT values; the reported value is the
-lowest grid representative, not evidence of 0.1 ms estimation precision.
-Reference checks, refinement, and final selection also optimize NDT, while
-independent validation scores the chosen full eight-parameter vector.
-
-In the [H100 experiment](fitting_acceleration/ndt_h100.md), profiling NDT with
-smaller search/refinement budgets took **5.8–6.1 minutes overall**, about
-**1.39× faster** than the previous adaptive fits, with similar fresh-seed
-likelihoods in two starts. A smaller-budget control without profiling fit less
-well. LC parameter estimates still varied. To use the
-tested budgets, add these options to a fit or recovery command:
+Replace the fit entry point with `dawa_pec_recovery.py`, keeping the same budget
+and validation options. It uses only the CSV's input design and mask. A short
+self-contained check is:
 
 ```bash
-  --likelihood marginal --fit-strategy adaptive --profile-ndt --estimates 100000 \
-  --adaptive-search-evaluations 1000 --adaptive-refine-evaluations 300 \
-  --optimizer-storage memory
-```
-
-`--profile-ndt` alone keeps the existing search/refinement budgets. The measured
-gain includes reducing those budgets; it is not a 1.39× faster simulator.
-
-NDT-profiled adaptive fits now run their independent sampling blocks together
-by default. This keeps the same samples and fitting decisions while reducing
-GPU launches and repeated preparation. Add `--no-batch-sampling-blocks` for
-separate-block execution, which uses less count-buffer memory. See the
-[H100 comparison](fitting_acceleration/sampling_blocks_h100.md) for complete
-fit timings and exact replay checks.
-
-## Run a short recovery check
-
-From the repository root, with the environment activated:
-
-```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
-  --data "$DAWA_DATA" --subject 1 \
-  --trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64 \
+python "$DAWA_SCRIPTS/dawa_pec_recovery.py" \
+  --data "$DAWA_SCRIPTS/examples/smoke_subject.csv" --subject 1 \
+  --estimates 128 --pseudocount 0.00128 --evaluations 21 \
+  --validation-seeds 91001 91002 --predictive-estimates 64 \
   --output "$DAWA_RESULTS/recovery-smoke"
 ```
 
-This generates responses, runs a small optimization, and checks the resulting
-parameters with fresh simulation seeds. As with the empirical smoke test,
-these settings verify execution rather than scientific recovery.
+By default, recovery generates a complete latent history and then applies the
+same observation law used for scoring. Measurement noise never changes the
+simulated state history. `--observation-model latent` explicitly selects raw
+model responses instead. Latent overflow outside the generation domain is an
+error, not a reason to discard and regenerate a history.
 
-## Run a full parameter recovery fit
-
-```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
-  --data "$DAWA_DATA" --subject 1 \
-  --estimates 100000 --evaluations 5000 --population 10 \
-  --start 0 --optimizer-seed 101 --simulation-seed 29 \
-  --output "$DAWA_RESULTS/recovery-start0"
-```
-
-This creates one synthetic subject using the selected subject's complete input
-sequence, then fits it with CMA-ES. Omit `--trials` for a full subject.
-
-For a second start on the **same synthetic observations**:
-
-```bash
-python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_recovery.py \
-  --data "$DAWA_DATA" --subject 1 \
-  --estimates 100000 --evaluations 5000 --population 10 \
-  --start 1 --optimizer-seed 202 --simulation-seed 37 \
-  --output "$DAWA_RESULTS/recovery-start1"
-```
-
-Keep `--data-seed` and `--model-seed` unchanged to reuse the synthetic dataset.
-To generate a new synthetic subject on the same design, change `--data-seed`
-(default `20260925`) and use another output directory. Keep generation, fitting,
-and validation seeds distinct. Changing only the optimizer seed tests search
-variability, not recovery across different synthetic datasets.
-
-The completed **legacy marginal** H100 pilot took about **28 minutes per start** for 760 trials,
-720 scored observations, 100,000 estimates, and 5,000 proposals. Runtime depends
-on the device, input sequence, and parameters. LC modes and scaling were weakly
-recovered in that pilot; compare multiple starts and synthetic datasets before
-interpreting parameter estimates. See the [pilot results](pec_recovery/README.md).
+For repeated fits to the same synthetic observations, keep `--data-seed`
+(default 20260925), `--observation-seed` (20260926), `--model-seed` (29), input
+design, and observation settings unchanged. Keep the pseudocount/particle ratio
+unchanged if changing the particle budget. Change `--data-seed` to generate a
+new subject on the same design. Generation, observation, fitting, prediction,
+and validation streams must use distinct seeds; validation repetitions must
+also have distinct seeds. The model-construction seed is a separate stream.
 
 ## Submit a GPU job on Della
 
-[dawa_gpu.slurm](dawa_gpu.slurm) runs either workflow on one full A100, with
-eight CPU cores, 24 GB of host RAM, and a two-hour limit. It uses an existing
-Python environment; jobs do not install packages. Log into `della-gpu` and
-set these paths to your own scratch checkout and results directory:
+The launcher requests one full A100, eight CPUs, 24 GB RAM, and two hours. It
+uses an existing environment and does not install packages. Set absolute paths
+on your scratch allocation before submitting:
 
 ```bash
-export DAWA_REPO_ROOT=/absolute/path/to/your/scratch/PsyNeuLink
+export DAWA_REPO_ROOT=/absolute/path/to/scratch/PsyNeuLink
 export DAWA_PYTHON="$DAWA_REPO_ROOT/.venv/bin/python"
-export DAWA_DATA="$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_lca_model/flanker_data_part1.csv"
-export DAWA_RESULTS=/absolute/path/to/your/scratch/dawa-results
+export DAWA_DATA=/absolute/path/to/flanker_data_part1.csv
+export DAWA_RESULTS=/absolute/path/to/scratch/dawa-results
 mkdir -p "$DAWA_RESULTS/logs"
+
+sbatch --chdir="$DAWA_RESULTS" --output="$DAWA_RESULTS/logs/fit-%j.log" \
+  "$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_gpu.slurm" \
+  fit --subject 1 --estimates 100000 --evaluations 5000 \
+  --validation-estimates 1000000 --validation-seeds 91001 91002 91003 91004 91005
 ```
 
-The commands use your default Slurm account. Submit an empirical fit or recovery
-run with the same driver options used locally:
+Use `recovery` instead of `fit` for synthetic data. Slurm options go before the
+script path; Python options go after the mode. Results default to
+`fit-JOB_ID` or `recovery-JOB_ID`; `--output` can select a new directory.
+For a smoke job, point `DAWA_DATA` to the tracked fixture and use the small
+budgets and pseudocount above. Allow for first-use compilation.
 
-```bash
-sbatch --chdir="$DAWA_RESULTS" \
-  --output="$DAWA_RESULTS/logs/fit-%j.log" \
-  "$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_gpu.slurm" \
-  fit --subject 1 --estimates 100000 --evaluations 5000
+For subject arrays, add `--array=1,2,3%2` before the script path and omit
+`--subject`. Array IDs are actual subject IDs; each task receives its own GPU
+and output directory. The `%2` limits concurrency. Default caches live under
+`DAWA_RESULTS/.work`, overridable with `DAWA_WORK_ROOT`. If needed, export
+`DAWA_CUDA_MODULE` for your environment; leave `CUDA_VISIBLE_DEVICES` to Slurm.
+The launcher inherits the driver's conditioned-likelihood and memory-storage
+defaults. Historical A100 Slurm measurements used the marginal objective;
+conditioned H100 measurements are documented in the recovery pilot.
 
-sbatch --chdir="$DAWA_RESULTS" \
-  --output="$DAWA_RESULTS/logs/recovery-%j.log" \
-  "$DAWA_REPO_ROOT/Scripts/Debug/pec_batch_compile/dawa/dawa_gpu.slurm" \
-  recovery --subject 1 --estimates 100000 --evaluations 5000
-```
+## Model and likelihood contract
 
-Results go to `fit-JOB_ID` or `recovery-JOB_ID` under `DAWA_RESULTS`. Use
-`--output /absolute/path/to/new/run` after `fit` or `recovery` to choose another
-directory. Slurm options belong **before** the script path; Python options
-belong **after** the mode. Create the log directory before submitting.
-
-For a short Slurm test, add `--time=00:05:00` before the script path and use
-`--trials 16 --estimates 128 --evaluations 21 --predictive-estimates 64` after
-the mode. Check `squeue -u "$USER"`, then inspect the log and final `fit.json`
-or `recovery.json`. A successful run also sets `manifest.json` status to
-`complete`.
-
-For subject arrays, add e.g. `--array=1,2,3` before the script path and omit
-`--subject`: array IDs are used as actual `subject_nr` values. Each task gets
-its own GPU and output directory. To limit concurrent tasks, use
-`--array=1,2,3%2`. For multiple starts on one subject, submit separate jobs with
-explicit `--subject`, `--start`, and seeds.
-
-The launcher keeps caches and temporary files under `DAWA_RESULTS/.work`;
-override this with `DAWA_WORK_ROOT`. If the Python environment needs a CUDA
-module, export `DAWA_CUDA_MODULE` before submission (the tested environment
-uses `cudatoolkit/13.0`). Leave `CUDA_VISIBLE_DEVICES` to Slurm. Della selects
-the partition from the resource request, so no explicit partition is needed.
-
-Both modes previously passed a **legacy marginal** [Slurm A100 test](dawa_benchmark_results.md#slurm-fitting-and-recovery-handoff-test-2026-09-25)
-on the full 760-trial subject at 100,000 estimates and 21 proposals. These short
-runs validate execution; use the full budget and multiple starts for fitting.
-
-## Parameters and current settings
-
-Both runners fit eight coordinates: seven parameter types, with a
-separate LC mode for each previous-congruency level.
-
-| Parameter | Search bounds | Value used to generate synthetic data |
+| Fitted coordinate | Bounds | Recovery generating value |
 | --- | --- | --- |
 | Response threshold | 0.25–0.70 | 0.40 |
 | Nondecision time | 0.10–0.30 s | 0.22 s |
 | Stimulus/decision/response bias | −0.50–0 | −0.40 |
 | Control gain | 5–20 | 12 |
-| LC mode, previous congruency 0 / 1 | 0.10–0.90 each | 0.65 / 0.80 |
+| LC mode for previous condition 0 / 1 | 0.10–0.90 each | 0.65 / 0.80 |
 | LC scaling | 1–4 | 1.5 |
 | LC base gain | 3–10 | 5.5 |
 
-Both runners use the tested recovery configuration:
+The runner fixes Gaussian noise SD at 0.1 in each LCA. LCAs integrate at 10 ms;
+the LC executes ten internal 20 ms steps per scheduler pass. Control state
+persists; the other LCAs reset. The recurrent schedule keeps processing layers
+advancing while bias and weight controllers publish once per trial.
 
-- **10 ms LCA timesteps**; the LC performs ten internal 20 ms steps per model pass.
-- **Noise SD 0.1 in each of the four LCAs**, fixed throughout fitting.
-- A simulated choice/RT histogram with **100 RT bins over 0–3 seconds**
-  (expanded at the same bin width when masked RTs require it),
-  Gaussian smoothing of **0.5 bins (15 ms)**, and **pseudocount 1** per choice/RT cell.
-- A population of noisy control states for each candidate. Every retained
-  observation updates that population, including masked observations.
+The observation kernel uses 30 ms RT bins, Gaussian smoothing SD 15 ms, and
+optional uniform contamination. With `N` particles, `K` joint choice/RT cells,
+and pseudocount `alpha`, contamination probability is `K*alpha/(N+K*alpha)`.
+At 100k particles, 100 RT bins, two choices, and alpha=1, this is about 0.2%.
+Validation automatically scales alpha with its particle budget. If changing
+`--estimates` between fits, scale `--pseudocount` proportionally to preserve
+the observation model. Expanding the histogram for masked RTs changes `K` and
+therefore the total contamination fraction, which is recorded in the manifest.
 
-The physical model settings match the pilot; the default likelihood now
-conditions latent control state on observed responses. These are not
-established best choices for every dataset. `--likelihood marginal` restores
-the previous objective and its fixed 0–3 s histogram.
+This is the likelihood under a specified observation model, estimated with
+finite particles. It is not an exact unsmoothed RT density. Every retained row
+conditions state; the mask selects which log factors contribute to the score.
+With masked rows, this is not the full joint likelihood or generally the joint
+likelihood of scored observations conditional on all masked observations.
+See [CONDITIONED_LIKELIHOOD.md](CONDITIONED_LIKELIHOOD.md) for boundary, overflow,
+resampling, and state-transport semantics.
 
-Budget and seed options are exposed by `--help` on either command. Generating parameters
-(`TRUTH`), starting points (`STARTS`), noise, timestep checks, and histogram
-settings are currently specified in [the shared fitting script](dawa_pec_fit.py).
-Bounds come from `fit_surface()` in [dawa_batched_simulation.py](dawa_batched_simulation.py).
-Changing those model/estimator settings currently requires editing the code;
-the exception is the histogram pseudocount, exposed as `--pseudocount`.
+The general `PECOptimizationFunction` does not enable conditioning automatically.
+These runners set `conditioned_likelihood=True` explicitly. The preserved
+[partition-wide LLVM scripts](dawa_lca_model/README.md) are an older workflow.
+A known LLVM reset/modulation mismatch remains; Python is the simulation
+reference used to check the GPU implementation. See the
+[reset diagnosis](dawa_benchmark_results.md#first-trial-llvm-rt-discrepancy-reset-diagnosis-2026-09-25).
 
-## Read the results
+## Validation and remaining engineering work
 
-| File in the output directory | What to look for |
-| --- | --- |
-| `progress.json` | Completed proposals, current best parameters/score, elapsed time, invalid-candidate count |
-| `fit.json` (empirical fit) | Final fitted values, scores at fresh seeds, observed/predicted summaries, fitting time |
-| `recovery.json` | Final fitted values, errors from truth, fitting time, fresh-seed scores, predictive summaries |
-| `manifest.json` | Settings, parameter order/bounds, seeds, data/source hashes, device, completion status |
-| `observed_subject.csv` or `synthetic_subject.csv` | The selected empirical or generated observations actually fitted, including masked rows |
-| `evaluations.jsonl`, `optimizer_trials.csv`, `optimizer.journal` | Search history and optimizer records |
-| `optimizer_refinement_trials.csv` (adaptive) | The separate local refinement at the reference simulation budget |
+- [Compiler notes](COMPILER_NOTES.md): supported components, reset and schedule tests.
+- [Conditioned accuracy](CONDITIONED_ACCURACY.md): exact-reference checks and particle-budget uncertainty.
+- [Conditioned recovery](CONDITIONED_RECOVERY.md): full fits, independent rescoring, and measured H100 runtimes.
+- [Legacy acceleration](fitting_acceleration/README.md): historical marginal benchmarks and reproductions.
 
-`optimizer.journal` is present only with journal storage. Adaptive reports also
-record simulation budgets, independent block seeds, incumbent checks, stopping
-reason, and total sampled trajectories. Low-budget search scores may not be
-comparable across generations; use the final reference score and fresh-seed
-validation to compare fits.
-
-Compare agreement between starts and observed/predicted choice/RT summaries;
-for recovery, also compare parameter errors. Higher log likelihood is better,
-but a recovery fit can score better than the generating parameters on a finite
-synthetic dataset. Fresh-seed rescoring
-checks simulation variability on the same observations; it is not held-out
-validation. Reaching the evaluation budget does not establish convergence.
-
-Proposals that exceed `--max-steps` are recorded and penalized. If many proposals
-fail, inspect their parameters and the model's response durations before
-increasing the cap. Final scoring and prediction checks must finish normally.
-
-## Further reading
-
-- [Recovery pilot](pec_recovery/README.md): completed fits, parameter errors, and interpretation.
-- [Compiler notes](COMPILER_NOTES.md): simulation checks, scheduling, noise, and GPU configuration.
-- [Benchmark results](dawa_benchmark_results.md): measured performance and reproduction commands.
-- [Original fitting scripts](dawa_lca_model/README.md): the earlier partition-wide LLVM workflow and Slurm examples.
-
-The older direct-likelihood experiments are indexed in the compiler notes.
-For the model with noise in all four LCAs, use the simulation-based workflow
-above.
+Remaining work includes profiling and reducing conditioned-loop overhead,
+sequential adaptive particle budgets, the LLVM reset fix, automatic fit resume,
+and observation-kernel sensitivity on recorded data. Missing outcomes and
+multiple disjoint subject sequences in one filter call are not supported.
+Parameter-identifiability and direct-likelihood research are separate from this
+handoff. The current driver uses fixed budgets and fits NDT jointly with the
+other coordinates.

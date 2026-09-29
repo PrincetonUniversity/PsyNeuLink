@@ -8,6 +8,10 @@ point and now defaults to observation-conditioned particle filtering. The
 2080 Ti performance; recovery accuracy needs separate validation. Reproducing the
 adaptive fits below requires `--likelihood marginal`; adaptive density pooling
 and NDT profiling are not yet valid for the conditioned objective.
+Commands for reproducing those older fits are in the
+[legacy fitting guide](LEGACY_FITTING.md).
+The [conditioned likelihood accuracy study](../CONDITIONED_ACCURACY.md) evaluates
+Monte Carlo uncertainty using exact and independent references and a particle-budget ladder.
 The optional [adaptive fitting workflow](adaptive_h100.md) now implements
 sample accumulation, uncertainty-based budgets, and high-budget refinement.
 The [fit-quality diagnosis](quality_diagnosis.md) investigates its remaining

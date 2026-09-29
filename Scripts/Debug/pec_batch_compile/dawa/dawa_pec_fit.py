@@ -130,6 +130,30 @@ def save_json(path, value):
     temporary.replace(path)
 
 
+def summarize_validation(rows):
+    """Summarize complete-filter scores and within-seed candidate differences.
+
+    This averages log scores, never individual trial factors. The uncertainty
+    describes repeated simulation on the same observations, not new subjects.
+    """
+    seeds = [row["seed"] for row in rows]
+    if not rows or len(set(seeds)) != len(seeds):
+        raise ValueError("Validation requires distinct seeds and at least one complete evaluation")
+    keys = set(rows[0]) - {"seed"}
+    if any(set(row) - {"seed"} != keys for row in rows):
+        raise ValueError("Validation candidates must match across seeds")
+    summary = {}
+    for key in sorted(keys):
+        values = np.asarray([row[key] for row in rows], dtype=float)
+        if not np.isfinite(values).all():
+            raise ValueError("Validation scores must be finite")
+        sd = float(values.std(ddof=1)) if len(values) > 1 else None
+        summary[key] = {"mean": float(values.mean()), "sd": sd,
+                        "mc_standard_error": None if sd is None else sd / np.sqrt(len(values))}
+    return {"replicates": len(rows), "statistics": summary,
+            "note": "Complete-run log scores; differences pair the same seed. Monte Carlo uncertainty only."}
+
+
 def synthetic_parameters(model, frame, coordinates):
     """Match the original fitting order, with modes for previous conditions 0/1."""
     if set(frame.PrevCongruency.unique()) != {0., 1.}:
@@ -160,6 +184,34 @@ def summarize_samples(values, frame):
             "rt_quantiles": np.quantile(sample[:, 1], [.1, .5, .9]).tolist(),
         }
     return result
+
+
+def recovery_observations(latent, *, observation_model, seed, estimates, pseudocount, device="cuda"):
+    """Apply the declared measurement law after generating a complete latent history.
+
+    Observation noise changes the recorded choice/RT, never the simulated state
+    entering the next trial. Overflow is an explicit error rather than silently
+    truncating, clipping, or rejecting a generated history.
+    """
+    from dawa_conditioned_reference import noisy_observations, observation_edges
+
+    if observation_model == "latent":
+        return np.array(latent, copy=True), {"kind": "latent_choices_rt"}
+    if observation_model != "conditioned":
+        raise ValueError("Unknown synthetic observation model")
+    edges = observation_edges(100, RT_RANGE, device=device)
+    ratio = pseudocount / estimates
+    observed = noisy_observations(np.asarray(latent), np.random.default_rng(seed),
+                                  edges=edges, bins=100, rt_range=RT_RANGE,
+                                  sigma=.5, alpha_per_estimate=ratio)
+    return observed, {
+        "kind": "binned_smoothed_uniform_contamination", "seed": seed,
+        "bins": 100, "rt_range": list(RT_RANGE), "edges": edges.tolist(),
+        "smoothing_sigma": .5, "alpha_per_estimate": ratio,
+        "contamination_fraction": 200 * ratio / (1 + 200 * ratio),
+        "representation": "bin_centers", "latent_history_unchanged": True,
+        "source_sha256": hashlib.sha256(Path(__file__).with_name("dawa_conditioned_reference.py").read_bytes()).hexdigest(),
+    }
 
 
 def main(argv=None, *, recovery=False):
@@ -195,28 +247,36 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--population", type=int, default=10, help="CMA-ES population and candidate batch size (default: 10)")
     parser.add_argument("--start", type=int, choices=(0, 1), default=0, help="Which of the two predefined starting points to use")
     parser.add_argument("--optimizer-seed", type=int, default=101)
-    parser.add_argument("--optimizer-storage", choices=("journal", "memory"),
-                        help="Defaults to journal for fixed fits and memory for adaptive fits; evaluation logs and final CSV are always saved")
+    parser.add_argument("--optimizer-storage", choices=("journal", "memory"), default="memory",
+                        help="Memory (default) avoids per-proposal journal writes; evaluation logs are always saved. Journal does not enable automatic resume.")
     parser.add_argument("--simulation-seed", type=int, default=29)
     if recovery:
         parser.add_argument("--data-seed", type=int, default=20260925)
+        parser.add_argument("--observation-seed", type=int, default=20260926)
+        parser.add_argument("--observation-model", choices=("auto", "latent", "conditioned"), default="auto",
+                            help="Synthetic measurement law: auto matches the chosen likelihood; latent reproduces older studies")
     else:
         parser.add_argument("--predictive-seed", type=int, default=21260925)
     parser.add_argument("--model-seed", type=int, default=29)
-    parser.add_argument("--validation-seeds", type=int, nargs="+", default=[8101, 8102, 8103])
+    parser.add_argument("--validation-seeds", type=int, nargs="+", default=[91001, 91002, 91003],
+                        help="Distinct seeds reserved for final rescoring (default: 91001 91002 91003)")
     parser.add_argument("--predictive-estimates", type=int, default=4096)
-    parser.add_argument("--max-steps", type=int, default=2000)
+    parser.add_argument("--max-steps", type=int, default=4000,
+                        help="Strict execution cap per trial (default: 4000, as in the conditioned pilot)")
     parser.add_argument("--source-revision", help="Commit of an isolated source snapshot without .git")
     parser.add_argument("--output", type=Path, required=True, help="New output directory; existing directories are never overwritten")
     args = parser.parse_args(argv)
+    if recovery:
+        if args.observation_model == "auto":
+            args.observation_model = "conditioned" if args.likelihood == "conditioned" else "latent"
+        if args.observation_model == "conditioned" and args.likelihood != "conditioned":
+            parser.error("The conditioned observation model requires --likelihood conditioned")
     if args.likelihood == "conditioned" and (args.fit_strategy == "adaptive" or args.profile_ndt):
         parser.error("Observation-conditioned fitting currently requires --fit-strategy fixed without --profile-ndt: "
                      "pooling independent density blocks or shifting NDT changes particle history. "
                      "Use --likelihood marginal only to reproduce the legacy objective.")
     if args.profile_ndt and args.fit_strategy != "adaptive":
         parser.error("--profile-ndt currently requires --fit-strategy adaptive")
-    if args.optimizer_storage is None:
-        args.optimizer_storage = "memory" if args.fit_strategy == "adaptive" else "journal"
     adaptive_config = AdaptiveConfig(
         min_estimates=args.adaptive_min_estimates, max_estimates=args.estimates,
         rank_tolerance=args.adaptive_rank_tolerance, check_every=args.adaptive_check_every,
@@ -238,12 +298,19 @@ def main(argv=None, *, recovery=False):
         parser.error("Pseudocount must be finite and nonnegative")
     if args.trials is not None and args.trials < 2:
         parser.error("A prefix must contain at least two trials")
+    if len(set(args.validation_seeds)) != len(args.validation_seeds):
+        parser.error("Validation seeds must be distinct; repeated seeds are not independent repetitions")
     independent_seeds = {args.simulation_seed}
     if recovery:
         independent_seeds.add(args.data_seed)
+        if args.observation_model == "conditioned":
+            if args.observation_seed in independent_seeds | set(args.validation_seeds):
+                parser.error("Observation, generation, fitting, and validation seeds must be independent")
+            independent_seeds.add(args.observation_seed)
     if (recovery and args.data_seed == args.simulation_seed) or set(args.validation_seeds) & independent_seeds:
         parser.error("Generation, fitting, and validation seeds must be independent")
-    if not recovery and args.predictive_seed in independent_seeds | set(args.validation_seeds):
+    predictive_seed = args.data_seed + 1000000 if recovery else args.predictive_seed
+    if predictive_seed in independent_seeds | set(args.validation_seeds):
         parser.error("Predictive, fitting, and validation seeds must be independent")
     try:
         frame = load_subject(args.data, args.subject, trials=args.trials, recovery=recovery)
@@ -253,6 +320,20 @@ def main(argv=None, *, recovery=False):
         parser.error("A CUDA GPU and CUDA-enabled PyTorch are required")
     args.output.mkdir(parents=True, exist_ok=False)
     started = time.perf_counter()
+    manifest = {
+        "status": "preparing", "mode": "recovery" if recovery else "empirical_fit",
+        "arguments": {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
+    }
+    save_json(args.output / "manifest.json", manifest)
+    try:
+        _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, started)
+    except BaseException as error:
+        manifest.update(failed_phase=manifest["status"], status="failed", error=f"{type(error).__name__}: {error}")
+        save_json(args.output / "manifest.json", manifest)
+        raise
+
+
+def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, started):
     set_global_seed(args.model_seed)
     pnl.set_num_threads(8)
     torch.set_num_threads(8)
@@ -269,8 +350,14 @@ def main(argv=None, *, recovery=False):
                                   strict_truncation=True, triton_launch_options=LAUNCH).values[0, 0]
         if not np.all(np.isin(generated[..., 0], [0., 1.])):
             raise AssertionError("Invalid generated choices")
-        frame["decision"] = generated[:, 0, 0]
-        frame["response_time"] = generated[:, 0, 1]
+        latent_frame = frame.copy()
+        latent_frame[["decision", "response_time"]] = generated[:, 0, :]
+        latent_frame.to_csv(args.output / "latent_subject.csv", index=False)
+        observed, observation_model = recovery_observations(
+            generated[:, 0, :], observation_model=args.observation_model, seed=args.observation_seed,
+            estimates=args.estimates, pseudocount=args.pseudocount,
+        )
+        frame[["decision", "response_time"]] = observed
     observations_path = args.output / ("synthetic_subject.csv" if recovery else "observed_subject.csv")
     frame.to_csv(observations_path, index=False)
     pec = make_fit_pec(model, inputs, outputs, frame, args)
@@ -306,10 +393,10 @@ def main(argv=None, *, recovery=False):
     )
     study.enqueue_trial(optimizer_initial)
     function.method = study
-    manifest = {
+    manifest.update({
         "status": "fitting", "mode": "recovery" if recovery else "empirical_fit",
         "arguments": {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
-        "git_commit": args.source_revision or subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        "git_commit": args.source_revision or subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[4], text=True).strip(),
         "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "entry_point": Path(sys.argv[0]).name,
         "source_model_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
@@ -340,7 +427,7 @@ def main(argv=None, *, recovery=False):
                  if args.likelihood == "conditioned" else
                  "Legacy trial-marginal fitting with unconditional simulated histories. Budget completion is not convergence."),
         "fit_strategy": args.fit_strategy,
-    }
+    })
     if args.fit_strategy == "adaptive":
         manifest["adaptive_config"] = asdict(adaptive_config)
         manifest["adaptive_driver_sha256"] = hashlib.sha256(Path(__file__).with_name("dawa_adaptive_fit.py").read_bytes()).hexdigest()
@@ -348,7 +435,9 @@ def main(argv=None, *, recovery=False):
         manifest["ndt_profile"] = ndt_profile.describe()
     if recovery:
         manifest.update(truth=dict(zip(names, TRUTH, strict=True)), generator_matches_pec_exactly=True,
-                        synthetic_sha256=manifest["observations_sha256"])
+                        synthetic_sha256=manifest["observations_sha256"],
+                        synthetic_observation_model=observation_model,
+                        latent_observations_sha256=hashlib.sha256((args.output / "latent_subject.csv").read_bytes()).hexdigest())
     save_json(args.output / "manifest.json", manifest)
     objective = function._make_objective_func()
     batch_objective = objective._batched_parameter_sets
@@ -452,88 +541,106 @@ def main(argv=None, *, recovery=False):
         return float(logged_batch([values])[0])
 
     logged_objective._batched_parameter_sets = logged_batch
-    try:
-        adaptive_report = None
-        if args.fit_strategy == "adaptive":
-            reserved_seeds = set(args.validation_seeds) | independent_seeds
-            reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
-            fit, adaptive_report, refinement = fit_adaptive(
-                study, optimizer_bounds, optimizer_initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
-                adaptive_config, evaluations=args.evaluations, population=args.population,
-                simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
-                reserved_seeds=reserved_seeds, log_batch=record_batch,
-                profile_parameter=None if ndt_profile is None else (ndt_profile.name, ndt_profile.values),
-                sample_blocks=(sample_density_blocks if ndt_profile is not None and args.batch_sampling_blocks else None),
-            )
-            refinement.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
-                args.output / "optimizer_refinement_trials.csv", index=False)
-        else:
-            fit = function._fit(logged_objective, display_iter=False)
-        fit_seconds = time.perf_counter() - optimization_started
-        expected_evaluations = (args.evaluations if adaptive_report is None else
-                                adaptive_report["search_evaluations"] + adaptive_report["refinement_evaluations"])
-        if len(records) != expected_evaluations:
-            raise AssertionError("Optimizer did not evaluate the requested budget")
-        fitted = np.asarray([fit["fitted_params"][name] for name in names])
-        if float(fit["optimal_value"]) <= -1.e9:
-            raise RuntimeError("No valid fit found")
-        np.testing.assert_allclose([study.trials[0].params[name] for name in optimizer_names],
-                                   list(optimizer_initial.values()), rtol=0, atol=1e-12)
-        study.trials_dataframe(attrs=("number", "value", "params", "state", "datetime_start", "datetime_complete")).to_csv(
-            args.output / "optimizer_trials.csv", index=False)
-        comparison = {"initial": STARTS[args.start], "fitted": fitted}
+    adaptive_report = None
+    if args.fit_strategy == "adaptive":
+        reserved_seeds = set(args.validation_seeds) | independent_seeds
+        reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
+        fit, adaptive_report, refinement = fit_adaptive(
+            study, optimizer_bounds, optimizer_initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
+            adaptive_config, evaluations=args.evaluations, population=args.population,
+            simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
+            reserved_seeds=reserved_seeds, log_batch=record_batch,
+            profile_parameter=None if ndt_profile is None else (ndt_profile.name, ndt_profile.values),
+            sample_blocks=(sample_density_blocks if ndt_profile is not None and args.batch_sampling_blocks else None),
+        )
+        refinement.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
+            args.output / "optimizer_refinement_trials.csv", index=False)
+    else:
+        fit = function._fit(logged_objective, display_iter=False)
+    fit_seconds = time.perf_counter() - optimization_started
+    expected_evaluations = (args.evaluations if adaptive_report is None else
+                            adaptive_report["search_evaluations"] + adaptive_report["refinement_evaluations"])
+    if len(records) != expected_evaluations:
+        raise AssertionError("Optimizer did not evaluate the requested budget")
+    fitted = np.asarray([fit["fitted_params"][name] for name in names])
+    if float(fit["optimal_value"]) <= -1.e9:
+        raise RuntimeError("No valid fit found")
+    np.testing.assert_allclose([study.trials[0].params[name] for name in optimizer_names],
+                               list(optimizer_initial.values()), rtol=0, atol=1e-12)
+    study.trials_dataframe(attrs=("number", "value", "params", "state", "datetime_start", "datetime_complete")).to_csv(
+        args.output / "optimizer_trials.csv", index=False)
+    save_json(args.output / "fit_checkpoint.json", {
+        "status": "search_complete", "mode": manifest["mode"], "subject": args.subject,
+        "fitted": dict(zip(names, fitted.tolist(), strict=True)), "initial": initial,
+        "best_training_log_likelihood": float(fit["optimal_value"]),
+        "evaluations": len(records), "fit_seconds": fit_seconds, "invalid_proposals": invalid,
+        "estimator": manifest["estimator"],
+        "note": "Search result saved before independent validation. This is not an optimizer resume checkpoint.",
+    })
+    comparison = {"initial": STARTS[args.start], "fitted": fitted}
+    if recovery:
+        comparison = {"truth": TRUTH, **comparison}
+    validation_estimates = args.validation_estimates or args.estimates
+    validation_pseudocount = args.pseudocount * validation_estimates / args.estimates
+    pec.controller.num_estimates = validation_estimates
+    function.batched_pseudocount = validation_pseudocount
+    manifest.update(status="validating", fit_seconds=fit_seconds)
+    save_json(args.output / "manifest.json", manifest)
+    validation = []
+    validation_record = {"status": "validating", "estimates": validation_estimates,
+                         "pseudocount": validation_pseudocount, "requested_seeds": args.validation_seeds,
+                         "independent_seed_rescoring": validation}
+    save_json(args.output / "validation.json", validation_record)
+    for seed in args.validation_seeds:
+        function.batched_seed = seed
+        scores = function._make_objective_func()._batched_parameter_sets(list(comparison.values()))
+        score = dict(zip(comparison, map(float, scores), strict=True))
+        validation.append({"seed": seed, **score, "fitted_minus_initial": score["fitted"] - score["initial"]})
         if recovery:
-            comparison = {"truth": TRUTH, **comparison}
-        validation_estimates = args.validation_estimates or args.estimates
-        validation_pseudocount = args.pseudocount * validation_estimates / args.estimates
-        pec.controller.num_estimates = validation_estimates
-        function.batched_pseudocount = validation_pseudocount
-        validation = []
-        for seed in args.validation_seeds:
-            function.batched_seed = seed
-            scores = function._make_objective_func()._batched_parameter_sets(list(comparison.values()))
-            score = dict(zip(comparison, map(float, scores), strict=True))
-            validation.append({"seed": seed, **score, "fitted_minus_initial": score["fitted"] - score["initial"]})
-            if recovery:
-                validation[-1]["fitted_minus_truth"] = score["fitted"] - score["truth"]
-        predictions = {}
-        predictive_seed = args.data_seed + 1000000 if recovery else args.predictive_seed
-        predictive_parameters = {"truth": TRUTH, "fitted": fitted} if recovery else {"fitted": fitted}
-        for label, values in predictive_parameters.items():
-            samples = plan.run(inputs, [function._batched_parameter_set(values)], args.predictive_estimates,
-                               seed=predictive_seed, strict_truncation=True,
-                               triton_launch_options=LAUNCH).values[0, 0][..., indices]
-            predictions[label] = summarize_samples(samples, frame)
-        report = {"status": "complete", "mode": manifest["mode"], "subject": args.subject, "initial": initial,
-                  "estimator": manifest["estimator"],
-                  "fitted": dict(zip(names, fitted.tolist(), strict=True)),
-                  "best_training_log_likelihood": float(fit["optimal_value"]),
-                  "initial_training_log_likelihood": (records[0]["log_likelihood"] if adaptive_report is None
-                                                       else adaptive_report["initial_reference_score"]),
-                  "evaluations": len(records), "requested_evaluations": args.evaluations, "fit_seconds": fit_seconds,
-                  "total_seconds": time.perf_counter() - started, "invalid_proposals": invalid,
-                  "validation_estimates": validation_estimates, "validation_pseudocount": validation_pseudocount,
-                  "independent_seed_rescoring": validation, "data_summary": manifest["data_summary"],
-                  "predictive_summaries": predictions, "predictive_seed": predictive_seed,
-                  "optimizer_stop_reason": "Requested evaluation budget completed; convergence not asserted"}
-        if adaptive_report is not None:
-            report["adaptive"] = {**adaptive_report, "sampling_work": sampling_work}
-            report["optimizer_stop_reason"] = adaptive_report["search_stop_reason"] + "; " + adaptive_report["refinement_stop_reason"]
-        if ndt_profile is not None:
-            report["ndt_profile"] = ndt_profile.describe()
-            report["initial_training_score_note"] = "Initial dynamics with optimized NDT; independent-seed 'initial' scores retain the original NDT."
-        if recovery:
-            widths = np.array([bounds[name][1] - bounds[name][0] for name in names])
-            report.update(truth=manifest["truth"], errors=dict(zip(names, (fitted - TRUTH).tolist(), strict=True)),
-                          errors_as_fraction_of_bounds=dict(zip(names, ((fitted - TRUTH) / widths).tolist(), strict=True)))
-        save_json(args.output / ("recovery.json" if recovery else "fit.json"), report)
-        manifest.update(status="complete", fit_seconds=fit_seconds)
-        save_json(args.output / "manifest.json", manifest)
-        print(json.dumps(report, indent=2), flush=True)
-    except BaseException as error:
-        manifest.update(status="failed", error=f"{type(error).__name__}: {error}")
-        save_json(args.output / "manifest.json", manifest)
-        raise
+            validation[-1]["fitted_minus_truth"] = score["fitted"] - score["truth"]
+        save_json(args.output / "validation.json", validation_record)
+    validation_summary = summarize_validation(validation)
+    validation_record.update(status="complete", summary=validation_summary)
+    save_json(args.output / "validation.json", validation_record)
+    manifest.update(status="predicting")
+    save_json(args.output / "manifest.json", manifest)
+    predictions = {}
+    predictive_seed = args.data_seed + 1000000 if recovery else args.predictive_seed
+    predictive_parameters = {"truth": TRUTH, "fitted": fitted} if recovery else {"fitted": fitted}
+    for label, values in predictive_parameters.items():
+        samples = plan.run(inputs, [function._batched_parameter_set(values)], args.predictive_estimates,
+                           seed=predictive_seed, strict_truncation=True,
+                           triton_launch_options=LAUNCH).values[0, 0][..., indices]
+        predictions[label] = summarize_samples(samples, frame)
+    report = {"status": "complete", "mode": manifest["mode"], "subject": args.subject, "initial": initial,
+              "estimator": manifest["estimator"],
+              "fitted": dict(zip(names, fitted.tolist(), strict=True)),
+              "best_training_log_likelihood": float(fit["optimal_value"]),
+              "initial_training_log_likelihood": (records[0]["log_likelihood"] if adaptive_report is None
+                                                   else adaptive_report["initial_reference_score"]),
+              "evaluations": len(records), "requested_evaluations": args.evaluations, "fit_seconds": fit_seconds,
+              "total_seconds": time.perf_counter() - started, "invalid_proposals": invalid,
+              "validation_estimates": validation_estimates, "validation_pseudocount": validation_pseudocount,
+              "validation_summary": validation_summary,
+              "independent_seed_rescoring": validation, "data_summary": manifest["data_summary"],
+              "predictive_summaries": predictions, "predictive_seed": predictive_seed,
+              "predictive_summary_kind": "latent_choices_rt_before_observation_kernel",
+              "optimizer_stop_reason": "Requested evaluation budget completed; convergence not asserted"}
+    if adaptive_report is not None:
+        report["adaptive"] = {**adaptive_report, "sampling_work": sampling_work}
+        report["optimizer_stop_reason"] = adaptive_report["search_stop_reason"] + "; " + adaptive_report["refinement_stop_reason"]
+    if ndt_profile is not None:
+        report["ndt_profile"] = ndt_profile.describe()
+        report["initial_training_score_note"] = "Initial dynamics with optimized NDT; independent-seed 'initial' scores retain the original NDT."
+    if recovery:
+        widths = np.array([bounds[name][1] - bounds[name][0] for name in names])
+        report.update(truth=manifest["truth"], synthetic_observation_model=observation_model,
+                      errors=dict(zip(names, (fitted - TRUTH).tolist(), strict=True)),
+                      errors_as_fraction_of_bounds=dict(zip(names, ((fitted - TRUTH) / widths).tolist(), strict=True)))
+    save_json(args.output / ("recovery.json" if recovery else "fit.json"), report)
+    manifest.update(status="complete", fit_seconds=fit_seconds)
+    save_json(args.output / "manifest.json", manifest)
+    print(json.dumps(report, indent=2), flush=True)
 
 
 if __name__ == "__main__":

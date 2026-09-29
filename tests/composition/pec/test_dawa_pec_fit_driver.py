@@ -12,8 +12,10 @@ import pytest
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
+import dawa_pec_fit as driver  # noqa: E402
 from dawa_pec_fit import (  # noqa: E402
-    LAUNCH, STARTS, build_model, histogram_settings, load_subject, main, make_fit_pec, node,
+    LAUNCH, STARTS, build_model, histogram_settings, load_subject, main, make_fit_pec, node, recovery_observations,
+    summarize_validation,
 )
 
 
@@ -47,6 +49,103 @@ def test_recovery_only_needs_design_and_drops_empirical_outcomes(tmp_path, desig
     assert "decision" not in actual and "response_time" not in actual
     design.drop(columns=["decision", "response_time"]).to_csv(path, index=False)
     pd.testing.assert_frame_equal(actual, load_subject(path, 42, recovery=True))
+
+
+def test_recovery_measurement_law_matches_scoring_and_preserves_latent_history():
+    from dawa_conditioned_reference import numpy_observation_density
+
+    latent = np.tile([0., .005], (50000, 1))
+    original = latent.copy()
+    observed, metadata = recovery_observations(
+        latent, observation_model="conditioned", seed=77, estimates=1000, pseudocount=1., device="cpu",
+    )
+    np.testing.assert_array_equal(latent, original)
+    assert metadata["contamination_fraction"] == pytest.approx(1 / 6)
+    edges = np.array(metadata["edges"], dtype=np.float32)
+    centers = (edges[:-1].astype(float) + edges[1:]) / 2.
+    # Joint frequencies exercise source-edge normalization and choice contamination.
+    for choice, index in [(0, 0), (0, 1), (0, 2), (1, 0), (1, 99)]:
+        target = [choice, centers[index]]
+        expected = numpy_observation_density(original[:1], target, edges=edges,
+                                               alpha_per_estimate=.001)[0] * float(edges[1] - edges[0])
+        count = ((observed[:, 0] == choice) & (observed[:, 1] == centers[index])).sum()
+        assert abs(count / len(observed) - expected) < 6 * np.sqrt(expected * (1 - expected) / len(observed)) + 1e-5
+    # Rescaling alpha and N together must leave generated observations identical.
+    other, _ = recovery_observations(latent, observation_model="conditioned", seed=77,
+                                     estimates=2000, pseudocount=2., device="cpu")
+    np.testing.assert_array_equal(observed, other)
+    raw, metadata = recovery_observations(latent, observation_model="latent", seed=77,
+                                         estimates=1000, pseudocount=1., device="cpu")
+    np.testing.assert_array_equal(raw, latent)
+    assert metadata["kind"] == "latent_choices_rt"
+
+
+def test_recovery_observation_overflow_is_not_silently_discarded():
+    with pytest.raises(ValueError, match="outside the observation domain"):
+        recovery_observations([[0., 4.]], observation_model="conditioned", seed=77,
+                              estimates=100000, pseudocount=1., device="cpu")
+
+
+def test_recovery_rejects_reused_observation_seed_before_setup(tmp_path, capsys):
+    with pytest.raises(SystemExit, match="2"):
+        main(["--output", str(tmp_path / "result"), "--observation-seed", "29"], recovery=True)
+    assert "seeds must be independent" in capsys.readouterr().err
+    assert not (tmp_path / "result").exists()
+
+
+@pytest.mark.parametrize("options,recovery", [
+    (["--validation-seeds", "44", "44"], False),
+    (["--validation-seeds", "21260925"], True),
+    (["--simulation-seed", "21260925"], True),
+])
+def test_invalid_validation_or_predictive_seeds_rejected_before_setup(tmp_path, capsys, options, recovery):
+    output = tmp_path / "result"
+    with pytest.raises(SystemExit, match="2"):
+        main(["--output", str(output), *options], recovery=recovery)
+    assert "seeds must be" in capsys.readouterr().err
+    assert not output.exists()
+
+
+def test_setup_failure_records_phase_and_preserves_output(tmp_path, design, monkeypatch):
+    path = tmp_path / "data.csv"
+    design.to_csv(path, index=False)
+    output = tmp_path / "failed"
+    monkeypatch.setattr(driver.torch.cuda, "is_available", lambda: True)
+
+    def broken_model(**kwargs):
+        raise RuntimeError("setup failure for test")
+
+    monkeypatch.setattr(driver, "build_model", broken_model)
+    with pytest.raises(RuntimeError, match="setup failure for test"):
+        main(["--data", str(path), "--subject", "42", "--output", str(output)])
+    saved = (output / "manifest.json").read_bytes()
+    manifest = json.loads(saved)
+    assert manifest["status"] == "failed" and manifest["failed_phase"] == "preparing"
+    assert "setup failure for test" in manifest["error"]
+    assert manifest["arguments"]["optimizer_storage"] == "memory"
+    with pytest.raises(FileExistsError):
+        main(["--data", str(path), "--subject", "42", "--output", str(output)])
+    assert (output / "manifest.json").read_bytes() == saved
+
+
+def test_validation_summary_uses_paired_scores_and_independent_repetitions():
+    rows = [{"seed": i, "initial": base, "fitted": base + difference, "fitted_minus_initial": difference}
+            for i, (base, difference) in enumerate([(100., 1.), (200., 2.), (300., 3.)])]
+    summary = summarize_validation(rows)
+    assert summary["replicates"] == 3
+    paired = summary["statistics"]["fitted_minus_initial"]
+    assert paired["mean"] == 2.
+    assert paired["sd"] == 1.
+    assert paired["mc_standard_error"] == pytest.approx(1 / np.sqrt(3))
+    assert summary["statistics"]["fitted"]["sd"] == 101.
+    single = summarize_validation(rows[:1])["statistics"]["fitted"]
+    assert single["sd"] is None and single["mc_standard_error"] is None
+    with pytest.raises(ValueError, match="distinct seeds"):
+        summarize_validation([rows[0], rows[0]])
+    with pytest.raises(ValueError, match="match across seeds"):
+        summarize_validation([rows[0], {"seed": 8, "fitted": 101.}])
+    with pytest.raises(ValueError, match="finite"):
+        summarize_validation([{"seed": 8, "fitted": float("nan")}])
 
 
 @pytest.mark.parametrize("column,value,error", [
@@ -167,7 +266,10 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
                "--validation-seeds", "8101", "--output", str(output)]
     if not recovery:
         command.extend(["--pseudocount", ".5", "--validation-estimates", "128", "--optimizer-storage", "memory"])
-    result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=DIRECTORY.parents[3])
+    else:
+        command.extend(["--optimizer-storage", "journal"])
+    # Source provenance must refer to this checkout even when launched elsewhere.
+    result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=tmp_path)
     assert result.returncode == 0, result.stdout + result.stderr
     manifest = json.loads((output / "manifest.json").read_text())
     report = json.loads((output / ("recovery.json" if recovery else "fit.json")).read_text())
@@ -184,12 +286,22 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
     assert (output / "optimizer.journal").exists() == recovery
     assert (output / "optimizer_trials.csv").exists()
     assert (output / "evaluations.jsonl").exists()
+    checkpoint = json.loads((output / "fit_checkpoint.json").read_text())
+    assert checkpoint["status"] == "search_complete" and checkpoint["fitted"] == report["fitted"]
+    validation = json.loads((output / "validation.json").read_text())
+    assert validation["status"] == "complete"
+    assert validation["independent_seed_rescoring"] == report["independent_seed_rescoring"]
+    assert report["validation_summary"] == validation["summary"]
+    assert validation["summary"]["replicates"] == 1
+    assert validation["summary"]["statistics"]["fitted"]["sd"] is None
     assert manifest["trials"] == 4 and manifest["scored_trials"] == 3
     assert observations.row_id.tolist() == [8, 3, 16, 1]
     assert len(report["fitted"]) == 8
     assert set(report["predictive_summaries"]["fitted"]) == {"0", "1"}
     if recovery:
         assert manifest["generator_matches_pec_exactly"]
+        assert manifest["synthetic_observation_model"]["kind"] == "binned_smoothed_uniform_contamination"
+        assert (output / "latent_subject.csv").exists()
         assert "truth" in report and "errors" in report
         assert not np.array_equal(observations.response_time, design.iloc[2:].response_time)
     else:
@@ -199,6 +311,45 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
         np.testing.assert_array_equal(observations[["decision", "response_time"]],
                                       design.iloc[2:][["decision", "response_time"]])
         assert "fitted_minus_initial" in report["independent_seed_rescoring"][0]
+
+
+@pytest.mark.triton
+@pytest.mark.triton_gpu
+@pytest.mark.batched
+@pytest.mark.parametrize("failed_phase", ["validating", "predicting"])
+def test_gpu_late_failure_preserves_search_and_completed_validation(tmp_path, design, monkeypatch, failed_phase):
+    path = tmp_path / "data.csv"
+    design.to_csv(path, index=False)
+    output = tmp_path / "result"
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("late failure for test")
+
+    if failed_phase == "validating":
+        monkeypatch.setattr(driver, "summarize_validation", fail)
+    else:
+        original_summary = driver.summarize_samples
+        summaries = []
+
+        def fail_on_predictions(*args, **kwargs):
+            if summaries:
+                fail()
+            summaries.append(True)
+            return original_summary(*args, **kwargs)
+
+        monkeypatch.setattr(driver, "summarize_samples", fail_on_predictions)
+    with pytest.raises(RuntimeError, match="late failure for test"):
+        main(["--data", str(path), "--subject", "42", "--estimates", "16", "--evaluations", "1",
+              "--predictive-estimates", "4", "--validation-seeds", "91001", "--output", str(output)])
+    manifest = json.loads((output / "manifest.json").read_text())
+    assert manifest["status"] == "failed" and manifest["failed_phase"] == failed_phase
+    checkpoint = json.loads((output / "fit_checkpoint.json").read_text())
+    assert checkpoint["status"] == "search_complete" and checkpoint["evaluations"] == 1
+    np.testing.assert_allclose(list(checkpoint["fitted"].values()), STARTS[0], rtol=0., atol=1e-12)
+    validation = json.loads((output / "validation.json").read_text())
+    assert len(validation["independent_seed_rescoring"]) == 1
+    assert validation["status"] == ("complete" if failed_phase == "predicting" else "validating")
+    assert not (output / "fit.json").exists()
 
 
 @pytest.mark.triton

@@ -9,6 +9,8 @@ on this page used trial-marginal histograms, without conditioning carried state
 on observed responses. The driver now defaults to observation-conditioned
 particle filtering. Use `--likelihood marginal` to reproduce this pilot;
 its timings and recovery results do not validate the new default objective.
+The subsequent [conditioned pilot](../CONDITIONED_RECOVERY.md) uses matched
+synthetic observations and independently validated LC-mode profiles.
 
 The [recovery driver](../dawa_pec_recovery.py) generates one synthetic subject
 and fits all eight original coordinates with CMA-ES through PEC's compiled
