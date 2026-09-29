@@ -230,7 +230,8 @@ def test_input_columns_are_the_same_however_the_inputs_are_listed():
 # --------------------------------------------------------------- PEC wiring
 
 
-def _ddm_pec(data, **kwargs):
+def _ddm_pec(data, depends_on=None, **kwargs):
+    """``depends_on`` maps the name of a parameter to the column of ``data`` it depends on."""
     decision = pnl.DDM(
         function=pnl.DriftDiffusionIntegrator(
             starting_value=0.0, rate=0.3, noise=1.0, threshold=0.6,
@@ -251,6 +252,7 @@ def _ddm_pec(data, **kwargs):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data,
+        depends_on={(name, decision): column for name, column in (depends_on or {}).items()},
         **kwargs,
     )
 
@@ -658,6 +660,29 @@ def test_outcomes_the_estimator_cannot_score_are_refused(ddm_data, response_time
                    likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="cannot score"):
         pec._setup_neural_likelihood()
+
+
+@pytest.mark.composition
+def test_a_parameter_that_depends_on_a_condition_is_scored_at_each_trials_value(ddm_data):
+    likelihood, _ = _toy_likelihood(epochs=1)
+    data = ddm_data.assign(condition=pd.Categorical(["easy", "hard", "easy", "hard"]))
+    pec = _ddm_pec(data, depends_on={"rate": "condition"}, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    outcomes, easy = pec._data_numpy, np.array([True, False, True, False])
+
+    expected = (likelihood.log_likelihood([0.2, 0.9], outcomes[easy])
+                + likelihood.log_likelihood([-0.4, 0.9], outcomes[~easy]))
+    assert pec.log_likelihood(0.2, -0.4, 0.9) == pytest.approx(expected, rel=1e-5)
+
+
+@pytest.mark.composition
+def test_training_refuses_a_model_whose_parameters_depend_on_a_condition(ddm_data):
+    """Training covers each parameter's range; which condition a value is fitted for comes later."""
+    data = ddm_data.assign(condition=pd.Categorical(["easy", "hard", "easy", "hard"]))
+    pec = _ddm_pec(data, depends_on={"rate": "condition"})
+    with pytest.raises(nlf.NeuralLikelihoodError, match="without depends_on"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=pec, inputs={pec.nodes[0]: np.ones((4, 1))},
+                                    n_parameter_samples=4, epochs=1)
 
 
 @pytest.fixture(scope="module")

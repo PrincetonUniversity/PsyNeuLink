@@ -881,9 +881,10 @@ class ParameterEstimationComposition(Composition):
         self._subject_id = subject_id
         self._likelihood_estimator = likelihood_estimator or "kde"
         self._likelihood_estimator_kwargs = dict(likelihood_estimator_kwargs or {})
-        # Loaded and checked against this composition on first use, not at construction:
-        # the fitted parameters and their ranges are only known once the controller exists.
+        # Loaded and checked against this composition on first use, once its data and controller
+        # are set up.
         self._neural_likelihood = None
+        self._neural_parameter_index = None
         # Kept on the composition rather than read back off the optimization function, which only
         # receives them when `distributed` is set; a hierarchical fit needs the factory either way.
         self._pec_distributed_options = dict(distributed_options or {})
@@ -1471,17 +1472,32 @@ class ParameterEstimationComposition(Composition):
                 else NeuralLikelihood.load(artifact)
             )
 
-            bounds = self.controller.function.fit_param_bounds
-            categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
+            # Checked against the model's parameters rather than the values fitted: a parameter that
+            # depends on a condition has a value fitted for each condition, all within its range.
             # Names are compared without the mechanism, whose name depends on construction order.
+            categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
             likelihood.provenance.check_matches(
-                _reported_names(self.controller.function.fit_param_names),
-                [bounds[name][0] for name in bounds],
-                [bounds[name][1] for name in bounds],
+                _reported_names([f"{mech.name}.{name}" for name, mech in self.fit_parameters]),
+                [float(min(values)) for values in self.fit_parameters.values()],
+                [float(max(values)) for values in self.fit_parameters.values()],
                 tuple(str(c) for c in self.data.columns),
                 categorical,
             )
             likelihood.provenance.check_outcomes(self._data_numpy[included])
+
+            # Where each of the model's parameters is found on each trial, among the values fitted:
+            # one that depends on a condition takes the value fitted for the trial's condition.
+            index = np.zeros((len(self.data), len(self.fit_parameters)), dtype=int)
+            fitted = 0
+            for k, key in enumerate(self.fit_parameters):
+                if self.depends_on and key in self.depends_on:
+                    for level in self.cond_levels[key]:
+                        index[np.asarray(self.cond_mask[key][level]), k] = fitted
+                        fitted += 1
+                else:
+                    index[:, k] = fitted
+                    fitted += 1
+            self._neural_parameter_index = index[included]
             self._neural_likelihood = likelihood
 
         likelihood = self._neural_likelihood
@@ -1497,7 +1513,7 @@ class ParameterEstimationComposition(Composition):
 
         # Excluded trials are dropped, as they are from a simulated likelihood.
         self.controller.function.set_neural_likelihood(
-            likelihood, self._data_numpy[included], features
+            likelihood, self._data_numpy[included], self._neural_parameter_index, features
         )
 
     @handle_external_context()

@@ -189,8 +189,8 @@ class NeuralLikelihood:
         )
 
     def _conditioning(self, theta: torch.Tensor, trial_features, n_trials) -> torch.Tensor:
-        """Broadcast one parameter vector across trials and append per-trial features."""
-        cond = theta.reshape(1, -1).expand(n_trials, -1)
+        """Give each trial its parameters, one vector for all or a row each, then its features."""
+        cond = theta.reshape(-1, theta.shape[-1]).expand(n_trials, -1)
         if self.provenance.n_trial_features:
             if trial_features is None:
                 raise NeuralLikelihoodError(
@@ -209,7 +209,10 @@ class NeuralLikelihood:
         return cond
 
     def trial_log_prob(self, theta, outcomes, trial_features=None) -> torch.Tensor:
-        """Per-trial log densities, differentiable with respect to ``theta``."""
+        """Per-trial log densities, differentiable with respect to ``theta``.
+
+        ``theta`` is one vector of parameters for every trial, or one row of them per trial.
+        """
         theta_t = (
             theta
             if isinstance(theta, torch.Tensor)
@@ -313,6 +316,11 @@ def _check_parameters(pec, names):
     """Raise unless `pec` fits exactly `names`, in that order: draws are passed to it by position."""
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
 
+    if pec.depends_on:
+        raise NeuralLikelihoodError(
+            "Train on a model without depends_on: the estimator is trained over each parameter's "
+            "range, and scores every condition's value of it when fitting."
+        )
     declared = _reported_names(pec.controller.function.fit_param_names)
     if tuple(declared) != tuple(names):
         raise NeuralLikelihoodError(

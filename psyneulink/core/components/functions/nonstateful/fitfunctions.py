@@ -588,6 +588,7 @@ class PECOptimizationFunction(OptimizationFunction):
         # Set by the PEC when likelihood_estimator="neural"; the likelihood is then computed without simulating.
         self._neural_likelihood = None
         self._neural_outcomes = None
+        self._neural_parameter_index = None
         self._neural_trial_features = None
 
         # Are we in data fitting mode, or generic optimization. This is set automatically by the PEC when
@@ -636,10 +637,15 @@ class PECOptimizationFunction(OptimizationFunction):
             aggregation_function=None,
         )
 
-    def set_neural_likelihood(self, likelihood, outcomes, trial_features=None):
-        """Score with a trained `NeuralLikelihood` instead of by simulating."""
+    def set_neural_likelihood(self, likelihood, outcomes, parameter_index, trial_features=None):
+        """Score with a trained `NeuralLikelihood` instead of by simulating.
+
+        ``parameter_index[t, k]`` is the position, among the values being fitted, of the value the
+        model's k-th parameter takes on trial t.
+        """
         self._neural_likelihood = likelihood
         self._neural_outcomes = outcomes
+        self._neural_parameter_index = parameter_index
         self._neural_trial_features = trial_features
 
     def _neural_log_likelihood(self, *args):
@@ -649,7 +655,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
             )
         return self._neural_likelihood.log_likelihood(
-            np.asarray(args, dtype=float),
+            np.asarray(args, dtype=float)[self._neural_parameter_index],
             self._neural_outcomes,
             self._neural_trial_features,
         )
