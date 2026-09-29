@@ -87,6 +87,14 @@ reductions. Full-subject comparisons against `b53de60067` are exact; the
 [optimization measurements](CONDITIONED_LIKELIHOOD.md#conditioned-loop-optimization-2026-09-29)
 document the memory reduction and remaining simulation cost.
 
+The experimental [adaptive conditioned policy](CONDITIONED_STAGED_FITTING.md),
+selected with `--fit-strategy adaptive`, changes
+particle count through the existing conditioned PEC objective. Every score
+starts a fresh full-history filter. It preserves the pseudocount/particle
+ratio, uses common-count reference checks, and carries learned CMA covariance
+into refinement. No compiler or model changes are needed for this policy;
+fixed-count fitting remains the default.
+
 ## Simulation checks
 
 Run from the repository root in the configured Python environment:

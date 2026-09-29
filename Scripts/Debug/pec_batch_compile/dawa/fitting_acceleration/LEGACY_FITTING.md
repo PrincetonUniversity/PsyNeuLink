@@ -17,11 +17,11 @@ python Scripts/Debug/pec_batch_compile/dawa/dawa_pec_fit.py \
   --output "$DAWA_RESULTS/subject1-adaptive"
 ```
 
-For recovery, use the same options with `dawa_pec_recovery.py`. Conditioned
-fitting currently rejects adaptive pooling and NDT profiling: independent
-trial-density blocks cannot be pooled as before, and changing NDT changes
-the observation weights and therefore subsequent state history. These
-shortcuts need separate sequential algorithms before they can be enabled.
+For recovery, use the same options with `dawa_pec_recovery.py`. With the
+conditioned likelihood, `--fit-strategy adaptive` selects the separate
+[full-filter budget policy](../CONDITIONED_STAGED_FITTING.md). Independent
+trial-density blocks cannot be pooled as before, and NDT profiling remains
+unsupported because changing NDT changes weights and subsequent state history.
 In marginal mode,
 `--estimates` is the maximum/reference budget and `--evaluations` is a cap on
 search plus refinement proposals. The current experimental policy defaults to:

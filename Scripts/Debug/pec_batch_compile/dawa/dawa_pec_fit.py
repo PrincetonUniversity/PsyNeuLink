@@ -28,6 +28,7 @@ from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationErro
 from psyneulink.core.globals.utilities import set_global_seed
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 from dawa_adaptive_fit import AdaptiveConfig, fit_adaptive
+from dawa_conditioned_fit import StagedConfig, conditioned_scores, fit_staged
 from dawa_ndt_profile import NDTProfile
 
 
@@ -229,21 +230,26 @@ def main(argv=None, *, recovery=False):
     parser.add_argument("--validation-estimates", type=int,
                         help="Fresh-seed rescoring budget; default matches fitting. Pseudocount scales with this budget to preserve prior weight.")
     parser.add_argument("--evaluations", type=int, default=5000, help="Total parameter proposals, not generations (default: 5000)")
-    parser.add_argument("--fit-strategy", choices=("fixed", "adaptive"), default="fixed")
-    parser.add_argument("--profile-ndt", action="store_true", help="Profile nondecision time with exact compiled counts (adaptive strategy only)")
+    parser.add_argument("--fit-strategy", choices=("fixed", "adaptive"), default="fixed",
+                        help="Fixed particle count (default), or adaptive budgets using the policy appropriate to the likelihood")
+    parser.add_argument("--profile-ndt", action="store_true", help="Profile nondecision time with exact compiled counts (marginal adaptive fitting only)")
     parser.add_argument("--batch-sampling-blocks", action=argparse.BooleanOptionalAction, default=True,
                         help="Run independent adaptive NDT sampling blocks together (disable for timing comparisons)")
-    parser.add_argument("--adaptive-min-estimates", type=int, default=5000)
-    parser.add_argument("--adaptive-rank-tolerance", type=float, default=1., help="Tolerance for the weighted rank-regret heuristic (not a confidence bound)")
-    parser.add_argument("--adaptive-initial-blocks", type=int, default=4)
-    parser.add_argument("--adaptive-search-evaluations", type=int, default=2000, help="Maximum coarse-search proposals before precision refinement")
+    parser.add_argument("--adaptive-min-estimates", type=int,
+                        help="Exploration particles for conditioned fits (default: 10000); minimum marginal race budget (default: 5000)")
+    parser.add_argument("--adaptive-rank-tolerance", type=float, default=1., help="Marginal only: weighted rank-regret tolerance (not a confidence bound)")
+    parser.add_argument("--adaptive-initial-blocks", type=int, default=4, help="Marginal only: initial blocks per race")
+    parser.add_argument("--adaptive-search-evaluations", type=int, default=2000, help="Marginal only: maximum coarse-search proposals before refinement")
     parser.add_argument("--adaptive-check-every", type=int, default=250)
     parser.add_argument("--adaptive-min-evaluations", type=int, default=1000)
     parser.add_argument("--adaptive-patience", type=int, default=2)
     parser.add_argument("--adaptive-progress-tolerance", type=float, default=.25)
     parser.add_argument("--adaptive-refine-evaluations", type=int, default=600)
-    parser.add_argument("--adaptive-selection-blocks", type=int, default=3, help="Fresh maximum-budget blocks pooled to select the final fit")
+    parser.add_argument("--adaptive-selection-repeats", "--adaptive-selection-blocks", type=int, default=3,
+                        help="Fresh reference-budget repetitions: average complete log scores (conditioned), pool densities (marginal)")
     parser.add_argument("--adaptive-selection-candidates", type=int, default=8)
+    parser.add_argument("--adaptive-checkpoint-candidates", type=int, default=4,
+                        help="Conditioned only: recent candidates per reference-budget checkpoint")
     parser.add_argument("--population", type=int, default=10, help="CMA-ES population and candidate batch size (default: 10)")
     parser.add_argument("--start", type=int, choices=(0, 1), default=0, help="Which of the two predefined starting points to use")
     parser.add_argument("--optimizer-seed", type=int, default=101)
@@ -271,23 +277,38 @@ def main(argv=None, *, recovery=False):
             args.observation_model = "conditioned" if args.likelihood == "conditioned" else "latent"
         if args.observation_model == "conditioned" and args.likelihood != "conditioned":
             parser.error("The conditioned observation model requires --likelihood conditioned")
-    if args.likelihood == "conditioned" and (args.fit_strategy == "adaptive" or args.profile_ndt):
-        parser.error("Observation-conditioned fitting currently requires --fit-strategy fixed without --profile-ndt: "
-                     "pooling independent density blocks or shifting NDT changes particle history. "
-                     "Use --likelihood marginal only to reproduce the legacy objective.")
+    if args.likelihood == "conditioned" and args.profile_ndt:
+        parser.error("Observation-conditioned fitting does not support --profile-ndt: "
+                     "shifting NDT changes particle history. Fit NDT jointly with the other parameters.")
     if args.profile_ndt and args.fit_strategy != "adaptive":
         parser.error("--profile-ndt currently requires --fit-strategy adaptive")
-    adaptive_config = AdaptiveConfig(
-        min_estimates=args.adaptive_min_estimates, max_estimates=args.estimates,
-        rank_tolerance=args.adaptive_rank_tolerance, check_every=args.adaptive_check_every,
-        min_evaluations=args.adaptive_min_evaluations, patience=args.adaptive_patience,
-        progress_tolerance=args.adaptive_progress_tolerance, refine_evaluations=args.adaptive_refine_evaluations,
-        initial_blocks=args.adaptive_initial_blocks, max_search_evaluations=args.adaptive_search_evaluations,
-        selection_blocks=args.adaptive_selection_blocks, selection_candidates=args.adaptive_selection_candidates,
-    )
+    if args.adaptive_min_estimates is None:
+        args.adaptive_min_estimates = 10000 if args.likelihood == "conditioned" else 5000
+    args.fit_policy = "fixed"
+    strategy_config = None
     if args.fit_strategy == "adaptive":
+        if args.likelihood == "conditioned":
+            args.fit_policy = "staged"
+            strategy_config = StagedConfig(
+                search_estimates=args.adaptive_min_estimates, reference_estimates=args.estimates,
+                refine_evaluations=args.adaptive_refine_evaluations, check_every=args.adaptive_check_every,
+                min_evaluations=args.adaptive_min_evaluations, patience=args.adaptive_patience,
+                progress_tolerance=args.adaptive_progress_tolerance,
+                checkpoint_candidates=args.adaptive_checkpoint_candidates,
+                selection_candidates=args.adaptive_selection_candidates, selection_repeats=args.adaptive_selection_repeats,
+            )
+        else:
+            args.fit_policy = "block_racing"
+            strategy_config = AdaptiveConfig(
+                min_estimates=args.adaptive_min_estimates, max_estimates=args.estimates,
+                rank_tolerance=args.adaptive_rank_tolerance, check_every=args.adaptive_check_every,
+                min_evaluations=args.adaptive_min_evaluations, patience=args.adaptive_patience,
+                progress_tolerance=args.adaptive_progress_tolerance, refine_evaluations=args.adaptive_refine_evaluations,
+                initial_blocks=args.adaptive_initial_blocks, max_search_evaluations=args.adaptive_search_evaluations,
+                selection_blocks=args.adaptive_selection_repeats, selection_candidates=args.adaptive_selection_candidates,
+            )
         try:
-            adaptive_config.validate(args.evaluations, args.population)
+            strategy_config.validate(args.evaluations, args.population)
         except ValueError as error:
             parser.error(str(error))
     if min(args.estimates, args.evaluations, args.population, args.predictive_estimates, args.max_steps) < 1:
@@ -326,14 +347,14 @@ def main(argv=None, *, recovery=False):
     }
     save_json(args.output / "manifest.json", manifest)
     try:
-        _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, started)
+        _run(args, frame, recovery, independent_seeds, strategy_config, manifest, started)
     except BaseException as error:
         manifest.update(failed_phase=manifest["status"], status="failed", error=f"{type(error).__name__}: {error}")
         save_json(args.output / "manifest.json", manifest)
         raise
 
 
-def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, started):
+def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, started):
     set_global_seed(args.model_seed)
     pnl.set_num_threads(8)
     torch.set_num_threads(8)
@@ -426,11 +447,12 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
                  "Masked observations condition history but do not add a log score. Budget completion is not convergence."
                  if args.likelihood == "conditioned" else
                  "Legacy trial-marginal fitting with unconditional simulated histories. Budget completion is not convergence."),
-        "fit_strategy": args.fit_strategy,
+        "fit_strategy": args.fit_strategy, "fit_policy": args.fit_policy,
     })
     if args.fit_strategy == "adaptive":
-        manifest["adaptive_config"] = asdict(adaptive_config)
-        manifest["adaptive_driver_sha256"] = hashlib.sha256(Path(__file__).with_name("dawa_adaptive_fit.py").read_bytes()).hexdigest()
+        manifest["adaptive_config"] = asdict(strategy_config)
+        policy_file = "dawa_conditioned_fit.py" if args.fit_policy == "staged" else "dawa_adaptive_fit.py"
+        manifest["adaptive_driver_sha256"] = hashlib.sha256(Path(__file__).with_name(policy_file).read_bytes()).hexdigest()
     if ndt_profile is not None:
         manifest["ndt_profile"] = ndt_profile.describe()
     if recovery:
@@ -444,7 +466,7 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
     optimization_started = time.perf_counter()
     records = []
     invalid = []
-    sampling_work = {"calls": 0, "kernel_launches": 0, "candidate_trajectories": 0}
+    sampling_work = {} if args.fit_policy == "staged" else {"calls": 0, "kernel_launches": 0, "candidate_trajectories": 0}
 
     def record_batch(candidates, scores, elapsed, metadata=None):
         if ndt_profile is not None:
@@ -541,25 +563,38 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
         return float(logged_batch([values])[0])
 
     logged_objective._batched_parameter_sets = logged_batch
-    adaptive_report = None
+    strategy_report = None
     if args.fit_strategy == "adaptive":
         reserved_seeds = set(args.validation_seeds) | independent_seeds
         reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
-        fit, adaptive_report, refinement = fit_adaptive(
-            study, optimizer_bounds, optimizer_initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
-            adaptive_config, evaluations=args.evaluations, population=args.population,
-            simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
-            reserved_seeds=reserved_seeds, log_batch=record_batch,
-            profile_parameter=None if ndt_profile is None else (ndt_profile.name, ndt_profile.values),
-            sample_blocks=(sample_density_blocks if ndt_profile is not None and args.batch_sampling_blocks else None),
-        )
+        if args.fit_policy == "staged":
+            def sample_scores(candidates, estimates, seed):
+                return conditioned_scores(pec, candidates, estimates, seed, reference_estimates=args.estimates,
+                                          pseudocount=args.pseudocount, invalid=invalid, work=sampling_work)
+
+            fit, strategy_report, refinement = fit_staged(
+                study, optimizer_bounds, optimizer_initial, sample_scores, strategy_config,
+                evaluations=args.evaluations, population=args.population,
+                simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
+                reserved_seeds=reserved_seeds, log_batch=record_batch,
+            )
+        else:
+            fit, strategy_report, refinement = fit_adaptive(
+                study, optimizer_bounds, optimizer_initial, sample_densities, frame.likelihood_include_mask.to_numpy(dtype=bool),
+                strategy_config, evaluations=args.evaluations, population=args.population,
+                simulation_seed=args.simulation_seed, optimizer_seed=args.optimizer_seed,
+                reserved_seeds=reserved_seeds, log_batch=record_batch,
+                profile_parameter=None if ndt_profile is None else (ndt_profile.name, ndt_profile.values),
+                sample_blocks=(sample_density_blocks if ndt_profile is not None and args.batch_sampling_blocks else None),
+            )
+        strategy_report["policy"] = args.fit_policy
         refinement.trials_dataframe(attrs=("number", "value", "params", "state")).to_csv(
             args.output / "optimizer_refinement_trials.csv", index=False)
     else:
         fit = function._fit(logged_objective, display_iter=False)
     fit_seconds = time.perf_counter() - optimization_started
-    expected_evaluations = (args.evaluations if adaptive_report is None else
-                            adaptive_report["search_evaluations"] + adaptive_report["refinement_evaluations"])
+    expected_evaluations = (args.evaluations if strategy_report is None else
+                            strategy_report["search_evaluations"] + strategy_report["refinement_evaluations"])
     if len(records) != expected_evaluations:
         raise AssertionError("Optimizer did not evaluate the requested budget")
     fitted = np.asarray([fit["fitted_params"][name] for name in names])
@@ -569,8 +604,11 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
                                list(optimizer_initial.values()), rtol=0, atol=1e-12)
     study.trials_dataframe(attrs=("number", "value", "params", "state", "datetime_start", "datetime_complete")).to_csv(
         args.output / "optimizer_trials.csv", index=False)
+    if strategy_report is not None:
+        save_json(args.output / f"{args.fit_strategy}.json", {**strategy_report, "sampling_work": sampling_work})
     save_json(args.output / "fit_checkpoint.json", {
         "status": "search_complete", "mode": manifest["mode"], "subject": args.subject,
+        "fit_strategy": args.fit_strategy, "fit_policy": args.fit_policy,
         "fitted": dict(zip(names, fitted.tolist(), strict=True)), "initial": initial,
         "best_training_log_likelihood": float(fit["optimal_value"]),
         "evaluations": len(records), "fit_seconds": fit_seconds, "invalid_proposals": invalid,
@@ -616,9 +654,10 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
               "estimator": manifest["estimator"],
               "fitted": dict(zip(names, fitted.tolist(), strict=True)),
               "best_training_log_likelihood": float(fit["optimal_value"]),
-              "initial_training_log_likelihood": (records[0]["log_likelihood"] if adaptive_report is None
-                                                   else adaptive_report["initial_reference_score"]),
+              "initial_training_log_likelihood": (records[0]["log_likelihood"] if strategy_report is None
+                                                   else strategy_report["initial_reference_score"]),
               "evaluations": len(records), "requested_evaluations": args.evaluations, "fit_seconds": fit_seconds,
+              "fit_strategy": args.fit_strategy, "fit_policy": args.fit_policy,
               "total_seconds": time.perf_counter() - started, "invalid_proposals": invalid,
               "validation_estimates": validation_estimates, "validation_pseudocount": validation_pseudocount,
               "validation_summary": validation_summary,
@@ -626,9 +665,9 @@ def _run(args, frame, recovery, independent_seeds, adaptive_config, manifest, st
               "predictive_summaries": predictions, "predictive_seed": predictive_seed,
               "predictive_summary_kind": "latent_choices_rt_before_observation_kernel",
               "optimizer_stop_reason": "Requested evaluation budget completed; convergence not asserted"}
-    if adaptive_report is not None:
-        report["adaptive"] = {**adaptive_report, "sampling_work": sampling_work}
-        report["optimizer_stop_reason"] = adaptive_report["search_stop_reason"] + "; " + adaptive_report["refinement_stop_reason"]
+    if strategy_report is not None:
+        report[args.fit_strategy] = {**strategy_report, "sampling_work": sampling_work}
+        report["optimizer_stop_reason"] = strategy_report["search_stop_reason"] + "; " + strategy_report["refinement_stop_reason"]
     if ndt_profile is not None:
         report["ndt_profile"] = ndt_profile.describe()
         report["initial_training_score_note"] = "Initial dynamics with optimized NDT; independent-seed 'initial' scores retain the original NDT."

@@ -176,7 +176,7 @@ def test_masked_rt_outside_histogram_retains_history(tmp_path, design):
     assert histogram_settings(frame, "marginal") == (100, (0., 3.))
 
 
-@pytest.mark.parametrize("extra", [["--fit-strategy", "adaptive"], ["--profile-ndt"]])
+@pytest.mark.parametrize("extra", [["--profile-ndt"], ["--fit-strategy", "adaptive", "--profile-ndt"]])
 def test_conditioned_rejects_unsupported_shortcuts_before_creating_output(tmp_path, capsys, extra):
     output = tmp_path / "must_not_exist"
     with pytest.raises(SystemExit, match="2"):
@@ -226,6 +226,12 @@ def test_pec_objective_routes_training_and_rescoring_with_complete_history(
     function.batched_seed = 8101
     validation = function._make_objective_func()._batched_parameter_sets(STARTS)
     np.testing.assert_array_equal(validation, training)
+    if likelihood == "conditioned":
+        from dawa_conditioned_fit import conditioned_scores
+        scores = conditioned_scores(pec, STARTS, 32, 42, reference_estimates=64,
+                                    pseudocount=.5, invalid=[], work={})
+        np.testing.assert_array_equal(scores, training)
+        assert (pec.controller.num_estimates, function.batched_seed, function.batched_pseudocount) == (128, 8101, 1.)
     for index, (method, received_inputs, parameters, kwargs) in enumerate(calls):
         assert method == likelihood
         assert len(parameters) == 2
@@ -234,9 +240,9 @@ def test_pec_objective_routes_training_and_rescoring_with_complete_history(
         np.testing.assert_array_equal(kwargs["include_mask"], [False, True, True, True])
         assert kwargs["strict_truncation"] is True
         assert kwargs["triton_launch_options"] == LAUNCH
-        assert kwargs["num_estimates"] == (64, 128)[index]
-        assert kwargs["pseudocount"] == (.5, 1.)[index]
-        assert kwargs["seed"] == (29, 8101)[index]
+        assert kwargs["num_estimates"] == (64, 128, 32)[index]
+        assert kwargs["pseudocount"] == (.5, 1., .25)[index]
+        assert kwargs["seed"] == (29, 8101, 42)[index]
         assert kwargs["bins"] == (134 if likelihood == "conditioned" else 100)
         for row, start in zip(parameters, STARTS, strict=True):
             mode = next(value for key, value in row.items() if key.endswith(".mode"))
@@ -279,6 +285,8 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
     assert report["validation_estimates"] == (64 if recovery else 128)
     assert report["validation_pseudocount"] == 1.
     assert manifest["estimator"]["pseudocount"] == (1. if recovery else .5)
+    assert report["fit_strategy"] == manifest["fit_strategy"] == "fixed"
+    assert report["fit_policy"] == manifest["fit_policy"] == "fixed"
     assert manifest["arguments"]["likelihood"] == "conditioned"
     assert manifest["estimator"]["kind"] == "observation_conditioned_particle_histogram"
     assert manifest["estimator"]["masked_observations_condition_history"] is True
@@ -375,6 +383,11 @@ def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, d
     report = json.loads((output / ("recovery.json" if recovery else "fit.json")).read_text())
     records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
     assert report["status"] == "complete"
+    manifest = json.loads((output / "manifest.json").read_text())
+    assert report["fit_strategy"] == manifest["fit_strategy"] == "adaptive"
+    assert report["fit_policy"] == manifest["fit_policy"] == "block_racing"
+    assert report["adaptive"]["policy"] == "block_racing"
+    assert manifest["adaptive_config"]["min_estimates"] == 16
     assert report["evaluations"] == 31 < report["requested_evaluations"]
     assert report["adaptive"]["search_evaluations"] == 21
     assert report["adaptive"]["refinement_evaluations"] == 10
@@ -395,3 +408,86 @@ def test_gpu_adaptive_recovery_checks_and_refines_on_separate_budget(tmp_path, d
         assert all(len(row["parameters"]) == 8 for row in records)
         profile = report["adaptive"]["profile"]
         assert report["fitted"][profile["parameter"]] == profile["values"][profile["selection_indices"][selection["winner"]]]
+
+
+@pytest.mark.triton
+@pytest.mark.triton_gpu
+@pytest.mark.batched
+@pytest.mark.parametrize("recovery", [False, True])
+def test_gpu_adaptive_conditioned_fitting_preserves_observation_law(tmp_path, design, recovery):
+    path = tmp_path / "data.csv"
+    design.to_csv(path, index=False)
+    output = tmp_path / "staged"
+    script = "dawa_pec_recovery.py" if recovery else "dawa_pec_fit.py"
+    command = [sys.executable, str(DIRECTORY / script), "--data", str(path), "--subject", "42",
+               "--fit-strategy", "adaptive", "--estimates", "64", "--adaptive-min-estimates", "16",
+               "--evaluations", "31", "--population", "4", "--adaptive-check-every", "4",
+               "--adaptive-min-evaluations", "9", "--adaptive-patience", "1",
+               "--adaptive-progress-tolerance", "100000", "--adaptive-refine-evaluations", "10",
+               "--pseudocount", ".5", "--validation-estimates", "128",
+               "--predictive-estimates", "16", "--validation-seeds", "8101", "--output", str(output)]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=180, cwd=tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    report = json.loads((output / ("recovery.json" if recovery else "fit.json")).read_text())
+    manifest = json.loads((output / "manifest.json").read_text())
+    records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
+    assert report["status"] == manifest["status"] == "complete"
+    assert report["fit_strategy"] == manifest["fit_strategy"] == "adaptive"
+    assert report["fit_policy"] == manifest["fit_policy"] == "staged"
+    assert report["adaptive"]["policy"] == "staged"
+    assert manifest["adaptive_config"]["search_estimates"] == 16
+    assert report["evaluations"] == 19
+    assert report["adaptive"]["search_evaluations"] == 9
+    assert report["adaptive"]["refinement_evaluations"] == 10
+    assert report["adaptive"]["refinement_covariance"]["reused"]
+    assert {row["estimates"] for row in records if row["phase"] == "staged_search"} == {16}
+    assert {row["estimates"] for row in records if row["phase"] == "refinement"} == {64}
+    assert report["adaptive"] == json.loads((output / "adaptive.json").read_text())
+    assert report["validation_estimates"] == 128 and report["validation_pseudocount"] == 1.
+    assert report["estimator"]["pseudocount"] == .5
+    selection = report["adaptive"]["final_selection"]
+    assert len(set(selection["seeds"])) == 3
+    assert set(selection["seeds"]).isdisjoint({29, 8101, 20260925, 20260926, 21260925})
+    assert selection["estimates_per_seed"] == 64
+    np.testing.assert_allclose(selection["mean_log_scores"], np.mean(selection["replicate_log_scores"], axis=0))
+    assert report["best_training_log_likelihood"] == selection["reference_scores"][selection["winner"]]
+    assert list(report["fitted"].values()) == selection["candidates"][selection["winner"]]
+    assert manifest["trials"] == 4 and manifest["scored_trials"] == 3
+    assert report["estimator"]["masked_observations_condition_history"]
+
+
+@pytest.mark.parametrize("likelihood", ["conditioned", "marginal"])
+def test_staged_is_not_a_public_fit_strategy(tmp_path, capsys, likelihood):
+    output = tmp_path / "must_not_exist"
+    with pytest.raises(SystemExit, match="2"):
+        main(["--fit-strategy", "staged", "--likelihood", likelihood, "--output", str(output)])
+    assert "invalid choice: 'staged'" in capsys.readouterr().err
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("likelihood", ["conditioned", "marginal"])
+@pytest.mark.parametrize("override", [False, True])
+def test_adaptive_cli_resolves_policy_defaults_and_shared_controls(tmp_path, design, monkeypatch, likelihood, override):
+    path = tmp_path / "data.csv"
+    design.to_csv(path, index=False)
+    received = []
+    monkeypatch.setattr(driver.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(driver, "_run", lambda args, frame, recovery, seeds, config, manifest, started:
+                        received.append((args, config)))
+    options = (["--adaptive-min-estimates", "2000", "--adaptive-refine-evaluations", "500",
+                "--adaptive-selection-repeats", "2"] if override else [])
+    main(["--data", str(path), "--subject", "42", "--likelihood", likelihood,
+          "--fit-strategy", "adaptive", "--output", str(tmp_path / "result"), *options])
+    args, config = received[0]
+    expected_count = 2000 if override else (10000 if likelihood == "conditioned" else 5000)
+    assert args.fit_strategy == "adaptive"
+    assert args.adaptive_min_estimates == expected_count
+    assert config.refine_evaluations == (500 if override else 600)
+    if likelihood == "conditioned":
+        assert args.fit_policy == "staged" and isinstance(config, driver.StagedConfig)
+        assert config.search_estimates == expected_count
+        assert config.selection_repeats == (2 if override else 3)
+    else:
+        assert args.fit_policy == "block_racing" and isinstance(config, driver.AdaptiveConfig)
+        assert config.min_estimates == expected_count
+        assert config.selection_blocks == (2 if override else 3)

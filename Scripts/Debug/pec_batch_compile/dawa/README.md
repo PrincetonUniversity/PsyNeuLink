@@ -14,10 +14,13 @@ state distribution before the next trial.
 | Inspect or modify the PNL composition | [full_lca_model_lc.py](dawa_lca_model/full_lca_model_lc.py) |
 
 Both fitting commands use the same compiler, bounds, and CMA-ES optimization.
-Recovery replaces the recorded responses with synthetic observations. The
-older adaptive and NDT-profiling commands are documented separately in the
-[legacy fitting guide](fitting_acceleration/LEGACY_FITTING.md); they require a
-different likelihood and are **not supported shortcuts for conditioned fits**.
+Recovery replaces the recorded responses with synthetic observations.
+Use `--fit-strategy adaptive` to vary simulation effort during fitting. The
+likelihood selects the policy: [conditioned fitting](CONDITIONED_STAGED_FITTING.md)
+uses smaller-particle exploration followed by full-count filtering and refinement;
+marginal fitting uses the earlier simulation-block approach. The
+[legacy fitting guide](fitting_acceleration/LEGACY_FITTING.md) documents that
+marginal policy and NDT profiling, which requires the marginal likelihood.
 
 ## Install and check the GPU
 
@@ -106,8 +109,10 @@ guarantee of likelihood precision or optimizer convergence.
 
 | Option | Interpretation / default |
 | --- | --- |
-| `--estimates` | Particles per candidate and trial; default 100,000 |
+| `--estimates` | Particles per candidate and trial; default 100,000; reference/refinement count for adaptive fitting |
+| `--fit-strategy` | `fixed` by default; `adaptive` selects the budget policy appropriate to the likelihood |
 | `--evaluations` | Total parameter proposals, not generations; default 5,000 |
+| `--adaptive-min-estimates` | Exploration count for conditioned fits (default 10,000); minimum race budget for marginal fits (default 5,000) |
 | `--population` | CMA-ES population and candidate batch size; default 10 |
 | `--optimizer-storage` | `memory` by default; `journal` additionally saves optimizer internals but does not enable automatic resume |
 | `--max-steps` | Strict execution cap per trial; default 4,000, matching the conditioned pilot |
@@ -133,12 +138,21 @@ versus 5.40 s on the local 2080 Ti. That projects to about **46 minutes for
 overhead. This is a throughput measurement, separate from the complete recovery
 fits above.
 
+The experimental [staged conditioned pilot](CONDITIONED_STAGED_FITTING.md)
+reduced search to **13.0 minutes** and the complete run to **15.3 minutes** on
+one H100, with a slightly higher independently rescored likelihood than the
+earlier fixed fit on the same synthetic subject and start. It used 1,251
+proposals at 10k particles, then 600 at 100k, plus reference checks and final
+selection. This first pilot supports further use and testing; fixed-count
+fitting remains the default.
+
 ## Read the results and diagnose failures
 
 | Output | Purpose |
 | --- | --- |
 | `manifest.json` | Resolved settings, hashes, device, and phase: `preparing`, `fitting`, `validating`, `predicting`, `complete`, or `failed` |
 | `progress.json` | Completed proposals, best training candidate, elapsed fitting time, invalid-candidate count |
+| `adaptive.json`, `optimizer_refinement_trials.csv` | Adaptive policy, reference checkpoints, final selection, work counts, and refinement trials; saved before validation |
 | `fit_checkpoint.json` | Completed search result, saved before validation; not a resumable optimizer checkpoint |
 | `validation.json` | Each completed fresh-seed evaluation, budget, pseudocount, and final summary |
 | `fit.json` / `recovery.json` | Final parameters, timing, independent validation, and predictive summaries |
@@ -283,6 +297,7 @@ reference used to check the GPU implementation. See the
 - [Conditioned accuracy](CONDITIONED_ACCURACY.md): exact-reference checks and particle-budget uncertainty.
 - [Conditioned performance](CONDITIONED_LIKELIHOOD.md#conditioned-loop-optimization-2026-09-29): preserved baseline, compiler optimizations, and current GPU measurements.
 - [Conditioned recovery](CONDITIONED_RECOVERY.md): full fits, independent rescoring, and measured H100 runtimes.
+- [Adaptive conditioned fitting](CONDITIONED_STAGED_FITTING.md): full-history budget stages, ranking calibration, and fitting pilot.
 - [Legacy acceleration](fitting_acceleration/README.md): historical marginal benchmarks and reproductions.
 
 Observation weighting and state gathering now use general fused GPU operations,
@@ -291,9 +306,9 @@ batches remain dominated by simulation; smaller budgets benefit more from the
 reduced launch overhead.
 
 Remaining work includes simulation-kernel optimization and further launch reduction,
-sequential adaptive particle budgets, the LLVM reset fix, automatic fit resume,
+broader validation of staged particle budgets, the LLVM reset fix, automatic fit resume,
 and observation-kernel sensitivity on recorded data. Missing outcomes and
 multiple disjoint subject sequences in one filter call are not supported.
 Parameter-identifiability and direct-likelihood research are separate from this
-handoff. The current driver uses fixed budgets and fits NDT jointly with the
-other coordinates.
+handoff. Fixed budgets remain the default; adaptive fitting is opt-in. Both fit
+NDT jointly with the other coordinates.

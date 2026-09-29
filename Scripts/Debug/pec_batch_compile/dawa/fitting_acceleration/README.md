@@ -6,8 +6,10 @@ responses. The [ordinary fitting guide](../README.md) remains the handoff entry
 point and now defaults to observation-conditioned particle filtering. The
 [conditioned sampler report](../CONDITIONED_LIKELIHOOD.md) measures its current
 2080 Ti performance; recovery accuracy needs separate validation. Reproducing the
-adaptive fits below requires `--likelihood marginal`; adaptive density pooling
-and NDT profiling are not yet valid for the conditioned objective.
+adaptive fits below requires `--likelihood marginal`; density pooling and NDT
+profiling are not valid for the conditioned objective. With the conditioned
+likelihood, `--fit-strategy adaptive` selects the separate
+[full-filter budget policy](../CONDITIONED_STAGED_FITTING.md).
 Commands for reproducing those older fits are in the
 [legacy fitting guide](LEGACY_FITTING.md).
 The [conditioned likelihood accuracy study](../CONDITIONED_ACCURACY.md) evaluates
