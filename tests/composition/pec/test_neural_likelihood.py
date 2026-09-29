@@ -211,11 +211,17 @@ def test_gates_warn_rather_than_raise_when_not_strict():
 # ------------------------------------------------------------- trial features
 
 
-def test_input_columns_line_up_every_input_trial_by_trial():
-    inputs = {"a": np.arange(10.0), "b": np.column_stack([np.ones(10), np.zeros(10)])}
-    columns = nlf._input_columns(inputs, 10)
+def test_input_columns_are_the_same_however_the_inputs_are_listed():
+    a = pnl.ProcessingMechanism(name="a")
+    b = pnl.ProcessingMechanism(name="b", default_variable=[0, 0])
+    model = pnl.Composition(nodes=[a, b])
+    inputs = {a: np.arange(10.0), b: np.column_stack([np.ones(10), np.zeros(10)])}
+
+    columns = nlf._input_columns(inputs, 10, model)
     assert columns.shape == (10, 3)
     np.testing.assert_allclose(columns[:, 0], np.arange(10.0))
+    np.testing.assert_array_equal(nlf._input_columns({b: inputs[b], a: inputs[a]}, 10, model),
+                                  columns)
 
 
 # --------------------------------------------------------------- PEC wiring

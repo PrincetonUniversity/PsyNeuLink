@@ -255,10 +255,15 @@ def _infer_categorical(outcomes: np.ndarray) -> tuple[bool, ...]:
     return tuple(flags)
 
 
-def _input_columns(inputs, n_trials: int) -> np.ndarray:
-    """The values entering the composition's input nodes, one row per trial."""
+def _input_columns(inputs, n_trials: int, model) -> np.ndarray:
+    """The values entering the model's input nodes, one row per trial.
+
+    They are taken in the order ``model`` lists its nodes, so the same inputs give the same
+    columns however ``inputs`` lists them.
+    """
+    position = {node: i for i, node in enumerate(model.nodes)}
     columns = [np.zeros((n_trials, 0))]
-    for value in (inputs or {}).values():
+    for _, value in sorted((inputs or {}).items(), key=lambda item: position.get(item[0], -1)):
         array = np.asarray(value, dtype=float)
         array = array.reshape(array.shape[0], -1) if array.ndim > 1 else array.reshape(-1, 1)
         if array.shape[0] == n_trials:
@@ -312,7 +317,7 @@ def _simulate(pec, inputs, thetas, names):
                 n_trials = sim.shape[0]
                 # Inputs that vary from trial to trial are what tell trials apart; the
                 # rest say nothing, and are left out.
-                columns = _input_columns(inputs, n_trials)
+                columns = _input_columns(inputs, n_trials, pec.model)
                 used = tuple(int(j) for j in np.flatnonzero(columns.std(axis=0) > 0))
                 layout = (columns.shape[1], used)
                 features = columns[:, list(used)] if used else None

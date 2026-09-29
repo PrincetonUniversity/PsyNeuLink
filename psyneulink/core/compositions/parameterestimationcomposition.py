@@ -1490,7 +1490,7 @@ class ParameterEstimationComposition(Composition):
         if provenance.n_trial_features:
             # The columns training used, even where one does not vary in these data: a
             # participant who saw one condition still has to be scored as being in it.
-            columns = _input_columns(inputs, len(self.data))
+            columns = _input_columns(inputs, len(self.data), self.model)
             if columns.shape[1] != provenance.n_input_columns:
                 raise ParameterEstimationCompositionError(
                     f"This neural likelihood was trained on inputs with "

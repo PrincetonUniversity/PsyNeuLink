@@ -97,8 +97,8 @@ with the estimator.
 
 When fitting, the same inputs are taken from those specified for `run <Composition.run>` or
 `log_likelihood <ParameterEstimationComposition.log_likelihood>`, including any that do not vary in the
-data being fit. These must therefore be the same inputs, in the same order, as those used for training;
-otherwise an error is generated.
+data being fit. These must therefore be the same inputs as those used for training, though the nodes to
+which they are given can be listed in any order; otherwise an error is generated.
 
 
 .. _Neural_Likelihood_Matching:
