@@ -53,9 +53,7 @@ def _toy_likelihood(epochs=3, seed=0):
         upper=(RATE_BOUNDS[1], THRESHOLD_BOUNDS[1]),
         outcome_names=OUTCOMES, categorical=categorical, categories=categories,
         log_transform=True, n_input_columns=1, trial_feature_columns=(), constant_inputs=(1.0,),
-        n_parameter_samples=len(theta),
-        n_trials_per_sample=1, epochs=epochs, val_nll=val_nll, seed=seed,
-        psyneulink_version="test", sbi_version="test",
+        val_nll=val_nll,
     )
     return nlf.NeuralLikelihood(
         estimator, metadata, (x[:256].clone(), cond[:256].clone())
@@ -390,8 +388,6 @@ def test_training_accepts_an_already_built_model():
         BOUNDS, OUTCOMES, pec=pec, inputs=inputs, n_parameter_samples=8, epochs=1,
     )
     assert likelihood.metadata.fit_param_names == ("rate", "threshold")
-    # the trial count comes from the model rather than from an argument
-    assert likelihood.metadata.n_trials_per_sample == 10
 
 
 @pytest.mark.composition
@@ -417,7 +413,7 @@ def test_each_training_draw_gets_noise_of_its_own():
     pec.log_likelihood(0.3, 0.6, inputs=inputs)
 
     same_draw_twice = np.array([[0.3, 0.6], [0.3, 0.6]])
-    _, x, n_trials, _ = nlf._simulate(pec, inputs, same_draw_twice, ("rate", "threshold"))
+    _, x, _ = nlf._simulate(pec, inputs, same_draw_twice, ("rate", "threshold"))
     first, second = np.split(x, 2)
     assert not np.array_equal(first, second)
     assert all(shared_noise.values.values())
@@ -430,10 +426,10 @@ def test_draws_are_simulated_alike_however_they_are_divided_among_workers():
     thetas = np.array([[0.3, 0.6], [0.3, 0.6], [-0.5, 1.0]])
     names = ("rate", "threshold")
 
-    _, whole, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas, names, seed=4)
-    _, first, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[:1], names, seed=4)
-    _, rest, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[1:], names, seed=4,
-                                  first_draw=1)
+    _, whole, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas, names, seed=4)
+    _, first, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[:1], names, seed=4)
+    _, rest, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[1:], names, seed=4,
+                               first_draw=1)
     np.testing.assert_array_equal(np.concatenate([first, rest]), whole)
 
 
@@ -476,11 +472,11 @@ def test_inputs_set_how_many_trials_each_draw_simulates():
     pec, _ = _ddm_training_pec(frame)
     node = pec.nodes[0]
 
-    _, _, ten, _ = nlf._simulate(pec, {node: np.ones((10, 1))}, np.array([[0.3, 0.6]]),
-                                 ("rate", "threshold"))
-    _, _, thirty, _ = nlf._simulate(pec, {node: np.ones((30, 1))}, np.array([[0.3, 0.6]]),
-                                    ("rate", "threshold"))
-    assert (ten, thirty) == (10, 30)
+    n_estimates = pec.controller.parameters.num_estimates.get()
+    for n_trials in (10, 30):
+        _, x, _ = nlf._simulate(pec, {node: np.ones((n_trials, 1))}, np.array([[0.3, 0.6]]),
+                                ("rate", "threshold"))
+        assert len(x) == n_trials * n_estimates
 
 
 def test_a_missing_sbi_is_reported_before_anything_is_simulated(monkeypatch):

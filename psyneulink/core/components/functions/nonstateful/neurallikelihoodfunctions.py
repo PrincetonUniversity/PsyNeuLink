@@ -57,16 +57,16 @@ def _require_sbi():
             "A neural likelihood requires the sbi package, which is not installed. "
             "Install it with `pip install \"psyneulink[nle]\"`."
         ) from e
-    return sbi
 
 
 @dataclass(frozen=True)
 class NeuralLikelihoodMetadata:
-    """What an estimator was trained for, and how.
+    """What an estimator was trained for, saved with it so that it can be rebuilt and checked.
 
     The parameters, their ranges and the outcomes are checked against a model before the
     estimator is used with it (`check_matches`), and its inputs and observed outcomes against
-    the trials it scores (`check_inputs`, `check_outcomes`); the rest is a record of the training.
+    the trials it scores (`check_inputs`, `check_outcomes`).  ``val_nll`` is the estimator's
+    negative log-likelihood per trial on the data held out from training.
     """
 
     fit_param_names: tuple[str, ...]
@@ -79,13 +79,7 @@ class NeuralLikelihoodMetadata:
     n_input_columns: int
     trial_feature_columns: tuple[int, ...]
     constant_inputs: tuple[float, ...]
-    n_parameter_samples: int
-    n_trials_per_sample: int
-    epochs: int
     val_nll: float
-    seed: int
-    psyneulink_version: str
-    sbi_version: str
 
     @property
     def n_trial_features(self) -> int:
@@ -348,9 +342,9 @@ def _check_parameters(pec, names):
 def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
     """Simulate every draw through ``pec``; ``first_draw`` is the place of the first among all draws.
 
-    Returns the conditioning rows, the simulated outcomes, the number of trials per draw (set
-    by ``inputs``, not by the model's data), and the layout of the inputs: how many columns
-    they have, which of them were used, and the values of the rest.
+    Returns the conditioning rows, the simulated outcomes, and the layout of the inputs: how many
+    columns they have, which of them were used, and the values of the rest.  Each draw simulates
+    as many trials as ``inputs`` has, whatever the model's data.
     """
     _check_parameters(pec, names)
     n_trials = None
@@ -395,7 +389,7 @@ def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
     finally:
         function.set_pec_objective_function(scoring)
         function.search_space[seed_dimension] = model_seeds
-    return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
+    return np.concatenate(cond_rows), np.concatenate(x_rows), layout
 
 
 def _simulate_chunk(pec_factory, data, thetas, first_draw, names, seed, worker_cores, training_id):
@@ -640,8 +634,8 @@ def train_neural_likelihood(
             if close_fn is not None:
                 close_fn()
 
-    n_trials, layout = results[0][2], results[0][3]
-    if any(r[3] != layout for r in results):
+    layout = results[0][2]
+    if any(r[2] != layout for r in results):
         raise NeuralLikelihoodError(
             "pec_factory returned inputs laid out differently on different workers; each "
             "call has to return the same inputs for the same number of trials."
@@ -679,8 +673,6 @@ def train_neural_likelihood(
         validation_fraction=validation_fraction, seed=seed,
     )
 
-    from psyneulink import __version__ as pnl_version
-
     metadata = NeuralLikelihoodMetadata(
         fit_param_names=names,
         lower=tuple(lower.tolist()),
@@ -692,13 +684,7 @@ def train_neural_likelihood(
         n_input_columns=int(layout[0]),
         trial_feature_columns=layout[1],
         constant_inputs=layout[2],
-        n_parameter_samples=int(n_parameter_samples),
-        n_trials_per_sample=int(n_trials),
-        epochs=int(epochs),
         val_nll=float(val_nll),
-        seed=int(seed),
-        psyneulink_version=str(pnl_version),
-        sbi_version=str(_require_sbi().__version__),
     )
     probe = (x[:256].clone(), cond[:256].clone())
     likelihood = NeuralLikelihood(estimator, metadata, probe)
