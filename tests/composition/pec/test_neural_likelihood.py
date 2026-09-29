@@ -684,6 +684,16 @@ def test_a_parameter_that_depends_on_a_condition_is_scored_at_each_trials_value(
 
 
 @pytest.mark.composition
+def test_training_refuses_a_model_scored_by_an_estimator(ddm_data):
+    likelihood, _ = _toy_likelihood(epochs=1)
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    with pytest.raises(nlf.NeuralLikelihoodError, match="scored by simulating it"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=pec, inputs={pec.nodes[0]: np.ones((4, 1))},
+                                    n_parameter_samples=4, epochs=1)
+
+
+@pytest.mark.composition
 def test_training_refuses_a_model_whose_parameters_depend_on_a_condition(ddm_data):
     """Training covers each parameter's range; which condition a value is fitted for comes later."""
     data = ddm_data.assign(condition=pd.Categorical(["easy", "hard", "easy", "hard"]))

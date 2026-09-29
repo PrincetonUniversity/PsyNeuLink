@@ -313,9 +313,16 @@ def _input_columns(inputs, n_trials: int, model) -> np.ndarray:
 
 
 def _check_parameters(pec, names):
-    """Raise unless `pec` fits exactly `names`, in that order: draws are passed to it by position."""
+    """Raise unless `pec` can be simulated for training, and fits exactly `names` in that order:
+    draws are passed to it by position.
+    """
     from psyneulink.core.compositions.hierarchical.subjectlikelihood import _reported_names
 
+    if not pec.scores_by_simulation:
+        raise NeuralLikelihoodError(
+            "Train on a model scored by simulating it: this one is scored by a trained estimator "
+            '(likelihood_estimator="neural"), and so is never simulated.'
+        )
     if pec.depends_on:
         raise NeuralLikelihoodError(
             "Train on a model without depends_on: the estimator is trained over each parameter's "
