@@ -480,6 +480,8 @@ class PECOptimizationFunction(OptimizationFunction):
             as the initial_seed passed to PEC at construction. Additional desired keyword arguments can be passed to the
             sampler via the optuna_kwargs argument.
             - optuna.study.Study: Pass an optuna study to use optuna for optimization.
+            - None: No search. The function can then only score parameter values it is given, which is how a
+            ParameterEstimationComposition specified without an optimization_function is built.
 
     optuna_kwargs :
         A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is a class of
@@ -544,7 +546,7 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study],
+        method: Optional[Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study]],
         optuna_kwargs: Optional[Mapping] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
