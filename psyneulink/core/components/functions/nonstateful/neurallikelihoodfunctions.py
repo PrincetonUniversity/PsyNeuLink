@@ -61,7 +61,7 @@ def _require_sbi():
 
 
 @dataclass(frozen=True)
-class NeuralLikelihoodProvenance:
+class NeuralLikelihoodMetadata:
     """What an estimator was trained for, and how.
 
     The parameters, their ranges and the outcomes are checked against a model before the
@@ -95,7 +95,7 @@ class NeuralLikelihoodProvenance:
         return json.dumps(asdict(self))
 
     @classmethod
-    def from_json(cls, text: str) -> NeuralLikelihoodProvenance:
+    def from_json(cls, text: str) -> NeuralLikelihoodMetadata:
         raw = json.loads(text)
         raw["categories"] = [tuple(c) for c in raw["categories"]]
         return cls(**{k: tuple(v) if isinstance(v, list) else v for k, v in raw.items()})
@@ -175,15 +175,15 @@ class NeuralLikelihood:
     Attributes
     ----------
 
-    provenance : NeuralLikelihoodProvenance
+    metadata : NeuralLikelihoodMetadata
         what the estimator was trained for, which is checked against a model before it is used to fit one
         (see `Neural_Likelihood_Matching`), and a record of its training, including its negative
         log-likelihood per trial on the data held out from training (``val_nll``).
     """
 
-    def __init__(self, estimator, provenance: NeuralLikelihoodProvenance, shape_probe):
+    def __init__(self, estimator, metadata: NeuralLikelihoodMetadata, shape_probe):
         self._estimator = estimator
-        self.provenance = provenance
+        self.metadata = metadata
         # Example rows, from which `load` rebuilds the network before restoring its weights.
         self._shape_probe = shape_probe
 
@@ -191,26 +191,26 @@ class NeuralLikelihood:
         """Reorder to sbi's layout and map categorical values onto codes 0..K-1."""
         return _encode_outcomes(
             outcomes,
-            self.provenance.categorical,
-            self.provenance.categories,
-            self.provenance.outcome_names,
+            self.metadata.categorical,
+            self.metadata.categories,
+            self.metadata.outcome_names,
         )
 
     def _conditioning(self, theta: torch.Tensor, trial_features, n_trials) -> torch.Tensor:
         """Give each trial its parameters, one vector for all or a row each, then its features."""
         cond = theta.reshape(-1, theta.shape[-1]).expand(n_trials, -1)
-        if self.provenance.n_trial_features:
+        if self.metadata.n_trial_features:
             if trial_features is None:
                 raise NeuralLikelihoodError(
                     f"This neural likelihood was trained with "
-                    f"{self.provenance.n_trial_features} per-trial feature(s), so "
+                    f"{self.metadata.n_trial_features} per-trial feature(s), so "
                     f"scoring requires trial_features."
                 )
             feats = torch.as_tensor(np.asarray(trial_features, dtype=float), dtype=torch.float32)
-            if feats.shape != (n_trials, self.provenance.n_trial_features):
+            if feats.shape != (n_trials, self.metadata.n_trial_features):
                 raise NeuralLikelihoodError(
                     f"Expected trial_features of shape "
-                    f"({n_trials}, {self.provenance.n_trial_features}), got "
+                    f"({n_trials}, {self.metadata.n_trial_features}), got "
                     f"{tuple(feats.shape)}."
                 )
             cond = torch.cat([cond, feats], dim=-1)
@@ -236,11 +236,11 @@ class NeuralLikelihood:
             return float(self.trial_log_prob(theta, outcomes, trial_features).sum())
 
     def save(self, path):
-        """Write weights and provenance to ``path``."""
+        """Write weights and metadata to ``path``."""
         torch.save(
             {
                 "state_dict": self._estimator.state_dict(),
-                "provenance": self.provenance.to_json(),
+                "metadata": self.metadata.to_json(),
                 "probe_x": self._shape_probe[0],
                 "probe_cond": self._shape_probe[1],
             },
@@ -252,17 +252,17 @@ class NeuralLikelihood:
         """Read back an estimator written by `save`."""
         _require_sbi()
         blob = torch.load(path, weights_only=True)
-        provenance = NeuralLikelihoodProvenance.from_json(blob["provenance"])
+        metadata = NeuralLikelihoodMetadata.from_json(blob["metadata"])
         estimator = _build_estimator(
             blob["probe_x"],
             blob["probe_cond"],
-            provenance.categorical,
-            provenance.categories,
-            provenance.log_transform,
+            metadata.categorical,
+            metadata.categories,
+            metadata.log_transform,
         )
         estimator.load_state_dict(blob["state_dict"])
         estimator.eval()
-        return cls(estimator, provenance, (blob["probe_x"], blob["probe_cond"]))
+        return cls(estimator, metadata, (blob["probe_x"], blob["probe_cond"]))
 
 
 def _build_estimator(x, cond, categorical, categories, log_transform):
@@ -681,7 +681,7 @@ def train_neural_likelihood(
 
     from psyneulink import __version__ as pnl_version
 
-    provenance = NeuralLikelihoodProvenance(
+    metadata = NeuralLikelihoodMetadata(
         fit_param_names=names,
         lower=tuple(lower.tolist()),
         upper=tuple(upper.tolist()),
@@ -701,7 +701,7 @@ def train_neural_likelihood(
         sbi_version=str(_require_sbi().__version__),
     )
     probe = (x[:256].clone(), cond[:256].clone())
-    likelihood = NeuralLikelihood(estimator, provenance, probe)
+    likelihood = NeuralLikelihood(estimator, metadata, probe)
     _check_gates(likelihood, x, cond, val_nll, strict)
     return likelihood
 

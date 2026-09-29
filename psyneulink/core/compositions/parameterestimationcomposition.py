@@ -1476,14 +1476,14 @@ class ParameterEstimationComposition(Composition):
             # depends on a condition has a value fitted for each condition, all within its range.
             # Names are compared without the mechanism, whose name depends on construction order.
             categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
-            likelihood.provenance.check_matches(
+            likelihood.metadata.check_matches(
                 _reported_names([f"{mech.name}.{name}" for name, mech in self.fit_parameters]),
                 [float(min(values)) for values in self.fit_parameters.values()],
                 [float(max(values)) for values in self.fit_parameters.values()],
                 tuple(str(c) for c in self.data.columns),
                 categorical,
             )
-            likelihood.provenance.check_outcomes(self._data_numpy[included])
+            likelihood.metadata.check_outcomes(self._data_numpy[included])
 
             # Where each of the model's parameters is found on each trial, among the values fitted:
             # one that depends on a condition takes the value fitted for the trial's condition.
@@ -1502,14 +1502,14 @@ class ParameterEstimationComposition(Composition):
 
         likelihood = self._neural_likelihood
         features = None
-        provenance = likelihood.provenance
-        if inputs is not None or provenance.n_trial_features:
+        metadata = likelihood.metadata
+        if inputs is not None or metadata.n_trial_features:
             # The inputs training used, even where one does not vary in these data: a participant
             # who saw one condition still has to be scored as being in it.
             columns = _input_columns(inputs, len(self.data), self.model)[included]
-            provenance.check_inputs(columns)
-            if provenance.n_trial_features:
-                features = columns[:, list(provenance.trial_feature_columns)]
+            metadata.check_inputs(columns)
+            if metadata.n_trial_features:
+                features = columns[:, list(metadata.trial_feature_columns)]
 
         # Excluded trials are dropped, as they are from a simulated likelihood.
         self.controller.function.set_neural_likelihood(

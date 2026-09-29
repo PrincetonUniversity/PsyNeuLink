@@ -81,7 +81,7 @@ def simulate_data(n_trials, rate, threshold, seed=0):
 
 def report_training(likelihood, started, artifact):
     print(f"  trained in {(time.time() - started) / 60:.1f} min, "
-          f"held-out NLL {likelihood.provenance.val_nll:.4f} per trial", flush=True)
+          f"held-out NLL {likelihood.metadata.val_nll:.4f} per trial", flush=True)
     print(f"  saved to {artifact}", flush=True)
 
 

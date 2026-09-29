@@ -47,7 +47,7 @@ def _toy_likelihood(epochs=3, seed=0):
         x, cond, categorical, categories, True, n_params=2, epochs=epochs, batch_size=512,
         learning_rate=5e-4, validation_fraction=0.1, seed=seed,
     )
-    provenance = nlf.NeuralLikelihoodProvenance(
+    metadata = nlf.NeuralLikelihoodMetadata(
         fit_param_names=("rate", "threshold"),
         lower=(RATE_BOUNDS[0], THRESHOLD_BOUNDS[0]),
         upper=(RATE_BOUNDS[1], THRESHOLD_BOUNDS[1]),
@@ -58,7 +58,7 @@ def _toy_likelihood(epochs=3, seed=0):
         psyneulink_version="test", sbi_version="test",
     )
     return nlf.NeuralLikelihood(
-        estimator, provenance, (x[:256].clone(), cond[:256].clone())
+        estimator, metadata, (x[:256].clone(), cond[:256].clone())
     ), raw
 
 
@@ -93,7 +93,7 @@ def test_held_out_rows_come_from_draws_not_trained_on():
     assert len(held_out) == 100
 
 
-# ---------------------------------------------------------------- provenance
+# ---------------------------------------------------------------- metadata
 
 
 @pytest.mark.parametrize(
@@ -112,17 +112,17 @@ def test_held_out_rows_come_from_draws_not_trained_on():
     ],
     ids=["reordered", "renamed", "wider-bounds", "outcome-names", "categorical-flags"],
 )
-def test_provenance_rejects_a_mismatched_model(
+def test_metadata_rejects_a_mismatched_model(
     names, lower, upper, outcomes, categorical, expected
 ):
     likelihood, _ = _toy_likelihood(epochs=1)
     with pytest.raises(nlf.NeuralLikelihoodError, match=expected):
-        likelihood.provenance.check_matches(names, lower, upper, outcomes, categorical)
+        likelihood.metadata.check_matches(names, lower, upper, outcomes, categorical)
 
 
-def test_provenance_accepts_the_model_it_was_trained_for():
+def test_metadata_accepts_the_model_it_was_trained_for():
     likelihood, _ = _toy_likelihood(epochs=1)
-    likelihood.provenance.check_matches(
+    likelihood.metadata.check_matches(
         ("rate", "threshold"), (-1.5, 0.3), (1.5, 1.5), OUTCOMES, (True, False)
     )
 
@@ -162,7 +162,7 @@ def test_wrong_number_of_outcome_columns_is_rejected():
 
 def test_missing_trial_features_are_reported(tmp_path):
     likelihood, raw = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0, 1))
+    object.__setattr__(likelihood.metadata, "trial_feature_columns", (0, 1))
     with pytest.raises(nlf.NeuralLikelihoodError, match="requires trial_features"):
         likelihood.log_likelihood([0.5, 0.9], raw[:8])
 
@@ -175,7 +175,7 @@ def test_save_and_load_round_trip_scores_identically(tmp_path):
     path = tmp_path / "toy.pt"
     likelihood.save(path)
     reloaded = nlf.NeuralLikelihood.load(path)
-    assert reloaded.provenance == likelihood.provenance
+    assert reloaded.metadata == likelihood.metadata
     assert reloaded.log_likelihood([0.5, 0.9], raw[:128]) == likelihood.log_likelihood(
         [0.5, 0.9], raw[:128]
     )
@@ -293,7 +293,7 @@ def test_estimator_kwargs_rejected_for_kde(ddm_data):
 def test_a_mismatched_artifact_is_rejected_before_fitting(ddm_data):
     """The check happens against the PEC, not only at training time."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "fit_param_names", ("rate", "non_decision_time"))
+    object.__setattr__(likelihood.metadata, "fit_param_names", ("rate", "non_decision_time"))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="trained for parameters"):
@@ -338,13 +338,13 @@ def test_training_data_is_generated_from_the_composition():
         pec_factory=_ddm_training_pec,
         n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
     )
-    provenance = likelihood.provenance
-    assert provenance.fit_param_names == ("rate", "threshold")
-    assert provenance.categorical == (True, False)
+    metadata = likelihood.metadata
+    assert metadata.fit_param_names == ("rate", "threshold")
+    assert metadata.categorical == (True, False)
     # The model is driven by a constant input, so nothing distinguishes one trial from another.
-    assert provenance.n_input_columns == 1
-    assert provenance.trial_feature_columns == ()
-    assert np.isfinite(provenance.val_nll)
+    assert metadata.n_input_columns == 1
+    assert metadata.trial_feature_columns == ()
+    assert np.isfinite(metadata.val_nll)
 
 
 @pytest.mark.composition
@@ -357,7 +357,7 @@ def test_training_data_generation_distributes():
         n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
         distributed_options={"n_workers": 2},
     )
-    assert np.isfinite(likelihood.provenance.val_nll)
+    assert np.isfinite(likelihood.metadata.val_nll)
 
 
 BOUNDS = {"rate": RATE_BOUNDS, "threshold": THRESHOLD_BOUNDS}
@@ -389,9 +389,9 @@ def test_training_accepts_an_already_built_model():
     likelihood = nlf.train_neural_likelihood(
         BOUNDS, OUTCOMES, pec=pec, inputs=inputs, n_parameter_samples=8, epochs=1,
     )
-    assert likelihood.provenance.fit_param_names == ("rate", "threshold")
+    assert likelihood.metadata.fit_param_names == ("rate", "threshold")
     # the trial count comes from the model rather than from an argument
-    assert likelihood.provenance.n_trials_per_sample == 10
+    assert likelihood.metadata.n_trials_per_sample == 10
 
 
 @pytest.mark.composition
@@ -607,8 +607,8 @@ def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
 def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
     """A later call with different inputs must not be scored against the first call's."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
-    object.__setattr__(likelihood.provenance, "constant_inputs", ())
+    object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
+    object.__setattr__(likelihood.metadata, "constant_inputs", ())
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     node = pec.nodes[0]
@@ -626,8 +626,8 @@ def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
 def test_trial_features_are_the_columns_training_used(ddm_data):
     """Taken by position, even where the column training used does not vary in these data."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "n_input_columns", 2)
-    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
+    object.__setattr__(likelihood.metadata, "n_input_columns", 2)
+    object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
 
@@ -639,8 +639,8 @@ def test_trial_features_are_the_columns_training_used(ddm_data):
 @pytest.mark.composition
 def test_inputs_laid_out_differently_from_training_are_refused(ddm_data):
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "n_input_columns", 2)
-    object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
+    object.__setattr__(likelihood.metadata, "n_input_columns", 2)
+    object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="laid out as they were"):
