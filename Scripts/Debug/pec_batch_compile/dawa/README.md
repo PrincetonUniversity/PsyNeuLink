@@ -126,6 +126,13 @@ validation. These are measurements for one synthetic subject, not a runtime
 promise for the 5,000-proposal command above. Earlier 6–28 minute marginal-fit
 benchmarks evaluate a different objective.
 
+The [latest matched compiler benchmark](CONDITIONED_LIKELIHOOD.md#h100-benchmark-and-profile-2026-09-29)
+measured **2.19 s per batch of four candidates** at 100k particles on one H100,
+versus 5.40 s on the local 2080 Ti. That projects to about **46 minutes for
+5,000 evaluations** for those proposals, before optimizer and validation
+overhead. This is a throughput measurement, separate from the complete recovery
+fits above.
+
 ## Read the results and diagnose failures
 
 | Output | Purpose |
@@ -226,6 +233,9 @@ The launcher inherits the driver's conditioned-likelihood and memory-storage
 defaults. Historical A100 Slurm measurements used the marginal objective;
 conditioned H100 measurements are documented in the recovery pilot.
 
+For current daytime experiments on the shared `della-rse` host, use at most
+one H100 and leave the second available to other users.
+
 ## Model and likelihood contract
 
 | Fitted coordinate | Bounds | Recovery generating value |
@@ -271,10 +281,16 @@ reference used to check the GPU implementation. See the
 
 - [Compiler notes](COMPILER_NOTES.md): supported components, reset and schedule tests.
 - [Conditioned accuracy](CONDITIONED_ACCURACY.md): exact-reference checks and particle-budget uncertainty.
+- [Conditioned performance](CONDITIONED_LIKELIHOOD.md#conditioned-loop-optimization-2026-09-29): preserved baseline, compiler optimizations, and current GPU measurements.
 - [Conditioned recovery](CONDITIONED_RECOVERY.md): full fits, independent rescoring, and measured H100 runtimes.
 - [Legacy acceleration](fitting_acceleration/README.md): historical marginal benchmarks and reproductions.
 
-Remaining work includes profiling and reducing conditioned-loop overhead,
+Observation weighting and state gathering now use general fused GPU operations,
+with exact baseline comparisons and lower tensor memory use. Large particle
+batches remain dominated by simulation; smaller budgets benefit more from the
+reduced launch overhead.
+
+Remaining work includes simulation-kernel optimization and further launch reduction,
 sequential adaptive particle budgets, the LLVM reset fix, automatic fit resume,
 and observation-kernel sensitivity on recorded data. Missing outcomes and
 multiple disjoint subject sequences in one filter call are not supported.

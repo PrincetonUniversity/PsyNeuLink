@@ -598,9 +598,12 @@ class BatchedSimulationPlan:
         multiple disjoint subject sequences are not supported.
 
         ``execution='prepared'`` prepares the CUDA kernel, inputs and parameters
-        once for the sequence. ``'reference'`` uses independent full runtime
-        preparation for each trial. CPU interpretation always uses the reference
-        path. Both execute the same trial kernel and observation update.
+        once for the sequence and fuses FP32 observation contributions and
+        systematic state gathering where supported. The reference FP64 CDF,
+        random offsets and score reductions are retained. ``'reference'`` uses
+        independent full runtime preparation and Torch filtering operations for
+        each trial. CPU interpretation always uses the reference path. Both
+        execute the same trial kernel and observation update.
         """
 
         from collections.abc import Mapping as MappingABC
@@ -662,6 +665,7 @@ class BatchedSimulationPlan:
         diagnostic_rows = []
         unsupported_rows = []
         prepared_runner = None
+        state_resampler = None
         if execution == "prepared" and self.backend == "triton":
             from psyneulink.core.batched.backend.triton.conditioned import prepare_conditioned_runner
 
@@ -746,6 +750,7 @@ class BatchedSimulationPlan:
                     categorical_cardinalities=categorical_cardinalities,
                     dtype=outcomes.dtype, device=outcomes.device,
                     strict_observations=True, source_normalized=True,
+                    fused=prepared_runner is not None,
                 )
             weights, density = observation_weights(outcomes, trial_index)
             if log_likelihood is None:
@@ -761,11 +766,12 @@ class BatchedSimulationPlan:
             flat_weights = weights.reshape(-1, num_estimates)
             totals = flat_weights.sum(dim=-1, keepdim=True)
             unsupported_rows.append((totals[..., 0] <= 0).reshape_as(density))
-            normalized = torch.where(
-                totals > 0,
-                flat_weights / torch.clamp(totals, min=torch.finfo(weights.dtype).tiny),
-                torch.full_like(flat_weights, 1.0 / float(num_estimates)),
-            )
+            if return_diagnostics or resampling == "multinomial":
+                normalized = torch.where(
+                    totals > 0,
+                    flat_weights / torch.clamp(totals, min=torch.finfo(weights.dtype).tiny),
+                    torch.full_like(flat_weights, 1.0 / float(num_estimates)),
+                )
             if return_diagnostics:
                 ess = (1. / normalized.square().sum(dim=-1)).clamp(max=float(num_estimates))
                 prior_fraction = (pseudocount / torch.clamp(
@@ -773,6 +779,16 @@ class BatchedSimulationPlan:
                 )).clamp(0., 1.)
                 diagnostic_rows.append(torch.stack((density, ess.reshape_as(density), prior_fraction.reshape_as(density))))
             if trial_index == num_trials - 1:
+                continue
+            if (prepared_runner is not None and resampling == "systematic"
+                    and weights.dtype == torch.float32 and terminal_state.dtype == torch.float32
+                    and terminal_state.is_contiguous() and terminal_state.shape[-1] <= 128):
+                if state_resampler is None:
+                    from psyneulink.core.batched.backend.triton.conditioned_ops import SystematicStateResampler
+
+                    state_resampler = SystematicStateResampler(num_estimates, weights.device)
+                state = state_resampler(weights, terminal_state, generator=resampling_generator,
+                                        shared_first_axis=common_random_numbers)
                 continue
             if resampling == "systematic":
                 ancestors = _systematic_resample(
@@ -965,6 +981,15 @@ def _as_long(tensor_like, idx):
 
 
 def _systematic_resample(weights, *, generator, shared_first_axis=False):
+    import torch
+
+    cumulative, positions = _systematic_resampling_inputs(
+        weights, generator=generator, shared_first_axis=shared_first_axis,
+    )
+    return torch.searchsorted(cumulative, positions, right=True).clamp_max(weights.shape[-1] - 1)
+
+
+def _systematic_resampling_inputs(weights, *, generator, shared_first_axis=False, indices=None):
     """Stable raw-weight CDF and one uniform offset per lane.
 
     CUDA FP32 reductions can change with the number of candidate rows. Small
@@ -985,10 +1010,11 @@ def _systematic_resample(weights, *, generator, shared_first_axis=False):
         random_shape = (1, *random_shape[1:])
     offset = torch.rand(random_shape, dtype=torch.float64,
                         device=weights.device, generator=generator)
-    positions = (torch.arange(num_estimates, dtype=torch.float64,
-                             device=weights.device) + offset) / num_estimates
+    if indices is None:
+        indices = torch.arange(num_estimates, dtype=torch.float64, device=weights.device)
+    positions = (indices + offset) / num_estimates
     positions = positions.clamp(max=1. - torch.finfo(torch.float64).eps)
-    return torch.searchsorted(cumulative, positions.expand_as(weights).contiguous(), right=True).clamp_max(num_estimates - 1)
+    return cumulative, positions.expand_as(weights).contiguous()
 
 
 def _slice_conditioned_trial(value, trial_index: int, num_trials: int):

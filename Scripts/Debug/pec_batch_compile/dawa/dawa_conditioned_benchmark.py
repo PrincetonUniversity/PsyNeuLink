@@ -8,6 +8,7 @@ not numerical agreement between the objectives. Compilation is timed separately.
 import argparse
 import cProfile
 import hashlib
+import importlib.metadata
 import json
 from pathlib import Path
 import platform
@@ -50,12 +51,19 @@ def main():
     parser.add_argument('--profile', type=Path, help='Save cProfile and CUDA trace for the final case')
     parser.add_argument('--execution', choices=['prepared', 'reference'], default='prepared',
                         help='Conditioned launch preparation; reference re-prepares every trial')
+    parser.add_argument('--block-size', type=int, choices=[32, 64, 128, 256, 512, 1024],
+                        default=LAUNCH['block_size'], help='Simulation kernel particles per block')
+    parser.add_argument('--num-warps', type=int, choices=[1, 2, 4, 8], default=LAUNCH['num_warps'])
+    parser.add_argument('--maxnreg', type=int, help='Optional simulation register cap (16 through 255)')
+    parser.add_argument('--source-revision', help='Base revision for an isolated source snapshot without Git metadata')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if min(*args.estimates, *args.batch_sizes, args.repeats, args.max_steps) < 1:
         parser.error('Counts must be positive')
     if max(args.batch_sizes) > len(PROPOSALS):
         parser.error(f'At most {len(PROPOSALS)} candidates are provided')
+    if args.maxnreg is not None and not 16 <= args.maxnreg <= 255:
+        parser.error('--maxnreg must be from 16 through 255')
     if args.output.exists():
         parser.error('Output already exists; choose a new report path')
     if any(not np.isfinite(x) or x < 0 for x in (args.pseudocount, args.smoothing_sigma)):
@@ -76,16 +84,23 @@ def main():
     # All recorded trials condition history, including rows omitted from scoring.
     bins = max(100, int(np.ceil(float(observed[:, 1].max()) / .03)))
     upper = bins * .03
+    launch = dict(LAUNCH, block_size=args.block_size, num_warps=args.num_warps)
+    if args.maxnreg is not None:
+        launch['maxnreg'] = args.maxnreg
     shared = dict(data=observed, categorical_dims=[0], bins=bins, bin_range=[(0., upper)],
                   smoothing_sigma=args.smoothing_sigma, categorical_cardinalities=[2],
-                  include_mask=include, strict_truncation=True, triton_launch_options=LAUNCH)
+                  include_mask=include, strict_truncation=True, triton_launch_options=launch)
     report = dict(
         status='running', gpu=torch.cuda.get_device_name(), hostname=platform.node(),
-        torch=torch.__version__, git_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+        torch=torch.__version__, git_commit=(args.source_revision or
+            subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()),
+        triton=importlib.metadata.version('triton'), cuda=torch.version.cuda,
+        benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         source_sha256=hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
         data_sha256=hashlib.sha256(args.data.read_bytes()).hexdigest(),
         subject=args.subject, trials=len(frame), scored_trials=int(include.sum()),
-        candidates=PROPOSALS, lca_dt=.01, all_lca_noise=.1, launch=LAUNCH,
+        max_steps=args.max_steps, model_seed=args.seed, common_random_numbers=True,
+        candidates=PROPOSALS, lca_dt=.01, all_lca_noise=.1, launch=launch,
         histogram=dict(bins=bins, rt_range=[0., upper], smoothing_sigma=args.smoothing_sigma,
                        pseudocount_at_100000=args.pseudocount,
                        contamination_fraction=bins * 2 * args.pseudocount / (100000 + bins * 2 * args.pseudocount)),
@@ -95,13 +110,19 @@ def main():
         conditioned_execution=args.execution, cases=[],
     )
     repo = Path(__file__).resolve().parents[4]
+    implementation_files = [
+        'psyneulink/core/batched/compiler.py', 'psyneulink/core/batched/likelihood.py',
+        'psyneulink/core/batched/backend/triton/runtime.py',
+        'psyneulink/core/batched/backend/triton/conditioned.py',
+        'psyneulink/core/batched/backend/triton/emit/emitter.py',
+        'psyneulink/core/batched/backend/triton/state.py',
+    ]
+    # The same harness can measure the frozen compiler before this module existed.
+    if (repo / 'psyneulink/core/batched/backend/triton/conditioned_ops.py').exists():
+        implementation_files.append('psyneulink/core/batched/backend/triton/conditioned_ops.py')
     report['implementation_sha256'] = {
         name: hashlib.sha256((repo / name).read_bytes()).hexdigest()
-        for name in ('psyneulink/core/batched/compiler.py', 'psyneulink/core/batched/likelihood.py',
-                     'psyneulink/core/batched/backend/triton/runtime.py',
-                     'psyneulink/core/batched/backend/triton/conditioned.py',
-                     'psyneulink/core/batched/backend/triton/emit/emitter.py',
-                     'psyneulink/core/batched/backend/triton/state.py')
+        for name in implementation_files
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     save_json(args.output, report)

@@ -80,6 +80,13 @@ subject. Simulation parity alone does not establish likelihood precision.
 The [conditioned recovery pilot](CONDITIONED_RECOVERY.md) adds matched synthetic
 observations and LC-mode profiles with nuisance-parameter reoptimization.
 
+Prepared conditioned execution also fuses observation contributions and
+systematic ancestor search/state gathering through generic flat-buffer kernels.
+It preserves the reference FP64 resampling CDF, RNG offsets, and score
+reductions. Full-subject comparisons against `b53de60067` are exact; the
+[optimization measurements](CONDITIONED_LIKELIHOOD.md#conditioned-loop-optimization-2026-09-29)
+document the memory reduction and remaining simulation cost.
+
 ## Simulation checks
 
 Run from the repository root in the configured Python environment:

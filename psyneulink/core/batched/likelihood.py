@@ -390,7 +390,7 @@ class _HistogramObservationWeights:
 
     def __init__(self, exp_data, categorical_dims=None, *, bins=100, bin_range=None,
                  smoothing_sigma=0., pseudocount=0., categorical_cardinalities=None,
-                 dtype, device, strict_observations=False, source_normalized=False):
+                 dtype, device, strict_observations=False, source_normalized=False, fused=False):
         import torch
 
         if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
@@ -403,9 +403,11 @@ class _HistogramObservationWeights:
         if exp_array.ndim != 2 or not np.isfinite(exp_array).all():
             raise ValueError("exp_data must be a finite 2D [trial, outcome] array.")
         self.num_trials, self.num_outcomes = exp_array.shape
+        self.bins = int(bins)
         self.pseudocount = float(pseudocount)
         self.strict_observations = strict_observations
         cat_mask = _as_categorical_mask(categorical_dims, self.num_outcomes)
+        self.cat_indices = tuple(int(i) for i in np.flatnonzero(cat_mask))
         self.cat_idx = torch.as_tensor(np.flatnonzero(cat_mask), dtype=torch.long, device=device)
         self.con_indices = np.flatnonzero(~cat_mask)
         cardinalities = _categorical_cardinalities(exp_array, cat_mask, categorical_cardinalities)
@@ -456,6 +458,11 @@ class _HistogramObservationWeights:
                 )
             self.bin_weights.append(lookup * in_range[:, None])
             self.bin_volume = self.bin_volume * (edge[1] - edge[0])
+        self.fused = None
+        if fused and torch.device(device).type == "cuda" and dtype == torch.float32:
+            from psyneulink.core.batched.backend.triton.conditioned_ops import FusedObservationContributions
+
+            self.fused = FusedObservationContributions(self)
 
     def __call__(self, sim, trial_index):
         import torch
@@ -467,15 +474,19 @@ class _HistogramObservationWeights:
         n_sims = sim.shape[-2]
         if n_sims < 1:
             raise ValueError("At least one simulation estimate is required.")
-        if self.cat_idx.numel():
+        use_fused = self.fused is not None and sim.dtype == torch.float32
+        if use_fused:
+            weights = self.fused(sim, trial_index)
+        elif self.cat_idx.numel():
             weights = torch.isclose(sim.index_select(-1, self.cat_idx),
                                     self.observed_cat[trial_index], atol=1e-6, rtol=0.).all(dim=-1).to(sim.dtype)
         else:
             weights = torch.ones(sim.shape[:-1], dtype=sim.dtype, device=sim.device)
-        for dimension, edge, lookup in zip(self.con_indices, self.edges, self.bin_weights):
-            value = sim[..., dimension].contiguous()
-            sim_bin = torch.bucketize(value, edge[1:-1])
-            weights = weights * lookup[trial_index][sim_bin] * ((value >= edge[0]) & (value <= edge[-1]))
+        if not use_fused:
+            for dimension, edge, lookup in zip(self.con_indices, self.edges, self.bin_weights):
+                value = sim[..., dimension].contiguous()
+                sim_bin = torch.bucketize(value, edge[1:-1])
+                weights = weights * lookup[trial_index][sim_bin] * ((value >= edge[0]) & (value <= edge[-1]))
         counts = weights.sum(dim=-1)
         density = (counts + self.pseudocount) / (
             (float(n_sims) + self.pseudocount * self.joint_bin_count) * self.bin_volume

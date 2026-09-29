@@ -1,0 +1,839 @@
+{
+  "date": "2026-09-29",
+  "baseline_commit": "b53de60067b5e137dc6ed85bfe5b1c82b83bbbb8",
+  "optimized_source_base_commit": "b53de60067b5e137dc6ed85bfe5b1c82b83bbbb8",
+  "protocol": {
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "hostname": "DavePC",
+    "torch": "2.13.0+cu130",
+    "source_sha256": "abd6982c2f8b31bfd840a03bb6de46505aa7d5162c9ad84f05f778b52c42d29a",
+    "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+    "subject": 1,
+    "trials": 760,
+    "scored_trials": 720,
+    "candidates": [
+      [
+        0.3,
+        0.2,
+        -0.45,
+        10.0,
+        0.9,
+        0.9,
+        1.0,
+        5.0
+      ],
+      [
+        0.4,
+        0.22,
+        -0.4,
+        12.0,
+        0.7,
+        0.8,
+        1.5,
+        5.5
+      ],
+      [
+        0.5,
+        0.18,
+        -0.35,
+        8.0,
+        0.5,
+        0.7,
+        2.0,
+        6.0
+      ],
+      [
+        0.6,
+        0.25,
+        -0.3,
+        15.0,
+        0.3,
+        0.6,
+        2.5,
+        7.0
+      ]
+    ],
+    "lca_dt": 0.01,
+    "all_lca_noise": 0.1,
+    "histogram": {
+      "bins": 100,
+      "rt_range": [
+        0.0,
+        3.0
+      ],
+      "smoothing_sigma": 0.5,
+      "pseudocount_at_100000": 1.0,
+      "contamination_fraction": 0.001996007984031936
+    },
+    "conditioned_execution": "prepared",
+    "max_steps": 4000,
+    "model_construction_seed": 29,
+    "repeat_seeds": [
+      29,
+      30,
+      31
+    ],
+    "diagnostics_seed": 29,
+    "common_random_numbers": true,
+    "strict_truncation": true,
+    "resampling": "systematic",
+    "interpretation": "Original 10 ms discrete model; observed history conditions all retained trials."
+  },
+  "variants": {
+    "baseline": {
+      "launch": {
+        "block_size": 32,
+        "num_warps": 1,
+        "trial_schedule": "independent",
+        "normal_rng": "philox4x_fast_v1"
+      },
+      "cases": [
+        {
+          "likelihood": "conditioned",
+          "estimates": 10000,
+          "candidate_batch_size": 1,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.6677971750032157,
+              "scores": [
+                -402.2547912597656
+              ],
+              "peak_allocated_mib": 6.3466796875,
+              "incremental_peak_mib": 6.3466796875
+            },
+            {
+              "seed": 30,
+              "seconds": 1.6176329171285033,
+              "scores": [
+                -400.0206604003906
+              ],
+              "peak_allocated_mib": 6.3466796875,
+              "incremental_peak_mib": 6.3466796875
+            },
+            {
+              "seed": 31,
+              "seconds": 1.5305712490808219,
+              "scores": [
+                -400.0386047363281
+              ],
+              "peak_allocated_mib": 6.3466796875,
+              "incremental_peak_mib": 6.3466796875
+            }
+          ],
+          "warmup_seconds": 43.705344651127234,
+          "median_seconds": 1.6176329171285033,
+          "seconds_per_candidate": 1.6176329171285033,
+          "projected_5000_evaluations_hours": 2.246712384900699,
+          "ess_summary": {
+            "minimum": 2.6145801544189453,
+            "median": 257.56396484375,
+            "fifth_percentile": 92.5609359741211
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "c24168c979bbcb337e8901d2c90bf63449862d6b40c0eda64be35de5c51a2c29"
+          },
+          "speedup_over_baseline": 1.0,
+          "peak_allocation_reduction_fraction": 0.0
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 10000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.4455383731983602,
+              "scores": [
+                -402.25482177734375,
+                -974.7965698242188,
+                -1222.4791259765625,
+                278.2253723144531
+              ],
+              "peak_allocated_mib": 23.29345703125,
+              "incremental_peak_mib": 23.29345703125
+            },
+            {
+              "seed": 30,
+              "seconds": 1.4335642349906266,
+              "scores": [
+                -400.0206604003906,
+                -984.1386108398438,
+                -1218.595703125,
+                281.3367614746094
+              ],
+              "peak_allocated_mib": 23.29345703125,
+              "incremental_peak_mib": 23.29345703125
+            },
+            {
+              "seed": 31,
+              "seconds": 1.6574486868921667,
+              "scores": [
+                -400.0386047363281,
+                -983.24658203125,
+                -1228.2386474609375,
+                279.7959899902344
+              ],
+              "peak_allocated_mib": 23.29345703125,
+              "incremental_peak_mib": 23.29345703125
+            }
+          ],
+          "warmup_seconds": 33.97987441113219,
+          "median_seconds": 1.4455383731983602,
+          "seconds_per_candidate": 0.36138459329959005,
+          "projected_5000_evaluations_hours": 0.5019230462494306,
+          "ess_summary": {
+            "minimum": 1.271153211593628,
+            "median": 263.4091491699219,
+            "fifth_percentile": 12.610279083251953
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "9aeb0858228e9ff4981b134aa52e58631f37b14f5e7fd9386eec780d3e04936f"
+          },
+          "speedup_over_baseline": 1.0,
+          "peak_allocation_reduction_fraction": 0.0
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 1,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.8959713191725314,
+              "scores": [
+                -399.3314514160156
+              ],
+              "peak_allocated_mib": 57.22900390625,
+              "incremental_peak_mib": 57.22900390625
+            },
+            {
+              "seed": 30,
+              "seconds": 1.8871081268880516,
+              "scores": [
+                -399.009765625
+              ],
+              "peak_allocated_mib": 57.22900390625,
+              "incremental_peak_mib": 57.22900390625
+            },
+            {
+              "seed": 31,
+              "seconds": 1.8894534891005605,
+              "scores": [
+                -400.12847900390625
+              ],
+              "peak_allocated_mib": 57.22900390625,
+              "incremental_peak_mib": 57.22900390625
+            }
+          ],
+          "warmup_seconds": 42.953117887023836,
+          "median_seconds": 1.8894534891005605,
+          "seconds_per_candidate": 1.8894534891005605,
+          "projected_5000_evaluations_hours": 2.624240957084112,
+          "ess_summary": {
+            "minimum": 55.542945861816406,
+            "median": 2645.02001953125,
+            "fifth_percentile": 945.0327758789062
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "55cea73b1445ae187a36044003495785ccf725ba5c48c133c8aa021669923d48"
+          },
+          "speedup_over_baseline": 1.0,
+          "peak_allocation_reduction_fraction": 0.0
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 5.454755678074434,
+              "scores": [
+                -399.3314514160156,
+                -972.968994140625,
+                -1205.3348388671875,
+                284.69207763671875
+              ],
+              "peak_allocated_mib": 227.39013671875,
+              "incremental_peak_mib": 227.39013671875
+            },
+            {
+              "seed": 30,
+              "seconds": 5.48969856207259,
+              "scores": [
+                -399.009765625,
+                -972.8944091796875,
+                -1205.564697265625,
+                286.141845703125
+              ],
+              "peak_allocated_mib": 227.39013671875,
+              "incremental_peak_mib": 227.39013671875
+            },
+            {
+              "seed": 31,
+              "seconds": 5.5464388590771705,
+              "scores": [
+                -400.1285095214844,
+                -971.39453125,
+                -1208.36669921875,
+                285.9420471191406
+              ],
+              "peak_allocated_mib": 227.39013671875,
+              "incremental_peak_mib": 227.39013671875
+            }
+          ],
+          "warmup_seconds": 5.411674539092928,
+          "median_seconds": 5.48969856207259,
+          "seconds_per_candidate": 1.3724246405181475,
+          "projected_5000_evaluations_hours": 1.9061453340529826,
+          "ess_summary": {
+            "minimum": 5.1618242263793945,
+            "median": 2603.685546875,
+            "fifth_percentile": 77.80996704101562
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "a945f856ae0192c0ecf910f61971aeaa09fba56b62bbcb097f81101cab155b90"
+          },
+          "speedup_over_baseline": 1.0,
+          "peak_allocation_reduction_fraction": 0.0
+        }
+      ],
+      "kernel_registers_and_spills": [
+        {
+          "registers": 128,
+          "spills": 0
+        },
+        {
+          "registers": 141,
+          "spills": 0
+        }
+      ],
+      "implementation_sha256": {
+        "psyneulink/core/batched/compiler.py": "668d37d74aa2da72b1dd5a00c4430dd1231f092849c3bf0e5fea5f186142cc5e",
+        "psyneulink/core/batched/likelihood.py": "cad6d00cb489b2eb9ae32541555dc00fc46dbedc8749990c1a838b5f185622f9",
+        "psyneulink/core/batched/backend/triton/runtime.py": "7d20f3b241e7b5af13a6f3f2bf619a497a1e6dc4e0d5e4d853716f84bb404bd7",
+        "psyneulink/core/batched/backend/triton/conditioned.py": "f13a0ad44d57a1acce1a78f4cf71da823df39ee6dd1c7bfe9ac0931a47d4a19a",
+        "psyneulink/core/batched/backend/triton/emit/emitter.py": "4cfdcf8678299624fb55873e33390ccef5ce1bb2857d3e6581a081cce5899ed2",
+        "psyneulink/core/batched/backend/triton/state.py": "774677a5ebcaaf1cd74d9a698203d92b83a2bcada69a6666e71fd62528a79763"
+      },
+      "raw_report_sha256": "483126e6b4b9afeb873092df65af41365ac5406ccff0afab60ddb5c1caf63498"
+    },
+    "optimized": {
+      "launch": {
+        "block_size": 32,
+        "num_warps": 1,
+        "trial_schedule": "independent",
+        "normal_rng": "philox4x_fast_v1"
+      },
+      "cases": [
+        {
+          "likelihood": "conditioned",
+          "estimates": 10000,
+          "candidate_batch_size": 1,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.0476523300167173,
+              "scores": [
+                -402.2547912597656
+              ],
+              "peak_allocated_mib": 4.7841796875,
+              "incremental_peak_mib": 4.7841796875
+            },
+            {
+              "seed": 30,
+              "seconds": 1.1470696381293237,
+              "scores": [
+                -400.0206604003906
+              ],
+              "peak_allocated_mib": 4.7841796875,
+              "incremental_peak_mib": 4.7841796875
+            },
+            {
+              "seed": 31,
+              "seconds": 1.0815212819725275,
+              "scores": [
+                -400.0386047363281
+              ],
+              "peak_allocated_mib": 4.7841796875,
+              "incremental_peak_mib": 4.7841796875
+            }
+          ],
+          "warmup_seconds": 2.698970956960693,
+          "median_seconds": 1.0815212819725275,
+          "seconds_per_candidate": 1.0815212819725275,
+          "projected_5000_evaluations_hours": 1.5021128916285105,
+          "ess_summary": {
+            "minimum": 2.6145801544189453,
+            "median": 257.56396484375,
+            "fifth_percentile": 92.5609359741211
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "c24168c979bbcb337e8901d2c90bf63449862d6b40c0eda64be35de5c51a2c29"
+          },
+          "speedup_over_baseline": 1.4957014199278549,
+          "peak_allocation_reduction_fraction": 0.24619172180335436
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 10000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.0929212120827287,
+              "scores": [
+                -402.25482177734375,
+                -974.7965698242188,
+                -1222.4791259765625,
+                278.2253723144531
+              ],
+              "peak_allocated_mib": 16.58056640625,
+              "incremental_peak_mib": 16.58056640625
+            },
+            {
+              "seed": 30,
+              "seconds": 1.002319228835404,
+              "scores": [
+                -400.0206604003906,
+                -984.1386108398438,
+                -1218.595703125,
+                281.3367614746094
+              ],
+              "peak_allocated_mib": 16.58056640625,
+              "incremental_peak_mib": 16.58056640625
+            },
+            {
+              "seed": 31,
+              "seconds": 1.0520142829045653,
+              "scores": [
+                -400.0386047363281,
+                -983.24658203125,
+                -1228.2386474609375,
+                279.7959899902344
+              ],
+              "peak_allocated_mib": 16.58056640625,
+              "incremental_peak_mib": 16.58056640625
+            }
+          ],
+          "warmup_seconds": 1.1266739508137107,
+          "median_seconds": 1.0520142829045653,
+          "seconds_per_candidate": 0.26300357072614133,
+          "projected_5000_evaluations_hours": 0.36528273711964077,
+          "ess_summary": {
+            "minimum": 1.271153211593628,
+            "median": 263.4091491699219,
+            "fifth_percentile": 12.610279083251953
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "9aeb0858228e9ff4981b134aa52e58631f37b14f5e7fd9386eec780d3e04936f"
+          },
+          "speedup_over_baseline": 1.3740672505009077,
+          "peak_allocation_reduction_fraction": 0.28818782098312545
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 1,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 1.786488997982815,
+              "scores": [
+                -399.3314514160156
+              ],
+              "peak_allocated_mib": 41.58984375,
+              "incremental_peak_mib": 41.58984375
+            },
+            {
+              "seed": 30,
+              "seconds": 1.794959300197661,
+              "scores": [
+                -399.009765625
+              ],
+              "peak_allocated_mib": 41.58984375,
+              "incremental_peak_mib": 41.58984375
+            },
+            {
+              "seed": 31,
+              "seconds": 1.795724119991064,
+              "scores": [
+                -400.12847900390625
+              ],
+              "peak_allocated_mib": 41.58984375,
+              "incremental_peak_mib": 41.58984375
+            }
+          ],
+          "warmup_seconds": 1.818408238934353,
+          "median_seconds": 1.794959300197661,
+          "seconds_per_candidate": 1.794959300197661,
+          "projected_5000_evaluations_hours": 2.492999028052307,
+          "ess_summary": {
+            "minimum": 55.542945861816406,
+            "median": 2645.02001953125,
+            "fifth_percentile": 945.0327758789062
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "55cea73b1445ae187a36044003495785ccf725ba5c48c133c8aa021669923d48"
+          },
+          "speedup_over_baseline": 1.0526441958280024,
+          "peak_allocation_reduction_fraction": 0.27327332451687214
+        },
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 5.356088200118393,
+              "scores": [
+                -399.3314514160156,
+                -972.968994140625,
+                -1205.3348388671875,
+                284.69207763671875
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 30,
+              "seconds": 5.398382305866107,
+              "scores": [
+                -399.009765625,
+                -972.8944091796875,
+                -1205.564697265625,
+                286.141845703125
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 31,
+              "seconds": 5.41927258297801,
+              "scores": [
+                -400.1285095214844,
+                -971.39453125,
+                -1208.36669921875,
+                285.9420471191406
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            }
+          ],
+          "warmup_seconds": 5.3406704030931,
+          "median_seconds": 5.398382305866107,
+          "seconds_per_candidate": 1.3495955764665268,
+          "projected_5000_evaluations_hours": 1.874438300647954,
+          "ess_summary": {
+            "minimum": 5.1618242263793945,
+            "median": 2603.685546875,
+            "fifth_percentile": 77.80996704101562
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "a945f856ae0192c0ecf910f61971aeaa09fba56b62bbcb097f81101cab155b90"
+          },
+          "speedup_over_baseline": 1.0169154852384676,
+          "peak_allocation_reduction_fraction": 0.2964944867348801
+        }
+      ],
+      "kernel_registers_and_spills": [
+        {
+          "registers": 128,
+          "spills": 0
+        },
+        {
+          "registers": 141,
+          "spills": 0
+        }
+      ],
+      "implementation_sha256": {
+        "psyneulink/core/batched/compiler.py": "6bad7e181c96dfe84ca4305cdb835fd03ed7e48a7cee36ea5920f144f7b1bf21",
+        "psyneulink/core/batched/likelihood.py": "e2fbb3163e362733444f414c648ea96c14f2a7eef7e3056e418bd63b0d99134f",
+        "psyneulink/core/batched/backend/triton/runtime.py": "7d20f3b241e7b5af13a6f3f2bf619a497a1e6dc4e0d5e4d853716f84bb404bd7",
+        "psyneulink/core/batched/backend/triton/conditioned.py": "f13a0ad44d57a1acce1a78f4cf71da823df39ee6dd1c7bfe9ac0931a47d4a19a",
+        "psyneulink/core/batched/backend/triton/conditioned_ops.py": "254cc38e160497a04cce2a07283b2f9a4ea557ccc6af06fb424f66c478264a5c",
+        "psyneulink/core/batched/backend/triton/emit/emitter.py": "4cfdcf8678299624fb55873e33390ccef5ce1bb2857d3e6581a081cce5899ed2",
+        "psyneulink/core/batched/backend/triton/state.py": "774677a5ebcaaf1cd74d9a698203d92b83a2bcada69a6666e71fd62528a79763"
+      },
+      "raw_report_sha256": "87c337e7a4b7d01e8d087dd8e0a5c06649b4eee4bfc2d238a33398de8713022b"
+    },
+    "block64-warps2": {
+      "launch": {
+        "block_size": 64,
+        "num_warps": 2,
+        "trial_schedule": "independent",
+        "normal_rng": "philox4x_fast_v1"
+      },
+      "cases": [
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 6.176612934097648,
+              "scores": [
+                -399.3314514160156,
+                -972.968994140625,
+                -1205.3348388671875,
+                284.69207763671875
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 30,
+              "seconds": 6.256731989793479,
+              "scores": [
+                -399.009765625,
+                -972.8944091796875,
+                -1205.564697265625,
+                286.141845703125
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 31,
+              "seconds": 6.3129588440060616,
+              "scores": [
+                -400.1285095214844,
+                -971.39453125,
+                -1208.36669921875,
+                285.9420471191406
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            }
+          ],
+          "warmup_seconds": 39.077240149024874,
+          "median_seconds": 6.256731989793479,
+          "seconds_per_candidate": 1.5641829974483699,
+          "projected_5000_evaluations_hours": 2.1724763853449582,
+          "ess_summary": {
+            "minimum": 5.1618242263793945,
+            "median": 2603.685546875,
+            "fifth_percentile": 77.80996704101562
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "a945f856ae0192c0ecf910f61971aeaa09fba56b62bbcb097f81101cab155b90"
+          },
+          "speedup_over_baseline": 0.8774066990607652,
+          "peak_allocation_reduction_fraction": 0.2964944867348801
+        }
+      ],
+      "kernel_registers_and_spills": [
+        {
+          "registers": 141,
+          "spills": 0
+        },
+        {
+          "registers": 145,
+          "spills": 0
+        }
+      ],
+      "implementation_sha256": {
+        "psyneulink/core/batched/compiler.py": "6bad7e181c96dfe84ca4305cdb835fd03ed7e48a7cee36ea5920f144f7b1bf21",
+        "psyneulink/core/batched/likelihood.py": "e2fbb3163e362733444f414c648ea96c14f2a7eef7e3056e418bd63b0d99134f",
+        "psyneulink/core/batched/backend/triton/runtime.py": "7d20f3b241e7b5af13a6f3f2bf619a497a1e6dc4e0d5e4d853716f84bb404bd7",
+        "psyneulink/core/batched/backend/triton/conditioned.py": "f13a0ad44d57a1acce1a78f4cf71da823df39ee6dd1c7bfe9ac0931a47d4a19a",
+        "psyneulink/core/batched/backend/triton/conditioned_ops.py": "254cc38e160497a04cce2a07283b2f9a4ea557ccc6af06fb424f66c478264a5c",
+        "psyneulink/core/batched/backend/triton/emit/emitter.py": "4cfdcf8678299624fb55873e33390ccef5ce1bb2857d3e6581a081cce5899ed2",
+        "psyneulink/core/batched/backend/triton/state.py": "774677a5ebcaaf1cd74d9a698203d92b83a2bcada69a6666e71fd62528a79763"
+      },
+      "raw_report_sha256": "48e4ab4d7d6547d2f4f5e2f283b6f6a71523aecf20c3b3c47f142cc2c92f5631"
+    },
+    "register-cap128": {
+      "launch": {
+        "block_size": 32,
+        "num_warps": 1,
+        "trial_schedule": "independent",
+        "normal_rng": "philox4x_fast_v1",
+        "maxnreg": 128
+      },
+      "cases": [
+        {
+          "likelihood": "conditioned",
+          "estimates": 100000,
+          "candidate_batch_size": 4,
+          "runs": [
+            {
+              "seed": 29,
+              "seconds": 5.1449704670812935,
+              "scores": [
+                -399.3314514160156,
+                -972.968994140625,
+                -1205.3348388671875,
+                284.69207763671875
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 30,
+              "seconds": 5.206986585166305,
+              "scores": [
+                -399.009765625,
+                -972.8944091796875,
+                -1205.564697265625,
+                286.141845703125
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            },
+            {
+              "seed": 31,
+              "seconds": 5.257445958908647,
+              "scores": [
+                -400.1285095214844,
+                -971.39453125,
+                -1208.36669921875,
+                285.9420471191406
+              ],
+              "peak_allocated_mib": 159.97021484375,
+              "incremental_peak_mib": 159.97021484375
+            }
+          ],
+          "warmup_seconds": 38.05117668793537,
+          "median_seconds": 5.206986585166305,
+          "seconds_per_candidate": 1.3017466462915763,
+          "projected_5000_evaluations_hours": 1.807981453182745,
+          "ess_summary": {
+            "minimum": 5.1618242263793945,
+            "median": 2603.685546875,
+            "fifth_percentile": 77.80996704101562
+          },
+          "parity_with_baseline": {
+            "exact_scores": true,
+            "exact_per_trial_diagnostics": true,
+            "diagnostics_sha256": "a945f856ae0192c0ecf910f61971aeaa09fba56b62bbcb097f81101cab155b90"
+          },
+          "speedup_over_baseline": 1.054294738863295,
+          "peak_allocation_reduction_fraction": 0.2964944867348801
+        }
+      ],
+      "kernel_registers_and_spills": [
+        {
+          "registers": 128,
+          "spills": 0
+        },
+        {
+          "registers": 128,
+          "spills": 2
+        }
+      ],
+      "implementation_sha256": {
+        "psyneulink/core/batched/compiler.py": "6bad7e181c96dfe84ca4305cdb835fd03ed7e48a7cee36ea5920f144f7b1bf21",
+        "psyneulink/core/batched/likelihood.py": "e2fbb3163e362733444f414c648ea96c14f2a7eef7e3056e418bd63b0d99134f",
+        "psyneulink/core/batched/backend/triton/runtime.py": "7d20f3b241e7b5af13a6f3f2bf619a497a1e6dc4e0d5e4d853716f84bb404bd7",
+        "psyneulink/core/batched/backend/triton/conditioned.py": "f13a0ad44d57a1acce1a78f4cf71da823df39ee6dd1c7bfe9ac0931a47d4a19a",
+        "psyneulink/core/batched/backend/triton/conditioned_ops.py": "254cc38e160497a04cce2a07283b2f9a4ea557ccc6af06fb424f66c478264a5c",
+        "psyneulink/core/batched/backend/triton/emit/emitter.py": "4cfdcf8678299624fb55873e33390ccef5ce1bb2857d3e6581a081cce5899ed2",
+        "psyneulink/core/batched/backend/triton/state.py": "774677a5ebcaaf1cd74d9a698203d92b83a2bcada69a6666e71fd62528a79763"
+      },
+      "raw_report_sha256": "a13b69927aac36afa45dff634c46e0924885efac2c178449392b85e6c866c813"
+    }
+  },
+  "profiles": {
+    "baseline": {
+      "estimates": 100000,
+      "candidate_batch_size": 4,
+      "seed": 29,
+      "kernel_launches": 48588,
+      "summed_kernel_ms": 5370.682963000016,
+      "groups": {
+        "other_cuda_kernels": {
+          "launches": 45551,
+          "milliseconds": 232.32972500001753
+        },
+        "simulation": {
+          "launches": 760,
+          "milliseconds": 4657.005106999998
+        },
+        "fp64_cumulative_sum": {
+          "launches": 759,
+          "milliseconds": 284.7300960000001
+        },
+        "torch_ancestor_search": {
+          "launches": 759,
+          "milliseconds": 38.66213300000004
+        },
+        "torch_state_gather": {
+          "launches": 759,
+          "milliseconds": 157.95590200000018
+        }
+      }
+    },
+    "optimized": {
+      "estimates": 100000,
+      "candidate_batch_size": 4,
+      "seed": 29,
+      "kernel_launches": 25032,
+      "summed_kernel_ms": 5335.455086000002,
+      "groups": {
+        "other_cuda_kernels": {
+          "launches": 21994,
+          "milliseconds": 124.13036200000099
+        },
+        "simulation": {
+          "launches": 760,
+          "milliseconds": 4743.073815000001
+        },
+        "fused_observation_contributions": {
+          "launches": 760,
+          "milliseconds": 8.44958799999999
+        },
+        "fp64_cumulative_sum": {
+          "launches": 759,
+          "milliseconds": 290.331638
+        },
+        "fused_ancestor_search_and_state_gather": {
+          "launches": 759,
+          "milliseconds": 169.4696830000003
+        }
+      }
+    }
+  },
+  "validation": {
+    "test_command": ".venv/bin/pytest -q -n 0 -o addopts='' -o required_plugins='' -p no:ruff -p no:pycodestyle tests/composition/pec/test_batched_conditioned_ops.py tests/composition/pec/test_batched_conditioned_likelihood.py tests/composition/pec/test_batched_conditioned_hmm.py tests/composition/pec/test_dawa_conditioned_likelihood.py",
+    "full_subject_scores_compared": 30,
+    "per_trial_entries_compared_per_diagnostic": 7600,
+    "diagnostic_names": [
+      "per_trial_densities",
+      "effective_sample_size",
+      "prior_mixture_fraction",
+      "zero_support"
+    ],
+    "passed_tests": 57
+  },
+  "raw_artifacts_local": "/tmp/dawa-conditioned-optimization-20260929",
+  "notes": [
+    "Score-only warm timings include sequence preparation, simulation, filtering, error checks and returning scores; exclude JIT, diagnostics and optimizer overhead.",
+    "Profile totals sum recorded CUDA kernel durations; host cProfile times include device backpressure and must not be treated as pure CPU computation.",
+    "All diagnostic arrays (densities, ESS, contamination fraction and zero support) match bitwise for seed 29. Scores match for seeds 29, 30, 31 in every variant.",
+    "Peak allocation measures live Torch tensors, excluding context, cache reservations and other processes.",
+    "The default launch is unchanged. Register cap 128 is an experiment, not a portable recommendation.",
+    "No H100 retest: fresh SSH required interactive Duo authentication."
+  ]
+}
