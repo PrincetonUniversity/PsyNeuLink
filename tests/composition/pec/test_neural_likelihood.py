@@ -634,6 +634,18 @@ def test_an_input_held_constant_in_training_has_to_keep_its_value(ddm_data):
         pec._setup_neural_likelihood({pec.nodes[0]: np.full((4, 1), 2.0)})
 
 
+@pytest.mark.composition
+@pytest.mark.parametrize("response_time", [0.0, np.nan], ids=["zero", "missing"])
+def test_outcomes_the_estimator_cannot_score_are_refused(ddm_data, response_time):
+    """The estimator models the logarithm of response times, so they have to be positive."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    ddm_data.loc[1, "response_time"] = response_time
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    with pytest.raises(nlf.NeuralLikelihoodError, match="cannot score"):
+        pec._setup_neural_likelihood()
+
+
 @pytest.fixture(scope="module")
 def trained_artifact(tmp_path_factory):
     """A trained estimator on disk, for factories that have to load it on a worker."""

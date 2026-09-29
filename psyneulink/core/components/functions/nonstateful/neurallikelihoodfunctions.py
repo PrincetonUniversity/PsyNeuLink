@@ -63,8 +63,8 @@ class NeuralLikelihoodProvenance:
     """What an estimator was trained for, and how.
 
     The parameters, their ranges and the outcomes are checked against a model before the
-    estimator is used with it (`check_matches`), and its inputs against the trials it scores
-    (`check_inputs`); the rest is a record of the training.
+    estimator is used with it (`check_matches`), and its inputs and observed outcomes against
+    the trials it scores (`check_inputs`, `check_outcomes`); the rest is a record of the training.
     """
 
     fit_param_names: tuple[str, ...]
@@ -147,6 +147,20 @@ class NeuralLikelihoodProvenance:
                 f"This neural likelihood was trained with inputs held at "
                 f"{list(self.constant_inputs)} on every trial, and cannot score trials in which "
                 f"they differ."
+            )
+
+    def check_outcomes(self, outcomes):
+        """Raise unless every observed outcome is one the estimator can score."""
+        outcomes = np.asarray(outcomes, dtype=float)
+        if not np.isfinite(outcomes).all():
+            raise NeuralLikelihoodError(
+                "The data contain outcomes that are not finite, which a neural likelihood cannot score."
+            )
+        continuous = outcomes[:, ~np.asarray(self.categorical, dtype=bool)]
+        if self.log_transform and (continuous <= 0).any():
+            raise NeuralLikelihoodError(
+                "The data contain continuous outcomes that are not positive, which this neural "
+                "likelihood cannot score: it models their logarithm."
             )
 
 

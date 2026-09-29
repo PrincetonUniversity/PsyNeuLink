@@ -118,6 +118,10 @@ that differs in any of the following:
 Other properties of the model, such as the values of parameters that are not fit, are not recorded; an
 estimator should be retrained if any of these are changed.
 
+An error is also generated if the **data** contain values that are not finite or, where the estimator
+models a continuous outcome on a logarithmic scale (as it does for response times), values of it that are
+not positive.
+
 
 .. _Neural_Likelihood_Validation:
 

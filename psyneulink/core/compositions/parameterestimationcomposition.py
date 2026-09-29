@@ -1449,7 +1449,7 @@ class ParameterEstimationComposition(Composition):
     def _setup_neural_likelihood(self, inputs=None):
         """Give the optimization function the estimator, and the trials of this call to score.
 
-        The estimator is loaded and checked against this model on the first call only.
+        The estimator is loaded and checked against this model and its data on the first call only.
         """
         if self._likelihood_estimator != "neural":
             return
@@ -1462,6 +1462,7 @@ class ParameterEstimationComposition(Composition):
             _reported_names,
         )
 
+        included = self.likelihood_include_mask
         if self._neural_likelihood is None:
             artifact = self._likelihood_estimator_kwargs["artifact"]
             likelihood = (
@@ -1480,11 +1481,10 @@ class ParameterEstimationComposition(Composition):
                 tuple(str(c) for c in self.data.columns),
                 categorical,
             )
+            likelihood.provenance.check_outcomes(self._data_numpy[included])
             self._neural_likelihood = likelihood
 
         likelihood = self._neural_likelihood
-        included = self.likelihood_include_mask
-
         features = None
         provenance = likelihood.provenance
         if inputs is not None or provenance.n_trial_features:
