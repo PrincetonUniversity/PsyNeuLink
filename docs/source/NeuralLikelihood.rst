@@ -93,12 +93,13 @@ Trial Features
 Where trials differ from one another (for example, congruent and incongruent trials), an estimator
 represents the distribution of outcomes on each kind of trial, which it distinguishes by the values of the
 model's inputs on each trial. Those inputs that vary across the trials simulated in training are recorded
-with the estimator.
+with the estimator, and those that do not are recorded with their values.
 
 When fitting, the same inputs are taken from those specified for `run <Composition.run>` or
 `log_likelihood <ParameterEstimationComposition.log_likelihood>`, including any that do not vary in the
-data being fit. These must therefore be the same inputs as those used for training, though the nodes to
-which they are given can be listed in any order; otherwise an error is generated.
+data being fit. These must be laid out as they were for training, though the nodes to which they are
+given can be listed in any order, and an input that did not vary in training must have the same value;
+otherwise an error is generated, since the estimator has no information about such trials.
 
 
 .. _Neural_Likelihood_Matching:

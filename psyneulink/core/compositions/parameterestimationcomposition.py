@@ -1487,18 +1487,13 @@ class ParameterEstimationComposition(Composition):
 
         features = None
         provenance = likelihood.provenance
-        if provenance.n_trial_features:
-            # The columns training used, even where one does not vary in these data: a
-            # participant who saw one condition still has to be scored as being in it.
-            columns = _input_columns(inputs, len(self.data), self.model)
-            if columns.shape[1] != provenance.n_input_columns:
-                raise ParameterEstimationCompositionError(
-                    f"This neural likelihood was trained on inputs with "
-                    f"{provenance.n_input_columns} value(s) per trial, and tells trials apart "
-                    f"by some of them; these inputs have {columns.shape[1]}. Pass inputs laid "
-                    f"out as they were for training."
-                )
-            features = columns[included][:, list(provenance.trial_feature_columns)]
+        if inputs is not None or provenance.n_trial_features:
+            # The inputs training used, even where one does not vary in these data: a participant
+            # who saw one condition still has to be scored as being in it.
+            columns = _input_columns(inputs, len(self.data), self.model)[included]
+            provenance.check_inputs(columns)
+            if provenance.n_trial_features:
+                features = columns[:, list(provenance.trial_feature_columns)]
 
         # Excluded trials are dropped, as they are from a simulated likelihood.
         self.controller.function.set_neural_likelihood(

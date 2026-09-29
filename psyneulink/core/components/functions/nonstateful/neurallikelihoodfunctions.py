@@ -63,7 +63,8 @@ class NeuralLikelihoodProvenance:
     """What an estimator was trained for, and how.
 
     The parameters, their ranges and the outcomes are checked against a model before the
-    estimator is used with it (`check_matches`); the rest is a record of the training.
+    estimator is used with it (`check_matches`), and its inputs against the trials it scores
+    (`check_inputs`); the rest is a record of the training.
     """
 
     fit_param_names: tuple[str, ...]
@@ -75,6 +76,7 @@ class NeuralLikelihoodProvenance:
     log_transform: bool
     n_input_columns: int
     trial_feature_columns: tuple[int, ...]
+    constant_inputs: tuple[float, ...]
     n_parameter_samples: int
     n_trials_per_sample: int
     epochs: int
@@ -126,6 +128,26 @@ class NeuralLikelihoodProvenance:
                     f"outside the range this neural likelihood was trained on "
                     f"[{tlo}, {thi}]. Retrain over the wider range, or narrow the fit."
                 )
+
+    def check_inputs(self, columns):
+        """Raise unless the model's inputs, as trial-by-trial ``columns``, are those of training.
+
+        Inputs that were the same on every trial in training told the estimator nothing about the
+        trial it was scoring, so it can score only trials in which they hold the same values.
+        """
+        if columns.shape[1] != self.n_input_columns:
+            raise NeuralLikelihoodError(
+                f"This neural likelihood was trained on inputs with {self.n_input_columns} "
+                f"value(s) per trial; these inputs have {columns.shape[1]}. Pass inputs laid out "
+                f"as they were for training."
+            )
+        held = [j for j in range(self.n_input_columns) if j not in self.trial_feature_columns]
+        if not np.allclose(columns[:, held], self.constant_inputs):
+            raise NeuralLikelihoodError(
+                f"This neural likelihood was trained with inputs held at "
+                f"{list(self.constant_inputs)} on every trial, and cannot score trials in which "
+                f"they differ."
+            )
 
 
 class NeuralLikelihood:
@@ -289,7 +311,7 @@ def _simulate(pec, inputs, thetas, names):
 
     Returns the conditioning rows, the simulated outcomes, the number of trials per draw (set
     by ``inputs``, not by the model's data), and the layout of the inputs: how many columns
-    they have, and which of them were used.
+    they have, which of them were used, and the values of the rest.
     """
     _check_parameters(pec, names)
     n_trials = None
@@ -315,11 +337,12 @@ def _simulate(pec, inputs, thetas, names):
             n_estimates = sim.shape[1]
             if n_trials is None:
                 n_trials = sim.shape[0]
-                # Inputs that vary from trial to trial are what tell trials apart; the
-                # rest say nothing, and are left out.
+                # Inputs that vary from trial to trial are what tell trials apart; the rest say
+                # nothing, and are recorded by value.
                 columns = _input_columns(inputs, n_trials, pec.model)
                 used = tuple(int(j) for j in np.flatnonzero(columns.std(axis=0) > 0))
-                layout = (columns.shape[1], used)
+                held = [j for j in range(columns.shape[1]) if j not in used]
+                layout = (columns.shape[1], used, tuple(float(v) for v in columns[0, held]))
                 features = columns[:, list(used)] if used else None
             x_rows.append(sim.reshape(-1, sim.shape[-1]))
             block = np.repeat(np.asarray(theta, dtype=float).reshape(1, -1),
@@ -620,6 +643,7 @@ def train_neural_likelihood(
         log_transform=log_transform,
         n_input_columns=int(layout[0]),
         trial_feature_columns=layout[1],
+        constant_inputs=layout[2],
         n_parameter_samples=int(n_parameter_samples),
         n_trials_per_sample=int(n_trials),
         epochs=int(epochs),

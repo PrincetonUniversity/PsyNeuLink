@@ -31,7 +31,10 @@ def _toy_arrays(n=6000, seed=0):
 
 
 def _toy_likelihood(epochs=3, seed=0):
-    """A small trained estimator; too small for accuracy claims, enough for behaviour."""
+    """A small trained estimator; too small for accuracy claims, enough for behaviour.
+
+    Its record is that of a model driven by an input of 1 on every trial, as the models here are.
+    """
     theta, raw = _toy_arrays(seed=seed)
     categorical = nlf._infer_categorical(raw)
     categories = tuple(
@@ -49,7 +52,7 @@ def _toy_likelihood(epochs=3, seed=0):
         lower=(RATE_BOUNDS[0], THRESHOLD_BOUNDS[0]),
         upper=(RATE_BOUNDS[1], THRESHOLD_BOUNDS[1]),
         outcome_names=OUTCOMES, categorical=categorical, categories=categories,
-        log_transform=True, n_input_columns=0, trial_feature_columns=(),
+        log_transform=True, n_input_columns=1, trial_feature_columns=(), constant_inputs=(1.0,),
         n_parameter_samples=len(theta),
         n_trials_per_sample=1, epochs=epochs, val_nll=val_nll, seed=seed,
         psyneulink_version="test", sbi_version="test",
@@ -580,8 +583,8 @@ def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
 def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
     """A later call with different inputs must not be scored against the first call's."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.provenance, "n_input_columns", 1)
     object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
+    object.__setattr__(likelihood.provenance, "constant_inputs", ())
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     node = pec.nodes[0]
@@ -604,7 +607,7 @@ def test_trial_features_are_the_columns_training_used(ddm_data):
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
 
-    one_condition = np.column_stack([np.full(4, 3.0), np.arange(4.0)])
+    one_condition = np.column_stack([np.full(4, 3.0), np.ones(4)])
     pec._setup_neural_likelihood({pec.nodes[0]: one_condition})
     np.testing.assert_allclose(pec.controller.function._neural_trial_features.ravel(), 3.0)
 
@@ -616,8 +619,19 @@ def test_inputs_laid_out_differently_from_training_are_refused(ddm_data):
     object.__setattr__(likelihood.provenance, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
-    with pytest.raises(pnl.ParameterEstimationCompositionError, match="laid out as they were"):
+    with pytest.raises(nlf.NeuralLikelihoodError, match="laid out as they were"):
         pec._setup_neural_likelihood({pec.nodes[0]: np.arange(4.0).reshape(-1, 1)})
+
+
+@pytest.mark.composition
+def test_an_input_held_constant_in_training_has_to_keep_its_value(ddm_data):
+    """Training saw only the one value, so says nothing of trials with another."""
+    likelihood, _ = _toy_likelihood(epochs=1)
+    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
+                   likelihood_estimator_kwargs={"artifact": likelihood})
+    pec._setup_neural_likelihood({pec.nodes[0]: np.ones((4, 1))})
+    with pytest.raises(nlf.NeuralLikelihoodError, match="held at"):
+        pec._setup_neural_likelihood({pec.nodes[0]: np.full((4, 1), 2.0)})
 
 
 @pytest.fixture(scope="module")
