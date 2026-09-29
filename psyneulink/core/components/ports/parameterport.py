@@ -447,12 +447,15 @@ class ParameterPortList(ContentAddressableList):
                 return self.parameter_mapping[final_source]
             except KeyError as e:
                 try:
-                    raise ParameterPortError(
-                        f'No ParameterPort corresponds to {key._owner._owner}'
-                        f'.parameters.{key.name}'
-                    ) from None
+                    key_component = key._owner._owner
+                    key_name = key.name
                 except AttributeError:
-                    raise e from None
+                    # this probably shouldn't be reached because key should be a Parameter here
+                    raise e
+                else:
+                    raise ParameterPortError(
+                        f'No ParameterPort corresponds to {key_component}.parameters.{key_name}'
+                    ) from e
 
         try:
             return super().__getitem__(key)
@@ -470,14 +473,14 @@ class ParameterPortList(ContentAddressableList):
                     # ContentAddressableList can also throw TypeError when key/index lookup fails
                     pass
             if len(possible_ports) == 0:
-                raise e from None
+                raise e
             elif len(possible_ports) == 1:
                 res = next(iter(possible_ports))
             else:
                 raise ParameterPortError(
                     f'Multiple ParameterPorts for {key} exist. Did you want'
                     f' {gen_friendly_comma_str(sorted([p.name for p in possible_ports]))}?'
-                ) from None
+                ) from e
 
         if res is not None:
             self.parameter_mapping[key] = res
