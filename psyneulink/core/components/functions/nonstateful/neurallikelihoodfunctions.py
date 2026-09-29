@@ -534,7 +534,8 @@ def train_neural_likelihood(
         specifies the learning rate of the Adam optimizer used for training.
 
     validation_fraction : float : default 0.1
-        specifies the fraction of the simulated data held out to evaluate the estimator.
+        specifies the fraction of the parameter draws whose simulated data are held out from training, to
+        evaluate the estimator.
 
     seed : int : default 0
         specifies the seed for the parameter draws, the noise simulated at each of them, and training.
