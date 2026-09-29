@@ -1,8 +1,18 @@
+"""Dawa's nonlinear control, stimulus, decision, and response LCA network.
+
+The LC monitors decision activity and modulates stimulus, decision, and response
+gain. Response threshold crossing determines the choice and decision time;
+the RT gate adds nondecision time to that readout.
+"""
+
 import psyneulink as pnl
 import numpy as np
 
-#Define function to generate a counterbalanced trial sequence
-def conflict_task_sequence(n: int = 512, incongruence_frequency: float = 0.5, seed: int = None):
+
+def conflict_task_sequence(
+    n: int = 512, incongruence_frequency: float = 0.5, seed: int = None
+):
+    """Generate a color-discrimination sequence with controlled congruency counts."""
     rng = np.random.RandomState(seed)
 
     # Half red, half blue
@@ -10,16 +20,18 @@ def conflict_task_sequence(n: int = 512, incongruence_frequency: float = 0.5, se
     n_blue = n - n_red
 
     # Split each into congruent/incongruent
-    n_red_incon  = int(n_red * incongruence_frequency)
-    n_red_con    = n_red - n_red_incon
+    n_red_incon = int(n_red * incongruence_frequency)
+    n_red_con = n_red - n_red_incon
     n_blue_incon = int(n_blue * incongruence_frequency)
-    n_blue_con   = n_blue - n_blue_incon
+    n_blue_con = n_blue - n_blue_incon
 
-    #[Red, Blue, Left, Right]
-    red_con    = [[1, 0, 1, 0]] * n_red_con     # Red target, left location (congruent)
-    red_incon  = [[1, 0, 0, 1]] * n_red_incon   # Red target, right location (incongruent)
-    blue_con   = [[0, 1, 0, 1]] * n_blue_con    # Blue target, right location (congruent)
-    blue_incon = [[0, 1, 1, 0]] * n_blue_incon  # Blue target, left location (incongruent)
+    # [Red, Blue, Left, Right]
+    red_con = [[1, 0, 1, 0]] * n_red_con  # Red target, left location (congruent)
+    red_incon = [[1, 0, 0, 1]] * n_red_incon  # Red target, right location (incongruent)
+    blue_con = [[0, 1, 0, 1]] * n_blue_con  # Blue target, right location (congruent)
+    blue_incon = [
+        [0, 1, 1, 0]
+    ] * n_blue_incon  # Blue target, left location (incongruent)
 
     stimuli = red_con + red_incon + blue_con + blue_incon
     rng.shuffle(stimuli)
@@ -30,8 +42,9 @@ def conflict_task_sequence(n: int = 512, incongruence_frequency: float = 0.5, se
 
     return tasks, stimuli
 
+
 def make_lca_model(
-# Control LCA,
+    # Control LCA,
     c_bias=0.0,
     c_gain=100,
     c_leak=1,
@@ -90,15 +103,14 @@ def make_lca_model(
     WeightedColorInput = pnl.ProcessingMechanism(
         name="Weighted Color Input",
         input_shapes=2,
-        function=pnl.Linear(intercept=0, slope=w1)
+        function=pnl.Linear(intercept=0, slope=w1),
     )
 
     WeightedLocationInput = pnl.ProcessingMechanism(
         name="Weighted Location Input",
         input_shapes=2,
-        function=pnl.Linear(intercept=0, slope=w2)
+        function=pnl.Linear(intercept=0, slope=w2),
     )
-
 
     controlExecution = pnl.LCAMechanism(
         name="Control Units\n[Color, Location]",
@@ -113,7 +125,7 @@ def make_lca_model(
         time_step_size=time_step_size,
         termination_measure=pnl.TimeScale.TRIAL,
         execute_until_finished=False,
-        #reset_stateful_function_when=pnl.AtTrialStart(),
+        # No trial-start reset: retained control activity provides trial history.
         termination_threshold=0,
     )
 
@@ -121,10 +133,12 @@ def make_lca_model(
         name="Stimulus Units\n[Red, Blue, Left, Right]",
         input_shapes=4,
         function=pnl.Logistic(gain=s_gain, bias=s_bias),
-        matrix=[[0, -s_competition, 0, 0],
-                [-s_competition, 0, 0, 0],
-                [0, 0, 0, -s_competition],
-                [0, 0, -s_competition, 0]],
+        matrix=[
+            [0, -s_competition, 0, 0],
+            [-s_competition, 0, 0, 0],
+            [0, 0, 0, -s_competition],
+            [0, 0, -s_competition, 0],
+        ],
         leak=s_leak,
         competition=s_competition,
         self_excitation=0,
@@ -133,19 +147,19 @@ def make_lca_model(
         termination_measure=pnl.TimeScale.TRIAL,
         execute_until_finished=False,
         termination_threshold=0,
-        reset_stateful_function_when=pnl.AtTrialStart()
+        reset_stateful_function_when=pnl.AtTrialStart(),
     )
 
     WeightedColorStimulus = pnl.ProcessingMechanism(
         name="Weighted Color Stimulus",
         input_shapes=2,
-        function=pnl.Linear(intercept=0, slope=w1)
+        function=pnl.Linear(intercept=0, slope=w1),
     )
 
     WeightedLocationStimulus = pnl.ProcessingMechanism(
         name="Weighted Location Stimulus",
         input_shapes=2,
-        function=pnl.Linear(intercept=0, slope=w2)
+        function=pnl.Linear(intercept=0, slope=w2),
     )
 
     decisionLayer = pnl.LCAMechanism(
@@ -161,7 +175,7 @@ def make_lca_model(
         output_ports=[pnl.RESULT, pnl.ENERGY],
         execute_until_finished=False,
         termination_threshold=0,
-        reset_stateful_function_when=pnl.AtTrialStart()
+        reset_stateful_function_when=pnl.AtTrialStart(),
     )
 
     responseLayer = pnl.LCAMechanism(
@@ -191,31 +205,34 @@ def make_lca_model(
     )
 
     biasMechanism = pnl.ProcessingMechanism(
-         name="Bias Mechanism",
-         input_shapes = 1,
-         function = pnl.Linear(slope=0, intercept=sdr_bias),
+        name="Bias Mechanism",
+        input_shapes=1,
+        function=pnl.Linear(slope=0, intercept=sdr_bias),
     )
 
     biasOverride = pnl.ControlMechanism(
         monitor_for_control=biasMechanism,
-        control_signals=[(pnl.BIAS, stimulusLayer),
-                         (pnl.BIAS, decisionLayer),
-                         (pnl.BIAS, responseLayer)],
-        modulation = pnl.OVERRIDE
+        control_signals=[
+            (pnl.BIAS, stimulusLayer),
+            (pnl.BIAS, decisionLayer),
+            (pnl.BIAS, responseLayer),
+        ],
+        modulation=pnl.OVERRIDE,
     )
-
 
     w1Mechanism = pnl.ProcessingMechanism(
         name="w1 Mechanism",
-        input_shapes = 1,
-        function = pnl.Linear(slope=0, intercept=w1),
+        input_shapes=1,
+        function=pnl.Linear(slope=0, intercept=w1),
     )
 
     w1Override = pnl.ControlMechanism(
         monitor_for_control=w1Mechanism,
-        control_signals=[(pnl.SLOPE, WeightedColorInput),
-                         (pnl.SLOPE, WeightedColorStimulus)],
-        modulation = pnl.OVERRIDE
+        control_signals=[
+            (pnl.SLOPE, WeightedColorInput),
+            (pnl.SLOPE, WeightedColorStimulus),
+        ],
+        modulation=pnl.OVERRIDE,
     )
 
     w2Mechanism = pnl.ProcessingMechanism(
@@ -226,18 +243,36 @@ def make_lca_model(
 
     w2Override = pnl.ControlMechanism(
         monitor_for_control=w2Mechanism,
-        control_signals=[(pnl.SLOPE, WeightedLocationInput),
-                         (pnl.SLOPE, WeightedLocationStimulus)],
-        modulation=pnl.OVERRIDE
+        control_signals=[
+            (pnl.SLOPE, WeightedLocationInput),
+            (pnl.SLOPE, WeightedLocationStimulus),
+        ],
+        modulation=pnl.OVERRIDE,
     )
 
-
     comp = pnl.Composition()
-    comp.add_nodes([taskInput, stimulusInput, controlExecution, stimulusLayer, decisionLayer, responseLayer, decisionGate, timeGate,
-                    biasMechanism, biasOverride,
-                    WeightedColorInput, WeightedLocationInput, WeightedColorStimulus, WeightedLocationStimulus,
-                    w1Mechanism, w1Override, w2Mechanism, w2Override
-    ])
+    comp.add_nodes(
+        [
+            taskInput,
+            stimulusInput,
+            controlExecution,
+            stimulusLayer,
+            decisionLayer,
+            responseLayer,
+            decisionGate,
+            timeGate,
+            biasMechanism,
+            biasOverride,
+            WeightedColorInput,
+            WeightedLocationInput,
+            WeightedColorStimulus,
+            WeightedLocationStimulus,
+            w1Mechanism,
+            w1Override,
+            w2Mechanism,
+            w2Override,
+        ]
+    )
 
     comp.add_projection(sender=taskInput, receiver=controlExecution)
 
@@ -245,12 +280,14 @@ def make_lca_model(
         sender=stimulusInput,
         receiver=WeightedColorInput,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, 0],
-                [0, 1],
-                [0, 0],
-                [0, 0],
-            ])
+            matrix=np.array(
+                [
+                    [1, 0],
+                    [0, 1],
+                    [0, 0],
+                    [0, 0],
+                ]
+            )
         ),
     )
 
@@ -258,24 +295,27 @@ def make_lca_model(
         sender=stimulusInput,
         receiver=WeightedLocationInput,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [0, 0],
-                [0, 0],
-                [1, 0],
-                [0, 1],
-            ])
+            matrix=np.array(
+                [
+                    [0, 0],
+                    [0, 0],
+                    [1, 0],
+                    [0, 1],
+                ]
+            )
         ),
     )
-
 
     comp.add_projection(
         sender=controlExecution,
         receiver=stimulusLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [c_w, c_w, 0,   0],  # Color control → Red & Blue
-                [0,   0,   c_w, c_w] # Location control → Left & Right
-            ])
+            matrix=np.array(
+                [
+                    [c_w, c_w, 0, 0],  # Color control → Red & Blue
+                    [0, 0, c_w, c_w],  # Location control → Left & Right
+                ]
+            )
         ),
     )
 
@@ -283,10 +323,12 @@ def make_lca_model(
         sender=controlExecution,
         receiver=decisionLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [c_w, c_w],  # Control unit 1 → Left, Right
-                [c_w, c_w],  # Control unit 2 → Left, Right
-            ])
+            matrix=np.array(
+                [
+                    [c_w, c_w],  # Control unit 1 → Left, Right
+                    [c_w, c_w],  # Control unit 2 → Left, Right
+                ]
+            )
         ),
     )
 
@@ -294,10 +336,12 @@ def make_lca_model(
         sender=controlExecution,
         receiver=responseLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [c_w, c_w],  # Control unit 1 → Left, Right
-                [c_w, c_w],  # Control unit 2 → Left, Right
-            ])
+            matrix=np.array(
+                [
+                    [c_w, c_w],  # Control unit 1 → Left, Right
+                    [c_w, c_w],  # Control unit 2 → Left, Right
+                ]
+            )
         ),
     )
 
@@ -305,10 +349,12 @@ def make_lca_model(
         sender=WeightedColorInput,
         receiver=stimulusLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, -1, 0, 0],
-                [-1, 1, 0, 0],
-            ])
+            matrix=np.array(
+                [
+                    [1, -1, 0, 0],
+                    [-1, 1, 0, 0],
+                ]
+            )
         ),
     )
 
@@ -316,10 +362,12 @@ def make_lca_model(
         sender=WeightedLocationInput,
         receiver=stimulusLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [0, 0, 1, -1],
-                [0, 0, -1, 1],
-            ])
+            matrix=np.array(
+                [
+                    [0, 0, 1, -1],
+                    [0, 0, -1, 1],
+                ]
+            )
         ),
     )
 
@@ -327,12 +375,14 @@ def make_lca_model(
         sender=stimulusLayer,
         receiver=WeightedColorStimulus,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, 0],
-                [0, 1],
-                [0, 0],
-                [0, 0],
-            ])
+            matrix=np.array(
+                [
+                    [1, 0],
+                    [0, 1],
+                    [0, 0],
+                    [0, 0],
+                ]
+            )
         ),
     )
 
@@ -340,12 +390,14 @@ def make_lca_model(
         sender=stimulusLayer,
         receiver=WeightedLocationStimulus,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [0, 0],
-                [0, 0],
-                [1, 0],
-                [0, 1],
-            ])
+            matrix=np.array(
+                [
+                    [0, 0],
+                    [0, 0],
+                    [1, 0],
+                    [0, 1],
+                ]
+            )
         ),
     )
 
@@ -353,10 +405,12 @@ def make_lca_model(
         sender=WeightedColorStimulus,
         receiver=decisionLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, -1],
-                [-1, 1],
-            ])
+            matrix=np.array(
+                [
+                    [1, -1],
+                    [-1, 1],
+                ]
+            )
         ),
     )
 
@@ -364,10 +418,12 @@ def make_lca_model(
         sender=WeightedLocationStimulus,
         receiver=decisionLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, -1],
-                [-1, 1],
-            ])
+            matrix=np.array(
+                [
+                    [1, -1],
+                    [-1, 1],
+                ]
+            )
         ),
     )
 
@@ -375,15 +431,21 @@ def make_lca_model(
         sender=decisionLayer,
         receiver=responseLayer,
         projection=pnl.MappingProjection(
-            matrix=np.array([
-                [1, -1],  # Decision Left → Response Left
-                [-1,  1], # Decision Right → Response Right
-            ])
+            matrix=np.array(
+                [
+                    [1, -1],  # Decision Left → Response Left
+                    [-1, 1],  # Decision Right → Response Right
+                ]
+            )
         ),
     )
     # responseLayer output port order: 0=RESULT, 1=DECISION_TIME, 2=DECISION_INDEX
-    comp.add_projection(sender=responseLayer.output_ports[1], receiver=timeGate)  # DECISION_TIME
-    comp.add_projection(sender=responseLayer.output_ports[2], receiver=decisionGate)  # DECISION_INDEX
+    comp.add_projection(
+        sender=responseLayer.output_ports[1], receiver=timeGate
+    )  # DECISION_TIME
+    comp.add_projection(
+        sender=responseLayer.output_ports[2], receiver=decisionGate
+    )  # DECISION_INDEX
 
     comp.scheduler.add_condition(decisionGate, pnl.WhenFinished(responseLayer))
     comp.scheduler.add_condition(timeGate, pnl.WhenFinished(responseLayer))
@@ -391,13 +453,11 @@ def make_lca_model(
     comp.scheduler.add_condition(biasMechanism, pnl.AtPass(0))
     comp.scheduler.add_condition(biasOverride, pnl.AtPass(0))
 
-
     comp.scheduler.add_condition(w1Mechanism, pnl.AtPass(0))
     comp.scheduler.add_condition(w1Override, pnl.AtPass(0))
 
     comp.scheduler.add_condition(w2Mechanism, pnl.AtPass(0))
     comp.scheduler.add_condition(w2Override, pnl.AtPass(0))
-
 
     lc_drive = pnl.ObjectiveMechanism(
         name="LC Monitor",
@@ -408,26 +468,29 @@ def make_lca_model(
     lc = pnl.TransferMechanism(
         name="LC",
         input_shapes=1,
-       integrator_mode=True,
-       integrator_function=pnl.FitzHughNagumoIntegrator(
-           integration_method="EULER",
-           time_step_size=0.02,
-           mode=lc_mode,
-           uncorrelated_activity=0.5,
-           time_constant_v=0.05,
-           time_constant_w=5.0,
-           a_v=-1.0, b_v=1.0, c_v=1.0,
-           d_v=0.0, e_v=-1.0, f_v=1.0,
-           a_w=1.0, b_w=-1.0, c_w=0.0,
-           threshold=lc_threshold,
-       ),
-       termination_measure=pnl.TimeScale.PASS,
-       termination_threshold=10,
-       execute_until_finished=True,
-       output_ports=[{
-           pnl.NAME: "NE_OUTPUT",
-           pnl.VARIABLE: (pnl.OWNER_VALUE, 1)
-       }],
+        integrator_mode=True,
+        integrator_function=pnl.FitzHughNagumoIntegrator(
+            integration_method="EULER",
+            time_step_size=0.02,
+            mode=lc_mode,
+            uncorrelated_activity=0.5,
+            time_constant_v=0.05,
+            time_constant_w=5.0,
+            a_v=-1.0,
+            b_v=1.0,
+            c_v=1.0,
+            d_v=0.0,
+            e_v=-1.0,
+            f_v=1.0,
+            a_w=1.0,
+            b_w=-1.0,
+            c_w=0.0,
+            threshold=lc_threshold,
+        ),
+        termination_measure=pnl.TimeScale.PASS,
+        termination_threshold=10,
+        execute_until_finished=True,
+        output_ports=[{pnl.NAME: "NE_OUTPUT", pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}],
         function=pnl.Linear(intercept=lc_base_gain, slope=lc_scaling),
         reset_stateful_function_when=pnl.AtTrialStart(),
     )
@@ -438,13 +501,13 @@ def make_lca_model(
     lc_control = pnl.ControlMechanism(
         name="LC Control",
         monitor_for_control=lc,
-        control_signals=[(pnl.GAIN, stimulusLayer),
-                         (pnl.GAIN, decisionLayer),
-                         (pnl.GAIN, responseLayer)],
+        control_signals=[
+            (pnl.GAIN, stimulusLayer),
+            (pnl.GAIN, decisionLayer),
+            (pnl.GAIN, responseLayer),
+        ],
         modulation=pnl.OVERRIDE,
     )
-
-
 
     comp.add_nodes([lc_control])
 
@@ -458,58 +521,63 @@ def make_lca_model(
     # Preserve the graph's execution order while allowing integration to
     # continue until the response reaches threshold and the output gates run.
     for mechanism in (
-        controlExecution, stimulusLayer, decisionLayer, responseLayer,
-        WeightedColorInput, WeightedLocationInput,
-        WeightedColorStimulus, WeightedLocationStimulus,
+        controlExecution,
+        stimulusLayer,
+        decisionLayer,
+        responseLayer,
+        WeightedColorInput,
+        WeightedLocationInput,
+        WeightedColorStimulus,
+        WeightedLocationStimulus,
     ):
         comp.scheduler.add_condition(mechanism, pnl.Always())
 
-    #comp.show_graph(show_learning=pnl.ALL)
+    # comp.show_graph(show_learning=pnl.ALL)
     return comp
 
 
 def run_lca_model(
-        tasks,
-        stimuli,
-        # Control LCA,
-        c_gain=10,
-        c_leak=7,
-        c_competition=3,
-        c_bias=0,
-        c_w=4,
-        # Stimulus LCA
-        s_bias=-0.45,
-        s_gain=5,
-        s_leak=8,
-        s_competition=8,
-        # Decision LCA
-        d_bias=-0.45,
-        d_gain=5,
-        d_leak=8,
-        d_competition=8,
-        d_noise=0.0,
-        # Response LCA
-        r_bias=-0.45,
-        r_gain=5,
-        r_leak=8,
-        r_competition=8,
-        r_threshold=0.0,
-        r_noise=0.1,
-        # Time gate
-        non_decision_time=0.0,
-        time_step_size=0.01,
-        # Weights
-        w1=1.0,
-        w2=1.2,
-        sdr_bias=-0.45,
-        lc_base_gain=5.0,
-        lc_scaling=1.0,
-        lc_mode=0.9,
-        lc_input=0.3,
-        lc_threshold=0.5,
-        rng_seed=None,
-        c_noise=0.0,
-        s_noise=0.0,
+    tasks,
+    stimuli,
+    # Control LCA,
+    c_gain=10,
+    c_leak=7,
+    c_competition=3,
+    c_bias=0,
+    c_w=4,
+    # Stimulus LCA
+    s_bias=-0.45,
+    s_gain=5,
+    s_leak=8,
+    s_competition=8,
+    # Decision LCA
+    d_bias=-0.45,
+    d_gain=5,
+    d_leak=8,
+    d_competition=8,
+    d_noise=0.0,
+    # Response LCA
+    r_bias=-0.45,
+    r_gain=5,
+    r_leak=8,
+    r_competition=8,
+    r_threshold=0.0,
+    r_noise=0.1,
+    # Time gate
+    non_decision_time=0.0,
+    time_step_size=0.01,
+    # Weights
+    w1=1.0,
+    w2=1.2,
+    sdr_bias=-0.45,
+    lc_base_gain=5.0,
+    lc_scaling=1.0,
+    lc_mode=0.9,
+    lc_input=0.3,
+    lc_threshold=0.5,
+    rng_seed=None,
+    c_noise=0.0,
+    s_noise=0.0,
 ):
 
     comp = make_lca_model(
@@ -555,7 +623,7 @@ def run_lca_model(
     decisionLayer = comp.nodes["Decision Units\n[Left, Right]"]
     responseLayer = comp.nodes["Response Units\n[Left, Right]"]
     lc = comp.nodes["LC"]
-  #  lc_control = comp.nodes["LC Control"]
+    #  lc_control = comp.nodes["LC Control"]
 
     # Log values for all three layers
     controlExecution.set_log_conditions("value")
@@ -574,20 +642,18 @@ def run_lca_model(
             taskInput: tasks,
             stimulusInput: stimuli,
         },
-        execution_mode=pnl.ExecutionMode.LLVMRun
+        execution_mode=pnl.ExecutionMode.LLVMRun,
     )
 
     return comp
 
 
-
 if __name__ == "__main__":
     from psyneulink.core.globals.utilities import set_global_seed
+
     set_global_seed(0)
 
-    tasks, stimuli = conflict_task_sequence(
-        n=512, incongruence_frequency=0.5, seed=3
-    )
+    tasks, stimuli = conflict_task_sequence(n=512, incongruence_frequency=0.5, seed=3)
     tasks = tasks[:5]
     stimuli = stimuli[:5]
     print("Full input sequence (first 5):")
@@ -609,7 +675,7 @@ if __name__ == "__main__":
         decision_times.append(dt)
 
     print("Stimuli (Red,Blue,Left,Right):")
-    print(stimuli[:len(decision_indices)])
+    print(stimuli[: len(decision_indices)])
 
     print("Decision times (seconds):")
     print(decision_times)

@@ -1,4 +1,4 @@
-#%%
+# %%
 import numpy as np
 import psyneulink as pnl
 import pandas as pd
@@ -7,15 +7,19 @@ import optuna
 from full_lca_model_lc import make_lca_model
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--subject_id", help="The subject ID to fit model.", default=1, type=int)
+parser.add_argument(
+    "--subject_id", help="The subject ID to fit model.", default=1, type=int
+)
 
 args = parser.parse_args()
+
 
 def get_node(comp, name):
     for node in comp.nodes:
         if node.name.startswith(name):
             return node
     return None
+
 
 def make_input_dict(comp, taskSequence, stimulusSequence):
     inputs = {
@@ -26,6 +30,7 @@ def make_input_dict(comp, taskSequence, stimulusSequence):
         get_node(comp, "w2 Mechanism"): [[np.array(0)] for v in stimulusSequence],
     }
     return inputs
+
 
 # High-level parameters that impact performance of the test
 num_estimates = 10000
@@ -81,13 +86,13 @@ data_to_fit = data[data["PrevCongruency"].notna()].reset_index(drop=True)
 data_to_fit["PrevCongruency"] = data_to_fit["PrevCongruency"].astype("category")
 
 # Create the model inputs (these fit your lca model)
-stimulusSequence = data_to_fit[['S1', 'S2', 'S3', 'S4']].to_numpy()
-taskSequence = data_to_fit[['T1', 'T2']].to_numpy()
+stimulusSequence = data_to_fit[["S1", "S2", "S3", "S4"]].to_numpy()
+taskSequence = data_to_fit[["T1", "T2"]].to_numpy()
 
-likelihood_include_mask = data_to_fit['likelihood_include_mask'].to_numpy(dtype='bool')
+likelihood_include_mask = data_to_fit["likelihood_include_mask"].to_numpy(dtype="bool")
 
 # Must match outcome_variables order: decision then response_time
-data_to_fit = data_to_fit[['decision', 'response_time', 'subject_nr', 'PrevCongruency']]
+data_to_fit = data_to_fit[["decision", "response_time", "subject_nr", "PrevCongruency"]]
 
 # Make a stability flexibility composition
 comp = make_lca_model(**lca_params)
@@ -103,7 +108,7 @@ w1Mechanism = comp.nodes["w1 Mechanism"]
 w2Mechanism = comp.nodes["w2 Mechanism"]
 lc_drive = comp.nodes["LC Monitor"]
 lc = comp.nodes["LC"]
-lc_control= comp.nodes["LC Control"]
+lc_control = comp.nodes["LC Control"]
 
 inputs = make_input_dict(comp, taskSequence, stimulusSequence)
 
@@ -135,7 +140,10 @@ pec = pnl.ParameterEstimationComposition(
     ],
     data=data_to_fit,
     likelihood_include_mask=likelihood_include_mask,
-    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(restart_strategy='ipop'), max_iterations=max_iterations),
+    optimization_function=pnl.PECOptimizationFunction(
+        method=optuna.samplers.CmaEsSampler(restart_strategy="ipop"),
+        max_iterations=max_iterations,
+    ),
     num_estimates=num_estimates,
 )
 
@@ -152,16 +160,16 @@ print(optimal_parameters)
 
 data_dict = {k: [v] for k, v in optimal_parameters.items()}
 df = pd.DataFrame(data_dict)
-df['log_likelihood'] = pec.optimal_value
-df['subject_nr'] = "ALL"
-df['fit_type'] = "Flanker"
-df['num_estimates'] = num_estimates
-df['max_iterations'] = max_iterations
+df["log_likelihood"] = pec.optimal_value
+df["subject_nr"] = "ALL"
+df["fit_type"] = "Flanker"
+df["num_estimates"] = num_estimates
+df["max_iterations"] = max_iterations
 
 # Add parameters used to initialize the model
 df = pd.concat([df, pd.DataFrame(lca_params, index=[0])], axis=1)
 
-output_path = 'flanker_fit_lc_prevcongruency_part2.csv'
+output_path = "flanker_fit_lc_prevcongruency_part2.csv"
 
 df.to_csv(output_path, index=False)
 

@@ -19,13 +19,36 @@ from psyneulink.core.globals.utilities import set_global_seed
 
 SOURCE = Path(__file__).with_name("dawa_lca_model") / "full_lca_model_lc.py"
 DEFAULTS = dict(
-    c_gain=10., c_leak=7., c_competition=3., c_bias=0., c_w=4.,
-    s_gain=5., s_leak=8., s_competition=8., s_bias=-.45,
-    d_gain=5., d_leak=8., d_competition=8., d_bias=-.45, d_noise=0.,
-    r_gain=5., r_leak=8., r_competition=8., r_bias=-.45, r_noise=.1,
-    r_threshold=.3, non_decision_time=.2, time_step_size=.01,
-    w1=1., w2=1.2, sdr_bias=-.45, lc_base_gain=5., lc_scaling=1.,
-    lc_mode=.9, lc_input=.3, lc_threshold=.5,
+    c_gain=10.0,
+    c_leak=7.0,
+    c_competition=3.0,
+    c_bias=0.0,
+    c_w=4.0,
+    s_gain=5.0,
+    s_leak=8.0,
+    s_competition=8.0,
+    s_bias=-0.45,
+    d_gain=5.0,
+    d_leak=8.0,
+    d_competition=8.0,
+    d_bias=-0.45,
+    d_noise=0.0,
+    r_gain=5.0,
+    r_leak=8.0,
+    r_competition=8.0,
+    r_bias=-0.45,
+    r_noise=0.1,
+    r_threshold=0.3,
+    non_decision_time=0.2,
+    time_step_size=0.01,
+    w1=1.0,
+    w2=1.2,
+    sdr_bias=-0.45,
+    lc_base_gain=5.0,
+    lc_scaling=1.0,
+    lc_mode=0.9,
+    lc_input=0.3,
+    lc_threshold=0.5,
 )
 
 
@@ -37,79 +60,147 @@ def source_module(path=SOURCE):
 
 
 def node(composition, name):
-    matches = [item for item in composition.nodes if re.sub(r"-\d+$", "", item.name) == name]
+    """Find a named source node despite PNL's suffixes for repeated constructions."""
+    matches = [
+        item for item in composition.nodes if re.sub(r"-\d+$", "", item.name) == name
+    ]
     if len(matches) != 1:
         raise ValueError(f"Expected one {name!r} node, found {len(matches)}")
     return matches[0]
 
 
-def build_model(*, trials=4, schedule="recurrent", deterministic=False, seed=3, source=SOURCE,
-                c_noise=None, s_noise=None, d_noise=None, r_noise=None):
+def build_model(
+    *,
+    trials=4,
+    schedule="recurrent",
+    deterministic=False,
+    seed=3,
+    source=SOURCE,
+    c_noise=None,
+    s_noise=None,
+    d_noise=None,
+    r_noise=None,
+):
     module = source_module(source)
     parameters = dict(DEFAULTS)
-    parameters.update({name: value for name, value in (
-        ("c_noise", c_noise), ("s_noise", s_noise), ("d_noise", d_noise), ("r_noise", r_noise),
-    ) if value is not None})
+    parameters.update(
+        {
+            name: value
+            for name, value in (
+                ("c_noise", c_noise),
+                ("s_noise", s_noise),
+                ("d_noise", d_noise),
+                ("r_noise", r_noise),
+            )
+            if value is not None
+        }
+    )
     if deterministic:
         for name in ("c_noise", "s_noise", "d_noise", "r_noise"):
             if name in parameters:
-                parameters[name] = 0.
+                parameters[name] = 0.0
     composition = module.make_lca_model(**parameters)
     if schedule == "recurrent":
         # Also apply the default to older/custom source builders. The bundled
         # builder already specifies these conditions for all callers.
         for name in (
-            "Control Units\n[Color, Location]", "Stimulus Units\n[Red, Blue, Left, Right]",
-            "Decision Units\n[Left, Right]", "Response Units\n[Left, Right]",
-            "Weighted Color Input", "Weighted Location Input",
-            "Weighted Color Stimulus", "Weighted Location Stimulus",
+            "Control Units\n[Color, Location]",
+            "Stimulus Units\n[Red, Blue, Left, Right]",
+            "Decision Units\n[Left, Right]",
+            "Response Units\n[Left, Right]",
+            "Weighted Color Input",
+            "Weighted Location Input",
+            "Weighted Color Stimulus",
+            "Weighted Location Stimulus",
         ):
             composition.scheduler.add_condition(node(composition, name), pnl.Always())
     tasks, stimuli = module.conflict_task_sequence(trials, seed=seed)
-    inputs = {node(composition, "Task Input"): tasks, node(composition, "Stimulus Input"): stimuli}
-    inputs.update({node(composition, name): np.zeros((trials, 1))
-                   for name in ("Bias Mechanism", "w1 Mechanism", "w2 Mechanism")})
-    outputs = tuple(node(composition, name).output_port for name in ("DECISION_GATE", "RT_GATE"))
+    inputs = {
+        node(composition, "Task Input"): tasks,
+        node(composition, "Stimulus Input"): stimuli,
+    }
+    inputs.update(
+        {
+            node(composition, name): np.zeros((trials, 1))
+            for name in ("Bias Mechanism", "w1 Mechanism", "w2 Mechanism")
+        }
+    )
+    outputs = tuple(
+        node(composition, name).output_port for name in ("DECISION_GATE", "RT_GATE")
+    )
     return composition, inputs, outputs
 
 
 def fit_surface(composition):
+    """Return ordered (lower, upper, default) triples before conditional expansion.
+
+    Fitting and recovery drivers use this insertion order to map coordinate
+    vectors to model parameters. Keep it aligned with their starts and grids.
+    """
     return {
-        ("termination_threshold", node(composition, "Response Units\n[Left, Right]")): (.25, .7, .3),
-        ("intercept", node(composition, "RT_GATE")): (.1, .3, .2),
-        ("intercept", node(composition, "Bias Mechanism")): (-.5, 0., -.45),
-        ("gain", node(composition, "Control Units\n[Color, Location]")): (5., 20., 10.),
-        ("mode", node(composition, "LC")): (.1, .9, .9),
-        ("slope", node(composition, "LC")): (1., 4., 1.),
-        ("intercept", node(composition, "LC")): (3., 10., 5.),
+        ("termination_threshold", node(composition, "Response Units\n[Left, Right]")): (
+            0.25,
+            0.7,
+            0.3,
+        ),
+        ("intercept", node(composition, "RT_GATE")): (0.1, 0.3, 0.2),
+        ("intercept", node(composition, "Bias Mechanism")): (-0.5, 0.0, -0.45),
+        ("gain", node(composition, "Control Units\n[Color, Location]")): (
+            5.0,
+            20.0,
+            10.0,
+        ),
+        ("mode", node(composition, "LC")): (0.1, 0.9, 0.9),
+        ("slope", node(composition, "LC")): (1.0, 4.0, 1.0),
+        ("intercept", node(composition, "LC")): (3.0, 10.0, 5.0),
     }
 
 
-def pec_smoke(composition, inputs, outputs, observed, *, backend, max_steps, estimates, seed):
+def pec_smoke(
+    composition, inputs, outputs, observed, *, backend, max_steps, estimates, seed
+):
     """Evaluate two candidates through PEC, including conditional fit lanes."""
     import pandas as pd
 
     surface = fit_surface(composition)
     data = pd.DataFrame(observed, columns=["decision", "response_time"])
-    data["decision"] = pd.Categorical(data["decision"], categories=[0., 1.])
-    data["subject_nr"] = pd.Categorical(np.repeat(np.arange(2), (len(data) + 1) // 2)[:len(data)])
+    data["decision"] = pd.Categorical(data["decision"], categories=[0.0, 1.0])
+    data["subject_nr"] = pd.Categorical(
+        np.repeat(np.arange(2), (len(data) + 1) // 2)[: len(data)]
+    )
     data["PrevCongruency"] = pd.Categorical(np.arange(len(data)) % 2)
-    depends = {key: "subject_nr" for key in (
-        ("termination_threshold", node(composition, "Response Units\n[Left, Right]")),
-        ("gain", node(composition, "Control Units\n[Color, Location]")),
-        ("intercept", node(composition, "RT_GATE")),
-        ("slope", node(composition, "LC")),
-    )}
+    depends = {
+        key: "subject_nr"
+        for key in (
+            (
+                "termination_threshold",
+                node(composition, "Response Units\n[Left, Right]"),
+            ),
+            ("gain", node(composition, "Control Units\n[Color, Location]")),
+            ("intercept", node(composition, "RT_GATE")),
+            ("slope", node(composition, "LC")),
+        )
+    }
     depends[("mode", node(composition, "LC"))] = "PrevCongruency"
     pec = pnl.ParameterEstimationComposition(
-        nodes=composition, parameters={key: np.array(values[:2]) for key, values in surface.items()},
-        depends_on=depends, outcome_variables=list(outputs), data=data,
+        nodes=composition,
+        parameters={key: np.array(values[:2]) for key, values in surface.items()},
+        depends_on=depends,
+        outcome_variables=list(outputs),
+        data=data,
         likelihood_include_mask=np.ones(len(data), dtype=bool),
         optimization_function=pnl.PECOptimizationFunction(
-            method="differential_evolution", max_iterations=1, batched_backend=backend,
-            batched_max_steps=max_steps, batched_seed=seed, batched_bins=20,
-            batched_bin_range=[(0., max_steps * .01 + .3)], batched_pseudocount=1.,
-        ), num_estimates=estimates, initial_seed=seed,
+            method="differential_evolution",
+            max_iterations=1,
+            batched_backend=backend,
+            batched_max_steps=max_steps,
+            batched_seed=seed,
+            batched_bins=20,
+            batched_bin_range=[(0.0, max_steps * 0.01 + 0.3)],
+            batched_pseudocount=1.0,
+        ),
+        num_estimates=estimates,
+        initial_seed=seed,
     )
     pec.controller._pec_input_values_by_node = inputs
     values = []
@@ -120,13 +211,15 @@ def pec_smoke(composition, inputs, outputs, observed, *, backend, max_steps, est
         values.extend([surface[key][2]] * levels)
     objective = pec.controller.function._make_objective_func()
     candidates = np.asarray([values, values])
-    candidates[1, 0] += .025
-    candidates[1, mode_coordinate] = .7
+    candidates[1, 0] += 0.025
+    candidates[1, mode_coordinate] = 0.7
     scores = objective._batched_parameter_sets(candidates)
     if not np.all(np.isfinite(scores)):
         raise AssertionError(f"PEC produced nonfinite scores: {scores}")
-    return {"candidate_scores": np.asarray(scores).tolist(),
-            "fit_coordinates": pec.controller.function.fit_param_names}
+    return {
+        "candidate_scores": np.asarray(scores).tolist(),
+        "fit_coordinates": pec.controller.function.fit_param_names,
+    }
 
 
 def reference_results(composition, inputs, outputs, mode):
@@ -134,63 +227,122 @@ def reference_results(composition, inputs, outputs, mode):
         rows = []
 
         def collect():
-            rows.append([float(port.parameters.value.get(composition).ravel()[0]) for port in outputs])
+            rows.append(
+                [
+                    float(port.parameters.value.get(composition).ravel()[0])
+                    for port in outputs
+                ]
+            )
 
         composition.run(inputs, call_after_trial=collect)
         return np.asarray(rows)
     composition.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
     indices = []
     for output in outputs:
-        matches = [i for i, port in enumerate(composition.output_CIM.input_ports)
-                   if any(projection.sender is output for projection in port.path_afferents)]
+        matches = [
+            i
+            for i, port in enumerate(composition.output_CIM.input_ports)
+            if any(projection.sender is output for projection in port.path_afferents)
+        ]
         if len(matches) != 1:
             raise AssertionError(f"Ambiguous reference output: {output}")
         indices.append(matches[0])
-    return np.asarray([[float(np.asarray(row[i]).ravel()[0]) for i in indices] for row in composition.results])
+    return np.asarray(
+        [
+            [float(np.asarray(row[i]).ravel()[0]) for i in indices]
+            for row in composition.results
+        ]
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=SOURCE)
-    parser.add_argument("--schedule", choices=("source", "recurrent"), default="recurrent",
-                        help="Recurrent processing is the default; source uses the loaded builder's own conditions")
+    parser.add_argument(
+        "--schedule",
+        choices=("source", "recurrent"),
+        default="recurrent",
+        help="Recurrent processing is the default; source uses the loaded builder's own conditions",
+    )
     parser.add_argument("--backend", choices=("triton", "triton_cpu"), default="triton")
     parser.add_argument("--trials", type=int, default=4)
     parser.add_argument("--estimates", type=int, default=256)
     parser.add_argument("--max-steps", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=29)
     parser.add_argument("--deterministic", action="store_true")
-    for prefix, layer in (("c", "control"), ("s", "stimulus"), ("d", "decision"), ("r", "response")):
-        parser.add_argument(f"--{prefix}-noise", type=float,
-                            help=f"Gaussian noise standard deviation for the {layer} LCA")
-    parser.add_argument("--reference", choices=("none", "python", "llvm"), default="none")
+    for prefix, layer in (
+        ("c", "control"),
+        ("s", "stimulus"),
+        ("d", "decision"),
+        ("r", "response"),
+    ):
+        parser.add_argument(
+            f"--{prefix}-noise",
+            type=float,
+            help=f"Gaussian noise standard deviation for the {layer} LCA",
+        )
+    parser.add_argument(
+        "--reference", choices=("none", "python", "llvm"), default="none"
+    )
     parser.add_argument("--pec-smoke", action="store_true")
-    parser.add_argument("--output", type=Path, help="Optional NPZ samples; a neighboring JSON stores the report")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional NPZ samples; a neighboring JSON stores the report",
+    )
     args = parser.parse_args()
     if args.reference != "none" and not args.deterministic:
-        parser.error("--reference requires --deterministic; GPU and LLVM use different RNG streams")
+        parser.error(
+            "--reference requires --deterministic; GPU and LLVM use different RNG streams"
+        )
     if args.trials < 2 or args.estimates < 1:
         parser.error("Use at least two trials and one estimate")
-    noise = {f"{prefix}_noise": getattr(args, f"{prefix}_noise") for prefix in ("c", "s", "d", "r")}
-    if any(value is not None and (not np.isfinite(value) or value < 0.) for value in noise.values()):
+    noise = {
+        f"{prefix}_noise": getattr(args, f"{prefix}_noise")
+        for prefix in ("c", "s", "d", "r")
+    }
+    if any(
+        value is not None and (not np.isfinite(value) or value < 0.0)
+        for value in noise.values()
+    ):
         parser.error("Noise standard deviations must be finite and nonnegative")
     set_global_seed(args.seed)
-    composition, inputs, outputs = build_model(trials=args.trials, schedule=args.schedule,
-                                                deterministic=args.deterministic, source=args.source, **noise)
-    plan = BatchedCompositionCompiler.compile(composition, backend=args.backend, outputs=outputs, max_steps=args.max_steps)
-    candidates = [{f"{node.name}.{parameter}": values[2] for (parameter, node), values in fit_surface(composition).items()}]
-    candidates.append({**candidates[0], f"{node(composition, 'LC').name}.mode": .7})
+    composition, inputs, outputs = build_model(
+        trials=args.trials,
+        schedule=args.schedule,
+        deterministic=args.deterministic,
+        source=args.source,
+        **noise,
+    )
+    plan = BatchedCompositionCompiler.compile(
+        composition, backend=args.backend, outputs=outputs, max_steps=args.max_steps
+    )
+    candidates = [
+        {
+            f"{node.name}.{parameter}": values[2]
+            for (parameter, node), values in fit_surface(composition).items()
+        }
+    ]
+    candidates.append({**candidates[0], f"{node(composition, 'LC').name}.mode": 0.7})
     start = time.perf_counter()
-    result = plan.run(inputs, candidates, args.estimates, seed=args.seed, strict_truncation=True)
+    result = plan.run(
+        inputs, candidates, args.estimates, seed=args.seed, strict_truncation=True
+    )
     first_seconds = time.perf_counter() - start
     start = time.perf_counter()
-    replay = plan.run(inputs, candidates, args.estimates, seed=args.seed, strict_truncation=True)
+    replay = plan.run(
+        inputs, candidates, args.estimates, seed=args.seed, strict_truncation=True
+    )
     warm_seconds = time.perf_counter() - start
     np.testing.assert_array_equal(result.values, replay.values)
     report = {
-        "schedule": args.schedule, "backend": args.backend, "shape": list(result.values.shape),
-        "noise_overrides": noise, "deterministic": args.deterministic,
-        "first_run_seconds": first_seconds, "warm_run_seconds": warm_seconds,
+        "schedule": args.schedule,
+        "backend": args.backend,
+        "shape": list(result.values.shape),
+        "noise_overrides": noise,
+        "deterministic": args.deterministic,
+        "first_run_seconds": first_seconds,
+        "warm_run_seconds": warm_seconds,
         "trial_estimates_per_second": 2 * args.trials * args.estimates / warm_seconds,
         "mean_rt_by_candidate": result.values[..., 1].mean(axis=(1, 2, 3)).tolist(),
         "reproducible": True,
@@ -204,10 +356,23 @@ def main():
     if args.pec_smoke:
         # Use a fresh graph: a native reference run leaves live scheduler state.
         set_global_seed(args.seed)
-        composition, inputs, outputs = build_model(trials=args.trials, schedule=args.schedule,
-                                                    deterministic=args.deterministic, source=args.source, **noise)
-        report["pec"] = pec_smoke(composition, inputs, outputs, result.values[0, 0, :, 0],
-                                  backend=args.backend, max_steps=args.max_steps, estimates=args.estimates, seed=args.seed)
+        composition, inputs, outputs = build_model(
+            trials=args.trials,
+            schedule=args.schedule,
+            deterministic=args.deterministic,
+            source=args.source,
+            **noise,
+        )
+        report["pec"] = pec_smoke(
+            composition,
+            inputs,
+            outputs,
+            result.values[0, 0, :, 0],
+            backend=args.backend,
+            max_steps=args.max_steps,
+            estimates=args.estimates,
+            seed=args.seed,
+        )
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(args.output, values=result.values)
