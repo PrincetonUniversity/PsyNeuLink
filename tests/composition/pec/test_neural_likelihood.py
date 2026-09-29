@@ -158,7 +158,7 @@ def test_wrong_number_of_outcome_columns_is_rejected():
         likelihood.log_likelihood([0.5, 0.9], np.zeros((4, 3)))
 
 
-def test_missing_trial_features_are_reported(tmp_path):
+def test_missing_trial_features_are_reported():
     likelihood, raw = _toy_likelihood(epochs=1)
     object.__setattr__(likelihood.metadata, "trial_feature_columns", (0, 1))
     with pytest.raises(nlf.NeuralLikelihoodError, match="requires trial_features"):
@@ -493,8 +493,7 @@ def test_a_missing_sbi_is_reported_before_anything_is_simulated(monkeypatch):
     assert not built
 
 
-@pytest.mark.composition
-def test_a_model_without_inputs_is_rejected(ddm_data):
+def test_a_model_without_inputs_is_rejected():
     with pytest.raises(nlf.NeuralLikelihoodError, match="pec requires inputs"):
         nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec=object(), n_parameter_samples=8)
 
