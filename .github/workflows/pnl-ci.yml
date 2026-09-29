@@ -106,9 +106,7 @@ jobs:
             arch: 'default'
             version-restrict: 'min'
 
-          # the optional distributed backend and neural likelihood extra, which the other builds run
-          # without; the distributed backend starts worker processes, which is the part least likely
-          # to behave the same on every OS
+          # the optional dask and nle extras, which the other builds run without
           - python-version: '3.10'
             os: ubuntu
             arch: 'default'
