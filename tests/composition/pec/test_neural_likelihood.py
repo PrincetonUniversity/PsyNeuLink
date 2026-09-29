@@ -421,6 +421,20 @@ def test_each_training_draw_gets_noise_of_its_own():
     assert all(shared_noise.values.values())
 
 
+@pytest.mark.composition
+def test_draws_are_simulated_alike_however_they_are_divided_among_workers():
+    """Each worker builds its own model, whose seeds start where every other's do."""
+    placeholder = pd.DataFrame(np.zeros((10, 2)), columns=list(OUTCOMES))
+    thetas = np.array([[0.3, 0.6], [0.3, 0.6], [-0.5, 1.0]])
+    names = ("rate", "threshold")
+
+    _, whole, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas, names, seed=4)
+    _, first, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[:1], names, seed=4)
+    _, rest, _, _ = nlf._simulate(*_ddm_training_pec(placeholder), thetas[1:], names, seed=4,
+                                  first_draw=1)
+    np.testing.assert_array_equal(np.concatenate([first, rest]), whole)
+
+
 def test_a_factory_is_given_the_outcome_columns():
     columns = []
 
@@ -447,8 +461,8 @@ def test_a_worker_builds_its_model_once_per_training(monkeypatch):
 
     data = pd.DataFrame(np.zeros((10, 2)), columns=list(OUTCOMES))
     for training in ("first", "first", "second"):
-        nlf._simulate_chunk(factory, data, np.array([[0.3, 0.6]]), ("rate", "threshold"), 3,
-                            training)
+        nlf._simulate_chunk(factory, data, np.array([[0.3, 0.6]]), 0, ("rate", "threshold"), 0,
+                            3, training)
     assert builds == [0, 1]
     assert threads == [3, 3]
 

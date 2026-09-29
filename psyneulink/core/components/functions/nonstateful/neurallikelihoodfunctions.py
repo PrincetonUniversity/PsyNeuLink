@@ -24,6 +24,8 @@ from dataclasses import dataclass, asdict
 import numpy as np
 import pandas as pd
 
+from psyneulink.core.globals import SampleIterator
+
 # Optional, as elsewhere in PsyNeuLink: the package is importable without it.
 try:
     import torch
@@ -320,8 +322,8 @@ def _check_parameters(pec, names):
         )
 
 
-def _simulate(pec, inputs, thetas, names):
-    """Simulate every draw through ``pec``.
+def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
+    """Simulate every draw through ``pec``; ``first_draw`` is the place of the first among all draws.
 
     Returns the conditioning rows, the simulated outcomes, the number of trials per draw (set
     by ``inputs``, not by the model's data), and the layout of the inputs: how many columns
@@ -332,23 +334,24 @@ def _simulate(pec, inputs, thetas, names):
     features = None
     layout = None
 
-    # Only the simulated outcomes are needed, so scoring is switched off; and each draw needs
-    # noise of its own, which a model built for fitting may be set to share. Both are restored
-    # after, for a caller still using the model.
+    # Only the simulated outcomes are needed, so scoring is switched off; it is restored after, for
+    # a caller still using the model, as are the seeds the model was about to use.
     function = pec.controller.function
     scoring = function._pec_objective_function
     function.set_pec_objective_function(lambda sim_data: 0.0)
-    shared_noise = pec.controller.parameters.same_seed_for_all_allocations
-    sharing = dict(shared_noise.values)
-    for execution_id in sharing:
-        shared_noise.set(False, execution_id)
+    seed_dimension = function.parameters.randomization_dimension.get()
+    model_seeds = function.search_space[seed_dimension]
+    n_estimates = int(np.squeeze(pec.controller.parameters.num_estimates.get()))
 
     cond_rows, x_rows = [], []
     try:
-        for theta in thetas:
+        for draw, theta in enumerate(thetas, start=first_draw):
+            # Seeded by the draw's place among all draws, so each draw has noise of its own, and the
+            # same noise however the draws are divided among workers.
+            seeds = np.random.SeedSequence([seed, draw]).generate_state(n_estimates) % (2**31 - 1)
+            function.search_space[seed_dimension] = SampleIterator(seeds.tolist())
             _, sim = pec.log_likelihood(*theta, inputs=inputs, return_sim_data=True)
             sim = np.asarray(sim, dtype=float)
-            n_estimates = sim.shape[1]
             if n_trials is None:
                 n_trials = sim.shape[0]
                 # Inputs that vary from trial to trial are what tell trials apart; the rest say
@@ -368,12 +371,11 @@ def _simulate(pec, inputs, thetas, names):
             cond_rows.append(block)
     finally:
         function.set_pec_objective_function(scoring)
-        for execution_id, value in sharing.items():
-            shared_noise.set(value, execution_id)
+        function.search_space[seed_dimension] = model_seeds
     return np.concatenate(cond_rows), np.concatenate(x_rows), n_trials, layout
 
 
-def _simulate_chunk(pec_factory, data, thetas, names, worker_cores, training_id):
+def _simulate_chunk(pec_factory, data, thetas, first_draw, names, seed, worker_cores, training_id):
     """Simulate ``thetas`` on a Dask worker, through the model it builds with ``pec_factory``.
 
     As for a distributed fit, the model is built once per worker, and the lock keeps two models
@@ -383,7 +385,7 @@ def _simulate_chunk(pec_factory, data, thetas, names, worker_cores, training_id)
 
     with fitfunctions._PEC_EVALUATION_LOCK:
         pec, inputs = fitfunctions._worker_pec(pec_factory, data, worker_cores, training_id)
-        return _simulate(pec, inputs, thetas, names)
+        return _simulate(pec, inputs, thetas, names, seed, first_draw)
 
 
 def _held_out_draws(cond, n_params, validation_fraction, generator):
@@ -527,7 +529,7 @@ def train_neural_likelihood(
         specifies the fraction of the simulated data held out to evaluate the estimator.
 
     seed : int : default 0
-        specifies the seed for the parameter draws and for training.
+        specifies the seed for the parameter draws, the noise simulated at each of them, and training.
 
     distributed_options : Mapping : default None
         specifies a Dask cluster over which to distribute the simulations, as for :ref:`distributed fitting
@@ -590,9 +592,9 @@ def train_neural_likelihood(
                                columns=list(outcome_names))
 
     if pec is not None:
-        results = [_simulate(pec, inputs, thetas, names)]
+        results = [_simulate(pec, inputs, thetas, names, seed)]
     elif distributed_options is None:
-        results = [_simulate(*pec_factory(placeholder), thetas, names)]
+        results = [_simulate(*pec_factory(placeholder), thetas, names, seed)]
     else:
         from psyneulink.core.components.functions.nonstateful import fitfunctions
 
@@ -603,9 +605,11 @@ def train_neural_likelihood(
             workers = len(client.nthreads()) or 1
             worker_cores = fitfunctions._resolve_worker_cores(distributed_options)
             training_id = uuid.uuid4().hex
-            futures = [client.submit(_simulate_chunk, pec_factory, placeholder, share, names,
-                                     worker_cores, training_id, pure=False)
-                       for share in np.array_split(thetas, min(workers, len(thetas)))]
+            shares = np.array_split(thetas, min(workers, len(thetas)))
+            starts = np.cumsum([0] + [len(share) for share in shares[:-1]])
+            futures = [client.submit(_simulate_chunk, pec_factory, placeholder, share, int(start),
+                                     names, seed, worker_cores, training_id, pure=False)
+                       for share, start in zip(shares, starts)]
             results = client.gather(futures)
         finally:
             if close_fn is not None:
