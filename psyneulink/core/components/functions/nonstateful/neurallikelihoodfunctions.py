@@ -474,7 +474,7 @@ def train_neural_likelihood(
     pec=None,
     inputs: Mapping | None = None,
     pec_factory: Callable | None = None,
-    n_parameter_samples: int = 20000,
+    n_parameter_samples: int = 16384,
     n_trials_per_sample: int | None = None,
     categorical: Sequence[bool] | None = None,
     epochs: int = 30,
@@ -513,8 +513,9 @@ def train_neural_likelihood(
         rows.  Required by **distributed_options**.  Exactly one of **pec** and **pec_factory** must be
         specified.
 
-    n_parameter_samples : int : default 20000
-        specifies the number of parameter values drawn from within **bounds** and simulated.
+    n_parameter_samples : int : default 16384
+        specifies the number of parameter values drawn from within **bounds** and simulated; they cover
+        **bounds** most evenly when this is a power of 2.
 
     n_trials_per_sample : int : default None
         specifies the number of trials simulated for each parameter draw when **pec_factory** is used; 100
