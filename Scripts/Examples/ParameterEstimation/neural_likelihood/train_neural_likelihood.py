@@ -1,12 +1,23 @@
 """Train a neural likelihood for a drift-diffusion model, then fit data with it.
 
 The estimator is trained on data simulated from the model, and is then used in place of simulating
-the model when fitting::
+the model when fitting.  Training simulates ``--n-trials-per-sample`` trials at each of
+``--n-parameter-samples`` parameter values drawn from within the fitted ranges.
+
+Run in one process::
 
     python train_neural_likelihood.py
 
-To divide the simulations for training among the workers of a Dask cluster, see
-train_neural_likelihood_distributed.py.
+With the simulations for training divided among the workers of a single-node cluster::
+
+    python train_neural_likelihood.py --distributed --n-workers 4
+
+Across several nodes, using the SLURM launcher::
+
+    srun -n <workers+2> python -m psyneulink.dask_run train_neural_likelihood.py --distributed
+
+Distributing is worthwhile when simulating the model is most of the cost of training: with many
+parameter draws, or a model that is slow to simulate.
 
 The defaults finish in a few minutes, and are too small for the estimates to be relied on.
 """
@@ -52,7 +63,12 @@ def trial_inputs(n_trials):
 
 
 def build_pec(data, **kwargs):
-    """Build a ParameterEstimationComposition that fits the model's rate and threshold to ``data``."""
+    """Build a ParameterEstimationComposition that fits the model's rate and threshold to ``data``,
+    and the inputs that run the model for one trial per row of ``data``.
+
+    Defined at module level so that it can be sent to a worker process, which calls it to build
+    its own model.
+    """
     comp, decision = build_model()
     pec = pnl.ParameterEstimationComposition(
         nodes=[comp],
@@ -66,7 +82,7 @@ def build_pec(data, **kwargs):
         data=data,
         **kwargs,
     )
-    return pec, comp
+    return pec, {comp: trial_inputs(len(data))}
 
 
 def simulate_data(n_trials, rate, threshold, seed=0):
@@ -79,15 +95,9 @@ def simulate_data(n_trials, rate, threshold, seed=0):
     return data
 
 
-def report_training(likelihood, started, artifact):
-    print(f"  trained in {(time.time() - started) / 60:.1f} min, "
-          f"held-out NLL {likelihood.metadata.val_nll:.4f} per trial", flush=True)
-    print(f"  saved to {artifact}", flush=True)
-
-
 def fit(data, artifact):
     """Fit ``data`` with a trained estimator, and print the estimates."""
-    pec, comp = build_pec(
+    pec, inputs = build_pec(
         data,
         optimization_function=pnl.PECOptimizationFunction(
             method="differential_evolution", max_iterations=50
@@ -96,7 +106,7 @@ def fit(data, artifact):
         likelihood_estimator_kwargs={"artifact": artifact},
     )
     started = time.time()
-    pec.run(inputs={comp: trial_inputs(len(data))})
+    pec.run(inputs=inputs)
     print(f"  fitted in {time.time() - started:.1f}s", flush=True)
     for name, estimate in pec.optimized_parameter_values.items():
         print(f"    {name:24s} {estimate:.4f}")
@@ -106,33 +116,56 @@ def fit(data, artifact):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n-parameter-samples", type=int, default=512)
-    parser.add_argument("--n-trials-per-sample", type=int, default=40)
+    parser.add_argument("--n-trials-per-sample", type=int, default=1000,
+                        help="trials simulated at each parameter draw in training")
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--n-trials", type=int, default=400,
                         help="trials in the dataset that is fitted")
     parser.add_argument("--rate", type=float, default=0.6)
     parser.add_argument("--threshold", type=float, default=0.9)
     parser.add_argument("--artifact", default="ddm_nle.pt")
+    parser.add_argument("--distributed", action="store_true",
+                        help="divide the training simulations among the workers of a Dask cluster")
+    parser.add_argument("--n-workers", type=int, default=None,
+                        help="size of the cluster created for --distributed")
     args = parser.parse_args()
 
     data = simulate_data(args.n_trials, args.rate, args.threshold)
 
-    # The model as it would be fitted without an estimator, scored by simulating it. Training
-    # simulates it for as many trials as its inputs have, at each set of parameter values.
-    pec, comp = build_pec(data, num_estimates=25, initial_seed=0)
-
     print("training a neural likelihood", flush=True)
     started = time.time()
-    likelihood = pnl.train_neural_likelihood(
-        FIT_RANGES,
-        OUTCOME_NAMES,
-        pec=pec,
-        inputs={comp: trial_inputs(args.n_trials_per_sample)},
-        n_parameter_samples=args.n_parameter_samples,
-        epochs=args.epochs,
-    )
+    # build_pec leaves num_estimates at its default of 1, so each parameter draw simulates each
+    # trial in the inputs once.
+    if args.distributed:
+        distributed_options = {}
+        if args.n_workers is not None:
+            distributed_options["n_workers"] = args.n_workers
+        # A composition cannot be sent to another process, so each worker builds its own model by
+        # calling build_pec with a table of n_trials_per_sample rows.
+        likelihood = pnl.train_neural_likelihood(
+            FIT_RANGES,
+            OUTCOME_NAMES,
+            pec_factory=build_pec,
+            n_trials_per_sample=args.n_trials_per_sample,
+            n_parameter_samples=args.n_parameter_samples,
+            epochs=args.epochs,
+            distributed_options=distributed_options,
+        )
+    else:
+        # The model as it would be fitted without an estimator, scored by simulating it.
+        pec, _ = build_pec(data)
+        likelihood = pnl.train_neural_likelihood(
+            FIT_RANGES,
+            OUTCOME_NAMES,
+            pec=pec,
+            inputs={pec.model: trial_inputs(args.n_trials_per_sample)},
+            n_parameter_samples=args.n_parameter_samples,
+            epochs=args.epochs,
+        )
     likelihood.save(args.artifact)
-    report_training(likelihood, started, args.artifact)
+    print(f"  trained in {(time.time() - started) / 60:.1f} min, "
+          f"held-out NLL {likelihood.metadata.val_nll:.4f} per trial", flush=True)
+    print(f"  saved to {args.artifact}", flush=True)
 
     print(f"\nfitting {len(data)} trials simulated at "
           f"rate={args.rate}, threshold={args.threshold}", flush=True)
