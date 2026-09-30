@@ -479,7 +479,7 @@ def train_neural_likelihood(
     pec=None,
     inputs: Mapping | None = None,
     pec_factory: Callable | None = None,
-    n_parameter_samples: int = 16384,
+    n_parameter_samples: int = 20000,
     n_trials_per_sample: int | None = None,
     categorical: Sequence[bool] | None = None,
     epochs: int = 30,
@@ -517,9 +517,8 @@ def train_neural_likelihood(
         rows.  Required by **distributed_options**.  Exactly one of **pec** and **pec_factory** must be
         specified.
 
-    n_parameter_samples : int : default 16384
-        specifies the number of parameter values drawn from within **bounds** and simulated; they cover
-        **bounds** most evenly when this is a power of 2.
+    n_parameter_samples : int : default 20000
+        specifies the number of parameter values drawn uniformly from within **bounds** and simulated.
 
     n_trials_per_sample : int : default None
         specifies the number of trials simulated for each parameter draw when **pec_factory** is used; 100
@@ -554,8 +553,6 @@ def train_neural_likelihood(
     -------
     A trained :class:`NeuralLikelihood`.
     """
-    from scipy.stats import qmc
-
     if (pec is None) == (pec_factory is None):
         raise NeuralLikelihoodError(
             "Supply exactly one of pec, a model to simulate in this process, or "
@@ -592,9 +589,7 @@ def train_neural_likelihood(
     # Checked before simulating, which is most of the cost.
     _require_sbi()
 
-    # Sobol draws cover the box more evenly than independent uniforms at the same count.
-    engine = qmc.Sobol(d=len(names), scramble=True, seed=seed)
-    thetas = qmc.scale(engine.random(n_parameter_samples), lower, upper)
+    thetas = np.random.default_rng(seed).uniform(lower, upper, size=(n_parameter_samples, len(names)))
 
     n_outcomes = len(outcome_names)
     # What a factory is called with: one row per trial to simulate, in the data's columns.

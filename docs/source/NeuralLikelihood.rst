@@ -28,7 +28,6 @@ the inputs used to run it::
         outcome_names=("decision", "response_time"),
         pec=pec,
         inputs={comp: trial_inputs},
-        n_parameter_samples=16384,
     )
     likelihood.save("ddm_nle.pt")
 
@@ -45,7 +44,6 @@ in place of **pec**, together with **distributed_options** (see :ref:`Distribute
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
         outcome_names=("decision", "response_time"),
         pec_factory=build_pec,
-        n_parameter_samples=16384,
         n_trials_per_sample=100,
         distributed_options={"n_workers": 8},
     )
@@ -150,7 +148,7 @@ Limitations
   (see `Neural_Likelihood_Matching`).
 * The accuracy of a fit is limited by that of the estimator, which depends on the amount of simulated
   data and training.
-* Parameter values are drawn evenly from within **bounds** for training, so regions of the parameter space
+* Parameter values are drawn uniformly from within **bounds** for training, so regions of the parameter space
   in which the model's behavior changes rapidly are not represented in more detail than others.
 * At least one outcome must be continuous, such as a response time: an estimator cannot be trained for a
   model whose outcomes are all categorical.
